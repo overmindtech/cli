@@ -1,0 +1,17 @@
+{
+  "type": "apigateway-method",
+  "category": 3,
+  "potentialLinks": [
+    "apigateway-integration",
+    "apigateway-authorizer",
+    "apigateway-request-validator",
+    "apigateway-method-response"
+  ],
+  "descriptiveName": "API Gateway Method",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Method by it's ID: {rest-api-id}/{resource-id}/{http-method}",
+    "search": true,
+    "searchDescription": "Search Methods by ARN"
+  }
+}

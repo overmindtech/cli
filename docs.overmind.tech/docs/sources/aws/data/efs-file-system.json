@@ -1,0 +1,18 @@
+{
+  "type": "efs-file-system",
+  "category": 2,
+  "descriptiveName": "EFS File System",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a file system by ID",
+    "list": true,
+    "listDescription": "List file systems",
+    "search": true,
+    "searchDescription": "Search file systems by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_efs_file_system.id"
+    }
+  ]
+}

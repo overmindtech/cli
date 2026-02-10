@@ -1,0 +1,24 @@
+{
+  "type": "iam-policy",
+  "category": 4,
+  "potentialLinks": ["iam-group", "iam-user", "iam-role"],
+  "descriptiveName": "IAM Policy",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an IAM policy by policyFullName ({path} + {policyName})",
+    "list": true,
+    "listDescription": "List all IAM policies",
+    "search": true,
+    "searchDescription": "Search for IAM policies by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "aws_iam_policy.arn"
+    },
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "aws_iam_user_policy_attachment.policy_arn"
+    }
+  ]
+}

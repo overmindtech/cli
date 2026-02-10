@@ -3,7 +3,7 @@ package shared
 import (
 	"fmt"
 
-	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/workspace/sdp-go"
 )
 
 // Base is a struct that holds fundamental pieces for creating an adapter.

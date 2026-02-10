@@ -1,0 +1,17 @@
+{
+  "type": "gcp-artifact-registry-docker-image",
+  "category": 2,
+  "descriptiveName": "GCP Artifact Registry Docker Image",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-artifact-registry-docker-image by its \"locations|repositories|dockerImages\"",
+    "search": true,
+    "searchDescription": "Search for Docker images in Artifact Registry. Use the format \"location|repository_id\" or \"projects/[project]/locations/[location]/repository/[repository_id]/dockerImages/[docker_image]\" which is supported for terraform mappings."
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "google_artifact_registry_docker_image.name"
+    }
+  ]
+}

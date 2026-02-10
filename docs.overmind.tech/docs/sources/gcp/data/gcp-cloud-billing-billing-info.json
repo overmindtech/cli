@@ -1,0 +1,10 @@
+{
+  "type": "gcp-cloud-billing-billing-info",
+  "category": 7,
+  "potentialLinks": ["gcp-cloud-resource-manager-project"],
+  "descriptiveName": "GCP Cloud Billing Billing Info",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-cloud-billing-billing-info by its \"name\""
+  }
+}

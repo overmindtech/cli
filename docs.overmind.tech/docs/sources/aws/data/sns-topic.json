@@ -1,0 +1,19 @@
+{
+  "type": "sns-topic",
+  "category": 7,
+  "potentialLinks": ["kms-key"],
+  "descriptiveName": "SNS Topic",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an SNS topic by its ARN",
+    "list": true,
+    "listDescription": "List all SNS topics",
+    "search": true,
+    "searchDescription": "Search SNS topic by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_sns_topic.id"
+    }
+  ]
+}

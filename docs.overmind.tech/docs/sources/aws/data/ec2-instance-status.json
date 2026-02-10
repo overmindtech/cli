@@ -1,0 +1,13 @@
+{
+  "type": "ec2-instance-status",
+  "category": 5,
+  "descriptiveName": "EC2 Instance Status",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an EC2 instance status by Instance ID",
+    "list": true,
+    "listDescription": "List all EC2 instance statuses",
+    "search": true,
+    "searchDescription": "Search EC2 instance statuses by ARN"
+  }
+}

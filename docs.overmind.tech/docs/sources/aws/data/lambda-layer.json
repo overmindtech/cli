@@ -1,0 +1,10 @@
+{
+  "type": "lambda-layer",
+  "category": 1,
+  "potentialLinks": ["lambda-layer-version"],
+  "descriptiveName": "Lambda Layer",
+  "supportedQueryMethods": {
+    "list": true,
+    "listDescription": "List all lambda layers"
+  }
+}

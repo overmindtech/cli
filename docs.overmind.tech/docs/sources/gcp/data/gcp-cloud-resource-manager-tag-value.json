@@ -1,0 +1,16 @@
+{
+  "type": "gcp-cloud-resource-manager-tag-value",
+  "category": 7,
+  "descriptiveName": "GCP Cloud Resource Manager Tag Value",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-cloud-resource-manager-tag-value by its \"name\"",
+    "search": true,
+    "searchDescription": "Search for TagValues by TagKey."
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_tags_tag_value.name"
+    }
+  ]
+}

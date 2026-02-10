@@ -1,0 +1,17 @@
+{
+  "type": "elbv2-target-health",
+  "category": 5,
+  "potentialLinks": [
+    "ec2-instance",
+    "lambda-function",
+    "ip",
+    "elbv2-load-balancer"
+  ],
+  "descriptiveName": "ELB Target Health",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get target health by unique ID ({TargetGroupArn}|{Id}|{AvailabilityZone}|{Port})",
+    "search": true,
+    "searchDescription": "Search for target health by target group ARN"
+  }
+}

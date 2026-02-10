@@ -1,0 +1,19 @@
+{
+  "type": "kms-custom-key-store",
+  "category": 2,
+  "potentialLinks": ["cloudhsmv2-cluster", "ec2-vpc-endpoint-service"],
+  "descriptiveName": "Custom Key Store",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a custom key store by its ID",
+    "list": true,
+    "listDescription": "List all custom key stores",
+    "search": true,
+    "searchDescription": "Search custom key store by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_kms_custom_key_store.id"
+    }
+  ]
+}

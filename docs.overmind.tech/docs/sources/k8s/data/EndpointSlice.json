@@ -1,0 +1,22 @@
+{
+  "type": "EndpointSlice",
+  "category": 3,
+  "potentialLinks": ["Node", "Pod", "dns", "ip"],
+  "descriptiveName": "Endpoint Slice",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a EndpointSlice by name",
+    "list": true,
+    "listDescription": "List all EndpointSlices",
+    "search": true,
+    "searchDescription": "Search for a EndpointSlice using the ListOptions JSON format e.g. {\"labelSelector\": \"app=wordpress\"}"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "kubernetes_endpoints_slice_v1.metadata[0].name"
+    },
+    {
+      "terraformQueryMap": "kubernetes_endpoints_slice.metadata[0].name"
+    }
+  ]
+}

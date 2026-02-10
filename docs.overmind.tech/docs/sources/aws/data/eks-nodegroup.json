@@ -1,0 +1,23 @@
+{
+  "type": "eks-nodegroup",
+  "category": 1,
+  "potentialLinks": [
+    "ec2-key-pair",
+    "ec2-security-group",
+    "ec2-subnet",
+    "autoscaling-auto-scaling-group",
+    "ec2-launch-template"
+  ],
+  "descriptiveName": "EKS Nodegroup",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a node group by unique name ({clusterName}:{NodegroupName})",
+    "search": true,
+    "searchDescription": "Search for node groups by cluster name"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_eks_node_group.id"
+    }
+  ]
+}

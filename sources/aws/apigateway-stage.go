@@ -8,7 +8,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/apigateway/types"
 
 	"github.com/overmindtech/cli/aws-source/adapters"
-	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/workspace/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	awsshared "github.com/overmindtech/cli/sources/aws/shared"
 	"github.com/overmindtech/cli/sources/shared"

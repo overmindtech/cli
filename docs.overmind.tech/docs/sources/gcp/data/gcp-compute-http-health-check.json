@@ -1,0 +1,16 @@
+{
+  "type": "gcp-compute-http-health-check",
+  "category": 3,
+  "descriptiveName": "GCP Compute Http Health Check",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-compute-http-health-check by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-compute-http-health-check"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_compute_http_health_check.name"
+    }
+  ]
+}

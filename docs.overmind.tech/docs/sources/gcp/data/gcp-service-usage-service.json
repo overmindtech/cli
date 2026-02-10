@@ -1,0 +1,12 @@
+{
+  "type": "gcp-service-usage-service",
+  "category": 7,
+  "potentialLinks": ["gcp-pub-sub-topic"],
+  "descriptiveName": "GCP Service Usage Service",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-service-usage-service by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-service-usage-service"
+  }
+}

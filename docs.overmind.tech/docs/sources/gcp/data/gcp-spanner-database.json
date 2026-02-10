@@ -1,0 +1,17 @@
+{
+  "type": "gcp-spanner-database",
+  "category": 6,
+  "potentialLinks": ["gcp-cloud-kms-crypto-key", "gcp-spanner-instance"],
+  "descriptiveName": "GCP Spanner Database",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-spanner-database by its \"instances|databases\"",
+    "search": true,
+    "searchDescription": "Search for gcp-spanner-database by its \"instances\""
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_spanner_database.name"
+    }
+  ]
+}

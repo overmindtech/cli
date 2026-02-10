@@ -1,0 +1,28 @@
+{
+  "type": "elb-load-balancer",
+  "category": 3,
+  "potentialLinks": [
+    "dns",
+    "route53-hosted-zone",
+    "ec2-subnet",
+    "ec2-vpc",
+    "ec2-instance",
+    "elb-instance-health",
+    "ec2-security-group"
+  ],
+  "descriptiveName": "Classic Load Balancer",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a classic load balancer by name",
+    "list": true,
+    "listDescription": "List all classic load balancers",
+    "search": true,
+    "searchDescription": "Search for classic load balancers by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "aws_elb.arn"
+    }
+  ]
+}

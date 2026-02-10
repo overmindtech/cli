@@ -1,0 +1,18 @@
+{
+  "type": "gcp-ai-platform-batch-prediction-job",
+  "category": 8,
+  "potentialLinks": [
+    "gcp-ai-platform-model",
+    "gcp-big-query-table",
+    "gcp-cloud-kms-crypto-key",
+    "gcp-iam-service-account",
+    "gcp-storage-bucket"
+  ],
+  "descriptiveName": "GCP Ai Platform Batch Prediction Job",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-ai-platform-batch-prediction-job by its \"locations|batchPredictionJobs\"",
+    "search": true,
+    "searchDescription": "Search Batch Prediction Jobs within a location. Use the location name e.g., 'us-central1'"
+  }
+}

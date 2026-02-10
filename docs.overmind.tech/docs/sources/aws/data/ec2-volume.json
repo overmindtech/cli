@@ -1,0 +1,19 @@
+{
+  "type": "ec2-volume",
+  "category": 2,
+  "potentialLinks": ["ec2-instance"],
+  "descriptiveName": "EC2 Volume",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a volume by ID",
+    "list": true,
+    "listDescription": "List all volumes",
+    "search": true,
+    "searchDescription": "Search volumes by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_ebs_volume.id"
+    }
+  ]
+}

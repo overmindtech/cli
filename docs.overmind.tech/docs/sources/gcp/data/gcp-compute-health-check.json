@@ -1,0 +1,16 @@
+{
+  "type": "gcp-compute-health-check",
+  "category": 7,
+  "descriptiveName": "GCP Compute Health Check",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get GCP Compute Health Check by \"gcp-compute-health-check-name\"",
+    "list": true,
+    "listDescription": "List all GCP Compute Health Check items"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_compute_health_check.name"
+    }
+  ]
+}

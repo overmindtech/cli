@@ -1,0 +1,19 @@
+{
+  "type": "networkmanager-network-resource-relationship",
+  "category": 3,
+  "potentialLinks": [
+    "networkmanager-connection",
+    "networkmanager-device",
+    "networkmanager-link",
+    "networkmanager-site",
+    "directconnect-connection",
+    "directconnect-direct-connect-gateway",
+    "directconnect-virtual-interface",
+    "ec2-customer"
+  ],
+  "descriptiveName": "Networkmanager Network Resource Relationships",
+  "supportedQueryMethods": {
+    "search": true,
+    "searchDescription": "Search for Networkmanager NetworkResourceRelationships by GlobalNetworkId"
+  }
+}

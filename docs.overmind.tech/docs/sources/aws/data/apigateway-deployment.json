@@ -1,0 +1,16 @@
+{
+  "type": "apigateway-deployment",
+  "category": 7,
+  "descriptiveName": "API Gateway Deployment",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an API Gateway Deployment by its rest API ID and ID: rest-api-id/deployment-id",
+    "search": true,
+    "searchDescription": "Search for API Gateway Deployments by their rest API ID"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_api_gateway_deployment.id"
+    }
+  ]
+}

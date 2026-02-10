@@ -1,0 +1,16 @@
+{
+  "type": "gcp-compute-security-policy",
+  "category": 4,
+  "descriptiveName": "GCP Compute Security Policy",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get GCP Compute Security Policy by \"gcp-compute-security-policy-name\"",
+    "list": true,
+    "listDescription": "List all GCP Compute Security Policy items"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_compute_security_policy.name"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "type": "ec2-security-group-rule",
+  "category": 4,
+  "potentialLinks": ["ec2-security-group"],
+  "descriptiveName": "Security Group Rule",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a security group rule by ID",
+    "list": true,
+    "listDescription": "List all security group rules",
+    "search": true,
+    "searchDescription": "Search security group rules by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_security_group_rule.security_group_rule_id"
+    },
+    {
+      "terraformQueryMap": "aws_vpc_security_group_ingress_rule.security_group_rule_id"
+    },
+    {
+      "terraformQueryMap": "aws_vpc_security_group_egress_rule.security_group_rule_id"
+    }
+  ]
+}

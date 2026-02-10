@@ -1,0 +1,22 @@
+{
+  "type": "ec2-subnet",
+  "category": 3,
+  "potentialLinks": ["ec2-vpc"],
+  "descriptiveName": "EC2 Subnet",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a subnet by ID",
+    "list": true,
+    "listDescription": "List all subnets",
+    "search": true,
+    "searchDescription": "Search for subnets by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_route_table_association.subnet_id"
+    },
+    {
+      "terraformQueryMap": "aws_subnet.id"
+    }
+  ]
+}

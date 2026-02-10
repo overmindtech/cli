@@ -1,0 +1,13 @@
+{
+  "type": "ec2-reserved-instance",
+  "category": 1,
+  "descriptiveName": "Reserved EC2 Instance",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a reserved EC2 instance by ID",
+    "list": true,
+    "listDescription": "List all reserved EC2 instances",
+    "search": true,
+    "searchDescription": "Search reserved EC2 instances by ARN"
+  }
+}

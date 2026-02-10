@@ -1,0 +1,19 @@
+{
+  "type": "sns-platform-application",
+  "category": 7,
+  "potentialLinks": ["sns-endpoint"],
+  "descriptiveName": "SNS Platform Application",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an SNS platform application by its ARN",
+    "list": true,
+    "listDescription": "List all SNS platform applications",
+    "search": true,
+    "searchDescription": "Search SNS platform applications by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_sns_platform_application.id"
+    }
+  ]
+}

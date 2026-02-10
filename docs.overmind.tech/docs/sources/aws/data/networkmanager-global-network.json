@@ -1,0 +1,29 @@
+{
+  "type": "networkmanager-global-network",
+  "category": 3,
+  "potentialLinks": [
+    "networkmanager-site",
+    "networkmanager-transit-gateway-registration",
+    "networkmanager-connect-peer-association",
+    "networkmanager-transit-gateway-connect-peer-association",
+    "networkmanager-network-resource-relationship",
+    "networkmanager-link",
+    "networkmanager-device",
+    "networkmanager-connection"
+  ],
+  "descriptiveName": "Network Manager Global Network",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a global network by id",
+    "list": true,
+    "listDescription": "List all global networks",
+    "search": true,
+    "searchDescription": "Search for a global network by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "aws_networkmanager_global_network.arn"
+    }
+  ]
+}

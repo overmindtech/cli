@@ -1,0 +1,17 @@
+{
+  "type": "gcp-pub-sub-topic",
+  "category": 7,
+  "potentialLinks": ["gcp-cloud-kms-crypto-key", "gcp-storage-bucket"],
+  "descriptiveName": "GCP Pub Sub Topic",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-pub-sub-topic by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-pub-sub-topic"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_pubsub_topic.name"
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+{
+  "type": "networkmanager-link",
+  "category": 3,
+  "potentialLinks": [
+    "networkmanager-global-network",
+    "networkmanager-link-association",
+    "networkmanager-site",
+    "networkmanager-network-resource-relationship"
+  ],
+  "descriptiveName": "Networkmanager Link",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Networkmanager Link",
+    "search": true,
+    "searchDescription": "Search for Networkmanager Links by GlobalNetworkId, GlobalNetworkId with SiteId, or ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "aws_networkmanager_link.arn"
+    }
+  ]
+}

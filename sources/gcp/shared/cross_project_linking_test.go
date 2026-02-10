@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/workspace/sdp-go"
 )
 
 // TestProjectBaseLinkedItemQueryByName_CrossProject verifies that project-level

@@ -1,0 +1,16 @@
+{
+  "type": "apigateway-authorizer",
+  "category": 4,
+  "descriptiveName": "API Gateway Authorizer",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an API Gateway Authorizer by its rest API ID and ID: rest-api-id/authorizer-id",
+    "search": true,
+    "searchDescription": "Search for API Gateway Authorizers by their rest API ID"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_api_gateway_authorizer.id"
+    }
+  ]
+}

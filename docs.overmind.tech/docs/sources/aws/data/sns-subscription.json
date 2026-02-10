@@ -1,0 +1,19 @@
+{
+  "type": "sns-subscription",
+  "category": 7,
+  "potentialLinks": ["sns-topic", "iam-role"],
+  "descriptiveName": "SNS Subscription",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an SNS subscription by its ARN",
+    "list": true,
+    "listDescription": "List all SNS subscriptions",
+    "search": true,
+    "searchDescription": "Search SNS subscription by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_sns_topic_subscription.id"
+    }
+  ]
+}

@@ -1,0 +1,18 @@
+{
+  "type": "gcp-cloud-functions-function",
+  "category": 1,
+  "potentialLinks": [
+    "gcp-cloud-kms-crypto-key",
+    "gcp-iam-service-account",
+    "gcp-pub-sub-topic",
+    "gcp-run-service",
+    "gcp-storage-bucket"
+  ],
+  "descriptiveName": "GCP Cloud Functions Function",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-cloud-functions-function by its \"locations|functions\"",
+    "search": true,
+    "searchDescription": "Search for gcp-cloud-functions-function by its \"locations\""
+  }
+}

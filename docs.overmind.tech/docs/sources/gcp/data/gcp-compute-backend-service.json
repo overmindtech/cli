@@ -1,0 +1,17 @@
+{
+  "type": "gcp-compute-backend-service",
+  "category": 1,
+  "potentialLinks": ["gcp-compute-network", "gcp-compute-security-policy"],
+  "descriptiveName": "GCP Compute Backend Service",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get GCP Compute Backend Service by \"gcp-compute-backend-service-name\"",
+    "list": true,
+    "listDescription": "List all GCP Compute Backend Service items"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_compute_backend_service.name"
+    }
+  ]
+}

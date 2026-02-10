@@ -1,0 +1,11 @@
+{
+  "type": "gcp-iam-role",
+  "category": 4,
+  "descriptiveName": "GCP Iam Role",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-iam-role by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-iam-role"
+  }
+}

@@ -1,0 +1,21 @@
+{
+  "type": "gcp-compute-vpn-tunnel",
+  "category": 3,
+  "potentialLinks": [
+    "gcp-compute-external-vpn-gateway",
+    "gcp-compute-router",
+    "gcp-compute-vpn-gateway"
+  ],
+  "descriptiveName": "GCP Compute Vpn Tunnel",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-compute-vpn-tunnel by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-compute-vpn-tunnel"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_compute_vpn_tunnel.name"
+    }
+  ]
+}

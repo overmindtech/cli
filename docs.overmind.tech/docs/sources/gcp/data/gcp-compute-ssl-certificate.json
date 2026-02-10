@@ -1,0 +1,16 @@
+{
+  "type": "gcp-compute-ssl-certificate",
+  "category": 7,
+  "descriptiveName": "GCP Compute Ssl Certificate",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-compute-ssl-certificate by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-compute-ssl-certificate"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_compute_ssl_certificate.name"
+    }
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "type": "dns",
+  "category": 3,
+  "potentialLinks": ["dns", "ip", "rdap-domain"],
+  "descriptiveName": "DNS Entry",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "A DNS A or AAAA entry to look up",
+    "search": true,
+    "searchDescription": "A DNS name (or IP for reverse DNS), this will perform a recursive search and return all results. It is recommended that you always use the SEARCH method"
+  }
+}

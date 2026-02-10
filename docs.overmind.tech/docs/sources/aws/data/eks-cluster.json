@@ -1,0 +1,19 @@
+{
+  "type": "eks-cluster",
+  "category": 1,
+  "descriptiveName": "EKS Cluster",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a cluster by name",
+    "list": true,
+    "listDescription": "List all clusters",
+    "search": true,
+    "searchDescription": "Search for clusters by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "aws_eks_cluster.arn"
+    }
+  ]
+}

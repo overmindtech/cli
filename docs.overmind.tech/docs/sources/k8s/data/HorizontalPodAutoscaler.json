@@ -1,0 +1,18 @@
+{
+  "type": "HorizontalPodAutoscaler",
+  "category": 7,
+  "descriptiveName": "Horizontal Pod Autoscaler",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Horizontal Pod Autoscaler by name",
+    "list": true,
+    "listDescription": "List all Horizontal Pod Autoscalers",
+    "search": true,
+    "searchDescription": "Search for a Horizontal Pod Autoscaler using the ListOptions JSON format e.g. {\"labelSelector\": \"app=wordpress\"}"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "kubernetes_horizontal_pod_autoscaler_v2.metadata[0].name"
+    }
+  ]
+}

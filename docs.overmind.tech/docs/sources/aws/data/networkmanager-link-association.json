@@ -1,0 +1,16 @@
+{
+  "type": "networkmanager-link-association",
+  "category": 3,
+  "potentialLinks": [
+    "networkmanager-global-network",
+    "networkmanager-link",
+    "networkmanager-device"
+  ],
+  "descriptiveName": "Networkmanager LinkAssociation",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Networkmanager Link Association",
+    "search": true,
+    "searchDescription": "Search for Networkmanager Link Associations by GlobalNetworkId and DeviceId or LinkId"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "type": "gcp-ai-platform-model",
+  "category": 8,
+  "potentialLinks": [
+    "gcp-ai-platform-endpoint",
+    "gcp-ai-platform-pipeline-job",
+    "gcp-artifact-registry-docker-image",
+    "gcp-cloud-kms-crypto-key"
+  ],
+  "descriptiveName": "GCP Ai Platform Model",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-ai-platform-model by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-ai-platform-model"
+  }
+}

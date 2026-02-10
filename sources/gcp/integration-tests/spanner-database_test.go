@@ -14,7 +14,7 @@ import (
 	"github.com/googleapis/gax-go/v2/apierror"
 	"google.golang.org/grpc/codes"
 
-	"github.com/overmindtech/cli/sdpcache"
+	"github.com/overmindtech/workspace/sdpcache"
 	"github.com/overmindtech/cli/sources/gcp/dynamic"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"

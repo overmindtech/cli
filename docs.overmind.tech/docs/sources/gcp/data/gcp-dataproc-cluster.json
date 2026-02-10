@@ -1,0 +1,27 @@
+{
+  "type": "gcp-dataproc-cluster",
+  "category": 1,
+  "potentialLinks": [
+    "gcp-cloud-kms-crypto-key",
+    "gcp-compute-image",
+    "gcp-compute-instance-group-manager",
+    "gcp-compute-network",
+    "gcp-compute-node-group",
+    "gcp-compute-subnetwork",
+    "gcp-dataproc-autoscaling-policy",
+    "gcp-iam-service-account",
+    "gcp-storage-bucket"
+  ],
+  "descriptiveName": "GCP Dataproc Cluster",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-dataproc-cluster by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-dataproc-cluster"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_dataproc_cluster.name"
+    }
+  ]
+}

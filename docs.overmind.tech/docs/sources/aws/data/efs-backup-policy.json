@@ -1,0 +1,16 @@
+{
+  "type": "efs-backup-policy",
+  "category": 2,
+  "descriptiveName": "EFS Backup Policy",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an Backup Policy by file system ID",
+    "search": true,
+    "searchDescription": "Search for an Backup Policy by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_efs_backup_policy.id"
+    }
+  ]
+}

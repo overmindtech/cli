@@ -1,0 +1,18 @@
+{
+  "type": "ClusterRole",
+  "category": 4,
+  "descriptiveName": "Cluster Role",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Cluster Role by name",
+    "list": true,
+    "listDescription": "List all Cluster Roles",
+    "search": true,
+    "searchDescription": "Search for a Cluster Role using the ListOptions JSON format e.g. {\"labelSelector\": \"app=wordpress\"}"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "kubernetes_cluster_role_v1.metadata[0].name"
+    }
+  ]
+}

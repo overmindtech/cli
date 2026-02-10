@@ -9,15 +9,15 @@ import (
 	"syscall"
 
 	"github.com/getsentry/sentry-go"
-	"github.com/overmindtech/cli/logging"
+	"github.com/overmindtech/workspace/logging"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
 
-	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/workspace/discovery"
 	"github.com/overmindtech/cli/sources/gcp/proc"
-	"github.com/overmindtech/cli/tracing"
+	"github.com/overmindtech/workspace/tracing"
 )
 
 var cfgFile string

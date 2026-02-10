@@ -1,0 +1,16 @@
+{
+  "type": "gcp-big-query-model",
+  "category": 6,
+  "potentialLinks": [
+    "gcp-big-query-dataset",
+    "gcp-big-query-table",
+    "gcp-cloud-kms-crypto-key"
+  ],
+  "descriptiveName": "GCP Big Query Model",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get GCP Big Query Model by \"gcp-big-query-dataset-id|gcp-big-query-model-id\"",
+    "search": true,
+    "searchDescription": "Search for GCP Big Query Model by \"gcp-big-query-model-id\""
+  }
+}

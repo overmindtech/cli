@@ -1,0 +1,11 @@
+{
+  "type": "gcp-security-center-management-security-center-service",
+  "category": 4,
+  "descriptiveName": "GCP Security Center Management Security Center Service",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-security-center-management-security-center-service by its \"locations|securityCenterServices\"",
+    "search": true,
+    "searchDescription": "Search Security Center services in a location. Use the format \"location\"."
+  }
+}

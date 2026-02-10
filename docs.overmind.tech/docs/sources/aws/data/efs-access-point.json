@@ -1,0 +1,18 @@
+{
+  "type": "efs-access-point",
+  "category": 3,
+  "descriptiveName": "EFS Access Point",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an access point by ID",
+    "list": true,
+    "listDescription": "List all access points",
+    "search": true,
+    "searchDescription": "Search for an access point by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_efs_access_point.id"
+    }
+  ]
+}

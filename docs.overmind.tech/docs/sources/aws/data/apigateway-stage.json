@@ -1,0 +1,17 @@
+{
+  "type": "apigateway-stage",
+  "category": 7,
+  "potentialLinks": ["wafv2-web-acl"],
+  "descriptiveName": "API Gateway Stage",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an API Gateway Stage by its rest API ID and stage name: rest-api-id/stage-name",
+    "search": true,
+    "searchDescription": "Search for API Gateway Stages by their rest API ID or with rest API ID and deployment-id: rest-api-id/deployment-id"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_api_gateway_stage.id"
+    }
+  ]
+}

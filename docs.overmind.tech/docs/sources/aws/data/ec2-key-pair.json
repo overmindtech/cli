@@ -1,0 +1,18 @@
+{
+  "type": "ec2-key-pair",
+  "category": 4,
+  "descriptiveName": "Key Pair",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a key pair by name",
+    "list": true,
+    "listDescription": "List all key pairs",
+    "search": true,
+    "searchDescription": "Search for key pairs by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_key_pair.id"
+    }
+  ]
+}

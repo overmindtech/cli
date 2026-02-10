@@ -1,0 +1,18 @@
+{
+  "type": "cloudfront-function",
+  "category": 1,
+  "descriptiveName": "CloudFront Function",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a CloudFront Function by name",
+    "list": true,
+    "listDescription": "List CloudFront Functions",
+    "search": true,
+    "searchDescription": "Search CloudFront Functions by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_cloudfront_function.name"
+    }
+  ]
+}

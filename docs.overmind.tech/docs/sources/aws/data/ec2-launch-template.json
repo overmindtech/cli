@@ -1,0 +1,18 @@
+{
+  "type": "ec2-launch-template",
+  "category": 1,
+  "descriptiveName": "Launch Template",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a launch template by ID",
+    "list": true,
+    "listDescription": "List all launch templates",
+    "search": true,
+    "searchDescription": "Search for launch templates by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_launch_template.id"
+    }
+  ]
+}

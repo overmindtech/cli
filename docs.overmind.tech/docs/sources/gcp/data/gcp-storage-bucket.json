@@ -1,0 +1,21 @@
+{
+  "type": "gcp-storage-bucket",
+  "category": 2,
+  "potentialLinks": [
+    "gcp-cloud-kms-crypto-key",
+    "gcp-compute-network",
+    "gcp-logging-bucket"
+  ],
+  "descriptiveName": "GCP Storage Bucket",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-storage-bucket by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-storage-bucket"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_storage_bucket.name"
+    }
+  ]
+}

@@ -1,0 +1,10 @@
+{
+  "type": "ip",
+  "category": 3,
+  "potentialLinks": ["dns", "rdap-ip-network"],
+  "descriptiveName": "IP Address",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "An ipv4 or ipv6 address"
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "type": "ec2-nat-gateway",
+  "category": 3,
+  "potentialLinks": ["ec2-vpc", "ec2-subnet", "ec2-network-interface", "ip"],
+  "descriptiveName": "NAT Gateway",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a NAT Gateway by ID",
+    "list": true,
+    "listDescription": "List all NAT gateways",
+    "search": true,
+    "searchDescription": "Search for NAT gateways by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_nat_gateway.id"
+    }
+  ]
+}

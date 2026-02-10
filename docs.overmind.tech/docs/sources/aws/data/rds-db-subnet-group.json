@@ -1,0 +1,20 @@
+{
+  "type": "rds-db-subnet-group",
+  "category": 3,
+  "potentialLinks": ["ec2-vpc", "ec2-subnet", "outposts-outpost"],
+  "descriptiveName": "RDS Subnet Group",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a subnet group by name",
+    "list": true,
+    "listDescription": "List all subnet groups",
+    "search": true,
+    "searchDescription": "Search for subnet groups by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "aws_db_subnet_group.arn"
+    }
+  ]
+}

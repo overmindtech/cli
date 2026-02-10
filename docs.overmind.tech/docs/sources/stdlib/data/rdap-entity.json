@@ -1,0 +1,12 @@
+{
+  "type": "rdap-entity",
+  "category": 4,
+  "potentialLinks": ["rdap-asn"],
+  "descriptiveName": "RDAP Entity",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an entity by its handle. This method is discouraged as it's not reliable since entity bootstrapping isn't comprehensive",
+    "search": true,
+    "searchDescription": "Search for an entity by its URL e.g. https://rdap.apnic.net/entity/AIC3-AP"
+  }
+}

@@ -5,14 +5,14 @@ import (
 	"errors"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v8"
-	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/workspace/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
 	"github.com/overmindtech/cli/sources/shared"
 	"github.com/overmindtech/cli/sources/stdlib"
-	"github.com/overmindtech/cli/sdpcache"
-	"github.com/overmindtech/cli/discovery"
+	"github.com/overmindtech/workspace/sdpcache"
+	"github.com/overmindtech/workspace/discovery"
 )
 
 var NetworkNetworkInterfaceLookupByName = shared.NewItemTypeLookup("name", azureshared.NetworkNetworkInterface)

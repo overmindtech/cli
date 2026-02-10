@@ -1,0 +1,24 @@
+{
+  "type": "gcp-sql-admin-instance",
+  "category": 6,
+  "potentialLinks": [
+    "gcp-cloud-kms-crypto-key",
+    "gcp-compute-network",
+    "gcp-iam-service-account",
+    "gcp-sql-admin-backup-run",
+    "gcp-sql-admin-instance",
+    "gcp-storage-bucket"
+  ],
+  "descriptiveName": "GCP Sql Admin Instance",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-sql-admin-instance by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-sql-admin-instance"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_sql_database_instance.name"
+    }
+  ]
+}

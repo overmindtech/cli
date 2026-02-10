@@ -1,0 +1,17 @@
+{
+  "type": "gcp-compute-instance-group",
+  "category": 1,
+  "potentialLinks": ["gcp-compute-network", "gcp-compute-subnetwork"],
+  "descriptiveName": "GCP Compute Instance Group",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get GCP Compute Instance Group by \"gcp-compute-instance-group-name\"",
+    "list": true,
+    "listDescription": "List all GCP Compute Instance Group items"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_compute_instance_group.name"
+    }
+  ]
+}

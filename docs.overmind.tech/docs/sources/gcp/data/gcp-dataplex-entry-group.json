@@ -1,0 +1,17 @@
+{
+  "type": "gcp-dataplex-entry-group",
+  "category": 2,
+  "descriptiveName": "GCP Dataplex Entry Group",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-dataplex-entry-group by its \"locations|entryGroups\"",
+    "search": true,
+    "searchDescription": "Search for Dataplex entry groups in a location. Use the format \"location\" or \"projects/[project_id]/locations/[location]/entryGroups/[entry_group_id]\" which is supported for terraform mappings."
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "google_dataplex_entry_group.id"
+    }
+  ]
+}

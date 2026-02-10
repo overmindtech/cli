@@ -1,0 +1,19 @@
+{
+  "type": "apigateway-rest-api",
+  "category": 1,
+  "potentialLinks": ["ec2-vpc-endpoint", "apigateway-resource"],
+  "descriptiveName": "REST API",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a REST API by ID",
+    "list": true,
+    "listDescription": "List all REST APIs",
+    "search": true,
+    "searchDescription": "Search for REST APIs by their name"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_api_gateway_rest_api.id"
+    }
+  ]
+}

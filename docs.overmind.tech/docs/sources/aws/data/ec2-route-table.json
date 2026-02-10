@@ -1,0 +1,41 @@
+{
+  "type": "ec2-route-table",
+  "category": 3,
+  "potentialLinks": [
+    "ec2-vpc",
+    "ec2-subnet",
+    "ec2-internet-gateway",
+    "ec2-vpc-endpoint",
+    "ec2-carrier-gateway",
+    "ec2-egress-only-internet-gateway",
+    "ec2-instance",
+    "ec2-local-gateway",
+    "ec2-nat-gateway",
+    "ec2-network-interface",
+    "ec2-transit-gateway",
+    "ec2-vpc-peering-connection"
+  ],
+  "descriptiveName": "Route Table",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a route table by ID",
+    "list": true,
+    "listDescription": "List all route tables",
+    "search": true,
+    "searchDescription": "Search route tables by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_route_table.id"
+    },
+    {
+      "terraformQueryMap": "aws_route_table_association.route_table_id"
+    },
+    {
+      "terraformQueryMap": "aws_default_route_table.default_route_table_id"
+    },
+    {
+      "terraformQueryMap": "aws_route.route_table_id"
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "type": "ec2-iam-instance-profile-association",
+  "category": 4,
+  "potentialLinks": ["iam-instance-profile", "ec2-instance"],
+  "descriptiveName": "IAM Instance Profile Association",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an IAM Instance Profile Association by ID",
+    "list": true,
+    "listDescription": "List all IAM Instance Profile Associations",
+    "search": true,
+    "searchDescription": "Search IAM Instance Profile Associations by ARN"
+  }
+}

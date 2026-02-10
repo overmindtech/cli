@@ -1,0 +1,12 @@
+{
+  "type": "dynamodb-backup",
+  "category": 6,
+  "potentialLinks": ["dynamodb-table"],
+  "descriptiveName": "DynamoDB Backup",
+  "supportedQueryMethods": {
+    "list": true,
+    "listDescription": "List all DynamoDB backups",
+    "search": true,
+    "searchDescription": "Search for a DynamoDB backup by table name"
+  }
+}

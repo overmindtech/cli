@@ -1,0 +1,9 @@
+{
+  "type": "gcp-cloud-resource-manager-project",
+  "category": 7,
+  "descriptiveName": "GCP Cloud Resource Manager Project",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-cloud-resource-manager-project by its \"name\""
+  }
+}

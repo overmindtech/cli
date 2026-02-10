@@ -1,0 +1,24 @@
+{
+  "type": "directconnect-connection",
+  "category": 3,
+  "potentialLinks": [
+    "directconnect-lag",
+    "directconnect-location",
+    "directconnect-loa",
+    "directconnect-virtual-interface"
+  ],
+  "descriptiveName": "Connection",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a connection by ID",
+    "list": true,
+    "listDescription": "List all connections",
+    "search": true,
+    "searchDescription": "Search connection by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_dx_connection.id"
+    }
+  ]
+}

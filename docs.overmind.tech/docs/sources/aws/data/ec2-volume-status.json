@@ -1,0 +1,14 @@
+{
+  "type": "ec2-volume-status",
+  "category": 5,
+  "potentialLinks": ["ec2-instance"],
+  "descriptiveName": "EC2 Volume Status",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a volume status by volume ID",
+    "list": true,
+    "listDescription": "List all volume statuses",
+    "search": true,
+    "searchDescription": "Search for volume statuses by ARN"
+  }
+}

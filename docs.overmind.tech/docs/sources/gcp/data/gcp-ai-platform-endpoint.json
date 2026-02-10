@@ -1,0 +1,18 @@
+{
+  "type": "gcp-ai-platform-endpoint",
+  "category": 8,
+  "potentialLinks": [
+    "gcp-ai-platform-model",
+    "gcp-ai-platform-model-deployment-monitoring-job",
+    "gcp-big-query-table",
+    "gcp-cloud-kms-crypto-key",
+    "gcp-compute-network"
+  ],
+  "descriptiveName": "GCP Ai Platform Endpoint",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-ai-platform-endpoint by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-ai-platform-endpoint"
+  }
+}

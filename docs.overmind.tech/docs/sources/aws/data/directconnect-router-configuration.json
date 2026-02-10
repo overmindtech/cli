@@ -1,0 +1,17 @@
+{
+  "type": "directconnect-router-configuration",
+  "category": 7,
+  "potentialLinks": ["directconnect-virtual-interface"],
+  "descriptiveName": "Router Configuration",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Router Configuration by Virtual Interface ID",
+    "search": true,
+    "searchDescription": "Search Router Configuration by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_dx_router_configuration.virtual_interface_id"
+    }
+  ]
+}

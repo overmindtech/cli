@@ -1,0 +1,21 @@
+{
+  "type": "gcp-run-revision",
+  "category": 7,
+  "potentialLinks": [
+    "gcp-artifact-registry-docker-image",
+    "gcp-cloud-kms-crypto-key",
+    "gcp-compute-network",
+    "gcp-compute-subnetwork",
+    "gcp-iam-service-account",
+    "gcp-run-service",
+    "gcp-sql-admin-instance",
+    "gcp-storage-bucket"
+  ],
+  "descriptiveName": "GCP Run Revision",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-run-revision by its \"locations|services|revisions\"",
+    "search": true,
+    "searchDescription": "Search for gcp-run-revision by its \"locations|services\""
+  }
+}

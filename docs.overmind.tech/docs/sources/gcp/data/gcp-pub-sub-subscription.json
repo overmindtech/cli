@@ -1,0 +1,22 @@
+{
+  "type": "gcp-pub-sub-subscription",
+  "category": 7,
+  "potentialLinks": [
+    "gcp-big-query-table",
+    "gcp-pub-sub-subscription",
+    "gcp-pub-sub-topic",
+    "gcp-storage-bucket"
+  ],
+  "descriptiveName": "GCP Pub Sub Subscription",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-pub-sub-subscription by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-pub-sub-subscription"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_pubsub_subscription.name"
+    }
+  ]
+}

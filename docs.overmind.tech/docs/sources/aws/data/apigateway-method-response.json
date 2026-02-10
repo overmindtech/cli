@@ -1,0 +1,11 @@
+{
+  "type": "apigateway-method-response",
+  "category": 3,
+  "descriptiveName": "API Gateway Method Response",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Method Response by it's ID: {rest-api-id}/{resource-id}/{http-method}/{status-code}",
+    "search": true,
+    "searchDescription": "Search Method Responses by ARN"
+  }
+}

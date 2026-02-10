@@ -1,0 +1,19 @@
+{
+  "type": "ecs-task-definition",
+  "category": 1,
+  "potentialLinks": ["iam-role", "secretsmanager-secret", "ssm-parameter"],
+  "descriptiveName": "Task Definition",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a task definition by revision name ({family}:{revision})",
+    "list": true,
+    "listDescription": "List all task definitions",
+    "search": true,
+    "searchDescription": "Search for task definitions by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_ecs_task_definition.family"
+    }
+  ]
+}

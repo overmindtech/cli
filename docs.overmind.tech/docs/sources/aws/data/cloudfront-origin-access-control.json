@@ -1,0 +1,18 @@
+{
+  "type": "cloudfront-origin-access-control",
+  "category": 4,
+  "descriptiveName": "Cloudfront Origin Access Control",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get Origin Access Control by ID",
+    "list": true,
+    "listDescription": "List Origin Access Controls",
+    "search": true,
+    "searchDescription": "Origin Access Control by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_cloudfront_origin_access_control.id"
+    }
+  ]
+}

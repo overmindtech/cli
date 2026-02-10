@@ -1,0 +1,10 @@
+{
+  "type": "rdap-ip-network",
+  "category": 3,
+  "potentialLinks": ["rdap-entity"],
+  "descriptiveName": "RDAP IP Network",
+  "supportedQueryMethods": {
+    "search": true,
+    "searchDescription": "Search for the most specific network that contains the specified IP or CIDR"
+  }
+}

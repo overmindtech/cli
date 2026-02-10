@@ -1,0 +1,23 @@
+{
+  "type": "directconnect-lag",
+  "category": 3,
+  "potentialLinks": [
+    "directconnect-connection",
+    "directconnect-hosted-connection",
+    "directconnect-location"
+  ],
+  "descriptiveName": "Link Aggregation Group",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Link Aggregation Group by ID",
+    "list": true,
+    "listDescription": "List all Link Aggregation Groups",
+    "search": true,
+    "searchDescription": "Search Link Aggregation Group by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_dx_lag.id"
+    }
+  ]
+}

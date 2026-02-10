@@ -1,0 +1,23 @@
+{
+  "type": "cloudfront-streaming-distribution",
+  "category": 3,
+  "potentialLinks": ["dns"],
+  "descriptiveName": "CloudFront Streaming Distribution",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Streaming Distribution by ID",
+    "list": true,
+    "listDescription": "List Streaming Distributions",
+    "search": true,
+    "searchDescription": "Search Streaming Distributions by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "aws_cloudfront_distribution.arn"
+    },
+    {
+      "terraformQueryMap": "aws_cloudfront_distribution.id"
+    }
+  ]
+}

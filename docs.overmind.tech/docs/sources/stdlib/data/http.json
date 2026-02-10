@@ -1,0 +1,12 @@
+{
+  "type": "http",
+  "category": 3,
+  "potentialLinks": ["ip", "dns", "certificate", "http"],
+  "descriptiveName": "HTTP Endpoint",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "A HTTP endpoint to run a `HEAD` request against",
+    "search": true,
+    "searchDescription": "A HTTP URL to search for. Query parameters and fragments will be stripped from the URL before processing."
+  }
+}

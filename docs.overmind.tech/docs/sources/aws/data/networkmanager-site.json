@@ -1,0 +1,22 @@
+{
+  "type": "networkmanager-site",
+  "category": 3,
+  "potentialLinks": [
+    "networkmanager-global-network",
+    "networkmanager-link",
+    "networkmanager-device"
+  ],
+  "descriptiveName": "Networkmanager Site",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Networkmanager Site",
+    "search": true,
+    "searchDescription": "Search for Networkmanager Sites by GlobalNetworkId or Site ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "aws_networkmanager_site.arn"
+    }
+  ]
+}

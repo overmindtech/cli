@@ -1,0 +1,22 @@
+{
+  "type": "Deployment",
+  "category": 1,
+  "potentialLinks": ["ReplicaSet"],
+  "descriptiveName": "Deployment",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Deployment by name",
+    "list": true,
+    "listDescription": "List all Deployments",
+    "search": true,
+    "searchDescription": "Search for a Deployment using the ListOptions JSON format e.g. {\"labelSelector\": \"app=wordpress\"}"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "kubernetes_deployment_v1.metadata[0].name"
+    },
+    {
+      "terraformQueryMap": "kubernetes_deployment.metadata[0].name"
+    }
+  ]
+}

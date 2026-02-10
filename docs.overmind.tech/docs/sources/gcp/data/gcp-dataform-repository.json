@@ -1,0 +1,22 @@
+{
+  "type": "gcp-dataform-repository",
+  "category": 6,
+  "potentialLinks": [
+    "gcp-cloud-kms-crypto-key",
+    "gcp-iam-service-account",
+    "gcp-secret-manager-secret"
+  ],
+  "descriptiveName": "GCP Dataform Repository",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-dataform-repository by its \"locations|repositories\"",
+    "search": true,
+    "searchDescription": "Search for Dataform repositories in a location. Use the format \"location\" or \"projects/[project_id]/locations/[location]/repositories/[repository_name]\" which is supported for terraform mappings."
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "google_dataform_repository.id"
+    }
+  ]
+}

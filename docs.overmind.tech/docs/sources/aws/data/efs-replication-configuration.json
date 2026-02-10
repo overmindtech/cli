@@ -1,0 +1,18 @@
+{
+  "type": "efs-replication-configuration",
+  "category": 2,
+  "descriptiveName": "EFS Replication Configuration",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a replication configuration by file system ID",
+    "list": true,
+    "listDescription": "List all replication configurations",
+    "search": true,
+    "searchDescription": "Search for a replication configuration by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_efs_replication_configuration.source_file_system_id"
+    }
+  ]
+}

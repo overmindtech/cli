@@ -1,0 +1,19 @@
+{
+  "type": "elbv2-rule",
+  "category": 7,
+  "descriptiveName": "ELB Rule",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a rule by ARN",
+    "search": true,
+    "searchDescription": "Search for rules by listener ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_alb_listener_rule.arn"
+    },
+    {
+      "terraformQueryMap": "aws_lb_listener_rule.arn"
+    }
+  ]
+}

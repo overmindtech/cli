@@ -1,0 +1,14 @@
+{
+  "type": "networkmanager-connect-attachment",
+  "category": 3,
+  "potentialLinks": ["networkmanager-core-network"],
+  "descriptiveName": "Networkmanager Connect Attachment",
+  "supportedQueryMethods": {
+    "get": true
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_networkmanager_core_network.id"
+    }
+  ]
+}

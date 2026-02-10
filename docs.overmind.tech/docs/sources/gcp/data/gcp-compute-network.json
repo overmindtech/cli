@@ -1,0 +1,17 @@
+{
+  "type": "gcp-compute-network",
+  "category": 3,
+  "potentialLinks": ["gcp-compute-network", "gcp-compute-subnetwork"],
+  "descriptiveName": "GCP Compute Network",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-compute-network by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-compute-network"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_compute_network.name"
+    }
+  ]
+}

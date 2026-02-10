@@ -1,0 +1,22 @@
+{
+  "type": "gcp-big-query-data-transfer-transfer-config",
+  "category": 6,
+  "potentialLinks": [
+    "gcp-big-query-dataset",
+    "gcp-cloud-kms-crypto-key",
+    "gcp-pub-sub-topic"
+  ],
+  "descriptiveName": "GCP Big Query Data Transfer Transfer Config",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-big-query-data-transfer-transfer-config by its \"locations|transferConfigs\"",
+    "search": true,
+    "searchDescription": "Search for BigQuery Data Transfer transfer configs in a location. Use the format \"location\" or \"projects/project_id/locations/location/transferConfigs/transfer_config_id\" which is supported for terraform mappings."
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "google_bigquery_data_transfer_config.id"
+    }
+  ]
+}

@@ -1,0 +1,24 @@
+{
+  "type": "gcp-compute-router",
+  "category": 3,
+  "potentialLinks": [
+    "gcp-compute-network",
+    "gcp-compute-subnetwork",
+    "gcp-compute-vpn-tunnel"
+  ],
+  "descriptiveName": "GCP Compute Router",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-compute-router by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-compute-router",
+    "search": true,
+    "searchDescription": "Search with full ID: projects/[project]/regions/[region]/routers/[router] (used for terraform mapping)."
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "google_compute_router.id"
+    }
+  ]
+}

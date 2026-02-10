@@ -5,8 +5,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/overmindtech/cli/discovery"
-	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/workspace/discovery"
+	"github.com/overmindtech/workspace/sdp-go"
 )
 
 func TestIPGet(t *testing.T) {

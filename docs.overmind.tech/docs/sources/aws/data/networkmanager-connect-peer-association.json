@@ -1,0 +1,19 @@
+{
+  "type": "networkmanager-connect-peer-association",
+  "category": 3,
+  "potentialLinks": [
+    "networkmanager-global-network",
+    "networkmanager-connect-peer",
+    "networkmanager-device",
+    "networkmanager-link"
+  ],
+  "descriptiveName": "Networkmanager Connect Peer Association",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Networkmanager Connect Peer Association",
+    "list": true,
+    "listDescription": "List all Networkmanager Connect Peer Associations",
+    "search": true,
+    "searchDescription": "Search for Networkmanager ConnectPeerAssociations by GlobalNetworkId"
+  }
+}

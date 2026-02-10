@@ -1,0 +1,27 @@
+{
+  "type": "ecs-service",
+  "category": 1,
+  "potentialLinks": [
+    "ecs-cluster",
+    "elbv2-target-group",
+    "servicediscovery-service",
+    "ecs-task-definition",
+    "ecs-capacity-provider",
+    "ec2-subnet",
+    "ecs-security-group",
+    "dns"
+  ],
+  "descriptiveName": "ECS Service",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an ECS service by full name ({clusterName}/{id})",
+    "search": true,
+    "searchDescription": "Search for ECS services by cluster"
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "aws_ecs_service.cluster_name"
+    }
+  ]
+}

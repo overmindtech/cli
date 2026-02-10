@@ -1,0 +1,19 @@
+{
+  "type": "gcp-monitoring-custom-dashboard",
+  "category": 5,
+  "descriptiveName": "GCP Monitoring Custom Dashboard",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-monitoring-custom-dashboard by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-monitoring-custom-dashboard",
+    "search": true,
+    "searchDescription": "Search for custom dashboards by their ID in the form of \"projects/[project_id]/dashboards/[dashboard_id]\". This is supported for terraform mappings."
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "google_monitoring_dashboard.id"
+    }
+  ]
+}

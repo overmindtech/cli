@@ -1,0 +1,17 @@
+{
+  "type": "sns-data-protection-policy",
+  "category": 7,
+  "potentialLinks": ["sns-topic"],
+  "descriptiveName": "SNS Data Protection Policy",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an SNS data protection policy by associated topic ARN",
+    "search": true,
+    "searchDescription": "Search SNS data protection policies by its ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_sns_topic_data_protection_policy.arn"
+    }
+  ]
+}

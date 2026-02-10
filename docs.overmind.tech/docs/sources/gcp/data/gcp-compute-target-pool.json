@@ -1,0 +1,24 @@
+{
+  "type": "gcp-compute-target-pool",
+  "category": 3,
+  "potentialLinks": [
+    "gcp-compute-health-check",
+    "gcp-compute-instance",
+    "gcp-compute-target-pool"
+  ],
+  "descriptiveName": "GCP Compute Target Pool",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-compute-target-pool by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-compute-target-pool",
+    "search": true,
+    "searchDescription": "Search with full ID: projects/[project]/regions/[region]/targetPools/[name] (used for terraform mapping)."
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "google_compute_target_pool.id"
+    }
+  ]
+}

@@ -1,0 +1,11 @@
+{
+  "type": "sns-endpoint",
+  "category": 7,
+  "descriptiveName": "SNS Endpoint",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an SNS endpoint by its ARN",
+    "search": true,
+    "searchDescription": "Search SNS endpoints by associated Platform Application ARN"
+  }
+}

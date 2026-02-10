@@ -6,9 +6,9 @@ import (
 	"os"
 
 	"github.com/google/uuid"
-	"github.com/overmindtech/cli/sdp-go"
-	"github.com/overmindtech/cli/sdp-go/sdpws"
-	"github.com/overmindtech/cli/tracing"
+	"github.com/overmindtech/workspace/sdp-go"
+	"github.com/overmindtech/workspace/sdp-go/sdpws"
+	"github.com/overmindtech/workspace/tracing"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"

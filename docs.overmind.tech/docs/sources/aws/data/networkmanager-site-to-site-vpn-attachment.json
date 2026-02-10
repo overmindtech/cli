@@ -1,0 +1,15 @@
+{
+  "type": "networkmanager-site-to-site-vpn-attachment",
+  "category": 3,
+  "potentialLinks": ["networkmanager-core-network", "ec2-vpn-connection"],
+  "descriptiveName": "Networkmanager Site To Site Vpn Attachment",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Networkmanager Site To Site Vpn Attachment by id"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_networkmanager_site_to_site_vpn_attachment.id"
+    }
+  ]
+}

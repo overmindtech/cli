@@ -1,0 +1,23 @@
+{
+  "type": "ec2-capacity-reservation",
+  "category": 7,
+  "potentialLinks": [
+    "outposts-outpost",
+    "ec2-placement-group",
+    "ec2-capacity-reservation-fleet"
+  ],
+  "descriptiveName": "Capacity Reservation",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a capacity reservation fleet by ID",
+    "list": true,
+    "listDescription": "List capacity reservation fleets",
+    "search": true,
+    "searchDescription": "Search capacity reservation fleets by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_ec2_capacity_reservation_fleet.id"
+    }
+  ]
+}

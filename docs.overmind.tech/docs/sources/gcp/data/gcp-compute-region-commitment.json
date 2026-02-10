@@ -1,0 +1,16 @@
+{
+  "type": "gcp-compute-region-commitment",
+  "potentialLinks": ["gcp-compute-reservation"],
+  "descriptiveName": "GCP Compute Region Commitment",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-compute-region-commitment by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-compute-region-commitment"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_compute_region_commitment.name"
+    }
+  ]
+}

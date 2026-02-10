@@ -1,0 +1,21 @@
+{
+  "type": "gcp-big-table-admin-app-profile",
+  "category": 7,
+  "potentialLinks": [
+    "gcp-big-table-admin-cluster",
+    "gcp-big-table-admin-instance"
+  ],
+  "descriptiveName": "GCP Big Table Admin App Profile",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-big-table-admin-app-profile by its \"instances|appProfiles\"",
+    "search": true,
+    "searchDescription": "Search for BigTable App Profiles in an instance. Use the format \"instance\" or \"projects/[project_id]/instances/[instance_name]/appProfiles/[app_profile_id]\" which is supported for terraform mappings."
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "google_bigtable_app_profile.id"
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "type": "gcp-compute-firewall",
+  "category": 3,
+  "potentialLinks": ["gcp-compute-network", "gcp-iam-service-account"],
+  "descriptiveName": "GCP Compute Firewall",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-compute-firewall by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-compute-firewall"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_compute_firewall.name"
+    }
+  ]
+}

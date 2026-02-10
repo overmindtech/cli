@@ -1,0 +1,18 @@
+{
+  "type": "ecs-task",
+  "category": 1,
+  "potentialLinks": [
+    "ecs-cluster",
+    "ecs-container-instance",
+    "ecs-task-definition",
+    "ec2-network-interface",
+    "ip"
+  ],
+  "descriptiveName": "ECS Task",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an ECS task by ID",
+    "search": true,
+    "searchDescription": "Search for ECS tasks by cluster"
+  }
+}

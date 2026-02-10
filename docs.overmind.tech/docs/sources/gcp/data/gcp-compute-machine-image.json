@@ -1,0 +1,22 @@
+{
+  "type": "gcp-compute-machine-image",
+  "category": 1,
+  "potentialLinks": [
+    "gcp-compute-disk",
+    "gcp-compute-instance",
+    "gcp-compute-network",
+    "gcp-compute-subnetwork"
+  ],
+  "descriptiveName": "GCP Compute Machine Image",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get GCP Compute Machine Image by \"gcp-compute-machine-image-name\"",
+    "list": true,
+    "listDescription": "List all GCP Compute Machine Image items"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_compute_machine_image.name"
+    }
+  ]
+}

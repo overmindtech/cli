@@ -1,0 +1,28 @@
+{
+  "type": "lambda-event-source-mapping",
+  "category": 1,
+  "potentialLinks": [
+    "lambda-function",
+    "dynamodb-table",
+    "kinesis-stream",
+    "sqs-queue",
+    "kafka-cluster",
+    "mq-broker",
+    "rds-db-cluster"
+  ],
+  "descriptiveName": "Lambda Event Source Mapping",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Lambda event source mapping by UUID",
+    "list": true,
+    "listDescription": "List all Lambda event source mappings",
+    "search": true,
+    "searchDescription": "Search for Lambda event source mappings by Event Source ARN (SQS, DynamoDB, Kinesis, etc.)"
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "aws_lambda_event_source_mapping.arn"
+    }
+  ]
+}

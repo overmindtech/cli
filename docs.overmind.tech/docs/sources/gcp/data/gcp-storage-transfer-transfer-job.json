@@ -1,0 +1,22 @@
+{
+  "type": "gcp-storage-transfer-transfer-job",
+  "category": 2,
+  "potentialLinks": [
+    "gcp-iam-service-account",
+    "gcp-pub-sub-subscription",
+    "gcp-pub-sub-topic",
+    "gcp-storage-bucket"
+  ],
+  "descriptiveName": "GCP Storage Transfer Transfer Job",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-storage-transfer-transfer-job by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-storage-transfer-transfer-job"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_storage_transfer_job.name"
+    }
+  ]
+}

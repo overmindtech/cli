@@ -1,0 +1,18 @@
+{
+  "type": "gcp-essential-contacts-contact",
+  "descriptiveName": "GCP Essential Contacts Contact",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-essential-contacts-contact by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-essential-contacts-contact",
+    "search": true,
+    "searchDescription": "Search for contacts by their ID in the form of \"projects/[project_id]/contacts/[contact_id]\"."
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "google_essential_contacts_contact.id"
+    }
+  ]
+}

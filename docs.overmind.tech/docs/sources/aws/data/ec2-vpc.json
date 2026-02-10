@@ -1,0 +1,16 @@
+{
+  "type": "ec2-vpc",
+  "category": 3,
+  "descriptiveName": "VPC",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a VPC by ID",
+    "list": true,
+    "listDescription": "List all VPCs"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_vpc.id"
+    }
+  ]
+}

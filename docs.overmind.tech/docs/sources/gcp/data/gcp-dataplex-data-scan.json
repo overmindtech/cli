@@ -1,0 +1,18 @@
+{
+  "type": "gcp-dataplex-data-scan",
+  "category": 5,
+  "potentialLinks": ["gcp-storage-bucket"],
+  "descriptiveName": "GCP Dataplex Data Scan",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-dataplex-data-scan by its \"locations|dataScans\"",
+    "search": true,
+    "searchDescription": "Search for Dataplex data scans in a location. Use the location name e.g., 'us-central1' or the format \"projects/[project_id]/locations/[location]/dataScans/[data_scan_id]\" which is supported for terraform mappings."
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "google_dataplex_datascan.id"
+    }
+  ]
+}

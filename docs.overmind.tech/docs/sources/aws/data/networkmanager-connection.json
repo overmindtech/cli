@@ -1,0 +1,22 @@
+{
+  "type": "networkmanager-connection",
+  "category": 3,
+  "potentialLinks": [
+    "networkmanager-global-network",
+    "networkmanager-link",
+    "networkmanager-device"
+  ],
+  "descriptiveName": "Networkmanager Connection",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Networkmanager Connection",
+    "search": true,
+    "searchDescription": "Search for Networkmanager Connections by GlobalNetworkId, Device ARN, or Connection ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "aws_networkmanager_connection.arn"
+    }
+  ]
+}

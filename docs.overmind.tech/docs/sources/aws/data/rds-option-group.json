@@ -1,0 +1,19 @@
+{
+  "type": "rds-option-group",
+  "category": 6,
+  "descriptiveName": "RDS Option Group",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an option group by name",
+    "list": true,
+    "listDescription": "List all RDS option groups",
+    "search": true,
+    "searchDescription": "Search for an option group by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "aws_db_option_group.arn"
+    }
+  ]
+}

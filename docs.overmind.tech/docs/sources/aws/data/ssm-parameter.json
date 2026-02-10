@@ -1,0 +1,23 @@
+{
+  "type": "ssm-parameter",
+  "category": 7,
+  "potentialLinks": ["ip", "http", "dns"],
+  "descriptiveName": "SSM Parameter",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an SSM parameter by name",
+    "list": true,
+    "listDescription": "List all SSM parameters",
+    "search": true,
+    "searchDescription": "Search for SSM parameters by ARN. This supports ARNs from IAM policies that contain wildcards"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_ssm_parameter.name"
+    },
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "aws_ssm_parameter.arn"
+    }
+  ]
+}

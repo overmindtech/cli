@@ -1,0 +1,19 @@
+{
+  "type": "PodDisruptionBudget",
+  "category": 7,
+  "potentialLinks": ["Pod"],
+  "descriptiveName": "Pod Disruption Budget",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a PodDisruptionBudget by name",
+    "list": true,
+    "listDescription": "List all PodDisruptionBudgets",
+    "search": true,
+    "searchDescription": "Search for a PodDisruptionBudget using the ListOptions JSON format e.g. {\"labelSelector\": \"app=wordpress\"}"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "kubernetes_pod_disruption_budget_v1.metadata[0].name"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "type": "ec2-network-acl",
+  "category": 4,
+  "potentialLinks": ["ec2-subnet", "ec2-vpc"],
+  "descriptiveName": "Network ACL",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a network ACL",
+    "list": true,
+    "listDescription": "List all network ACLs",
+    "search": true,
+    "searchDescription": "Search for network ACLs by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_network_acl.id"
+    }
+  ]
+}

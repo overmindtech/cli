@@ -1,0 +1,29 @@
+{
+  "type": "gcp-compute-instance-template",
+  "category": 1,
+  "potentialLinks": [
+    "gcp-cloud-kms-crypto-key",
+    "gcp-compute-disk",
+    "gcp-compute-image",
+    "gcp-compute-instance",
+    "gcp-compute-network",
+    "gcp-compute-node-group",
+    "gcp-compute-reservation",
+    "gcp-compute-security-policy",
+    "gcp-compute-snapshot",
+    "gcp-compute-subnetwork",
+    "gcp-iam-service-account"
+  ],
+  "descriptiveName": "GCP Compute Instance Template",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-compute-instance-template by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-compute-instance-template"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_compute_instance_template.name"
+    }
+  ]
+}

@@ -1,0 +1,19 @@
+{
+  "type": "ec2-egress-only-internet-gateway",
+  "category": 3,
+  "potentialLinks": ["ec2-vpc"],
+  "descriptiveName": "Egress Only Internet Gateway",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an egress only internet gateway by ID",
+    "list": true,
+    "listDescription": "List all egress only internet gateways",
+    "search": true,
+    "searchDescription": "Search egress only internet gateways by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "egress_only_internet_gateway.id"
+    }
+  ]
+}

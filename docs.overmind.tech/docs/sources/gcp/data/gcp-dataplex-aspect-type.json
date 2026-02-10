@@ -1,0 +1,17 @@
+{
+  "type": "gcp-dataplex-aspect-type",
+  "category": 7,
+  "descriptiveName": "GCP Dataplex Aspect Type",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-dataplex-aspect-type by its \"locations|aspectTypes\"",
+    "search": true,
+    "searchDescription": "Search for Dataplex aspect types in a location. Use the format \"location\" or \"projects/[project_id]/locations/[location]/aspectTypes/[aspect_type_id]\" which is supported for terraform mappings."
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "google_dataplex_aspect_type.id"
+    }
+  ]
+}

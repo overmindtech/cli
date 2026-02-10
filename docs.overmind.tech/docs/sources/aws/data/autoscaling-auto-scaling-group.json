@@ -1,0 +1,27 @@
+{
+  "type": "autoscaling-auto-scaling-group",
+  "category": 7,
+  "potentialLinks": [
+    "ec2-launch-template",
+    "elbv2-target-group",
+    "ec2-instance",
+    "iam-role",
+    "autoscaling-launch-configuration",
+    "ec2-placement-group"
+  ],
+  "descriptiveName": "Autoscaling Group",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get an Autoscaling Group by name",
+    "list": true,
+    "listDescription": "List Autoscaling Groups",
+    "search": true,
+    "searchDescription": "Search for Autoscaling Groups by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "aws_autoscaling_group.arn"
+    }
+  ]
+}

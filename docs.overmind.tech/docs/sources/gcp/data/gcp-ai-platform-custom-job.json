@@ -1,0 +1,18 @@
+{
+  "type": "gcp-ai-platform-custom-job",
+  "category": 8,
+  "potentialLinks": [
+    "gcp-ai-platform-model",
+    "gcp-cloud-kms-crypto-key",
+    "gcp-compute-network",
+    "gcp-iam-service-account",
+    "gcp-storage-bucket"
+  ],
+  "descriptiveName": "GCP Ai Platform Custom Job",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-ai-platform-custom-job by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-ai-platform-custom-job"
+  }
+}

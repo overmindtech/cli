@@ -1,0 +1,9 @@
+{
+  "label": "Public Resources (stdlib)",
+  "position": 3,
+  "collapsed": true,
+  "link": {
+    "type": "generated-index",
+    "description": "How to explore with Overminds built-in Public Resoures."
+  }
+}

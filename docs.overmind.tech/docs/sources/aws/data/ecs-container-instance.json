@@ -1,0 +1,12 @@
+{
+  "type": "ecs-container-instance",
+  "category": 1,
+  "potentialLinks": ["ec2-instance"],
+  "descriptiveName": "Container Instance",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a container instance by ID which consists of {clusterName}/{id}",
+    "search": true,
+    "searchDescription": "Search for container instances by cluster"
+  }
+}

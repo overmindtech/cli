@@ -1,0 +1,18 @@
+{
+  "type": "cloudfront-cache-policy",
+  "category": 7,
+  "descriptiveName": "CloudFront Cache Policy",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a CloudFront Cache Policy",
+    "list": true,
+    "listDescription": "List CloudFront Cache Policies",
+    "search": true,
+    "searchDescription": "Search CloudFront Cache Policies by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_cloudfront_cache_policy.id"
+    }
+  ]
+}

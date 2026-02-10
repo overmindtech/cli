@@ -1,0 +1,17 @@
+{
+  "type": "gcp-compute-snapshot",
+  "category": 2,
+  "potentialLinks": ["gcp-compute-disk", "gcp-compute-instant-snapshot"],
+  "descriptiveName": "GCP Compute Snapshot",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get GCP Compute Snapshot by \"gcp-compute-snapshot-name\"",
+    "list": true,
+    "listDescription": "List all GCP Compute Snapshot items"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_compute_snapshot.name"
+    }
+  ]
+}

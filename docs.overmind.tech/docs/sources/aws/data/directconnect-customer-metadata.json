@@ -1,0 +1,13 @@
+{
+  "type": "directconnect-customer-metadata",
+  "category": 7,
+  "descriptiveName": "Customer Metadata",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a customer agreement by name",
+    "list": true,
+    "listDescription": "List all customer agreements",
+    "search": true,
+    "searchDescription": "Search customer agreements by ARN"
+  }
+}

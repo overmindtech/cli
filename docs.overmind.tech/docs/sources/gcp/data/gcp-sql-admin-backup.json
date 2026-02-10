@@ -1,0 +1,16 @@
+{
+  "type": "gcp-sql-admin-backup",
+  "category": 6,
+  "potentialLinks": [
+    "gcp-cloud-kms-crypto-key",
+    "gcp-sql-admin-backup-run",
+    "gcp-sql-admin-instance"
+  ],
+  "descriptiveName": "GCP Sql Admin Backup",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-sql-admin-backup by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-sql-admin-backup"
+  }
+}

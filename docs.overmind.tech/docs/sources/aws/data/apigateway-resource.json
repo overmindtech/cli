@@ -1,0 +1,17 @@
+{
+  "type": "apigateway-resource",
+  "category": 1,
+  "potentialLinks": ["apigateway-method"],
+  "descriptiveName": "API Gateway",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Resource by rest-api-id/resource-id",
+    "search": true,
+    "searchDescription": "Search Resources by REST API ID"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_api_gateway_resource.id"
+    }
+  ]
+}

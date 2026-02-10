@@ -1,0 +1,17 @@
+{
+  "type": "gcp-cloud-build-build",
+  "category": 7,
+  "potentialLinks": [
+    "gcp-artifact-registry-docker-image",
+    "gcp-iam-service-account",
+    "gcp-logging-bucket",
+    "gcp-storage-bucket"
+  ],
+  "descriptiveName": "GCP Cloud Build Build",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-cloud-build-build by its \"name\"",
+    "list": true,
+    "listDescription": "List all gcp-cloud-build-build"
+  }
+}

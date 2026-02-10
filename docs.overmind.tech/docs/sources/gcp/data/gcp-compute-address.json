@@ -1,0 +1,21 @@
+{
+  "type": "gcp-compute-address",
+  "category": 3,
+  "potentialLinks": [
+    "gcp-compute-address",
+    "gcp-compute-network",
+    "gcp-compute-subnetwork"
+  ],
+  "descriptiveName": "GCP Compute Address",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get GCP Compute Address by \"gcp-compute-address-name\"",
+    "list": true,
+    "listDescription": "List all GCP Compute Address items"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_compute_address.name"
+    }
+  ]
+}

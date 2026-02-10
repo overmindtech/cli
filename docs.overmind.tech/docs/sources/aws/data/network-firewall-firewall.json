@@ -1,0 +1,28 @@
+{
+  "type": "network-firewall-firewall",
+  "category": 3,
+  "potentialLinks": [
+    "network-firewall-firewall-policy",
+    "ec2-subnet",
+    "ec2-vpc",
+    "logs-log-group",
+    "s3-bucket",
+    "firehose-delivery-stream",
+    "iam-policy",
+    "kms-key"
+  ],
+  "descriptiveName": "Network Firewall",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Network Firewall by name",
+    "list": true,
+    "listDescription": "List Network Firewalls",
+    "search": true,
+    "searchDescription": "Search for Network Firewalls by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_networkfirewall_firewall.name"
+    }
+  ]
+}

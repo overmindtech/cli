@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/overmindtech/cli/sdp-go"
+	"github.com/overmindtech/workspace/sdp-go"
 	aws "github.com/overmindtech/cli/sources/aws/shared"
 	"github.com/overmindtech/cli/sources/stdlib"
 )

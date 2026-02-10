@@ -1,0 +1,14 @@
+{
+  "type": "VolumeAttachment",
+  "category": 2,
+  "potentialLinks": ["PersistentVolume", "Node"],
+  "descriptiveName": "Volume Attachment",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a VolumeAttachment by name",
+    "list": true,
+    "listDescription": "List all VolumeAttachments",
+    "search": true,
+    "searchDescription": "Search for a VolumeAttachment using the ListOptions JSON format e.g. {\"labelSelector\": \"app=wordpress\"}"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "type": "ec2-vpc-endpoint",
+  "category": 3,
+  "descriptiveName": "VPC Endpoint",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a VPC Endpoint by ID",
+    "list": true,
+    "listDescription": "List all VPC Endpoints",
+    "search": true,
+    "searchDescription": "Search VPC Endpoints by ARN"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_vpc_endpoint.id"
+    }
+  ]
+}

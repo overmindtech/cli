@@ -1,0 +1,22 @@
+{
+  "type": "directconnect-hosted-connection",
+  "category": 3,
+  "potentialLinks": [
+    "directconnect-lag",
+    "directconnect-location",
+    "directconnect-loa",
+    "directconnect-virtual-interface"
+  ],
+  "descriptiveName": "Hosted Connection",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a Hosted Connection by connection ID",
+    "search": true,
+    "searchDescription": "Search Hosted Connections by Interconnect or LAG ID"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_dx_hosted_connection.id"
+    }
+  ]
+}
