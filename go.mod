@@ -16,6 +16,7 @@ require (
 	cloud.google.com/go/auth v0.18.1
 	cloud.google.com/go/bigquery v1.73.1
 	cloud.google.com/go/bigtable v1.42.0
+	cloud.google.com/go/certificatemanager v1.9.6
 	cloud.google.com/go/compute v1.54.0
 	cloud.google.com/go/compute/metadata v0.9.0
 	cloud.google.com/go/container v1.46.0
