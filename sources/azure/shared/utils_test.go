@@ -971,3 +971,56 @@ func TestExtractDNSFromURL(t *testing.T) {
 		})
 	}
 }
+
+func TestExtractStorageAccountNameFromBlobURI(t *testing.T) {
+	tests := []struct {
+		name     string
+		blobURI  string
+		expected string
+	}{
+		{
+			name:     "valid blob URI",
+			blobURI:  "https://mystorageaccount.blob.core.windows.net/container/blob",
+			expected: "mystorageaccount",
+		},
+		{
+			name:     "blob URI with path only",
+			blobURI:  "https://account.blob.core.windows.net/packages/app.zip",
+			expected: "account",
+		},
+		{
+			name:     "sovereign cloud China blob URI",
+			blobURI:  "https://myaccount.blob.core.chinacloudapi.cn/container/blob",
+			expected: "myaccount",
+		},
+		{
+			name:     "sovereign cloud US Government blob URI",
+			blobURI:  "https://myaccount.blob.core.usgovcloudapi.net/container/blob",
+			expected: "myaccount",
+		},
+		{
+			name:     "non-blob HTTPS URL must return empty",
+			blobURI:  "https://example.com/artifacts/app.zip",
+			expected: "",
+		},
+		{
+			name:     "non-blob HTTP URL must return empty",
+			blobURI:  "http://cdn.example.com/foo",
+			expected: "",
+		},
+		{
+			name:     "empty URI",
+			blobURI:  "",
+			expected: "",
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := azureshared.ExtractStorageAccountNameFromBlobURI(tc.blobURI)
+			if actual != tc.expected {
+				t.Errorf("ExtractStorageAccountNameFromBlobURI(%q) = %q; want %q", tc.blobURI, actual, tc.expected)
+			}
+		})
+	}
+}

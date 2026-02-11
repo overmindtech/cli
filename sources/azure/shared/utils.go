@@ -22,12 +22,13 @@ func GetResourceIDPathKeys(resourceType string) []string {
 		"azure-storage-blob-container":              {"storageAccounts", "containers"},
 		"azure-storage-file-share":                  {"storageAccounts", "shares"},
 		"azure-storage-table":                       {"storageAccounts", "tables"},
-		"azure-sql-database":                        {"servers", "databases"},           // "/subscriptions/00000000-1111-2222-3333-444444444444/resourceGroups/Default-SQL-SouthEastAsia/providers/Microsoft.Sql/servers/testsvr/databases/testdb",
-		"azure-dbforpostgresql-database":            {"flexibleServers", "databases"},   // "/subscriptions/00000000-1111-2222-3333-444444444444/resourceGroups/Default-PostgreSQL-SouthEastAsia/providers/Microsoft.DBforPostgreSQL/flexibleServers/testsvr/databases/testdb",
-		"azure-keyvault-secret":                     {"vaults", "secrets"},              // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.KeyVault/vaults/{vaultName}/secrets/{secretName}",
-		"azure-authorization-role-assignment":       {"roleAssignments"},                // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Authorization/roleAssignments/{roleAssignmentName}",
-		"azure-compute-virtual-machine-run-command": {"virtualMachines", "runCommands"}, // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/virtualMachines/{virtualMachineName}/runCommands/{runCommandName}",
-		"azure-compute-virtual-machine-extension":   {"virtualMachines", "extensions"},  // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/virtualMachines/{virtualMachineName}/extensions/{extensionName}",
+		"azure-sql-database":                        {"servers", "databases"},                  // "/subscriptions/00000000-1111-2222-3333-444444444444/resourceGroups/Default-SQL-SouthEastAsia/providers/Microsoft.Sql/servers/testsvr/databases/testdb",
+		"azure-dbforpostgresql-database":            {"flexibleServers", "databases"},          // "/subscriptions/00000000-1111-2222-3333-444444444444/resourceGroups/Default-PostgreSQL-SouthEastAsia/providers/Microsoft.DBforPostgreSQL/flexibleServers/testsvr/databases/testdb",
+		"azure-keyvault-secret":                     {"vaults", "secrets"},                     // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.KeyVault/vaults/{vaultName}/secrets/{secretName}",
+		"azure-authorization-role-assignment":       {"roleAssignments"},                       // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Authorization/roleAssignments/{roleAssignmentName}",
+		"azure-compute-virtual-machine-run-command": {"virtualMachines", "runCommands"},        // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/virtualMachines/{virtualMachineName}/runCommands/{runCommandName}",
+		"azure-compute-virtual-machine-extension":   {"virtualMachines", "extensions"},         // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/virtualMachines/{virtualMachineName}/extensions/{extensionName}",
+		"azure-compute-gallery-application-version": {"galleries", "applications", "versions"}, // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/galleries/{galleryName}/applications/{applicationName}/versions/{versionName}",
 	}
 
 	if keys, ok := pathKeysMap[resourceType]; ok {
@@ -406,20 +407,25 @@ func ExtractDNSFromURL(urlStr string) string {
 	return urlStr
 }
 
-// ExtractStorageAccountNameFromBlobURI extracts the storage account name from an Azure blob URI
-// Blob URIs follow the format: https://{accountName}.blob.core.windows.net/{container}/{blob}
+// ExtractStorageAccountNameFromBlobURI extracts the storage account name from an Azure blob URI.
+// Blob URIs use the host format {accountName}.blob.core.{suffix} in all Azure clouds, e.g.:
+// - Public: https://{accountName}.blob.core.windows.net/{container}/{blob}
+// - China: https://{accountName}.blob.core.chinacloudapi.cn/...
+// - US Government: https://{accountName}.blob.core.usgovcloudapi.net/...
 func ExtractStorageAccountNameFromBlobURI(blobURI string) string {
 	if blobURI == "" {
 		return ""
 	}
-
 	parsedURL, err := url.Parse(blobURI)
 	if err != nil {
 		return ""
 	}
-
 	host := parsedURL.Host
-	// Extract account name from hostname: {accountName}.blob.core.windows.net
+	// Accept any Azure blob endpoint (public and sovereign clouds); check host only to avoid matching path/query
+	if !strings.Contains(host, ".blob.core.") {
+		return ""
+	}
+	// Account name is the first label of the host in all Azure blob endpoints
 	parts := strings.Split(host, ".")
 	if len(parts) > 0 && parts[0] != "" {
 		return parts[0]
@@ -428,24 +434,21 @@ func ExtractStorageAccountNameFromBlobURI(blobURI string) string {
 	return ""
 }
 
-// ExtractContainerNameFromBlobURI extracts the container name from an Azure blob URI
-// Blob URIs follow the format: https://{accountName}.blob.core.windows.net/{container}/{blob}
-// Returns the first path segment which is the container name
+// ExtractContainerNameFromBlobURI extracts the container name from an Azure blob URI.
+// Blob URIs use the same path layout in all Azure clouds; the first path segment is the container.
+// Returns the first path segment which is the container name.
 func ExtractContainerNameFromBlobURI(blobURI string) string {
 	if blobURI == "" {
 		return ""
 	}
-
-	// Defensive check: ensure this is actually a blob URI
-	if !strings.Contains(blobURI, ".blob.core.windows.net") {
-		return ""
-	}
-
 	parsedURL, err := url.Parse(blobURI)
 	if err != nil {
 		return ""
 	}
-
+	// Ensure this is an Azure blob host (public or sovereign cloud); check host only to avoid matching path/query
+	if !strings.Contains(parsedURL.Host, ".blob.core.") {
+		return ""
+	}
 	path := strings.Trim(parsedURL.Path, "/")
 	if path == "" {
 		return ""

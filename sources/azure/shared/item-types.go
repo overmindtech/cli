@@ -25,7 +25,9 @@ var (
 	ComputeDiskAccessPrivateEndpointConnection = shared.NewItemType(Azure, Compute, DiskAccessPrivateEndpointConnection)
 	ComputeSharedGalleryImage                  = shared.NewItemType(Azure, Compute, SharedGalleryImage)
 	ComputeCommunityGalleryImage               = shared.NewItemType(Azure, Compute, CommunityGalleryImage)
-	ComputeSharedGalleryApplicationVersion     = shared.NewItemType(Azure, Compute, SharedGalleryApplicationVersion)
+	ComputeGalleryApplication                  = shared.NewItemType(Azure, Compute, GalleryApplication)
+	ComputeGalleryApplicationVersion           = shared.NewItemType(Azure, Compute, GalleryApplicationVersion)
+	ComputeGallery                             = shared.NewItemType(Azure, Compute, Gallery)
 
 	// Network item types
 	NetworkVirtualNetwork                                 = shared.NewItemType(Azure, Network, VirtualNetwork)

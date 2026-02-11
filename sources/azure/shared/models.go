@@ -73,7 +73,9 @@ const (
 	DiskAccessPrivateEndpointConnection shared.Resource = "disk-access-private-endpoint-connection"
 	SharedGalleryImage                  shared.Resource = "shared-gallery-image"
 	CommunityGalleryImage               shared.Resource = "community-gallery-image"
-	SharedGalleryApplicationVersion     shared.Resource = "shared-gallery-application-version"
+	GalleryApplicationVersion           shared.Resource = "gallery-application-version"
+	GalleryApplication                  shared.Resource = "gallery-application"
+	Gallery                             shared.Resource = "gallery"
 
 	// Network resources
 	VirtualNetwork                                 shared.Resource = "virtual-network"
