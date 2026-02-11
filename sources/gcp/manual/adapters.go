@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"cloud.google.com/go/bigquery"
+	certificatemanager "cloud.google.com/go/certificatemanager/apiv1"
 	compute "cloud.google.com/go/compute/apiv1"
 	iamAdmin "cloud.google.com/go/iam/admin/apiv1"
 	logging "cloud.google.com/go/logging/apiv2"
@@ -39,11 +40,12 @@ func Adapters(ctx context.Context, projectLocations, regionLocations, zoneLocati
 		instanceGroupManagerCli        *compute.InstanceGroupManagersClient
 		regionInstanceGroupManagerCli  *compute.RegionInstanceGroupManagersClient
 		diskCli                        *compute.DisksClient
-		iamServiceAccountKeyCli   *iamAdmin.IamClient
-		iamServiceAccountCli      *iamAdmin.IamClient
-		kmsLoader                 *shared.CloudKMSAssetLoader
-		bigQueryDatasetCli        *bigquery.Client
-		loggingConfigCli          *logging.ConfigClient
+		iamServiceAccountKeyCli        *iamAdmin.IamClient
+		iamServiceAccountCli           *iamAdmin.IamClient
+		certificateManagerCli          *certificatemanager.Client
+		kmsLoader                      *shared.CloudKMSAssetLoader
+		bigQueryDatasetCli             *bigquery.Client
+		loggingConfigCli               *logging.ConfigClient
 		nodeGroupCli              *compute.NodeGroupsClient
 		nodeTemplateCli           *compute.NodeTemplatesClient
 		regionBackendServiceCli   *compute.RegionBackendServicesClient
@@ -145,6 +147,12 @@ func Adapters(ctx context.Context, projectLocations, regionLocations, zoneLocati
 		iamServiceAccountCli, err = iamAdmin.NewIamClient(ctx, opts...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create IAM service account client: %w", err)
+		}
+
+		// Certificate Manager
+		certificateManagerCli, err = certificatemanager.NewClient(ctx, opts...)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create certificate manager client: %w", err)
 		}
 
 		// Extract project ID from projectLocations for BigQuery client initialization.
@@ -275,6 +283,7 @@ func Adapters(ctx context.Context, projectLocations, regionLocations, zoneLocati
 			sources.WrapperToAdapter(NewComputeSnapshot(shared.NewComputeSnapshotsClient(computeSnapshotCli), projectLocations), cache),
 			sources.WrapperToAdapter(NewIAMServiceAccountKey(shared.NewIAMServiceAccountKeyClient(iamServiceAccountKeyCli), projectLocations), cache),
 			sources.WrapperToAdapter(NewIAMServiceAccount(shared.NewIAMServiceAccountClient(iamServiceAccountCli), projectLocations), cache),
+			sources.WrapperToAdapter(NewCertificateManagerCertificate(shared.NewCertificateManagerCertificateClient(certificateManagerCli), projectLocations), cache),
 			sources.WrapperToAdapter(NewCloudKMSKeyRing(kmsLoader, projectLocations), cache),
 			sources.WrapperToAdapter(NewCloudKMSCryptoKey(kmsLoader, projectLocations), cache),
 			sources.WrapperToAdapter(NewCloudKMSCryptoKeyVersion(kmsLoader, projectLocations), cache),

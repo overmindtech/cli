@@ -173,6 +173,7 @@ var (
 	ComputeInterconnectAttachment                                        = shared.NewItemType(GCP, Compute, InterconnectAttachment)
 	ComputeServiceAttachment                                             = shared.NewItemType(GCP, Compute, ServiceAttachment)
 	ComputeTargetHttpsProxy                                              = shared.NewItemType(GCP, Compute, TargetHttpsProxy)
+	ComputeRegionTargetHttpsProxy                                        = shared.NewItemType(GCP, Compute, RegionTargetHttpsProxy)
 	ComputeSSLPolicy                                                     = shared.NewItemType(GCP, Compute, SSLPolicy)
 	ComputeTargetHttpProxy                                               = shared.NewItemType(GCP, Compute, TargetHttpProxy)
 	ComputeTargetTcpProxy                                                = shared.NewItemType(GCP, Compute, TargetTcpProxy)
@@ -191,6 +192,10 @@ var (
 	FileInstance                                                         = shared.NewItemType(GCP, File, Instance)
 	FileBackup                                                           = shared.NewItemType(GCP, File, Backup)
 	CertificateManagerCertificateMap                                     = shared.NewItemType(GCP, CertificateManager, CertificateMap)
+	CertificateManagerCertificateMapEntry                                = shared.NewItemType(GCP, CertificateManager, CertificateMapEntry)
+	CertificateManagerCertificate                                        = shared.NewItemType(GCP, CertificateManager, Certificate)
+	CertificateManagerDnsAuthorization                                   = shared.NewItemType(GCP, CertificateManager, DnsAuthorization)
+	CertificateManagerCertificateIssuanceConfig                          = shared.NewItemType(GCP, CertificateManager, CertificateIssuanceConfig)
 	ComputeRoutePolicy                                                   = shared.NewItemType(GCP, Compute, RoutePolicy)                           // Router Route Policy child resource
 	ComputeBgpRoute                                                      = shared.NewItemType(GCP, Compute, BgpRoute)                              // Router BGP Route child resource
 	NetworkServicesMesh                                                  = shared.NewItemType(GCP, NetworkServices, Mesh)                          // https://cloud.google.com/service-mesh/docs/reference/network-services/rest/v1/projects.locations.meshes/get

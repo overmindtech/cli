@@ -194,6 +194,7 @@ const (
 	InterconnectAttachment                       shared.Resource = "interconnect-attachment"
 	ServiceAttachment                            shared.Resource = "service-attachment"
 	TargetHttpsProxy                             shared.Resource = "target-https-proxy"
+	RegionTargetHttpsProxy                       shared.Resource = "region-target-https-proxy"
 	SSLPolicy                                    shared.Resource = "ssl-policy"
 	TargetHttpProxy                              shared.Resource = "target-http-proxy"
 	TargetTcpProxy                               shared.Resource = "target-tcp-proxy"
@@ -216,6 +217,10 @@ const (
 	EffectiveSecurityHealthAnalyticsCustomModule shared.Resource = "effective-security-health-analytics-custom-module" // Security Center Management Effective Security Health Analytics Custom Module
 	EffectiveEventThreatDetectionCustomModule    shared.Resource = "effective-event-threat-detection-custom-module"    // Security Center Management Effective Event Threat Detection Custom Module
 	CertificateMap                               shared.Resource = "certificate-map"                                   // Certificate Manager Certificate Map
+	CertificateMapEntry                          shared.Resource = "certificate-map-entry"                             // Certificate Manager Certificate Map Entry
+	Certificate                                  shared.Resource = "certificate"                                       // Certificate Manager Certificate
+	DnsAuthorization                             shared.Resource = "dns-authorization"                                 // Certificate Manager DNS Authorization
+	CertificateIssuanceConfig                    shared.Resource = "certificate-issuance-config"                       // Certificate Manager Certificate Issuance Config
 	InternalRange                                shared.Resource = "internal-range"                                    // Network Connectivity API Internal Range
 	RoutePolicy                                  shared.Resource = "route-policy"                                      // Router Route Policy child resource
 	BgpRoute                                     shared.Resource = "bgp-route"                                         // Router BGP Route child resource
