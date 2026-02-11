@@ -83,6 +83,15 @@ var PredefinedRoles = map[string]role{
 			"bigtable.backups.list",
 		},
 	},
+	"roles/certificatemanager.viewer": {
+		Role: "roles/certificatemanager.viewer",
+		// Read-only access to Certificate Manager resources.
+		Link: "https://cloud.google.com/iam/docs/roles-permissions/certificatemanager#certificatemanager.viewer",
+		IAMPermissions: []string{
+			"certificatemanager.certs.get",
+			"certificatemanager.certs.list",
+		},
+	},
 	"roles/cloudfunctions.viewer": {
 		Role: "roles/cloudfunctions.viewer",
 		// Read-only access to functions and locations.
