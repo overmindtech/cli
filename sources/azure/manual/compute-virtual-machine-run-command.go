@@ -153,53 +153,48 @@ func (s computeVirtualMachineRunCommandWrapper) azureVirtualMachineRunCommandToS
 			}
 
 			uri := *blobURI
-			isBlobURI := strings.Contains(uri, ".blob.core.windows.net")
+			storageAccountName := azureshared.ExtractStorageAccountNameFromBlobURI(uri)
+			if storageAccountName != "" {
+				// Link to Storage Account
+				// Reference: https://learn.microsoft.com/en-us/rest/api/storagerp/storage-accounts/get-properties?view=rest-storagerp-2025-06-01&tabs=HTTP
+				// GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Storage/storageAccounts/{accountName}?api-version=2025-06-01
+				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   azureshared.StorageAccount.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  storageAccountName,
+						Scope:  scope,
+					},
+					BlastPropagation: &sdp.BlastPropagation{
+						In:  true,  // If Storage Account is deleted/modified → blob becomes inaccessible (In: true)
+						Out: false, // If Run Command is deleted → Storage Account remains (Out: false)
+					}, // Run Command depends on Storage Account for blob access
+				})
 
-			// Check if it's an Azure blob URI (contains .blob.core.windows.net)
-			if isBlobURI {
-				storageAccountName := azureshared.ExtractStorageAccountNameFromBlobURI(uri)
-				if storageAccountName != "" {
-					// Link to Storage Account
-					// Reference: https://learn.microsoft.com/en-us/rest/api/storagerp/storage-accounts/get-properties?view=rest-storagerp-2025-06-01&tabs=HTTP
-					// GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Storage/storageAccounts/{accountName}?api-version=2025-06-01
+				// Extract container name and link to Blob Container
+				containerName := azureshared.ExtractContainerNameFromBlobURI(uri)
+				if containerName != "" {
+					// Link to Blob Container
+					// Reference: https://learn.microsoft.com/en-us/rest/api/storagerp/blob-containers/get?view=rest-storagerp-2025-06-01&tabs=HTTP
+					// GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Storage/storageAccounts/{accountName}/blobServices/default/containers/{containerName}?api-version=2025-06-01
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
-							Type:   azureshared.StorageAccount.String(),
+							Type:   azureshared.StorageBlobContainer.String(),
 							Method: sdp.QueryMethod_GET,
-							Query:  storageAccountName,
+							Query:  shared.CompositeLookupKey(storageAccountName, containerName),
 							Scope:  scope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Storage Account is deleted/modified → blob becomes inaccessible (In: true)
-							Out: false, // If Run Command is deleted → Storage Account remains (Out: false)
-						}, // Run Command depends on Storage Account for blob access
+							In:  true,  // If Blob Container is deleted/modified → blob becomes inaccessible (In: true)
+							Out: false, // If Run Command is deleted → Blob Container remains (Out: false)
+						}, // Run Command depends on Blob Container for blob access
 					})
-
-					// Extract container name and link to Blob Container
-					containerName := azureshared.ExtractContainerNameFromBlobURI(uri)
-					if containerName != "" {
-						// Link to Blob Container
-						// Reference: https://learn.microsoft.com/en-us/rest/api/storagerp/blob-containers/get?view=rest-storagerp-2025-06-01&tabs=HTTP
-						// GET https://management.azure.com/subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Storage/storageAccounts/{accountName}/blobServices/default/containers/{containerName}?api-version=2025-06-01
-						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-							Query: &sdp.Query{
-								Type:   azureshared.StorageBlobContainer.String(),
-								Method: sdp.QueryMethod_GET,
-								Query:  shared.CompositeLookupKey(storageAccountName, containerName),
-								Scope:  scope,
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,  // If Blob Container is deleted/modified → blob becomes inaccessible (In: true)
-								Out: false, // If Run Command is deleted → Blob Container remains (Out: false)
-							}, // Run Command depends on Blob Container for blob access
-						})
-					}
 				}
 			}
 
 			// Link to stdlib.NetworkHTTP and DNS only for non-blob URIs
 			// For blob URIs, the StorageBlobContainer already has these links
-			if !isBlobURI && (strings.HasPrefix(uri, "http://") || strings.HasPrefix(uri, "https://")) {
+			if storageAccountName == "" && (strings.HasPrefix(uri, "http://") || strings.HasPrefix(uri, "https://")) {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 					Query: &sdp.Query{
 						Type:   stdlib.NetworkHTTP.String(),

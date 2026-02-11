@@ -33,6 +33,20 @@ func NewComputeCapacityReservationGroup(client clients.CapacityReservationGroups
 	}
 }
 
+func capacityReservationGroupGetOptions() *armcompute.CapacityReservationGroupsClientGetOptions {
+	expand := armcompute.CapacityReservationGroupInstanceViewTypes(armcompute.ExpandTypesForGetCapacityReservationGroupsVirtualMachinesRef)
+	return &armcompute.CapacityReservationGroupsClientGetOptions{
+		Expand: &expand,
+	}
+}
+
+func capacityReservationGroupListOptions() *armcompute.CapacityReservationGroupsClientListByResourceGroupOptions {
+	expand := armcompute.ExpandTypesForGetCapacityReservationGroupsVirtualMachinesRef
+	return &armcompute.CapacityReservationGroupsClientListByResourceGroupOptions{
+		Expand: &expand,
+	}
+}
+
 // ref: https://learn.microsoft.com/en-us/rest/api/compute/capacity-reservation-groups/get?view=rest-compute-2025-04-01&tabs=HTTP
 func (c *computeCapacityReservationGroupWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) != 1 {
@@ -46,7 +60,7 @@ func (c *computeCapacityReservationGroupWrapper) Get(ctx context.Context, scope 
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, c.Type())
 	}
-	capacityReservationGroup, err := c.client.Get(ctx, rgScope.ResourceGroup, capacityReservationGroupName, nil)
+	capacityReservationGroup, err := c.client.Get(ctx, rgScope.ResourceGroup, capacityReservationGroupName, capacityReservationGroupGetOptions())
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, c.Type())
 	}
@@ -59,7 +73,7 @@ func (c *computeCapacityReservationGroupWrapper) List(ctx context.Context, scope
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, c.Type())
 	}
-	pager := c.client.NewListByResourceGroupPager(rgScope.ResourceGroup, nil)
+	pager := c.client.NewListByResourceGroupPager(rgScope.ResourceGroup, capacityReservationGroupListOptions())
 
 	var items []*sdp.Item
 	for pager.More() {
@@ -87,7 +101,7 @@ func (c *computeCapacityReservationGroupWrapper) ListStream(ctx context.Context,
 		stream.SendError(azureshared.QueryError(err, scope, c.Type()))
 		return
 	}
-	pager := c.client.NewListByResourceGroupPager(rgScope.ResourceGroup, nil)
+	pager := c.client.NewListByResourceGroupPager(rgScope.ResourceGroup, capacityReservationGroupListOptions())
 	for pager.More() {
 		page, err := pager.NextPage(ctx)
 		if err != nil {
