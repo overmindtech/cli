@@ -35,7 +35,7 @@ func TestComputeCapacityReservationGroup(t *testing.T) {
 		crg := createAzureCapacityReservationGroup(groupName)
 
 		mockClient := mocks.NewMockCapacityReservationGroupsClient(ctrl)
-		mockClient.EXPECT().Get(ctx, resourceGroup, groupName, nil).Return(
+		mockClient.EXPECT().Get(ctx, resourceGroup, groupName, gomock.Eq(capacityReservationGroupGetOptions())).Return(
 			armcompute.CapacityReservationGroupsClientGetResponse{
 				CapacityReservationGroup: *crg,
 			}, nil)
@@ -75,7 +75,7 @@ func TestComputeCapacityReservationGroup(t *testing.T) {
 		crg := createAzureCapacityReservationGroupWithLinks(groupName, subscriptionID, resourceGroup, []string{"res-1", "res-2"}, []string{"vm-1", "vm-2"})
 
 		mockClient := mocks.NewMockCapacityReservationGroupsClient(ctrl)
-		mockClient.EXPECT().Get(ctx, resourceGroup, groupName, nil).Return(
+		mockClient.EXPECT().Get(ctx, resourceGroup, groupName, gomock.Eq(capacityReservationGroupGetOptions())).Return(
 			armcompute.CapacityReservationGroupsClientGetResponse{
 				CapacityReservationGroup: *crg,
 			}, nil)
@@ -148,7 +148,7 @@ func TestComputeCapacityReservationGroup(t *testing.T) {
 	t.Run("Get_ClientError", func(t *testing.T) {
 		expectedErr := errors.New("capacity reservation group not found")
 		mockClient := mocks.NewMockCapacityReservationGroupsClient(ctrl)
-		mockClient.EXPECT().Get(ctx, resourceGroup, "nonexistent", nil).Return(
+		mockClient.EXPECT().Get(ctx, resourceGroup, "nonexistent", gomock.Eq(capacityReservationGroupGetOptions())).Return(
 			armcompute.CapacityReservationGroupsClientGetResponse{}, expectedErr)
 
 		wrapper := manual.NewComputeCapacityReservationGroup(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
@@ -166,7 +166,7 @@ func TestComputeCapacityReservationGroup(t *testing.T) {
 
 		mockClient := mocks.NewMockCapacityReservationGroupsClient(ctrl)
 		mockPager := newMockCapacityReservationGroupsPager(ctrl, []*armcompute.CapacityReservationGroup{crg1, crg2})
-		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(mockPager)
+		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, gomock.Eq(capacityReservationGroupListOptions())).Return(mockPager)
 
 		wrapper := manual.NewComputeCapacityReservationGroup(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
@@ -201,7 +201,7 @@ func TestComputeCapacityReservationGroup(t *testing.T) {
 
 		mockClient := mocks.NewMockCapacityReservationGroupsClient(ctrl)
 		mockPager := newMockCapacityReservationGroupsPager(ctrl, []*armcompute.CapacityReservationGroup{crg1, crg2})
-		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(mockPager)
+		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, gomock.Eq(capacityReservationGroupListOptions())).Return(mockPager)
 
 		wrapper := manual.NewComputeCapacityReservationGroup(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
@@ -252,7 +252,7 @@ func TestComputeCapacityReservationGroup(t *testing.T) {
 
 		mockClient := mocks.NewMockCapacityReservationGroupsClient(ctrl)
 		mockPager := newMockCapacityReservationGroupsPager(ctrl, []*armcompute.CapacityReservationGroup{crg1, crgNilName})
-		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(mockPager)
+		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, gomock.Eq(capacityReservationGroupListOptions())).Return(mockPager)
 
 		wrapper := manual.NewComputeCapacityReservationGroup(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
@@ -275,7 +275,7 @@ func TestComputeCapacityReservationGroup(t *testing.T) {
 	t.Run("ListWithPagerError", func(t *testing.T) {
 		mockClient := mocks.NewMockCapacityReservationGroupsClient(ctrl)
 		errorPager := newErrorCapacityReservationGroupsPager(ctrl)
-		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(errorPager)
+		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, gomock.Eq(capacityReservationGroupListOptions())).Return(errorPager)
 
 		wrapper := manual.NewComputeCapacityReservationGroup(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
@@ -294,7 +294,7 @@ func TestComputeCapacityReservationGroup(t *testing.T) {
 	t.Run("ListStreamWithPagerError", func(t *testing.T) {
 		mockClient := mocks.NewMockCapacityReservationGroupsClient(ctrl)
 		errorPager := newErrorCapacityReservationGroupsPager(ctrl)
-		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(errorPager)
+		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, gomock.Eq(capacityReservationGroupListOptions())).Return(errorPager)
 
 		wrapper := manual.NewComputeCapacityReservationGroup(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
@@ -317,6 +317,20 @@ func TestComputeCapacityReservationGroup(t *testing.T) {
 			t.Error("Expected error when pager returns error, but got none")
 		}
 	})
+}
+
+func capacityReservationGroupGetOptions() *armcompute.CapacityReservationGroupsClientGetOptions {
+	expand := armcompute.CapacityReservationGroupInstanceViewTypes(armcompute.ExpandTypesForGetCapacityReservationGroupsVirtualMachinesRef)
+	return &armcompute.CapacityReservationGroupsClientGetOptions{
+		Expand: &expand,
+	}
+}
+
+func capacityReservationGroupListOptions() *armcompute.CapacityReservationGroupsClientListByResourceGroupOptions {
+	expand := armcompute.ExpandTypesForGetCapacityReservationGroupsVirtualMachinesRef
+	return &armcompute.CapacityReservationGroupsClientListByResourceGroupOptions{
+		Expand: &expand,
+	}
 }
 
 // createAzureCapacityReservationGroup creates a mock Azure Capacity Reservation Group for testing.
@@ -353,8 +367,8 @@ func createAzureCapacityReservationGroupWithLinks(groupName, subscriptionID, res
 			"env": to.Ptr("test"),
 		},
 		Properties: &armcompute.CapacityReservationGroupProperties{
-			CapacityReservations:       reservations,
-			VirtualMachinesAssociated:  vms,
+			CapacityReservations:      reservations,
+			VirtualMachinesAssociated: vms,
 		},
 	}
 }

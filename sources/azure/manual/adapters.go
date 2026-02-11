@@ -253,6 +253,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create capacity reservation groups client: %w", err)
 		}
 
+		galleryApplicationVersionsClient, err := armcompute.NewGalleryApplicationVersionsClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create gallery application versions client: %w", err)
+		}
+
 		// Multi-scope resource group adapters (one adapter per type handling all resource groups)
 		if len(resourceGroupScopes) > 0 {
 			adapters = append(adapters,
@@ -400,6 +405,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewCapacityReservationGroupsClient(capacityReservationGroupsClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewComputeGalleryApplicationVersion(
+					clients.NewGalleryApplicationVersionsClient(galleryApplicationVersionsClient),
+					resourceGroupScopes,
+				), cache),
 			)
 		}
 
@@ -451,6 +460,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewComputeDiskAccess(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeDedicatedHostGroup(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeCapacityReservationGroup(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewComputeGalleryApplicationVersion(nil, placeholderResourceGroupScopes), noOpCache),
 		)
 
 		_ = regions

@@ -698,7 +698,7 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 						}
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
-								Type:   azureshared.ComputeSharedGalleryApplicationVersion.String(),
+								Type:   azureshared.ComputeGalleryApplicationVersion.String(),
 								Method: sdp.QueryMethod_GET,
 								Query:  shared.CompositeLookupKey(galleryName, applicationName, version),
 								Scope:  extractedScope,
@@ -990,7 +990,7 @@ func (c computeVirtualMachineScaleSetWrapper) PotentialLinks() map[shared.ItemTy
 		azureshared.ComputeImage,
 		azureshared.ComputeSharedGalleryImage,
 		azureshared.ComputeCommunityGalleryImage,
-		azureshared.ComputeSharedGalleryApplicationVersion,
+		azureshared.ComputeGalleryApplicationVersion,
 		// Storage resources
 		azureshared.StorageAccount,
 		// Identity resources
