@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 
 	"google.golang.org/api/pubsub/v1"
@@ -215,6 +216,124 @@ func TestPubSubSubscription(t *testing.T) {
 		_, err = adapter.Get(ctx, projectID, subscriptionName, true)
 		if err == nil {
 			t.Error("Expected error when getting non-existent subscription, but got nil")
+		}
+	})
+}
+
+// TestPubSubSubscriptionIAMTerraformMappings verifies that the IAM Terraform resource
+// types (iam_binding, iam_member, iam_policy) are registered as terraform mappings on
+// the PubSub Subscription adapter. This is critical because these Terraform-only
+// resources don't have their own GCP API — they represent IAM policy changes on the
+// parent subscription. Without these mappings, IAM changes would show as "Unsupported"
+// in the change analysis UI instead of being resolved to the parent subscription for
+// blast radius analysis.
+//
+// Background: google_pubsub_subscription_iam_binding is an authoritative Terraform
+// resource that manages a single role's members on a subscription. When it changes,
+// we need to resolve it to the affected subscription so customers see the downstream
+// impact (e.g. services that read from the subscription losing access).
+func TestPubSubSubscriptionIAMTerraformMappings(t *testing.T) {
+	// Retrieve the terraform mappings registered for PubSubSubscription
+	tfMapping, ok := gcpshared.SDPAssetTypeToTerraformMappings[gcpshared.PubSubSubscription]
+	if !ok {
+		t.Fatal("Expected PubSubSubscription to have terraform mappings registered, but none were found")
+	}
+
+	// Build a lookup of terraform type -> query field from the registered mappings.
+	// This mirrors the logic in cli/tfutils/plan_mapper.go that splits
+	// TerraformQueryMap on "." to get the terraform type and attribute name.
+	type mappingInfo struct {
+		terraformType string
+		queryField    string
+		method        sdp.QueryMethod
+	}
+	registeredMappings := make([]mappingInfo, 0, len(tfMapping.Mappings))
+	for _, m := range tfMapping.Mappings {
+		parts := strings.SplitN(m.GetTerraformQueryMap(), ".", 2)
+		if len(parts) != 2 {
+			t.Errorf("Invalid TerraformQueryMap format: %q (expected 'type.attribute')", m.GetTerraformQueryMap())
+			continue
+		}
+		registeredMappings = append(registeredMappings, mappingInfo{
+			terraformType: parts[0],
+			queryField:    parts[1],
+			method:        m.GetTerraformMethod(),
+		})
+	}
+
+	// Define the IAM terraform types we expect to be mapped, along with the
+	// Terraform attribute that identifies the parent subscription.
+	// All three IAM resource types use "subscription" as the attribute that
+	// contains the subscription name.
+	expectedIAMMappings := []struct {
+		terraformType string
+		queryField    string
+		method        sdp.QueryMethod
+		description   string // documents why this mapping exists, for reviewer clarity
+	}{
+		{
+			terraformType: "google_pubsub_subscription_iam_binding",
+			queryField:    "subscription",
+			method:        sdp.QueryMethod_GET,
+			description:   "Authoritative for a given role — maps to parent subscription for blast radius",
+		},
+		{
+			terraformType: "google_pubsub_subscription_iam_member",
+			queryField:    "subscription",
+			method:        sdp.QueryMethod_GET,
+			description:   "Non-authoritative single member — maps to parent subscription for blast radius",
+		},
+		{
+			terraformType: "google_pubsub_subscription_iam_policy",
+			queryField:    "subscription",
+			method:        sdp.QueryMethod_GET,
+			description:   "Authoritative for full IAM policy — maps to parent subscription for blast radius",
+		},
+	}
+
+	for _, expected := range expectedIAMMappings {
+		t.Run(expected.terraformType, func(t *testing.T) {
+			found := false
+			for _, registered := range registeredMappings {
+				if registered.terraformType == expected.terraformType {
+					found = true
+
+					if registered.queryField != expected.queryField {
+						t.Errorf("Terraform type %s: expected query field %q, got %q",
+							expected.terraformType, expected.queryField, registered.queryField)
+					}
+
+					if registered.method != expected.method {
+						t.Errorf("Terraform type %s: expected method %s, got %s",
+							expected.terraformType, expected.method, registered.method)
+					}
+					break
+				}
+			}
+
+			if !found {
+				t.Errorf("Terraform type %s is not registered as a mapping on PubSubSubscription. "+
+					"This means %q changes will show as 'Unsupported' in the change analysis UI. "+
+					"Purpose: %s",
+					expected.terraformType, expected.terraformType, expected.description)
+			}
+		})
+	}
+
+	// Also verify the base subscription mapping still exists (sanity check)
+	t.Run("google_pubsub_subscription", func(t *testing.T) {
+		found := false
+		for _, registered := range registeredMappings {
+			if registered.terraformType == "google_pubsub_subscription" {
+				found = true
+				if registered.queryField != "name" {
+					t.Errorf("Expected query field 'name' for google_pubsub_subscription, got %q", registered.queryField)
+				}
+				break
+			}
+		}
+		if !found {
+			t.Error("Base terraform mapping for google_pubsub_subscription is missing — this would break all subscription change analysis")
 		}
 	})
 }

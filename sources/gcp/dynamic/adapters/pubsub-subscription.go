@@ -67,6 +67,28 @@ var _ = registerableAdapter{
 				TerraformMethod:   sdp.QueryMethod_GET,
 				TerraformQueryMap: "google_pubsub_subscription.name",
 			},
+			// IAM resources for Pub/Sub Subscriptions. These are Terraform-only
+			// constructs (no standalone GCP API resource exists for them). When an
+			// IAM binding/member/policy changes in a Terraform plan, we resolve it
+			// to the parent subscription so that blast radius analysis can show the
+			// downstream impact of the access change.
+			//
+			// Reference: https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/pubsub_subscription_iam
+			{
+				// Authoritative for a given role — grants the role to a list of members.
+				TerraformMethod:   sdp.QueryMethod_GET,
+				TerraformQueryMap: "google_pubsub_subscription_iam_binding.subscription",
+			},
+			{
+				// Non-authoritative — grants a single member a single role.
+				TerraformMethod:   sdp.QueryMethod_GET,
+				TerraformQueryMap: "google_pubsub_subscription_iam_member.subscription",
+			},
+			{
+				// Authoritative for the entire IAM policy on the subscription.
+				TerraformMethod:   sdp.QueryMethod_GET,
+				TerraformQueryMap: "google_pubsub_subscription_iam_policy.subscription",
+			},
 		},
 	},
 }.Register()
