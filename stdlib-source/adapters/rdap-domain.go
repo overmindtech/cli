@@ -197,12 +197,6 @@ func (s *RdapDomainAdapter) Search(ctx context.Context, scope string, query stri
 						Query:  newURL.String(),
 						Scope:  "global",
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// A change in a name server could affect the domains
-						In: true,
-						// Domains won't affect the name server
-						Out: false,
-					},
 				})
 			}
 
@@ -220,11 +214,6 @@ func (s *RdapDomainAdapter) Search(ctx context.Context, scope string, query stri
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  network.StartAddress,
 					Scope:  "global",
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// do not link through rdap definitions to avoid huge blast radius
-					In:  false,
-					Out: false,
 				},
 			})
 		}

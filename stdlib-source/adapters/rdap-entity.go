@@ -188,13 +188,6 @@ func (s *RdapEntityAdapter) runEntityRequest(ctx context.Context, query string, 
 				Query:  autnum.Handle,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// The ASN won't affect the entity
-				In: false,
-				// The entity could maybe affect the ASN? Change this if it
-				// causes issues
-				Out: true,
-			},
 		})
 	}
 
