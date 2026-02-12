@@ -252,12 +252,6 @@ func (s *CertificateAdapter) Search(ctx context.Context, scope string, query str
 					Query:  cert.Issuer.String(),
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changing issuer will affect the child
-					In: true,
-					// The child can't affect the issuer
-					Out: false,
-				},
 			})
 		}
 	}

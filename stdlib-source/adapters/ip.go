@@ -159,11 +159,6 @@ func (bc *IPAdapter) Get(ctx context.Context, scope string, query string, ignore
 					Query:  ip.String(),
 					Scope:  "global",
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// DNS always linked
-					In:  true,
-					Out: true,
-				},
 			},
 			{
 				// RDAP
@@ -172,11 +167,6 @@ func (bc *IPAdapter) Get(ctx context.Context, scope string, query string, ignore
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  ip.String(),
 					Scope:  "global",
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// do not link through rdap definitions to avoid huge blast radius
-					In:  false,
-					Out: false,
 				},
 			},
 		},

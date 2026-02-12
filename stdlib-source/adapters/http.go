@@ -274,11 +274,6 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 				Query:  ip.String(),
 				Scope:  "global",
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// IPs always linked
-				In:  true,
-				Out: true,
-			},
 		})
 	} else {
 		// If the host is not an ip, try to resolve via DNS
@@ -288,11 +283,6 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  req.URL.Hostname(),
 				Scope:  "global",
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// DNS always linked
-				In:  true,
-				Out: true,
 			},
 		})
 	}
@@ -340,12 +330,6 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 					Query:  strings.Join(certs, "\n"),
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changing the cert will affect the HTTP endpoint
-					In: true,
-					// The HTTP endpoint won't affect the cert
-					Out: false,
-				},
 			})
 		}
 	}
@@ -390,11 +374,6 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 								Method: sdp.QueryMethod_SEARCH,
 								Query:  resolvedURL.String(),
 								Scope:  scope,
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								// Redirects are tightly coupled
-								In:  true,
-								Out: true,
 							},
 						})
 					}

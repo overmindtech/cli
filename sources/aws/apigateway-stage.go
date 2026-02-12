@@ -167,10 +167,6 @@ func (d *apiGatewayStageWrapper) awsToSdpItem(stage types.Stage, scope, query st
 				Query:  restAPIID + "/" + *stage.DeploymentId,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
-			},
 		})
 	}
 
@@ -181,10 +177,6 @@ func (d *apiGatewayStageWrapper) awsToSdpItem(stage types.Stage, scope, query st
 			Method: sdp.QueryMethod_GET,
 			Query:  restAPIID,
 			Scope:  scope,
-		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  true,
-			Out: true,
 		},
 	})
 

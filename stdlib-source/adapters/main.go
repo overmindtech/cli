@@ -131,12 +131,6 @@ func extractEntityLinks(entities []rdap.Entity) []*sdp.LinkedItemQuery {
 					Query:  selfLink,
 					Scope:  "global",
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// The Entity isn't a "real" component, so no matter what
-					// changes it won't actually "affect" anything
-					In:  false,
-					Out: false,
-				},
 			})
 		}
 	}
