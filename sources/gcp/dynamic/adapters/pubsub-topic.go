@@ -93,6 +93,26 @@ var _ = registerableAdapter{
 				TerraformMethod:   sdp.QueryMethod_GET,
 				TerraformQueryMap: "google_pubsub_topic.name",
 			},
+			// IAM resources for Pub/Sub Topics. These are Terraform-only constructs
+			// (no standalone GCP API resource exists). When an IAM binding/member/policy
+			// changes, we resolve it to the parent topic for blast radius analysis.
+			//
+			// Reference: https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/pubsub_topic_iam
+			{
+				// Authoritative for a given role — grants the role to a list of members.
+				TerraformMethod:   sdp.QueryMethod_GET,
+				TerraformQueryMap: "google_pubsub_topic_iam_binding.topic",
+			},
+			{
+				// Non-authoritative — grants a single member a single role.
+				TerraformMethod:   sdp.QueryMethod_GET,
+				TerraformQueryMap: "google_pubsub_topic_iam_member.topic",
+			},
+			{
+				// Authoritative for the entire IAM policy on the topic.
+				TerraformMethod:   sdp.QueryMethod_GET,
+				TerraformQueryMap: "google_pubsub_topic_iam_policy.topic",
+			},
 		},
 	},
 }.Register()

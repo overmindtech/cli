@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"sort"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -675,4 +676,198 @@ func TestProjectPermissionCheckResult_FormatError(t *testing.T) {
 func contains(s, substr string) bool {
 	return len(s) >= len(substr) && (s == substr || len(substr) == 0 ||
 		(len(s) > 0 && (s[:len(substr)] == substr || contains(s[1:], substr))))
+}
+
+// TestCriticalTerraformMappingsRegistered verifies that customer-critical Terraform
+// resource types are correctly registered in the adapter metadata. This test mirrors
+// the mapping table construction in cli/tfutils/plan_mapper.go — it loads all
+// registered adapter metadata, parses TerraformQueryMap entries, and checks that
+// each critical Terraform type resolves to the expected Overmind item type.
+//
+// If this test fails, the affected Terraform resources will show as "Unsupported"
+// (skipped) in the change analysis UI, meaning no blast radius or risk analysis.
+func TestCriticalTerraformMappingsRegistered(t *testing.T) {
+	// Build the mapping table from all registered adapter metadata, exactly as
+	// cli/tfutils/plan_mapper.go does at lines 168-190
+	type tfMapEntry struct {
+		overmindType string
+		method       sdp.QueryMethod
+		queryField   string
+	}
+	mappings := make(map[string][]tfMapEntry)
+	for _, metadata := range Metadata.AllAdapterMetadata() {
+		if metadata.GetType() == "" {
+			continue
+		}
+		for _, mapping := range metadata.GetTerraformMappings() {
+			subs := strings.SplitN(mapping.GetTerraformQueryMap(), ".", 2)
+			if len(subs) != 2 {
+				continue
+			}
+			terraformType := subs[0]
+			mappings[terraformType] = append(mappings[terraformType], tfMapEntry{
+				overmindType: metadata.GetType(),
+				method:       mapping.GetTerraformMethod(),
+				queryField:   subs[1],
+			})
+		}
+	}
+
+	// Each entry defines a Terraform resource type that must be mapped, what
+	// Overmind type it should resolve to, and which attribute is extracted from
+	// the Terraform plan to perform the lookup.
+	criticalMappings := []struct {
+		terraformType    string
+		expectedType     string
+		expectedField    string
+		expectedMethod   sdp.QueryMethod
+		reason           string // documents why this mapping is critical
+	}{
+		// Core resource mappings
+		{
+			terraformType:  "google_compute_instance",
+			expectedType:   gcpshared.ComputeInstance.String(),
+			expectedField:  "name",
+			expectedMethod: sdp.QueryMethod_GET,
+			reason:         "Core compute resource — one of the most common GCP resources in Terraform",
+		},
+		{
+			terraformType:  "google_compute_network",
+			expectedType:   gcpshared.ComputeNetwork.String(),
+			expectedField:  "name",
+			expectedMethod: sdp.QueryMethod_GET,
+			reason:         "VPC networks are foundational infrastructure with wide blast radius",
+		},
+		{
+			terraformType:  "google_compute_subnetwork",
+			expectedType:   gcpshared.ComputeSubnetwork.String(),
+			expectedField:  "name",
+			expectedMethod: sdp.QueryMethod_GET,
+			reason:         "Subnets are critical networking resources",
+		},
+		{
+			terraformType:  "google_storage_bucket",
+			expectedType:   gcpshared.StorageBucket.String(),
+			expectedField:  "name",
+			expectedMethod: sdp.QueryMethod_GET,
+			reason:         "Storage buckets are one of the most common GCP resources",
+		},
+		{
+			terraformType:  "google_pubsub_topic",
+			expectedType:   gcpshared.PubSubTopic.String(),
+			expectedField:  "name",
+			expectedMethod: sdp.QueryMethod_GET,
+			reason:         "Pub/Sub topics are critical messaging infrastructure",
+		},
+		{
+			terraformType:  "google_pubsub_subscription",
+			expectedType:   gcpshared.PubSubSubscription.String(),
+			expectedField:  "name",
+			expectedMethod: sdp.QueryMethod_GET,
+			reason:         "Pub/Sub subscriptions are critical messaging infrastructure",
+		},
+		// Previously broken mappings (fixed in PRs #3755 and #3782)
+		{
+			terraformType:  "google_compute_region_instance_group_manager",
+			expectedType:   gcpshared.ComputeRegionInstanceGroupManager.String(),
+			expectedField:  "name",
+			expectedMethod: sdp.QueryMethod_GET,
+			reason:         "Regional MIG — was missing before PR #3755; customer-reported issue",
+		},
+		{
+			terraformType:  "google_kms_crypto_key",
+			expectedType:   gcpshared.CloudKMSCryptoKey.String(),
+			expectedField:  "id",
+			expectedMethod: sdp.QueryMethod_SEARCH,
+			reason:         "KMS key — TerraformMappings() returned nil before PR #3782; customer-reported issue",
+		},
+		// IAM binding mappings — these Terraform-only resources don't have
+		// standalone GCP APIs, so they resolve to the parent resource for blast
+		// radius analysis.
+		//
+		// Pub/Sub Subscription IAM
+		{
+			terraformType:  "google_pubsub_subscription_iam_binding",
+			expectedType:   gcpshared.PubSubSubscription.String(),
+			expectedField:  "subscription",
+			expectedMethod: sdp.QueryMethod_GET,
+			reason:         "IAM binding on subscription — resolves to parent subscription for blast radius",
+		},
+		{
+			terraformType:  "google_pubsub_subscription_iam_member",
+			expectedType:   gcpshared.PubSubSubscription.String(),
+			expectedField:  "subscription",
+			expectedMethod: sdp.QueryMethod_GET,
+			reason:         "IAM member on subscription — resolves to parent subscription for blast radius",
+		},
+		{
+			terraformType:  "google_pubsub_subscription_iam_policy",
+			expectedType:   gcpshared.PubSubSubscription.String(),
+			expectedField:  "subscription",
+			expectedMethod: sdp.QueryMethod_GET,
+			reason:         "IAM policy on subscription — resolves to parent subscription for blast radius",
+		},
+		// Pub/Sub Topic IAM
+		{
+			terraformType:  "google_pubsub_topic_iam_binding",
+			expectedType:   gcpshared.PubSubTopic.String(),
+			expectedField:  "topic",
+			expectedMethod: sdp.QueryMethod_GET,
+			reason:         "IAM binding on topic — resolves to parent topic for blast radius",
+		},
+		{
+			terraformType:  "google_pubsub_topic_iam_member",
+			expectedType:   gcpshared.PubSubTopic.String(),
+			expectedField:  "topic",
+			expectedMethod: sdp.QueryMethod_GET,
+			reason:         "IAM member on topic — resolves to parent topic for blast radius",
+		},
+		{
+			terraformType:  "google_pubsub_topic_iam_policy",
+			expectedType:   gcpshared.PubSubTopic.String(),
+			expectedField:  "topic",
+			expectedMethod: sdp.QueryMethod_GET,
+			reason:         "IAM policy on topic — resolves to parent topic for blast radius",
+		},
+	}
+
+	for _, tc := range criticalMappings {
+		t.Run(tc.terraformType, func(t *testing.T) {
+			entries, ok := mappings[tc.terraformType]
+			if !ok {
+				t.Fatalf("Terraform type %q is NOT registered in any adapter metadata. "+
+					"This means it will show as 'Unsupported' in change analysis. Reason it's critical: %s",
+					tc.terraformType, tc.reason)
+			}
+
+			// Verify at least one mapping resolves to the expected Overmind type
+			found := false
+			for _, entry := range entries {
+				if entry.overmindType == tc.expectedType {
+					found = true
+
+					if entry.queryField != tc.expectedField {
+						t.Errorf("Terraform type %q maps to %q but uses query field %q, expected %q",
+							tc.terraformType, tc.expectedType, entry.queryField, tc.expectedField)
+					}
+
+					if entry.method != tc.expectedMethod {
+						t.Errorf("Terraform type %q maps to %q but uses method %s, expected %s",
+							tc.terraformType, tc.expectedType, entry.method, tc.expectedMethod)
+					}
+					break
+				}
+			}
+
+			if !found {
+				actualTypes := make([]string, 0, len(entries))
+				for _, e := range entries {
+					actualTypes = append(actualTypes, e.overmindType)
+				}
+				t.Errorf("Terraform type %q is registered but resolves to %v, expected %q. "+
+					"Reason: %s",
+					tc.terraformType, actualTypes, tc.expectedType, tc.reason)
+			}
+		})
+	}
 }
