@@ -57,6 +57,26 @@ var _ = registerableAdapter{
 				TerraformMethod:   sdp.QueryMethod_GET,
 				TerraformQueryMap: "google_storage_bucket.name",
 			},
+			// IAM resources for Storage Buckets. These are Terraform-only constructs
+			// (no standalone GCP API resource exists). When an IAM binding/member/policy
+			// changes, we resolve it to the parent bucket for blast radius analysis.
+			//
+			// Reference: https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/storage_bucket_iam
+			{
+				// Authoritative for a given role — grants the role to a list of members.
+				TerraformMethod:   sdp.QueryMethod_GET,
+				TerraformQueryMap: "google_storage_bucket_iam_binding.bucket",
+			},
+			{
+				// Non-authoritative — grants a single member a single role.
+				TerraformMethod:   sdp.QueryMethod_GET,
+				TerraformQueryMap: "google_storage_bucket_iam_member.bucket",
+			},
+			{
+				// Authoritative for the entire IAM policy on the bucket.
+				TerraformMethod:   sdp.QueryMethod_GET,
+				TerraformQueryMap: "google_storage_bucket_iam_policy.bucket",
+			},
 		},
 	},
 }.Register()

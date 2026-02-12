@@ -59,6 +59,46 @@ var _ = registerableAdapter{
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{
-		Description: "There is no terraform resource for this type.",
+		Reference:   "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/google_project",
+		Description: "Maps google_project, Shared VPC, and project IAM resources to the Compute Project adapter.",
+		Mappings: []*sdp.TerraformMapping{
+			{
+				TerraformMethod:   sdp.QueryMethod_GET,
+				TerraformQueryMap: "google_project.project_id",
+			},
+			{
+				TerraformMethod:   sdp.QueryMethod_GET,
+				TerraformQueryMap: "google_compute_shared_vpc_host_project.project",
+			},
+			{
+				TerraformMethod:   sdp.QueryMethod_GET,
+				TerraformQueryMap: "google_compute_shared_vpc_service_project.service_project",
+			},
+			{
+				// Host project is also affected when the attachment is created/destroyed.
+				TerraformMethod:   sdp.QueryMethod_GET,
+				TerraformQueryMap: "google_compute_shared_vpc_service_project.host_project",
+			},
+			// IAM resources for Projects. These are Terraform-only constructs
+			// (no standalone GCP API resource exists). When an IAM binding/member/policy
+			// changes, we resolve it to the parent project for blast radius analysis.
+			//
+			// Reference: https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/google_project_iam
+			{
+				// Authoritative for a given role — grants the role to a list of members.
+				TerraformMethod:   sdp.QueryMethod_GET,
+				TerraformQueryMap: "google_project_iam_binding.project",
+			},
+			{
+				// Non-authoritative — grants a single member a single role.
+				TerraformMethod:   sdp.QueryMethod_GET,
+				TerraformQueryMap: "google_project_iam_member.project",
+			},
+			{
+				// Authoritative for the entire IAM policy on the project.
+				TerraformMethod:   sdp.QueryMethod_GET,
+				TerraformQueryMap: "google_project_iam_policy.project",
+			},
+		},
 	},
 }.Register()
