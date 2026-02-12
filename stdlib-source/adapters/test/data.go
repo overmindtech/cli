@@ -100,11 +100,6 @@ func admins() *sdp.Item {
 				Query:  "test-dylan",
 				Scope:  "test",
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// the show must go on
-				In:  false,
-				Out: false,
-			},
 		},
 	}
 
@@ -121,11 +116,6 @@ func dylan() *sdp.Item {
 				Method: sdp.QueryMethod_LIST,
 				Scope:  "test",
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// best friends
-				In:  true,
-				Out: true,
-			},
 		},
 		{
 			Query: &sdp.Query{
@@ -134,12 +124,6 @@ func dylan() *sdp.Item {
 				Query:  "test-motorcycling",
 				Scope:  "test",
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// accidents happen
-				In: true,
-				// motorcycles will endure
-				Out: false,
-			},
 		},
 		{
 			Query: &sdp.Query{
@@ -147,12 +131,6 @@ func dylan() *sdp.Item {
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  "test-london",
 				Scope:  "test",
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// we are what we eat
-				In: true,
-				// london don't care
-				Out: false,
 			},
 		},
 	}
@@ -171,12 +149,6 @@ func manny() *sdp.Item {
 				Query:  "test-london",
 				Scope:  "test",
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// we are what we eat
-				In: true,
-				// london don't care
-				Out: false,
-			},
 		},
 		{
 			Query: &sdp.Query{
@@ -184,12 +156,6 @@ func manny() *sdp.Item {
 				Method: sdp.QueryMethod_GET,
 				Query:  "test-kibble",
 				Scope:  "test",
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// there are other options
-				In: false,
-				// the kibble is soon gone
-				Out: true,
 			},
 		},
 	}
@@ -219,11 +185,6 @@ func london() *sdp.Item {
 				Query:  "test-gb",
 				Scope:  "test",
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// politics, enough said
-				In:  true,
-				Out: true,
-			},
 		},
 		{
 			Query: &sdp.Query{
@@ -232,10 +193,6 @@ func london() *sdp.Item {
 				Query:  "*",
 				Scope:  "test",
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  false,
-				Out: false,
-			},
 		},
 		{
 			Query: &sdp.Query{
@@ -243,10 +200,6 @@ func london() *sdp.Item {
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  "test-soho",
 				Scope:  "test",
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
 			},
 		},
 	}

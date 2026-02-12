@@ -142,10 +142,6 @@ func (d *apiGatewayKeyWrapper) awsToSdpItem(apiKey types.ApiKey, scope string) (
 						Query:  restAPIID,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 		}

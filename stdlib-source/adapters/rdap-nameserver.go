@@ -177,11 +177,6 @@ func (s *RdapNameserverAdapter) Search(ctx context.Context, scope string, query 
 			Query:  strings.ToLower(nameserver.LDHName),
 			Scope:  "global",
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// These represent the same thing so linked them both ways
-			In:  true,
-			Out: true,
-		},
 	})
 
 	// Link IP addresses
@@ -195,11 +190,6 @@ func (s *RdapNameserverAdapter) Search(ctx context.Context, scope string, query 
 					Method: sdp.QueryMethod_GET,
 					Query:  ip,
 					Scope:  "global",
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// IPs are always linked
-					In:  true,
-					Out: true,
 				},
 			})
 		}
