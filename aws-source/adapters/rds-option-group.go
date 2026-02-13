@@ -53,7 +53,7 @@ func NewRDSOptionGroupAdapter(client rdsClient, accountID string, region string,
 		AccountID:       accountID,
 		Client:          client,
 		AdapterMetadata: optionGroupAdapterMetadata,
-		cache:        cache,
+		cache:           cache,
 		PaginatorBuilder: func(client rdsClient, params *rds.DescribeOptionGroupsInput) Paginator[*rds.DescribeOptionGroupsOutput, *rds.Options] {
 			return rds.NewDescribeOptionGroupsPaginator(client, params)
 		},
