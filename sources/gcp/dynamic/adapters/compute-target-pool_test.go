@@ -97,10 +97,6 @@ func TestComputeTargetPool(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "instance-1",
 					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, zone),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Instance 2 link
 				{
@@ -108,10 +104,6 @@ func TestComputeTargetPool(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "instance-2",
 					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, zone),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Health check 1 link
 				{
@@ -119,10 +111,6 @@ func TestComputeTargetPool(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "health-check-1",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Health check 2 link
 				{
@@ -130,10 +118,6 @@ func TestComputeTargetPool(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "health-check-2",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Backup pool link
 				{
@@ -141,10 +125,6 @@ func TestComputeTargetPool(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "backup-pool",
 					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, region),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)

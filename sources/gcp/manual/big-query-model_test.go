@@ -52,20 +52,12 @@ func TestBigQueryModel(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("global", "test-ring", "test-key"),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.BigQueryDataset.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  datasetID,
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  false,
-						Out: true,
-					},
 				},
 			}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)

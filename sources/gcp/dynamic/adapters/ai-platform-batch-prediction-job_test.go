@@ -301,30 +301,18 @@ func TestAIPlatformBatchPredictionJob(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-model",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.IAMServiceAccount.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  fmt.Sprintf("batch-prediction@%s.iam.gserviceaccount.com", projectID),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.CloudKMSCryptoKey.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(location, "test-ring", "test-key"),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Input GCS bucket link
 				{
@@ -332,10 +320,6 @@ func TestAIPlatformBatchPredictionJob(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  fmt.Sprintf("%s-input-bucket", projectID),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Output GCS bucket link
 				{
@@ -343,10 +327,6 @@ func TestAIPlatformBatchPredictionJob(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  fmt.Sprintf("%s-output-bucket", projectID),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			}
 

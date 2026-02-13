@@ -113,20 +113,12 @@ func TestMonitoringAlertPolicy(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-channel-1",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.MonitoringNotificationChannel.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-channel-2",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)

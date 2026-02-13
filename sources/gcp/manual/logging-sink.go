@@ -157,10 +157,6 @@ func (l loggingSinkWrapper) gcpLoggingSinkToItem(sink *loggingpb.LogSink, locati
 						Query:  parts[1], // Bucket name
 						Scope:  location.ProjectID,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,  // Changes to bucket affect sink
-						Out: false, // Changes to sink don't affect bucket
-					},
 				})
 			}
 		case strings.HasPrefix(sink.GetDestination(), "bigquery.googleapis.com"):
@@ -173,10 +169,6 @@ func (l loggingSinkWrapper) gcpLoggingSinkToItem(sink *loggingpb.LogSink, locati
 						Method: sdp.QueryMethod_GET,
 						Query:  values[1], // Dataset ID
 						Scope:  values[0], // Project ID
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,  // Changes to dataset affect sink
-						Out: false, // Changes to sink don't affect dataset
 					},
 				})
 			}
@@ -191,10 +183,6 @@ func (l loggingSinkWrapper) gcpLoggingSinkToItem(sink *loggingpb.LogSink, locati
 						Query:  values[1], // Topic ID
 						Scope:  values[0], // Project ID
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,  // Changes to topic affect sink
-						Out: false, // Changes to sink don't affect topic
-					},
 				})
 			}
 		case strings.HasPrefix(sink.GetDestination(), "logging.googleapis.com"):
@@ -207,10 +195,6 @@ func (l loggingSinkWrapper) gcpLoggingSinkToItem(sink *loggingpb.LogSink, locati
 						Method: sdp.QueryMethod_GET,
 						Query:  shared.CompositeLookupKey(values[1], values[2]), // location|bucket_ID
 						Scope:  values[0],                                       // Project ID
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,  // Changes to bucket affect sink
-						Out: false, // Changes to sink don't affect bucket
 					},
 				})
 			}
@@ -237,10 +221,6 @@ func (l loggingSinkWrapper) gcpLoggingSinkToItem(sink *loggingpb.LogSink, locati
 							Method: sdp.QueryMethod_GET,
 							Query:  writerIdentity, // Service account email
 							Scope:  projectID,      // Project ID extracted from email
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If the service account is deleted or its permissions are changed: The sink may fail to export logs
-							Out: false, // Changes to the sink don't affect the service account
 						},
 					})
 				}

@@ -10,11 +10,6 @@ import (
 // TestProjectBaseLinkedItemQueryByName_CrossProject verifies that project-level
 // resources correctly extract the project ID from cross-project URIs
 func TestProjectBaseLinkedItemQueryByName_CrossProject(t *testing.T) {
-	blastPropagation := &sdp.BlastPropagation{
-		In:  true,
-		Out: false,
-	}
-
 	tests := []struct {
 		name        string
 		projectID   string
@@ -34,7 +29,6 @@ func TestProjectBaseLinkedItemQueryByName_CrossProject(t *testing.T) {
 					Query:  "my-image",
 					Scope:  "my-project",
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		{
@@ -49,7 +43,6 @@ func TestProjectBaseLinkedItemQueryByName_CrossProject(t *testing.T) {
 					Query:  "my-image",
 					Scope:  "my-project",
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		{
@@ -64,7 +57,6 @@ func TestProjectBaseLinkedItemQueryByName_CrossProject(t *testing.T) {
 					Query:  "pcs-clamav-box",
 					Scope:  "box-dev-baseos", // Should use extracted project, not context project
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		{
@@ -79,7 +71,6 @@ func TestProjectBaseLinkedItemQueryByName_CrossProject(t *testing.T) {
 					Query:  "other-image",
 					Scope:  "other-project", // Should use extracted project, not context project
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		{
@@ -101,7 +92,7 @@ func TestProjectBaseLinkedItemQueryByName_CrossProject(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			linkerFunc := ProjectBaseLinkedItemQueryByName(ComputeImage)
-			got := linkerFunc(tt.projectID, "", tt.query, blastPropagation)
+			got := linkerFunc(tt.projectID, "", tt.query)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ProjectBaseLinkedItemQueryByName() = %v, want %v\nDescription: %s", got, tt.want, tt.description)
 			}
@@ -112,11 +103,6 @@ func TestProjectBaseLinkedItemQueryByName_CrossProject(t *testing.T) {
 // TestRegionBaseLinkedItemQueryByName_CrossProject verifies that regional
 // resources correctly extract the project ID from cross-project URIs
 func TestRegionBaseLinkedItemQueryByName_CrossProject(t *testing.T) {
-	blastPropagation := &sdp.BlastPropagation{
-		In:  true,
-		Out: false,
-	}
-
 	tests := []struct {
 		name          string
 		projectID     string
@@ -138,7 +124,6 @@ func TestRegionBaseLinkedItemQueryByName_CrossProject(t *testing.T) {
 					Query:  "my-address",
 					Scope:  "my-project.us-central1",
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		{
@@ -154,7 +139,6 @@ func TestRegionBaseLinkedItemQueryByName_CrossProject(t *testing.T) {
 					Query:  "other-address",
 					Scope:  "other-project.europe-west1", // Should use extracted project, not context project
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		{
@@ -170,7 +154,7 @@ func TestRegionBaseLinkedItemQueryByName_CrossProject(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			linkerFunc := RegionBaseLinkedItemQueryByName(ComputeAddress)
-			got := linkerFunc(tt.projectID, tt.fromItemScope, tt.query, blastPropagation)
+			got := linkerFunc(tt.projectID, tt.fromItemScope, tt.query)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("RegionBaseLinkedItemQueryByName() = %v, want %v\nDescription: %s", got, tt.want, tt.description)
 			}
@@ -181,11 +165,6 @@ func TestRegionBaseLinkedItemQueryByName_CrossProject(t *testing.T) {
 // TestZoneBaseLinkedItemQueryByName_CrossProject verifies that zonal
 // resources correctly extract the project ID from cross-project URIs
 func TestZoneBaseLinkedItemQueryByName_CrossProject(t *testing.T) {
-	blastPropagation := &sdp.BlastPropagation{
-		In:  true,
-		Out: false,
-	}
-
 	tests := []struct {
 		name          string
 		projectID     string
@@ -207,7 +186,6 @@ func TestZoneBaseLinkedItemQueryByName_CrossProject(t *testing.T) {
 					Query:  "my-disk",
 					Scope:  "my-project.us-central1-a",
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		{
@@ -223,7 +201,6 @@ func TestZoneBaseLinkedItemQueryByName_CrossProject(t *testing.T) {
 					Query:  "other-disk",
 					Scope:  "other-project.europe-west1-b", // Should use extracted project, not context project
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		{
@@ -239,7 +216,7 @@ func TestZoneBaseLinkedItemQueryByName_CrossProject(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			linkerFunc := ZoneBaseLinkedItemQueryByName(ComputeDisk)
-			got := linkerFunc(tt.projectID, tt.fromItemScope, tt.query, blastPropagation)
+			got := linkerFunc(tt.projectID, tt.fromItemScope, tt.query)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ZoneBaseLinkedItemQueryByName() = %v, want %v\nDescription: %s", got, tt.want, tt.description)
 			}

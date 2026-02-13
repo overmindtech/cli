@@ -8,10 +8,6 @@ import (
 var computeBackendImpact = &gcpshared.Impact{
 	ToSDPItemType: gcpshared.ComputeBackendService,
 	Description:   "If the Backend Service or Backend Bucket is updated or deleted: The URL Map's routing behavior may change or break. If the URL Map changes: The backend service or bucket remains structurally unaffected.",
-	BlastPropagation: &sdp.BlastPropagation{
-		In:  true,
-		Out: false,
-	},
 }
 
 // URL Map (global, project-level) resource.

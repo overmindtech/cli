@@ -120,10 +120,6 @@ func TestStorageTransferTransferJob(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "source-bucket",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// transferSpec.gcsDataSink.bucketName
 				{
@@ -131,10 +127,6 @@ func TestStorageTransferTransferJob(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "dest-bucket",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// serviceAccount
 				{
@@ -142,10 +134,6 @@ func TestStorageTransferTransferJob(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-sa@test-project.iam.gserviceaccount.com",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// notificationConfig.pubsubTopic
 				{
@@ -153,10 +141,6 @@ func TestStorageTransferTransferJob(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "transfer-notifications",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
@@ -190,10 +174,6 @@ func TestStorageTransferTransferJob(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  "https://example.com/urllist.tsv",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// transferSpec.gcsDataSink.bucketName
 				{
@@ -201,10 +181,6 @@ func TestStorageTransferTransferJob(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "http-dest-bucket",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// transferSpec.gcsIntermediateDataLocation.bucketName
 				{
@@ -212,10 +188,6 @@ func TestStorageTransferTransferJob(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "intermediate-bucket",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// serviceAccount
 				{
@@ -223,10 +195,6 @@ func TestStorageTransferTransferJob(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-sa2@test-project.iam.gserviceaccount.com",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// eventStream.name
 				{
@@ -234,10 +202,6 @@ func TestStorageTransferTransferJob(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "transfer-events",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)

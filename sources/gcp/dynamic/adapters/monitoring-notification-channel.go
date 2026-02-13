@@ -41,13 +41,11 @@ var _ = registerableAdapter{
 		"labels.topic": {
 			ToSDPItemType:    gcpshared.PubSubTopic,
 			Description:      "If the Pub/Sub Topic is deleted or updated: The Notification Channel may fail to send alerts. If the Notification Channel is updated: The topic remains unaffected.",
-			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 		// For webhook_basicauth and webhook_tokenauth type notification channels, the url label contains the HTTP/HTTPS endpoint
 		"labels.url": {
 			ToSDPItemType:    stdlib.NetworkHTTP,
 			Description:      "If the HTTP endpoint is unavailable or updated: The Notification Channel may fail to send alerts. If the Notification Channel is updated: The endpoint remains unaffected.",
-			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

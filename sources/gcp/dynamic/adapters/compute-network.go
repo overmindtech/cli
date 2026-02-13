@@ -24,23 +24,14 @@ var _ = registerableAdapter{
 		"subnetworks": {
 			Description:   "If the Compute Subnetwork is deleted: The network remains unaffected, but its subnetwork configuration may change. If the network is deleted: All associated subnetworks are also deleted.",
 			ToSDPItemType: gcpshared.ComputeSubnetwork,
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: true,
-			},
 		},
 		"peerings.network": {
 			Description:   "If the Compute Network Peering is deleted: The network remains unaffected, but its peering configuration may change. If the network is deleted: All associated peerings are also deleted.",
 			ToSDPItemType: gcpshared.ComputeNetwork,
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: true,
-			},
 		},
 		"firewallPolicy": {
 			Description:      "If the Compute Firewall Policy is updated: The network's security posture may change. If the network is updated: The firewall policy remains unaffected, but its application to the network may change.",
 			ToSDPItemType:    gcpshared.ComputeFirewallPolicy,
-			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

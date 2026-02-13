@@ -31,9 +31,6 @@ var _ = registerableAdapter{
 		"urlMap": {
 			ToSDPItemType: gcpshared.ComputeUrlMap,
 			Description:   "If the URL Map is updated or deleted: The HTTP proxy routing behavior may change or break. If the proxy changes: The URL map remains structurally unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In: true,
-			},
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

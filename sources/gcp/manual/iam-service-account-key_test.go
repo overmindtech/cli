@@ -50,7 +50,6 @@ func TestIAMServiceAccountKey(t *testing.T) {
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            testServiceAccount,
 					ExpectedScope:            projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 			}
 

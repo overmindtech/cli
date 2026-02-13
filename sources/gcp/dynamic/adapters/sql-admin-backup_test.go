@@ -90,10 +90,6 @@ func TestSQLAdminBackup(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-instance",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					// kmsKey
@@ -101,10 +97,6 @@ func TestSQLAdminBackup(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("global", "my-keyring", "my-key"),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					// kmsKeyVersion
@@ -112,10 +104,6 @@ func TestSQLAdminBackup(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("global", "my-keyring", "my-key", "1"),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					// instanceSettings.settings.ipConfiguration.privateNetwork
@@ -123,10 +111,6 @@ func TestSQLAdminBackup(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-network",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					// instanceSettings.settings.ipConfiguration.authorizedNetworks.value (first entry)
@@ -134,10 +118,6 @@ func TestSQLAdminBackup(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "203.0.113.0/24",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					// instanceSettings.settings.ipConfiguration.authorizedNetworks.value (second entry)
@@ -145,10 +125,6 @@ func TestSQLAdminBackup(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "198.51.100.5/32",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				// Note: allocatedIpRange link is not tested here because the NetworkConnectivityInternalRange adapter doesn't exist yet.
 				// The blast propagation is defined in the adapter so it will work automatically when the adapter is created.

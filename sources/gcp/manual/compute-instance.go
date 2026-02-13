@@ -253,10 +253,6 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 							Query:  diskName,
 							Scope:  scope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: true,
-						},
 					})
 				}
 			}
@@ -277,10 +273,6 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 								Query:  sourceImage, // Pass full URI so Search can detect format
 								Scope:  scope,
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,
-								Out: false,
-							},
 						})
 					}
 				}
@@ -298,10 +290,6 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 								Method: sdp.QueryMethod_GET,
 								Query:  snapshotName,
 								Scope:  scope,
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,
-								Out: false,
 							},
 						})
 					}
@@ -324,10 +312,6 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 								Query:  shared.CompositeLookupKey(loc, keyRing, cryptoKey, cryptoKeyVersion),
 								Scope:  location.ProjectID,
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,
-								Out: false,
-							},
 						})
 					}
 				}
@@ -348,10 +332,6 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 								Method: sdp.QueryMethod_GET,
 								Query:  shared.CompositeLookupKey(loc, keyRing, cryptoKey, cryptoKeyVersion),
 								Scope:  location.ProjectID,
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,
-								Out: false,
 							},
 						})
 					}
@@ -376,10 +356,6 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 								Query:  shared.CompositeLookupKey(loc, keyRing, cryptoKey, cryptoKeyVersion),
 								Scope:  location.ProjectID,
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,
-								Out: false,
-							},
 						})
 					} else {
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -388,10 +364,6 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 								Method: sdp.QueryMethod_GET,
 								Query:  shared.CompositeLookupKey(loc, keyRing, cryptoKey),
 								Scope:  location.ProjectID,
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,
-								Out: false,
 							},
 						})
 					}
@@ -410,10 +382,6 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 						Query:  networkInterface.GetNetworkIP(),
 						Scope:  "global",
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 
@@ -424,10 +392,6 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 						Method: sdp.QueryMethod_GET,
 						Query:  networkInterface.GetIpv6Address(),
 						Scope:  "global",
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
 					},
 				})
 			}
@@ -442,10 +406,6 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 							Query:  natIP,
 							Scope:  "global",
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: true,
-						},
 					})
 				}
 				if externalIPv6 := accessConfig.GetExternalIpv6(); externalIPv6 != "" {
@@ -455,10 +415,6 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 							Method: sdp.QueryMethod_GET,
 							Query:  externalIPv6,
 							Scope:  "global",
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: true,
 						},
 					})
 				}
@@ -473,10 +429,6 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 							Method: sdp.QueryMethod_GET,
 							Query:  externalIPv6,
 							Scope:  "global",
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: true,
 						},
 					})
 				}
@@ -494,10 +446,6 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 								Query:  subnetworkName,
 								Scope:  gcpshared.RegionalScope(location.ProjectID, region),
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,
-								Out: false,
-							},
 						})
 					}
 				}
@@ -513,10 +461,6 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 								Method: sdp.QueryMethod_GET,
 								Query:  networkName,
 								Scope:  location.ProjectID,
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,
-								Out: false,
 							},
 						})
 					}
@@ -539,10 +483,6 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 						Query:  resourcePolicyName,
 						Scope:  gcpshared.RegionalScope(location.ProjectID, region),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				})
 			}
 		}
@@ -558,10 +498,6 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 					Query:  email,
 					Scope:  location.ProjectID,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			})
 		}
 	}
@@ -576,10 +512,6 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 					Method: sdp.QueryMethod_GET,
 					Query:  zoneName,
 					Scope:  location.ProjectID,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
 				},
 			})
 		}
@@ -609,10 +541,6 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 								Query:  templateName,
 								Scope:  scope,
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,
-								Out: false,
-							},
 						})
 					}
 				}
@@ -628,10 +556,6 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 								Method: sdp.QueryMethod_GET,
 								Query:  igmName,
 								Scope:  scope,
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,
-								Out: false,
 							},
 						})
 					}

@@ -41,24 +41,18 @@ var _ = registerableAdapter{
 		"name": {
 			ToSDPItemType:    gcpshared.ContainerCluster,
 			Description:      "If the Container Cluster is deleted or updated: The Node Pool may become invalid or inaccessible. If the Node Pool is updated: The cluster remains unaffected.",
-			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 		"config.bootDiskKmsKey": gcpshared.CryptoKeyImpactInOnly,
 		"config.serviceAccount": gcpshared.IAMServiceAccountImpactInOnly,
 		"config.nodeGroup": {
 			ToSDPItemType:    gcpshared.ComputeNodeGroup,
 			Description:      "If the node pool is backed by a node group, then changes to the node group may affect the node pool. Changes to the node pool will not affect the node group.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		"config.network":    gcpshared.ComputeNetworkImpactInOnly,
 		"config.subnetwork": gcpshared.ComputeSubnetworkImpactInOnly,
 		"instanceGroupUrls": {
 			ToSDPItemType: gcpshared.ComputeInstanceGroupManager,
 			Description:   "If the Instance Group Manager is deleted or updated: The Node Pool may fail to create new nodes or become invalid. If the Node Pool is updated: The instance group manager remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
-			},
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

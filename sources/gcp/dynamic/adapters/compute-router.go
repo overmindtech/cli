@@ -33,10 +33,6 @@ var _ = registerableAdapter{
 		"interfaces.linkedInterconnectAttachment": {
 			ToSDPItemType: gcpshared.ComputeInterconnectAttachment,
 			Description:   "They are tightly coupled.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: true,
-			},
 		},
 		"interfaces.privateIpAddress":     gcpshared.IPImpactBothWays,
 		"interfaces.subnetwork":           gcpshared.ComputeSubnetworkImpactInOnly,
@@ -47,28 +43,16 @@ var _ = registerableAdapter{
 		"nats.natIps": {
 			ToSDPItemType: stdlib.NetworkIP,
 			Description:   "If the NAT IP address is deleted or updated: The Router NAT may fail to function correctly. If the Router NAT is updated: The IP address remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
-			},
 		},
 		"nats.drainNatIps": {
 			ToSDPItemType: stdlib.NetworkIP,
 			Description:   "If the draining NAT IP address is deleted or updated: The Router NAT may fail to drain correctly. If the Router NAT is updated: The IP address remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
-			},
 		},
 		"nats.subnetworks.name":      gcpshared.ComputeSubnetworkImpactInOnly,
 		"nats.nat64Subnetworks.name": gcpshared.ComputeSubnetworkImpactInOnly,
 		"interfaces.linkedVpnTunnel": {
 			ToSDPItemType: gcpshared.ComputeVpnTunnel,
 			Description:   "They are tightly coupled.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: true,
-			},
 		},
 		// Child resource: RoutePolicy - Router can list all its route policies via listRoutePolicies
 		// This is a link from parent to child via SEARCH
@@ -76,10 +60,6 @@ var _ = registerableAdapter{
 		"name": {
 			ToSDPItemType: gcpshared.ComputeRoutePolicy,
 			Description:   "If the Router is deleted or updated: All associated Route Policies may become invalid or inaccessible. If a Route Policy is updated: The router remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  false,
-				Out: true,
-			},
 			IsParentToChild: true, // Router discovers all its Route Policies via SEARCH
 		},
 		// Note: BgpRoute is also a child resource with listBgpRoutes endpoint, but we can only use "name"

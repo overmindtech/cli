@@ -36,59 +36,34 @@ var _ = registerableAdapter{
 		"endpoint": {
 			ToSDPItemType: gcpshared.AIPlatformEndpoint,
 			Description:   "They are tightly coupled - monitoring job monitors the endpoint's deployed models.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: true,
-			},
 		},
 		"modelDeploymentMonitoringObjectiveConfigs.deployedModelId": {
 			ToSDPItemType: gcpshared.AIPlatformModel,
 			Description:   "If the Model is deleted or updated: The monitoring job may fail to monitor. If the monitoring job is updated: The model remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In: true,
-			},
 		},
 		"modelMonitoringAlertConfig.notificationChannels": {
 			ToSDPItemType: gcpshared.MonitoringNotificationChannel,
 			Description:   "If the Notification Channel is deleted or updated: The monitoring job may fail to send alerts. If the monitoring job is updated: The notification channel remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In: true,
-			},
 		},
 		"bigqueryTables.bigqueryTablePath": {
 			ToSDPItemType: gcpshared.BigQueryTable,
 			Description:   "If the BigQuery table storing monitoring logs is deleted or inaccessible: The monitoring job may fail to write logs. If the monitoring job is updated: The table remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In: true,
-			},
 		},
 		"modelDeploymentMonitoringObjectiveConfigs.objectiveConfig.trainingDataset.gcsSource.uris": {
 			ToSDPItemType: gcpshared.StorageBucket,
 			Description:   "If the GCS bucket containing training data is deleted or inaccessible: The monitoring job may fail to compare predictions against training data. If the monitoring job is updated: The bucket remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In: true,
-			},
 		},
 		"modelDeploymentMonitoringObjectiveConfigs.objectiveConfig.trainingDataset.bigquerySource.inputUri": {
 			ToSDPItemType: gcpshared.BigQueryTable,
 			Description:   "If the BigQuery table containing training data is deleted or inaccessible: The monitoring job may fail to compare predictions against training data. If the monitoring job is updated: The table remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In: true,
-			},
 		},
 		"predictInstanceSchemaUri": {
 			ToSDPItemType: gcpshared.StorageBucket,
 			Description:   "If the GCS bucket containing the prediction instance schema is deleted or inaccessible: The monitoring job may fail to validate prediction requests. If the monitoring job is updated: The bucket remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In: true,
-			},
 		},
 		"analysisInstanceSchemaUri": {
 			ToSDPItemType: gcpshared.StorageBucket,
 			Description:   "If the GCS bucket containing the analysis instance schema is deleted or inaccessible: The monitoring job may fail to perform analysis. If the monitoring job is updated: The bucket remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In: true,
-			},
 		},
 	},
 }.Register()

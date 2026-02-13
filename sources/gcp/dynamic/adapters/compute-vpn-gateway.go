@@ -38,10 +38,6 @@ var _ = registerableAdapter{
 		"vpnInterfaces.interconnectAttachment": {
 			ToSDPItemType: gcpshared.ComputeInterconnectAttachment,
 			Description:   "If the Interconnect Attachment is deleted or updated: The VPN gateway interface may fail to operate correctly. If the VPN gateway is deleted or updated: The interconnect attachment may become disconnected or unusable. They are tightly coupled.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: true,
-			},
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

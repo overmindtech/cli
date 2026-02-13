@@ -161,10 +161,6 @@ func TestBigQueryDataTransferTransferConfig(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  destinationDatasetId,
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// dataSourceId link - NOTE: BigQueryDataTransferDataSource adapter doesn't exist yet
 				// TODO: Add test case when BigQueryDataTransferDataSource adapter is created
@@ -174,10 +170,6 @@ func TestBigQueryDataTransferTransferConfig(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-topic",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// encryptionConfiguration.kmsKeyName link
 				{
@@ -185,10 +177,6 @@ func TestBigQueryDataTransferTransferConfig(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("us-central1", "test-ring", "test-key"),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)

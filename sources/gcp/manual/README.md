@@ -114,10 +114,6 @@ t.Run("StaticTests", func(t *testing.T) {
             ExpectedMethod: sdp.QueryMethod_GET,
             ExpectedQuery:  "test-dataset",
             ExpectedScope:  "test-project-id",
-            ExpectedBlastPropagation: &sdp.BlastPropagation{
-                In:  true,
-                Out: true,
-            },
         },
         // ... more test cases
     }

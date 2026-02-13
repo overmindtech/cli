@@ -235,10 +235,6 @@ func (c computeInstantSnapshotWrapper) gcpComputeInstantSnapshotToSDPItem(ctx co
 						Query:  diskName,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  false,
-						Out: true,
-					},
 				})
 			}
 		}

@@ -53,10 +53,6 @@ func TestComputeMachineImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-network",
 					ExpectedScope:  "test-project-id",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Subnetwork link
 				{
@@ -64,10 +60,6 @@ func TestComputeMachineImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-subnetwork",
 					ExpectedScope:  "test-project-id.us-central1",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Network Attachment link
 				{
@@ -75,10 +67,6 @@ func TestComputeMachineImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-network-attachment",
 					ExpectedScope:  "test-project-id.us-central1",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// IPv4 internal IP address
 				{
@@ -86,10 +74,6 @@ func TestComputeMachineImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "10.0.0.1",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				// IPv6 internal address
 				{
@@ -97,10 +81,6 @@ func TestComputeMachineImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "2001:db8::1",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				// External IPv4 address (NAT IP)
 				{
@@ -108,10 +88,6 @@ func TestComputeMachineImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "203.0.113.1",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				// External IPv6 address
 				{
@@ -119,10 +95,6 @@ func TestComputeMachineImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "2001:db8::2",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				// Disk source link
 				{
@@ -130,10 +102,6 @@ func TestComputeMachineImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-disk",
 					ExpectedScope:  "test-project-id.us-central1-a",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Disk encryption key
 				{
@@ -141,10 +109,6 @@ func TestComputeMachineImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "global|test-keyring|test-key|test-version-source-disk",
 					ExpectedScope:  "test-project-id",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Source image link (SEARCH handles full URI)
 				{
@@ -152,10 +116,6 @@ func TestComputeMachineImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  "https://www.googleapis.com/compute/v1/projects/test-project-id/global/images/test-source-image",
 					ExpectedScope:  "test-project-id",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Source snapshot link
 				{
@@ -163,10 +123,6 @@ func TestComputeMachineImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-source-snapshot",
 					ExpectedScope:  "test-project-id",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Source image encryption key
 				{
@@ -174,10 +130,6 @@ func TestComputeMachineImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "global|test-keyring|test-key|test-version-source-image",
 					ExpectedScope:  "test-project-id",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Source snapshot encryption key
 				{
@@ -185,10 +137,6 @@ func TestComputeMachineImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "global|test-keyring|test-key|test-version-source-snapshot",
 					ExpectedScope:  "test-project-id",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Service account link
 				{
@@ -196,10 +144,6 @@ func TestComputeMachineImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-sa@test-project-id.iam.gserviceaccount.com",
 					ExpectedScope:  "test-project-id",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Accelerator type link
 				{
@@ -207,10 +151,6 @@ func TestComputeMachineImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "nvidia-tesla-k80",
 					ExpectedScope:  "test-project-id.us-central1-a",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Machine image encryption key
 				{
@@ -218,10 +158,6 @@ func TestComputeMachineImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "global|test-keyring|test-key|test-version-machine-encryption-key",
 					ExpectedScope:  "test-project-id",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Source instance link
 				{
@@ -229,10 +165,6 @@ func TestComputeMachineImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-instance",
 					ExpectedScope:  "test-project-id.us-central1-a",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Saved disk link (from savedDisks)
 				{
@@ -240,10 +172,6 @@ func TestComputeMachineImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-saved-disk",
 					ExpectedScope:  "test-project-id.us-central1-a",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			}
 

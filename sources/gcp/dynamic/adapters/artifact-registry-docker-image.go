@@ -30,7 +30,6 @@ var _ = registerableAdapter{
 		"name": {
 			ToSDPItemType:    gcpshared.ArtifactRegistryRepository,
 			Description:      "If the Artifact Registry Repository is deleted or updated: The Docker Image may become invalid or inaccessible. If the Docker Image is updated: The repository remains unaffected.",
-			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

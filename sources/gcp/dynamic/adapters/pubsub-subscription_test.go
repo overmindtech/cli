@@ -89,10 +89,6 @@ func TestPubSubSubscription(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-topic",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					// deadLetterPolicy.deadLetterTopic
@@ -100,10 +96,6 @@ func TestPubSubSubscription(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "dead-letter-topic",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					// pushConfig.pushEndpoint
@@ -111,10 +103,6 @@ func TestPubSubSubscription(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  "https://example.com/push-endpoint",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					// pushConfig.oidcToken.serviceAccountEmail
@@ -122,10 +110,6 @@ func TestPubSubSubscription(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  fmt.Sprintf("push-sa@%s.iam.gserviceaccount.com", projectID),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					// bigqueryConfig.table
@@ -133,10 +117,6 @@ func TestPubSubSubscription(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("test_dataset", "test_table"),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					// bigqueryConfig.serviceAccountEmail
@@ -144,10 +124,6 @@ func TestPubSubSubscription(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  fmt.Sprintf("bq-sa@%s.iam.gserviceaccount.com", projectID),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					// cloudStorageConfig.bucket
@@ -155,10 +131,6 @@ func TestPubSubSubscription(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-bucket",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					// cloudStorageConfig.serviceAccountEmail
@@ -166,10 +138,6 @@ func TestPubSubSubscription(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  fmt.Sprintf("storage-sa@%s.iam.gserviceaccount.com", projectID),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			}
 

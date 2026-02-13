@@ -31,33 +31,19 @@ var _ = registerableAdapter{
 		"containerSpec.imageUri": {
 			ToSDPItemType: gcpshared.ArtifactRegistryDockerImage,
 			Description:   "If the Artifact Registry Docker Image is updated or deleted: The Model may fail to serve predictions. If the Model is updated: The Docker image remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In: true,
-			},
 		},
 		"pipelineJob": {
 			ToSDPItemType: gcpshared.AIPlatformPipelineJob,
 			Description:   "If the Pipeline Job is deleted: The Model may not be retrievable. If the Model is updated: The Pipeline Job remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In: true,
-			},
 		},
 		"deployedModels.endpoint": {
 			ToSDPItemType: gcpshared.AIPlatformEndpoint,
 			Description:   "They are tightly coupled.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: true,
-			},
 		},
 		// GCS bucket containing the Model artifact and supporting files (artifactUri).
 		"artifactUri": {
 			ToSDPItemType: gcpshared.StorageBucket,
 			Description:   "If the Storage Bucket containing model artifacts is deleted or its permissions are changed: The Model may fail to load artifacts and serve predictions. If the Model is updated: The Storage Bucket remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
-			},
 		},
 	},
 }.Register()

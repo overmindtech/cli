@@ -11,8 +11,7 @@ import (
 
 func TestAWSLinkByARN(t *testing.T) {
 	type args struct {
-		awsItem          string
-		blastPropagation *sdp.BlastPropagation
+		awsItem string
 	}
 
 	tests := []struct {
@@ -26,10 +25,6 @@ func TestAWSLinkByARN(t *testing.T) {
 			arn:  "arn:aws:iam::123456789012:role/MyRole",
 			args: args{
 				awsItem: "iam-role",
-				blastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			},
 			want: &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
@@ -38,10 +33,6 @@ func TestAWSLinkByARN(t *testing.T) {
 					Query:  "arn:aws:iam::123456789012:role/MyRole",
 					Scope:  "123456789012",
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			},
 		},
 		{
@@ -49,10 +40,6 @@ func TestAWSLinkByARN(t *testing.T) {
 			arn:  "arn:aws:kms:us-west-2:123456789012:key/abcd1234-56ef-78gh-90ij-klmnopqrstuv",
 			args: args{
 				awsItem: "kms-key",
-				blastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			},
 			want: &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
@@ -61,18 +48,13 @@ func TestAWSLinkByARN(t *testing.T) {
 					Query:  "arn:aws:kms:us-west-2:123456789012:key/abcd1234-56ef-78gh-90ij-klmnopqrstuv",
 					Scope:  "123456789012.us-west-2", // Region scope
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			},
 		},
 		{
 			name: "Malformed ARN",
 			arn:  "invalid-arn",
 			args: args{
-				awsItem:          "iam-role",
-				blastPropagation: &sdp.BlastPropagation{},
+				awsItem: "iam-role",
 			},
 			want: nil,
 		},
@@ -80,7 +62,7 @@ func TestAWSLinkByARN(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			gotFunc := AWSLinkByARN(tt.args.awsItem)
-			gotLIQ := gotFunc("", "", tt.arn, tt.args.blastPropagation)
+			gotLIQ := gotFunc("", "", tt.arn)
 			if !reflect.DeepEqual(gotLIQ, tt.want) {
 				t.Errorf("AWSLinkByARN() = %v, want %v", gotLIQ, tt.want)
 			}
@@ -90,10 +72,6 @@ func TestAWSLinkByARN(t *testing.T) {
 
 func TestForwardingRuleTargetLinker(t *testing.T) {
 	projectID := "test-project"
-	blastPropagation := &sdp.BlastPropagation{
-		In:  true,
-		Out: true,
-	}
 
 	tests := []struct {
 		name      string
@@ -111,7 +89,6 @@ func TestForwardingRuleTargetLinker(t *testing.T) {
 					Query:  "my-http-proxy",
 					Scope:  projectID,
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		{
@@ -124,7 +101,6 @@ func TestForwardingRuleTargetLinker(t *testing.T) {
 					Query:  "my-http-proxy",
 					Scope:  projectID,
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		{
@@ -137,7 +113,6 @@ func TestForwardingRuleTargetLinker(t *testing.T) {
 					Query:  "my-http-proxy",
 					Scope:  projectID,
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		// Global Target HTTPS Proxy tests
@@ -151,7 +126,6 @@ func TestForwardingRuleTargetLinker(t *testing.T) {
 					Query:  "my-https-proxy",
 					Scope:  projectID,
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		{
@@ -164,7 +138,6 @@ func TestForwardingRuleTargetLinker(t *testing.T) {
 					Query:  "my-https-proxy",
 					Scope:  projectID,
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		// Global Target TCP Proxy tests
@@ -178,7 +151,6 @@ func TestForwardingRuleTargetLinker(t *testing.T) {
 					Query:  "my-tcp-proxy",
 					Scope:  projectID,
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		{
@@ -191,7 +163,6 @@ func TestForwardingRuleTargetLinker(t *testing.T) {
 					Query:  "my-tcp-proxy",
 					Scope:  projectID,
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		// Global Target SSL Proxy tests
@@ -205,7 +176,6 @@ func TestForwardingRuleTargetLinker(t *testing.T) {
 					Query:  "my-ssl-proxy",
 					Scope:  projectID,
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		{
@@ -218,7 +188,6 @@ func TestForwardingRuleTargetLinker(t *testing.T) {
 					Query:  "my-ssl-proxy",
 					Scope:  projectID,
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		// Regional Target Pool tests
@@ -232,7 +201,6 @@ func TestForwardingRuleTargetLinker(t *testing.T) {
 					Query:  "my-target-pool",
 					Scope:  "test-project.us-central1",
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		{
@@ -245,7 +213,6 @@ func TestForwardingRuleTargetLinker(t *testing.T) {
 					Query:  "my-target-pool",
 					Scope:  "test-project.us-central1",
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		// Regional Target VPN Gateway tests
@@ -259,7 +226,6 @@ func TestForwardingRuleTargetLinker(t *testing.T) {
 					Query:  "my-vpn-gateway",
 					Scope:  "test-project.us-west1",
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		{
@@ -272,7 +238,6 @@ func TestForwardingRuleTargetLinker(t *testing.T) {
 					Query:  "my-vpn-gateway",
 					Scope:  "test-project.us-west1",
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		// Zonal Target Instance tests
@@ -286,7 +251,6 @@ func TestForwardingRuleTargetLinker(t *testing.T) {
 					Query:  "my-target-instance",
 					Scope:  "test-project.us-central1-a",
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		{
@@ -299,7 +263,6 @@ func TestForwardingRuleTargetLinker(t *testing.T) {
 					Query:  "my-target-instance",
 					Scope:  "test-project.us-central1-a",
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		// Edge cases
@@ -326,7 +289,6 @@ func TestForwardingRuleTargetLinker(t *testing.T) {
 					Query:  "targetHttpProxies", // LastPathComponent returns this from trailing slash
 					Scope:  projectID,
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		{
@@ -340,7 +302,7 @@ func TestForwardingRuleTargetLinker(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := ForwardingRuleTargetLinker(projectID, "", tt.targetURI, blastPropagation)
+			got := ForwardingRuleTargetLinker(projectID, "", tt.targetURI)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("ForwardingRuleTargetLinker() = %v, want %v", got, tt.want)
 			}
@@ -349,11 +311,6 @@ func TestForwardingRuleTargetLinker(t *testing.T) {
 }
 
 func TestNetworkDNSLinker(t *testing.T) {
-	blastPropagation := &sdp.BlastPropagation{
-		In:  true,
-		Out: true,
-	}
-
 	tests := []struct {
 		name  string
 		query string
@@ -369,7 +326,6 @@ func TestNetworkDNSLinker(t *testing.T) {
 					Query:  "example.com",
 					Scope:  "global",
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		{
@@ -382,7 +338,6 @@ func TestNetworkDNSLinker(t *testing.T) {
 					Query:  "api.example.com",
 					Scope:  "global",
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		{
@@ -399,7 +354,7 @@ func TestNetworkDNSLinker(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := linkerFunc("", "", tt.query, blastPropagation)
+			got := linkerFunc("", "", tt.query)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("NetworkDNSLinker() = %v, want %v", got, tt.want)
 			}
@@ -408,11 +363,6 @@ func TestNetworkDNSLinker(t *testing.T) {
 }
 
 func TestMSKClusterLinkByARN(t *testing.T) {
-	blastPropagation := &sdp.BlastPropagation{
-		In:  true,
-		Out: false,
-	}
-
 	tests := []struct {
 		name string
 		arn  string
@@ -428,7 +378,6 @@ func TestMSKClusterLinkByARN(t *testing.T) {
 					Query:  "arn:aws:kafka:us-east-1:123456789012:cluster/my-cluster/abcd1234-abcd-cafe-abab-9876543210ab-4",
 					Scope:  "123456789012.us-east-1",
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		{
@@ -441,7 +390,6 @@ func TestMSKClusterLinkByARN(t *testing.T) {
 					Query:  "arn:aws:kafka:us-west-2:987654321098:cluster/prod-cluster/efgh5678-efgh-cafe-cdcd-1234567890ab-5",
 					Scope:  "987654321098.us-west-2",
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		{
@@ -463,7 +411,7 @@ func TestMSKClusterLinkByARN(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := linkerFunc("", "", tt.arn, blastPropagation)
+			got := linkerFunc("", "", tt.arn)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("MSKClusterLinkByARN() = %v, want %v", got, tt.want)
 			}
@@ -473,10 +421,6 @@ func TestMSKClusterLinkByARN(t *testing.T) {
 
 func TestHealthCheckLinker(t *testing.T) {
 	projectID := "test-project"
-	blastPropagation := &sdp.BlastPropagation{
-		In:  true,
-		Out: false,
-	}
 
 	tests := []struct {
 		name           string
@@ -494,7 +438,6 @@ func TestHealthCheckLinker(t *testing.T) {
 					Query:  "my-health-check",
 					Scope:  projectID,
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		{
@@ -507,7 +450,6 @@ func TestHealthCheckLinker(t *testing.T) {
 					Query:  "my-health-check",
 					Scope:  projectID,
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		{
@@ -520,7 +462,6 @@ func TestHealthCheckLinker(t *testing.T) {
 					Query:  "my-health-check",
 					Scope:  projectID,
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		// Regional Health Check tests
@@ -534,7 +475,6 @@ func TestHealthCheckLinker(t *testing.T) {
 					Query:  "my-regional-health-check",
 					Scope:  "test-project.us-central1",
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		{
@@ -547,7 +487,6 @@ func TestHealthCheckLinker(t *testing.T) {
 					Query:  "my-regional-health-check",
 					Scope:  "test-project.us-west1",
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		{
@@ -560,7 +499,6 @@ func TestHealthCheckLinker(t *testing.T) {
 					Query:  "eu-health-check",
 					Scope:  "test-project.europe-west1",
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 		// Edge cases
@@ -584,14 +522,13 @@ func TestHealthCheckLinker(t *testing.T) {
 					Query:  "healthChecks", // LastPathComponent returns this from trailing slash
 					Scope:  projectID,
 				},
-				BlastPropagation: blastPropagation,
 			},
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := HealthCheckLinker(projectID, "", tt.healthCheckURI, blastPropagation)
+			got := HealthCheckLinker(projectID, "", tt.healthCheckURI)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("HealthCheckLinker() = %v, want %v", got, tt.want)
 			}

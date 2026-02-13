@@ -46,7 +46,6 @@ var orgPolicyPolicyAdapter = registerableAdapter{ //nolint:unused
 			// the actual type (project, folder, or organization) based on the name prefix
 			ToSDPItemType:    gcpshared.CloudResourceManagerProject,
 			Description:      "If the parent resource (project, folder, or organization) is deleted or updated: The Org Policy may become invalid or inaccessible. If the Org Policy is updated: The parent resource remains unaffected.",
-			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 		// Note: spec.rules[].condition.expression contains CEL expressions that may reference
 		// Tag Keys and Tag Values via resource.matchTag() or resource.matchTagId().

@@ -39,7 +39,6 @@ var _ = registerableAdapter{
 		"logging.logBucket": {
 			ToSDPItemType:    gcpshared.LoggingBucket,
 			Description:      "If the Logging Bucket is deleted or updated: The Storage Bucket may fail to write logs. If the Storage Bucket is updated: The Logging Bucket remains unaffected.",
-			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 		// TODO: Add parent-to-child links once the child adapters are implemented:
 		// - StorageBucketAccessControl (requires adapter implementation)

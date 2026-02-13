@@ -52,7 +52,6 @@ var _ = registerableAdapter{
 		"serverCaCerts.cert": {
 			ToSDPItemType:    gcpshared.ComputeSSLCertificate,
 			Description:      "If the certificate is deleted or updated: The Redis instance may lose secure connectivity. If the Redis instance is updated: The certificate remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

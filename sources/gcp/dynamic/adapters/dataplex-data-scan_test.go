@@ -96,10 +96,6 @@ func TestDataplexDataScan(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  bucketName,
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Note: data.entity link also exists but DataplexEntity adapter doesn't exist yet
 			}

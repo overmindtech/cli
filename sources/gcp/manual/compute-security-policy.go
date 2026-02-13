@@ -157,10 +157,6 @@ func (c computeSecurityPolicyWrapper) gcpComputeSecurityPolicyToSDPItem(security
 				Query:  shared.CompositeLookupKey(policyName, rulePriority),
 				Scope:  location.ProjectID,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  false,
-				Out: true,
-			},
 		})
 	}
 

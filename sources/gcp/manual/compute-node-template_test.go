@@ -90,10 +90,6 @@ func TestComputeNodeTemplate(t *testing.T) {
 					ExpectedScope:  "*",
 
 					// [SPEC] The node groups does not affect the node template.
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  false,
-						Out: true,
-					},
 				},
 			}
 

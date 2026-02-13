@@ -28,10 +28,6 @@ var _ = registerableAdapter{
 		"instance": {
 			ToSDPItemType: gcpshared.SQLAdminInstance,
 			Description:   "If the Cloud SQL Instance is deleted or updated: The Backup may become invalid or inaccessible. If the Backup is updated: The instance cannot recover from the backup.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: true,
-			},
 		},
 		"kmsKey":        gcpshared.CryptoKeyImpactInOnly,
 		"kmsKeyVersion": gcpshared.CryptoKeyVersionImpactInOnly,
@@ -45,10 +41,6 @@ var _ = registerableAdapter{
 		"instanceSettings.settings.ipConfiguration.allocatedIpRange": {
 			ToSDPItemType: gcpshared.NetworkConnectivityInternalRange,
 			Description:   "If the Reserved Internal Range is deleted or updated: The backup's instance settings snapshot may reference an invalid IP range configuration. If the backup is updated: The internal range remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
-			},
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

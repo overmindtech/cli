@@ -26,17 +26,14 @@ var _ = registerableAdapter{
 		"name": {
 			ToSDPItemType:    gcpshared.BigTableAdminCluster,
 			Description:      "If the BigTableAdmin Cluster is deleted or updated: The Backup may become invalid or inaccessible. If the Backup is updated: The cluster remains unaffected.",
-			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 		"sourceTable": {
 			ToSDPItemType:    gcpshared.BigTableAdminTable,
 			Description:      "If the BigTableAdmin Table is deleted or updated: The Backup may become invalid or inaccessible. If the Backup is updated: The table remains unaffected.",
-			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 		"sourceBackup": {
 			ToSDPItemType:    gcpshared.BigTableAdminBackup,
 			Description:      "If the source Backup is deleted or updated: The Backup may become invalid or inaccessible. If the Backup is updated: The source backup remains unaffected.",
-			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 		"encryptionInfo.kmsKeyVersion": gcpshared.CryptoKeyVersionImpactInOnly,
 	},

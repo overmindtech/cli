@@ -28,7 +28,6 @@ var _ = registerableAdapter{
 		"snapshotSchedulePolicy.snapshotProperties.storageLocations": {
 			ToSDPItemType:    gcpshared.StorageBucket,
 			Description:      "If the Storage Bucket is deleted or updated: The Resource Policy may fail to create snapshots. If the Resource Policy is updated: The Storage Bucket remains unaffected.",
-			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

@@ -48,30 +48,18 @@ func TestComputeReservation(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-commitment",
 					ExpectedScope:  "test-project-id.us-central1",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.ComputeAcceleratorType.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "nvidia-tesla-k80",
 					ExpectedScope:  "test-project-id.us-central1-a",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-policy",
 					ExpectedScope:  "test-project-id.us-central1",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			}
 

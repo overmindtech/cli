@@ -89,10 +89,6 @@ func TestComputeAutoscalerWrapper(t *testing.T) {
 
 					// [SPEC] Autoscalers are tightly coupled with the instance group manager
 					// (albeit less strength on the IN direction).
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 			}
 

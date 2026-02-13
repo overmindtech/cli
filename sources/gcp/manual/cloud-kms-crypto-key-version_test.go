@@ -351,10 +351,6 @@ func TestCloudKMSCryptoKeyVersion(t *testing.T) {
 						Query:  "us|test-keyring|test-key",
 						Scope:  projectID,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			},
 		}
@@ -378,10 +374,6 @@ func TestCloudKMSCryptoKeyVersion(t *testing.T) {
 				ExpectedMethod: sdp.QueryMethod_GET,
 				ExpectedQuery:  "us|test-keyring|test-key",
 				ExpectedScope:  "test-project-id",
-				ExpectedBlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			},
 		}
 

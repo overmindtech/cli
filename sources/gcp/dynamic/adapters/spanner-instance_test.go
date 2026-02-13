@@ -124,19 +124,12 @@ func TestSpannerInstance(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "regional-us-central1",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.SpannerDatabase.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  instanceName,
-					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						Out: true,
-					},
+					ExpectedScope: projectID,
 				},
 			}
 

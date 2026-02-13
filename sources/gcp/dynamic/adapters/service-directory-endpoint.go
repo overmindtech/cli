@@ -27,7 +27,6 @@ var _ = registerableAdapter{
 		"name": {
 			ToSDPItemType:    gcpshared.ServiceDirectoryService,
 			Description:      "If the Service Directory Service is deleted or updated: The Endpoint may lose its association or fail to resolve names. If the Endpoint is updated: The service remains unaffected.",
-			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 		// An IPv4 or IPv6 address.
 		"address": gcpshared.IPImpactBothWays,

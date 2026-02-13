@@ -44,18 +44,10 @@ var _ = registerableAdapter{
 		"defaultServiceAccount": {
 			Description:   "If the IAM Service Account is deleted: Project resources may fail to work as before. If the project is deleted: service account is deleted.",
 			ToSDPItemType: gcpshared.IAMServiceAccount,
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: true,
-			},
 		},
 		"usageExportLocation.bucketName": {
 			Description:   "If the Compute Bucket is deleted: Project usage export may fail. If the project is deleted: bucket is deleted.",
 			ToSDPItemType: gcpshared.StorageBucket,
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: true,
-			},
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

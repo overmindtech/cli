@@ -67,7 +67,6 @@ func TestComputeDisk(t *testing.T) {
 							ExpectedMethod:           sdp.QueryMethod_SEARCH,
 							ExpectedQuery:            "projects/test-project-id/global/images/test-image",
 							ExpectedScope:            "test-project-id",
-							ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 						},
 					},
 				},
@@ -81,7 +80,6 @@ func TestComputeDisk(t *testing.T) {
 							ExpectedMethod:           sdp.QueryMethod_GET,
 							ExpectedQuery:            "test-snapshot",
 							ExpectedScope:            "test-project-id",
-							ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 						},
 					},
 				},
@@ -95,7 +93,6 @@ func TestComputeDisk(t *testing.T) {
 							ExpectedMethod:           sdp.QueryMethod_GET,
 							ExpectedQuery:            "test-instant-snapshot",
 							ExpectedScope:            "test-project-id.us-central1-a",
-							ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 						},
 					},
 				},
@@ -109,7 +106,6 @@ func TestComputeDisk(t *testing.T) {
 							ExpectedMethod:           sdp.QueryMethod_GET,
 							ExpectedQuery:            "source-disk",
 							ExpectedScope:            "test-project-id.us-central1-a",
-							ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 						},
 					},
 				},
@@ -121,49 +117,42 @@ func TestComputeDisk(t *testing.T) {
 				ExpectedMethod:           sdp.QueryMethod_GET,
 				ExpectedQuery:            "test-policy",
 				ExpectedScope:            "test-project-id.us-central1",
-				ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 			}
 			userTest := shared.QueryTest{
 				ExpectedType:             gcpshared.ComputeInstance.String(),
 				ExpectedMethod:           sdp.QueryMethod_GET,
 				ExpectedQuery:            "test-instance",
 				ExpectedScope:            "test-project-id.us-central1-a",
-				ExpectedBlastPropagation: &sdp.BlastPropagation{In: false, Out: true},
 			}
 			diskTypeTest := shared.QueryTest{
 				ExpectedType:             gcpshared.ComputeDiskType.String(),
 				ExpectedMethod:           sdp.QueryMethod_GET,
 				ExpectedQuery:            "pd-standard",
 				ExpectedScope:            "test-project-id.us-central1-a",
-				ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 			}
 			diskEncryptionKeyTest := shared.QueryTest{
 				ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
 				ExpectedMethod:           sdp.QueryMethod_GET,
 				ExpectedQuery:            "global|test-keyring|test-key|test-version-source-disk",
 				ExpectedScope:            "test-project-id",
-				ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 			}
 			sourceImageEncryptionKeyTest := shared.QueryTest{
 				ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
 				ExpectedMethod:           sdp.QueryMethod_GET,
 				ExpectedQuery:            "global|test-keyring|test-key|test-version-source-image",
 				ExpectedScope:            "test-project-id",
-				ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 			}
 			sourceSnapshotEncryptionKeyTest := shared.QueryTest{
 				ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
 				ExpectedMethod:           sdp.QueryMethod_GET,
 				ExpectedQuery:            "global|test-keyring|test-key|test-version-source-snapshot",
 				ExpectedScope:            "test-project-id",
-				ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 			}
 			sourceConsistencyGroupPolicy := shared.QueryTest{
 				ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
 				ExpectedMethod:           sdp.QueryMethod_GET,
 				ExpectedQuery:            "test-consistency-group-policy",
 				ExpectedScope:            "test-project-id.us-central1",
-				ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 			}
 
 			for _, tc := range cases {
@@ -364,56 +353,48 @@ func TestComputeDisk(t *testing.T) {
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "test-policy",
 					ExpectedScope:            fmt.Sprintf("%s.us-central1", projectID),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 				{
 					ExpectedType:             gcpshared.ComputeInstance.String(),
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "test-instance",
 					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: false, Out: true},
 				},
 				{
 					ExpectedType:             gcpshared.ComputeDiskType.String(),
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "pd-standard",
 					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 				{
 					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-disk",
 					ExpectedScope:            projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 				{
 					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-image",
 					ExpectedScope:            projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 				{
 					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-snapshot",
 					ExpectedScope:            projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 				{
 					ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "test-consistency-group-policy",
 					ExpectedScope:            fmt.Sprintf("%s.us-central1", projectID),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 				{
 					ExpectedType:             gcpshared.ComputeImage.String(),
 					ExpectedMethod:           sdp.QueryMethod_SEARCH,
 					ExpectedQuery:            "projects/test-project-id/global/images/test-image",
 					ExpectedScope:            projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 			}
 
@@ -423,7 +404,6 @@ func TestComputeDisk(t *testing.T) {
 				ExpectedMethod:           sdp.QueryMethod_GET,
 				ExpectedQuery:            "test-bucket",
 				ExpectedScope:            projectID,
-				ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 			})
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
@@ -454,56 +434,48 @@ func TestComputeDisk(t *testing.T) {
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "test-policy",
 					ExpectedScope:            fmt.Sprintf("%s.us-central1", projectID),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 				{
 					ExpectedType:             gcpshared.ComputeInstance.String(),
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "test-instance",
 					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: false, Out: true},
 				},
 				{
 					ExpectedType:             gcpshared.ComputeDiskType.String(),
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "pd-standard",
 					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 				{
 					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-disk",
 					ExpectedScope:            projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 				{
 					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-image",
 					ExpectedScope:            projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 				{
 					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-snapshot",
 					ExpectedScope:            projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 				{
 					ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "test-consistency-group-policy",
 					ExpectedScope:            fmt.Sprintf("%s.us-central1", projectID),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 				{
 					ExpectedType:             gcpshared.ComputeImage.String(),
 					ExpectedMethod:           sdp.QueryMethod_SEARCH,
 					ExpectedQuery:            "projects/test-project-id/global/images/test-image",
 					ExpectedScope:            projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 			}
 
@@ -513,7 +485,6 @@ func TestComputeDisk(t *testing.T) {
 				ExpectedMethod:           sdp.QueryMethod_GET,
 				ExpectedQuery:            "test-storage-pool",
 				ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
-				ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 			})
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
@@ -548,56 +519,48 @@ func TestComputeDisk(t *testing.T) {
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "test-policy",
 					ExpectedScope:            fmt.Sprintf("%s.us-central1", projectID),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 				{
 					ExpectedType:             gcpshared.ComputeInstance.String(),
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "test-instance",
 					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: false, Out: true},
 				},
 				{
 					ExpectedType:             gcpshared.ComputeDiskType.String(),
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "pd-standard",
 					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 				{
 					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-disk",
 					ExpectedScope:            projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 				{
 					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-image",
 					ExpectedScope:            projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 				{
 					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-snapshot",
 					ExpectedScope:            projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 				{
 					ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "test-consistency-group-policy",
 					ExpectedScope:            fmt.Sprintf("%s.us-central1", projectID),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 				{
 					ExpectedType:             gcpshared.ComputeImage.String(),
 					ExpectedMethod:           sdp.QueryMethod_SEARCH,
 					ExpectedQuery:            "projects/test-project-id/global/images/test-image",
 					ExpectedScope:            projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 			}
 
@@ -608,14 +571,12 @@ func TestComputeDisk(t *testing.T) {
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "primary-disk",
 					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 				shared.QueryTest{
 					ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "test-consistency-policy",
 					ExpectedScope:            fmt.Sprintf("%s.us-central1", projectID),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 			)
 
@@ -661,56 +622,48 @@ func TestComputeDisk(t *testing.T) {
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "test-policy",
 					ExpectedScope:            fmt.Sprintf("%s.us-central1", projectID),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 				{
 					ExpectedType:             gcpshared.ComputeInstance.String(),
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "test-instance",
 					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: false, Out: true},
 				},
 				{
 					ExpectedType:             gcpshared.ComputeDiskType.String(),
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "pd-standard",
 					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 				{
 					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-disk",
 					ExpectedScope:            projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 				{
 					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-image",
 					ExpectedScope:            projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 				{
 					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-snapshot",
 					ExpectedScope:            projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 				{
 					ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "test-consistency-group-policy",
 					ExpectedScope:            fmt.Sprintf("%s.us-central1", projectID),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 				{
 					ExpectedType:             gcpshared.ComputeImage.String(),
 					ExpectedMethod:           sdp.QueryMethod_SEARCH,
 					ExpectedQuery:            "projects/test-project-id/global/images/test-image",
 					ExpectedScope:            projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 			}
 
@@ -721,21 +674,18 @@ func TestComputeDisk(t *testing.T) {
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "secondary-disk-1",
 					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 				shared.QueryTest{
 					ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "test-consistency-policy",
 					ExpectedScope:            fmt.Sprintf("%s.us-central1", projectID),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 				shared.QueryTest{
 					ExpectedType:             gcpshared.ComputeDisk.String(),
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "secondary-disk-2",
 					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 			)
 

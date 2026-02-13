@@ -41,18 +41,15 @@ var _ = registerableAdapter{
 		"parentPrefix": {
 			ToSDPItemType:    gcpshared.ComputePublicAdvertisedPrefix,
 			Description:      "If the Public Advertised Prefix is updated or deleted: the delegated prefix may become invalid or withdrawn. If the delegated prefix changes: the parent advertised prefix remains structurally unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		// Each sub-prefix may be delegated to a specific project.
 		"publicDelegatedSubPrefixs.delegateeProject": {
 			ToSDPItemType:    gcpshared.CloudResourceManagerProject,
 			Description:      "If the delegatee Project is deleted or disabled: usage of the delegated sub-prefix may stop working. If the delegated prefix changes: the project resource remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		"publicDelegatedSubPrefixs.name": {
 			ToSDPItemType:    gcpshared.ComputePublicDelegatedPrefix,
 			Description:      "If the delegated sub-prefix is updated or deleted: usage of the sub-prefix may stop working. If the parent delegated prefix changes: the sub-prefix remains structurally unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

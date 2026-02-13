@@ -263,10 +263,6 @@ func (c computeImageWrapper) gcpComputeImageToSDPItem(ctx context.Context, image
 						Query:  diskName,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				})
 			}
 		}
@@ -282,10 +278,6 @@ func (c computeImageWrapper) gcpComputeImageToSDPItem(ctx context.Context, image
 					Method: sdp.QueryMethod_GET,
 					Query:  snapshotName,
 					Scope:  location.ProjectID,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
 				},
 			})
 		}
@@ -306,10 +298,6 @@ func (c computeImageWrapper) gcpComputeImageToSDPItem(ctx context.Context, image
 				Query:  sourceImage, // Pass full URI so Search can detect format
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
-			},
 		})
 	}
 
@@ -329,10 +317,6 @@ func (c computeImageWrapper) gcpComputeImageToSDPItem(ctx context.Context, image
 					Query:  licenseName,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			})
 		}
 	}
@@ -340,9 +324,8 @@ func (c computeImageWrapper) gcpComputeImageToSDPItem(ctx context.Context, image
 	// Link to raw disk storage bucket
 	if rawDisk := image.GetRawDisk(); rawDisk != nil {
 		if rawDiskSource := rawDisk.GetSource(); rawDiskSource != "" {
-			blastPropagation := &sdp.BlastPropagation{In: true, Out: false}
 			if linkFunc, ok := gcpshared.ManualAdapterLinksByAssetType[gcpshared.StorageBucket]; ok {
-				linkedQuery := linkFunc(location.ProjectID, location.ToScope(), rawDiskSource, blastPropagation)
+				linkedQuery := linkFunc(location.ProjectID, location.ToScope(), rawDiskSource)
 				if linkedQuery != nil {
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, linkedQuery)
 				}
@@ -381,10 +364,6 @@ func (c computeImageWrapper) gcpComputeImageToSDPItem(ctx context.Context, image
 					Query:  replacement, // Pass full URI so Search can detect format
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			})
 		}
 	}
@@ -407,10 +386,6 @@ func (c computeImageWrapper) addKMSKeyLinks(sdpItem *sdp.Item, keyName, kmsKeySe
 					Query:  shared.CompositeLookupKey(loc, keyRing, cryptoKey, cryptoKeyVersion),
 					Scope:  location.ProjectID,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			})
 		} else if loc != "" && keyRing != "" && cryptoKey != "" {
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -419,10 +394,6 @@ func (c computeImageWrapper) addKMSKeyLinks(sdpItem *sdp.Item, keyName, kmsKeySe
 					Method: sdp.QueryMethod_GET,
 					Query:  shared.CompositeLookupKey(loc, keyRing, cryptoKey),
 					Scope:  location.ProjectID,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
 				},
 			})
 		}
@@ -447,10 +418,6 @@ func (c computeImageWrapper) addKMSKeyLinks(sdpItem *sdp.Item, keyName, kmsKeySe
 					Method: sdp.QueryMethod_GET,
 					Query:  serviceAccountEmail,
 					Scope:  projectID,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
 				},
 			})
 		}
