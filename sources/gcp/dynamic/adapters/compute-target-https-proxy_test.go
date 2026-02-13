@@ -84,30 +84,18 @@ func TestComputeTargetHttpsProxy(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-url-map",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.ComputeSSLCertificate.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-cert",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.ComputeSSLPolicy.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-policy",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)

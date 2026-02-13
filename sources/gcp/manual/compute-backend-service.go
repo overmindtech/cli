@@ -333,10 +333,6 @@ func gcpComputeBackendServiceToSDPItem(ctx context.Context, projectID string, sc
 					// This is a global resource
 					Scope: projectID,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			})
 		}
 	}
@@ -359,10 +355,6 @@ func gcpComputeBackendServiceToSDPItem(ctx context.Context, projectID string, sc
 					Query:  securityPolicyName,
 					Scope:  projectID,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			})
 		}
 	}
@@ -377,10 +369,6 @@ func gcpComputeBackendServiceToSDPItem(ctx context.Context, projectID string, sc
 					Method: sdp.QueryMethod_GET,
 					Query:  edgeSecurityPolicyName,
 					Scope:  projectID,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
 				},
 			})
 		}
@@ -409,10 +397,6 @@ func gcpComputeBackendServiceToSDPItem(ctx context.Context, projectID string, sc
 							// This is a global resource but it will require a location dynamically.
 							Query: shared.CompositeLookupKey(location, policyName),
 							Scope: projectID,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
 						},
 					})
 				}
@@ -448,10 +432,6 @@ func gcpComputeBackendServiceToSDPItem(ctx context.Context, projectID string, sc
 							Query:  healthCheckName,
 							Scope:  healthCheckScope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
-						},
 					})
 				}
 			}
@@ -474,10 +454,6 @@ func gcpComputeBackendServiceToSDPItem(ctx context.Context, projectID string, sc
 							Method: sdp.QueryMethod_GET,
 							Query:  groupName,
 							Scope:  zone,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
 						},
 					})
 				}
@@ -502,10 +478,6 @@ func gcpComputeBackendServiceToSDPItem(ctx context.Context, projectID string, sc
 								Query:  negName,
 								Scope:  zone,
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,
-								Out: false,
-							},
 						})
 					}
 				} else {
@@ -518,10 +490,6 @@ func gcpComputeBackendServiceToSDPItem(ctx context.Context, projectID string, sc
 								Method: sdp.QueryMethod_GET,
 								Query:  negName,
 								Scope:  negScope,
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,
-								Out: false,
 							},
 						})
 					}
@@ -540,10 +508,6 @@ func gcpComputeBackendServiceToSDPItem(ctx context.Context, projectID string, sc
 							Method: sdp.QueryMethod_GET,
 							Query:  groupName,
 							Scope:  zone,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
 						},
 					})
 				}
@@ -567,10 +531,6 @@ func gcpComputeBackendServiceToSDPItem(ctx context.Context, projectID string, sc
 						Query:  shared.CompositeLookupKey(location, policyName),
 						Scope:  projectID,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 		}
@@ -592,10 +552,6 @@ func gcpComputeBackendServiceToSDPItem(ctx context.Context, projectID string, sc
 							Method: sdp.QueryMethod_GET,
 							Query:  shared.CompositeLookupKey(location, bindingName),
 							Scope:  projectID,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
 						},
 					})
 				}
@@ -624,10 +580,6 @@ func gcpComputeBackendServiceToSDPItem(ctx context.Context, projectID string, sc
 								Query:  negName,
 								Scope:  negScope,
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,
-								Out: false,
-							},
 						})
 					}
 				}
@@ -653,10 +605,6 @@ func gcpComputeBackendServiceToSDPItem(ctx context.Context, projectID string, sc
 									Query:  instanceName,
 									Scope:  instanceScope,
 								},
-								BlastPropagation: &sdp.BlastPropagation{
-									In:  true,
-									Out: false,
-								},
 							})
 						}
 					}
@@ -680,10 +628,6 @@ func gcpComputeBackendServiceToSDPItem(ctx context.Context, projectID string, sc
 					Query:  regionName,
 					// Regions are project-scoped resources
 					Scope: projectID,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
 				},
 			})
 		}

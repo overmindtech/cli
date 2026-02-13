@@ -195,10 +195,6 @@ func TestCloudFunctionsFunction(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(location, "test-ring", "test-key"),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Test storage bucket link (buildConfig.source.storageSource.bucket)
 				{
@@ -206,10 +202,6 @@ func TestCloudFunctionsFunction(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-bucket",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Test service account link (serviceConfig.serviceAccountEmail)
 				{
@@ -217,10 +209,6 @@ func TestCloudFunctionsFunction(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  fmt.Sprintf("test-function@%s.iam.gserviceaccount.com", projectID),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Test Pub/Sub topic link (eventTrigger.pubsubTopic)
 				{
@@ -228,10 +216,6 @@ func TestCloudFunctionsFunction(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-topic",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Test event trigger service account link (eventTrigger.serviceAccountEmail)
 				{
@@ -239,10 +223,6 @@ func TestCloudFunctionsFunction(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  fmt.Sprintf("event-trigger@%s.iam.gserviceaccount.com", projectID),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Test Eventarc trigger link (eventTrigger.trigger)
 				{
@@ -250,10 +230,6 @@ func TestCloudFunctionsFunction(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(location, "test-trigger"),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Test Cloud Run service link (serviceConfig.service)
 				{
@@ -261,10 +237,6 @@ func TestCloudFunctionsFunction(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(location, "test-function-service"),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Test Artifact Registry repository link (buildConfig.dockerRepository)
 				{
@@ -272,10 +244,6 @@ func TestCloudFunctionsFunction(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(location, "test-docker-repo"),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Test Cloud Run Worker Pool link (buildConfig.workerPool)
 				{
@@ -283,10 +251,6 @@ func TestCloudFunctionsFunction(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(location, "test-worker-pool"),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Test resolved storage bucket link (buildConfig.sourceProvenance.resolvedStorageSource.bucket)
 				{
@@ -294,10 +258,6 @@ func TestCloudFunctionsFunction(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-resolved-bucket",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Note: serviceConfig.vpcConnector test case omitted because gcp-vpc-access-connector adapter doesn't exist
 			}

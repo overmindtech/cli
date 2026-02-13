@@ -83,10 +83,6 @@ func TestSecurityCenterManagementSecurityCenterService(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  projectID,
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			}
 

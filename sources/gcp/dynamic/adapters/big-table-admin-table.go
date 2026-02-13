@@ -27,18 +27,15 @@ var _ = registerableAdapter{
 		"name": {
 			ToSDPItemType:    gcpshared.BigTableAdminInstance,
 			Description:      "If the BigTableAdmin Instance is deleted or updated: The Table may become invalid or inaccessible. If the Table is updated: The instance remains unaffected.",
-			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 		// If this table was restored from another data source (e.g. a backup), this field, restoreInfo, will be populated with information about the restore.
 		"restoreInfo.backupInfo.sourceTable": {
 			ToSDPItemType:    gcpshared.BigTableAdminTable,
 			Description:      "If the source BigTableAdmin Table is deleted or updated: The restored table may become invalid or inaccessible. If the restored table is updated: The source table remains unaffected.",
-			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 		"restoreInfo.backupInfo.sourceBackup": {
 			ToSDPItemType:    gcpshared.BigTableAdminBackup,
 			Description:      "If the source BigTableAdmin Backup is deleted or updated: The restored table may become invalid or inaccessible. If the restored table is updated: The source backup remains unaffected.",
-			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

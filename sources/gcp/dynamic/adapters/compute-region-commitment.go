@@ -26,18 +26,10 @@ var _ = registerableAdapter{
 		"reservations.name": {
 			ToSDPItemType: gcpshared.ComputeReservation,
 			Description:   "If the Region Commitment is deleted or updated: Reservations that reference this commitment may lose associated discounts or resource guarantees. If the Reservation is updated or deleted: The commitment remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  false, // Changes to reservations don't affect commitments
-				Out: true,  // Changes to commitments affect reservations that reference them
-			},
 		},
 		"licenseResource.license": {
 			ToSDPItemType: gcpshared.ComputeLicense,
 			Description:   "If the Region Commitment is deleted or updated: Licenses that reference this commitment won't be affected. If the License is updated or deleted: The commitment may lose associated discounts or resource guarantees.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
-			},
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

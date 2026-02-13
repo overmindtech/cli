@@ -74,10 +74,6 @@ func TestAIPlatformCustomJob(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("global", "my-keyring", "my-key"),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					// jobSpec.network
@@ -85,10 +81,6 @@ func TestAIPlatformCustomJob(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "default",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					// jobSpec.serviceAccount
@@ -96,10 +88,6 @@ func TestAIPlatformCustomJob(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "aiplatform-sa@test-project.iam.gserviceaccount.com",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			}
 

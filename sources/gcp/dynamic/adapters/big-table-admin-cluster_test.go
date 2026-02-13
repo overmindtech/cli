@@ -172,10 +172,6 @@ func TestBigTableAdminCluster(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("us-central1", "test-keyring", "test-key"),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					// name field creates a backlink to the BigTable instance
@@ -183,10 +179,6 @@ func TestBigTableAdminCluster(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  instanceName,
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			}
 

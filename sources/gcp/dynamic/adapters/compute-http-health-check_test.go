@@ -82,10 +82,6 @@ func TestComputeHttpHealthCheck(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  "example.com",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 			}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
@@ -129,10 +125,6 @@ func TestComputeHttpHealthCheck(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "192.168.1.1",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 			}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)

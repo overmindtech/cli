@@ -74,10 +74,6 @@ func TestServiceDirectoryEndpoint(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(location, namespace, serviceName),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					// address
@@ -85,10 +81,6 @@ func TestServiceDirectoryEndpoint(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "192.168.1.1",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					// network
@@ -96,10 +88,6 @@ func TestServiceDirectoryEndpoint(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "default",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			}
 

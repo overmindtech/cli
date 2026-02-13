@@ -29,15 +29,10 @@ var _ = registerableAdapter{
 		"name": {
 			ToSDPItemType:    gcpshared.LoggingBucket,
 			Description:      "If the Logging Bucket is deleted or updated: The Logging Link may lose its association or fail to function as expected. If the Logging Link is updated: The bucket remains unaffected.",
-			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 		"bigqueryDataset.datasetId": {
 			Description:   "They are tightly coupled with the Logging Link.",
 			ToSDPItemType: gcpshared.BigQueryDataset,
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: true,
-			},
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

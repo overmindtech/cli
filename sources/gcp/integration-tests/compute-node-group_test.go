@@ -204,11 +204,7 @@ func TestComputeNodeGroupIntegration(t *testing.T) {
 					ExpectedType:   gcpshared.ComputeNodeGroup.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  nodeTemplateName,
-					ExpectedScope:  "*",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  false,
-						Out: true,
-					},
+					ExpectedScope: "*",
 				},
 			}
 

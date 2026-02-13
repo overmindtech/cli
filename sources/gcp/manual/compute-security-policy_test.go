@@ -51,10 +51,6 @@ func TestComputeSecurityPolicy(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-security-policy|1000",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  false,
-						Out: true,
-					},
 				},
 			}
 

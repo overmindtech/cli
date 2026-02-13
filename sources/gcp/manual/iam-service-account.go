@@ -172,10 +172,6 @@ func (c iamServiceAccountWrapper) gcpIAMServiceAccountToSDPItem(serviceAccount *
 				Query:  projectID,
 				Scope:  location.ProjectID,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: true,
-			},
 		})
 	}
 
@@ -189,10 +185,6 @@ func (c iamServiceAccountWrapper) gcpIAMServiceAccountToSDPItem(serviceAccount *
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  serviceAccountID,
 						Scope:  location.ProjectID,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  false,
-						Out: true,
 					},
 				})
 			}

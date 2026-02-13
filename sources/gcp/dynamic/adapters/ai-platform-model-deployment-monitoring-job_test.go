@@ -137,10 +137,6 @@ func TestAIPlatformModelDeploymentMonitoringJob(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("global", "test-ring", "test-key"),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// AI Platform Endpoint link (bidirectional)
 				{
@@ -148,10 +144,6 @@ func TestAIPlatformModelDeploymentMonitoringJob(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-endpoint",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				// Deployed Model ID link (AI Platform Model)
 				{
@@ -159,10 +151,6 @@ func TestAIPlatformModelDeploymentMonitoringJob(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "deployed-model-123",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Notification Channel 1 link
 				{
@@ -170,10 +158,6 @@ func TestAIPlatformModelDeploymentMonitoringJob(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "alert-channel-1",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Notification Channel 2 link
 				{
@@ -181,10 +165,6 @@ func TestAIPlatformModelDeploymentMonitoringJob(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "alert-channel-2",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// BigQuery table 1 link (training predict log)
 				{
@@ -192,10 +172,6 @@ func TestAIPlatformModelDeploymentMonitoringJob(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("monitoring_dataset", "training_predict_log"),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// BigQuery table 2 link (serving predict log)
 				{
@@ -203,10 +179,6 @@ func TestAIPlatformModelDeploymentMonitoringJob(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("monitoring_dataset", "serving_predict_log"),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Training dataset GCS source bucket links
 				{
@@ -214,20 +186,12 @@ func TestAIPlatformModelDeploymentMonitoringJob(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "training-bucket",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.StorageBucket.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "training-bucket-2",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Training dataset BigQuery source link
 				{
@@ -235,10 +199,6 @@ func TestAIPlatformModelDeploymentMonitoringJob(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("training_dataset", "training_table"),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Deployed Model ID link (second model)
 				{
@@ -246,10 +206,6 @@ func TestAIPlatformModelDeploymentMonitoringJob(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "deployed-model-456",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Schema bucket link for predict instance schema
 				{
@@ -257,10 +213,6 @@ func TestAIPlatformModelDeploymentMonitoringJob(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "schema-bucket",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Schema bucket link for analysis instance schema
 				{
@@ -268,10 +220,6 @@ func TestAIPlatformModelDeploymentMonitoringJob(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "schema-bucket-2",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)

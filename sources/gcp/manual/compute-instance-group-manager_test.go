@@ -67,50 +67,30 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "unit-test-template",
 						ExpectedScope:  projectID,
-						ExpectedBlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
-						},
 					},
 					{
 						ExpectedType:   gcpshared.ComputeInstanceGroup.String(),
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "test-group",
 						ExpectedScope:  "test-project-id.us-central1-a",
-						ExpectedBlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: true,
-						},
 					},
 					{
 						ExpectedType:   gcpshared.ComputeZone.String(),
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "us-central1-a",
 						ExpectedScope:  projectID,
-						ExpectedBlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
-						},
 					},
 					{
 						ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "test-policy",
 						ExpectedScope:  "test-project-id.us-central1",
-						ExpectedBlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
-						},
 					},
 					{
 						ExpectedType:   gcpshared.ComputeTargetPool.String(),
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "test-pool",
 						ExpectedScope:  "test-project-id.us-central1",
-						ExpectedBlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: true,
-						},
 					},
 				}
 
@@ -136,50 +116,30 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "unit-test-template",
 						ExpectedScope:  gcpshared.RegionalScope(projectID, region),
-						ExpectedBlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
-						},
 					},
 					{
 						ExpectedType:   gcpshared.ComputeInstanceGroup.String(),
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "test-group",
 						ExpectedScope:  "test-project-id.us-central1-a",
-						ExpectedBlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: true,
-						},
 					},
 					{
 						ExpectedType:   gcpshared.ComputeZone.String(),
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "us-central1-a",
 						ExpectedScope:  projectID,
-						ExpectedBlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
-						},
 					},
 					{
 						ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "test-policy",
 						ExpectedScope:  "test-project-id.us-central1",
-						ExpectedBlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
-						},
 					},
 					{
 						ExpectedType:   gcpshared.ComputeTargetPool.String(),
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "test-pool",
 						ExpectedScope:  "test-project-id.us-central1",
-						ExpectedBlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: true,
-						},
 					},
 				}
 
@@ -228,10 +188,6 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "canary-template",
 						ExpectedScope:  projectID,
-						ExpectedBlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
-						},
 					},
 					// Stable version template (regional)
 					{
@@ -239,40 +195,24 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "stable-template",
 						ExpectedScope:  gcpshared.RegionalScope(projectID, region),
-						ExpectedBlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
-						},
 					},
 					{
 						ExpectedType:   gcpshared.ComputeInstanceGroup.String(),
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "test-group",
 						ExpectedScope:  "test-project-id.us-central1-a",
-						ExpectedBlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: true,
-						},
 					},
 					{
 						ExpectedType:   gcpshared.ComputeTargetPool.String(),
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "test-pool",
 						ExpectedScope:  "test-project-id.us-central1",
-						ExpectedBlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: true,
-						},
 					},
 					{
 						ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "test-policy",
 						ExpectedScope:  "test-project-id.us-central1",
-						ExpectedBlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
-						},
 					},
 				}
 
@@ -318,10 +258,6 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "unit-test-template",
 						ExpectedScope:  projectID,
-						ExpectedBlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
-						},
 					},
 					// Health check from auto-healing policy
 					{
@@ -329,50 +265,30 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "test-health-check",
 						ExpectedScope:  projectID,
-						ExpectedBlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
-						},
 					},
 					{
 						ExpectedType:   gcpshared.ComputeInstanceGroup.String(),
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "test-group",
 						ExpectedScope:  "test-project-id.us-central1-a",
-						ExpectedBlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: true,
-						},
 					},
 					{
 						ExpectedType:   gcpshared.ComputeZone.String(),
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "us-central1-a",
 						ExpectedScope:  projectID,
-						ExpectedBlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
-						},
 					},
 					{
 						ExpectedType:   gcpshared.ComputeTargetPool.String(),
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "test-pool",
 						ExpectedScope:  "test-project-id.us-central1",
-						ExpectedBlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: true,
-						},
 					},
 					{
 						ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "test-policy",
 						ExpectedScope:  "test-project-id.us-central1",
-						ExpectedBlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
-						},
 					},
 				}
 

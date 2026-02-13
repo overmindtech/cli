@@ -159,10 +159,6 @@ func (b BigQueryDatasetWrapper) gcpBigQueryDatasetToItem(metadata *bigquery.Data
 			Query:  parts[1],
 			Scope:  location.ToScope(),
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  true,
-			Out: false,
-		},
 	})
 
 	// Link to contained tables.
@@ -173,10 +169,6 @@ func (b BigQueryDatasetWrapper) gcpBigQueryDatasetToItem(metadata *bigquery.Data
 			Query:  parts[1],
 			Scope:  location.ToScope(),
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  true,
-			Out: true,
-		},
 	})
 
 	// Link to contained routines.
@@ -186,10 +178,6 @@ func (b BigQueryDatasetWrapper) gcpBigQueryDatasetToItem(metadata *bigquery.Data
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  parts[1],
 			Scope:  location.ToScope(),
-		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  true,
-			Out: true,
 		},
 	})
 
@@ -205,10 +193,6 @@ func (b BigQueryDatasetWrapper) gcpBigQueryDatasetToItem(metadata *bigquery.Data
 						Query:  access.Entity,
 						Scope:  location.ToScope(),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				})
 			}
 		}
@@ -221,16 +205,6 @@ func (b BigQueryDatasetWrapper) gcpBigQueryDatasetToItem(metadata *bigquery.Data
 					Method: sdp.QueryMethod_GET,
 					Query:  access.Dataset.Dataset.DatasetID,
 					Scope:  location.ToScope(),
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					/*
-						A grant authorizing all resources of a particular type in a particular dataset access to this dataset.
-						Only views are supported for now.
-						The role field is not required when this field is set.
-						If that dataset is deleted and re-created, its access needs to be granted again via an update operation.
-					*/
-					In:  false,
-					Out: true,
 				},
 			})
 		}
@@ -247,10 +221,6 @@ func (b BigQueryDatasetWrapper) gcpBigQueryDatasetToItem(metadata *bigquery.Data
 					Query:  shared.CompositeLookupKey(values...),
 					Scope:  location.ProjectID,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			})
 		}
 	}
@@ -266,10 +236,6 @@ func (b BigQueryDatasetWrapper) gcpBigQueryDatasetToItem(metadata *bigquery.Data
 					Method: sdp.QueryMethod_GET,
 					Query:  shared.CompositeLookupKey(values...),
 					Scope:  location.ToScope(),
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: true,
 				},
 			})
 		}

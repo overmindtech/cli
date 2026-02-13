@@ -91,10 +91,6 @@ func (m BigQueryModelWrapper) GCPBigQueryMetadataToItem(ctx context.Context, loc
 		},
 		// Model is in a dataset, if dataset is deleted, model is deleted.
 		// If the model is deleted, the dataset is not deleted.
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  false,
-			Out: true,
-		},
 	})
 
 	if metadata.EncryptionConfig != nil && metadata.EncryptionConfig.KMSKeyName != "" {
@@ -106,10 +102,6 @@ func (m BigQueryModelWrapper) GCPBigQueryMetadataToItem(ctx context.Context, loc
 					Method: sdp.QueryMethod_GET,
 					Scope:  location.ProjectID,
 					Query:  shared.CompositeLookupKey(values...),
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
 				},
 			})
 		}
@@ -127,10 +119,6 @@ func (m BigQueryModelWrapper) GCPBigQueryMetadataToItem(ctx context.Context, loc
 						Query:  shared.CompositeLookupKey(dataSetId, row.DataSplitResult.EvaluationTable.TableId),
 					},
 					// If the evaluation table is deleted or updated: The model's evaluation results may become invalid or inaccessible. If the model is updated: The table remains unaffected.
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				})
 			}
 
@@ -144,10 +132,6 @@ func (m BigQueryModelWrapper) GCPBigQueryMetadataToItem(ctx context.Context, loc
 						Query:  shared.CompositeLookupKey(dataSetId, row.DataSplitResult.TrainingTable.TableId),
 					},
 					// If the training table is deleted or updated: The model's training data may become invalid or inaccessible. If the model is updated: The table remains unaffected.
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				})
 			}
 
@@ -161,10 +145,6 @@ func (m BigQueryModelWrapper) GCPBigQueryMetadataToItem(ctx context.Context, loc
 						Query:  shared.CompositeLookupKey(dataSetId, row.DataSplitResult.TestTable.TableId),
 					},
 					// If the test table is deleted or updated: The model's test results may become invalid or inaccessible. If the model is updated: The table remains unaffected.
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				})
 			}
 		}

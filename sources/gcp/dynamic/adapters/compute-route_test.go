@@ -76,10 +76,6 @@ func TestComputeRoute(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "default",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					// nextHopNetwork
@@ -87,10 +83,6 @@ func TestComputeRoute(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "peer-network",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					// nextHopIp
@@ -98,10 +90,6 @@ func TestComputeRoute(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "10.0.0.1",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					// nextHopVpnTunnel
@@ -109,10 +97,6 @@ func TestComputeRoute(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-tunnel",
 					ExpectedScope:  "test-project.us-central1",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					// nextHopInstance
@@ -120,10 +104,6 @@ func TestComputeRoute(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-instance",
 					ExpectedScope:  "test-project.us-central1-a",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// TODO: Add test for nextHopGateway → ComputeGateway
 				// Requires ComputeGateway adapter to be implemented first

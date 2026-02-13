@@ -53,10 +53,6 @@ func TestBigQueryRoutine(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  datasetID,
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				// Imported library GCS bucket link
 				{
@@ -64,10 +60,6 @@ func TestBigQueryRoutine(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "bucket",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Remote function connection link
 				{
@@ -75,10 +67,6 @@ func TestBigQueryRoutine(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "us|example-conn",
 					ExpectedScope:  "example",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Remote function HTTP endpoint link
 				{
@@ -86,10 +74,6 @@ func TestBigQueryRoutine(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  "https://example.com/run",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)

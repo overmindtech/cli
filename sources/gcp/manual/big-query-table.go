@@ -177,11 +177,6 @@ func (b BigQueryTableWrapper) GCPBigQueryTableToItem(location gcpshared.Location
 			Query:  parts[0], // dataset ID
 			Scope:  location.ProjectID,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// Tightly coupled.
-			In:  true,
-			Out: true,
-		},
 	})
 
 	if metadata.EncryptionConfig != nil && metadata.EncryptionConfig.KMSKeyName != "" {
@@ -196,11 +191,6 @@ func (b BigQueryTableWrapper) GCPBigQueryTableToItem(location gcpshared.Location
 					Method: sdp.QueryMethod_GET,
 					Query:  shared.CompositeLookupKey(values...),
 					Scope:  location.ProjectID,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Tightly coupled.
-					In:  true,
-					Out: false,
 				},
 			})
 		}
@@ -239,11 +229,6 @@ func (b BigQueryTableWrapper) GCPBigQueryTableToItem(location gcpshared.Location
 						Query:  shared.CompositeLookupKey(connectionLocation, connectionID),
 						Scope:  projectID,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Tightly coupled.
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 		}
@@ -260,11 +245,7 @@ func (b BigQueryTableWrapper) GCPBigQueryTableToItem(location gcpshared.Location
 					// Use the StorageBucket linker to extract bucket name from various URI formats
 					if linkFunc, ok := gcpshared.ManualAdapterLinksByAssetType[gcpshared.StorageBucket]; ok {
 						// The linker handles gs:// URIs and extracts bucket names
-						linkedQuery := linkFunc(location.ProjectID, location.ToScope(), sourceURI, &sdp.BlastPropagation{
-							// If the Storage Bucket is deleted or updated: The external table may fail to read data. If the table is updated: The bucket remains unaffected.
-							In:  true,
-							Out: false,
-						})
+						linkedQuery := linkFunc(location.ProjectID, location.ToScope(), sourceURI)
 						if linkedQuery != nil {
 							// Create a unique key from query and scope to deduplicate
 							bucketKey := fmt.Sprintf("%s|%s", linkedQuery.GetQuery().GetQuery(), linkedQuery.GetQuery().GetScope())
@@ -293,11 +274,6 @@ func (b BigQueryTableWrapper) GCPBigQueryTableToItem(location gcpshared.Location
 					Query:  shared.CompositeLookupKey(baseTableRef.DatasetID, baseTableRef.TableID),
 					Scope:  baseTableRef.ProjectID,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// If the base table is deleted or updated: The snapshot may become invalid or inaccessible. If the snapshot is updated: The base table remains unaffected.
-					In:  true,
-					Out: false,
-				},
 			})
 		}
 	}
@@ -315,11 +291,6 @@ func (b BigQueryTableWrapper) GCPBigQueryTableToItem(location gcpshared.Location
 					Method: sdp.QueryMethod_GET,
 					Query:  shared.CompositeLookupKey(baseTableRef.DatasetID, baseTableRef.TableID),
 					Scope:  baseTableRef.ProjectID,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// If the base table is deleted or updated: The clone may become invalid or inaccessible. If the clone is updated: The base table remains unaffected.
-					In:  true,
-					Out: false,
 				},
 			})
 		}

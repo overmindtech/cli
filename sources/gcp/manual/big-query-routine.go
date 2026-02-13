@@ -177,23 +177,15 @@ func (b BigQueryRoutineWrapper) gcpBigQueryRoutineToItem(metadata *bigquery.Rout
 			Query:  datasetID,
 			Scope:  location.ProjectID,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  true,
-			Out: true,
-		},
 	})
 
 	// Link to imported libraries (GCS buckets) for JavaScript routines
 	// Format: gs://bucket-name/path/to/file.js
 	if len(metadata.ImportedLibraries) > 0 {
-		blastPropagation := &sdp.BlastPropagation{
-			In:  true,
-			Out: false,
-		}
 		if linkFunc, ok := gcpshared.ManualAdapterLinksByAssetType[gcpshared.StorageBucket]; ok {
 			for _, libraryURI := range metadata.ImportedLibraries {
 				if libraryURI != "" {
-					linkedQuery := linkFunc(location.ProjectID, location.ToScope(), libraryURI, blastPropagation)
+					linkedQuery := linkFunc(location.ProjectID, location.ToScope(), libraryURI)
 					if linkedQuery != nil {
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, linkedQuery)
 					}
@@ -232,11 +224,6 @@ func (b BigQueryRoutineWrapper) gcpBigQueryRoutineToItem(metadata *bigquery.Rout
 					Query:  shared.CompositeLookupKey(location, connectionID),
 					Scope:  projectID,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// If the Connection is deleted or updated: The remote function may fail to authenticate. If the routine is updated: The connection remains unaffected.
-					In:  true,
-					Out: false,
-				},
 			})
 		}
 	}
@@ -252,11 +239,6 @@ func (b BigQueryRoutineWrapper) gcpBigQueryRoutineToItem(metadata *bigquery.Rout
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  endpoint,
 					Scope:  "global",
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// If the HTTP endpoint is unreachable: The remote function will fail to execute. If the routine is updated: The endpoint remains unaffected.
-					In:  true,
-					Out: false,
 				},
 			})
 		}

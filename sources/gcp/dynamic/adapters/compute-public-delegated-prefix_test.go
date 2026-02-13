@@ -99,10 +99,6 @@ func TestComputePublicDelegatedPrefix(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "delegatee-project-1",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Delegatee project 2 link
 				{
@@ -110,10 +106,6 @@ func TestComputePublicDelegatedPrefix(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "delegatee-project-2",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Sub-prefix 1 link
 				{
@@ -121,10 +113,6 @@ func TestComputePublicDelegatedPrefix(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-sub-prefix-1",
 					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, region),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Sub-prefix 2 link
 				{
@@ -132,10 +120,6 @@ func TestComputePublicDelegatedPrefix(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-sub-prefix-2",
 					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, region),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)

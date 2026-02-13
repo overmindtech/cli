@@ -40,92 +40,74 @@ var _ = registerableAdapter{
 		"config.masterConfig.imageUri": {
 			ToSDPItemType:    gcpshared.ComputeImage,
 			Description:      "If the Image is deleted or updated: The cluster may fail to create new nodes. If the cluster is updated: The existing nodes remain unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		"config.masterConfig.managedGroupConfig.instanceGroupManagerUri": {
 			ToSDPItemType:    gcpshared.ComputeInstanceGroupManager,
 			Description:      "If the Instance Group Manager is deleted or updated: The cluster may fail to create new nodes. If the cluster is updated: The existing nodes remain unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		"config.masterConfig.accelerators.acceleratorTypeUri": {
 			ToSDPItemType:    gcpshared.ComputeAcceleratorType,
 			Description:      "If the Accelerator Type is deleted or updated: The cluster may fail to create new nodes. If the cluster is updated: The existing nodes remain unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		"config.workerConfig.imageUri": {
 			ToSDPItemType:    gcpshared.ComputeImage,
 			Description:      "If the Image is deleted or updated: The cluster may fail to create new nodes. If the cluster is updated: The existing nodes remain unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		"config.workerConfig.managedGroupConfig.instanceGroupManagerUri": {
 			ToSDPItemType:    gcpshared.ComputeInstanceGroupManager,
 			Description:      "If the Instance Group Manager is deleted or updated: The cluster may fail to create new nodes. If the cluster is updated: The existing nodes remain unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		"config.workerConfig.accelerators.acceleratorTypeUri": {
 			ToSDPItemType:    gcpshared.ComputeAcceleratorType,
 			Description:      "If the Accelerator Type is deleted or updated: The cluster may fail to create new nodes. If the cluster is updated: The existing nodes remain unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		"config.secondaryWorkerConfig.imageUri": {
 			ToSDPItemType:    gcpshared.ComputeImage,
 			Description:      "If the Image is deleted or updated: The cluster may fail to create new nodes. If the cluster is updated: The existing nodes remain unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		"config.secondaryWorkerConfig.managedGroupConfig.instanceGroupManagerUri": {
 			ToSDPItemType:    gcpshared.ComputeInstanceGroupManager,
 			Description:      "If the Instance Group Manager is deleted or updated: The cluster may fail to create new nodes. If the cluster is updated: The existing nodes remain unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		"config.secondaryWorkerConfig.accelerators.acceleratorTypeUri": {
 			ToSDPItemType:    gcpshared.ComputeAcceleratorType,
 			Description:      "If the Accelerator Type is deleted or updated: The cluster may fail to create new nodes. If the cluster is updated: The existing nodes remain unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		"config.autoscalingConfig.policyUri": {
 			ToSDPItemType:    gcpshared.DataprocAutoscalingPolicy,
 			Description:      "If the Autoscaling Policy is deleted or updated: The cluster may fail to scale. If the cluster is updated: The existing nodes remain unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		"config.auxiliaryNodeGroups.nodeGroup.name": {
 			ToSDPItemType:    gcpshared.ComputeNodeGroup,
 			Description:      "If the Node Group is deleted or updated: The cluster may fail to create new nodes. If the cluster is updated: The existing nodes remain unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		"config.tempBucket": {
 			ToSDPItemType:    gcpshared.StorageBucket,
 			Description:      "If the Storage Bucket is deleted or updated: The cluster may fail to stage data or logs. If the cluster is updated: The bucket remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		"config.stagingBucket": {
 			ToSDPItemType:    gcpshared.StorageBucket,
 			Description:      "If the Storage Bucket is deleted or updated: The cluster may fail to stage job dependencies, configuration files, or job driver console output. If the cluster is updated: The bucket remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		"config.metastoreConfig.dataprocMetastoreService": {
 			ToSDPItemType:    gcpshared.DataprocMetastoreService,
 			Description:      "If the Dataproc Metastore Service is deleted or updated: The cluster may lose access to centralized metadata or fail to operate correctly. If the cluster is updated: The metastore service remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		"virtualClusterConfig.kubernetesClusterConfig.gkeClusterConfig.gkeClusterTarget": {
 			ToSDPItemType:    gcpshared.ContainerCluster,
 			Description:      "If the GKE Cluster is deleted or updated: The Dataproc virtual cluster may become invalid or inaccessible. If the Dataproc cluster is updated: The GKE cluster remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		"virtualClusterConfig.kubernetesClusterConfig.gkeClusterConfig.nodePoolTarget.nodePool": {
 			ToSDPItemType:    gcpshared.ContainerNodePool,
 			Description:      "If the GKE Node Pool is deleted or updated: The Dataproc virtual cluster may fail to schedule workloads or lose capacity. If the Dataproc cluster is updated: The node pool remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		"virtualClusterConfig.stagingBucket": {
 			ToSDPItemType:    gcpshared.StorageBucket,
 			Description:      "If the Storage Bucket is deleted or updated: The virtual cluster may fail to stage job dependencies, configuration files, or job driver console output. If the cluster is updated: The bucket remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		"virtualClusterConfig.auxiliaryServicesConfig.sparkHistoryServerConfig.dataprocCluster": {
 			ToSDPItemType:    gcpshared.DataprocCluster,
 			Description:      "If the Spark History Server Dataproc Cluster is deleted or updated: The cluster may lose access to Spark job history or fail to monitor Spark applications. If the cluster is updated: The Spark History Server cluster remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

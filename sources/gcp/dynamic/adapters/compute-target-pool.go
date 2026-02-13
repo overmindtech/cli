@@ -39,17 +39,14 @@ var _ = registerableAdapter{
 		"instances": {
 			ToSDPItemType:    gcpshared.ComputeInstance,
 			Description:      "If the Compute Instance is deleted or updated: the pool membership becomes invalid or traffic may fail to reach it. If the pool is updated: the instance remains structurally unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		"healthChecks": {
 			ToSDPItemType:    gcpshared.ComputeHealthCheck,
 			Description:      "If the Health Check is updated or deleted: health status and traffic distribution may be affected. If the pool is updated: the health check remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		"backupPool": {
 			ToSDPItemType:    gcpshared.ComputeTargetPool,
 			Description:      "If the backup Target Pool is updated or deleted: failover behavior may change. If this pool is updated: the backup pool remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

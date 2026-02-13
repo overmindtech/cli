@@ -29,17 +29,14 @@ var _ = registerableAdapter{
 		"destinationDatasetId": {
 			ToSDPItemType:    gcpshared.BigQueryDataset,
 			Description:      "If the BigQuery Dataset is deleted or updated: The transfer config may fail to write data. If the transfer config is updated: The dataset remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		"dataSourceId": {
 			ToSDPItemType:    gcpshared.BigQueryDataTransferDataSource,
 			Description:      "If the Data Source is deleted or updated: The transfer config may fail to function. If the transfer config is updated: The data source remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		"notificationPubsubTopic": {
 			ToSDPItemType:    gcpshared.PubSubTopic,
 			Description:      "If the Pub/Sub Topic is deleted or updated: Notifications may fail to be sent. If the transfer config is updated: The Pub/Sub topic remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		"encryptionConfiguration.kmsKeyName": gcpshared.CryptoKeyImpactInOnly,
 		"serviceAccountName":                 gcpshared.IAMServiceAccountImpactInOnly,
@@ -50,10 +47,6 @@ var _ = registerableAdapter{
 		"name": {
 			ToSDPItemType: gcpshared.BigQueryDataTransferTransferRun,
 			Description:   "If the Transfer Config is deleted or updated: All associated transfer runs may become invalid or inaccessible. If a transfer run is updated: The transfer config remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  false,
-				Out: true,
-			},
 			IsParentToChild: true,
 		},
 	},

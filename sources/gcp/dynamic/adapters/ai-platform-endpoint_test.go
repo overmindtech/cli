@@ -119,10 +119,6 @@ func TestAIPlatformEndpoint(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("global", "test-ring", "test-key"),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Network link
 				{
@@ -130,10 +126,6 @@ func TestAIPlatformEndpoint(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "default",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Deployed model link
 				{
@@ -141,10 +133,6 @@ func TestAIPlatformEndpoint(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-model",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				// Model deployment monitoring job link
 				{
@@ -152,10 +140,6 @@ func TestAIPlatformEndpoint(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("global", "test-job"),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				// Dedicated endpoint DNS link
 				{
@@ -163,10 +147,6 @@ func TestAIPlatformEndpoint(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  "test-endpoint.aiplatform.googleapis.com",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				// BigQuery table link
 				{
@@ -174,10 +154,6 @@ func TestAIPlatformEndpoint(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("test_dataset", "test_table"),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)

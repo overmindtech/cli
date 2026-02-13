@@ -91,30 +91,18 @@ func TestComputeVpnGateway(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "default",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					ExpectedType:   stdlib.NetworkIP.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "203.0.113.1",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.ComputeInterconnectAttachment.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-attachment",
 					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, region),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 			}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)

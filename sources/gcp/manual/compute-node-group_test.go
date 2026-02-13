@@ -52,10 +52,6 @@ func TestComputeNodeGroup(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "node-template-1",
 					ExpectedScope:  "test-project.northamerica-northeast1",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			}
 

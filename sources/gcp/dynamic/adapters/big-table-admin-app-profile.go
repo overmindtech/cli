@@ -25,17 +25,14 @@ var _ = registerableAdapter{
 		"name": {
 			ToSDPItemType:    gcpshared.BigTableAdminInstance,
 			Description:      "If the BigTableAdmin Instance is deleted or updated: The AppProfile may become invalid or inaccessible. If the AppProfile is updated: The instance remains unaffected.",
-			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 		"multiClusterRoutingUseAny.clusterIds": {
 			ToSDPItemType:    gcpshared.BigTableAdminCluster,
 			Description:      "If the BigTableAdmin Cluster is deleted or updated: The AppProfile may lose routing capabilities or fail to access data. If the AppProfile is updated: The cluster remains unaffected.",
-			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 		"singleClusterRouting.clusterId": {
 			ToSDPItemType:    gcpshared.BigTableAdminCluster,
 			Description:      "If the BigTableAdmin Cluster is deleted or updated: The AppProfile may lose routing capabilities or fail to access data. If the AppProfile is updated: The cluster remains unaffected.",
-			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

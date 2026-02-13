@@ -345,10 +345,6 @@ func GcpComputeHealthCheckToSDPItem(healthCheck *computepb.HealthCheck, location
 					Query:  regionName,
 					Scope:  location.ProjectID,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			})
 		}
 	}
@@ -361,10 +357,6 @@ func GcpComputeHealthCheckToSDPItem(healthCheck *computepb.HealthCheck, location
 				Method: sdp.QueryMethod_GET,
 				Query:  region,
 				Scope:  location.ProjectID,
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
 			},
 		})
 	}
@@ -385,10 +377,6 @@ func linkHostToNetworkResource(sdpItem *sdp.Item, host string) {
 				Query:  host,
 				Scope:  "global",
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: true,
-			},
 		})
 	} else {
 		sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -397,10 +385,6 @@ func linkHostToNetworkResource(sdpItem *sdp.Item, host string) {
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  host,
 				Scope:  "global",
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: true,
 			},
 		})
 	}

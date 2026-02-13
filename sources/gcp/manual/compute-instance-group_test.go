@@ -54,30 +54,18 @@ func TestComputeInstanceGroup(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-network",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.ComputeSubnetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-subnetwork",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.ComputeZone.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  zone,
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			}
 

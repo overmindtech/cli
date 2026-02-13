@@ -40,12 +40,10 @@ var _ = registerableAdapter{
 		"nodePools.config.nodeGroup": {
 			ToSDPItemType:    gcpshared.ComputeNodeGroup,
 			Description:      "If the referenced Node Group is deleted or updated: Node pools backed by it may fail to create or manage nodes. Updates to the node pool will not affect the node group.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		"notificationConfig.pubsub.topic": {
 			ToSDPItemType:    gcpshared.PubSubTopic,
 			Description:      "If the referenced Pub/Sub topic is deleted or updated: Notifications may fail to be sent. Updates to the cluster will not affect the topic.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		// The Cloud KMS cryptoKeyVersions to use for signing service account JWTs issued by this cluster.
 		// Format: projects/{project}/locations/{location}/keyRings/{keyring}/cryptoKeys/{cryptoKey}/cryptoKeyVersions/{cryptoKeyVersion}
@@ -63,7 +61,6 @@ var _ = registerableAdapter{
 		"resourceUsageExportConfig.bigqueryDestination.datasetId": {
 			ToSDPItemType:    gcpshared.BigQueryDataset,
 			Description:      "If the referenced BigQuery dataset is deleted or updated: Resource usage export may fail. Updates to the cluster will not affect the dataset.",
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		// The IP address of this cluster's master endpoint.
 		"endpoint": gcpshared.IPImpactBothWays,
@@ -72,10 +69,6 @@ var _ = registerableAdapter{
 		"name": {
 			ToSDPItemType: gcpshared.ContainerNodePool,
 			Description:   "If the Container Cluster is deleted or updated: All associated Node Pools may become invalid or inaccessible. If a Node Pool is updated: The cluster remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  false,
-				Out: true,
-			},
 			IsParentToChild: true,
 		},
 	},

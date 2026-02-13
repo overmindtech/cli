@@ -37,15 +37,10 @@ var _ = registerableAdapter{
 		"projectId": {
 			ToSDPItemType:    gcpshared.CloudResourceManagerProject,
 			Description:      "If the Cloud Resource Manager Project is deleted or updated: The billing information may become invalid or inaccessible. If the billing info is updated: The project remains unaffected.",
-			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 		"billingAccountName": {
 			ToSDPItemType: gcpshared.CloudBillingBillingAccount,
 			Description:   "If the Cloud Billing Billing Account is deleted or updated: The billing information may become invalid or inaccessible. If the billing info is updated: The billing account is impacted as well.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: true,
-			},
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

@@ -78,10 +78,6 @@ func TestBigTableAdminInstance(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  instanceName,
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  false,
-						Out: true,
-					},
 				},
 			}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)

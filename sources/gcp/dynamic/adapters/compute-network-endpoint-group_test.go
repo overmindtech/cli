@@ -98,10 +98,6 @@ func TestComputeNetworkEndpointGroup(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "default",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Subnetwork link
 				{
@@ -109,10 +105,6 @@ func TestComputeNetworkEndpointGroup(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "default",
 					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Cloud Run service link
 				{
@@ -120,10 +112,6 @@ func TestComputeNetworkEndpointGroup(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("us-central1", "test-cloud-run-service"),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// Note: App Engine service link test omitted because gcp-app-engine-service adapter doesn't exist yet
 				// Cloud Function link
@@ -132,10 +120,6 @@ func TestComputeNetworkEndpointGroup(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("us-central1", "test-cloud-function"),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)

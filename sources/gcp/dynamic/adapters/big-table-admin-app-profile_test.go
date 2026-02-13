@@ -85,10 +85,6 @@ func TestBigTableAdminAppProfile(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  instanceName,
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// TODO: Add test for singleClusterRouting.clusterId → BigTableAdminCluster
 				// Requires manual linker to combine instance name with cluster ID
@@ -122,10 +118,6 @@ func TestBigTableAdminAppProfile(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  instanceName,
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// TODO: Add tests for multiClusterRoutingUseAny.clusterIds → BigTableAdminCluster
 				// Requires manual linker to combine instance name with cluster IDs

@@ -29,10 +29,6 @@ var _ = registerableAdapter{
 		"name": {
 			ToSDPItemType: gcpshared.ServiceDirectoryEndpoint,
 			Description:   "If the Service Directory Service is deleted or updated: All associated endpoints may become invalid or inaccessible. If an endpoint is updated: The service remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  false,
-				Out: true,
-			},
 			IsParentToChild: true,
 		},
 		// Link to IP addresses in endpoint addresses (if endpoints are included in the response)

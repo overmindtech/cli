@@ -164,12 +164,12 @@ For each attribute that references another resource:
 ```go
 blastPropagation: map[string]*gcpshared.Impact{
     "network": {
-        In:  true,  // This resource is affected if network changes
-        Out: false, // Network is not affected if this resource changes
+        ToSDPItemType: gcpshared.ComputeNetwork,
+        Description:   "This resource is affected if network changes. Network is not affected if this resource changes.",
     },
     "subnet": {
-        In:  true,  // This resource is affected if subnet changes
-        Out: true,  // Subnet is affected if this resource changes
+        ToSDPItemType: gcpshared.ComputeSubnetwork,
+        Description:   "This resource is affected if subnet changes. Subnet is affected if this resource changes.",
     },
 },
 ```
@@ -199,9 +199,8 @@ SpannerDatabase: {
     // This is a backlink to instance.
     // Framework will extract the instance name and create the linked item query with GET
     "name": {
-        Description:      "If the Spanner Instance is deleted or updated: The Database may become invalid or inaccessible. If the Database is updated: The instance remains unaffected.",
-        ToSDPItemType:    SpannerInstance,
-        BlastPropagation: impactInOnly,
+        Description:   "If the Spanner Instance is deleted or updated: The Database may become invalid or inaccessible. If the Database is updated: The instance remains unaffected.",
+        ToSDPItemType: SpannerInstance,
     },
 }
 ```
@@ -228,10 +227,6 @@ When adding backlink blast propagations, verify they work correctly in tests:
     ExpectedMethod: sdp.QueryMethod_GET,
     ExpectedQuery:  instanceName,
     ExpectedScope:  projectID,
-    ExpectedBlastPropagation: &sdp.BlastPropagation{
-        In:  true,
-        Out: false,
-    },
 }
 ```
 
@@ -262,12 +257,8 @@ var spannerInstanceAdapter = registerableAdapter{
         // This a link from parent to child via SEARCH
         // We need to make sure that the linked item supports `SEARCH` method for the `instance` name.
         "name": {
-            ToSDPItemType: gcpshared.SpannerDatabase,
-            Description:   "If the Spanner Instance is deleted or updated: All associated databases may become invalid or inaccessible. If a database is updated: The instance remains unaffected.",
-            BlastPropagation: &sdp.BlastPropagation{
-                In: false,
-                Out: true,
-            },
+            ToSDPItemType:    gcpshared.SpannerDatabase,
+            Description:      "If the Spanner Instance is deleted or updated: All associated databases may become invalid or inaccessible. If a database is updated: The instance remains unaffected.",
             IsParentToChild: true,
         },
     },
@@ -297,10 +288,6 @@ When adding parent-to-child blast propagations, verify they work correctly in te
     ExpectedMethod: sdp.QueryMethod_SEARCH,
     ExpectedQuery:  instanceName,
     ExpectedScope:  projectID,
-    ExpectedBlastPropagation: &sdp.BlastPropagation{
-        In: false,
-        Out: true,
-    },
 }
 ```
 

@@ -161,10 +161,6 @@ func (c computeSnapshotWrapper) gcpComputeSnapshotToSDPItem(ctx context.Context,
 					Query:  licenseName,
 					Scope:  location.ProjectID,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			})
 		}
 	}
@@ -181,10 +177,6 @@ func (c computeSnapshotWrapper) gcpComputeSnapshotToSDPItem(ctx context.Context,
 						Method: sdp.QueryMethod_GET,
 						Query:  instantSnapshotName,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
 					},
 				})
 			}
@@ -208,10 +200,6 @@ func (c computeSnapshotWrapper) gcpComputeSnapshotToSDPItem(ctx context.Context,
 						Query:  diskName,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  false,
-						Out: true,
-					},
 				})
 			}
 		}
@@ -233,10 +221,6 @@ func (c computeSnapshotWrapper) gcpComputeSnapshotToSDPItem(ctx context.Context,
 						Method: sdp.QueryMethod_GET,
 						Query:  snapshotSchedulePolicyName,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
 					},
 				})
 			}
@@ -282,10 +266,6 @@ func (c computeSnapshotWrapper) addKMSKeyLink(sdpItem *sdp.Item, keyName string,
 				Method: sdp.QueryMethod_GET,
 				Query:  shared.CompositeLookupKey(loc, keyRing, cryptoKey, cryptoKeyVersion),
 				Scope:  location.ProjectID,
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
 			},
 		})
 	}
