@@ -207,7 +207,7 @@ func setupTest(t *testing.T, ctx context.Context, iamService *iam.Service, crmSe
 	maxAttempts = 60 // Allow more time for enforcement
 	for attempt := 1; attempt <= maxAttempts; attempt++ {
 		// Create credentials from "Our Service Account" key
-		testCreds, err := google.CredentialsFromJSON(ctx, keyData, iam.CloudPlatformScope)
+		testCreds, err := google.CredentialsFromJSONWithType(ctx, keyData, google.ServiceAccount, iam.CloudPlatformScope)
 		if err != nil {
 			t.Fatalf("Failed to create credentials for verification: %v", err)
 		}
@@ -250,7 +250,7 @@ func testOurServiceAccountDirectAuth(t *testing.T, ctx context.Context, state *t
 	}
 
 	// Create credentials from the key
-	creds, err := google.CredentialsFromJSON(ctx, keyData, compute.DefaultAuthScopes()...)
+	creds, err := google.CredentialsFromJSONWithType(ctx, keyData, google.ServiceAccount, compute.DefaultAuthScopes()...)
 	if err != nil {
 		t.Logf("Key data: %s", string(keyData))
 		t.Fatalf("Failed to create credentials from key: %v", err)
@@ -315,7 +315,7 @@ func testCustomerServiceAccountDirectAuth(t *testing.T, ctx context.Context, sta
 	}
 
 	// Create credentials from the key
-	creds, err := google.CredentialsFromJSON(ctx, keyData, compute.DefaultAuthScopes()...)
+	creds, err := google.CredentialsFromJSONWithType(ctx, keyData, google.ServiceAccount, compute.DefaultAuthScopes()...)
 	if err != nil {
 		t.Fatalf("Failed to create credentials from key: %v", err)
 	}
@@ -357,7 +357,7 @@ func testImpersonation(t *testing.T, ctx context.Context, state *testState) {
 	}
 
 	// Create credentials from "Our Service Account" key
-	creds, err := google.CredentialsFromJSON(ctx, keyData, iam.CloudPlatformScope)
+	creds, err := google.CredentialsFromJSONWithType(ctx, keyData, google.ServiceAccount, iam.CloudPlatformScope)
 	if err != nil {
 		t.Fatalf("Failed to create credentials from key: %v", err)
 	}
