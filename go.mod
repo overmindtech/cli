@@ -114,7 +114,7 @@ require (
 	github.com/harness/harness-go-sdk v0.7.6
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/hashicorp/hcl/v2 v2.24.0
-	github.com/hashicorp/terraform-config-inspect v0.0.0-20260204111900-477360eb0c77
+	github.com/hashicorp/terraform-config-inspect v0.0.0-20260210152655-f4be3ba97d94
 	github.com/invopop/jsonschema v0.13.0
 	github.com/jackc/pgx/v5 v5.8.0
 	github.com/jedib0t/go-pretty/v6 v6.7.8
@@ -337,7 +337,7 @@ require (
 	github.com/lestrrat-go/jwx/v2 v2.1.6 // indirect
 	github.com/lestrrat-go/option v1.0.1 // indirect
 	github.com/lib/pq v1.10.9 // indirect
-	github.com/lithammer/fuzzysearch v1.1.8 // indirect
+	github.com/lithammer/fuzzysearch v1.1.8
 	github.com/logrusorgru/aurora v2.0.3+incompatible // indirect
 	github.com/lucasb-eyer/go-colorful v1.2.0 // indirect
 	github.com/lufia/plan9stats v0.0.0-20211012122336-39d0f177ccd0 // indirect
