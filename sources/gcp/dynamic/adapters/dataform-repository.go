@@ -29,25 +29,21 @@ var _ = registerableAdapter{
 		"gitRemoteSettings.authenticationTokenSecretVersion": {
 			ToSDPItemType:    gcpshared.SecretManagerSecret,
 			Description:      "If the Secret Manager Secret is deleted or updated: The Dataform Repository may fail to authenticate with the Git remote. If the Dataform Repository is updated: The secret remains unaffected.",
-			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 		// The name of the Secret Manager secret version to use as a ssh private key for Git operations. Must be in the format projects/*/secrets/*/versions/*.
 		"gitRemoteSettings.sshAuthenticationConfig.userPrivateKeySecretVersion": {
 			ToSDPItemType:    gcpshared.SecretManagerSecret,
 			Description:      "If the Secret Manager Secret is deleted or updated: The Dataform Repository may fail to authenticate with the Git remote. If the Dataform Repository is updated: The secret remains unaffected.",
-			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 		// Name of the Secret Manager secret version used to interpolate variables into the .npmrc file for package installation operations.
 		"npmrcEnvironmentVariablesSecretVersion": {
 			ToSDPItemType:    gcpshared.SecretManagerSecret,
 			Description:      "If the Secret Manager Secret is deleted or updated: The Dataform Repository may fail to install npm packages. If the Dataform Repository is updated: The secret remains unaffected.",
-			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 		// The URL of the Git remote repository. Can be HTTPS (e.g., https://github.com/user/repo.git) or SSH (e.g., git@github.com:user/repo.git).
 		"gitRemoteSettings.url": {
 			ToSDPItemType:    stdlib.NetworkHTTP,
 			Description:      "If the Git remote URL becomes inaccessible: The Dataform Repository may fail to sync with the remote. If the Dataform Repository is updated: The Git remote remains unaffected.",
-			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 		// The service account to run workflow invocations under.
 		"serviceAccount": gcpshared.IAMServiceAccountImpactInOnly,

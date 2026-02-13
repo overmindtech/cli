@@ -200,13 +200,6 @@ func (c iamServiceAccountKeyWrapper) gcpIAMServiceAccountKeyToSDPItem(key *admin
 			Query:  serviceAccountName,
 			Scope:  location.ProjectID,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// If service account is deleted, all keys that belong to it are deleted
-			// If key is deleted, resources using that particular key lose access to service-account.
-			// But account itself keeps working.
-			In:  true,
-			Out: false,
-		},
 	})
 
 	return sdpItem, nil

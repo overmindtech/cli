@@ -40,10 +40,6 @@ var _ = registerableAdapter{
 		"name": {
 			Description:   "If the parent Project, Folder, or Organization is deleted or updated: The Security Center Service may become invalid or inaccessible. If the Security Center Service is updated: The parent resource remains unaffected.",
 			ToSDPItemType: gcpshared.CloudResourceManagerProject, // Manual linker handles detection of project/folder/organization from name prefix
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
-			},
 		},
 		// Note: Custom modules (SecurityHealthAnalyticsCustomModule, EventThreatDetectionCustomModule, etc.)
 		// are not direct children in the API path structure - they are sibling resources under the same

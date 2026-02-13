@@ -349,10 +349,6 @@ func TestCloudKMSCryptoKey(t *testing.T) {
 						Query:  "global|test-keyring|test-key",
 						Scope:  projectID,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					Query: &sdp.Query{
@@ -361,10 +357,6 @@ func TestCloudKMSCryptoKey(t *testing.T) {
 						Query:  "global|test-keyring",
 						Scope:  projectID,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					Query: &sdp.Query{
@@ -372,10 +364,6 @@ func TestCloudKMSCryptoKey(t *testing.T) {
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  "global|test-keyring|test-key",
 						Scope:  projectID,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
 					},
 				},
 			},
@@ -400,30 +388,18 @@ func TestCloudKMSCryptoKey(t *testing.T) {
 				ExpectedMethod: sdp.QueryMethod_GET,
 				ExpectedQuery:  "global|test-keyring|test-key",
 				ExpectedScope:  "test-project-id",
-				ExpectedBlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: true,
-				},
 			},
 			{
 				ExpectedType:   gcpshared.CloudKMSKeyRing.String(),
 				ExpectedMethod: sdp.QueryMethod_GET,
 				ExpectedQuery:  "global|test-keyring",
 				ExpectedScope:  "test-project-id",
-				ExpectedBlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			},
 			{
 				ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
 				ExpectedMethod: sdp.QueryMethod_SEARCH,
 				ExpectedQuery:  "global|test-keyring|test-key",
 				ExpectedScope:  "test-project-id",
-				ExpectedBlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: true,
-				},
 			},
 		}
 

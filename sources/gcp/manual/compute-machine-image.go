@@ -172,10 +172,6 @@ func (c computeMachineImageWrapper) gcpComputeMachineImageToSDPItem(ctx context.
 								Query:  networkName,
 								Scope:  scope,
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,
-								Out: false,
-							},
 						})
 					}
 				}
@@ -192,10 +188,6 @@ func (c computeMachineImageWrapper) gcpComputeMachineImageToSDPItem(ctx context.
 								Method: sdp.QueryMethod_GET,
 								Query:  subnetworkName,
 								Scope:  scope,
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,
-								Out: false,
 							},
 						})
 					}
@@ -214,10 +206,6 @@ func (c computeMachineImageWrapper) gcpComputeMachineImageToSDPItem(ctx context.
 								Query:  networkAttachmentName,
 								Scope:  scope,
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,
-								Out: false,
-							},
 						})
 					}
 				}
@@ -231,10 +219,6 @@ func (c computeMachineImageWrapper) gcpComputeMachineImageToSDPItem(ctx context.
 						Query:  networkIP,
 						Scope:  "global",
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 
@@ -245,10 +229,6 @@ func (c computeMachineImageWrapper) gcpComputeMachineImageToSDPItem(ctx context.
 						Method: sdp.QueryMethod_GET,
 						Query:  ipv6Address,
 						Scope:  "global",
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
 					},
 				})
 			}
@@ -262,10 +242,6 @@ func (c computeMachineImageWrapper) gcpComputeMachineImageToSDPItem(ctx context.
 							Query:  natIP,
 							Scope:  "global",
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: true,
-						},
 					})
 				}
 			}
@@ -278,10 +254,6 @@ func (c computeMachineImageWrapper) gcpComputeMachineImageToSDPItem(ctx context.
 							Method: sdp.QueryMethod_GET,
 							Query:  externalIpv6,
 							Scope:  "global",
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: true,
 						},
 					})
 				}
@@ -301,10 +273,6 @@ func (c computeMachineImageWrapper) gcpComputeMachineImageToSDPItem(ctx context.
 									Method: sdp.QueryMethod_GET,
 									Query:  diskName,
 									Scope:  scope,
-								},
-								BlastPropagation: &sdp.BlastPropagation{
-									In:  true,
-									Out: false,
 								},
 							})
 
@@ -330,10 +298,6 @@ func (c computeMachineImageWrapper) gcpComputeMachineImageToSDPItem(ctx context.
 									Query:  sourceImage, // Pass full URI so Search can detect format
 									Scope:  scope,
 								},
-								BlastPropagation: &sdp.BlastPropagation{
-									In:  true,
-									Out: false,
-								},
 							})
 						}
 					}
@@ -350,10 +314,6 @@ func (c computeMachineImageWrapper) gcpComputeMachineImageToSDPItem(ctx context.
 									Method: sdp.QueryMethod_GET,
 									Query:  snapshotName,
 									Scope:  scope,
-								},
-								BlastPropagation: &sdp.BlastPropagation{
-									In:  true,
-									Out: false,
 								},
 							})
 						}
@@ -384,10 +344,6 @@ func (c computeMachineImageWrapper) gcpComputeMachineImageToSDPItem(ctx context.
 							Query:  saEmail,
 							Scope:  location.ProjectID,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
-						},
 					})
 				}
 			}
@@ -405,10 +361,6 @@ func (c computeMachineImageWrapper) gcpComputeMachineImageToSDPItem(ctx context.
 								Method: sdp.QueryMethod_GET,
 								Query:  acceleratorTypeName,
 								Scope:  scope,
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,
-								Out: false,
 							},
 						})
 					}
@@ -433,10 +385,6 @@ func (c computeMachineImageWrapper) gcpComputeMachineImageToSDPItem(ctx context.
 						Query:  sourceInstanceName,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				})
 			}
 		}
@@ -454,10 +402,6 @@ func (c computeMachineImageWrapper) gcpComputeMachineImageToSDPItem(ctx context.
 							Method: sdp.QueryMethod_GET,
 							Query:  diskName,
 							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
 						},
 					})
 				}
@@ -495,10 +439,6 @@ func (c computeMachineImageWrapper) addKMSKeyLink(sdpItem *sdp.Item, keyName str
 				Method: sdp.QueryMethod_GET,
 				Query:  shared.CompositeLookupKey(loc, keyRing, cryptoKey, cryptoKeyVersion),
 				Scope:  location.ProjectID,
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
 			},
 		})
 	}

@@ -50,14 +50,12 @@ func TestIAMServiceAccount(t *testing.T) {
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "test-project-id",
 					ExpectedScope:            "test-project-id",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 				},
 				{
 					ExpectedType:             gcpshared.IAMServiceAccountKey.String(),
 					ExpectedMethod:           sdp.QueryMethod_SEARCH,
 					ExpectedQuery:            "test-service-account-id",
 					ExpectedScope:            "test-project-id",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: false, Out: true},
 				},
 			}
 
@@ -83,14 +81,12 @@ func TestIAMServiceAccount(t *testing.T) {
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "test-project-id",
 					ExpectedScope:            "test-project-id",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 				},
 				{
 					ExpectedType:             gcpshared.IAMServiceAccountKey.String(),
 					ExpectedMethod:           sdp.QueryMethod_SEARCH,
 					ExpectedQuery:            "test-service-account-id",
 					ExpectedScope:            "test-project-id",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: false, Out: true},
 				},
 			}
 

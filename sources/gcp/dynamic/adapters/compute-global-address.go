@@ -38,10 +38,6 @@ var computeGlobalAddressAdapter = registerableAdapter{ //nolint:unused
 		"ipCollection": {
 			ToSDPItemType: gcpshared.ComputePublicDelegatedPrefix,
 			Description:   "If the Public Delegated Prefix is deleted or updated: The Global Address may fail to reserve IP addresses from the prefix. If the Global Address is updated: The Public Delegated Prefix remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
-			},
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

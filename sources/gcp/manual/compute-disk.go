@@ -248,10 +248,6 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 							Query:  diskTypeName,
 							Scope:  scope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
-						},
 					})
 				}
 			}
@@ -273,10 +269,6 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 						Query:  sourceImage, // Pass full URI so Search can detect format
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				})
 			}
 		}
@@ -297,10 +289,6 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 							Method: sdp.QueryMethod_GET,
 							Query:  snapshotName,
 							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
 						},
 					})
 				}
@@ -324,10 +312,6 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 							Query:  instantSnapshotName,
 							Scope:  scope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
-						},
 					})
 				}
 			}
@@ -349,10 +333,6 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 							Method: sdp.QueryMethod_GET,
 							Query:  sourceDiskName,
 							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
 						},
 					})
 				}
@@ -376,10 +356,6 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 							Query:  rpName,
 							Scope:  scope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
-						},
 					})
 				}
 			}
@@ -400,10 +376,6 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 							Method: sdp.QueryMethod_GET,
 							Query:  instanceName,
 							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  false,
-							Out: true,
 						},
 					})
 				}
@@ -433,10 +405,6 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 					},
 					// Deleting a key might break the disk’s ability to function and have its data read
 					// Deleting a disk in GCP does not affect its associated encryption key
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				})
 			}
 		}
@@ -464,10 +432,6 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 					},
 					// Deleting a key might break the disk’s ability to function and have its data read
 					// Deleting a disk in GCP does not affect its source image's encryption key
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				})
 			}
 		}
@@ -495,10 +459,6 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 					},
 					// Deleting a key might break the disk’s ability to function and have its data read
 					// Deleting a disk in GCP does not affect its source image's encryption key
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				})
 			}
 		}
@@ -520,10 +480,6 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 							Query:  rpName,
 							Scope:  scope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
-						},
 					})
 				}
 			}
@@ -543,9 +499,8 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 	// - gs://bucket-name/path/to/file
 	// - bucket-name (without gs:// prefix)
 	if sourceStorageObject := disk.GetSourceStorageObject(); sourceStorageObject != "" {
-		blastPropagation := &sdp.BlastPropagation{In: true, Out: false}
 		if linkFunc, ok := gcpshared.ManualAdapterLinksByAssetType[gcpshared.StorageBucket]; ok {
-			linkedQuery := linkFunc(location.ProjectID, location.ToScope(), sourceStorageObject, blastPropagation)
+			linkedQuery := linkFunc(location.ProjectID, location.ToScope(), sourceStorageObject)
 			if linkedQuery != nil {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, linkedQuery)
 			}
@@ -569,10 +524,6 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 							Scope:  scope,
 						},
 						// If the Storage Pool is deleted or updated: The disk may fail to operate correctly or become invalid. If the disk is updated: The Storage Pool remains unaffected.
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
-						},
 					})
 				}
 			}
@@ -594,10 +545,6 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 								Query:  primaryDiskName,
 								Scope:  scope,
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,
-								Out: false,
-							},
 						})
 					}
 				}
@@ -616,10 +563,6 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 								Method: sdp.QueryMethod_GET,
 								Query:  policyName,
 								Scope:  scope,
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,
-								Out: false,
 							},
 						})
 					}
@@ -644,10 +587,6 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 									Query:  secondaryDiskName,
 									Scope:  scope,
 								},
-								BlastPropagation: &sdp.BlastPropagation{
-									In:  true,
-									Out: false,
-								},
 							})
 						}
 					}
@@ -666,10 +605,6 @@ func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *c
 									Method: sdp.QueryMethod_GET,
 									Query:  policyName,
 									Scope:  scope,
-								},
-								BlastPropagation: &sdp.BlastPropagation{
-									In:  true,
-									Out: false,
 								},
 							})
 						}

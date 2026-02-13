@@ -31,10 +31,6 @@ var bigTableAdminClusterAdapter = registerableAdapter{ //nolint:unused
 		"name": {
 			ToSDPItemType: gcpshared.BigTableAdminInstance,
 			Description:   "If the BigTableAdmin Instance is deleted or updated: The Cluster may become invalid or inaccessible. If the Cluster is updated: The instance remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
-			},
 		},
 	},
 	// No Terraform mapping

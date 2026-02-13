@@ -30,13 +30,11 @@ var _ = registerableAdapter{
 		"restoreInfo.backupInfo.backup": {
 			Description:      "If the Spanner Backup is deleted or updated: The Database may become invalid or inaccessible. If the Database is updated: The backup remains unaffected.",
 			ToSDPItemType:    gcpshared.SpannerBackup,
-			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 		// Source database from which the backup was taken (if database was restored from backup).
 		"restoreInfo.backupInfo.sourceDatabase": {
 			Description:      "If the source Database is deleted or updated: The restored Database may become invalid or lose its restore point reference. If the restored Database is updated: The source database remains unaffected.",
 			ToSDPItemType:    gcpshared.SpannerDatabase,
-			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 		"encryptionInfo.kmsKeyVersion": gcpshared.CryptoKeyVersionImpactInOnly,
 		// This is a backlink to instance.
@@ -48,7 +46,6 @@ var _ = registerableAdapter{
 		"name": {
 			Description:      "If the Spanner Instance is deleted or updated: The Database may become invalid or inaccessible. If the Database is updated: The instance remains unaffected.",
 			ToSDPItemType:    gcpshared.SpannerInstance,
-			BlastPropagation: gcpshared.ImpactInOnly,
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

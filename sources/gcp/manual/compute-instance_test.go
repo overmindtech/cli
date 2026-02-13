@@ -55,60 +55,36 @@ func TestComputeInstance(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-instance",
 					ExpectedScope:  "test-project-id.us-central1-a",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					ExpectedType:   stdlib.NetworkIP.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "192.168.1.3",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.ComputeSubnetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "default",
 					ExpectedScope:  "test-project-id.us-central1",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.ComputeNetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "network",
 					ExpectedScope:  "test-project-id",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					ExpectedType:   stdlib.NetworkIP.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-policy",
 					ExpectedScope:  "test-project-id.us-central1",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			}
 
@@ -329,60 +305,36 @@ func TestComputeInstance(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-instance",
 					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, zone),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					ExpectedType:   stdlib.NetworkIP.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "192.168.1.3",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.ComputeSubnetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "default",
 					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.ComputeNetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "network",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					ExpectedType:   stdlib.NetworkIP.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-policy",
 					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			}
 
@@ -393,40 +345,24 @@ func TestComputeInstance(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  fmt.Sprintf("projects/%s/global/images/test-image", projectID),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				shared.QueryTest{
 					ExpectedType:   gcpshared.ComputeSnapshot.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-snapshot",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				shared.QueryTest{
 					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "global|test-keyring|test-key|test-version-image",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				shared.QueryTest{
 					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "global|test-keyring|test-key|test-version-snapshot",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			)
 
@@ -468,60 +404,36 @@ func TestComputeInstance(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-instance",
 					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, zone),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					ExpectedType:   stdlib.NetworkIP.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "192.168.1.3",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.ComputeSubnetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "default",
 					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.ComputeNetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "network",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					ExpectedType:   stdlib.NetworkIP.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-policy",
 					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			}
 
@@ -531,10 +443,6 @@ func TestComputeInstance(t *testing.T) {
 				ExpectedMethod: sdp.QueryMethod_GET,
 				ExpectedQuery:  "global|test-keyring|test-key|test-version-disk",
 				ExpectedScope:  projectID,
-				ExpectedBlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			})
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
@@ -575,60 +483,36 @@ func TestComputeInstance(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-instance",
 					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, zone),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					ExpectedType:   stdlib.NetworkIP.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "192.168.1.3",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.ComputeSubnetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "default",
 					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.ComputeNetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "network",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					ExpectedType:   stdlib.NetworkIP.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-policy",
 					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			}
 
@@ -638,10 +522,6 @@ func TestComputeInstance(t *testing.T) {
 				ExpectedMethod: sdp.QueryMethod_GET,
 				ExpectedQuery:  "global|test-keyring|test-key",
 				ExpectedScope:  projectID,
-				ExpectedBlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			})
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
@@ -678,60 +558,36 @@ func TestComputeInstance(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-instance",
 					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, zone),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					ExpectedType:   stdlib.NetworkIP.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "192.168.1.3",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.ComputeSubnetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "default",
 					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.ComputeNetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "network",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					ExpectedType:   stdlib.NetworkIP.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-policy",
 					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			}
 
@@ -741,10 +597,6 @@ func TestComputeInstance(t *testing.T) {
 				ExpectedMethod: sdp.QueryMethod_GET,
 				ExpectedQuery:  serviceAccountEmail,
 				ExpectedScope:  projectID,
-				ExpectedBlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			})
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
@@ -791,60 +643,36 @@ func TestComputeInstance(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-instance",
 					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, zone),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					ExpectedType:   stdlib.NetworkIP.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "192.168.1.3",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.ComputeSubnetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "default",
 					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.ComputeNetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "network",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					ExpectedType:   stdlib.NetworkIP.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-policy",
 					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			}
 
@@ -855,20 +683,12 @@ func TestComputeInstance(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  instanceTemplateName,
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				shared.QueryTest{
 					ExpectedType:   gcpshared.ComputeInstanceGroupManager.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  igmName,
 					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			)
 
@@ -910,60 +730,36 @@ func TestComputeInstance(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-instance",
 					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, zone),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					ExpectedType:   stdlib.NetworkIP.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "192.168.1.3",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.ComputeSubnetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "default",
 					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.ComputeNetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "network",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					ExpectedType:   stdlib.NetworkIP.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "2001:0db8:85a3:0000:0000:8a2e:0370:7334",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-policy",
 					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			}
 
@@ -974,10 +770,6 @@ func TestComputeInstance(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  instanceTemplateName,
 					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			)
 

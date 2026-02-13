@@ -247,10 +247,6 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(ctx cont
 				Query:  rule.GetIPAddress(),
 				Scope:  "global",
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: true,
-			},
 		})
 	}
 
@@ -265,10 +261,6 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(ctx cont
 						Method: sdp.QueryMethod_GET,
 						Query:  backendServiceName,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
 					},
 				})
 			}
@@ -303,10 +295,6 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(ctx cont
 						Query:  networkName,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				})
 			}
 		}
@@ -324,10 +312,6 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(ctx cont
 						Query:  subnetworkName,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				})
 			}
 		}
@@ -335,10 +319,7 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(ctx cont
 
 	// Link to target resource (polymorphic)
 	if target := rule.GetTarget(); target != "" {
-		linkedQuery := gcpshared.ForwardingRuleTargetLinker(location.ProjectID, location.ToScope(), target, &sdp.BlastPropagation{
-			In:  true,
-			Out: true,
-		})
+		linkedQuery := gcpshared.ForwardingRuleTargetLinker(location.ProjectID, location.ToScope(), target)
 		if linkedQuery != nil {
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, linkedQuery)
 		}
@@ -357,10 +338,6 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(ctx cont
 						Query:  forwardingRuleName,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				})
 			}
 		}
@@ -378,10 +355,6 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(ctx cont
 						Method: sdp.QueryMethod_GET,
 						Query:  prefixName,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
 					},
 				})
 			}
@@ -402,10 +375,6 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(ctx cont
 						Query:  query,
 						Scope:  location.ProjectID,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				})
 			}
 		}
@@ -423,10 +392,6 @@ func (c computeForwardingRuleWrapper) gcpComputeForwardingRuleToSDPItem(ctx cont
 							Method: sdp.QueryMethod_GET,
 							Query:  query,
 							Scope:  location.ProjectID,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
 						},
 					})
 				}

@@ -229,10 +229,6 @@ func (c computeNodeTemplateWrapper) gcpComputeNodeTemplateToSDPItem(nodeTemplate
 			Query:  nodeTemplate.GetName(),
 			Scope:  "*",
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  false,
-			Out: true,
-		},
 	})
 
 	return sdpItem, nil

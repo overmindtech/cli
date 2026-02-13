@@ -26,20 +26,12 @@ var spannerInstanceAdapter = registerableAdapter{ //nolint:unused
 		"config": {
 			ToSDPItemType: gcpshared.SpannerInstanceConfig,
 			Description:   "If the Spanner Instance Config is deleted or updated: The Spanner Instance may fail to operate correctly. If the Spanner Instance is updated: The config remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
-			},
 		},
 		// This is a link from parent to child via SEARCH
 		// We need to make sure that the linked item supports `SEARCH` method for the `instance` name.
 		"name": {
 			ToSDPItemType: gcpshared.SpannerDatabase,
 			Description:   "If the Spanner Instance is deleted or updated: All associated databases may become invalid or inaccessible. If a database is updated: The instance remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  false,
-				Out: true,
-			},
 			IsParentToChild: true,
 		},
 	},

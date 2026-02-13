@@ -36,24 +36,15 @@ var _ = registerableAdapter{
 		"model": {
 			ToSDPItemType: gcpshared.AIPlatformModel,
 			Description:   "If the Model is deleted or updated: The batch prediction job may fail. If the batch prediction job is updated: The model remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In: true,
-			},
 		},
 		"endpoint": {
 			ToSDPItemType: gcpshared.AIPlatformEndpoint,
 			Description:   "If the Endpoint is deleted or updated: The batch prediction job may fail. If the batch prediction job is updated: The endpoint remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In: true,
-			},
 		},
 		// TODO: https://linear.app/overmind/issue/ENG-1446/investigate-creating-a-manual-linker-for-cloud-storage
 		"inputConfig.gcsSource.uris": {
 			ToSDPItemType: gcpshared.StorageBucket,
 			Description:   "If the GCS source bucket is deleted or inaccessible: The batch prediction job will fail to read input data. If the batch prediction job is updated: The bucket remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In: true,
-			},
 		},
 		// TODO:
 		// BigQuery path. For example: bq://projectId.bqDatasetId.bqTableId.
@@ -61,17 +52,11 @@ var _ = registerableAdapter{
 		"inputConfig.bigquerySource.inputUri": {
 			ToSDPItemType: gcpshared.BigQueryTable,
 			Description:   "If the BigQuery table is deleted or inaccessible: The batch prediction job will fail to read input data. If the batch prediction job is updated: The table remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In: true,
-			},
 		},
 		// TODO: https://linear.app/overmind/issue/ENG-1446/investigate-creating-a-manual-linker-for-cloud-storage
 		"outputConfig.gcsDestination.outputUriPrefix": {
 			ToSDPItemType: gcpshared.StorageBucket,
 			Description:   "If the output GCS bucket is deleted or inaccessible: The batch prediction job will fail to write results. If the batch prediction job is updated: The bucket remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In: true,
-			},
 		},
 		// TODO:
 		// BigQuery path. For example: bq://projectId.bqDatasetId.bqTableId.
@@ -79,25 +64,16 @@ var _ = registerableAdapter{
 		"outputConfig.bigqueryDestination.outputUri": {
 			ToSDPItemType: gcpshared.BigQueryTable,
 			Description:   "If the BigQuery output table is deleted or inaccessible: The batch prediction job will fail to write results. If the batch prediction job is updated: The table remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In: true,
-			},
 		},
 		"serviceAccount": {
 			ToSDPItemType: gcpshared.IAMServiceAccount,
 			Description:   "If the Service Account is deleted or permissions are revoked: The batch prediction job may fail to access required resources. If the batch prediction job is updated: The service account remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In: true,
-			},
 		},
 		"network": gcpshared.ComputeNetworkImpactInOnly,
 		// TODO: https://linear.app/overmind/issue/ENG-1446/investigate-creating-a-manual-linker-for-cloud-storage
 		"unmanagedContainerModel.artifactUri": {
 			ToSDPItemType: gcpshared.StorageBucket,
 			Description:   "If the GCS bucket containing the model artifacts is deleted or inaccessible: The batch prediction job will fail to access the model. If the batch prediction job is updated: The bucket remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In: true,
-			},
 		},
 	},
 }.Register()

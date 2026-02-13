@@ -51,67 +51,42 @@ func TestComputeSnapshot(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-license",
 					ExpectedScope:  "test-project-id",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.ComputeInstantSnapshot.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-instant-snapshot",
 					ExpectedScope:  "test-project-id.us-central1-a",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "global|test-keyring|test-key|test-version-source-snapshot",
 					ExpectedScope:  "test-project-id",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.ComputeDisk.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-disk",
 					ExpectedScope:  "test-project-id.us-central1-a",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  false,
-						Out: true,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "global|test-keyring|test-key|test-version-source-disk",
 					ExpectedScope:  "test-project-id",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
 					ExpectedMethod:           sdp.QueryMethod_GET,
 					ExpectedQuery:            "test-source-snapshot-schedule-policy",
 					ExpectedScope:            "test-project-id.us-central1",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				},
 				{
 					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "global|test-keyring|test-key|test-version-snapshot",
 					ExpectedScope:  "test-project-id",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			}
 

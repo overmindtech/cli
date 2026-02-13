@@ -298,10 +298,6 @@ func (c computeNodeGroupWrapper) gcpComputeNodeGroupToSDPItem(ctx context.Contex
 						Query:  name,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				})
 			}
 		}

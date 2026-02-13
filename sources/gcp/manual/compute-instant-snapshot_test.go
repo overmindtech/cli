@@ -75,10 +75,6 @@ func TestComputeInstantSnapshot(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-disk",
 					ExpectedScope:  "test-project-id.us-central1-a",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  false,
-						Out: true,
-					},
 				},
 			}
 

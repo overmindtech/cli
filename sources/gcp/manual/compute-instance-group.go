@@ -234,10 +234,6 @@ func (c computeInstanceGroupWrapper) gcpComputeInstanceGroupToSDPItem(instanceGr
 					Query:  networkName,
 					Scope:  location.ProjectID,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 	}
@@ -251,10 +247,6 @@ func (c computeInstanceGroupWrapper) gcpComputeInstanceGroupToSDPItem(instanceGr
 					Method: sdp.QueryMethod_GET,
 					Query:  subnetworkName,
 					Scope:  location.ProjectID,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: true,
 				},
 			})
 		}
@@ -270,10 +262,6 @@ func (c computeInstanceGroupWrapper) gcpComputeInstanceGroupToSDPItem(instanceGr
 					Query:  zoneName,
 					Scope:  location.ProjectID,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			})
 		}
 	}
@@ -287,10 +275,6 @@ func (c computeInstanceGroupWrapper) gcpComputeInstanceGroupToSDPItem(instanceGr
 					Method: sdp.QueryMethod_GET,
 					Query:  regionName,
 					Scope:  location.ProjectID,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
 				},
 			})
 		}

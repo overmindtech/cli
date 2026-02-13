@@ -463,10 +463,6 @@ func (l *CloudKMSAssetLoader) keyRingLinkedQueries(keyRingVals []string, scope s
 			Query:  shared.CompositeLookupKey(keyRingVals...),
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  true,
-			Out: true,
-		},
 	})
 
 	// Link to CryptoKeys in this KeyRing
@@ -476,10 +472,6 @@ func (l *CloudKMSAssetLoader) keyRingLinkedQueries(keyRingVals []string, scope s
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  shared.CompositeLookupKey(keyRingVals[0], keyRingVals[1]),
 			Scope:  scope,
-		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  false,
-			Out: true,
 		},
 	})
 
@@ -501,10 +493,6 @@ func (l *CloudKMSAssetLoader) cryptoKeyLinkedQueries(values []string, cryptoKey 
 			Query:  shared.CompositeLookupKey(kmsLocation, keyRing, cryptoKeyName),
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  true,
-			Out: true,
-		},
 	})
 
 	// Link to parent KeyRing
@@ -515,10 +503,6 @@ func (l *CloudKMSAssetLoader) cryptoKeyLinkedQueries(values []string, cryptoKey 
 			Query:  shared.CompositeLookupKey(kmsLocation, keyRing),
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  true,
-			Out: false,
-		},
 	})
 
 	// Link to all CryptoKeyVersions
@@ -528,10 +512,6 @@ func (l *CloudKMSAssetLoader) cryptoKeyLinkedQueries(values []string, cryptoKey 
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  shared.CompositeLookupKey(kmsLocation, keyRing, cryptoKeyName),
 			Scope:  scope,
-		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  true,
-			Out: true,
 		},
 	})
 
@@ -546,10 +526,6 @@ func (l *CloudKMSAssetLoader) cryptoKeyLinkedQueries(values []string, cryptoKey 
 						Method: sdp.QueryMethod_GET,
 						Query:  shared.CompositeLookupKey(keyVersionVals...),
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
 					},
 				})
 			}
@@ -566,10 +542,6 @@ func (l *CloudKMSAssetLoader) cryptoKeyLinkedQueries(values []string, cryptoKey 
 						Query:  shared.CompositeLookupKey(importJobVals...),
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				})
 			}
 		}
@@ -585,10 +557,6 @@ func (l *CloudKMSAssetLoader) cryptoKeyLinkedQueries(values []string, cryptoKey 
 							Method: sdp.QueryMethod_GET,
 							Query:  shared.CompositeLookupKey(backendVals...),
 							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
 						},
 					})
 				}
@@ -611,10 +579,6 @@ func (l *CloudKMSAssetLoader) cryptoKeyVersionLinkedQueries(values []string, key
 			Query:  shared.CompositeLookupKey(values[0], values[1], values[2]),
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  true,
-			Out: false,
-		},
 	})
 
 	// Link to ImportJob if present
@@ -627,10 +591,6 @@ func (l *CloudKMSAssetLoader) cryptoKeyVersionLinkedQueries(values []string, key
 					Method: sdp.QueryMethod_GET,
 					Query:  shared.CompositeLookupKey(importJobVals...),
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
 				},
 			})
 		}
@@ -648,10 +608,6 @@ func (l *CloudKMSAssetLoader) cryptoKeyVersionLinkedQueries(values []string, key
 							Method: sdp.QueryMethod_GET,
 							Query:  shared.CompositeLookupKey(ekmVals...),
 							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
 						},
 					})
 				}

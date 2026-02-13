@@ -26,19 +26,11 @@ var _ = registerableAdapter{
 		"storagePoolType": {
 			ToSDPItemType: gcpshared.ComputeStoragePoolType,
 			Description:   "If the Storage Pool Type is deleted or updated: The Storage Pool may fail to operate correctly or become invalid. If the Storage Pool is updated: The Storage Pool Type remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
-			},
 		},
 		// Link to the zone where the storage pool resides
 		"zone": {
 			ToSDPItemType: gcpshared.ComputeZone,
 			Description:   "If the Zone is deleted or becomes unavailable: The Storage Pool may become inaccessible. If the Storage Pool is updated: The Zone remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
-			},
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

@@ -236,10 +236,6 @@ func (c computeReservationWrapper) gcpComputeReservationToSDPItem(ctx context.Co
 						Query:  commitmentName,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				})
 			}
 		}
@@ -261,10 +257,6 @@ func (c computeReservationWrapper) gcpComputeReservationToSDPItem(ctx context.Co
 								Query:  acceleratorName,
 								Scope:  scope,
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,
-								Out: false,
-							},
 						})
 					}
 				}
@@ -285,10 +277,6 @@ func (c computeReservationWrapper) gcpComputeReservationToSDPItem(ctx context.Co
 							Method: sdp.QueryMethod_GET,
 							Query:  policyName,
 							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
 						},
 					})
 				}

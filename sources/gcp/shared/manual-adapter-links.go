@@ -13,8 +13,8 @@ import (
 	"github.com/overmindtech/cli/sources/stdlib"
 )
 
-func ZoneBaseLinkedItemQueryByName(sdpItem shared.ItemType) func(projectID, fromItemScope, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
-	return func(projectID, fromItemScope, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+func ZoneBaseLinkedItemQueryByName(sdpItem shared.ItemType) func(projectID, fromItemScope, query string) *sdp.LinkedItemQuery {
+	return func(projectID, fromItemScope, query string) *sdp.LinkedItemQuery {
 		name := LastPathComponent(query)
 		zone := ExtractPathParam("zones", query)
 		// Extract project ID from URI if present (for cross-project references)
@@ -34,7 +34,6 @@ func ZoneBaseLinkedItemQueryByName(sdpItem shared.ItemType) func(projectID, from
 					Query:  name,
 					Scope:  scope,
 				},
-				BlastPropagation: blastPropagation,
 			}
 		}
 
@@ -42,8 +41,8 @@ func ZoneBaseLinkedItemQueryByName(sdpItem shared.ItemType) func(projectID, from
 	}
 }
 
-func RegionBaseLinkedItemQueryByName(sdpItem shared.ItemType) func(projectID, fromItemScope, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
-	return func(projectID, fromItemScope, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+func RegionBaseLinkedItemQueryByName(sdpItem shared.ItemType) func(projectID, fromItemScope, query string) *sdp.LinkedItemQuery {
+	return func(projectID, fromItemScope, query string) *sdp.LinkedItemQuery {
 		name := LastPathComponent(query)
 		scope := fromItemScope
 		region := ExtractPathParam("regions", query)
@@ -63,7 +62,6 @@ func RegionBaseLinkedItemQueryByName(sdpItem shared.ItemType) func(projectID, fr
 					Query:  name,
 					Scope:  scope,
 				},
-				BlastPropagation: blastPropagation,
 			}
 		}
 
@@ -71,8 +69,8 @@ func RegionBaseLinkedItemQueryByName(sdpItem shared.ItemType) func(projectID, fr
 	}
 }
 
-func ProjectBaseLinkedItemQueryByName(sdpItem shared.ItemType) func(projectID, _, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
-	return func(projectID, _, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+func ProjectBaseLinkedItemQueryByName(sdpItem shared.ItemType) func(projectID, _, query string) *sdp.LinkedItemQuery {
+	return func(projectID, _, query string) *sdp.LinkedItemQuery {
 		name := LastPathComponent(query)
 		// Extract project ID from URI if present (for cross-project references)
 		extractedProjectID := ExtractPathParam("projects", query)
@@ -88,7 +86,6 @@ func ProjectBaseLinkedItemQueryByName(sdpItem shared.ItemType) func(projectID, _
 					Query:  name,
 					Scope:  scope,
 				},
-				BlastPropagation: blastPropagation,
 			}
 		}
 
@@ -99,7 +96,7 @@ func ProjectBaseLinkedItemQueryByName(sdpItem shared.ItemType) func(projectID, _
 // ComputeImageLinker handles linking to compute images using SEARCH method.
 // SEARCH supports any format: full URIs, family names, or specific image names.
 // The adapter's Search method will intelligently detect the format and use the appropriate API.
-func ComputeImageLinker(projectID, _, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+func ComputeImageLinker(projectID, _, query string) *sdp.LinkedItemQuery {
 	// Extract project ID from the URI if present, otherwise use the provided projectID
 	imageProjectID := ExtractPathParam("projects", query)
 	if imageProjectID == "" {
@@ -116,7 +113,6 @@ func ComputeImageLinker(projectID, _, query string, blastPropagation *sdp.BlastP
 				Query:  query, // Pass the full query string so Search can detect the format
 				Scope:  imageProjectID,
 			},
-			BlastPropagation: blastPropagation,
 		}
 	}
 
@@ -128,7 +124,7 @@ func ComputeImageLinker(projectID, _, query string, blastPropagation *sdp.BlastP
 // TargetTcpProxy, TargetSslProxy, TargetPool, TargetVpnGateway, TargetInstance, ServiceAttachment).
 // This function parses the URI to determine the target type and creates the appropriate link.
 // Supports both full HTTPS URLs and resource name formats.
-func ForwardingRuleTargetLinker(projectID, fromItemScope, targetURI string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+func ForwardingRuleTargetLinker(projectID, fromItemScope, targetURI string) *sdp.LinkedItemQuery {
 	if targetURI == "" {
 		return nil
 	}
@@ -221,7 +217,6 @@ func ForwardingRuleTargetLinker(projectID, fromItemScope, targetURI string, blas
 				Query:  query,
 				Scope:  scope,
 			},
-			BlastPropagation: blastPropagation,
 		}
 	}
 
@@ -232,7 +227,7 @@ func ForwardingRuleTargetLinker(projectID, fromItemScope, targetURI string, blas
 // The service field can reference either a BackendService (global or regional) or a BackendBucket (global).
 // This function parses the URI to determine the target type and creates the appropriate link.
 // Supports both full HTTPS URLs and resource name formats.
-func BackendServiceOrBucketLinker(projectID, fromItemScope, backendURI string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+func BackendServiceOrBucketLinker(projectID, fromItemScope, backendURI string) *sdp.LinkedItemQuery {
 	if backendURI == "" {
 		return nil
 	}
@@ -287,7 +282,6 @@ func BackendServiceOrBucketLinker(projectID, fromItemScope, backendURI string, b
 				Query:  query,
 				Scope:  scope,
 			},
-			BlastPropagation: blastPropagation,
 		}
 	}
 
@@ -298,7 +292,7 @@ func BackendServiceOrBucketLinker(projectID, fromItemScope, backendURI string, b
 // Health checks can be either global (project-scoped) or regional (project.region-scoped).
 // This function parses the URI to determine the scope and creates the appropriate link.
 // Supports both full HTTPS URLs and resource name formats.
-func HealthCheckLinker(projectID, fromItemScope, healthCheckURI string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+func HealthCheckLinker(projectID, fromItemScope, healthCheckURI string) *sdp.LinkedItemQuery {
 	if healthCheckURI == "" {
 		return nil
 	}
@@ -341,7 +335,6 @@ func HealthCheckLinker(projectID, fromItemScope, healthCheckURI string, blastPro
 				Query:  name,
 				Scope:  scope,
 			},
-			BlastPropagation: blastPropagation,
 		}
 	}
 
@@ -353,7 +346,7 @@ func HealthCheckLinker(projectID, fromItemScope, healthCheckURI string, blastPro
 // This can include: forwarding rules (regional/global), instances, target VPN gateways, routers.
 // This function parses the URI to determine the resource type and creates the appropriate link.
 // Supports both full HTTPS URLs and resource name formats.
-func AddressUsersLinker(ctx context.Context, projectID, userURI string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+func AddressUsersLinker(ctx context.Context, projectID, userURI string) *sdp.LinkedItemQuery {
 	if userURI == "" {
 		return nil
 	}
@@ -464,15 +457,14 @@ func AddressUsersLinker(ctx context.Context, projectID, userURI string, blastPro
 				Query:  query,
 				Scope:  scope,
 			},
-			BlastPropagation: blastPropagation,
 		}
 	}
 
 	return nil
 }
 
-func AWSLinkByARN(awsItem string) func(_, _, arn string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
-	return func(_, _, arn string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+func AWSLinkByARN(awsItem string) func(_, _, arn string) *sdp.LinkedItemQuery {
+	return func(_, _, arn string) *sdp.LinkedItemQuery {
 		// https://docs.aws.amazon.com/IAM/latest/UserGuide/reference-arns.html#arns-syntax
 		parts := strings.Split(arn, ":")
 		if len(parts) < 5 {
@@ -497,7 +489,6 @@ func AWSLinkByARN(awsItem string) func(_, _, arn string, blastPropagation *sdp.B
 				Query:  arn, // By default, we search by the full ARN
 				Scope:  scope,
 			},
-			BlastPropagation: blastPropagation,
 		}
 	}
 }
@@ -507,7 +498,7 @@ func AWSLinkByARN(awsItem string) func(_, _, arn string, blastPropagation *sdp.B
 // So we need to manually define how to create the linked item query based on the item type and the query string.
 //
 // Expects that the query will have all the necessary information to create the linked item query.
-var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItemScope, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery{
+var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItemScope, query string) *sdp.LinkedItemQuery{
 	ComputeInstance:                   ZoneBaseLinkedItemQueryByName(ComputeInstance),
 	ComputeInstanceGroup:              ZoneBaseLinkedItemQueryByName(ComputeInstanceGroup),
 	ComputeInstanceGroupManager:       ZoneBaseLinkedItemQueryByName(ComputeInstanceGroupManager),
@@ -540,7 +531,7 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 	ComputeTargetInstance: ForwardingRuleTargetLinker,
 	// Service Attachment (regional) - use polymorphic linker
 	ComputeServiceAttachment: ForwardingRuleTargetLinker,
-	CloudKMSCryptoKeyVersion: func(projectID, _, keyName string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+	CloudKMSCryptoKeyVersion: func(projectID, _, keyName string) *sdp.LinkedItemQuery {
 		location := ExtractPathParam("locations", keyName)
 		keyRing := ExtractPathParam("keyRings", keyName)
 		cryptoKey := ExtractPathParam("cryptoKeys", keyName)
@@ -554,7 +545,6 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 					Query:  shared.CompositeLookupKey(location, keyRing, cryptoKey, cryptoKeyVersion),
 					Scope:  projectID,
 				},
-				BlastPropagation: blastPropagation,
 			}
 		}
 		return nil
@@ -566,7 +556,7 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 	// The name field can reference projects, folders, or organizations depending on the resource scope.
 	// This function parses the name to determine the target type and creates the appropriate link.
 	// This is registered for CloudResourceManagerProject but can detect and link to all three types.
-	CloudResourceManagerProject: func(projectID, _, name string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+	CloudResourceManagerProject: func(projectID, _, name string) *sdp.LinkedItemQuery {
 		if name == "" {
 			return nil
 		}
@@ -581,8 +571,7 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 						Query:  projectIDFromName,
 						Scope:  projectIDFromName, // Project scope uses project ID as scope
 					},
-					BlastPropagation: blastPropagation,
-				}
+	}
 			}
 		} else if strings.HasPrefix(name, "folders/") {
 			folderID := ExtractPathParam("folders", name)
@@ -594,8 +583,7 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 						Query:  folderID,
 						Scope:  projectID, // Folder scope uses project ID (may need adjustment when folder adapter is created)
 					},
-					BlastPropagation: blastPropagation,
-				}
+	}
 			}
 		} else if strings.HasPrefix(name, "organizations/") {
 			orgID := ExtractPathParam("organizations", name)
@@ -607,13 +595,12 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 						Query:  orgID,
 						Scope:  projectID, // Organization scope uses project ID (may need adjustment when org adapter is created)
 					},
-					BlastPropagation: blastPropagation,
-				}
+	}
 			}
 		}
 		return nil
 	},
-	CloudResourceManagerFolder: func(projectID, _, name string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+	CloudResourceManagerFolder: func(projectID, _, name string) *sdp.LinkedItemQuery {
 		if name == "" {
 			return nil
 		}
@@ -628,13 +615,12 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 						Query:  folderID,
 						Scope:  projectID, // Folder scope uses project ID (may need adjustment when folder adapter is created)
 					},
-					BlastPropagation: blastPropagation,
-				}
+	}
 			}
 		}
 		return nil
 	},
-	CloudResourceManagerOrganization: func(projectID, _, name string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+	CloudResourceManagerOrganization: func(projectID, _, name string) *sdp.LinkedItemQuery {
 		if name == "" {
 			return nil
 		}
@@ -649,13 +635,12 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 						Query:  orgID,
 						Scope:  projectID, // Organization scope uses project ID (may need adjustment when org adapter is created)
 					},
-					BlastPropagation: blastPropagation,
-				}
+	}
 			}
 		}
 		return nil
 	},
-	stdlib.NetworkIP: func(_, _, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+	stdlib.NetworkIP: func(_, _, query string) *sdp.LinkedItemQuery {
 		if query != "" {
 			return &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
@@ -664,12 +649,11 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 					Query:  query,
 					Scope:  "global",
 				},
-				BlastPropagation: blastPropagation,
 			}
 		}
 		return nil
 	},
-	stdlib.NetworkDNS: func(_, _, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+	stdlib.NetworkDNS: func(_, _, query string) *sdp.LinkedItemQuery {
 		if query != "" {
 			return &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
@@ -678,12 +662,11 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 					Query:  query,
 					Scope:  "global",
 				},
-				BlastPropagation: blastPropagation,
 			}
 		}
 		return nil
 	},
-	stdlib.NetworkHTTP: func(_, _, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+	stdlib.NetworkHTTP: func(_, _, query string) *sdp.LinkedItemQuery {
 		if query != "" {
 			// Extract the base URL (remove query parameters and fragments)
 			httpURL := query
@@ -702,13 +685,12 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 						Query:  httpURL,
 						Scope:  "global",
 					},
-					BlastPropagation: blastPropagation,
-				}
+	}
 			}
 		}
 		return nil
 	},
-	CloudKMSCryptoKey: func(projectID, _, keyName string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+	CloudKMSCryptoKey: func(projectID, _, keyName string) *sdp.LinkedItemQuery {
 		//"projects/{kms_project_id}/locations/{region}/keyRings/{key_region}/cryptoKeys/{key}
 		values := ExtractPathParams(keyName, "locations", "keyRings", "cryptoKeys")
 		if len(values) != 3 {
@@ -726,12 +708,11 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 					Query:  shared.CompositeLookupKey(location, keyRing, cryptoKey),
 					Scope:  projectID,
 				},
-				BlastPropagation: blastPropagation,
 			}
 		}
 		return nil
 	},
-	BigQueryTable: func(projectID, fromItemScope, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+	BigQueryTable: func(projectID, fromItemScope, query string) *sdp.LinkedItemQuery {
 		if query == "" {
 			return nil
 		}
@@ -756,8 +737,7 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 						Query:  shared.CompositeLookupKey(values[1], values[2]),
 						Scope:  values[0],
 					},
-					BlastPropagation: blastPropagation,
-				}
+	}
 			}
 		}
 
@@ -772,8 +752,7 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 						Query:  shared.CompositeLookupKey(values[1], values[2]),
 						Scope:  values[0],
 					},
-					BlastPropagation: blastPropagation,
-				}
+	}
 			}
 		}
 
@@ -788,7 +767,6 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 					Query:  shared.CompositeLookupKey(parts[1], parts[2]),
 					Scope:  parts[0],
 				},
-				BlastPropagation: blastPropagation,
 			}
 		}
 
@@ -798,7 +776,7 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 	aws.KinesisStreamConsumer: AWSLinkByARN("kinesis-stream-consumer"),
 	aws.IAMRole:               AWSLinkByARN("iam-role"),
 	aws.MSKCluster:            AWSLinkByARN("msk-cluster"),
-	SQLAdminInstance: func(projectID, _, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+	SQLAdminInstance: func(projectID, _, query string) *sdp.LinkedItemQuery {
 		// Supported formats:
 		// 1) {project}:{location}:{instance} (Cloud Run format)
 		//    See: https://cloud.google.com/run/docs/reference/rest/v2/Volume#cloudsqlinstance
@@ -815,7 +793,6 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 					Query:  parts[2],
 					Scope:  parts[0],
 				},
-				BlastPropagation: blastPropagation,
 			}
 		}
 
@@ -830,8 +807,7 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 						Query:  values[1],
 						Scope:  values[0],
 					},
-					BlastPropagation: blastPropagation,
-				}
+	}
 			}
 		}
 
@@ -844,13 +820,12 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 					Query:  query,
 					Scope:  projectID,
 				},
-				BlastPropagation: blastPropagation,
 			}
 		}
 
 		return nil
 	},
-	BigQueryDataset: func(projectID, fromItemScope, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+	BigQueryDataset: func(projectID, fromItemScope, query string) *sdp.LinkedItemQuery {
 		// Supported formats:
 		// 1) datasetId (e.g., "my_dataset")
 		// 2) projects/{project}/datasets/{dataset}
@@ -908,8 +883,7 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 						Query:  dataset,
 						Scope:  scope,
 					},
-					BlastPropagation: blastPropagation,
-				}
+	}
 			}
 		}
 
@@ -924,8 +898,7 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 						Query:  parts[1], // dataset ID
 						Scope:  parts[0], // project ID
 					},
-					BlastPropagation: blastPropagation,
-				}
+	}
 			}
 		}
 
@@ -943,12 +916,11 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 					Query:  query, // dataset ID
 					Scope:  projectID,
 				},
-				BlastPropagation: blastPropagation,
 			}
 		}
 		return nil
 	},
-	BigQueryModel: func(projectID, fromItemScope, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+	BigQueryModel: func(projectID, fromItemScope, query string) *sdp.LinkedItemQuery {
 		// Supported format:
 		// projects/{project}/datasets/{dataset}/models/{model}
 		if query == "" {
@@ -970,8 +942,7 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 						Query:  shared.CompositeLookupKey(dataset, model),
 						Scope:  scope,
 					},
-					BlastPropagation: blastPropagation,
-				}
+	}
 			}
 		}
 
@@ -988,14 +959,13 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 						Query:  shared.CompositeLookupKey(dataset, model),
 						Scope:  scope,
 					},
-					BlastPropagation: blastPropagation,
-				}
+	}
 			}
 		}
 
 		return nil
 	},
-	StorageBucket: func(projectID, fromItemScope, query string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+	StorageBucket: func(projectID, fromItemScope, query string) *sdp.LinkedItemQuery {
 		if query == "" {
 			return nil
 		}
@@ -1017,8 +987,7 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 						Query:  values[1],
 						Scope:  values[0],
 					},
-					BlastPropagation: blastPropagation,
-				}
+	}
 			}
 		}
 
@@ -1033,8 +1002,7 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 						Query:  values[1],
 						Scope:  values[0],
 					},
-					BlastPropagation: blastPropagation,
-				}
+	}
 			}
 		}
 
@@ -1061,7 +1029,6 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 					Query:  bucketName,
 					Scope:  projectID,
 				},
-				BlastPropagation: blastPropagation,
 			}
 		}
 
@@ -1072,14 +1039,14 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 	// Format: projects/{project_number}/policies/{constraint} or
 	//         folders/{folder_id}/policies/{constraint} or
 	//         organizations/{organization_id}/policies/{constraint}
-	CloudResourceManagerProject: func(projectID, _, policyName string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
-		return orgPolicyParentLinker(projectID, policyName, blastPropagation)
+	CloudResourceManagerProject: func(projectID, _, policyName string) *sdp.LinkedItemQuery {
+		return orgPolicyParentLinker(projectID, policyName)
 	},
-	CloudResourceManagerFolder: func(projectID, _, policyName string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
-		return orgPolicyParentLinker(projectID, policyName, blastPropagation)
+	CloudResourceManagerFolder: func(projectID, _, policyName string) *sdp.LinkedItemQuery {
+		return orgPolicyParentLinker(projectID, policyName)
 	},
-	CloudResourceManagerOrganization: func(projectID, _, policyName string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
-		return orgPolicyParentLinker(projectID, policyName, blastPropagation)
+	CloudResourceManagerOrganization: func(projectID, _, policyName string) *sdp.LinkedItemQuery {
+		return orgPolicyParentLinker(projectID, policyName)
 	},
 }
 
@@ -1092,7 +1059,7 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 //
 // It also handles simple project references: projects/{project_id} (without /policies/)
 // In that case, the scope should be the current project (projectID), not the referenced project.
-func orgPolicyParentLinker(projectID, policyName string, blastPropagation *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+func orgPolicyParentLinker(projectID, policyName string) *sdp.LinkedItemQuery {
 	if policyName == "" {
 		return nil
 	}
@@ -1151,7 +1118,6 @@ func orgPolicyParentLinker(projectID, policyName string, blastPropagation *sdp.B
 				Query:  parentID,
 				Scope:  scope,
 			},
-			BlastPropagation: blastPropagation,
 		}
 	}
 

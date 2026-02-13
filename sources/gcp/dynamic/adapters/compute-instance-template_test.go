@@ -168,10 +168,6 @@ func TestComputeInstanceTemplate(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "default",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					// properties.disks.initializeParams.diskName
@@ -179,10 +175,6 @@ func TestComputeInstanceTemplate(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "disk-name",
 					ExpectedScope:  "test-project.us-central1-a",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					// properties.disks.source
@@ -190,30 +182,18 @@ func TestComputeInstanceTemplate(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "source",
 					ExpectedScope:  "test-project.us-central1-a",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.ComputeImage.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  "projects/debian-cloud/global/images/family/debian-11",
 					ExpectedScope:  "debian-cloud",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					ExpectedType:   gcpshared.ComputeSubnetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "default",
 					ExpectedScope:  "test-project.us-central1",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					// properties.networkInterfaces.networkIP
@@ -221,10 +201,6 @@ func TestComputeInstanceTemplate(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "10.240.17.92",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					// properties.networkInterfaces.ipv6Address
@@ -232,10 +208,6 @@ func TestComputeInstanceTemplate(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "2600:1901:0:1234::1",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					// properties.networkInterfaces.accessConfigs.natIP
@@ -243,10 +215,6 @@ func TestComputeInstanceTemplate(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "10.240.17.93",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					// properties.networkInterfaces.accessConfigs.externalIpv6
@@ -254,10 +222,6 @@ func TestComputeInstanceTemplate(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "2600:1901:0:1234::2",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					// properties.networkInterfaces.accessConfigs.securityPolicy
@@ -265,10 +229,6 @@ func TestComputeInstanceTemplate(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-security-policy",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					// properties.networkInterfaces.ipv6AccessConfigs.natIP
@@ -276,10 +236,6 @@ func TestComputeInstanceTemplate(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "10.240.17.94",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					// properties.networkInterfaces.ipv6AccessConfigs.externalIpv6
@@ -287,10 +243,6 @@ func TestComputeInstanceTemplate(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "2600:1901:0:1234::3",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					// properties.networkInterfaces.ipv6AccessConfigs.securityPolicy
@@ -298,10 +250,6 @@ func TestComputeInstanceTemplate(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-security-policy-ipv6",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					// properties.disks.initializeParams.sourceSnapshot
@@ -309,10 +257,6 @@ func TestComputeInstanceTemplate(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "my-snapshot",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					// properties.disks.initializeParams.resourcePolicies
@@ -320,10 +264,6 @@ func TestComputeInstanceTemplate(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "my-resource-policy",
 					ExpectedScope:  "test-project.us-central1",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					// properties.disks.initializeParams.storagePool
@@ -331,10 +271,6 @@ func TestComputeInstanceTemplate(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "my-storage-pool",
 					ExpectedScope:  "test-project.us-central1-a",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					// properties.disks.initializeParams.licenses
@@ -342,10 +278,6 @@ func TestComputeInstanceTemplate(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "debian-11-bullseye-init-param",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					// properties.disks.initializeParams.licenses
@@ -353,10 +285,6 @@ func TestComputeInstanceTemplate(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "debian-11-bullseye-disk",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					// properties.disks.initializeParams.sourceImageEncryptionKey.kmsKeyName
@@ -364,10 +292,6 @@ func TestComputeInstanceTemplate(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "global|my-keyring|source-image-encryption-key",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					// properties.disks.initializeParams.sourceImageEncryptionKey.kmsKeyServiceAccount
@@ -375,10 +299,6 @@ func TestComputeInstanceTemplate(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "source-image-encryption-key-service-account@test-project.iam.gserviceaccount.com",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					// properties.guestAccelerators.acceleratorType
@@ -386,10 +306,6 @@ func TestComputeInstanceTemplate(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "nvidia-tesla-t4",
 					ExpectedScope:  "test-project.us-central1-a",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					// properties.scheduling.nodeAffinities.values
@@ -397,10 +313,6 @@ func TestComputeInstanceTemplate(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "my-node-group",
 					ExpectedScope:  "test-project.us-central1-a",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					// properties.reservationAffinity.values
@@ -408,10 +320,6 @@ func TestComputeInstanceTemplate(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "my-reservation",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					// properties.disks.initializeParams.diskType
@@ -419,10 +327,6 @@ func TestComputeInstanceTemplate(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "pd-standard",
 					ExpectedScope:  "test-project.us-central1-a",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					// properties.disks.initializeParams.sourceSnapshotEncryptionKey.kmsKeyName
@@ -430,10 +334,6 @@ func TestComputeInstanceTemplate(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "global|my-keyring|source-snapshot-encryption-key",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					// properties.disks.initializeParams.sourceSnapshotEncryptionKey.kmsKeyServiceAccount
@@ -441,10 +341,6 @@ func TestComputeInstanceTemplate(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "source-snapshot-encryption-key-service-account@test-project.iam.gserviceaccount.com",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					// properties.disks.diskEncryptionKey.kmsKeyName
@@ -452,10 +348,6 @@ func TestComputeInstanceTemplate(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "global|my-keyring|disk-encryption-key",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					// properties.disks.diskEncryptionKey.kmsKeyServiceAccount
@@ -463,10 +355,6 @@ func TestComputeInstanceTemplate(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "disk-encryption-key-service-account@test-project.iam.gserviceaccount.com",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			}
 

@@ -55,10 +55,6 @@ func TestComputeImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-source-disk",
 					ExpectedScope:  fmt.Sprintf("%s.us-central1-a", projectID),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// sourceSnapshot link
 				{
@@ -66,10 +62,6 @@ func TestComputeImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-source-snapshot",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// sourceImage link (SEARCH handles full URI; createComputeImageWithLinks uses https URL)
 				{
@@ -77,10 +69,6 @@ func TestComputeImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/images/test-source-image", projectID),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// licenses link (first license)
 				{
@@ -88,10 +76,6 @@ func TestComputeImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-license-1",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// licenses link (second license)
 				{
@@ -99,10 +83,6 @@ func TestComputeImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-license-2",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// rawDisk.source (GCS bucket) link
 				{
@@ -110,10 +90,6 @@ func TestComputeImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  fmt.Sprintf("%s-raw-disk-bucket", projectID),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// imageEncryptionKey.kmsKeyName (CryptoKeyVersion) link
 				{
@@ -121,10 +97,6 @@ func TestComputeImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "global|test-keyring|test-image-key|test-version-image",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// imageEncryptionKey.kmsKeyServiceAccount link
 				{
@@ -132,10 +104,6 @@ func TestComputeImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  fmt.Sprintf("test-image-kms-sa@%s.iam.gserviceaccount.com", projectID),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// sourceImageEncryptionKey.kmsKeyName (CryptoKeyVersion) link
 				{
@@ -143,10 +111,6 @@ func TestComputeImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "global|test-keyring|test-source-image-key|test-version-source-image",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// sourceImageEncryptionKey.kmsKeyServiceAccount link
 				{
@@ -154,10 +118,6 @@ func TestComputeImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  fmt.Sprintf("test-source-image-kms-sa@%s.iam.gserviceaccount.com", projectID),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// sourceSnapshotEncryptionKey.kmsKeyName (CryptoKeyVersion) link
 				{
@@ -165,10 +125,6 @@ func TestComputeImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "global|test-keyring|test-source-snapshot-key|test-version-source-snapshot",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// sourceSnapshotEncryptionKey.kmsKeyServiceAccount link
 				{
@@ -176,10 +132,6 @@ func TestComputeImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  fmt.Sprintf("test-source-snapshot-kms-sa@%s.iam.gserviceaccount.com", projectID),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// deprecated.replacement link (SEARCH handles full URI)
 				{
@@ -187,10 +139,6 @@ func TestComputeImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/images/test-replacement-image", projectID),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			}
 

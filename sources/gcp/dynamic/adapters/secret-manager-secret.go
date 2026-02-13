@@ -41,10 +41,6 @@ var _ = registerableAdapter{
 		"topics.name": {
 			ToSDPItemType: gcpshared.PubSubTopic,
 			Description:   "If the Pub/Sub Topic is deleted or its policy changes: Secret event notifications may fail. If the Secret changes: The topic remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
-			},
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

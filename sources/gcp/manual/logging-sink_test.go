@@ -43,10 +43,6 @@ func TestNewLoggingSink(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "my_bucket",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			},
 			{
@@ -57,10 +53,6 @@ func TestNewLoggingSink(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "my_dataset",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			},
 			{
@@ -71,10 +63,6 @@ func TestNewLoggingSink(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "my_topic",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			},
 			{
@@ -85,10 +73,6 @@ func TestNewLoggingSink(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("global", "my_bucket"),
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			},
 		}
@@ -145,10 +129,6 @@ func TestNewLoggingSink(t *testing.T) {
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  "my_bucket",
 						ExpectedScope:  projectID,
-						ExpectedBlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
-						},
 					},
 					// IAM Service Account link from writerIdentity
 					{
@@ -156,10 +136,6 @@ func TestNewLoggingSink(t *testing.T) {
 						ExpectedMethod: sdp.QueryMethod_GET,
 						ExpectedQuery:  writerIdentity,
 						ExpectedScope:  projectID,
-						ExpectedBlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
-						},
 					},
 				}
 				shared.RunStaticTests(t, adapter, sdpItem, queryTests)

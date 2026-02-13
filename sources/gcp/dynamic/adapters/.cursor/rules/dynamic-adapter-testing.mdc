@@ -292,11 +292,11 @@ t.Run("Get", func(t *testing.T) {
         t.Errorf("Expected name field to be '%s', got %s", resourceName, val)
     }
 
-    // Include static tests - MUST cover ALL blast propagation links
+    // Include static tests - MUST cover ALL linked resources the adapter produces
     t.Run("StaticTests", func(t *testing.T) {
-        // CRITICAL: Review the adapter's blast propagation configuration and to create
-        // test cases for EVERY linked resource defined in the adapter's blastPropagation map
-        // Check the adapter file (e.g., compute-global-address.go) for all blast propagation entries
+        // CRITICAL: Review the adapter's linked-resource map and create
+        // test cases for EVERY linked item type the adapter produces.
+        // Check the adapter file (e.g., compute-global-address.go) for all linked resource types.
         // IMPORTANT: Always use Item types with .String() for ExpectedType (e.g., gcpshared.ComputeNetwork.String())
         // NEVER use pure strings (e.g., "gcp-compute-network") for ExpectedType
         queryTests := shared.QueryTests{
@@ -305,10 +305,6 @@ t.Run("Get", func(t *testing.T) {
                 ExpectedMethod: sdp.QueryMethod_GET,
                 ExpectedQuery:  "linked-resource-name",
                 ExpectedScope:  projectID,
-                ExpectedBlastPropagation: &sdp.BlastPropagation{
-                    In:  true,
-                    Out: false,
-                },
             },
         }
         shared.RunStaticTests(t, adapter, sdpItem, queryTests)
@@ -460,14 +456,14 @@ func uint64Ptr(u uint64) *uint64 {
 
 ## Blast Propagation Testing Requirements
 
-**CRITICAL**: Every adapter test SHOULD include comprehensive StaticTests that cover ALL blast propagation links defined in the adapter configuration.
+**CRITICAL**: Every adapter test SHOULD include comprehensive StaticTests that cover ALL linked resources defined in the adapter.
 
 ### Steps to Ensure Complete Coverage
 
 1. **Review Adapter File**: Open the corresponding adapter file (e.g., `compute-global-address.go`)
-2. **Find blastPropagation Map**: Locate the `blastPropagation` field in the adapter configuration
-3. **Create Test Cases**: Write a QueryTest for EVERY entry in the blastPropagation map
-4. **Handle TODOs**: Note any blast propagation entries marked with TODO comments - these may not work yet but should be documented in test comments
+2. **Find linked-resource map**: Locate the map in the adapter that defines which linked item types the adapter produces (field name may be `blastPropagation`; values are `*gcpshared.Impact`).
+3. **Create Test Cases**: Write a QueryTest for every linked item type the adapter produces (one test per distinct linked type, not per attribute path).
+4. **Handle TODOs**: Note any entries marked with TODO comments—these may not work yet but should be documented in test comments.
 
 ### Example Complete StaticTests
 
@@ -480,10 +476,6 @@ t.Run("StaticTests", func(t *testing.T) {
             ExpectedMethod: sdp.QueryMethod_GET,
             ExpectedQuery:  "default",
             ExpectedScope:  projectID,
-            ExpectedBlastPropagation: &sdp.BlastPropagation{
-                In:  true,
-                Out: false,
-            },
         },
         // IP address link
         {
@@ -491,10 +483,6 @@ t.Run("StaticTests", func(t *testing.T) {
             ExpectedMethod: sdp.QueryMethod_GET,
             ExpectedQuery:  "203.0.113.1",
             ExpectedScope:  "global",
-            ExpectedBlastPropagation: &sdp.BlastPropagation{
-                In:  true,
-                Out: true,
-            },
         },
         // Backend service link
         {
@@ -502,10 +490,6 @@ t.Run("StaticTests", func(t *testing.T) {
             ExpectedMethod: sdp.QueryMethod_GET,
             ExpectedQuery:  "test-backend-service",
             ExpectedScope:  projectID,
-            ExpectedBlastPropagation: &sdp.BlastPropagation{
-                In:  true,
-                Out: true,
-            },
         },
         // Subnetwork link (note special scope format)
         {
@@ -513,10 +497,6 @@ t.Run("StaticTests", func(t *testing.T) {
             ExpectedMethod: sdp.QueryMethod_GET,
             ExpectedQuery:  "test-subnet",
             ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
-            ExpectedBlastPropagation: &sdp.BlastPropagation{
-                In:  true,
-                Out: false,
-            },
         },
     }
     shared.RunStaticTests(t, adapter, sdpItem, queryTests)
@@ -539,7 +519,7 @@ t.Run("StaticTests", func(t *testing.T) {
 - [ ] **ErrorHandling test**: Tests error responses (e.g., 404 Not Found)
 - [ ] **LIMIT TO 3/4 TEST CASES ONLY**: Get, List/Search, Search with Terraform, ErrorHandling - no additional tests needed
 - [ ] Multiple query parameter resources test combined query format (e.g., "location/resource")
-- [ ] **CRITICAL**: Static tests include blast propagation for ALL linked resources in the adapter's blastPropagation map
+- [ ] **CRITICAL**: Static tests include a test case for ALL linked resources defined in the adapter (every linked item type the adapter produces)
 - [ ] Static test queries use correct scope formats (especially for subnetworks: "projectID.region")
 - [ ] Static test queries use correct query formats (especially for KMS keys: use `shared.CompositeLookupKey()`)
 - [ ] Pointer helper functions are defined locally
@@ -553,7 +533,7 @@ t.Run("StaticTests", func(t *testing.T) {
 - Always validate SDP item type, scope, and unique attribute
 - Include comprehensive attribute validation in Get tests using **camelCase** for attribute names
 - Use `t.Skipf()` for optional functionality (like Search)
-- Always include static tests with blast propagation
+- Always include static tests that cover every linked resource the adapter produces
 - Mock HTTP responses must match actual API endpoints exactly
 - **Length checks**: Regular Search/List tests expect 2+ items, but Terraform format Search expects exactly 1 item
 
@@ -595,7 +575,7 @@ go test -race ./sources/gcp/... -v
   - Missing mock responses for HTTP calls
   - Incorrect protobuf type usage
   - Wrong API endpoint URLs
-  - Missing or incorrect blast propagation configurations
+  - Missing or incorrect linked-resource test cases in StaticTests
   - Scope format issues (especially for regional resources)
 - Fix the underlying issues in the adapter or test code
 - Re-run tests until all tests pass
@@ -627,7 +607,7 @@ TestYourAdapter(t *testing.T) {
     t.Run("Get", func(t *testing.T) {
         // Test Get functionality
         t.Run("StaticTests", func(t *testing.T) {
-            // Test ALL blast propagation links
+            // Test ALL linked resources the adapter produces
         })
     })
 

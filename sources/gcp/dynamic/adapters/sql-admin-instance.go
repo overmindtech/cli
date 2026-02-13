@@ -42,25 +42,21 @@ var _ = registerableAdapter{
 		"settings.sqlServerAuditConfig.bucket": {
 			Description:      "If the Storage Bucket is deleted or updated: The Cloud SQL Instance may fail to write audit logs. If the Cloud SQL Instance is updated: The bucket remains unaffected.",
 			ToSDPItemType:    gcpshared.StorageBucket,
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		// Name of the primary (master) instance this replica depends on.
 		"masterInstanceName": {
 			Description:      "If the master instance is deleted or updated: This replica may lose replication or become stale. If this replica is updated: The master remains unaffected.",
 			ToSDPItemType:    gcpshared.SQLAdminInstance,
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		// Failover replica for high availability; changes in the failover target can impact this instance's HA posture.
 		"failoverReplica.name": {
 			Description:      "If the failover replica is deleted or updated: High availability for this instance may be reduced or fail. If this instance is updated: The failover replica remains unaffected.",
 			ToSDPItemType:    gcpshared.SQLAdminInstance,
-			BlastPropagation: &sdp.BlastPropagation{In: true},
 		},
 		// Read replicas sourced from this primary instance. Changes to this instance can impact replicas, but replica changes typically do not impact the primary.
 		"replicaNames": {
 			Description:      "If this primary instance is deleted or materially updated: Its replicas may become unavailable or invalid. Changes on replicas generally do not impact the primary.",
 			ToSDPItemType:    gcpshared.SQLAdminInstance,
-			BlastPropagation: &sdp.BlastPropagation{Out: true},
 		},
 		// Added: All assigned IP addresses (public or private). Treated as tightly coupled network identifiers.
 		"ipAddresses.ipAddress": gcpshared.IPImpactBothWays,
@@ -71,10 +67,6 @@ var _ = registerableAdapter{
 		"dnsName": {
 			Description:   "Tightly coupled with the Cloud SQL Instance endpoint.",
 			ToSDPItemType: stdlib.NetworkDNS,
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: true,
-			},
 		},
 		// Authorized networks (CIDR ranges) allowed to connect to the instance.
 		"settings.ipConfiguration.authorizedNetworks.value": gcpshared.IPImpactBothWays,
@@ -82,21 +74,13 @@ var _ = registerableAdapter{
 		"settings.ipConfiguration.allocatedIpRange": {
 			Description:   "If the Subnetwork's secondary IP range is deleted or updated: The Cloud SQL Instance may fail to allocate private IP addresses. If the instance is updated: The subnetwork remains unaffected.",
 			ToSDPItemType: gcpshared.ComputeSubnetwork,
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
-			},
 		},
 		// CA pool resource name when using customer-managed CAs.
 		// Format: projects/{project}/locations/{region}/caPools/{caPoolId}
 		// TODO: Private CA resource type (PrivateCACAPool) does not exist yet. Uncomment when created.
 		// "settings.ipConfiguration.serverCaPool": {
 		// 	Description:      "If the Private CA Pool is deleted or updated: The Cloud SQL Instance may fail to use customer-managed certificates. If the instance is updated: The CA pool remains unaffected.",
-		// 	ToSDPItemType:    gcpshared.PrivateCACAPool,
-		// 		BlastPropagation: &sdp.BlastPropagation{
-		// 			In: false,
-		// 			Out: true,
-		// 		},
+		// 	ToSDPItemType: gcpshared.PrivateCACAPool,
 		// },
 		// Forward link from parent to child via SEARCH
 		// Link to all backup runs for this instance
@@ -111,10 +95,6 @@ var _ = registerableAdapter{
 		"name": {
 			ToSDPItemType: gcpshared.SQLAdminBackupRun,
 			Description:   "If the Cloud SQL Instance is deleted or updated: All associated Backup Runs may become invalid or inaccessible. If a Backup Run is updated: The instance remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  false,
-				Out: true,
-			},
 			IsParentToChild: true,
 		},
 	},

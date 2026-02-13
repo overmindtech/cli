@@ -31,30 +31,18 @@ var _ = registerableAdapter{
 		"urlMap": {
 			ToSDPItemType: gcpshared.ComputeUrlMap,
 			Description:   "If the URL Map is updated or deleted: The HTTPS proxy routing behavior may change or break. If the proxy changes: The URL map remains structurally unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In: true,
-			},
 		},
 		"sslCertificates": {
 			ToSDPItemType: gcpshared.ComputeSSLCertificate,
 			Description:   "If the SSL Certificate is updated or deleted: TLS handshakes may fail for the HTTPS proxy. If the proxy changes: The certificate resource remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In: true,
-			},
 		},
 		"sslPolicy": {
 			ToSDPItemType: gcpshared.ComputeSSLPolicy,
 			Description:   "If the SSL Policy is updated or deleted: TLS handshakes may fail for the HTTPS proxy. If the proxy changes: The SSL policy resource remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In: true,
-			},
 		},
 		"certificateMap": {
 			ToSDPItemType: gcpshared.CertificateManagerCertificateMap,
 			Description:   "If the Certificate Map is updated or deleted: TLS handshakes may fail for the HTTPS proxy. If the proxy changes: The certificate map resource remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In: true,
-			},
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

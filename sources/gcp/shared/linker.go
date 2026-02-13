@@ -33,7 +33,7 @@ type ItemLookup map[string]ItemTypeMeta
 type Linker struct {
 	sdpAssetTypeToAdapterMeta map[shared.ItemType]AdapterMeta
 	explicitBlastPropagations map[shared.ItemType]map[string]*Impact
-	manualAdapterLinker       map[shared.ItemType]func(scope, fromItemScope, query string, bp *sdp.BlastPropagation) *sdp.LinkedItemQuery
+	manualAdapterLinker map[shared.ItemType]func(scope, fromItemScope, query string) *sdp.LinkedItemQuery
 }
 
 // NewLinker creates a new Linker instance with the provided item lookup and predefined mappings.
@@ -92,11 +92,11 @@ func (l *Linker) AutoLink(ctx context.Context, projectID string, fromSDPItem *sd
 		// You can specify either IP or DNS in the blast propagation, and it will automatically
 		// detect which type the value actually is and create the appropriate link
 		if impact.ToSDPItemType == stdlib.NetworkIP || impact.ToSDPItemType == stdlib.NetworkDNS {
-			l.linkIPOrDNS(ctx, fromSDPItem, toItemGCPResourceName, impact.BlastPropagation)
+			l.linkIPOrDNS(ctx, fromSDPItem, toItemGCPResourceName)
 			return
 		}
 
-		linkedItemQuery := linkFunc(projectID, fromSDPItem.GetScope(), toItemGCPResourceName, impact.BlastPropagation)
+		linkedItemQuery := linkFunc(projectID, fromSDPItem.GetScope(), toItemGCPResourceName)
 		if linkedItemQuery == nil {
 			log.WithContext(ctx).WithFields(lf).Warn(
 				"manual adapter linker failed to create a linked item query",
@@ -209,14 +209,13 @@ func (l *Linker) AutoLink(ctx context.Context, projectID string, fromSDPItem *sd
 			Query:  query,
 			Scope:  scope,
 		},
-		BlastPropagation: impact.BlastPropagation,
 	})
 }
 
 // linkIPOrDNS detects whether the value is an IP address or DNS name and creates
 // the appropriate linked item query. This is used for fields like "host" that
 // could contain either type of value.
-func (l *Linker) linkIPOrDNS(ctx context.Context, fromSDPItem *sdp.Item, toItemValue string, blastPropagation *sdp.BlastPropagation) {
+func (l *Linker) linkIPOrDNS(ctx context.Context, fromSDPItem *sdp.Item, toItemValue string) {
 	if toItemValue == "" {
 		return
 	}
@@ -230,7 +229,6 @@ func (l *Linker) linkIPOrDNS(ctx context.Context, fromSDPItem *sdp.Item, toItemV
 				Query:  toItemValue,
 				Scope:  "global",
 			},
-			BlastPropagation: blastPropagation,
 		})
 		return
 	}
@@ -244,14 +242,13 @@ func (l *Linker) linkIPOrDNS(ctx context.Context, fromSDPItem *sdp.Item, toItemV
 				Query:  toItemValue,
 				Scope:  "global",
 			},
-			BlastPropagation: blastPropagation,
 		})
 		return
 	}
 
 	// If neither IP nor DNS, try the manual adapter linker as fallback
 	if linkFunc, ok := l.manualAdapterLinker[stdlib.NetworkIP]; ok {
-		linkedItemQuery := linkFunc("", fromSDPItem.GetScope(), toItemValue, blastPropagation)
+		linkedItemQuery := linkFunc("", fromSDPItem.GetScope(), toItemValue)
 		if linkedItemQuery != nil {
 			fromSDPItem.LinkedItemQueries = append(
 				fromSDPItem.LinkedItemQueries,

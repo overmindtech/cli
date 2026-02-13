@@ -91,10 +91,6 @@ func TestDNSManagedZone(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  "example.com.",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					// privateVisibilityConfig.networks.networkUrl
@@ -102,23 +98,15 @@ func TestDNSManagedZone(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "default",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// TODO: Add test for privateVisibilityConfig.gkeClusters.gkeClusterName → ContainerCluster
-				// Requires adapter to define BlastPropagation (currently only has ToSDPItemType)
+				// Link from adapter (ToSDPItemType only)
 				{
 					// forwardingConfig.targetNameServers.ipv4Address
 					ExpectedType:   stdlib.NetworkIP.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "10.0.0.10",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					// forwardingConfig.targetNameServers.ipv6Address
@@ -126,10 +114,6 @@ func TestDNSManagedZone(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "2001:db8::1",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					// peeringConfig.targetNetwork.networkUrl
@@ -137,10 +121,6 @@ func TestDNSManagedZone(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "peering-network",
 					ExpectedScope:  projectID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				// TODO: Add test for serviceDirectoryConfig.namespace.namespaceUrl → ServiceDirectoryNamespace
 				// Requires ServiceDirectoryNamespace adapter to be implemented first

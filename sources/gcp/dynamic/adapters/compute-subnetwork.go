@@ -24,27 +24,15 @@ var _ = registerableAdapter{
 		"network": {
 			Description:   "If the Compute Network is updated: The firewall rules may no longer apply correctly. If the firewall is updated: The network remains unaffected, but its security posture may change.",
 			ToSDPItemType: gcpshared.ComputeNetwork,
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: true,
-			},
 		},
 		"gatewayAddress": gcpshared.IPImpactBothWays,
 		"secondaryIpRanges.reservedInternalRange": {
 			Description:   "If the Reserved Internal Range is deleted or updated: The subnetwork's secondary IP range configuration may become invalid. If the subnetwork is updated: The internal range remains unaffected.",
 			ToSDPItemType: gcpshared.NetworkConnectivityInternalRange,
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
-			},
 		},
 		"ipCollection": {
 			Description:   "If the Public Delegated Prefix is deleted or updated: The subnetwork may lose its IP allocation source (BYOIP). If the subnetwork is updated: The prefix remains unaffected.",
 			ToSDPItemType: gcpshared.ComputePublicDelegatedPrefix,
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
-			},
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

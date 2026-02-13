@@ -240,10 +240,6 @@ func (c computeAutoscalerWrapper) gcpComputeAutoscalerToSDPItem(ctx context.Cont
 					Query:  igmName,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 	}

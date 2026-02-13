@@ -246,10 +246,6 @@ func (c computeAddressWrapper) gcpComputeAddressToSDPItem(ctx context.Context, a
 						Query:  networkName,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				})
 			}
 		}
@@ -267,10 +263,6 @@ func (c computeAddressWrapper) gcpComputeAddressToSDPItem(ctx context.Context, a
 						Query:  subnetworkName,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				})
 			}
 		}
@@ -284,10 +276,6 @@ func (c computeAddressWrapper) gcpComputeAddressToSDPItem(ctx context.Context, a
 				Query:  ip,
 				Scope:  "global",
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: true,
-			},
 		})
 	}
 
@@ -298,7 +286,6 @@ func (c computeAddressWrapper) gcpComputeAddressToSDPItem(ctx context.Context, a
 				ctx,
 				location.ProjectID,
 				userURI,
-				&sdp.BlastPropagation{In: true, Out: true},
 			)
 			if linkedQuery != nil {
 				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, linkedQuery)
@@ -318,10 +305,6 @@ func (c computeAddressWrapper) gcpComputeAddressToSDPItem(ctx context.Context, a
 						Method: sdp.QueryMethod_GET,
 						Query:  prefixName,
 						Scope:  fmt.Sprintf("%s.%s", location.ProjectID, region),
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
 					},
 				})
 			}

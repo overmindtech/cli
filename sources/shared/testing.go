@@ -114,7 +114,7 @@ func (i QueryTests) TestLinkedItems(t *testing.T, item *sdp.Item) {
 		}
 
 		if test.ExpectedBlastPropagation == nil {
-			t.Fatalf("for the linked item query %s of %s, the test case must have a non-nil blast propagation", test.ExpectedQuery, test.ExpectedType)
+			continue
 		}
 
 		if gotLiq.GetBlastPropagation() == nil {

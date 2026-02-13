@@ -33,57 +33,30 @@ var _ = registerableAdapter{
 		"deployedModels.model": {
 			ToSDPItemType: gcpshared.AIPlatformModel,
 			Description:   "They are tightly coupled.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: true,
-			},
 		},
 		"deployedModels.serviceAccount": {
 			ToSDPItemType: gcpshared.IAMServiceAccount,
 			Description:   "If the service account is deleted or its permissions are updated: The DeployedModel may fail to run or access required resources. If the DeployedModel is updated: The service account remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
-			},
 		},
 		"deployedModels.sharedResources": {
 			ToSDPItemType: gcpshared.AIPlatformDeploymentResourcePool,
 			Description:   "If the DeploymentResourcePool is deleted or updated: The DeployedModel may fail to run or lose access to shared resources. If the DeployedModel is updated: The DeploymentResourcePool remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
-			},
 		},
 		"deployedModels.privateEndpoints.serviceAttachment": {
 			ToSDPItemType: gcpshared.ComputeServiceAttachment,
 			Description:   "If the Service Attachment is deleted or updated: The DeployedModel's private endpoint connectivity may be disrupted. If the DeployedModel is updated: The Service Attachment remains unaffected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
-			},
 		},
 		"modelDeploymentMonitoringJob": {
 			ToSDPItemType: gcpshared.AIPlatformModelDeploymentMonitoringJob,
 			Description:   "They are tightly coupled.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: true,
-			},
 		},
 		"dedicatedEndpointDns": {
 			ToSDPItemType: stdlib.NetworkDNS,
 			Description:   "The DNS name for the dedicated endpoint. If the Endpoint is deleted, this DNS name will no longer resolve.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: true,
-			},
 		},
 		"predictRequestResponseLoggingConfig.bigqueryDestination.outputUri": {
 			ToSDPItemType: gcpshared.BigQueryTable,
 			Description:   "If the BigQuery Table is deleted or updated, the Endpoint's logging configuration may be affected.",
-			BlastPropagation: &sdp.BlastPropagation{
-				In: true,
-			},
 		},
 	},
 }.Register()

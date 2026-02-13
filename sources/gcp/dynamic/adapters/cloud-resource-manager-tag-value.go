@@ -40,10 +40,6 @@ var _ = registerableAdapter{
 		"parent": {
 			ToSDPItemType: gcpshared.CloudResourceManagerTagKey,
 			Description:   "They are tightly coupled",
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: true,
-			},
 		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{

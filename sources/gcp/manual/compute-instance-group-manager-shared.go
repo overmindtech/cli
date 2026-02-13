@@ -51,7 +51,6 @@ func InstanceGroupManagerToSDPItem(ctx context.Context, instanceGroupManager *co
 					Query:  instanceTemplateName,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 			})
 		}
 	}
@@ -68,7 +67,6 @@ func InstanceGroupManagerToSDPItem(ctx context.Context, instanceGroupManager *co
 					Query:  instanceGroupName,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 			})
 		}
 	}
@@ -84,7 +82,6 @@ func InstanceGroupManagerToSDPItem(ctx context.Context, instanceGroupManager *co
 					Query:  zoneName,
 					Scope:  location.ProjectID,
 				},
-				BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 			})
 		}
 	}
@@ -100,7 +97,6 @@ func InstanceGroupManagerToSDPItem(ctx context.Context, instanceGroupManager *co
 					Query:  regionName,
 					Scope:  location.ProjectID,
 				},
-				BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 			})
 		}
 	}
@@ -118,7 +114,6 @@ func InstanceGroupManagerToSDPItem(ctx context.Context, instanceGroupManager *co
 							Query:  zoneName,
 							Scope:  location.ProjectID,
 						},
-						BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 					})
 				}
 			}
@@ -137,7 +132,6 @@ func InstanceGroupManagerToSDPItem(ctx context.Context, instanceGroupManager *co
 					Query:  targetPoolName,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 			})
 		}
 	}
@@ -155,7 +149,6 @@ func InstanceGroupManagerToSDPItem(ctx context.Context, instanceGroupManager *co
 						Query:  resourcePolicyName,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				})
 			}
 		}
@@ -180,7 +173,6 @@ func InstanceGroupManagerToSDPItem(ctx context.Context, instanceGroupManager *co
 						Query:  versionTemplateName,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
 				})
 			}
 		}
@@ -201,10 +193,6 @@ func InstanceGroupManagerToSDPItem(ctx context.Context, instanceGroupManager *co
 						Query:  healthCheckName,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				})
 			}
 		}
@@ -224,7 +212,6 @@ func InstanceGroupManagerToSDPItem(ctx context.Context, instanceGroupManager *co
 						Query:  autoscalerName,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 				})
 			}
 		}
