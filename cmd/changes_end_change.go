@@ -26,7 +26,11 @@ func EndChange(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	changeUuid, err := getChangeUUIDAndCheckStatus(ctx, oi, sdp.ChangeStatus_CHANGE_STATUS_HAPPENING, viper.GetString("ticket-link"), true)
+	// Resolve the change UUID without checking status. The server-side
+	// EndChangeSimple handles status validation atomically and queues end-change
+	// behind start-change if needed, avoiding the TOCTOU race where status
+	// transitions between client-side checks.
+	changeUuid, err := getChangeUUID(ctx, oi, viper.GetString("ticket-link"))
 	if err != nil {
 		return loggedError{
 			err:     err,
@@ -36,8 +40,9 @@ func EndChange(cmd *cobra.Command, args []string) error {
 
 	lf := log.Fields{"uuid": changeUuid.String()}
 
+	// Call the simple RPC (enqueues a background job and returns immediately)
 	client := AuthenticatedChangesClient(ctx, oi)
-	stream, err := client.EndChange(ctx, &connect.Request[sdp.EndChangeRequest]{
+	resp, err := client.EndChangeSimple(ctx, &connect.Request[sdp.EndChangeRequest]{
 		Msg: &sdp.EndChangeRequest{
 			ChangeUUID: changeUuid[:],
 		},
@@ -49,29 +54,50 @@ func EndChange(cmd *cobra.Command, args []string) error {
 			message: "failed to end change",
 		}
 	}
-	log.WithContext(ctx).WithFields(lf).Info("processing")
-	lastLog := time.Now().Add(-1 * time.Minute)
-	for stream.Receive() {
-		msg := stream.Msg()
-		// print progress every 2 seconds
-		if time.Now().After(lastLog.Add(2 * time.Second)) {
-			log.WithContext(ctx).WithFields(lf).WithFields(log.Fields{
-				"state": msg.GetState(),
-				"items": msg.GetNumItems(),
-				"edges": msg.GetNumEdges(),
-			}).Info("progress")
-			lastLog = time.Now()
-		}
-	}
-	if stream.Err() != nil {
-		return loggedError{
-			err:     stream.Err(),
-			fields:  lf,
-			message: "failed to process end change",
-		}
-	}
 
-	log.WithContext(ctx).WithFields(lf).Info("finished change")
+	queuedAfterStart := resp.Msg.GetQueuedAfterStart()
+	waitForSnapshot := viper.GetBool("wait-for-snapshot")
+	if waitForSnapshot {
+		// Poll until change status is DONE
+		log.WithContext(ctx).WithFields(lf).Info("waiting for snapshot to complete")
+		for {
+			changeResp, err := client.GetChange(ctx, &connect.Request[sdp.GetChangeRequest]{
+				Msg: &sdp.GetChangeRequest{
+					UUID: changeUuid[:],
+				},
+			})
+			if err != nil {
+				return loggedError{
+					err:     err,
+					fields:  lf,
+					message: "failed to get change status",
+				}
+			}
+			if changeResp.Msg.GetChange().GetMetadata().GetStatus() == sdp.ChangeStatus_CHANGE_STATUS_DONE {
+				break
+			}
+			log.WithContext(ctx).WithFields(lf).WithFields(log.Fields{
+				"status": changeResp.Msg.GetChange().GetMetadata().GetStatus().String(),
+			}).Info("waiting for snapshot")
+			time.Sleep(3 * time.Second)
+
+			// check if the context is cancelled
+			if ctx.Err() != nil {
+				return loggedError{
+					err:     ctx.Err(),
+					fields:  lf,
+					message: "context cancelled",
+				}
+			}
+		}
+		log.WithContext(ctx).WithFields(lf).Info("finished change")
+	} else {
+		if queuedAfterStart {
+			log.WithContext(ctx).WithFields(lf).Info("change end queued (will run after start-change completes)")
+		} else {
+			log.WithContext(ctx).WithFields(lf).Info("change end initiated (processing in background)")
+		}
+	}
 	return nil
 }
 
@@ -79,4 +105,6 @@ func init() {
 	changesCmd.AddCommand(endChangeCmd)
 
 	addChangeUuidFlags(endChangeCmd)
+
+	endChangeCmd.PersistentFlags().Bool("wait-for-snapshot", false, "Wait for the snapshot to complete before returning. Defaults to false.")
 }
