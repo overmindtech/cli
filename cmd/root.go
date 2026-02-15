@@ -247,6 +247,64 @@ func getChangeUUIDAndCheckStatus(ctx context.Context, oi sdp.OvermindInstance, e
 	return changeUUID, nil
 }
 
+// getChangeUUID resolves a change UUID from --uuid, --change, or --ticket-link without
+// checking the change status. Use this when the server-side RPC handles status validation
+// (e.g. EndChangeSimple already validates status atomically and has queuing logic).
+func getChangeUUID(ctx context.Context, oi sdp.OvermindInstance, ticketLink string) (uuid.UUID, error) {
+	uuidString := viper.GetString("uuid")
+	changeUrlString := viper.GetString("change")
+
+	// If no arguments are specified then return an error
+	if uuidString == "" && changeUrlString == "" && ticketLink == "" {
+		return uuid.Nil, errors.New("no change specified; use one of --change, --ticket-link or --uuid")
+	}
+
+	// Check UUID first if more than one is set
+	if uuidString != "" {
+		changeUUID, err := uuid.Parse(uuidString)
+		if err != nil {
+			return uuid.Nil, fmt.Errorf("invalid --uuid value '%v', error: %w", uuidString, err)
+		}
+		trace.SpanFromContext(ctx).SetAttributes(
+			attribute.String("ovm.change.uuid", changeUUID.String()),
+		)
+		return changeUUID, nil
+	}
+
+	// Then check for a change URL
+	if changeUrlString != "" {
+		uuidFromChangeURL, err := parseChangeUrl(changeUrlString)
+		if err != nil {
+			return uuidFromChangeURL, err
+		}
+		trace.SpanFromContext(ctx).SetAttributes(
+			attribute.String("ovm.change.uuid", uuidFromChangeURL.String()),
+		)
+		return uuidFromChangeURL, nil
+	}
+
+	// Finally look up by ticket link (single attempt, no status check)
+	client := AuthenticatedChangesClient(ctx, oi)
+	change, err := client.GetChangeByTicketLink(ctx, &connect.Request[sdp.GetChangeByTicketLinkRequest]{
+		Msg: &sdp.GetChangeByTicketLinkRequest{
+			TicketLink: ticketLink,
+		},
+	})
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("error looking up change with ticket link %v: %w", ticketLink, err)
+	}
+
+	uuidPtr := change.Msg.GetChange().GetMetadata().GetUUIDParsed()
+	if uuidPtr == nil {
+		return uuid.Nil, fmt.Errorf("change found with ticket link %v but has no UUID", ticketLink)
+	}
+
+	trace.SpanFromContext(ctx).SetAttributes(
+		attribute.String("ovm.change.uuid", uuidPtr.String()),
+	)
+	return *uuidPtr, nil
+}
+
 // getChangeByTicketLinkWithRetry performs the GetChangeByTicketLink API call with retry logic,
 // retrying both on error and when the status does not match the expected status.
 // NB api-server will only return the latest change with this ticket link.
