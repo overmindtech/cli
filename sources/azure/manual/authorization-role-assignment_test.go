@@ -335,6 +335,76 @@ func TestAuthorizationRoleAssignment(t *testing.T) {
 		}
 	})
 
+	t.Run("Search", func(t *testing.T) {
+		roleAssignmentName := "test-role-assignment"
+		roleAssignment := createAzureRoleAssignment(roleAssignmentName, "/subscriptions/test-subscription/resourceGroups/test-rg")
+
+		mockClient := mocks.NewMockRoleAssignmentsClient(ctrl)
+		azureScope := "/subscriptions/test-subscription/resourceGroups/test-rg"
+		mockClient.EXPECT().Get(ctx, azureScope, roleAssignmentName, nil).Return(
+			armauthorization.RoleAssignmentsClientGetResponse{
+				RoleAssignment: *roleAssignment,
+			}, nil)
+
+		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		searchable, ok := adapter.(discovery.SearchableAdapter)
+		if !ok {
+			t.Fatalf("Adapter does not implement SearchableAdapter")
+		}
+
+		items, err := searchable.Search(ctx, scope, roleAssignmentName, true)
+		if err != nil {
+			t.Fatalf("Search failed: %v", err)
+		}
+		if len(items) != 1 {
+			t.Errorf("Expected 1 item, got %d", len(items))
+		}
+		if len(items) > 0 && items[0].GetType() != azureshared.AuthorizationRoleAssignment.String() {
+			t.Errorf("Expected type %s, got %s", azureshared.AuthorizationRoleAssignment.String(), items[0].GetType())
+		}
+	})
+
+	t.Run("Search_InvalidQueryParts", func(t *testing.T) {
+		mockClient := mocks.NewMockRoleAssignmentsClient(ctrl)
+		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
+		searchableWrapper := wrapper.(sources.SearchableWrapper)
+
+		_, qErr := searchableWrapper.Search(ctx, scope, "name1", "name2")
+		if qErr == nil {
+			t.Error("Expected error for too many query parts, got nil")
+		}
+	})
+
+	t.Run("Search_EmptyName", func(t *testing.T) {
+		mockClient := mocks.NewMockRoleAssignmentsClient(ctrl)
+		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
+		searchableWrapper := wrapper.(sources.SearchableWrapper)
+
+		_, qErr := searchableWrapper.Search(ctx, scope, "")
+		if qErr == nil {
+			t.Error("Expected error for empty role assignment name, got nil")
+		}
+	})
+
+	t.Run("SearchLookups", func(t *testing.T) {
+		mockClient := mocks.NewMockRoleAssignmentsClient(ctrl)
+		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
+		searchableWrapper := wrapper.(sources.SearchableWrapper)
+
+		searchLookups := searchableWrapper.SearchLookups()
+		if len(searchLookups) != 1 {
+			t.Errorf("Expected 1 search lookup group, got %d", len(searchLookups))
+		}
+		if len(searchLookups) > 0 && len(searchLookups[0]) != 1 {
+			t.Errorf("Expected 1 lookup in first group, got %d", len(searchLookups[0]))
+		}
+		if len(searchLookups) > 0 && len(searchLookups[0]) > 0 && searchLookups[0][0].ItemType != azureshared.AuthorizationRoleAssignment {
+			t.Errorf("Expected SearchLookups to include AuthorizationRoleAssignment, got %v", searchLookups[0][0].ItemType)
+		}
+	})
+
 	t.Run("TerraformMappings", func(t *testing.T) {
 		mockClient := mocks.NewMockRoleAssignmentsClient(ctrl)
 		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
@@ -348,8 +418,8 @@ func TestAuthorizationRoleAssignment(t *testing.T) {
 		for _, mapping := range mappings {
 			if mapping.GetTerraformQueryMap() == "azurerm_role_assignment.id" {
 				foundMapping = true
-				if mapping.GetTerraformMethod() != sdp.QueryMethod_GET {
-					t.Errorf("Expected TerraformMethod to be GET, got: %v", mapping.GetTerraformMethod())
+				if mapping.GetTerraformMethod() != sdp.QueryMethod_SEARCH {
+					t.Errorf("Expected TerraformMethod to be SEARCH, got: %v", mapping.GetTerraformMethod())
 				}
 				break
 			}

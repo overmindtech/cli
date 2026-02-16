@@ -15,6 +15,7 @@ import (
 	k8sAdapters "github.com/overmindtech/cli/k8s-source/adapters"
 	"github.com/overmindtech/workspace/sdp-go"
 	gcpAdapters "github.com/overmindtech/cli/sources/gcp/proc"
+	azureAdapters "github.com/overmindtech/cli/sources/azure/proc"
 	log "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -163,6 +164,7 @@ func MappedItemDiffsFromPlan(ctx context.Context, planJson []byte, fileName stri
 	adapterMetadata := awsAdapters.Metadata.AllAdapterMetadata()
 	adapterMetadata = append(adapterMetadata, k8sAdapters.Metadata.AllAdapterMetadata()...)
 	adapterMetadata = append(adapterMetadata, gcpAdapters.Metadata.AllAdapterMetadata()...)
+	adapterMetadata = append(adapterMetadata, azureAdapters.Metadata.AllAdapterMetadata()...)
 	// These mappings are from the terraform type, to required mapping data
 	mappings := make(map[string][]TfMapData)
 	for _, metadata := range adapterMetadata {
@@ -342,7 +344,7 @@ func mapResourceToQuery(itemDiff *sdp.ItemDiff, terraformResource *Resource, map
 
 	// If we get to this point, we haven't found a mapping
 	message := fmt.Sprintf("missing mapping attribute: %v", strings.Join(attemptedMappings, ", "))
-	
+
 	// Check if this is a newly created resource - these don't exist yet so missing
 	// attributes are expected, not an error
 	if itemDiff.GetStatus() == sdp.ItemDiffStatus_ITEM_DIFF_STATUS_CREATED {
@@ -360,7 +362,7 @@ func mapResourceToQuery(itemDiff *sdp.ItemDiff, terraformResource *Resource, map
 			},
 		}
 	}
-	
+
 	// For other statuses (REPLACED, UPDATED, DELETED), missing attributes are a real error
 	mappingStatus := sdp.MappedItemMappingStatus_MAPPED_ITEM_MAPPING_STATUS_ERROR
 	return PlannedChangeMapResult{

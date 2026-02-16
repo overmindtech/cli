@@ -221,9 +221,10 @@ func (s storageBlobContainerWrapper) azureBlobContainerToSDPItem(container *arms
 func (s storageBlobContainerWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
-			TerraformMethod: sdp.QueryMethod_GET,
+			TerraformMethod: sdp.QueryMethod_SEARCH,
 			// https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_container
-			TerraformQueryMap: "azurerm_storage_container.name",
+			// Terraform uses: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Storage/storageAccounts/{account}/blobServices/default/containers/{container}
+			TerraformQueryMap: "azurerm_storage_container.id",
 		},
 	}
 }

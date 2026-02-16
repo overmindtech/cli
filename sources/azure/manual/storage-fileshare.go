@@ -168,9 +168,10 @@ func (s storageFileShareWrapper) azureFileShareToSDPItem(fileShare *armstorage.F
 func (s storageFileShareWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
-			TerraformMethod: sdp.QueryMethod_GET,
+			TerraformMethod: sdp.QueryMethod_SEARCH,
 			// https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/storage_share
-			TerraformQueryMap: "azurerm_storage_share.name",
+			// Terraform uses: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Storage/storageAccounts/{account}/fileServices/default/shares/{share}
+			TerraformQueryMap: "azurerm_storage_share.id",
 		},
 	}
 }
