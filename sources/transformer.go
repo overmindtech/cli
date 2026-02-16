@@ -2,6 +2,7 @@ package sources
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -252,6 +253,20 @@ func (s *standardAdapterCore) validateScopes(scope string) error {
 	}
 }
 
+// NOTFOUND caching contract (applies to all adapters using this transformer, including manual adapters):
+// we only cache when the result is "not found" (not timeouts or other errors). When a second call hits
+// the cache, we return the same response and error as a fresh not-found call (e.g. Get: nil item + same
+// error message; List/Search: empty slice + nil error). No behavior change.
+//
+// IsNotFound returns true if err is a QueryError with ErrorType NOTFOUND.
+func IsNotFound(err error) bool {
+	var qe *sdp.QueryError
+	if errors.As(err, &qe) {
+		return qe.GetErrorType() == sdp.QueryError_NOTFOUND
+	}
+	return false
+}
+
 // Get retrieves a single item with a given scope and query.
 func (s *standardAdapterCore) Get(ctx context.Context, scope string, query string, ignoreCache bool) (*sdp.Item, error) {
 	if err := s.validateScopes(scope); err != nil {
@@ -270,13 +285,18 @@ func (s *standardAdapterCore) Get(ctx context.Context, scope string, query strin
 	defer done()
 
 	if qErr != nil {
+		// For better semantics, convert cached NOTFOUND into nil result
+		if qErr.GetErrorType() == sdp.QueryError_NOTFOUND {
+			return nil, qErr
+		}
 		log.WithContext(ctx).WithFields(log.Fields{
 			"ovm.source.type":      s.sourceType,
 			"ovm.source.adapter":   s.Name(),
 			"ovm.source.scope":     scope,
 			"ovm.source.method":    sdp.QueryMethod_GET.String(),
 			"ovm.source.cache-key": ck,
-		}).WithError(qErr).Error("failed to lookup item in cache")
+		}).WithError(qErr).Info("returning cached query error")
+		return nil, qErr
 	}
 
 	if cacheHit && len(cachedItem) > 0 {
@@ -294,8 +314,25 @@ func (s *standardAdapterCore) Get(ctx context.Context, scope string, query strin
 
 	item, err := s.wrapper.Get(ctx, scope, queryParts...)
 	if err != nil {
-		s.cache.StoreError(ctx, err, shared.DefaultCacheDuration, ck)
+		// Only cache NOTFOUND so lookup behaviour is unchanged for timeouts/other errors
+		if IsNotFound(err) {
+			s.cache.StoreError(ctx, err, shared.DefaultCacheDuration, ck)
+		}
 		return nil, err
+	}
+
+	if item == nil {
+		// Cache not-found when item is nil
+		notFoundErr := &sdp.QueryError{
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   fmt.Sprintf("%s not found for query '%s'", s.Type(), query),
+			Scope:         scope,
+			SourceName:    s.Name(),
+			ItemType:      s.Type(),
+			ResponderName: s.Name(),
+		}
+		s.cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, ck)
+		return nil, notFoundErr
 	}
 
 	// Store in cache after successful get
@@ -381,13 +418,18 @@ func (s *standardListableAdapterImpl) List(ctx context.Context, scope string, ig
 	defer done()
 
 	if qErr != nil {
+		// For better semantics, convert cached NOTFOUND into empty result
+		if qErr.GetErrorType() == sdp.QueryError_NOTFOUND {
+			return []*sdp.Item{}, nil
+		}
 		log.WithContext(ctx).WithFields(log.Fields{
 			"ovm.source.type":      s.sourceType,
 			"ovm.source.adapter":   s.Name(),
 			"ovm.source.scope":     scope,
 			"ovm.source.method":    sdp.QueryMethod_LIST.String(),
 			"ovm.source.cache-key": ck,
-		}).WithError(qErr).Error("failed to lookup item in cache")
+		}).WithError(qErr).Info("returning cached query error")
+		return nil, qErr
 	}
 
 	if cacheHit {
@@ -396,8 +438,25 @@ func (s *standardListableAdapterImpl) List(ctx context.Context, scope string, ig
 
 	items, err := s.listable.List(ctx, scope)
 	if err != nil {
-		s.cache.StoreError(ctx, err, shared.DefaultCacheDuration, ck)
+		// Only cache NOTFOUND so lookup behaviour is unchanged for timeouts/other errors
+		if IsNotFound(err) {
+			s.cache.StoreError(ctx, err, shared.DefaultCacheDuration, ck)
+		}
 		return nil, err
+	}
+
+	if len(items) == 0 {
+		// Cache not-found when no items were found
+		notFoundErr := &sdp.QueryError{
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   fmt.Sprintf("no %s found in scope %s", s.Type(), scope),
+			Scope:         scope,
+			SourceName:    s.Name(),
+			ItemType:      s.Type(),
+			ResponderName: s.Name(),
+		}
+		s.cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, ck)
+		return items, nil
 	}
 
 	for _, item := range items {
@@ -430,13 +489,19 @@ func (s *standardListableAdapterImpl) ListStream(ctx context.Context, scope stri
 	defer done()
 
 	if qErr != nil {
+		// For better semantics, convert cached NOTFOUND into empty result
+		if qErr.GetErrorType() == sdp.QueryError_NOTFOUND {
+			return
+		}
 		log.WithContext(ctx).WithFields(log.Fields{
 			"ovm.source.type":      s.sourceType,
 			"ovm.source.adapter":   s.Name(),
 			"ovm.source.scope":     scope,
 			"ovm.source.method":    sdp.QueryMethod_LIST.String(),
 			"ovm.source.cache-key": ck,
-		}).WithError(qErr).Error("failed to lookup item in cache")
+		}).WithError(qErr).Info("returning cached query error")
+		stream.SendError(qErr)
+		return
 	}
 
 	if cacheHit {
@@ -613,9 +678,62 @@ func (s *standardSearchableAdapterImpl) Search(ctx context.Context, scope string
 		)
 	}
 
+	// Check cache before searching
+	cacheHit, ck, cachedItems, qErr, done := s.cache.Lookup(
+		ctx,
+		s.Name(),
+		sdp.QueryMethod_SEARCH,
+		scope,
+		s.Type(),
+		query,
+		ignoreCache,
+	)
+	defer done()
+
+	if qErr != nil {
+		// For better semantics, convert cached NOTFOUND into empty result
+		if qErr.GetErrorType() == sdp.QueryError_NOTFOUND {
+			return []*sdp.Item{}, nil
+		}
+		log.WithContext(ctx).WithFields(log.Fields{
+			"ovm.source.type":      s.sourceType,
+			"ovm.source.adapter":   s.Name(),
+			"ovm.source.scope":     scope,
+			"ovm.source.method":    sdp.QueryMethod_SEARCH.String(),
+			"ovm.source.cache-key": ck,
+		}).WithError(qErr).Info("returning cached query error")
+		return nil, qErr
+	}
+
+	if cacheHit {
+		return cachedItems, nil
+	}
+
 	items, err := s.searchable.Search(ctx, scope, queryParts...)
 	if err != nil {
+		// Only cache NOTFOUND so lookup behaviour is unchanged for timeouts/other errors
+		if IsNotFound(err) {
+			s.cache.StoreError(ctx, err, shared.DefaultCacheDuration, ck)
+		}
 		return nil, err
+	}
+
+	if len(items) == 0 {
+		// Cache not-found when no items were found
+		notFoundErr := &sdp.QueryError{
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   fmt.Sprintf("no %s found for search query '%s'", s.Type(), query),
+			Scope:         scope,
+			SourceName:    s.Name(),
+			ItemType:      s.Type(),
+			ResponderName: s.Name(),
+		}
+		s.cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, ck)
+		return items, nil
+	}
+
+	for _, item := range items {
+		s.cache.StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
 	}
 
 	return items, nil
@@ -639,13 +757,19 @@ func (s *standardSearchableAdapterImpl) SearchStream(ctx context.Context, scope 
 	defer done()
 
 	if qErr != nil {
+		// For better semantics, convert cached NOTFOUND into empty result
+		if qErr.GetErrorType() == sdp.QueryError_NOTFOUND {
+			return
+		}
 		log.WithContext(ctx).WithFields(log.Fields{
 			"ovm.source.type":      s.sourceType,
 			"ovm.source.adapter":   s.Name(),
 			"ovm.source.scope":     scope,
 			"ovm.source.method":    sdp.QueryMethod_SEARCH.String(),
 			"ovm.source.cache-key": ck,
-		}).WithError(qErr).Error("failed to lookup item in cache")
+		}).WithError(qErr).Info("returning cached query error")
+		stream.SendError(qErr)
+		return
 	}
 
 	if cacheHit {

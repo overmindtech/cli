@@ -261,6 +261,105 @@ func TestComputeInstance(t *testing.T) {
 		}
 	})
 
+	// ListCachesNotFoundWithMemoryCache verifies that when List returns 0 items,
+	// NOTFOUND is cached (for both "*" and a specific scope). We verify caching
+	// by: (1) calling cache.Lookup and asserting cache hit with NOTFOUND error,
+	// (2) repeating the List call and asserting the GCP client is not called again (gomock Times(1)).
+	t.Run("ListCachesNotFoundWithMemoryCache", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+
+		mockClient := mocks.NewMockComputeInstanceClient(ctrl)
+		projectID := "cache-test-project"
+		zone := "us-central1-a"
+		scope := projectID + "." + zone
+
+		// Empty aggregated iterator: one Next() then Done (for List("*")).
+		mockAggIter := mocks.NewMockInstancesScopedListPairIterator(ctrl)
+		mockAggIter.EXPECT().Next().Return(compute.InstancesScopedListPair{}, iterator.Done)
+
+		// Empty per-zone iterator: one Next() then Done (for List(scope)).
+		mockListIter := mocks.NewMockComputeInstanceIterator(ctrl)
+		mockListIter.EXPECT().Next().Return(nil, iterator.Done)
+
+		mockClient.EXPECT().AggregatedList(gomock.Any(), gomock.Any()).Return(mockAggIter).Times(1)
+		mockClient.EXPECT().List(gomock.Any(), gomock.Any()).Return(mockListIter).Times(1)
+
+		wrapper := manual.NewComputeInstance(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
+		cache := sdpcache.NewMemoryCache()
+		adapter := sources.WrapperToAdapter(wrapper, cache)
+
+		discAdapter := adapter.(discovery.Adapter)
+		listable := adapter.(discovery.ListableAdapter)
+
+		// --- Scope "*" (wildcard): two List calls ---
+		// First List("*"): cache miss → listAggregatedStream → AggregatedList (0 items) → NOTFOUND cached.
+		items, err := listable.List(ctx, "*", false)
+		if err != nil {
+			t.Fatalf("first List(*): unexpected error: %v", err)
+		}
+		if len(items) != 0 {
+			t.Errorf("first List(*): expected 0 items, got %d", len(items))
+		}
+
+		// Verify NOTFOUND is in the cache for "*".
+		cacheHit, _, _, qErr, done := cache.Lookup(ctx, discAdapter.Name(), sdp.QueryMethod_LIST, "*", discAdapter.Type(), "", false)
+		done()
+		if !cacheHit {
+			t.Fatal("expected cache hit for List(*) after first call")
+		}
+		if qErr == nil {
+			t.Fatal("expected cached NOTFOUND error for List(*), got nil")
+		}
+		if qErr.GetErrorType() != sdp.QueryError_NOTFOUND {
+			t.Errorf("expected cached error type NOTFOUND for List(*), got %v", qErr.GetErrorType())
+		}
+
+		// Second List("*"): must hit cache (no second AggregatedList call).
+		items, err = listable.List(ctx, "*", false)
+		if err != nil {
+			t.Fatalf("second List(*): unexpected error: %v", err)
+		}
+		if len(items) != 0 {
+			t.Errorf("second List(*): expected 0 items, got %d", len(items))
+		}
+
+		// --- Specific scope: two List calls ---
+		// First List(scope): cache miss → per-zone List → List (0 items) → NOTFOUND cached.
+		items, err = listable.List(ctx, scope, false)
+		if err != nil {
+			t.Fatalf("first List(scope): unexpected error: %v", err)
+		}
+		if len(items) != 0 {
+			t.Errorf("first List(scope): expected 0 items, got %d", len(items))
+		}
+
+		// Verify NOTFOUND is in the cache for scope.
+		cacheHit, _, _, qErr, done = cache.Lookup(ctx, discAdapter.Name(), sdp.QueryMethod_LIST, scope, discAdapter.Type(), "", false)
+		done()
+		if !cacheHit {
+			t.Fatal("expected cache hit for List(scope) after first call")
+		}
+		if qErr == nil {
+			t.Fatal("expected cached NOTFOUND error for List(scope), got nil")
+		}
+		if qErr.GetErrorType() != sdp.QueryError_NOTFOUND {
+			t.Errorf("expected cached error type NOTFOUND for List(scope), got %v", qErr.GetErrorType())
+		}
+
+		// Second List(scope): must hit cache (no second List call).
+		items, err = listable.List(ctx, scope, false)
+		if err != nil {
+			t.Fatalf("second List(scope): unexpected error: %v", err)
+		}
+		if len(items) != 0 {
+			t.Errorf("second List(scope): expected 0 items, got %d", len(items))
+		}
+
+		// We know it was cached: (1) cache.Lookup returned cacheHit true with NOTFOUND, and
+		// (2) ctrl.Finish() verifies AggregatedList and List were each called exactly once.
+	})
+
 	t.Run("GetWithInitializeParams", func(t *testing.T) {
 		wrapper := manual.NewComputeInstance(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 

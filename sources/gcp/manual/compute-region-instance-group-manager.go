@@ -3,6 +3,7 @@ package manual
 import (
 	"context"
 	"errors"
+	"sync/atomic"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/sourcegraph/conc/pool"
@@ -137,6 +138,8 @@ func (c computeRegionInstanceGroupManagerWrapper) ListStream(ctx context.Context
 		Region:  location.Region,
 	})
 
+	var itemsSent int
+	var hadError bool
 	for {
 		igm, iterErr := it.Next()
 		if errors.Is(iterErr, iterator.Done) {
@@ -150,17 +153,32 @@ func (c computeRegionInstanceGroupManagerWrapper) ListStream(ctx context.Context
 		item, sdpErr := c.gcpRegionInstanceGroupManagerToSDPItem(ctx, igm, location)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
+			hadError = true
 			continue
 		}
 
 		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
+		itemsSent++
+	}
+	if itemsSent == 0 && !hadError {
+		notFoundErr := &sdp.QueryError{
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   "no compute region instance group managers found in scope " + scope,
+			Scope:         scope,
+			SourceName:    c.Name(),
+			ItemType:      c.Type(),
+			ResponderName: c.Name(),
+		}
+		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
 	}
 }
 
 func (c computeRegionInstanceGroupManagerWrapper) listAllRegionsStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	// Use a pool to list across all regions in parallel
 	p := pool.New().WithContext(ctx).WithMaxGoroutines(10)
+	var itemsSent atomic.Int32
+	var hadError atomic.Bool
 
 	for _, location := range c.Locations() {
 		p.Go(func(ctx context.Context) error {
@@ -176,17 +194,20 @@ func (c computeRegionInstanceGroupManagerWrapper) listAllRegionsStream(ctx conte
 				}
 				if iterErr != nil {
 					stream.SendError(gcpshared.QueryError(iterErr, location.ToScope(), c.Type()))
+					hadError.Store(true)
 					return iterErr
 				}
 
 				item, sdpErr := c.gcpRegionInstanceGroupManagerToSDPItem(ctx, igm, location)
 				if sdpErr != nil {
 					stream.SendError(sdpErr)
+					hadError.Store(true)
 					continue
 				}
 
 				cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 				stream.SendItem(item)
+				itemsSent.Add(1)
 			}
 
 			return nil
@@ -195,6 +216,17 @@ func (c computeRegionInstanceGroupManagerWrapper) listAllRegionsStream(ctx conte
 
 	// Wait for all goroutines to complete
 	_ = p.Wait()
+	if itemsSent.Load() == 0 && !hadError.Load() {
+		notFoundErr := &sdp.QueryError{
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   "no compute region instance group managers found in scope *",
+			Scope:         "*",
+			SourceName:    c.Name(),
+			ItemType:      c.Type(),
+			ResponderName: c.Name(),
+		}
+		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
+	}
 }
 
 func (c computeRegionInstanceGroupManagerWrapper) gcpRegionInstanceGroupManagerToSDPItem(ctx context.Context, instanceGroupManager *computepb.InstanceGroupManager, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {

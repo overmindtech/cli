@@ -239,6 +239,77 @@ func TestComputeRegionInstanceGroupManager(t *testing.T) {
 			t.Fatalf("Expected 2 items, got: %d", len(items))
 		}
 	})
+
+	t.Run("ListCachesNotFoundWithMemoryCache", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		mockClient := mocks.NewMockRegionInstanceGroupManagerClient(ctrl)
+		projectID := "cache-test-project"
+		region := "us-central1"
+		scope := projectID + "." + region
+
+		// "*" path calls List once per region; specific scope calls List once. With 1 region: 2 List calls total.
+		mockIter1 := mocks.NewMockRegionInstanceGroupManagerIterator(ctrl)
+		mockIter1.EXPECT().Next().Return(nil, iterator.Done)
+		mockIter2 := mocks.NewMockRegionInstanceGroupManagerIterator(ctrl)
+		mockIter2.EXPECT().Next().Return(nil, iterator.Done)
+		mockClient.EXPECT().List(gomock.Any(), gomock.Any()).Return(mockIter1).Times(1)
+		mockClient.EXPECT().List(gomock.Any(), gomock.Any()).Return(mockIter2).Times(1)
+
+		wrapper := manual.NewComputeRegionInstanceGroupManager(mockClient, []gcpshared.LocationInfo{gcpshared.NewRegionalLocation(projectID, region)})
+		cache := sdpcache.NewMemoryCache()
+		adapter := sources.WrapperToAdapter(wrapper, cache)
+		discAdapter := adapter.(discovery.Adapter)
+		listable := adapter.(discovery.ListableAdapter)
+
+		// --- Scope "*" ---
+		items, err := listable.List(ctx, "*", false)
+		if err != nil {
+			t.Fatalf("first List(*): %v", err)
+		}
+		if len(items) != 0 {
+			t.Errorf("first List(*): expected 0 items, got %d", len(items))
+		}
+		cacheHit, _, _, qErr, done := cache.Lookup(ctx, discAdapter.Name(), sdp.QueryMethod_LIST, "*", discAdapter.Type(), "", false)
+		done()
+		if !cacheHit {
+			t.Fatal("expected cache hit for List(*)")
+		}
+		if qErr == nil || qErr.GetErrorType() != sdp.QueryError_NOTFOUND {
+			t.Fatalf("expected cached NOTFOUND for List(*), got %v", qErr)
+		}
+		items, err = listable.List(ctx, "*", false)
+		if err != nil {
+			t.Fatalf("second List(*): %v", err)
+		}
+		if len(items) != 0 {
+			t.Errorf("second List(*): expected 0 items, got %d", len(items))
+		}
+
+		// --- Specific scope ---
+		items, err = listable.List(ctx, scope, false)
+		if err != nil {
+			t.Fatalf("first List(scope): %v", err)
+		}
+		if len(items) != 0 {
+			t.Errorf("first List(scope): expected 0 items, got %d", len(items))
+		}
+		cacheHit, _, _, qErr, done = cache.Lookup(ctx, discAdapter.Name(), sdp.QueryMethod_LIST, scope, discAdapter.Type(), "", false)
+		done()
+		if !cacheHit {
+			t.Fatal("expected cache hit for List(scope)")
+		}
+		if qErr == nil || qErr.GetErrorType() != sdp.QueryError_NOTFOUND {
+			t.Fatalf("expected cached NOTFOUND for List(scope), got %v", qErr)
+		}
+		items, err = listable.List(ctx, scope, false)
+		if err != nil {
+			t.Fatalf("second List(scope): %v", err)
+		}
+		if len(items) != 0 {
+			t.Errorf("second List(scope): expected 0 items, got %d", len(items))
+		}
+	})
 }
 
 func createRegionInstanceGroupManager(name string, isStable bool, instanceTemplate string) *computepb.InstanceGroupManager {

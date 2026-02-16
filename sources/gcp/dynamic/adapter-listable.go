@@ -10,6 +10,7 @@ import (
 	"github.com/overmindtech/workspace/sdp-go"
 	"github.com/overmindtech/workspace/sdpcache"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
+	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/shared"
 )
 
@@ -75,13 +76,18 @@ func (g ListableAdapter) List(ctx context.Context, scope string, ignoreCache boo
 	defer done()
 
 	if qErr != nil {
+		// For better semantics, convert cached NOTFOUND into empty result
+		if qErr.GetErrorType() == sdp.QueryError_NOTFOUND {
+			return []*sdp.Item{}, nil
+		}
 		log.WithContext(ctx).WithFields(log.Fields{
 			"ovm.source.type":      "gcp",
 			"ovm.source.adapter":   g.Name(),
 			"ovm.source.scope":     scope,
 			"ovm.source.method":    sdp.QueryMethod_LIST.String(),
 			"ovm.source.cache-key": ck,
-		}).WithError(qErr).Error("failed to lookup item in cache")
+		}).WithError(qErr).Info("returning cached query error")
+		return nil, qErr
 	}
 
 	if cacheHit {
@@ -90,18 +96,33 @@ func (g ListableAdapter) List(ctx context.Context, scope string, ignoreCache boo
 
 	listURL, err := g.listEndpointFunc(location)
 	if err != nil {
-		err := &sdp.QueryError{
+		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
 			ErrorString: fmt.Sprintf("failed to construct list endpoint: %v", err),
 		}
-		g.cache.StoreError(ctx, err, shared.DefaultCacheDuration, ck)
-		return nil, err
 	}
 
 	items, err := aggregateSDPItems(ctx, g.Adapter, listURL, location)
 	if err != nil {
-		g.cache.StoreError(ctx, err, shared.DefaultCacheDuration, ck)
+		if sources.IsNotFound(err) {
+			g.cache.StoreError(ctx, err, shared.DefaultCacheDuration, ck)
+			return []*sdp.Item{}, nil
+		}
 		return nil, err
+	}
+
+	if len(items) == 0 {
+		// Cache not-found when no items were found
+		notFoundErr := &sdp.QueryError{
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   fmt.Sprintf("no %s found in scope %s", g.Type(), scope),
+			Scope:         scope,
+			SourceName:    g.Name(),
+			ItemType:      g.Type(),
+			ResponderName: g.Name(),
+		}
+		g.cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, ck)
+		return items, nil
 	}
 
 	for _, item := range items {
@@ -130,13 +151,19 @@ func (g ListableAdapter) ListStream(ctx context.Context, scope string, ignoreCac
 	defer done()
 
 	if qErr != nil {
+		// For better semantics, convert cached NOTFOUND into empty result
+		if qErr.GetErrorType() == sdp.QueryError_NOTFOUND {
+			return
+		}
 		log.WithContext(ctx).WithFields(log.Fields{
 			"ovm.source.type":      "gcp",
 			"ovm.source.adapter":   g.Name(),
 			"ovm.source.scope":     scope,
 			"ovm.source.method":    sdp.QueryMethod_LIST.String(),
 			"ovm.source.cache-key": ck,
-		}).WithError(qErr).Error("failed to lookup item in cache")
+		}).WithError(qErr).Info("returning cached query error")
+		stream.SendError(qErr)
+		return
 	}
 
 	if cacheHit {

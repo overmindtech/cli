@@ -5,6 +5,7 @@ import (
 	"sync"
 	"testing"
 
+	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/api/iterator"
@@ -205,6 +206,77 @@ func TestComputeReservation(t *testing.T) {
 		_, ok = adapter.(discovery.SearchStreamableAdapter)
 		if ok {
 			t.Fatalf("Adapter should not support SearchStream operation")
+		}
+	})
+
+	t.Run("ListCachesNotFoundWithMemoryCache", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		mockClient := mocks.NewMockComputeReservationClient(ctrl)
+		projectID := "cache-test-project"
+		zone := "us-central1-a"
+		scope := projectID + "." + zone
+
+		mockAggIter := mocks.NewMockReservationsScopedListPairIterator(ctrl)
+		mockAggIter.EXPECT().Next().Return(compute.ReservationsScopedListPair{}, iterator.Done)
+		mockListIter := mocks.NewMockComputeReservationIterator(ctrl)
+		mockListIter.EXPECT().Next().Return(nil, iterator.Done)
+
+		mockClient.EXPECT().AggregatedList(gomock.Any(), gomock.Any()).Return(mockAggIter).Times(1)
+		mockClient.EXPECT().List(gomock.Any(), gomock.Any()).Return(mockListIter).Times(1)
+
+		wrapper := manual.NewComputeReservation(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
+		cache := sdpcache.NewMemoryCache()
+		adapter := sources.WrapperToAdapter(wrapper, cache)
+		discAdapter := adapter.(discovery.Adapter)
+		listable := adapter.(discovery.ListableAdapter)
+
+		// --- Scope "*" ---
+		items, err := listable.List(ctx, "*", false)
+		if err != nil {
+			t.Fatalf("first List(*): %v", err)
+		}
+		if len(items) != 0 {
+			t.Errorf("first List(*): expected 0 items, got %d", len(items))
+		}
+		cacheHit, _, _, qErr, done := cache.Lookup(ctx, discAdapter.Name(), sdp.QueryMethod_LIST, "*", discAdapter.Type(), "", false)
+		done()
+		if !cacheHit {
+			t.Fatal("expected cache hit for List(*)")
+		}
+		if qErr == nil || qErr.GetErrorType() != sdp.QueryError_NOTFOUND {
+			t.Fatalf("expected cached NOTFOUND for List(*), got %v", qErr)
+		}
+		items, err = listable.List(ctx, "*", false)
+		if err != nil {
+			t.Fatalf("second List(*): %v", err)
+		}
+		if len(items) != 0 {
+			t.Errorf("second List(*): expected 0 items, got %d", len(items))
+		}
+
+		// --- Specific scope ---
+		items, err = listable.List(ctx, scope, false)
+		if err != nil {
+			t.Fatalf("first List(scope): %v", err)
+		}
+		if len(items) != 0 {
+			t.Errorf("first List(scope): expected 0 items, got %d", len(items))
+		}
+		cacheHit, _, _, qErr, done = cache.Lookup(ctx, discAdapter.Name(), sdp.QueryMethod_LIST, scope, discAdapter.Type(), "", false)
+		done()
+		if !cacheHit {
+			t.Fatal("expected cache hit for List(scope)")
+		}
+		if qErr == nil || qErr.GetErrorType() != sdp.QueryError_NOTFOUND {
+			t.Fatalf("expected cached NOTFOUND for List(scope), got %v", qErr)
+		}
+		items, err = listable.List(ctx, scope, false)
+		if err != nil {
+			t.Fatalf("second List(scope): %v", err)
+		}
+		if len(items) != 0 {
+			t.Errorf("second List(scope): expected 0 items, got %d", len(items))
 		}
 	})
 }

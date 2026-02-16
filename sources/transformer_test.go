@@ -2,6 +2,7 @@ package sources
 
 import (
 	"context"
+	"errors"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -206,14 +207,306 @@ func TestListErrorCausesCacheHang(t *testing.T) {
 		t.Logf("  List() called %d times", mockWrapper.callCount.Load())
 	}
 
-	// List() is called twice - once by first, once by second after being woken
+	// We only cache NOTFOUND; this wrapper returns QueryError_OTHER so the error is not cached.
+	// Both goroutines call List() (callCount == 2). The important assertion is timing above:
+	// second goroutine completes quickly because done() wakes it, then it retries and gets the same error.
 	callCount := mockWrapper.callCount.Load()
 	if callCount != 2 {
-		t.Errorf("Expected List to be called twice, was called %d times", callCount)
+		t.Errorf("Expected List to be called twice (error is not cached), was called %d times", callCount)
 	}
 
 	t.Logf("Test results:")
 	t.Logf("  First goroutine: %v", firstDuration)
 	t.Logf("  Second goroutine: %v", secondDuration)
 	t.Logf("  List() calls: %d", callCount)
+}
+
+// notFoundCachingWrapper returns nil/empty from Get/List/Search to test NOTFOUND caching.
+type notFoundCachingWrapper struct {
+	getCallCount    atomic.Int32
+	listCallCount   atomic.Int32
+	searchCallCount atomic.Int32
+	itemType        shared.ItemType
+	scope           string
+}
+
+func (w *notFoundCachingWrapper) Scopes() []string {
+	return []string{w.scope}
+}
+
+func (w *notFoundCachingWrapper) GetLookups() ItemTypeLookups {
+	return ItemTypeLookups{shared.NewItemTypeLookup("id", w.itemType)}
+}
+
+func (w *notFoundCachingWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+	w.getCallCount.Add(1)
+	return nil, nil
+}
+
+func (w *notFoundCachingWrapper) Type() string {
+	return w.itemType.String()
+}
+
+func (w *notFoundCachingWrapper) Name() string {
+	return "notfound-caching-adapter"
+}
+
+func (w *notFoundCachingWrapper) ItemType() shared.ItemType {
+	return w.itemType
+}
+
+func (w *notFoundCachingWrapper) TerraformMappings() []*sdp.TerraformMapping {
+	return nil
+}
+
+func (w *notFoundCachingWrapper) Category() sdp.AdapterCategory {
+	return sdp.AdapterCategory_ADAPTER_CATEGORY_COMPUTE_APPLICATION
+}
+
+func (w *notFoundCachingWrapper) PotentialLinks() map[shared.ItemType]bool {
+	return nil
+}
+
+func (w *notFoundCachingWrapper) AdapterMetadata() *sdp.AdapterMetadata {
+	return nil
+}
+
+func (w *notFoundCachingWrapper) IAMPermissions() []string {
+	return nil
+}
+
+func (w *notFoundCachingWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+	w.listCallCount.Add(1)
+	return []*sdp.Item{}, nil
+}
+
+func (w *notFoundCachingWrapper) SearchLookups() []ItemTypeLookups {
+	return []ItemTypeLookups{{shared.NewItemTypeLookup("id", w.itemType)}}
+}
+
+func (w *notFoundCachingWrapper) Search(ctx context.Context, scope string, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
+	w.searchCallCount.Add(1)
+	return []*sdp.Item{}, nil
+}
+
+// TestGetNilCachesNotFound tests that when wrapper Get returns (nil, nil), the adapter
+// caches NOTFOUND and a second Get returns the cached error without calling the wrapper again.
+func TestGetNilCachesNotFound(t *testing.T) {
+	ctx := context.Background()
+	cache := sdpcache.NewMemoryCache()
+	scope := "test-scope"
+	// Use AWS item type so adapter validation does not require GCP predefined role.
+	itemType := shared.NewItemType(aws.AWS, aws.APIGateway, aws.RESTAPI)
+
+	wrapper := &notFoundCachingWrapper{itemType: itemType, scope: scope}
+	adapter := WrapperToAdapter(wrapper, cache)
+
+	// First Get: miss, wrapper returns (nil, nil), adapter caches NOTFOUND
+	item, err := adapter.Get(ctx, scope, "query1", false)
+	if item != nil {
+		t.Errorf("first Get: expected nil item, got %v", item)
+	}
+	if err == nil {
+		t.Fatal("first Get: expected NOTFOUND error, got nil")
+	}
+	var qErr *sdp.QueryError
+	if !errors.As(err, &qErr) || qErr.GetErrorType() != sdp.QueryError_NOTFOUND {
+		t.Errorf("first Get: expected NOTFOUND, got %v", err)
+	}
+	if wrapper.getCallCount.Load() != 1 {
+		t.Errorf("first Get: expected 1 Get call, got %d", wrapper.getCallCount.Load())
+	}
+
+	// Second Get: should hit cache, wrapper not called again
+	item, err = adapter.Get(ctx, scope, "query1", false)
+	if item != nil {
+		t.Errorf("second Get: expected nil item, got %v", item)
+	}
+	if err == nil {
+		t.Fatal("second Get: expected NOTFOUND error, got nil")
+	}
+	if !errors.As(err, &qErr) || qErr.GetErrorType() != sdp.QueryError_NOTFOUND {
+		t.Errorf("second Get: expected NOTFOUND, got %v", err)
+	}
+	if wrapper.getCallCount.Load() != 1 {
+		t.Errorf("second Get: expected still 1 Get call (cache hit), got %d", wrapper.getCallCount.Load())
+	}
+}
+
+// TestListEmptyCachesNotFound tests that when wrapper List returns ([], nil), the adapter
+// caches NOTFOUND and a second List returns empty from cache without calling the wrapper again.
+func TestListEmptyCachesNotFound(t *testing.T) {
+	ctx := context.Background()
+	cache := sdpcache.NewMemoryCache()
+	scope := "test-scope"
+	// Use AWS item type so adapter validation does not require GCP predefined role.
+	itemType := shared.NewItemType(aws.AWS, aws.APIGateway, aws.RESTAPI)
+
+	wrapper := &notFoundCachingWrapper{itemType: itemType, scope: scope}
+	adapter := WrapperToAdapter(wrapper, cache).(interface {
+		List(context.Context, string, bool) ([]*sdp.Item, error)
+	})
+
+	// First List: miss, wrapper returns ([], nil), adapter caches NOTFOUND
+	items, err := adapter.List(ctx, scope, false)
+	if err != nil {
+		t.Fatalf("first List: unexpected error %v", err)
+	}
+	if items == nil {
+		t.Error("first List: expected non-nil empty slice, got nil")
+	}
+	if len(items) != 0 {
+		t.Errorf("first List: expected 0 items, got %d", len(items))
+	}
+	if wrapper.listCallCount.Load() != 1 {
+		t.Errorf("first List: expected 1 List call, got %d", wrapper.listCallCount.Load())
+	}
+
+	// Second List: should hit cache, wrapper not called again
+	items, err = adapter.List(ctx, scope, false)
+	if err != nil {
+		t.Fatalf("second List: unexpected error %v", err)
+	}
+	if items == nil {
+		t.Error("second List: expected non-nil empty slice, got nil")
+	}
+	if len(items) != 0 {
+		t.Errorf("second List: expected 0 items, got %d", len(items))
+	}
+	if wrapper.listCallCount.Load() != 1 {
+		t.Errorf("second List: expected still 1 List call (cache hit), got %d", wrapper.listCallCount.Load())
+	}
+}
+
+// TestSearchEmptyCachesNotFound tests that when wrapper Search returns ([], nil), the adapter
+// caches NOTFOUND and a second Search returns empty from cache without calling the wrapper again.
+func TestSearchEmptyCachesNotFound(t *testing.T) {
+	ctx := context.Background()
+	cache := sdpcache.NewMemoryCache()
+	scope := "test-scope"
+	// Use AWS item type so adapter validation does not require GCP predefined role.
+	itemType := shared.NewItemType(aws.AWS, aws.APIGateway, aws.RESTAPI)
+
+	wrapper := &notFoundCachingWrapper{itemType: itemType, scope: scope}
+	adapter := WrapperToAdapter(wrapper, cache).(interface {
+		Search(context.Context, string, string, bool) ([]*sdp.Item, error)
+	})
+
+	query := "id1"
+
+	// First Search: miss, wrapper returns ([], nil), adapter caches NOTFOUND
+	items, err := adapter.Search(ctx, scope, query, false)
+	if err != nil {
+		t.Fatalf("first Search: unexpected error %v", err)
+	}
+	if items == nil {
+		t.Error("first Search: expected non-nil empty slice, got nil")
+	}
+	if len(items) != 0 {
+		t.Errorf("first Search: expected 0 items, got %d", len(items))
+	}
+	if wrapper.searchCallCount.Load() != 1 {
+		t.Errorf("first Search: expected 1 Search call, got %d", wrapper.searchCallCount.Load())
+	}
+
+	// Second Search: should hit cache, wrapper not called again
+	items, err = adapter.Search(ctx, scope, query, false)
+	if err != nil {
+		t.Fatalf("second Search: unexpected error %v", err)
+	}
+	if items == nil {
+		t.Error("second Search: expected non-nil empty slice, got nil")
+	}
+	if len(items) != 0 {
+		t.Errorf("second Search: expected 0 items, got %d", len(items))
+	}
+	if wrapper.searchCallCount.Load() != 1 {
+		t.Errorf("second Search: expected still 1 Search call (cache hit), got %d", wrapper.searchCallCount.Load())
+	}
+}
+
+// TestGetNOTFOUNDCacheHitMatchesLiveNOTFOUND asserts response parity: a NOTFOUND cache hit returns
+// the same (item, error) as a fresh NOTFOUND — nil item and identical error type and error message.
+func TestGetNOTFOUNDCacheHitMatchesLiveNOTFOUND(t *testing.T) {
+	ctx := context.Background()
+	cache := sdpcache.NewMemoryCache()
+	scope := "test-scope"
+	itemType := shared.NewItemType(aws.AWS, aws.APIGateway, aws.RESTAPI)
+	wrapper := &notFoundCachingWrapper{itemType: itemType, scope: scope}
+	adapter := WrapperToAdapter(wrapper, cache)
+
+	query := "query1"
+	// Live NOTFOUND
+	liveItem, liveErr := adapter.Get(ctx, scope, query, false)
+	// Cache NOTFOUND (second call hits cache)
+	cacheItem, cacheErr := adapter.Get(ctx, scope, query, false)
+
+	// Same item: both nil
+	if liveItem != nil || cacheItem != nil {
+		t.Errorf("both responses must have nil item: live=%v cache=%v", liveItem, cacheItem)
+	}
+	// Same error semantics: both NOTFOUND with same message
+	var liveQE, cacheQE *sdp.QueryError
+	if !errors.As(liveErr, &liveQE) || !errors.As(cacheErr, &cacheQE) {
+		t.Fatalf("both errors must be QueryError: live=%v cache=%v", liveErr, cacheErr)
+	}
+	if liveQE.GetErrorType() != sdp.QueryError_NOTFOUND || cacheQE.GetErrorType() != sdp.QueryError_NOTFOUND {
+		t.Errorf("both must be NOTFOUND: live=%v cache=%v", liveQE.GetErrorType(), cacheQE.GetErrorType())
+	}
+	if liveQE.GetErrorString() != cacheQE.GetErrorString() {
+		t.Errorf("error string must match: live=%q cache=%q", liveQE.GetErrorString(), cacheQE.GetErrorString())
+	}
+}
+
+// TestListNOTFOUNDCacheHitMatchesLiveNOTFOUND asserts response parity: a NOTFOUND cache hit for List
+// returns the same (items, error) as a fresh not-found — empty slice and nil error.
+func TestListNOTFOUNDCacheHitMatchesLiveNOTFOUND(t *testing.T) {
+	ctx := context.Background()
+	cache := sdpcache.NewMemoryCache()
+	scope := "test-scope"
+	itemType := shared.NewItemType(aws.AWS, aws.APIGateway, aws.RESTAPI)
+	wrapper := &notFoundCachingWrapper{itemType: itemType, scope: scope}
+	adapter := WrapperToAdapter(wrapper, cache).(interface {
+		List(context.Context, string, bool) ([]*sdp.Item, error)
+	})
+
+	liveItems, liveErr := adapter.List(ctx, scope, false)
+	cacheItems, cacheErr := adapter.List(ctx, scope, false)
+
+	if liveErr != nil || cacheErr != nil {
+		t.Errorf("both must return nil error: live=%v cache=%v", liveErr, cacheErr)
+	}
+	if liveItems == nil || cacheItems == nil {
+		t.Errorf("both must return non-nil slice: live=%v cache=%v", liveItems, cacheItems)
+	}
+	if len(liveItems) != 0 || len(cacheItems) != 0 {
+		t.Errorf("both must return empty slice: live len=%d cache len=%d", len(liveItems), len(cacheItems))
+	}
+}
+
+// TestSearchNOTFOUNDCacheHitMatchesLiveNOTFOUND asserts response parity: a NOTFOUND cache hit for Search
+// returns the same (items, error) as a fresh not-found — empty slice and nil error.
+func TestSearchNOTFOUNDCacheHitMatchesLiveNOTFOUND(t *testing.T) {
+	ctx := context.Background()
+	cache := sdpcache.NewMemoryCache()
+	scope := "test-scope"
+	itemType := shared.NewItemType(aws.AWS, aws.APIGateway, aws.RESTAPI)
+	wrapper := &notFoundCachingWrapper{itemType: itemType, scope: scope}
+	adapter := WrapperToAdapter(wrapper, cache).(interface {
+		Search(context.Context, string, string, bool) ([]*sdp.Item, error)
+	})
+
+	query := "id1"
+	liveItems, liveErr := adapter.Search(ctx, scope, query, false)
+	cacheItems, cacheErr := adapter.Search(ctx, scope, query, false)
+
+	if liveErr != nil || cacheErr != nil {
+		t.Errorf("both must return nil error: live=%v cache=%v", liveErr, cacheErr)
+	}
+	if liveItems == nil || cacheItems == nil {
+		t.Errorf("both must return non-nil slice: live=%v cache=%v", liveItems, cacheItems)
+	}
+	if len(liveItems) != 0 || len(cacheItems) != 0 {
+		t.Errorf("both must return empty slice: live len=%d cache len=%d", len(liveItems), len(cacheItems))
+	}
 }

@@ -3,6 +3,7 @@ package dynamic
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -17,6 +18,7 @@ import (
 	"github.com/overmindtech/workspace/sdp-go"
 	"github.com/overmindtech/workspace/sdpcache"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
+	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/shared"
 )
 
@@ -52,6 +54,22 @@ var (
 		return fmt.Sprintf("Search for %s by its %s", sdpAssetType, selector)
 	}
 )
+
+// enrichNOTFOUNDQueryError sets Scope, SourceName, ItemType, ResponderName on a NOTFOUND QueryError when they are empty,
+// so cached/returned errors have consistent metadata for debugging and cache inspection.
+func enrichNOTFOUNDQueryError(err error, scope, sourceName, itemType string) {
+	var qe *sdp.QueryError
+	if err == nil || !errors.As(err, &qe) || qe.GetErrorType() != sdp.QueryError_NOTFOUND {
+		return
+	}
+	if qe.GetScope() != "" {
+		return
+	}
+	qe.Scope = scope
+	qe.SourceName = sourceName
+	qe.ItemType = itemType
+	qe.ResponderName = sourceName
+}
 
 func linkItem(ctx context.Context, projectID string, sdpItem *sdp.Item, sdpAssetType shared.ItemType, linker *gcpshared.Linker, resp any, keys []string) {
 	if value, ok := resp.(string); ok {
@@ -144,12 +162,18 @@ func externalCallSingle(ctx context.Context, httpCli *http.Client, url string) (
 	defer resp.Body.Close()
 
 	if resp.StatusCode != http.StatusOK {
-		body, err := io.ReadAll(resp.Body)
-		if err == nil {
+		body, readErr := io.ReadAll(resp.Body)
+		if resp.StatusCode == http.StatusNotFound {
+			// Return NOTFOUND regardless of body read so callers can cache via IsNotFound(err)
+			return nil, &sdp.QueryError{
+				ErrorType:   sdp.QueryError_NOTFOUND,
+				ErrorString: fmt.Sprintf("resource not found: %s", url),
+			}
+		}
+		if readErr == nil {
 			if resp.StatusCode == http.StatusForbidden {
 				return nil, &PermissionError{URL: url}
 			}
-
 			return nil, fmt.Errorf(
 				"failed to make a GET call: %s, HTTP Status: %s, HTTP Body: %s",
 				url,
@@ -157,12 +181,11 @@ func externalCallSingle(ctx context.Context, httpCli *http.Client, url string) (
 				string(body),
 			)
 		}
-
 		log.WithContext(ctx).WithFields(log.Fields{
 			"ovm.source.type":                 "gcp",
 			"ovm.source.http.url":             url,
 			"ovm.source.http.response-status": resp.Status,
-		}).Warnf("failed to read the response body: %v", err)
+		}).Warnf("failed to read the response body: %v", readErr)
 		return nil, fmt.Errorf("failed to make call: %s", resp.Status)
 	}
 
@@ -198,22 +221,27 @@ func externalCallMulti(ctx context.Context, itemsSelector string, httpCli *http.
 		}
 
 		if resp.StatusCode != http.StatusOK {
-			// Read the body to provide more context in the error message
-			body, err := io.ReadAll(resp.Body)
-			resp.Body.Close() // Close the response body
-			if err == nil {
+			body, readErr := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			if resp.StatusCode == http.StatusNotFound {
+				// Return QueryError NOTFOUND so callers (streamSDPItems, aggregateSDPItems) can cache via IsNotFound(err)
+				return &sdp.QueryError{
+					ErrorType:   sdp.QueryError_NOTFOUND,
+					ErrorString: fmt.Sprintf("resource not found: %s", currentURL),
+				}
+			}
+			if readErr == nil {
 				return fmt.Errorf(
 					"failed to make the GET call. HTTP Status: %s, HTTP Body: %s",
 					resp.Status,
 					string(body),
 				)
 			}
-
 			log.WithContext(ctx).WithFields(log.Fields{
 				"ovm.source.type":                 "gcp",
 				"ovm.source.http.url-for-list":    currentURL,
 				"ovm.source.http.response-status": resp.Status,
-			}).Warnf("failed to read the response body: %v", err)
+			}).Warnf("failed to read the response body: %v", readErr)
 			return fmt.Errorf("failed to make the GET call. HTTP Status: %s", resp.Status)
 		}
 
@@ -334,10 +362,15 @@ func aggregateSDPItems(ctx context.Context, a Adapter, url string, location gcps
 	},
 	)
 
+	hadExtractError := false
+	var lastExtractErr error
 	for resp := range out {
 		item, err := externalToSDP(ctx, location, a.uniqueAttributeKeys, resp, a.sdpAssetType, a.linker, a.nameSelector)
 		if err != nil {
 			log.WithError(err).Warn("failed to extract item from response")
+			hadExtractError = true
+			lastExtractErr = err
+			continue
 		}
 
 		items = append(items, item)
@@ -345,7 +378,17 @@ func aggregateSDPItems(ctx context.Context, a Adapter, url string, location gcps
 
 	err := p.Wait()
 	if err != nil {
+		// If we have items but the pool failed with NOTFOUND (e.g. 404 on a later pagination page),
+		// return the items we collected so the caller does not cache NOTFOUND for a non-empty result.
+		if sources.IsNotFound(err) && len(items) > 0 {
+			return items, nil
+		}
 		return nil, err
+	}
+
+	// If all items failed extraction, return error so caller does not cache NOTFOUND (matches streamSDPItems)
+	if len(items) == 0 && hadExtractError && lastExtractErr != nil {
+		return nil, lastExtractErr
 	}
 
 	return items, nil
@@ -354,6 +397,9 @@ func aggregateSDPItems(ctx context.Context, a Adapter, url string, location gcps
 // streamSDPItems retrieves items from an external API and streams them as SDP items.
 func streamSDPItems(ctx context.Context, a Adapter, url string, location gcpshared.LocationInfo, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey) {
 	itemsSelector := a.uniqueAttributeKeys[len(a.uniqueAttributeKeys)-1] // Use the last key as the item selector
+	if a.listResponseSelector != "" {
+		itemsSelector = a.listResponseSelector
+	}
 
 	out := make(chan map[string]interface{})
 	p := pool.New().WithErrors().WithContext(ctx)
@@ -367,10 +413,12 @@ func streamSDPItems(ctx context.Context, a Adapter, url string, location gcpshar
 	})
 
 	itemsSent := 0
+	hadExtractError := false
 	for resp := range out {
 		item, err := externalToSDP(ctx, location, a.uniqueAttributeKeys, resp, a.sdpAssetType, a.linker, a.nameSelector)
 		if err != nil {
 			log.WithError(err).Warn("failed to extract item from response")
+			hadExtractError = true
 			continue
 		}
 
@@ -382,8 +430,27 @@ func streamSDPItems(ctx context.Context, a Adapter, url string, location gcpshar
 
 	err := p.Wait()
 	if err != nil {
-		cache.StoreError(ctx, err, shared.DefaultCacheDuration, cacheKey)
-		stream.SendError(err)
+		// Only cache NOTFOUND when no items were sent. For NOTFOUND, don't send error on stream
+		// so behaviour matches cached path (0 items, no error). When items were already sent,
+		// also don't send NOTFOUND (consistent with aggregateSDPItems returning items, nil).
+		if sources.IsNotFound(err) && itemsSent == 0 {
+			cache.StoreError(ctx, err, shared.DefaultCacheDuration, cacheKey)
+		}
+		if !sources.IsNotFound(err) {
+			stream.SendError(err)
+		}
+	} else if itemsSent == 0 && !hadExtractError {
+		// Cache not-found when no items were sent AND no extraction errors occurred
+		// If we had extraction errors, items may exist but couldn't be processed
+		notFoundErr := &sdp.QueryError{
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   fmt.Sprintf("no %s found in scope %s", a.sdpAssetType.String(), location.ToScope()),
+			Scope:         location.ToScope(),
+			SourceName:    a.Name(),
+			ItemType:      a.sdpAssetType.String(),
+			ResponderName: a.Name(),
+		}
+		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
 	}
 	// Note: No items found is valid. The caller's defer done() will release pending work.
 }
@@ -434,14 +501,18 @@ func terraformMappingViaSearch(ctx context.Context, a Adapter, query string, loc
 
 	resp, err := externalCallSingle(ctx, a.httpCli, getURL)
 	if err != nil {
-		cache.StoreError(ctx, err, shared.DefaultCacheDuration, cacheKey)
+		enrichNOTFOUNDQueryError(err, location.ToScope(), a.Name(), a.Type())
+		if sources.IsNotFound(err) {
+			cache.StoreError(ctx, err, shared.DefaultCacheDuration, cacheKey)
+			// Return empty result, nil error so behaviour matches cached NOTFOUND (caller converts to [], nil)
+			return []*sdp.Item{}, nil
+		}
 		return nil, err
 	}
 
 	item, err := externalToSDP(ctx, location, a.uniqueAttributeKeys, resp, a.sdpAssetType, a.linker, a.nameSelector)
 	if err != nil {
 		wrappedErr := fmt.Errorf("failed to convert response to SDP: %w", err)
-		cache.StoreError(ctx, wrappedErr, shared.DefaultCacheDuration, cacheKey)
 		return nil, wrappedErr
 	}
 

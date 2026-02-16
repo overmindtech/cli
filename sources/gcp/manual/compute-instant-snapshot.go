@@ -3,6 +3,7 @@ package manual
 import (
 	"context"
 	"errors"
+	"sync/atomic"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/sourcegraph/conc/pool"
@@ -125,6 +126,8 @@ func (c computeInstantSnapshotWrapper) ListStream(ctx context.Context, stream di
 		Zone:    location.Zone,
 	})
 
+	var itemsSent int
+	var hadError bool
 	for {
 		instantSnapshot, iterErr := it.Next()
 		if errors.Is(iterErr, iterator.Done) {
@@ -138,11 +141,24 @@ func (c computeInstantSnapshotWrapper) ListStream(ctx context.Context, stream di
 		item, sdpErr := c.gcpComputeInstantSnapshotToSDPItem(ctx, instantSnapshot, location)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
+			hadError = true
 			continue
 		}
 
 		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
+		itemsSent++
+	}
+	if itemsSent == 0 && !hadError {
+		notFoundErr := &sdp.QueryError{
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   "no compute instant snapshots found in scope " + scope,
+			Scope:         scope,
+			SourceName:    c.Name(),
+			ItemType:      c.Type(),
+			ResponderName: c.Name(),
+		}
+		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
 	}
 }
 
@@ -153,6 +169,8 @@ func (c computeInstantSnapshotWrapper) listAggregatedStream(ctx context.Context,
 
 	// Use a pool with 10x concurrency to parallelize AggregatedList calls
 	p := pool.New().WithMaxGoroutines(10).WithContext(ctx)
+	var itemsSent atomic.Int32
+	var hadError atomic.Bool
 
 	for _, projectID := range projectIDs {
 		p.Go(func(ctx context.Context) error {
@@ -168,6 +186,7 @@ func (c computeInstantSnapshotWrapper) listAggregatedStream(ctx context.Context,
 				}
 				if iterErr != nil {
 					stream.SendError(gcpshared.QueryError(iterErr, projectID, c.Type()))
+					hadError.Store(true)
 					return iterErr
 				}
 
@@ -188,11 +207,13 @@ func (c computeInstantSnapshotWrapper) listAggregatedStream(ctx context.Context,
 						item, sdpErr := c.gcpComputeInstantSnapshotToSDPItem(ctx, instantSnapshot, scopeLocation)
 						if sdpErr != nil {
 							stream.SendError(sdpErr)
+							hadError.Store(true)
 							continue
 						}
 
 						cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 						stream.SendItem(item)
+						itemsSent.Add(1)
 					}
 				}
 			}
@@ -203,6 +224,17 @@ func (c computeInstantSnapshotWrapper) listAggregatedStream(ctx context.Context,
 
 	// Wait for all goroutines to complete
 	_ = p.Wait()
+	if itemsSent.Load() == 0 && !hadError.Load() {
+		notFoundErr := &sdp.QueryError{
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   "no compute instant snapshots found in scope *",
+			Scope:         "*",
+			SourceName:    c.Name(),
+			ItemType:      c.Type(),
+			ResponderName: c.Name(),
+		}
+		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
+	}
 }
 
 func (c computeInstantSnapshotWrapper) gcpComputeInstantSnapshotToSDPItem(ctx context.Context, instantSnapshot *computepb.InstantSnapshot, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {

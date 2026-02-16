@@ -190,6 +190,51 @@ func TestCloudKMSCryptoKeyVersion(t *testing.T) {
 		}
 	})
 
+	t.Run("SearchCachesNotFoundWithMemoryCache", func(t *testing.T) {
+		cache := sdpcache.NewMemoryCache()
+		defer cache.Clear()
+
+		notFoundErr := &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOTFOUND,
+			ErrorString: "no crypto key versions found for search query",
+		}
+		query := "us|test-keyring|empty-key"
+		searchCacheKey := sdpcache.CacheKeyFromParts("gcp-source", sdp.QueryMethod_SEARCH, projectID, gcpshared.CloudKMSCryptoKeyVersion.String(), query)
+		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, searchCacheKey)
+
+		loader := gcpshared.NewCloudKMSAssetLoader(nil, projectID, cache, "gcp-source", []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		wrapper := manual.NewCloudKMSCryptoKeyVersion(loader, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		adapter := sources.WrapperToAdapter(wrapper, cache)
+		discAdapter := adapter.(discovery.Adapter)
+		searchable := adapter.(discovery.SearchableAdapter)
+		scope := wrapper.Scopes()[0]
+
+		items, qErr := searchable.Search(ctx, scope, query, false)
+		if qErr != nil {
+			t.Fatalf("first Search: unexpected error: %v", qErr)
+		}
+		if len(items) != 0 {
+			t.Errorf("first Search: expected 0 items, got %d", len(items))
+		}
+
+		cacheHit, _, _, cachedErr, done := cache.Lookup(ctx, discAdapter.Name(), sdp.QueryMethod_SEARCH, scope, discAdapter.Type(), query, false)
+		done()
+		if !cacheHit {
+			t.Fatal("expected cache hit for Search after first call")
+		}
+		if cachedErr == nil || cachedErr.GetErrorType() != sdp.QueryError_NOTFOUND {
+			t.Fatalf("expected cached NOTFOUND for Search, got %v", cachedErr)
+		}
+
+		items, qErr = searchable.Search(ctx, scope, query, false)
+		if qErr != nil {
+			t.Fatalf("second Search: unexpected error: %v", qErr)
+		}
+		if len(items) != 0 {
+			t.Errorf("second Search: expected 0 items, got %d", len(items))
+		}
+	})
+
 	t.Run("List_Unsupported", func(t *testing.T) {
 		cache := sdpcache.NewMemoryCache()
 		defer cache.Clear()

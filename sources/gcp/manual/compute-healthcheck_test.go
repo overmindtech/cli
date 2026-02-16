@@ -7,6 +7,7 @@ import (
 	"sync"
 	"testing"
 
+	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/api/iterator"
@@ -332,6 +333,49 @@ func TestComputeHealthCheck(t *testing.T) {
 		_, ok = adapter.(discovery.SearchStreamableAdapter)
 		if ok {
 			t.Fatalf("Adapter should not support SearchStream operation")
+		}
+	})
+
+	t.Run("ListCachesNotFoundWithMemoryCache", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		mockGlobalClient := mocks.NewMockComputeHealthCheckClient(ctrl)
+		mockRegionalClient := mocks.NewMockComputeRegionHealthCheckClient(ctrl)
+		projectID := "cache-test-project"
+
+		mockAggIter := mocks.NewMockHealthChecksScopedListPairIterator(ctrl)
+		mockAggIter.EXPECT().Next().Return(compute.HealthChecksScopedListPair{}, iterator.Done)
+		mockGlobalClient.EXPECT().AggregatedList(gomock.Any(), gomock.Any()).Return(mockAggIter).Times(1)
+
+		// Project-only: List("*") uses AggregatedList; we only test the "*" path here.
+		wrapper := manual.NewComputeHealthCheck(mockGlobalClient, mockRegionalClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)}, nil)
+		cache := sdpcache.NewMemoryCache()
+		adapter := sources.WrapperToAdapter(wrapper, cache)
+		discAdapter := adapter.(discovery.Adapter)
+		listable := adapter.(discovery.ListableAdapter)
+
+		// --- Scope "*" ---
+		items, err := listable.List(ctx, "*", false)
+		if err != nil {
+			t.Fatalf("first List(*): %v", err)
+		}
+		if len(items) != 0 {
+			t.Errorf("first List(*): expected 0 items, got %d", len(items))
+		}
+		cacheHit, _, _, qErr, done := cache.Lookup(ctx, discAdapter.Name(), sdp.QueryMethod_LIST, "*", discAdapter.Type(), "", false)
+		done()
+		if !cacheHit {
+			t.Fatal("expected cache hit for List(*)")
+		}
+		if qErr == nil || qErr.GetErrorType() != sdp.QueryError_NOTFOUND {
+			t.Fatalf("expected cached NOTFOUND for List(*), got %v", qErr)
+		}
+		items, err = listable.List(ctx, "*", false)
+		if err != nil {
+			t.Fatalf("second List(*): %v", err)
+		}
+		if len(items) != 0 {
+			t.Errorf("second List(*): expected 0 items, got %d", len(items))
 		}
 	})
 
