@@ -43,7 +43,7 @@ func NewSearchableListableAdapter(searchURLFunc gcpshared.EndpointFunc, listEndp
 				sdpAdapterCategory:   config.SDPAdapterCategory,
 				terraformMappings:    config.TerraformMappings,
 				linker:               config.Linker,
-				potentialLinks:       potentialLinksFromBlasts(config.SDPAssetType, gcpshared.BlastPropagations),
+				potentialLinks:       potentialLinksFromLinkRules(config.SDPAssetType, gcpshared.LinkRules),
 				uniqueAttributeKeys:  config.UniqueAttributeKeys,
 				iamPermissions:       config.IAMPermissions,
 				nameSelector:         config.NameSelector,

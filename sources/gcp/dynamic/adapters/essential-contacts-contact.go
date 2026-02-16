@@ -31,7 +31,7 @@ var _ = registerableAdapter{
 		IAMPermissions: []string{"essentialcontacts.contacts.get", "essentialcontacts.contacts.list"},
 		PredefinedRole: "roles/essentialcontacts.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// There is no links for this item type.
 	},
 	terraformMapping: gcpshared.TerraformMapping{

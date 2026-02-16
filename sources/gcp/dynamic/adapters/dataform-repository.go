@@ -24,7 +24,7 @@ var _ = registerableAdapter{
 		IAMPermissions:      []string{"dataform.repositories.get", "dataform.repositories.list"},
 		PredefinedRole:      "roles/dataform.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// The name of the Secret Manager secret version to use as an authentication token for Git operations. Must be in the format projects/*/secrets/*/versions/*.
 		"gitRemoteSettings.authenticationTokenSecretVersion": {
 			ToSDPItemType:    gcpshared.SecretManagerSecret,

@@ -22,7 +22,7 @@ var _ = registerableAdapter{
 		IAMPermissions: []string{"bigtable.backups.get", "bigtable.backups.list"},
 		PredefinedRole: "roles/bigtable.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"name": {
 			ToSDPItemType:    gcpshared.BigTableAdminCluster,
 			Description:      "If the BigTableAdmin Cluster is deleted or updated: The Backup may become invalid or inaccessible. If the Backup is updated: The cluster remains unaffected.",

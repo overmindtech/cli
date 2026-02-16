@@ -31,7 +31,7 @@ var _ = registerableAdapter{
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 		// https://cloud.google.com/dataproc/docs/reference/rest/v1/projects.regions.clusters#clusterstatus
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"config.gceClusterConfig.networkUri":      gcpshared.ComputeNetworkImpactInOnly,
 		"config.gceClusterConfig.subnetworkUri":   gcpshared.ComputeSubnetworkImpactInOnly,
 		"config.gceClusterConfig.serviceAccount":  gcpshared.IAMServiceAccountImpactInOnly,

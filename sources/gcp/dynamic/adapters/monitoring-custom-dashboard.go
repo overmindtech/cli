@@ -29,7 +29,7 @@ var _ = registerableAdapter{
 		IAMPermissions:      []string{"monitoring.dashboards.get", "monitoring.dashboards.list"},
 		PredefinedRole:      "roles/monitoring.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// There is no links for this item type.
 	},
 	terraformMapping: gcpshared.TerraformMapping{

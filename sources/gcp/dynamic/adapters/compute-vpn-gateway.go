@@ -28,7 +28,7 @@ var _ = registerableAdapter{
 		},
 		PredefinedRole: "roles/compute.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// Network associated with the VPN gateway.
 		"network": gcpshared.ComputeNetworkImpactInOnly,
 		// IP addresses assigned to VPN interfaces (each interface may have an external IP).

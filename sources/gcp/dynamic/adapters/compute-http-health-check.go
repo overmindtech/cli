@@ -30,7 +30,7 @@ var _ = registerableAdapter{
 	},
 	// HTTP health checks are referenced by backend services and target pools for health monitoring.
 	// Updates to health checks can affect traffic distribution and service availability.
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"host": gcpshared.IPImpactBothWays,
 	},
 	terraformMapping: gcpshared.TerraformMapping{

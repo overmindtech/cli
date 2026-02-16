@@ -35,7 +35,7 @@ var _ = registerableAdapter{
 		IAMPermissions: []string{"serviceusage.services.get", "serviceusage.services.list"},
 		PredefinedRole: "roles/serviceusage.serviceUsageViewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"parent": {
 			ToSDPItemType:    gcpshared.CloudResourceManagerProject,
 			Description:      "If the Project is deleted or updated: The Service Usage Service may become invalid or inaccessible. If the Service Usage Service is updated: The project remains unaffected.",

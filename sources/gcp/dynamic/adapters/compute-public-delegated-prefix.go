@@ -36,7 +36,7 @@ var _ = registerableAdapter{
 		// HEALTH: status (e.g., LIVE/TO_BE_DELETED) may be present on the resource
 		// TODO: https://linear.app/overmind/issue/ENG-631
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// Parent Public Advertised Prefix from which this delegated prefix is allocated.
 		"parentPrefix": {
 			ToSDPItemType:    gcpshared.ComputePublicAdvertisedPrefix,

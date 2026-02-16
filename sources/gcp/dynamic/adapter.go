@@ -59,7 +59,7 @@ func NewAdapter(config *AdapterConfig, cache sdpcache.Cache) discovery.Adapter {
 		sdpAdapterCategory:   config.SDPAdapterCategory,
 		terraformMappings:    config.TerraformMappings,
 		linker:               config.Linker,
-		potentialLinks:       potentialLinksFromBlasts(config.SDPAssetType, gcpshared.BlastPropagations),
+		potentialLinks:       potentialLinksFromLinkRules(config.SDPAssetType, gcpshared.LinkRules),
 		uniqueAttributeKeys:  config.UniqueAttributeKeys,
 		iamPermissions:       config.IAMPermissions,
 		nameSelector:         config.NameSelector,

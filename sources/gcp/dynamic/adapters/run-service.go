@@ -30,7 +30,7 @@ var _ = registerableAdapter{
 		PredefinedRole: "roles/run.viewer",
 		// TODO: https://linear.app/overmind/issue/ENG-631 - status field for health monitoring
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"template.serviceAccount": gcpshared.IAMServiceAccountImpactInOnly,
 		"template.vpcAccess.connector": {
 			ToSDPItemType:    gcpshared.VPCAccessConnector,

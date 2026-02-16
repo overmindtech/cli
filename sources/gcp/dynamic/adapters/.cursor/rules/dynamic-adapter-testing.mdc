@@ -450,18 +450,18 @@ func uint64Ptr(u uint64) *uint64 {
 5. **Wrong List Response Structure**: Assuming all list responses have `.Items` field (field names vary by service - verify with `go doc`)
 6. **Missing Pointer Helpers**: Always define local pointer helper functions
 7. **Incorrect HTTP URLs**: Match the exact API endpoint format from the adapter metadata
-8. **Missing Static Tests**: Always include blast propagation tests for linked resources
+8. **Missing Static Tests**: Always include link rule tests for linked resources
 9. **Missing Search Tests**: Include Search tests only if the adapter implements `SearchableAdapter` - use `t.Skipf()` if not supported
 10. **Using Pure Strings for ExpectedType**: Always use Item types with `.String()` (e.g., `gcpshared.ComputeNetwork.String()` or `stdlib.NetworkIP.String()`), never pure strings like `"gcp-compute-network"` or `"ip"`
 
-## Blast Propagation Testing Requirements
+## Link Rules Testing Requirements
 
 **CRITICAL**: Every adapter test SHOULD include comprehensive StaticTests that cover ALL linked resources defined in the adapter.
 
 ### Steps to Ensure Complete Coverage
 
 1. **Review Adapter File**: Open the corresponding adapter file (e.g., `compute-global-address.go`)
-2. **Find linked-resource map**: Locate the map in the adapter that defines which linked item types the adapter produces (field name may be `blastPropagation`; values are `*gcpshared.Impact`).
+2. **Find linked-resource map**: Locate the map in the adapter that defines which linked item types the adapter produces (field name is `linkRules`; values are `*gcpshared.Impact`).
 3. **Create Test Cases**: Write a QueryTest for every linked item type the adapter produces (one test per distinct linked type, not per attribute path).
 4. **Handle TODOs**: Note any entries marked with TODO comments—these may not work yet but should be documented in test comments.
 

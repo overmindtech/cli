@@ -135,7 +135,7 @@ func TestContainerCluster(t *testing.T) {
 			t.Errorf("Expected name field to be '%s', got %s", clusterName, val)
 		}
 
-		// Include static tests - covers ALL blast propagation links
+		// Include static tests - covers ALL link rule links
 		t.Run("StaticTests", func(t *testing.T) {
 			queryTests := shared.QueryTests{
 				// Network link

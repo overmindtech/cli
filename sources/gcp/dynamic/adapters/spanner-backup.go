@@ -20,7 +20,7 @@ var _ = registerableAdapter{
 		UniqueAttributeKeys: []string{"instances", "backups"},
 		IAMPermissions:      []string{"spanner.backups.get", "spanner.backups.list"},
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// This is a backlink to instance.
 		// Framework will extract the instance name and create the linked item query with GET
 		"name": {

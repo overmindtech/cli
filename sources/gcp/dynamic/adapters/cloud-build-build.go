@@ -24,7 +24,7 @@ var _ = registerableAdapter{
 		IAMPermissions: []string{"cloudbuild.builds.get", "cloudbuild.builds.list"},
 		PredefinedRole: "roles/cloudbuild.builds.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"source.storageSource.bucket": {
 			ToSDPItemType:    gcpshared.StorageBucket,
 			Description:      "If the Storage Bucket is deleted or updated: The Cloud Build may fail to access source files. If the Cloud Build is updated: The bucket remains unaffected.",

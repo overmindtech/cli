@@ -20,7 +20,7 @@ var _ = registerableAdapter{
 		IAMPermissions:      []string{"aiplatform.pipelineJobs.get", "aiplatform.pipelineJobs.list"},
 		PredefinedRole:      "roles/aiplatform.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// The service account that the pipeline workload runs as (root-level).
 		"serviceAccount": gcpshared.IAMServiceAccountImpactInOnly,
 		// The full name of the network to which the job should be peered (root-level).

@@ -34,7 +34,7 @@ var orgPolicyPolicyAdapter = registerableAdapter{ //nolint:unused
 		},
 		PredefinedRole: "roles/orgpolicy.policyViewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// The name field contains the parent resource identifier (project, folder, or organization)
 		// Format: projects/{project_number}/policies/{constraint} or
 		//         folders/{folder_id}/policies/{constraint} or

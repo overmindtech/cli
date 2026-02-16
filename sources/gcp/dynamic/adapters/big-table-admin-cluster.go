@@ -21,7 +21,7 @@ var bigTableAdminClusterAdapter = registerableAdapter{ //nolint:unused
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 		// https://cloud.google.com/bigtable/docs/reference/admin/rest/v2/projects.instances.clusters#State
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// Customer-managed encryption key protecting data in this cluster.
 		"encryptionConfig.kmsKeyName": gcpshared.CryptoKeyImpactInOnly,
 		// This is a backlink to instance.

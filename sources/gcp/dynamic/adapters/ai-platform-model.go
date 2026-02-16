@@ -25,7 +25,7 @@ var _ = registerableAdapter{
 		IAMPermissions:      []string{"aiplatform.models.get", "aiplatform.models.list"},
 		PredefinedRole:      "roles/aiplatform.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"encryptionSpec.kmsKeyName": gcpshared.CryptoKeyImpactInOnly,
 		// Container image used for prediction (containerSpec.imageUri).
 		"containerSpec.imageUri": {

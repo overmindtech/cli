@@ -21,7 +21,7 @@ var _ = registerableAdapter{
 		IAMPermissions:      []string{"compute.storagePools.get", "compute.storagePools.list"},
 		PredefinedRole:      "roles/compute.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// Link to the storage pool type that defines the characteristics of this storage pool
 		"storagePoolType": {
 			ToSDPItemType: gcpshared.ComputeStoragePoolType,

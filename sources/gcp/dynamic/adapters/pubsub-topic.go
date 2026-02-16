@@ -23,7 +23,7 @@ var _ = registerableAdapter{
 		IAMPermissions: []string{"pubsub.topics.get", "pubsub.topics.list"},
 		PredefinedRole: "roles/pubsub.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"kmsKeyName": gcpshared.CryptoKeyImpactInOnly,
 		// Schema settings for message validation
 		"schemaSettings.schema": {

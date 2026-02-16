@@ -120,7 +120,7 @@ func TestDataprocAutoscalingPolicy(t *testing.T) {
 			t.Errorf("Expected unique attribute value '%s', got %s", policyName, sdpItem.UniqueAttributeValue())
 		}
 
-		// Skip static tests - no blast propagations for this adapter
+		// Skip static tests - no link rules for this adapter
 	})
 
 	t.Run("List", func(t *testing.T) {

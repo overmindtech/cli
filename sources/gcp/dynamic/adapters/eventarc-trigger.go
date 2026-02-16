@@ -30,7 +30,7 @@ var eventarcTriggerAdapter = registerableAdapter{ //nolint:unused
 		},
 		PredefinedRole: "roles/eventarc.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// Service account used by the trigger to invoke the target service
 		"serviceAccount": gcpshared.IAMServiceAccountImpactInOnly,
 		// Channel associated with the trigger for event delivery

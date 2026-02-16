@@ -29,7 +29,7 @@ var _ = registerableAdapter{
 		IAMPermissions:      []string{"aiplatform.customJobs.get", "aiplatform.customJobs.list"},
 		PredefinedRole:      "roles/aiplatform.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// The Cloud KMS key that will be used to encrypt the output artifacts.
 		"encryptionSpec.kmsKeyName": {
 			Description:      "If the Cloud KMS CryptoKey is updated: The CustomJob may not be able to access encrypted output artifacts. If the CustomJob is updated: The CryptoKey remains unaffected.",

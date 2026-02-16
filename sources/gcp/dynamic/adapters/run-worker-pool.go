@@ -31,7 +31,7 @@ var _ = registerableAdapter{
 		},
 		PredefinedRole: "roles/run.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// Service account used by revisions in the worker pool
 		"template.serviceAccount": gcpshared.IAMServiceAccountImpactInOnly,
 		// Encryption key for image encryption

@@ -128,7 +128,7 @@ func TestAIPlatformModelDeploymentMonitoringJob(t *testing.T) {
 			t.Errorf("Expected unique attribute value '%s', got %s", combinedQuery, sdpItem.UniqueAttributeValue())
 		}
 
-		// Include static tests - covers ALL blast propagation links
+		// Include static tests - covers ALL link rule links
 		t.Run("StaticTests", func(t *testing.T) {
 			queryTests := shared.QueryTests{
 				// KMS encryption key link

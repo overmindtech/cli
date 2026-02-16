@@ -22,7 +22,7 @@ var _ = registerableAdapter{
 		IAMPermissions:      []string{"dns.managedZones.get", "dns.managedZones.list"},
 		PredefinedRole:      "roles/dns.reader",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"dnsName": {
 			ToSDPItemType: stdlib.NetworkDNS,
 			Description:   "Tightly coupled with the DNS Managed Zone.",

@@ -74,7 +74,7 @@ func TestComputeHttpHealthCheck(t *testing.T) {
 
 		t.Run("StaticTests", func(t *testing.T) {
 			// Test that DNS names are correctly detected when using IPImpactBothWays
-			// Even though the blast propagation uses stdlib.NetworkIP, it should detect
+			// Even though the link rule uses stdlib.NetworkIP, it should detect
 			// that "example.com" is a DNS name and create a DNS link
 			queryTests := shared.QueryTests{
 				{
@@ -88,7 +88,7 @@ func TestComputeHttpHealthCheck(t *testing.T) {
 		})
 
 		// Test with IP address - verify bidirectional detection works
-		// Even though the blast propagation uses stdlib.NetworkIP, it should detect
+		// Even though the link rule uses stdlib.NetworkIP, it should detect
 		// that "192.168.1.1" is an IP address and create an IP link
 		t.Run("StaticTestsWithIP", func(t *testing.T) {
 			healthCheckWithIP := map[string]interface{}{
@@ -152,7 +152,7 @@ func TestComputeHttpHealthCheck(t *testing.T) {
 
 		// Verify that both IP and DNS are in potential links when using IPImpactBothWays
 		// This demonstrates bidirectional behavior: even though we specify stdlib.NetworkIP
-		// in the blast propagation, both IP and DNS are included in potential links
+		// in the link rules, both IP and DNS are included in potential links
 		potentialLinksMap := make(map[string]bool)
 		for _, link := range metadata.GetPotentialLinks() {
 			potentialLinksMap[link] = true

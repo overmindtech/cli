@@ -20,7 +20,7 @@ var _ = registerableAdapter{
 		IAMPermissions:      []string{"compute.firewalls.get", "compute.firewalls.list"},
 		PredefinedRole:      "roles/compute.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"network": {
 			Description:   "If the Compute Network is updated: The firewall rules may no longer apply correctly. If the firewall is updated: The network remains unaffected, but its security posture may change.",
 			ToSDPItemType: gcpshared.ComputeNetwork,

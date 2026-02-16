@@ -29,7 +29,7 @@ var _ = registerableAdapter{
 		IAMPermissions:      []string{"run.revisions.get", "run.revisions.list"},
 		PredefinedRole:      "roles/run.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"service": {
 			ToSDPItemType:    gcpshared.RunService,
 			Description:      "If the Run Service is deleted or updated: The Revision may lose its association or fail to run. If the Revision is updated: The service remains unaffected.",

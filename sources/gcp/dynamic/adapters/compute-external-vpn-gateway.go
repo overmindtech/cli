@@ -27,7 +27,7 @@ var _ = registerableAdapter{
 		},
 		PredefinedRole: "roles/compute.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"interfaces.ipAddress":   gcpshared.IPImpactBothWays,
 		"interfaces.ipv6Address": gcpshared.IPImpactBothWays,
 	},

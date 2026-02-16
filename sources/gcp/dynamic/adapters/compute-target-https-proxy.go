@@ -27,7 +27,7 @@ var _ = registerableAdapter{
 		},
 		PredefinedRole: "roles/compute.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"urlMap": {
 			ToSDPItemType: gcpshared.ComputeUrlMap,
 			Description:   "If the URL Map is updated or deleted: The HTTPS proxy routing behavior may change or break. If the proxy changes: The URL map remains structurally unaffected.",
