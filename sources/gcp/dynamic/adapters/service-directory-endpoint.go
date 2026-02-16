@@ -23,7 +23,7 @@ var _ = registerableAdapter{
 		IAMPermissions:      []string{"servicedirectory.endpoints.get", "servicedirectory.endpoints.list"},
 		PredefinedRole:      "roles/servicedirectory.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"name": {
 			ToSDPItemType:    gcpshared.ServiceDirectoryService,
 			Description:      "If the Service Directory Service is deleted or updated: The Endpoint may lose its association or fail to resolve names. If the Endpoint is updated: The service remains unaffected.",

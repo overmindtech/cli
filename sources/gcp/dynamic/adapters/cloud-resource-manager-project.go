@@ -33,7 +33,7 @@ var _ = registerableAdapter{
 		IAMPermissions: []string{"resourcemanager.projects.get"},
 		PredefinedRole: "roles/resourcemanager.tagViewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// There are no links for this item type.
 		// TODO: Currently our highest level of scope is the project.
 		// This item has `parent` attribute that refers to organization or folder which are higher level scopes that we don't support yet.

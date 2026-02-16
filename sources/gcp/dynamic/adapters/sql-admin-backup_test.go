@@ -127,7 +127,7 @@ func TestSQLAdminBackup(t *testing.T) {
 					ExpectedScope:  "global",
 				},
 				// Note: allocatedIpRange link is not tested here because the NetworkConnectivityInternalRange adapter doesn't exist yet.
-				// The blast propagation is defined in the adapter so it will work automatically when the adapter is created.
+				// The link rule is defined in the adapter so it will work automatically when the adapter is created.
 			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)

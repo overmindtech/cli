@@ -22,7 +22,7 @@ var _ = registerableAdapter{
 		// HEALTH: https://cloud.google.com/compute/docs/reference/rest/v1/regionCommitments#Status
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"reservations.name": {
 			ToSDPItemType: gcpshared.ComputeReservation,
 			Description:   "If the Region Commitment is deleted or updated: Reservations that reference this commitment may lose associated discounts or resource guarantees. If the Reservation is updated or deleted: The commitment remains unaffected.",

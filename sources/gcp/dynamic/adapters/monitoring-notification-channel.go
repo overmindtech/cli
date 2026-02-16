@@ -35,7 +35,7 @@ var _ = registerableAdapter{
 		},
 		PredefinedRole: "roles/monitoring.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// For pubsub type notification channels, the topic label contains the Pub/Sub topic resource name
 		// Format: projects/{project}/topics/{topic}
 		"labels.topic": {

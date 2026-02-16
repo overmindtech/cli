@@ -21,7 +21,7 @@ var _ = registerableAdapter{
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 		// state: https://cloud.google.com/bigtable/docs/reference/admin/rest/v2/projects.instances#State
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// Forward link from parent to child via SEARCH
 		// Link to all clusters in this instance (most fundamental infrastructure component)
 		"name": {

@@ -20,7 +20,7 @@ var _ = registerableAdapter{
 		IAMPermissions:      []string{"compute.instanceTemplates.get", "compute.instanceTemplates.list"},
 		PredefinedRole:      "roles/compute.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// https://cloud.google.com/compute/docs/reference/rest/v1/instanceTemplates/get
 		"properties.networkInterfaces.network": {
 			Description:      "If the network is deleted: Resources may experience connectivity changes or disruptions. If the template is deleted: Network itself is not affected.",

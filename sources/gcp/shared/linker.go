@@ -32,15 +32,13 @@ type ItemLookup map[string]ItemTypeMeta
 // Linker is responsible for linking items based on their types and relationships.
 type Linker struct {
 	sdpAssetTypeToAdapterMeta map[shared.ItemType]AdapterMeta
-	explicitBlastPropagations map[shared.ItemType]map[string]*Impact
-	manualAdapterLinker map[shared.ItemType]func(scope, fromItemScope, query string) *sdp.LinkedItemQuery
+	manualAdapterLinker       map[shared.ItemType]func(scope, fromItemScope, query string) *sdp.LinkedItemQuery
 }
 
 // NewLinker creates a new Linker instance with the provided item lookup and predefined mappings.
 func NewLinker() *Linker {
 	return &Linker{
 		sdpAssetTypeToAdapterMeta: SDPAssetTypeToAdapterMeta,
-		explicitBlastPropagations: BlastPropagations,
 		manualAdapterLinker:       ManualAdapterLinksByAssetType,
 	}
 }
@@ -63,9 +61,9 @@ func (l *Linker) AutoLink(ctx context.Context, projectID string, fromSDPItem *sd
 		"ovm.gcp.key":                key,
 	}
 
-	impacts, ok := l.explicitBlastPropagations[fromSDPItemType]
+	impacts, ok := LinkRules[fromSDPItemType]
 	if !ok {
-		log.WithContext(ctx).WithFields(lf).Warnf("there are no blast propagations for the FROM item type")
+		log.WithContext(ctx).WithFields(lf).Warnf("there are no link rules for the FROM item type")
 		return
 	}
 
@@ -89,7 +87,7 @@ func (l *Linker) AutoLink(ctx context.Context, projectID string, fromSDPItem *sd
 	if linkFunc, ok := l.manualAdapterLinker[impact.ToSDPItemType]; ok {
 		// Special handling for stdlib.NetworkIP and stdlib.NetworkDNS - detect both IP and DNS
 		// This handles fields like "host" that could contain either an IP address or DNS name
-		// You can specify either IP or DNS in the blast propagation, and it will automatically
+		// You can specify either IP or DNS in the link rules, and it will automatically
 		// detect which type the value actually is and create the appropriate link
 		if impact.ToSDPItemType == stdlib.NetworkIP || impact.ToSDPItemType == stdlib.NetworkDNS {
 			l.linkIPOrDNS(ctx, fromSDPItem, toItemGCPResourceName)

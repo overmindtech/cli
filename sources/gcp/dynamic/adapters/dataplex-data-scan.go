@@ -31,7 +31,7 @@ var _ = registerableAdapter{
 		// TODO: https://linear.app/overmind/issue/ENG-631 state
 		// https://cloud.google.com/dataplex/docs/reference/rest/v1/projects.locations.dataScans#DataScan
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// Data source references - can scan various data sources
 		"data.entity": {
 			ToSDPItemType: gcpshared.DataplexEntity,

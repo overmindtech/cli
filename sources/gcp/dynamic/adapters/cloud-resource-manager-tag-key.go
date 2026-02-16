@@ -32,6 +32,6 @@ var cloudResourceManagerTagKeyAdapter = registerableAdapter{ //nolint:unused
 		},
 		PredefinedRole: "roles/resourcemanager.tagViewer",
 	},
-	// No blast propagation yet. TagValue already links back to TagKey via parent attribute.
-	blastPropagation: map[string]*gcpshared.Impact{},
+	// No link rules yet. TagValue already links back to TagKey via parent attribute.
+	linkRules: map[string]*gcpshared.Impact{},
 }.Register()

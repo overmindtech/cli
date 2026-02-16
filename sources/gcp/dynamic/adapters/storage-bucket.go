@@ -29,7 +29,7 @@ var _ = registerableAdapter{
 		IAMPermissions:      []string{"storage.buckets.get", "storage.buckets.list"},
 		PredefinedRole:      "roles/storage.bucketViewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// A Cloud KMS key that will be used to encrypt objects written to this bucket if no encryption method is specified as part of the object write request.
 		"encryption.defaultKmsKeyName": gcpshared.CryptoKeyImpactInOnly,
 		// Name of the network.

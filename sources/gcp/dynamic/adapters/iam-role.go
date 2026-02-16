@@ -21,7 +21,7 @@ var _ = registerableAdapter{
 		IAMPermissions:      []string{"iam.roles.get", "iam.roles.list"},
 		PredefinedRole:      "roles/iam.roleViewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// There is no links for this item type.
 	},
 	terraformMapping: gcpshared.TerraformMapping{

@@ -31,7 +31,7 @@ var _ = registerableAdapter{
 		// TODO: https://linear.app/overmind/issue/ENG-631 state
 		// https://cloud.google.com/vertex-ai/docs/reference/rest/v1/projects.locations.batchPredictionJobs#JobState
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"encryptionSpec.kmsKeyName": gcpshared.CryptoKeyImpactInOnly,
 		"model": {
 			ToSDPItemType: gcpshared.AIPlatformModel,

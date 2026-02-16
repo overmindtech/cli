@@ -150,10 +150,10 @@ func TestBigQueryDataTransferTransferConfig(t *testing.T) {
 			t.Errorf("Expected notificationPubsubTopic field to be '%s', got %s", notificationPubsubTopic, notificationTopic)
 		}
 
-		// Include static tests - MUST cover ALL blast propagation links
+		// Include static tests - MUST cover ALL link rule links
 		t.Run("StaticTests", func(t *testing.T) {
-			// CRITICAL: Review the adapter's blast propagation configuration and create
-			// test cases for EVERY linked resource defined in the adapter's blastPropagation map
+			// CRITICAL: Review the adapter's link rules configuration and create
+			// test cases for EVERY linked resource defined in the adapter's link rules map
 			queryTests := shared.QueryTests{
 				// destinationDatasetId link
 				{

@@ -33,7 +33,7 @@ var _ = registerableAdapter{
 		},
 		PredefinedRole: "roles/compute.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"defaultService": computeBackendImpact,
 		"defaultRouteAction.weightedBackendServices.backendService":                  computeBackendImpact,
 		"defaultRouteAction.requestMirrorPolicy.backendService":                      computeBackendImpact,

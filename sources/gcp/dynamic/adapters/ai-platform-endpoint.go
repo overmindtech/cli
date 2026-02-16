@@ -27,7 +27,7 @@ var _ = registerableAdapter{
 		IAMPermissions:      []string{"aiplatform.endpoints.get", "aiplatform.endpoints.list"},
 		PredefinedRole:      "roles/aiplatform.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"encryptionSpec.kmsKeyName": gcpshared.CryptoKeyImpactInOnly,
 		"network":                   gcpshared.ComputeNetworkImpactInOnly,
 		"deployedModels.model": {

@@ -21,7 +21,7 @@ var _ = registerableAdapter{
 		IAMPermissions:      []string{"compute.resourcePolicies.get", "compute.resourcePolicies.list"},
 		PredefinedRole:      "roles/compute.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// Cloud Storage bucket storage location where snapshots created by this policy are stored.
 		// The storageLocations field can contain bucket names, gs:// URIs, or region identifiers.
 		// The manual adapter linker will handle extraction of bucket names from various formats.

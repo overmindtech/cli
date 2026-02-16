@@ -24,7 +24,7 @@ var _ = registerableAdapter{
 		IAMPermissions: []string{"cloudsql.backupRuns.get", "cloudsql.backupRuns.list"},
 		PredefinedRole: "roles/cloudsql.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"instance": {
 			ToSDPItemType: gcpshared.SQLAdminInstance,
 			Description:   "They are tightly coupled",

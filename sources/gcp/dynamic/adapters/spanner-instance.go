@@ -22,7 +22,7 @@ var spannerInstanceAdapter = registerableAdapter{ //nolint:unused
 		// HEALTH: https://cloud.google.com/spanner/docs/reference/rest/v1/projects.instances#State
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"config": {
 			ToSDPItemType: gcpshared.SpannerInstanceConfig,
 			Description:   "If the Spanner Instance Config is deleted or updated: The Spanner Instance may fail to operate correctly. If the Spanner Instance is updated: The config remains unaffected.",

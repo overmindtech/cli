@@ -30,7 +30,7 @@ var _ = registerableAdapter{
 		PredefinedRole: "roles/securitycentermanagement.viewer",
 		// TODO: https://linear.app/overmind/issue/ENG-631 - check if SecurityCenterService has status/state attribute
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// Link to parent resource (project, folder, or organization) from name field
 		// The name field format is: projects/{project}/locations/{location}/securityCenterServices/{service}
 		// or: folders/{folder}/locations/{location}/securityCenterServices/{service}

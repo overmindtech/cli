@@ -36,7 +36,7 @@ var _ = registerableAdapter{
 		},
 		PredefinedRole: "roles/resourcemanager.tagViewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"parent": {
 			ToSDPItemType: gcpshared.CloudResourceManagerTagKey,
 			Description:   "They are tightly coupled",

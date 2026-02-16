@@ -20,7 +20,7 @@ var _ = registerableAdapter{
 		IAMPermissions:      []string{"compute.routes.get", "compute.routes.list"},
 		PredefinedRole:      "roles/compute.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// https://cloud.google.com/compute/docs/reference/rest/v1/routes/get
 		// Network that the route belongs to
 		"network": {

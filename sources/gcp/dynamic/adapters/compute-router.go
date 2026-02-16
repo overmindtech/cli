@@ -28,7 +28,7 @@ var _ = registerableAdapter{
 		IAMPermissions:      []string{"compute.routers.get", "compute.routers.list"},
 		PredefinedRole:      "roles/compute.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"network": gcpshared.ComputeNetworkImpactInOnly,
 		"interfaces.linkedInterconnectAttachment": {
 			ToSDPItemType: gcpshared.ComputeInterconnectAttachment,
@@ -63,7 +63,7 @@ var _ = registerableAdapter{
 			IsParentToChild: true, // Router discovers all its Route Policies via SEARCH
 		},
 		// Note: BgpRoute is also a child resource with listBgpRoutes endpoint, but we can only use "name"
-		// once in the blastPropagation map. When BgpRoute adapter is created with SEARCH support,
+		// once in the link rules map. When BgpRoute adapter is created with SEARCH support,
 		// we can consider using a different field or handling it separately.
 	},
 	terraformMapping: gcpshared.TerraformMapping{

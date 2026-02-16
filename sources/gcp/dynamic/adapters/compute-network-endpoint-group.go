@@ -28,7 +28,7 @@ var _ = registerableAdapter{
 		},
 		PredefinedRole: "roles/compute.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// Parent VPC network reference (changes to network can impact NEG reachability; NEG changes do not impact network)
 		"network": gcpshared.ComputeNetworkImpactInOnly,
 		// Subnetwork reference (regional) – subnetwork changes can affect endpoints, NEG changes do not affect subnetwork

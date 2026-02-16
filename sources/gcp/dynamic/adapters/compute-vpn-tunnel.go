@@ -30,7 +30,7 @@ var _ = registerableAdapter{
 		// HEALTH: https://cloud.google.com/compute/docs/reference/rest/v1/vpnTunnels#Status => status
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// The peer IP address of the remote VPN gateway.
 		"peerIp": gcpshared.IPImpactBothWays,
 		"targetVpnGateway": {

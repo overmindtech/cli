@@ -33,7 +33,7 @@ var _ = registerableAdapter{
 		// This role is required via ai adapters and it gives this exact permission.
 		PredefinedRole: "roles/aiplatform.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"projectId": {
 			ToSDPItemType:    gcpshared.CloudResourceManagerProject,
 			Description:      "If the Cloud Resource Manager Project is deleted or updated: The billing information may become invalid or inaccessible. If the billing info is updated: The project remains unaffected.",

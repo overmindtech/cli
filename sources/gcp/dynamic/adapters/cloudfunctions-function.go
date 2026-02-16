@@ -28,7 +28,7 @@ var cloudFunctionAdapter = registerableAdapter{ //nolint:unused
 		// HEALTH: https://cloud.google.com/compute/docs/reference/rest/v1/globalForwardingRules#Status => state
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"kmsKeyName": gcpshared.CryptoKeyImpactInOnly,
 		"buildConfig.source.storageSource.bucket": {
 			ToSDPItemType: gcpshared.StorageBucket,

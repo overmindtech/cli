@@ -23,7 +23,7 @@ var _ = registerableAdapter{
 		IAMPermissions: []string{"pubsub.subscriptions.get", "pubsub.subscriptions.list"},
 		PredefinedRole: "roles/pubsub.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"topic": {
 			ToSDPItemType:    gcpshared.PubSubTopic,
 			Description:      "If the Pub/Sub Topic is deleted or updated: The Subscription may fail to receive messages. If the Subscription is updated: The topic remains unaffected.",

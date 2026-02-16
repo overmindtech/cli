@@ -40,7 +40,7 @@ var _ = registerableAdapter{
 		IAMPermissions:      []string{"compute.projects.get"},
 		PredefinedRole:      "roles/compute.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"defaultServiceAccount": {
 			Description:   "If the IAM Service Account is deleted: Project resources may fail to work as before. If the project is deleted: service account is deleted.",
 			ToSDPItemType: gcpshared.IAMServiceAccount,

@@ -21,7 +21,7 @@ var _ = registerableAdapter{
 		IAMPermissions:      []string{"spanner.instanceConfigs.get", "spanner.instanceConfigs.list"},
 		PredefinedRole:      "roles/spanner.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{},
+	linkRules: map[string]*gcpshared.Impact{},
 	terraformMapping: gcpshared.TerraformMapping{
 		Description: "There is no terraform resource for this type.",
 	},
