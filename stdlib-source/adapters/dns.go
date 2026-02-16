@@ -158,17 +158,25 @@ func (d *DNSAdapter) Get(ctx context.Context, scope string, query string, ignore
 	// should be using Search() now anyway
 	items, err := d.MakeQuery(ctx, query)
 	if err != nil {
+		// makeQueryImpl returns NOTFOUND when no A/AAAA records exist; cache it to avoid repeated lookups
+		var qe *sdp.QueryError
+		if errors.As(err, &qe) && qe.GetErrorType() == sdp.QueryError_NOTFOUND {
+			d.cache.StoreError(ctx, qe, dnsCacheDuration, ck)
+		}
 		return nil, err
 	}
 
 	if len(items) == 0 {
-		return nil, &sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOTFOUND,
-			ErrorString: "no DNS records found",
-			Scope:       scope,
-			SourceName:  d.Name(),
-			ItemType:    d.Type(),
+		notFoundErr := &sdp.QueryError{
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   "no DNS records found",
+			Scope:         scope,
+			SourceName:    d.Name(),
+			ItemType:      d.Type(),
+			ResponderName: d.Name(),
 		}
+		d.cache.StoreError(ctx, notFoundErr, dnsCacheDuration, ck)
+		return nil, notFoundErr
 	}
 	d.cache.StoreItem(ctx, items[0], dnsCacheDuration, ck)
 	return items[0], nil
@@ -222,6 +230,7 @@ func (d *DNSAdapter) Search(ctx context.Context, scope string, query string, ign
 		cacheHit, _, cachedItems, qErr, done = d.cache.Lookup(ctx, d.Name(), sdp.QueryMethod_SEARCH, scope, d.Type(), query, ignoreCache)
 		defer done()
 		if qErr != nil {
+			// Cached NOTFOUND: return same (nil, error) as fresh lookup for consistency
 			return nil, qErr
 		}
 		if cacheHit {
@@ -237,18 +246,23 @@ func (d *DNSAdapter) Search(ctx context.Context, scope string, query string, ign
 			// If it's an IP then we want to run a reverse lookup
 			items, err := d.MakeReverseQuery(ctx, query)
 			if err != nil {
-				d.cache.StoreError(ctx, err, dnsCacheDuration, ck)
+				// Only cache NOTFOUND to avoid repeated lookups; do not cache transient errors (e.g. timeouts).
+				var qe *sdp.QueryError
+				if errors.As(err, &qe) && qe.GetErrorType() == sdp.QueryError_NOTFOUND {
+					d.cache.StoreError(ctx, err, dnsCacheDuration, ck)
+				}
 				return nil, err
 			}
 
 			if len(items) == 0 {
-				// Cache NOTFOUND error for empty results to avoid repeated network calls
+				// Cache NOTFOUND for empty results; return (nil, error) so cache hit returns same as fresh.
 				notFoundErr := &sdp.QueryError{
-					ErrorType:   sdp.QueryError_NOTFOUND,
-					ErrorString: "no reverse DNS records found",
-					Scope:       "global",
-					SourceName:  d.Name(),
-					ItemType:    d.Type(),
+					ErrorType:     sdp.QueryError_NOTFOUND,
+					ErrorString:   "no reverse DNS records found",
+					Scope:         "global",
+					SourceName:    d.Name(),
+					ItemType:      d.Type(),
+					ResponderName: d.Name(),
 				}
 				d.cache.StoreError(ctx, notFoundErr, dnsCacheDuration, ck)
 				return nil, notFoundErr
@@ -268,9 +282,14 @@ func (d *DNSAdapter) Search(ctx context.Context, scope string, query string, ign
 
 	items, err := d.MakeQuery(ctx, query)
 	if err != nil {
-		d.cache.StoreError(ctx, err, dnsCacheDuration, ck)
+		// Only cache NOTFOUND to avoid repeated lookups; return (nil, error) so cache hit returns same as fresh.
+		var qe *sdp.QueryError
+		if errors.As(err, &qe) && qe.GetErrorType() == sdp.QueryError_NOTFOUND {
+			d.cache.StoreError(ctx, err, dnsCacheDuration, ck)
+		}
 		return nil, err
 	}
+	// MakeQuery never returns (nil, 0 items): makeQueryImpl returns NOTFOUND when there are no A/AAAA answers, and when there are answers it only groups CNAME/A/AAAA so at least one item is produced.
 
 	for _, item := range items {
 		d.cache.StoreItem(ctx, item, dnsCacheDuration, ck)

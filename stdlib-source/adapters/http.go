@@ -175,11 +175,11 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 		return nil, qErr
 	}
 	if cacheHit {
+		// Get only caches a single item or NOTFOUND (via StoreError). Guard against empty slice for defensive safety (e.g. cache corruption).
 		if len(cachedItems) > 0 {
 			return cachedItems[0], nil
-		} else {
-			return nil, nil
 		}
+		return nil, nil
 	}
 
 	// Create a client that skips TLS verification since we will want to get the
@@ -228,6 +228,21 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 
 	// Clean up connections once we're done
 	defer client.CloseIdleConnections()
+	defer res.Body.Close()
+
+	// Treat HTTP 404 and 410 as not-found; cache to avoid repeated requests.
+	if res.StatusCode == http.StatusNotFound || res.StatusCode == http.StatusGone {
+		notFoundErr := &sdp.QueryError{
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   fmt.Sprintf("HTTP %s for %s", res.Status, query),
+			Scope:         scope,
+			SourceName:    s.Name(),
+			ItemType:      s.Type(),
+			ResponderName: s.Name(),
+		}
+		s.cache.StoreError(ctx, notFoundErr, httpCacheDuration, ck)
+		return nil, notFoundErr
+	}
 
 	// Convert headers from map[string][]string to map[string]string. This means
 	// that headers that were returned many times will end up with their values
@@ -413,13 +428,13 @@ func (s *HTTPAdapter) Search(ctx context.Context, scope string, query string, ig
 	// Use the existing Get method to retrieve the item
 	item, err := s.Get(ctx, scope, cleanURL, ignoreCache)
 	if err != nil {
+		// Return (nil, error) for NOTFOUND so cache hit and fresh lookup behave the same
 		return nil, err
 	}
-
 	if item == nil {
+		// Get can return (nil, nil) on the defensive path when cache reports hit but cachedItems is empty (e.g. cache corruption).
 		return []*sdp.Item{}, nil
 	}
-
 	return []*sdp.Item{item}, nil
 }
 

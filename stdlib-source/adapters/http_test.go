@@ -126,7 +126,9 @@ func TestHTTPGet(t *testing.T) {
 	defer server.TLSServer.Close()
 
 	t.Run("With a specified port and dns name", func(t *testing.T) {
-		item, err := src.Get(context.Background(), "global", "https://"+net.JoinHostPort("localhost", server.Port), false)
+		// Use localhost with /200 so we get an item and exercise DNS link; root path returns 404 which we now treat as NOTFOUND
+		url := fmt.Sprintf("https://localhost:%s/200", server.Port)
+		item, err := src.Get(context.Background(), "global", url, false)
 		if err != nil {
 			t.Fatal(err)
 		}
@@ -178,23 +180,114 @@ func TestHTTPGet(t *testing.T) {
 	})
 
 	t.Run("With a 404", func(t *testing.T) {
+		// 404 is cached as NOTFOUND; no item returned
 		item, err := src.Get(context.Background(), "global", server.NotFoundPage, false)
-		if err != nil {
-			t.Fatal(err)
+		if item != nil {
+			t.Errorf("expected nil item for 404, got %v", item)
 		}
-
-		var status interface{}
-
-		status, err = item.GetAttributes().Get("status")
-		if err != nil {
-			t.Fatal(err)
+		if err == nil {
+			t.Fatal("expected NOTFOUND error for 404, got nil")
 		}
-
-		if status != float64(404) {
-			t.Errorf("expected status to be 404, got: %v", status)
+		var qErr *sdp.QueryError
+		if !errors.As(err, &qErr) || qErr.GetErrorType() != sdp.QueryError_NOTFOUND {
+			t.Errorf("expected NOTFOUND error for 404, got %v", err)
 		}
+	})
 
-		discovery.TestValidateItem(t, item)
+	t.Run("404 NOTFOUND is cached and second Get does not hit server", func(t *testing.T) {
+		var count int
+		mux := http.NewServeMux()
+		mux.HandleFunc("/404", func(w http.ResponseWriter, _ *http.Request) {
+			count++
+			w.WriteHeader(http.StatusNotFound)
+		})
+		srv := httptest.NewTLSServer(mux)
+		defer srv.Close()
+
+		cachedSrc := HTTPAdapter{cache: sdpcache.NewMemoryCache()}
+		url404 := srv.URL + "/404"
+
+		// First call: 404 is cached as NOTFOUND
+		item, err := cachedSrc.Get(context.Background(), "global", url404, false)
+		if item != nil {
+			t.Errorf("first Get: expected nil item, got %v", item)
+		}
+		if err == nil {
+			t.Fatal("first Get: expected NOTFOUND error, got nil")
+		}
+		var qErr *sdp.QueryError
+		if !errors.As(err, &qErr) || qErr.GetErrorType() != sdp.QueryError_NOTFOUND {
+			t.Errorf("first Get: expected NOTFOUND, got %v", err)
+		}
+		if count != 1 {
+			t.Errorf("first Get: expected 1 request, got %d", count)
+		}
+		firstErrStr := err.Error()
+
+		// Second call: should hit cache, no new request; same response as first (nil item, NOTFOUND, same message)
+		item, err = cachedSrc.Get(context.Background(), "global", url404, false)
+		if item != nil {
+			t.Errorf("second Get: expected nil item, got %v", item)
+		}
+		if err == nil {
+			t.Fatal("second Get: expected NOTFOUND error, got nil")
+		}
+		if !errors.As(err, &qErr) || qErr.GetErrorType() != sdp.QueryError_NOTFOUND {
+			t.Errorf("second Get: expected NOTFOUND, got %v", err)
+		}
+		if err.Error() != firstErrStr {
+			t.Errorf("first and second Get must return same error message: first %q, second %q", firstErrStr, err.Error())
+		}
+		if count != 1 {
+			t.Errorf("second Get: expected no new request (count still 1), got %d", count)
+		}
+	})
+
+	t.Run("Search 404 returns same NOTFOUND for first and second call", func(t *testing.T) {
+		var count int
+		mux := http.NewServeMux()
+		mux.HandleFunc("/404", func(w http.ResponseWriter, _ *http.Request) {
+			count++
+			w.WriteHeader(http.StatusNotFound)
+		})
+		srv := httptest.NewTLSServer(mux)
+		defer srv.Close()
+
+		cachedSrc := HTTPAdapter{cache: sdpcache.NewMemoryCache()}
+		url404 := srv.URL + "/404"
+
+		first, err1 := cachedSrc.Search(context.Background(), "global", url404, false)
+		if err1 == nil {
+			t.Fatal("first Search: expected NOTFOUND error, got nil")
+		}
+		if first != nil {
+			t.Errorf("first Search: expected nil items, got len=%d", len(first))
+		}
+		var qErr *sdp.QueryError
+		if !errors.As(err1, &qErr) || qErr.GetErrorType() != sdp.QueryError_NOTFOUND {
+			t.Errorf("first Search: expected NOTFOUND, got %v", err1)
+		}
+		if count != 1 {
+			t.Errorf("first Search: expected 1 request, got %d", count)
+		}
+		firstErrStr := err1.Error()
+
+		second, err2 := cachedSrc.Search(context.Background(), "global", url404, false)
+		if err2 == nil {
+			t.Fatal("second Search: expected NOTFOUND error, got nil")
+		}
+		if second != nil {
+			t.Errorf("second Search: expected nil items, got len=%d", len(second))
+		}
+		if !errors.As(err2, &qErr) || qErr.GetErrorType() != sdp.QueryError_NOTFOUND {
+			t.Errorf("second Search: expected NOTFOUND, got %v", err2)
+		}
+		if err2.Error() != firstErrStr {
+			t.Errorf("first and second Search must return same error message: first %q, second %q", firstErrStr, err2.Error())
+		}
+		if count != 1 {
+			t.Errorf("second Search: expected no new request (count still 1), got %d", count)
+		}
 	})
 
 	t.Run("With a timeout", func(t *testing.T) {
