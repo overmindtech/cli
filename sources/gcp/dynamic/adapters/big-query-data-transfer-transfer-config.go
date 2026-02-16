@@ -25,7 +25,7 @@ var _ = registerableAdapter{
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 		// state: https://cloud.google.com/bigquery/docs/reference/datatransfer/rest/v1/projects.locations.transferConfigs#TransferState
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"destinationDatasetId": {
 			ToSDPItemType:    gcpshared.BigQueryDataset,
 			Description:      "If the BigQuery Dataset is deleted or updated: The transfer config may fail to write data. If the transfer config is updated: The dataset remains unaffected.",

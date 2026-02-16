@@ -31,7 +31,7 @@ var _ = registerableAdapter{
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 		// https://cloud.google.com/vertex-ai/docs/reference/rest/v1/projects.locations.modelDeploymentMonitoringJobs#JobState
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"encryptionSpec.kmsKeyName": gcpshared.CryptoKeyImpactInOnly,
 		"endpoint": {
 			ToSDPItemType: gcpshared.AIPlatformEndpoint,

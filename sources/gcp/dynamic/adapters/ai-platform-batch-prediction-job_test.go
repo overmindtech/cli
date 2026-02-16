@@ -293,7 +293,7 @@ func TestAIPlatformBatchPredictionJob(t *testing.T) {
 		}
 
 		t.Run("StaticTests", func(t *testing.T) {
-			// Only test blast propagation paths that are currently working
+			// Only test link rule paths that are currently working
 			// (GCS and BigQuery paths have TODOs and require manual linkers)
 			queryTests := shared.QueryTests{
 				{

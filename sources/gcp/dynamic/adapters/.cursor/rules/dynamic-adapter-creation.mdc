@@ -14,7 +14,7 @@ When creating new GCP dynamic adapters in the Overmind codebase, follow these pa
 
 - Always use the `registerableAdapter` struct pattern (NOT legacy `SDPAssetTypeToAdapterMeta`)
 - Implement proper scope detection (project/regional/zonal)
-- Include comprehensive blast propagation analysis
+- Include comprehensive link rules analysis (attribute key → linked item type)
 - Add proper terraform mapping support
 - Follow naming conventions and IAM permissions
 - Research from official API documentation
@@ -152,7 +152,7 @@ UniqueAttributeKeys: []string{"subresources", "resources"},
 - Terraform mapping needs SEARCH but adapter doesn't support it
 - See `orgpolicy-policy.go` for example
 
-### 5. Blast Propagation Analysis
+### 5. Link Rules Analysis
 
 For each attribute that references another resource:
 
@@ -162,7 +162,7 @@ For each attribute that references another resource:
 
 #### Implementation:
 ```go
-blastPropagation: map[string]*gcpshared.Impact{
+linkRules: map[string]*gcpshared.Impact{
     "network": {
         ToSDPItemType: gcpshared.ComputeNetwork,
         Description:   "This resource is affected if network changes. Network is not affected if this resource changes.",
@@ -192,9 +192,9 @@ A Spanner database name has the format: `projects/{project}/instances/{instance}
 To create a backlink from the database to its parent instance:
 
 ```go
-// In sources/gcp/shared/blast-propagations.go
+// In sources/gcp/shared/link-rules.go (or in the adapter's linkRules map)
 SpannerDatabase: {
-    // ... other blast propagations ...
+    // ... other link rules ...
 
     // This is a backlink to instance.
     // Framework will extract the instance name and create the linked item query with GET
@@ -217,7 +217,7 @@ SpannerDatabase: {
 
 **Testing the Backlink:**
 
-When adding backlink blast propagations, verify they work correctly in tests:
+When adding backlink link rules, verify they work correctly in tests:
 
 ```go
 // In adapter_test.go
@@ -234,7 +234,7 @@ When adding backlink blast propagations, verify they work correctly in tests:
 - Child resources with hierarchical naming (database → instance, subnet → network)
 - Parent resource is part of the child's name/path
 - Relationship is one-way (child depends on parent, but parent doesn't depend on specific child)
-- Use `impactInOnly` blast propagation (parent changes affect child, but not vice versa)
+- Use in-only impact (parent changes affect child, but not vice versa)
 
 #### Creating Forward Links from Parent to Child Resources
 
@@ -253,7 +253,7 @@ To create a forward link from the instance to its databases:
 var spannerInstanceAdapter = registerableAdapter{
     // ... other fields ...
 
-    blastPropagation: map[string]*gcpshared.Impact{
+    linkRules: map[string]*gcpshared.Impact{
         // This a link from parent to child via SEARCH
         // We need to make sure that the linked item supports `SEARCH` method for the `instance` name.
         "name": {
@@ -266,7 +266,7 @@ var spannerInstanceAdapter = registerableAdapter{
 ```
 
 **How It Works:**
-1. The framework detects `IsParentToChild: true` on the blast propagation
+1. The framework detects `IsParentToChild: true` on the link rule
 2. It modifies the unique attribute keys by removing the last element (the child identifier)
    - For databases: `["instances", "databases"]` becomes `["instances"]`
 3. It extracts only the parent identifier from the resource name (e.g., `test-instance`)
@@ -279,7 +279,7 @@ var spannerInstanceAdapter = registerableAdapter{
 
 **Testing the Forward Link:**
 
-When adding parent-to-child blast propagations, verify they work correctly in tests:
+When adding parent-to-child link rules, verify they work correctly in tests:
 
 ```go
 // In adapter_test.go (e.g., spanner-instance_test.go)
@@ -426,7 +426,7 @@ resource "google_project_service" "overmind_apis" {
 - **Multiple Unique Attributes**: Check adapters with complex URL structures
 - **No-op Search**: `orgpolicy-policy.go`
 - **NameSelector**: `dataproc-cluster.go`
-- **Complex Blast Propagation**: `dataproc-cluster.go`
+- **Complex link rules**: `dataproc-cluster.go`
 
 ## Files to Create/Modify
 
@@ -442,7 +442,7 @@ resource "google_project_service" "overmind_apis" {
 ### Always Use:
 - `registerableAdapter` struct, never legacy maps
 - Endpoint functions that match the exact API URL format
-- Clear and specific blast propagation descriptions
+- Clear and specific link rule descriptions
 - Terraform mapping method that matches adapter capabilities
 - IAM permissions that match the actual API requirements
 
@@ -455,7 +455,7 @@ resource "google_project_service" "overmind_apis" {
 
 - [ ] Adapter file compiles without errors
 - [ ] Proper scope detection and endpoint functions
-- [ ] Comprehensive blast propagation analysis
+- [ ] Comprehensive link rules analysis
 - [ ] Valid terraform mapping with correct method (GET/SEARCH)
 - [ ] Appropriate IAM permissions defined
 - [ ] Custom role updated if new permissions required (see Custom Role section)
@@ -463,7 +463,7 @@ resource "google_project_service" "overmind_apis" {
 - [ ] Follows existing adapter patterns
 - [ ] No legacy `SDPAssetTypeToAdapterMeta` usage
 - [ ] API URLs match official GCP documentation exactly
-- [ ] Blast propagation covers all linked resources
+- [ ] Link rules cover all linked resources
 - [ ] Terraform resource name verified in registry
 - [ ] **Required APIs enabled in deployment**: All APIs used by the adapter are included in `deploy/modules/ovm-services/gke.tf`
 

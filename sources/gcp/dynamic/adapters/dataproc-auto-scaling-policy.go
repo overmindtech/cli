@@ -29,7 +29,7 @@ var _ = registerableAdapter{
 		},
 		PredefinedRole: "roles/dataproc.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// AutoscalingPolicies don't directly reference other resources,
 		// but they are referenced by Dataproc clusters via config.autoscalingConfig.policyUri
 		// The reverse relationship is handled in the cluster adapter

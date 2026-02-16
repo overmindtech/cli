@@ -8,13 +8,13 @@ import (
 type registerableAdapter struct {
 	sdpType          shared.ItemType
 	meta             gcpshared.AdapterMeta
-	blastPropagation map[string]*gcpshared.Impact
+	linkRules        map[string]*gcpshared.Impact
 	terraformMapping gcpshared.TerraformMapping
 }
 
 func (d registerableAdapter) Register() registerableAdapter {
 	gcpshared.SDPAssetTypeToAdapterMeta[d.sdpType] = d.meta
-	gcpshared.BlastPropagations[d.sdpType] = d.blastPropagation
+	gcpshared.LinkRules[d.sdpType] = d.linkRules
 	gcpshared.SDPAssetTypeToTerraformMappings[d.sdpType] = d.terraformMapping
 
 	return d

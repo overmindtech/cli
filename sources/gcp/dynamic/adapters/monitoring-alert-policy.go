@@ -35,7 +35,7 @@ var _ = registerableAdapter{
 		},
 		PredefinedRole: "roles/monitoring.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"notificationChannels": {
 			ToSDPItemType:    gcpshared.MonitoringNotificationChannel,
 			Description:      "The notification channels that are used to notify when this alert policy is triggered. If notification channels are deleted, the alert policy will not be able to notify when triggered. If the alert policy is deleted, the notification channels will not be affected.",

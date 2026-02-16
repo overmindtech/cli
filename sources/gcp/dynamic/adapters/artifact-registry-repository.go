@@ -21,7 +21,7 @@ var _ = registerableAdapter{
 		PredefinedRole:      "roles/artifactregistry.reader",
 		// HEALTH: Not currently exposed on the Repository resource (no status field providing operational state)
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"kmsKeyName": gcpshared.CryptoKeyImpactInOnly,
 		// Forward link from parent to child via SEARCH
 		// Link to all docker images in this repository

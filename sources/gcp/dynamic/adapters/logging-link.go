@@ -25,7 +25,7 @@ var _ = registerableAdapter{
 		IAMPermissions:      []string{"logging.links.get", "logging.links.list"},
 		PredefinedRole:      "roles/logging.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"name": {
 			ToSDPItemType:    gcpshared.LoggingBucket,
 			Description:      "If the Logging Bucket is deleted or updated: The Logging Link may lose its association or fail to function as expected. If the Logging Link is updated: The bucket remains unaffected.",

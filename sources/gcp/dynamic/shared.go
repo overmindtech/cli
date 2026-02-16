@@ -317,9 +317,9 @@ func externalCallMulti(ctx context.Context, itemsSelector string, httpCli *http.
 	return nil
 }
 
-func potentialLinksFromBlasts(itemType shared.ItemType, blasts map[shared.ItemType]map[string]*gcpshared.Impact) []string {
+func potentialLinksFromLinkRules(itemType shared.ItemType, linkRules map[shared.ItemType]map[string]*gcpshared.Impact) []string {
 	potentialLinksMap := make(map[string]bool)
-	for _, impact := range blasts[itemType] {
+	for _, impact := range linkRules[itemType] {
 		potentialLinksMap[impact.ToSDPItemType.String()] = true
 		// Special case: stdlib.NetworkIP and stdlib.NetworkDNS are interchangeable
 		// because the linker automatically detects whether a value is an IP address or DNS name

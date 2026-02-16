@@ -22,7 +22,7 @@ var _ = registerableAdapter{
 		IAMPermissions:      []string{"servicedirectory.services.get", "servicedirectory.services.list"},
 		PredefinedRole:      "roles/servicedirectory.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// Link from parent Service to child Endpoints via SEARCH
 		// The framework will extract location, namespace, and service from the service name
 		// and create a SEARCH query to find all endpoints under this service

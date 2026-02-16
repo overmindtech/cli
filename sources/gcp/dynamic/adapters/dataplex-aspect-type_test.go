@@ -152,8 +152,8 @@ func TestDataplexAspectType(t *testing.T) {
 			t.Errorf("Expected etag field to be 'BwWWja0YfJA=', got %s", val)
 		}
 
-		// Note: Since this adapter doesn't define blast propagation relationships,
-		// we don't run StaticTests here. The adapter's blastPropagation map is empty,
+		// Note: Since this adapter doesn't define link rule relationships,
+		// we don't run StaticTests here. The adapter's link rules map is empty,
 		// which is correct as AspectTypes are schema definitions rather than runtime resources.
 	})
 

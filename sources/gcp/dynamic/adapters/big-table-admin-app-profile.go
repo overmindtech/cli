@@ -21,7 +21,7 @@ var _ = registerableAdapter{
 		IAMPermissions:      []string{"bigtable.appProfiles.get", "bigtable.appProfiles.list"},
 		PredefinedRole:      "roles/bigtable.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"name": {
 			ToSDPItemType:    gcpshared.BigTableAdminInstance,
 			Description:      "If the BigTableAdmin Instance is deleted or updated: The AppProfile may become invalid or inaccessible. If the AppProfile is updated: The instance remains unaffected.",

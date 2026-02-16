@@ -27,7 +27,7 @@ var _ = registerableAdapter{
 		},
 		PredefinedRole: "roles/compute.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// SSL Policies are configuration-only resources that define TLS/SSL parameters
 		// They don't have dependencies on other GCP resources, but are referenced by:
 		// - Target HTTPS Proxies (via sslPolicy field)

@@ -30,7 +30,7 @@ var _ = registerableAdapter{
 		},
 		PredefinedRole: "roles/dataplex.catalogViewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// Based on the AspectType structure from the API documentation,
 		// AspectTypes typically define metadata schemas and don't have direct dependencies
 		// on other GCP resources in their core definition. They are schema definitions

@@ -32,7 +32,7 @@ var _ = registerableAdapter{
 		},
 		PredefinedRole: "roles/container.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"network":                         gcpshared.ComputeNetworkImpactInOnly,
 		"subnetwork":                      gcpshared.ComputeSubnetworkImpactInOnly,
 		"nodePools.config.serviceAccount": gcpshared.IAMServiceAccountImpactInOnly,

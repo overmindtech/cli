@@ -24,7 +24,7 @@ var _ = registerableAdapter{
 		IAMPermissions:      []string{"artifactregistry.dockerimages.get", "artifactregistry.dockerimages.list"},
 		PredefinedRole:      "roles/artifactregistry.reader",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// This is a link to its parent resource: ArtifactRegistryRepository
 		// Linker will extract the repository name from the image name.
 		"name": {

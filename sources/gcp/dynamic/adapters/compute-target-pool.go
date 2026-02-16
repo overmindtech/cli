@@ -35,7 +35,7 @@ var _ = registerableAdapter{
 		},
 		PredefinedRole: "roles/compute.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"instances": {
 			ToSDPItemType:    gcpshared.ComputeInstance,
 			Description:      "If the Compute Instance is deleted or updated: the pool membership becomes invalid or traffic may fail to reach it. If the pool is updated: the instance remains structurally unaffected.",

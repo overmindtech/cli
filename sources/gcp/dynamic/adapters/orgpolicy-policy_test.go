@@ -88,7 +88,7 @@ func TestOrgPolicyPolicy(t *testing.T) {
 			t.Errorf("Expected name field to be '%s', got %s", expectedName, val)
 		}
 
-		// Skip static tests - no blast propagations for this adapter
+		// Skip static tests - no link rules for this adapter
 		// Static tests fail when linked queries are nil
 	})
 

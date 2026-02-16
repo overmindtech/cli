@@ -19,7 +19,7 @@ var _ = registerableAdapter{
 		IAMPermissions:      []string{"compute.networks.get", "compute.networks.list"},
 		PredefinedRole:      "roles/compute.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"gatewayIPv4": gcpshared.IPImpactBothWays,
 		"subnetworks": {
 			Description:   "If the Compute Subnetwork is deleted: The network remains unaffected, but its subnetwork configuration may change. If the network is deleted: All associated subnetworks are also deleted.",

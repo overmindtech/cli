@@ -34,7 +34,7 @@ var _ = registerableAdapter{
 		PredefinedRole: "roles/file.viewer",
 		// TODO: https://linear.app/overmind/issue/ENG-631 => state
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"networks.network":     gcpshared.ComputeNetworkImpactInOnly,
 		"networks.ipAddresses": gcpshared.IPImpactBothWays,
 		"kmsKeyName":           gcpshared.CryptoKeyImpactInOnly,

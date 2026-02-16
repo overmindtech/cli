@@ -189,8 +189,8 @@ func TestCloudResourceManagerTagKey(t *testing.T) {
 			}
 		}
 
-		// Note: Since this adapter doesn't define blast propagation relationships,
-		// we don't run StaticTests here. The adapter's blastPropagation map is empty,
+		// Note: Since this adapter doesn't define link rule relationships,
+		// we don't run StaticTests here. The adapter's link rules map is empty,
 		// which is correct as TagKeys are configuration resources rather than runtime resources.
 	})
 

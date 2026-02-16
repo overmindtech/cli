@@ -31,7 +31,7 @@ var _ = registerableAdapter{
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 		// https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1/instances#SqlInstanceState
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// VPC network used for private service connectivity.
 		"settings.ipConfiguration.privateNetwork": gcpshared.ComputeNetworkImpactInOnly,
 		// CMEK used to encrypt the primary data disk.

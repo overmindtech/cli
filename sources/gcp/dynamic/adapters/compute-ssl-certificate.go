@@ -29,7 +29,7 @@ var computeSSLCertificateAdapter = registerableAdapter{ //nolint:unused
 			},
 		},
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
-		// There is no blast propagation originating from Compute SSL Certificates
+	linkRules: map[string]*gcpshared.Impact{
+		// There are no link rules originating from Compute SSL Certificates
 	},
 }.Register()

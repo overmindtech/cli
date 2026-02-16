@@ -27,7 +27,7 @@ var _ = registerableAdapter{
 		IAMPermissions: []string{"logging.buckets.get", "logging.buckets.list"},
 		PredefinedRole: "roles/logging.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		"cmekSettings.kmsKeyName":        gcpshared.CryptoKeyImpactInOnly,
 		"cmekSettings.kmsKeyVersionName": gcpshared.CryptoKeyVersionImpactInOnly,
 		"cmekSettings.serviceAccountId":  gcpshared.IAMServiceAccountImpactInOnly,

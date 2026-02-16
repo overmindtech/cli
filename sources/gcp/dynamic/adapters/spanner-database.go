@@ -23,7 +23,7 @@ var _ = registerableAdapter{
 		IAMPermissions: []string{"spanner.databases.get", "spanner.databases.list"},
 		PredefinedRole: "overmind_custom_role",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// The Cloud KMS key used to encrypt the database.
 		"encryptionConfig.kmsKeyName":  gcpshared.CryptoKeyImpactInOnly,
 		"encryptionConfig.kmsKeyNames": gcpshared.CryptoKeyImpactInOnly,

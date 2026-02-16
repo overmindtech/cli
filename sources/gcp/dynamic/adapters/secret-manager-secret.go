@@ -32,7 +32,7 @@ var _ = registerableAdapter{
 		},
 		PredefinedRole: "roles/secretmanager.viewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// CMEK used with Automatic replication
 		"replication.automatic.customerManagedEncryption.kmsKeyName": gcpshared.CryptoKeyImpactInOnly,
 		// CMEK used with User-managed replication per replica

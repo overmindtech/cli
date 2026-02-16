@@ -35,7 +35,7 @@ var _ = registerableAdapter{
 		// TODO: https://linear.app/overmind/issue/ENG-631 status
 		// https://cloud.google.com/storage-transfer/docs/reference/rest/v1/transferJobs#TransferJob.status
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// Transfer spec references to source and destination storage
 		"transferSpec.gcsDataSource.bucketName": {
 			ToSDPItemType: gcpshared.StorageBucket,

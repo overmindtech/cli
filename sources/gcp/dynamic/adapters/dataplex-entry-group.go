@@ -25,7 +25,7 @@ var _ = registerableAdapter{
 		IAMPermissions: []string{"dataplex.entryGroups.get", "dataplex.entryGroups.list"},
 		PredefinedRole: "roles/dataplex.catalogViewer",
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// There is no links for this item type.
 	},
 	terraformMapping: gcpshared.TerraformMapping{

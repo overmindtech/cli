@@ -39,7 +39,7 @@ var _ = registerableAdapter{
 		// TODO: https://linear.app/overmind/issue/ENG-631/investigate-how-we-can-add-health-status-for-supporting-items
 		// https://cloud.google.com/memorystore/docs/redis/reference/rest/v1/projects.locations.instances#Instance.State
 	},
-	blastPropagation: map[string]*gcpshared.Impact{
+	linkRules: map[string]*gcpshared.Impact{
 		// The name of the VPC network to which the instance is connected.
 		"authorizedNetwork": gcpshared.ComputeNetworkImpactInOnly,
 		// Optional. The KMS key reference that the customer provides when trying to create the instance.
