@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"sync/atomic"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/sourcegraph/conc/pool"
@@ -183,6 +184,8 @@ func (c computeHealthCheckWrapper) ListStream(ctx context.Context, stream discov
 	}
 
 	// Route to the appropriate API based on whether the scope includes a region
+	var itemsSent int
+	var hadError bool
 	if location.Regional() {
 		// Regional health checks
 		it := c.regionalClient.List(ctx, &computepb.ListRegionHealthChecksRequest{
@@ -203,11 +206,13 @@ func (c computeHealthCheckWrapper) ListStream(ctx context.Context, stream discov
 			item, sdpErr := GcpComputeHealthCheckToSDPItem(healthCheck, location, gcpshared.ComputeHealthCheck)
 			if sdpErr != nil {
 				stream.SendError(sdpErr)
+				hadError = true
 				continue
 			}
 
 			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 			stream.SendItem(item)
+			itemsSent++
 		}
 	} else {
 		// Global health checks
@@ -228,12 +233,25 @@ func (c computeHealthCheckWrapper) ListStream(ctx context.Context, stream discov
 			item, sdpErr := GcpComputeHealthCheckToSDPItem(healthCheck, location, gcpshared.ComputeHealthCheck)
 			if sdpErr != nil {
 				stream.SendError(sdpErr)
+				hadError = true
 				continue
 			}
 
 			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 			stream.SendItem(item)
+			itemsSent++
 		}
+	}
+	if itemsSent == 0 && !hadError {
+		notFoundErr := &sdp.QueryError{
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   "no compute health checks found in scope " + scope,
+			Scope:         scope,
+			SourceName:    c.Name(),
+			ItemType:      c.Type(),
+			ResponderName: c.Name(),
+		}
+		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
 	}
 }
 
@@ -244,6 +262,8 @@ func (c computeHealthCheckWrapper) listAggregatedStream(ctx context.Context, str
 
 	// Use a pool with 10x concurrency to parallelize AggregatedList calls
 	p := pool.New().WithMaxGoroutines(10).WithContext(ctx)
+	var itemsSent atomic.Int32
+	var hadError atomic.Bool
 
 	for _, projectID := range projectIDs {
 		p.Go(func(ctx context.Context) error {
@@ -259,6 +279,7 @@ func (c computeHealthCheckWrapper) listAggregatedStream(ctx context.Context, str
 				}
 				if iterErr != nil {
 					stream.SendError(gcpshared.QueryError(iterErr, projectID, c.Type()))
+					hadError.Store(true)
 					return iterErr
 				}
 
@@ -279,11 +300,13 @@ func (c computeHealthCheckWrapper) listAggregatedStream(ctx context.Context, str
 						item, sdpErr := GcpComputeHealthCheckToSDPItem(healthCheck, scopeLocation, gcpshared.ComputeHealthCheck)
 						if sdpErr != nil {
 							stream.SendError(sdpErr)
+							hadError.Store(true)
 							continue
 						}
 
 						cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 						stream.SendItem(item)
+						itemsSent.Add(1)
 					}
 				}
 			}
@@ -294,6 +317,17 @@ func (c computeHealthCheckWrapper) listAggregatedStream(ctx context.Context, str
 
 	// Wait for all goroutines to complete
 	_ = p.Wait()
+	if itemsSent.Load() == 0 && !hadError.Load() {
+		notFoundErr := &sdp.QueryError{
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   "no compute health checks found in scope *",
+			Scope:         "*",
+			SourceName:    c.Name(),
+			ItemType:      c.Type(),
+			ResponderName: c.Name(),
+		}
+		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
+	}
 }
 
 // GcpComputeHealthCheckToSDPItem converts a GCP health check to an SDP item.

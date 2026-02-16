@@ -2,6 +2,7 @@ package manual_test
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"sync"
 	"testing"
@@ -285,6 +286,96 @@ func TestComputeImage(t *testing.T) {
 
 		if len(items) != 2 {
 			t.Fatalf("Expected 2 items, got: %d", len(items))
+		}
+	})
+
+	t.Run("ListCachesNotFoundWithMemoryCache", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		mockClient := mocks.NewMockComputeImagesClient(ctrl)
+		projectID := "cache-test-project"
+		scope := projectID
+
+		mockIter := mocks.NewMockComputeImageIterator(ctrl)
+		mockIter.EXPECT().Next().Return(nil, iterator.Done)
+		mockClient.EXPECT().List(ctx, gomock.Any()).Return(mockIter).Times(1)
+
+		wrapper := manual.NewComputeImage(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		cache := sdpcache.NewMemoryCache()
+		adapter := sources.WrapperToAdapter(wrapper, cache)
+		discAdapter := adapter.(discovery.Adapter)
+		listable := adapter.(discovery.ListableAdapter)
+
+		items, err := listable.List(ctx, scope, false)
+		if err != nil {
+			t.Fatalf("first List(scope): %v", err)
+		}
+		if len(items) != 0 {
+			t.Errorf("first List(scope): expected 0 items, got %d", len(items))
+		}
+		cacheHit, _, _, qErr, done := cache.Lookup(ctx, discAdapter.Name(), sdp.QueryMethod_LIST, scope, discAdapter.Type(), "", false)
+		done()
+		if !cacheHit {
+			t.Fatal("expected cache hit for List(scope)")
+		}
+		if qErr == nil || qErr.GetErrorType() != sdp.QueryError_NOTFOUND {
+			t.Fatalf("expected cached NOTFOUND for List(scope), got %v", qErr)
+		}
+		items, err = listable.List(ctx, scope, false)
+		if err != nil {
+			t.Fatalf("second List(scope): %v", err)
+		}
+		if len(items) != 0 {
+			t.Errorf("second List(scope): expected 0 items, got %d", len(items))
+		}
+	})
+
+	// SearchCachesNotFoundWithMemoryCache verifies that when Search returns no items
+	// (NotFound from both Get and GetFromFamily), NOTFOUND is cached. Second Search
+	// hits cache and returns 0 items without calling the backend again.
+	t.Run("SearchCachesNotFoundWithMemoryCache", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		mockClient := mocks.NewMockComputeImagesClient(ctrl)
+		projectID := "cache-test-project"
+		scope := projectID
+		query := "nonexistent-image"
+
+		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(nil, status.Error(codes.NotFound, "image not found")).Times(1)
+		mockClient.EXPECT().GetFromFamily(ctx, gomock.Any()).Return(nil, status.Error(codes.NotFound, "family not found")).Times(1)
+
+		wrapper := manual.NewComputeImage(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		cache := sdpcache.NewMemoryCache()
+		adapter := sources.WrapperToAdapter(wrapper, cache)
+		discAdapter := adapter.(discovery.Adapter)
+		searchable := adapter.(discovery.SearchableAdapter)
+
+		// First Search: cache miss → Get then GetFromFamily return NotFound → transformer stores NOTFOUND.
+		_, err := searchable.Search(ctx, scope, query, false)
+		if err == nil {
+			t.Fatal("first Search: expected error (NOTFOUND), got nil")
+		}
+		var qe *sdp.QueryError
+		if errors.As(err, &qe) && qe.GetErrorType() != sdp.QueryError_NOTFOUND {
+			t.Errorf("first Search: expected NOTFOUND, got %v", err)
+		}
+
+		cacheHit, _, _, qErr, done := cache.Lookup(ctx, discAdapter.Name(), sdp.QueryMethod_SEARCH, scope, discAdapter.Type(), query, false)
+		done()
+		if !cacheHit {
+			t.Fatal("expected cache hit for Search after first call")
+		}
+		if qErr == nil || qErr.GetErrorType() != sdp.QueryError_NOTFOUND {
+			t.Fatalf("expected cached NOTFOUND for Search, got %v", qErr)
+		}
+
+		// Second Search: cache hit → transformer returns empty result, no backend calls.
+		items, err := searchable.Search(ctx, scope, query, false)
+		if err != nil {
+			t.Fatalf("second Search: unexpected error: %v", err)
+		}
+		if len(items) != 0 {
+			t.Errorf("second Search: expected 0 items, got %d", len(items))
 		}
 	})
 

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"sync/atomic"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/sourcegraph/conc/pool"
@@ -142,6 +143,8 @@ func (c computeInstanceWrapper) ListStream(ctx context.Context, stream discovery
 		Zone:    location.Zone,
 	})
 
+	itemsSent := 0
+	var hadError bool
 	for {
 		instance, iterErr := it.Next()
 		if errors.Is(iterErr, iterator.Done) {
@@ -155,11 +158,25 @@ func (c computeInstanceWrapper) ListStream(ctx context.Context, stream discovery
 		item, sdpErr := c.gcpComputeInstanceToSDPItem(ctx, instance, location)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
+			hadError = true
 			continue
 		}
 
 		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
+		itemsSent++
+	}
+
+	if itemsSent == 0 && !hadError {
+		notFoundErr := &sdp.QueryError{
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   "no compute instances found in scope " + scope,
+			Scope:         scope,
+			SourceName:    c.Name(),
+			ItemType:      c.Type(),
+			ResponderName: c.Name(),
+		}
+		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
 	}
 }
 
@@ -168,6 +185,8 @@ func (c computeInstanceWrapper) listAggregatedStream(ctx context.Context, stream
 	// Get all unique project IDs
 	projectIDs := gcpshared.GetProjectIDsFromLocations(c.Locations())
 
+	var itemsSent atomic.Int32
+	var hadError atomic.Bool
 	// Use a pool with 10x concurrency to parallelize AggregatedList calls
 	p := pool.New().WithMaxGoroutines(10).WithContext(ctx)
 
@@ -185,6 +204,7 @@ func (c computeInstanceWrapper) listAggregatedStream(ctx context.Context, stream
 				}
 				if iterErr != nil {
 					stream.SendError(gcpshared.QueryError(iterErr, projectID, c.Type()))
+					hadError.Store(true)
 					return iterErr
 				}
 
@@ -205,11 +225,13 @@ func (c computeInstanceWrapper) listAggregatedStream(ctx context.Context, stream
 						item, sdpErr := c.gcpComputeInstanceToSDPItem(ctx, instance, scopeLocation)
 						if sdpErr != nil {
 							stream.SendError(sdpErr)
+							hadError.Store(true)
 							continue
 						}
 
 						cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 						stream.SendItem(item)
+						itemsSent.Add(1)
 					}
 				}
 			}
@@ -220,6 +242,18 @@ func (c computeInstanceWrapper) listAggregatedStream(ctx context.Context, stream
 
 	// Wait for all goroutines to complete
 	_ = p.Wait()
+
+	if itemsSent.Load() == 0 && !hadError.Load() {
+		notFoundErr := &sdp.QueryError{
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   "no compute instances found in scope *",
+			Scope:         "*",
+			SourceName:    c.Name(),
+			ItemType:      c.Type(),
+			ResponderName: c.Name(),
+		}
+		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
+	}
 }
 
 func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context, instance *computepb.Instance, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {

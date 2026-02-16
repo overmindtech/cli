@@ -123,6 +123,47 @@ func TestBigQueryDataset(t *testing.T) {
 			t.Fatalf("Adapter should not support SearchStream operation")
 		}
 	})
+
+	t.Run("ListCachesNotFoundWithMemoryCache", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		mockClient := mocks.NewMockBigQueryDatasetClient(ctrl)
+		projectID := "cache-test-project"
+		scope := projectID
+
+		mockClient.EXPECT().List(ctx, projectID, gomock.Any()).Return([]*sdp.Item{}, nil).Times(1)
+
+		wrapper := manual.NewBigQueryDataset(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		cache := sdpcache.NewMemoryCache()
+		adapter := sources.WrapperToAdapter(wrapper, cache)
+		discAdapter := adapter.(discovery.Adapter)
+		listable := adapter.(discovery.ListableAdapter)
+
+		items, err := listable.List(ctx, scope, false)
+		if err != nil {
+			t.Fatalf("first List: unexpected error: %v", err)
+		}
+		if len(items) != 0 {
+			t.Errorf("first List: expected 0 items, got %d", len(items))
+		}
+
+		cacheHit, _, _, qErr, done := cache.Lookup(ctx, discAdapter.Name(), sdp.QueryMethod_LIST, scope, discAdapter.Type(), "", false)
+		done()
+		if !cacheHit {
+			t.Fatal("expected cache hit for List after first call")
+		}
+		if qErr == nil || qErr.GetErrorType() != sdp.QueryError_NOTFOUND {
+			t.Fatalf("expected cached NOTFOUND for List, got %v", qErr)
+		}
+
+		items, err = listable.List(ctx, scope, false)
+		if err != nil {
+			t.Fatalf("second List: unexpected error: %v", err)
+		}
+		if len(items) != 0 {
+			t.Errorf("second List: expected 0 items, got %d", len(items))
+		}
+	})
 }
 
 // createDataset creates a BigQuery Dataset for testing.

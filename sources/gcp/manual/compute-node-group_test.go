@@ -6,6 +6,7 @@ import (
 	"sync"
 	"testing"
 
+	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/api/iterator"
@@ -192,6 +193,77 @@ func TestComputeNodeGroup(t *testing.T) {
 		}
 	})
 
+	t.Run("ListCachesNotFoundWithMemoryCache", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		mockClient := mocks.NewMockComputeNodeGroupClient(ctrl)
+		projectID := "cache-test-project"
+		zone := "us-central1-a"
+		scope := projectID + "." + zone
+
+		mockAggIter := mocks.NewMockNodeGroupsScopedListPairIterator(ctrl)
+		mockAggIter.EXPECT().Next().Return(compute.NodeGroupsScopedListPair{}, iterator.Done)
+		mockListIter := mocks.NewMockComputeNodeGroupIterator(ctrl)
+		mockListIter.EXPECT().Next().Return(nil, iterator.Done)
+
+		mockClient.EXPECT().AggregatedList(gomock.Any(), gomock.Any()).Return(mockAggIter).Times(1)
+		mockClient.EXPECT().List(gomock.Any(), gomock.Any()).Return(mockListIter).Times(1)
+
+		wrapper := manual.NewComputeNodeGroup(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
+		cache := sdpcache.NewMemoryCache()
+		adapter := sources.WrapperToAdapter(wrapper, cache)
+		discAdapter := adapter.(discovery.Adapter)
+		listable := adapter.(discovery.ListableAdapter)
+
+		// --- Scope "*" ---
+		items, err := listable.List(ctx, "*", false)
+		if err != nil {
+			t.Fatalf("first List(*): %v", err)
+		}
+		if len(items) != 0 {
+			t.Errorf("first List(*): expected 0 items, got %d", len(items))
+		}
+		cacheHit, _, _, qErr, done := cache.Lookup(ctx, discAdapter.Name(), sdp.QueryMethod_LIST, "*", discAdapter.Type(), "", false)
+		done()
+		if !cacheHit {
+			t.Fatal("expected cache hit for List(*)")
+		}
+		if qErr == nil || qErr.GetErrorType() != sdp.QueryError_NOTFOUND {
+			t.Fatalf("expected cached NOTFOUND for List(*), got %v", qErr)
+		}
+		items, err = listable.List(ctx, "*", false)
+		if err != nil {
+			t.Fatalf("second List(*): %v", err)
+		}
+		if len(items) != 0 {
+			t.Errorf("second List(*): expected 0 items, got %d", len(items))
+		}
+
+		// --- Specific scope ---
+		items, err = listable.List(ctx, scope, false)
+		if err != nil {
+			t.Fatalf("first List(scope): %v", err)
+		}
+		if len(items) != 0 {
+			t.Errorf("first List(scope): expected 0 items, got %d", len(items))
+		}
+		cacheHit, _, _, qErr, done = cache.Lookup(ctx, discAdapter.Name(), sdp.QueryMethod_LIST, scope, discAdapter.Type(), "", false)
+		done()
+		if !cacheHit {
+			t.Fatal("expected cache hit for List(scope)")
+		}
+		if qErr == nil || qErr.GetErrorType() != sdp.QueryError_NOTFOUND {
+			t.Fatalf("expected cached NOTFOUND for List(scope), got %v", qErr)
+		}
+		items, err = listable.List(ctx, scope, false)
+		if err != nil {
+			t.Fatalf("second List(scope): %v", err)
+		}
+		if len(items) != 0 {
+			t.Errorf("second List(scope): expected 0 items, got %d", len(items))
+		}
+	})
+
 	t.Run("Search", func(t *testing.T) {
 		wrapper := manual.NewComputeNodeGroup(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
@@ -257,6 +329,51 @@ func TestComputeNodeGroup(t *testing.T) {
 			if nodeTemplate != testTemplateUrl {
 				t.Fatalf("Expected node_template to be %s, got: %s", testTemplateUrl, nodeTemplate)
 			}
+		}
+	})
+
+	t.Run("SearchCachesNotFoundWithMemoryCache", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		mockClient := mocks.NewMockComputeNodeGroupClient(ctrl)
+		projectID := "cache-test-project"
+		zone := "us-central1-a"
+		scope := projectID + "." + zone
+		query := "https://www.googleapis.com/compute/v1/projects/cache-test-project/zones/us-central1-a/nodeTemplates/nonexistent-template"
+
+		mockIter := mocks.NewMockComputeNodeGroupIterator(ctrl)
+		mockIter.EXPECT().Next().Return(nil, iterator.Done)
+		mockClient.EXPECT().List(ctx, gomock.Any()).Return(mockIter).Times(1)
+
+		wrapper := manual.NewComputeNodeGroup(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
+		cache := sdpcache.NewMemoryCache()
+		adapter := sources.WrapperToAdapter(wrapper, cache)
+		discAdapter := adapter.(discovery.Adapter)
+		searchable := adapter.(discovery.SearchableAdapter)
+
+		items, err := searchable.Search(ctx, scope, query, false)
+		if err != nil {
+			t.Fatalf("first Search: unexpected error: %v", err)
+		}
+		if len(items) != 0 {
+			t.Errorf("first Search: expected 0 items, got %d", len(items))
+		}
+
+		cacheHit, _, _, qErr, done := cache.Lookup(ctx, discAdapter.Name(), sdp.QueryMethod_SEARCH, scope, discAdapter.Type(), query, false)
+		done()
+		if !cacheHit {
+			t.Fatal("expected cache hit for Search after first call")
+		}
+		if qErr == nil || qErr.GetErrorType() != sdp.QueryError_NOTFOUND {
+			t.Fatalf("expected cached NOTFOUND for Search, got %v", qErr)
+		}
+
+		items, err = searchable.Search(ctx, scope, query, false)
+		if err != nil {
+			t.Fatalf("second Search: unexpected error: %v", err)
+		}
+		if len(items) != 0 {
+			t.Errorf("second Search: expected 0 items, got %d", len(items))
 		}
 	})
 

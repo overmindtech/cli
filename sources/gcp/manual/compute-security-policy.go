@@ -109,6 +109,8 @@ func (c computeSecurityPolicyWrapper) ListStream(ctx context.Context, stream dis
 		Project: location.ProjectID,
 	})
 
+	var itemsSent int
+	var hadError bool
 	for {
 		securityPolicy, iterErr := it.Next()
 		if errors.Is(iterErr, iterator.Done) {
@@ -122,10 +124,23 @@ func (c computeSecurityPolicyWrapper) ListStream(ctx context.Context, stream dis
 		item, sdpErr := c.gcpComputeSecurityPolicyToSDPItem(securityPolicy, location)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
+			hadError = true
 			continue
 		}
 
 		stream.SendItem(item)
+		itemsSent++
+	}
+	if itemsSent == 0 && !hadError {
+		notFoundErr := &sdp.QueryError{
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   "no compute security policies found in scope " + scope,
+			Scope:         scope,
+			SourceName:    c.Name(),
+			ItemType:      c.Type(),
+			ResponderName: c.Name(),
+		}
+		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
 	}
 }
 

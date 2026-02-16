@@ -181,6 +181,50 @@ func TestCloudKMSKeyRing(t *testing.T) {
 		}
 	})
 
+	t.Run("ListCachesNotFoundWithMemoryCache", func(t *testing.T) {
+		cache := sdpcache.NewMemoryCache()
+		defer cache.Clear()
+
+		notFoundErr := &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOTFOUND,
+			ErrorString: "no key rings found for list",
+		}
+		listCacheKey := sdpcache.CacheKeyFromParts("gcp-source", sdp.QueryMethod_LIST, projectID, gcpshared.CloudKMSKeyRing.String(), "")
+		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, listCacheKey)
+
+		loader := gcpshared.NewCloudKMSAssetLoader(nil, projectID, cache, "gcp-source", []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		wrapper := manual.NewCloudKMSKeyRing(loader, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		adapter := sources.WrapperToAdapter(wrapper, cache)
+		discAdapter := adapter.(discovery.Adapter)
+		listable := adapter.(discovery.ListableAdapter)
+		scope := wrapper.Scopes()[0]
+
+		items, qErr := listable.List(ctx, scope, false)
+		if qErr != nil {
+			t.Fatalf("first List: unexpected error: %v", qErr)
+		}
+		if len(items) != 0 {
+			t.Errorf("first List: expected 0 items, got %d", len(items))
+		}
+
+		cacheHit, _, _, cachedErr, done := cache.Lookup(ctx, discAdapter.Name(), sdp.QueryMethod_LIST, scope, discAdapter.Type(), "", false)
+		done()
+		if !cacheHit {
+			t.Fatal("expected cache hit for List after first call")
+		}
+		if cachedErr == nil || cachedErr.GetErrorType() != sdp.QueryError_NOTFOUND {
+			t.Fatalf("expected cached NOTFOUND for List, got %v", cachedErr)
+		}
+
+		items, qErr = listable.List(ctx, scope, false)
+		if qErr != nil {
+			t.Fatalf("second List: unexpected error: %v", qErr)
+		}
+		if len(items) != 0 {
+			t.Errorf("second List: expected 0 items, got %d", len(items))
+		}
+	})
+
 	t.Run("Search_CacheHit_ByLocation", func(t *testing.T) {
 		cache := sdpcache.NewCache(ctx)
 		defer cache.Clear()
@@ -219,6 +263,51 @@ func TestCloudKMSKeyRing(t *testing.T) {
 
 		if len(items) != 1 {
 			t.Fatalf("Expected 1 item, got: %d", len(items))
+		}
+	})
+
+	t.Run("SearchCachesNotFoundWithMemoryCache", func(t *testing.T) {
+		cache := sdpcache.NewMemoryCache()
+		defer cache.Clear()
+
+		notFoundErr := &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOTFOUND,
+			ErrorString: "no key rings found for search query",
+		}
+		query := "us-central1"
+		searchCacheKey := sdpcache.CacheKeyFromParts("gcp-source", sdp.QueryMethod_SEARCH, projectID, gcpshared.CloudKMSKeyRing.String(), query)
+		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, searchCacheKey)
+
+		loader := gcpshared.NewCloudKMSAssetLoader(nil, projectID, cache, "gcp-source", []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		wrapper := manual.NewCloudKMSKeyRing(loader, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		adapter := sources.WrapperToAdapter(wrapper, cache)
+		discAdapter := adapter.(discovery.Adapter)
+		searchable := adapter.(discovery.SearchableAdapter)
+		scope := wrapper.Scopes()[0]
+
+		items, qErr := searchable.Search(ctx, scope, query, false)
+		if qErr != nil {
+			t.Fatalf("first Search: unexpected error: %v", qErr)
+		}
+		if len(items) != 0 {
+			t.Errorf("first Search: expected 0 items, got %d", len(items))
+		}
+
+		cacheHit, _, _, cachedErr, done := cache.Lookup(ctx, discAdapter.Name(), sdp.QueryMethod_SEARCH, scope, discAdapter.Type(), query, false)
+		done()
+		if !cacheHit {
+			t.Fatal("expected cache hit for Search after first call")
+		}
+		if cachedErr == nil || cachedErr.GetErrorType() != sdp.QueryError_NOTFOUND {
+			t.Fatalf("expected cached NOTFOUND for Search, got %v", cachedErr)
+		}
+
+		items, qErr = searchable.Search(ctx, scope, query, false)
+		if qErr != nil {
+			t.Fatalf("second Search: unexpected error: %v", qErr)
+		}
+		if len(items) != 0 {
+			t.Errorf("second Search: expected 0 items, got %d", len(items))
 		}
 	})
 

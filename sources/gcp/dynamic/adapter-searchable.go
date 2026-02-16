@@ -11,6 +11,7 @@ import (
 	"github.com/overmindtech/workspace/sdp-go"
 	"github.com/overmindtech/workspace/sdpcache"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
+	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/shared"
 )
 
@@ -78,13 +79,18 @@ func (g SearchableAdapter) Search(ctx context.Context, scope, query string, igno
 	)
 	defer done()
 	if qErr != nil {
+		// For better semantics, convert cached NOTFOUND into empty result
+		if qErr.GetErrorType() == sdp.QueryError_NOTFOUND {
+			return []*sdp.Item{}, nil
+		}
 		log.WithContext(ctx).WithFields(log.Fields{
 			"ovm.source.type":      "gcp",
 			"ovm.source.adapter":   g.Name(),
 			"ovm.source.scope":     scope,
 			"ovm.source.method":    sdp.QueryMethod_SEARCH.String(),
 			"ovm.source.cache-key": ck,
-		}).WithError(qErr).Error("failed to lookup item in cache")
+		}).WithError(qErr).Info("returning cached query error")
+		return nil, qErr
 	}
 
 	if cacheHit {
@@ -101,18 +107,33 @@ func (g SearchableAdapter) Search(ctx context.Context, scope, query string, igno
 	// This is a regular SEARCH call
 	searchEndpoint := g.searchEndpointFunc(query, location)
 	if searchEndpoint == "" {
-		err := &sdp.QueryError{
+		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
 			ErrorString: fmt.Sprintf("no search endpoint found for query \"%s\". %s", query, g.Metadata().GetSupportedQueryMethods().GetSearchDescription()),
 		}
-		g.cache.StoreError(ctx, err, shared.DefaultCacheDuration, ck)
-		return nil, err
 	}
 
 	items, err := aggregateSDPItems(ctx, g.Adapter, searchEndpoint, location)
 	if err != nil {
-		g.cache.StoreError(ctx, err, shared.DefaultCacheDuration, ck)
+		if sources.IsNotFound(err) {
+			g.cache.StoreError(ctx, err, shared.DefaultCacheDuration, ck)
+			return []*sdp.Item{}, nil
+		}
 		return nil, err
+	}
+
+	if len(items) == 0 {
+		// Cache not-found when no items were found
+		notFoundErr := &sdp.QueryError{
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   fmt.Sprintf("no %s found for search query '%s'", g.Type(), query),
+			Scope:         scope,
+			SourceName:    g.Name(),
+			ItemType:      g.Type(),
+			ResponderName: g.Name(),
+		}
+		g.cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, ck)
+		return items, nil
 	}
 
 	for _, item := range items {
@@ -140,13 +161,19 @@ func (g SearchableAdapter) SearchStream(ctx context.Context, scope, query string
 	)
 	defer done()
 	if qErr != nil {
+		// For better semantics, convert cached NOTFOUND into empty result
+		if qErr.GetErrorType() == sdp.QueryError_NOTFOUND {
+			return
+		}
 		log.WithContext(ctx).WithFields(log.Fields{
 			"ovm.source.type":      "gcp",
 			"ovm.source.adapter":   g.Name(),
 			"ovm.source.scope":     scope,
 			"ovm.source.method":    sdp.QueryMethod_SEARCH.String(),
 			"ovm.source.cache-key": ck,
-		}).WithError(qErr).Error("failed to lookup item in cache")
+		}).WithError(qErr).Info("returning cached query error")
+		stream.SendError(qErr)
+		return
 	}
 
 	if cacheHit {
@@ -167,6 +194,10 @@ func (g SearchableAdapter) SearchStream(ctx context.Context, scope, query string
 				ErrorType:   sdp.QueryError_OTHER,
 				ErrorString: fmt.Sprintf("failed to execute terraform mapping search for query \"%s\": %v", query, err),
 			})
+			return
+		}
+		if len(items) == 0 {
+			// NOTFOUND: terraformMappingViaSearch returns ([], nil); send nothing (matches cached NOTFOUND behaviour)
 			return
 		}
 		g.cache.StoreItem(ctx, items[0], shared.DefaultCacheDuration, ck)

@@ -201,6 +201,8 @@ func (c computeImageWrapper) ListStream(ctx context.Context, stream discovery.Qu
 		Project: location.ProjectID,
 	})
 
+	var itemsSent int
+	var hadError bool
 	for {
 		image, iterErr := it.Next()
 		if errors.Is(iterErr, iterator.Done) {
@@ -214,11 +216,24 @@ func (c computeImageWrapper) ListStream(ctx context.Context, stream discovery.Qu
 		item, sdpErr := c.gcpComputeImageToSDPItem(ctx, image, location)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
+			hadError = true
 			continue
 		}
 
 		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
+		itemsSent++
+	}
+	if itemsSent == 0 && !hadError {
+		notFoundErr := &sdp.QueryError{
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   "no compute images found in scope " + scope,
+			Scope:         scope,
+			SourceName:    c.Name(),
+			ItemType:      c.Type(),
+			ResponderName: c.Name(),
+		}
+		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
 	}
 }
 

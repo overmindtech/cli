@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"sync/atomic"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/sourcegraph/conc/pool"
@@ -189,6 +190,8 @@ func (c computeBackendServiceWrapper) ListStream(ctx context.Context, stream dis
 	}
 
 	// Route to the appropriate API based on whether the scope includes a region
+	var itemsSent int
+	var hadError bool
 	if location.Regional() {
 		// Regional backend services
 		it := c.regionalClient.List(ctx, &computepb.ListRegionBackendServicesRequest{
@@ -209,11 +212,13 @@ func (c computeBackendServiceWrapper) ListStream(ctx context.Context, stream dis
 			item, sdpErr := gcpComputeBackendServiceToSDPItem(ctx, location.ProjectID, location.ToScope(), backendService, gcpshared.ComputeBackendService)
 			if sdpErr != nil {
 				stream.SendError(sdpErr)
+				hadError = true
 				continue
 			}
 
 			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 			stream.SendItem(item)
+			itemsSent++
 		}
 	} else {
 		// Global backend services
@@ -234,12 +239,25 @@ func (c computeBackendServiceWrapper) ListStream(ctx context.Context, stream dis
 			item, sdpErr := gcpComputeBackendServiceToSDPItem(ctx, location.ProjectID, location.ToScope(), backendService, gcpshared.ComputeBackendService)
 			if sdpErr != nil {
 				stream.SendError(sdpErr)
+				hadError = true
 				continue
 			}
 
 			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 			stream.SendItem(item)
+			itemsSent++
 		}
+	}
+	if itemsSent == 0 && !hadError {
+		notFoundErr := &sdp.QueryError{
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   "no compute backend services found in scope " + scope,
+			Scope:         scope,
+			SourceName:    c.Name(),
+			ItemType:      c.Type(),
+			ResponderName: c.Name(),
+		}
+		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
 	}
 }
 
@@ -250,6 +268,8 @@ func (c computeBackendServiceWrapper) listAggregatedStream(ctx context.Context, 
 
 	// Use a pool with 10x concurrency to parallelize AggregatedList calls
 	p := pool.New().WithMaxGoroutines(10).WithContext(ctx)
+	var itemsSent atomic.Int32
+	var hadError atomic.Bool
 
 	for _, projectID := range projectIDs {
 		p.Go(func(ctx context.Context) error {
@@ -265,6 +285,7 @@ func (c computeBackendServiceWrapper) listAggregatedStream(ctx context.Context, 
 				}
 				if iterErr != nil {
 					stream.SendError(gcpshared.QueryError(iterErr, projectID, c.Type()))
+					hadError.Store(true)
 					return iterErr
 				}
 
@@ -285,11 +306,13 @@ func (c computeBackendServiceWrapper) listAggregatedStream(ctx context.Context, 
 						item, sdpErr := gcpComputeBackendServiceToSDPItem(ctx, scopeLocation.ProjectID, scopeLocation.ToScope(), backendService, gcpshared.ComputeBackendService)
 						if sdpErr != nil {
 							stream.SendError(sdpErr)
+							hadError.Store(true)
 							continue
 						}
 
 						cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 						stream.SendItem(item)
+						itemsSent.Add(1)
 					}
 				}
 			}
@@ -300,6 +323,17 @@ func (c computeBackendServiceWrapper) listAggregatedStream(ctx context.Context, 
 
 	// Wait for all goroutines to complete
 	_ = p.Wait()
+	if itemsSent.Load() == 0 && !hadError.Load() {
+		notFoundErr := &sdp.QueryError{
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   "no compute backend services found in scope *",
+			Scope:         "*",
+			SourceName:    c.Name(),
+			ItemType:      c.Type(),
+			ResponderName: c.Name(),
+		}
+		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
+	}
 }
 
 func gcpComputeBackendServiceToSDPItem(ctx context.Context, projectID string, scope string, bs *computepb.BackendService, itemType shared.ItemType) (*sdp.Item, *sdp.QueryError) {

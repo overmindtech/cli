@@ -127,6 +127,8 @@ func (c iamServiceAccountWrapper) ListStream(ctx context.Context, stream discove
 
 	results := c.client.List(ctx, req)
 
+	var itemsSent int
+	var hadError bool
 	for {
 		sa, iterErr := results.Next()
 		if errors.Is(iterErr, iterator.Done) {
@@ -140,11 +142,24 @@ func (c iamServiceAccountWrapper) ListStream(ctx context.Context, stream discove
 		item, sdpErr := c.gcpIAMServiceAccountToSDPItem(sa, location)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
+			hadError = true
 			continue
 		}
 
 		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
+		itemsSent++
+	}
+	if itemsSent == 0 && !hadError {
+		notFoundErr := &sdp.QueryError{
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   "no IAM service accounts found in scope " + scope,
+			Scope:         scope,
+			SourceName:    c.Name(),
+			ItemType:      c.Type(),
+			ResponderName: c.Name(),
+		}
+		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
 	}
 }
 

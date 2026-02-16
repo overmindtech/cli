@@ -12,6 +12,7 @@ import (
 	"github.com/overmindtech/workspace/sdp-go"
 	"github.com/overmindtech/workspace/sdpcache"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
+	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/shared"
 )
 
@@ -130,13 +131,18 @@ func (g Adapter) Get(ctx context.Context, scope string, query string, ignoreCach
 	)
 	defer done()
 	if qErr != nil {
+		// For better semantics, convert cached NOTFOUND into nil result
+		if qErr.GetErrorType() == sdp.QueryError_NOTFOUND {
+			return nil, qErr
+		}
 		log.WithContext(ctx).WithFields(log.Fields{
 			"ovm.source.type":      "gcp",
 			"ovm.source.adapter":   g.Name(),
 			"ovm.source.scope":     scope,
 			"ovm.source.method":    sdp.QueryMethod_GET.String(),
 			"ovm.source.cache-key": ck,
-		}).WithError(qErr).Error("failed to lookup item in cache")
+		}).WithError(qErr).Info("returning cached query error")
+		return nil, qErr
 	}
 
 	if cacheHit && len(cachedItem) > 0 {
@@ -153,19 +159,24 @@ func (g Adapter) Get(ctx context.Context, scope string, query string, ignoreCach
 				g.Metadata().GetSupportedQueryMethods().GetGetDescription(),
 			),
 		}
-		g.cache.StoreError(ctx, err, shared.DefaultCacheDuration, ck)
 		return nil, err
 	}
 
 	resp, err := externalCallSingle(ctx, g.httpCli, url)
 	if err != nil {
-		g.cache.StoreError(ctx, err, shared.DefaultCacheDuration, ck)
+		enrichNOTFOUNDQueryError(err, scope, g.Name(), g.Type())
+		if sources.IsNotFound(err) {
+			g.cache.StoreError(ctx, err, shared.DefaultCacheDuration, ck)
+		}
 		return nil, err
 	}
 
 	item, err := externalToSDP(ctx, location, g.uniqueAttributeKeys, resp, g.sdpAssetType, g.linker, g.nameSelector)
 	if err != nil {
-		g.cache.StoreError(ctx, err, shared.DefaultCacheDuration, ck)
+		enrichNOTFOUNDQueryError(err, scope, g.Name(), g.Type())
+		if sources.IsNotFound(err) {
+			g.cache.StoreError(ctx, err, shared.DefaultCacheDuration, ck)
+		}
 		return nil, err
 	}
 
