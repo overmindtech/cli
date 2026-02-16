@@ -107,6 +107,8 @@ func (l loggingSinkWrapper) ListStream(ctx context.Context, stream discovery.Que
 		Parent: fmt.Sprintf("projects/%s", location.ProjectID),
 	})
 
+	var itemsSent int
+	var hadError bool
 	for {
 		sink, iterErr := it.Next()
 		if errors.Is(iterErr, iterator.Done) {
@@ -120,11 +122,24 @@ func (l loggingSinkWrapper) ListStream(ctx context.Context, stream discovery.Que
 		item, sdpErr := l.gcpLoggingSinkToItem(sink, location)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
+			hadError = true
 			continue
 		}
 
 		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
+		itemsSent++
+	}
+	if itemsSent == 0 && !hadError {
+		notFoundErr := &sdp.QueryError{
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   "no logging sinks found in scope " + scope,
+			Scope:         scope,
+			SourceName:    l.Name(),
+			ItemType:      l.Type(),
+			ResponderName: l.Name(),
+		}
+		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
 	}
 }
 

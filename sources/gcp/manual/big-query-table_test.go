@@ -200,6 +200,49 @@ func TestBigQueryTable(t *testing.T) {
 		}
 	})
 
+	t.Run("SearchCachesNotFoundWithMemoryCache", func(t *testing.T) {
+		ctrl := gomock.NewController(t)
+		defer ctrl.Finish()
+		mockClient := mocks.NewMockBigQueryTableClient(ctrl)
+		projectID := "cache-test-project"
+		scope := projectID
+		datasetID := "empty_dataset"
+		query := datasetID
+
+		mockClient.EXPECT().List(gomock.Any(), projectID, datasetID, gomock.Any()).Return([]*sdp.Item{}, nil).Times(1)
+
+		wrapper := manual.NewBigQueryTable(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		cache := sdpcache.NewMemoryCache()
+		adapter := sources.WrapperToAdapter(wrapper, cache)
+		discAdapter := adapter.(discovery.Adapter)
+		searchable := adapter.(discovery.SearchableAdapter)
+
+		items, err := searchable.Search(ctx, scope, query, false)
+		if err != nil {
+			t.Fatalf("first Search: unexpected error: %v", err)
+		}
+		if len(items) != 0 {
+			t.Errorf("first Search: expected 0 items, got %d", len(items))
+		}
+
+		cacheHit, _, _, qErr, done := cache.Lookup(ctx, discAdapter.Name(), sdp.QueryMethod_SEARCH, scope, discAdapter.Type(), query, false)
+		done()
+		if !cacheHit {
+			t.Fatal("expected cache hit for Search after first call")
+		}
+		if qErr == nil || qErr.GetErrorType() != sdp.QueryError_NOTFOUND {
+			t.Fatalf("expected cached NOTFOUND for Search, got %v", qErr)
+		}
+
+		items, err = searchable.Search(ctx, scope, query, false)
+		if err != nil {
+			t.Fatalf("second Search: unexpected error: %v", err)
+		}
+		if len(items) != 0 {
+			t.Errorf("second Search: expected 0 items, got %d", len(items))
+		}
+	})
+
 	t.Run("List_Unsupported", func(t *testing.T) {
 		wrapper := manual.NewBigQueryTable(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())

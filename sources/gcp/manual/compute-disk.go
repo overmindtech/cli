@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"strings"
+	"sync/atomic"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/sourcegraph/conc/pool"
@@ -135,6 +136,8 @@ func (c computeDiskWrapper) ListStream(ctx context.Context, stream discovery.Que
 		Zone:    location.Zone,
 	})
 
+	var itemsSent int
+	var hadError bool
 	for {
 		disk, iterErr := it.Next()
 		if errors.Is(iterErr, iterator.Done) {
@@ -148,11 +151,24 @@ func (c computeDiskWrapper) ListStream(ctx context.Context, stream discovery.Que
 		item, sdpErr := c.gcpComputeDiskToSDPItem(ctx, disk, location)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
+			hadError = true
 			continue
 		}
 
 		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
+		itemsSent++
+	}
+	if itemsSent == 0 && !hadError {
+		notFoundErr := &sdp.QueryError{
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   "no compute disks found in scope " + scope,
+			Scope:         scope,
+			SourceName:    c.Name(),
+			ItemType:      c.Type(),
+			ResponderName: c.Name(),
+		}
+		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
 	}
 }
 
@@ -163,6 +179,8 @@ func (c computeDiskWrapper) listAggregatedStream(ctx context.Context, stream dis
 
 	// Use a pool with 10x concurrency to parallelize AggregatedList calls
 	p := pool.New().WithMaxGoroutines(10).WithContext(ctx)
+	var itemsSent atomic.Int32
+	var hadError atomic.Bool
 
 	for _, projectID := range projectIDs {
 		p.Go(func(ctx context.Context) error {
@@ -178,6 +196,7 @@ func (c computeDiskWrapper) listAggregatedStream(ctx context.Context, stream dis
 				}
 				if iterErr != nil {
 					stream.SendError(gcpshared.QueryError(iterErr, projectID, c.Type()))
+					hadError.Store(true)
 					return iterErr
 				}
 
@@ -198,11 +217,13 @@ func (c computeDiskWrapper) listAggregatedStream(ctx context.Context, stream dis
 						item, sdpErr := c.gcpComputeDiskToSDPItem(ctx, disk, scopeLocation)
 						if sdpErr != nil {
 							stream.SendError(sdpErr)
+							hadError.Store(true)
 							continue
 						}
 
 						cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 						stream.SendItem(item)
+						itemsSent.Add(1)
 					}
 				}
 			}
@@ -213,6 +234,17 @@ func (c computeDiskWrapper) listAggregatedStream(ctx context.Context, stream dis
 
 	// Wait for all goroutines to complete
 	_ = p.Wait()
+	if itemsSent.Load() == 0 && !hadError.Load() {
+		notFoundErr := &sdp.QueryError{
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   "no compute disks found in scope *",
+			Scope:         "*",
+			SourceName:    c.Name(),
+			ItemType:      c.Type(),
+			ResponderName: c.Name(),
+		}
+		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
+	}
 }
 
 func (c computeDiskWrapper) gcpComputeDiskToSDPItem(ctx context.Context, disk *computepb.Disk, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {

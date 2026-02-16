@@ -112,6 +112,8 @@ func (c computeSnapshotWrapper) ListStream(ctx context.Context, stream discovery
 		Project: location.ProjectID,
 	})
 
+	var itemsSent int
+	var hadError bool
 	for {
 		snapshot, iterErr := it.Next()
 		if errors.Is(iterErr, iterator.Done) {
@@ -125,11 +127,24 @@ func (c computeSnapshotWrapper) ListStream(ctx context.Context, stream discovery
 		item, sdpErr := c.gcpComputeSnapshotToSDPItem(ctx, snapshot, location)
 		if sdpErr != nil {
 			stream.SendError(sdpErr)
+			hadError = true
 			continue
 		}
 
 		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 		stream.SendItem(item)
+		itemsSent++
+	}
+	if itemsSent == 0 && !hadError {
+		notFoundErr := &sdp.QueryError{
+			ErrorType:     sdp.QueryError_NOTFOUND,
+			ErrorString:   "no compute snapshots found in scope " + scope,
+			Scope:         scope,
+			SourceName:    c.Name(),
+			ItemType:      c.Type(),
+			ResponderName: c.Name(),
+		}
+		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
 	}
 }
 
