@@ -25,9 +25,12 @@ func TestSearch(t *testing.T) {
 
 	t.Run("with a bad DNS name", func(t *testing.T) {
 		_, err := s.Search(context.Background(), "global", "not.real.overmind.tech", false)
-
 		if err == nil {
-			t.Error("expected error")
+			t.Error("expected error for non-existent name")
+		}
+		var qe *sdp.QueryError
+		if !errors.As(err, &qe) || qe.GetErrorType() != sdp.QueryError_NOTFOUND {
+			t.Errorf("expected NOTFOUND error, got %v", err)
 		}
 	})
 
@@ -64,6 +67,40 @@ func TestSearch(t *testing.T) {
 		}
 
 		discovery.TestValidateItems(t, items)
+	})
+
+	t.Run("Search returns same NOTFOUND for first and second call", func(t *testing.T) {
+		// First call (fresh NOTFOUND) and second call (cached NOTFOUND) must return the same: nil items, same error
+		cache := sdpcache.NewMemoryCache()
+		cachedSrc := DNSAdapter{cache: cache, Servers: s.Servers}
+		query := "not.real.overmind.tech"
+
+		first, err1 := cachedSrc.Search(context.Background(), "global", query, false)
+		if err1 == nil {
+			t.Fatal("first Search: expected NOTFOUND error, got nil")
+		}
+		if first != nil {
+			t.Errorf("first Search: expected nil items, got len=%d", len(first))
+		}
+		var qe *sdp.QueryError
+		if !errors.As(err1, &qe) || qe.GetErrorType() != sdp.QueryError_NOTFOUND {
+			t.Errorf("first Search: expected NOTFOUND, got %v", err1)
+		}
+		firstErrStr := err1.Error()
+
+		second, err2 := cachedSrc.Search(context.Background(), "global", query, false)
+		if err2 == nil {
+			t.Fatal("second Search: expected NOTFOUND error, got nil")
+		}
+		if second != nil {
+			t.Errorf("second Search: expected nil items, got len=%d", len(second))
+		}
+		if !errors.As(err2, &qe) || qe.GetErrorType() != sdp.QueryError_NOTFOUND {
+			t.Errorf("second Search: expected NOTFOUND, got %v", err2)
+		}
+		if err2.Error() != firstErrStr {
+			t.Errorf("first and second Search must return same error message: first %q, second %q", firstErrStr, err2.Error())
+		}
 	})
 
 	t.Run("with an IP and therefore reverse DNS", func(t *testing.T) {
@@ -139,6 +176,52 @@ func TestDnsGet(t *testing.T) {
 		var e *sdp.QueryError
 		if !errors.As(err, &e) {
 			t.Errorf("expected error type to be *sdp.QueryError, got %T", err)
+		}
+	})
+
+	t.Run("GET returns NOTFOUND when cache has NOTFOUND", func(t *testing.T) {
+		cache := sdpcache.NewMemoryCache()
+		cachedSrc := DNSAdapter{cache: cache}
+		query := "cached.notfound.get.example"
+
+		// Pre-seed cache with NOTFOUND (simulates a previous Get that got 0 records)
+		ck := sdpcache.CacheKeyFromParts(cachedSrc.Name(), sdp.QueryMethod_GET, "global", cachedSrc.Type(), query)
+		notFoundErr := &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOTFOUND,
+			ErrorString: "no DNS records found",
+			Scope:       "global",
+			SourceName:  cachedSrc.Name(),
+			ItemType:    cachedSrc.Type(),
+		}
+		cache.StoreError(context.Background(), notFoundErr, dnsCacheDuration, ck)
+
+		// Get should return cached NOTFOUND without doing a DNS lookup
+		item, err := cachedSrc.Get(context.Background(), "global", query, false)
+		if item != nil {
+			t.Errorf("expected nil item, got %v", item)
+		}
+		if err == nil {
+			t.Fatal("expected NOTFOUND error, got nil")
+		}
+		var qErr *sdp.QueryError
+		if !errors.As(err, &qErr) || qErr.GetErrorType() != sdp.QueryError_NOTFOUND {
+			t.Errorf("expected NOTFOUND, got %v", err)
+		}
+
+		// Second Get: should still return cached NOTFOUND (same response as first)
+		firstErrStr := err.Error()
+		item, err = cachedSrc.Get(context.Background(), "global", query, false)
+		if item != nil {
+			t.Errorf("second Get: expected nil item, got %v", item)
+		}
+		if err == nil {
+			t.Fatal("second Get: expected NOTFOUND error, got nil")
+		}
+		if !errors.As(err, &qErr) || qErr.GetErrorType() != sdp.QueryError_NOTFOUND {
+			t.Errorf("second Get: expected NOTFOUND, got %v", err)
+		}
+		if err.Error() != firstErrStr {
+			t.Errorf("first and second Get must return same error message: first %q, second %q", firstErrStr, err.Error())
 		}
 	})
 
