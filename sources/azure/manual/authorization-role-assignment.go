@@ -227,11 +227,41 @@ func (a authorizationRoleAssignmentWrapper) GetLookups() sources.ItemTypeLookups
 	}
 }
 
+// SearchLookups defines how the source can be searched (e.g. by role assignment name within a scope).
+// Used when TerraformMethod is SEARCH (azurerm_role_assignment.id).
+func (a authorizationRoleAssignmentWrapper) SearchLookups() []sources.ItemTypeLookups {
+	return []sources.ItemTypeLookups{
+		{
+			AuthorizationRoleAssignmentLookupByName,
+		},
+	}
+}
+
+// Search resolves a role assignment by name within the given scope.
+// Supports Terraform SEARCH resolution when the query is the role assignment name (or extracted from Azure resource ID by the transformer).
+func (a authorizationRoleAssignmentWrapper) Search(ctx context.Context, scope string, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
+	if len(queryParts) != 1 {
+		return nil, azureshared.QueryError(errors.New("Search requires 1 query part: roleAssignmentName"), scope, a.Type())
+	}
+	roleAssignmentName := queryParts[0]
+	if roleAssignmentName == "" {
+		return nil, azureshared.QueryError(errors.New("roleAssignmentName cannot be empty"), scope, a.Type())
+	}
+	item, qErr := a.Get(ctx, scope, roleAssignmentName)
+	if qErr != nil {
+		return nil, qErr
+	}
+	return []*sdp.Item{item}, nil
+}
+
 // ref: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment
 func (a authorizationRoleAssignmentWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
-			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformMethod: sdp.QueryMethod_SEARCH,
+			// https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment
+			// Terraform uses: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Authorization/roleAssignments/{roleAssignmentName}
+			// Or: /subscriptions/{sub}/providers/Microsoft.Authorization/roleAssignments/{roleAssignmentName}
 			TerraformQueryMap: "azurerm_role_assignment.id",
 		},
 	}
