@@ -9,6 +9,7 @@ import (
 	compute "cloud.google.com/go/compute/apiv1"
 	iamAdmin "cloud.google.com/go/iam/admin/apiv1"
 	logging "cloud.google.com/go/logging/apiv2"
+	"cloud.google.com/go/storage"
 	"golang.org/x/oauth2"
 	"google.golang.org/api/option"
 
@@ -50,6 +51,7 @@ func Adapters(ctx context.Context, projectLocations, regionLocations, zoneLocati
 		nodeTemplateCli           *compute.NodeTemplatesClient
 		regionBackendServiceCli   *compute.RegionBackendServicesClient
 		regionHealthCheckCli      *compute.RegionHealthChecksClient
+		storageCli                *storage.Client
 	)
 
 	if initGCPClients {
@@ -222,6 +224,11 @@ func Adapters(ctx context.Context, projectLocations, regionLocations, zoneLocati
 		if err != nil {
 			return nil, fmt.Errorf("failed to create compute region health checks client: %w", err)
 		}
+
+		storageCli, err = storage.NewClient(ctx, opts...)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create storage client: %w", err)
+		}
 	}
 
 	var adapters []discovery.Adapter
@@ -290,6 +297,7 @@ func Adapters(ctx context.Context, projectLocations, regionLocations, zoneLocati
 			sources.WrapperToAdapter(NewBigQueryDataset(shared.NewBigQueryDatasetClient(bigQueryDatasetCli), projectLocations), cache),
 			sources.WrapperToAdapter(NewLoggingSink(shared.NewLoggingConfigClient(loggingConfigCli), projectLocations), cache),
 			sources.WrapperToAdapter(NewBigQueryRoutine(shared.NewBigQueryRoutineClient(bigQueryDatasetCli), projectLocations), cache),
+			sources.WrapperToAdapter(NewStorageBucketIAMPolicy(shared.NewStorageBucketIAMPolicyGetter(storageCli), projectLocations), cache),
 		)
 	}
 

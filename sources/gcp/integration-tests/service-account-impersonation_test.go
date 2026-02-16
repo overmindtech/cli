@@ -13,12 +13,13 @@ import (
 
 	compute "cloud.google.com/go/compute/apiv1"
 	"cloud.google.com/go/compute/apiv1/computepb"
+	authcredentials "cloud.google.com/go/auth/credentials"
+	"cloud.google.com/go/auth/oauth2adapt"
 	credentials "cloud.google.com/go/iam/credentials/apiv1"
 	credentialspb "cloud.google.com/go/iam/credentials/apiv1/credentialspb"
 	"github.com/google/uuid"
 	"github.com/googleapis/gax-go/v2/apierror"
 	"golang.org/x/oauth2"
-	"golang.org/x/oauth2/google"
 	cloudresourcemanager "google.golang.org/api/cloudresourcemanager/v1"
 	"google.golang.org/api/googleapi"
 	"google.golang.org/api/iam/v1"
@@ -49,7 +50,8 @@ func TestServiceAccountImpersonationIntegration(t *testing.T) {
 	// Initialize Cloud Resource Manager service
 	crmService, err := cloudresourcemanager.NewService(t.Context())
 	if err != nil {
-		t.Fatalf("Failed to create Cloud Resource Manager service: %v", err)
+		t.Errorf("Failed to create Cloud Resource Manager service: %v", err)
+		return
 	}
 
 	state := &testState{
@@ -59,7 +61,8 @@ func TestServiceAccountImpersonationIntegration(t *testing.T) {
 	// Initialize IAM service using Application Default Credentials
 	iamService, err := iam.NewService(t.Context())
 	if err != nil {
-		t.Fatalf("Failed to create IAM service: %v", err)
+		t.Errorf("Failed to create IAM service: %v", err)
+		return
 	}
 
 	// Create UUIDs for service account names
@@ -73,7 +76,9 @@ func TestServiceAccountImpersonationIntegration(t *testing.T) {
 
 	// since this test needs to keep state between tests, we wrap it in a Run function
 	t.Run("Run", func(t *testing.T) {
-		setupTest(t, t.Context(), iamService, crmService, state)
+		if !setupTest(t, t.Context(), iamService, crmService, state) {
+			return
+		}
 
 		t.Cleanup(func() {
 			teardownTest(t, t.Context(), iamService, crmService, state)
@@ -94,12 +99,13 @@ func TestServiceAccountImpersonationIntegration(t *testing.T) {
 	})
 }
 
-func setupTest(t *testing.T, ctx context.Context, iamService *iam.Service, crmService *cloudresourcemanager.Service, state *testState) {
+func setupTest(t *testing.T, ctx context.Context, iamService *iam.Service, crmService *cloudresourcemanager.Service, state *testState) bool {
 	// Create "Our Service Account"
 	t.Logf("Creating 'Our Service Account': %s", state.ourServiceAccountID)
 	ourSA, err := createServiceAccount(ctx, iamService, state.projectID, state.ourServiceAccountID, "Our Service Account for impersonation test")
 	if err != nil {
-		t.Fatalf("Failed to create 'Our Service Account': %v", err)
+		t.Errorf("Failed to create 'Our Service Account': %v", err)
+		return false
 	}
 	state.ourServiceAccountEmail = ourSA.Email
 	t.Logf("Created 'Our Service Account': %s", state.ourServiceAccountEmail)
@@ -108,7 +114,8 @@ func setupTest(t *testing.T, ctx context.Context, iamService *iam.Service, crmSe
 	t.Logf("Creating 'Customer Service Account': %s", state.customerServiceAccountID)
 	customerSA, err := createServiceAccount(ctx, iamService, state.projectID, state.customerServiceAccountID, "Customer Service Account for impersonation test")
 	if err != nil {
-		t.Fatalf("Failed to create 'Customer Service Account': %v", err)
+		t.Errorf("Failed to create 'Customer Service Account': %v", err)
+		return false
 	}
 	state.customerServiceAccountEmail = customerSA.Email
 	t.Logf("Created 'Customer Service Account': %s", state.customerServiceAccountEmail)
@@ -136,7 +143,8 @@ func setupTest(t *testing.T, ctx context.Context, iamService *iam.Service, crmSe
 		if attempt < maxAttempts {
 			time.Sleep(1 * time.Second)
 		} else {
-			t.Fatalf("Service account verification failed after %d attempts. The service accounts may not have been created correctly.", maxAttempts)
+			t.Errorf("Service account verification failed after %d attempts. The service accounts may not have been created correctly.", maxAttempts)
+			return false
 		}
 	}
 
@@ -144,7 +152,8 @@ func setupTest(t *testing.T, ctx context.Context, iamService *iam.Service, crmSe
 	t.Logf("Granting impersonation permission to 'Our Service Account'")
 	err = grantServiceAccountTokenCreator(ctx, iamService, state.projectID, state.customerServiceAccountEmail, state.ourServiceAccountEmail)
 	if err != nil {
-		t.Fatalf("Failed to grant serviceAccountTokenCreator role: %v", err)
+		t.Errorf("Failed to grant serviceAccountTokenCreator role: %v", err)
+		return false
 	}
 
 	// Verify IAM policy binding is effective
@@ -164,7 +173,8 @@ func setupTest(t *testing.T, ctx context.Context, iamService *iam.Service, crmSe
 		if attempt < maxAttempts {
 			time.Sleep(1 * time.Second)
 		} else {
-			t.Fatalf("IAM policy binding verification failed after %d attempts. The role may not have been granted correctly.", maxAttempts)
+			t.Errorf("IAM policy binding verification failed after %d attempts. The role may not have been granted correctly.", maxAttempts)
+			return false
 		}
 	}
 
@@ -172,7 +182,8 @@ func setupTest(t *testing.T, ctx context.Context, iamService *iam.Service, crmSe
 	t.Logf("Granting roles/compute.viewer to 'Customer Service Account' at project level")
 	err = grantProjectIAMRole(ctx, crmService, state.projectID, state.customerServiceAccountEmail, "roles/compute.viewer")
 	if err != nil {
-		t.Fatalf("Failed to grant roles/compute.viewer role: %v", err)
+		t.Errorf("Failed to grant roles/compute.viewer role: %v", err)
+		return false
 	}
 
 	// Create service account keys for authentication
@@ -181,7 +192,8 @@ func setupTest(t *testing.T, ctx context.Context, iamService *iam.Service, crmSe
 	// Create key for "Our Service Account"
 	ourKey, err := createServiceAccountKey(ctx, iamService, state.projectID, state.ourServiceAccountEmail)
 	if err != nil {
-		t.Fatalf("Failed to create key for 'Our Service Account': %v", err)
+		t.Errorf("Failed to create key for 'Our Service Account': %v", err)
+		return false
 	}
 	state.ourServiceAccountKey = []byte(ourKey.PrivateKeyData)
 	state.ourServiceAccountKeyID = extractKeyID(ourKey.Name)
@@ -190,7 +202,8 @@ func setupTest(t *testing.T, ctx context.Context, iamService *iam.Service, crmSe
 	// Create key for "Customer Service Account"
 	customerKey, err := createServiceAccountKey(ctx, iamService, state.projectID, state.customerServiceAccountEmail)
 	if err != nil {
-		t.Fatalf("Failed to create key for 'Customer Service Account': %v", err)
+		t.Errorf("Failed to create key for 'Customer Service Account': %v", err)
+		return false
 	}
 	state.customerServiceAccountKey = []byte(customerKey.PrivateKeyData)
 	state.customerServiceAccountKeyID = extractKeyID(customerKey.Name)
@@ -201,21 +214,25 @@ func setupTest(t *testing.T, ctx context.Context, iamService *iam.Service, crmSe
 	t.Log("Verifying permission is actually effective by attempting GenerateAccessToken...")
 	keyData, err := base64.StdEncoding.DecodeString(string(state.ourServiceAccountKey))
 	if err != nil {
-		t.Fatalf("Failed to decode service account key for verification: %v", err)
+		t.Errorf("Failed to decode service account key for verification: %v", err)
+		return false
 	}
 
 	maxAttempts = 60 // Allow more time for enforcement
 	for attempt := 1; attempt <= maxAttempts; attempt++ {
 		// Create credentials from "Our Service Account" key
-		testCreds, err := google.CredentialsFromJSONWithType(ctx, keyData, google.ServiceAccount, iam.CloudPlatformScope)
+		testCreds, err := authcredentials.NewCredentialsFromJSON(authcredentials.ServiceAccount, keyData, &authcredentials.DetectOptions{Scopes: []string{iam.CloudPlatformScope}})
 		if err != nil {
-			t.Fatalf("Failed to create credentials for verification: %v", err)
+			t.Errorf("Failed to create credentials for verification: %v", err)
+			return false
 		}
+		testTokenSource := oauth2adapt.TokenSourceFromTokenProvider(testCreds)
 
 		// Create IAM Credentials client
-		testClient, err := credentials.NewIamCredentialsClient(ctx, option.WithTokenSource(testCreds.TokenSource))
+		testClient, err := credentials.NewIamCredentialsClient(ctx, option.WithTokenSource(testTokenSource))
 		if err != nil {
-			t.Fatalf("Failed to create IAM Credentials client for verification: %v", err)
+			t.Errorf("Failed to create IAM Credentials client for verification: %v", err)
+			return false
 		}
 
 		// Attempt to generate a token to verify the permission is actually effective
@@ -235,9 +252,11 @@ func setupTest(t *testing.T, ctx context.Context, iamService *iam.Service, crmSe
 			t.Logf("Attempt %d/%d: Permission not yet effective, error: %v, waiting...", attempt, maxAttempts, err)
 			time.Sleep(2 * time.Second)
 		} else {
-			t.Fatalf("Permission verification failed after %d attempts. The permission may not be enforced yet. Last error: %v", maxAttempts, err)
+			t.Errorf("Permission verification failed after %d attempts. The permission may not be enforced yet. Last error: %v", maxAttempts, err)
+			return false
 		}
 	}
+	return true
 }
 
 func testOurServiceAccountDirectAuth(t *testing.T, ctx context.Context, state *testState) {
@@ -246,20 +265,24 @@ func testOurServiceAccountDirectAuth(t *testing.T, ctx context.Context, state *t
 	// Decode the service account key
 	keyData, err := base64.StdEncoding.DecodeString(string(state.ourServiceAccountKey))
 	if err != nil {
-		t.Fatalf("Failed to decode service account key: %v", err)
+		t.Errorf("Failed to decode service account key: %v", err)
+		return
 	}
 
 	// Create credentials from the key
-	creds, err := google.CredentialsFromJSONWithType(ctx, keyData, google.ServiceAccount, compute.DefaultAuthScopes()...)
+	creds, err := authcredentials.NewCredentialsFromJSON(authcredentials.ServiceAccount, keyData, &authcredentials.DetectOptions{Scopes: compute.DefaultAuthScopes()})
 	if err != nil {
 		t.Logf("Key data: %s", string(keyData))
-		t.Fatalf("Failed to create credentials from key: %v", err)
+		t.Errorf("Failed to create credentials from key: %v", err)
+		return
 	}
+	tokenSource := oauth2adapt.TokenSourceFromTokenProvider(creds)
 
 	// Create Compute Engine client using these credentials
-	client, err := compute.NewInstancesRESTClient(ctx, option.WithTokenSource(creds.TokenSource))
+	client, err := compute.NewInstancesRESTClient(ctx, option.WithTokenSource(tokenSource))
 	if err != nil {
-		t.Fatalf("Failed to create Compute client: %v", err)
+		t.Errorf("Failed to create Compute client: %v", err)
+		return
 	}
 	defer client.Close()
 
@@ -279,7 +302,8 @@ func testOurServiceAccountDirectAuth(t *testing.T, ctx context.Context, state *t
 
 	// We expect a permission error
 	if err == nil {
-		t.Fatal("Expected permission denied error, but listing succeeded")
+		t.Error("Expected permission denied error, but listing succeeded")
+		return
 	}
 
 	// Check if it's a permission error
@@ -289,7 +313,8 @@ func testOurServiceAccountDirectAuth(t *testing.T, ctx context.Context, state *t
 			t.Logf("✓ Correctly received permission denied error: %v", err)
 			return
 		}
-		t.Fatalf("Expected permission denied error, got: %v", err)
+		t.Errorf("Expected permission denied error, got: %v", err)
+		return
 	}
 
 	// Also check for googleapi.Error
@@ -299,10 +324,11 @@ func testOurServiceAccountDirectAuth(t *testing.T, ctx context.Context, state *t
 			t.Logf("✓ Correctly received permission denied error: %v", err)
 			return
 		}
-		t.Fatalf("Expected permission denied error, got: %v", err)
+		t.Errorf("Expected permission denied error, got: %v", err)
+		return
 	}
 
-	t.Fatalf("Expected permission denied error, got unexpected error: %v", err)
+	t.Errorf("Expected permission denied error, got unexpected error: %v", err)
 }
 
 func testCustomerServiceAccountDirectAuth(t *testing.T, ctx context.Context, state *testState) {
@@ -311,19 +337,23 @@ func testCustomerServiceAccountDirectAuth(t *testing.T, ctx context.Context, sta
 	// Decode the service account key
 	keyData, err := base64.StdEncoding.DecodeString(string(state.customerServiceAccountKey))
 	if err != nil {
-		t.Fatalf("Failed to decode service account key: %v", err)
+		t.Errorf("Failed to decode service account key: %v", err)
+		return
 	}
 
 	// Create credentials from the key
-	creds, err := google.CredentialsFromJSONWithType(ctx, keyData, google.ServiceAccount, compute.DefaultAuthScopes()...)
+	creds, err := authcredentials.NewCredentialsFromJSON(authcredentials.ServiceAccount, keyData, &authcredentials.DetectOptions{Scopes: compute.DefaultAuthScopes()})
 	if err != nil {
-		t.Fatalf("Failed to create credentials from key: %v", err)
+		t.Errorf("Failed to create credentials from key: %v", err)
+		return
 	}
+	tokenSource := oauth2adapt.TokenSourceFromTokenProvider(creds)
 
 	// Create Compute Engine client using these credentials
-	client, err := compute.NewInstancesRESTClient(ctx, option.WithTokenSource(creds.TokenSource))
+	client, err := compute.NewInstancesRESTClient(ctx, option.WithTokenSource(tokenSource))
 	if err != nil {
-		t.Fatalf("Failed to create Compute client: %v", err)
+		t.Errorf("Failed to create Compute client: %v", err)
+		return
 	}
 	defer client.Close()
 
@@ -341,7 +371,8 @@ func testCustomerServiceAccountDirectAuth(t *testing.T, ctx context.Context, sta
 	it := client.List(ctx, req)
 	_, err = it.Next()
 	if err != nil {
-		t.Fatalf("Expected to successfully list instances, but got error: %v", err)
+		t.Errorf("Expected to successfully list instances, but got error: %v", err)
+		return
 	}
 
 	t.Log("✓ Successfully listed instances as 'Customer Service Account'")
@@ -353,19 +384,23 @@ func testImpersonation(t *testing.T, ctx context.Context, state *testState) {
 	// Decode the "Our Service Account" key
 	keyData, err := base64.StdEncoding.DecodeString(string(state.ourServiceAccountKey))
 	if err != nil {
-		t.Fatalf("Failed to decode service account key: %v", err)
+		t.Errorf("Failed to decode service account key: %v", err)
+		return
 	}
 
 	// Create credentials from "Our Service Account" key
-	creds, err := google.CredentialsFromJSONWithType(ctx, keyData, google.ServiceAccount, iam.CloudPlatformScope)
+	creds, err := authcredentials.NewCredentialsFromJSON(authcredentials.ServiceAccount, keyData, &authcredentials.DetectOptions{Scopes: []string{iam.CloudPlatformScope}})
 	if err != nil {
-		t.Fatalf("Failed to create credentials from key: %v", err)
+		t.Errorf("Failed to create credentials from key: %v", err)
+		return
 	}
+	tokenSource := oauth2adapt.TokenSourceFromTokenProvider(creds)
 
 	// Create IAM Credentials client using "Our Service Account" credentials
-	iamCredsClient, err := credentials.NewIamCredentialsClient(ctx, option.WithTokenSource(creds.TokenSource))
+	iamCredsClient, err := credentials.NewIamCredentialsClient(ctx, option.WithTokenSource(tokenSource))
 	if err != nil {
-		t.Fatalf("Failed to create IAM Credentials client: %v", err)
+		t.Errorf("Failed to create IAM Credentials client: %v", err)
+		return
 	}
 	defer iamCredsClient.Close()
 
@@ -377,17 +412,18 @@ func testImpersonation(t *testing.T, ctx context.Context, state *testState) {
 
 	tokenResp, err := iamCredsClient.GenerateAccessToken(ctx, generateTokenReq)
 	if err != nil {
-		t.Fatalf("Failed to generate access token for impersonated service account: %v", err)
+		t.Errorf("Failed to generate access token for impersonated service account: %v", err)
+		return
 	}
 
 	// Create Compute Engine client using the impersonated token
-	tokenSource := oauth2.StaticTokenSource(&oauth2.Token{
+	impersonatedTS := oauth2.StaticTokenSource(&oauth2.Token{
 		AccessToken: tokenResp.GetAccessToken(),
 	})
-
-	client, err := compute.NewInstancesRESTClient(ctx, option.WithTokenSource(tokenSource))
+	client, err := compute.NewInstancesRESTClient(ctx, option.WithTokenSource(impersonatedTS))
 	if err != nil {
-		t.Fatalf("Failed to create Compute client: %v", err)
+		t.Errorf("Failed to create Compute client: %v", err)
+		return
 	}
 	defer client.Close()
 
@@ -405,7 +441,8 @@ func testImpersonation(t *testing.T, ctx context.Context, state *testState) {
 	it := client.List(ctx, req)
 	_, err = it.Next()
 	if err != nil {
-		t.Fatalf("Expected to successfully list instances via impersonation, but got error: %v", err)
+		t.Errorf("Expected to successfully list instances via impersonation, but got error: %v", err)
+		return
 	}
 
 	t.Log("✓ Successfully listed instances via impersonation")

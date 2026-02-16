@@ -1034,6 +1034,24 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 
 		return nil
 	},
+	// StorageBucketIAMPolicy: link by bucket name using GET (one policy item per bucket).
+	StorageBucketIAMPolicy: func(projectID, _, query string) *sdp.LinkedItemQuery {
+		bucketName := query
+		if idx := strings.Index(query, "/"); idx != -1 {
+			bucketName = query[:idx]
+		}
+		if projectID == "" || bucketName == "" {
+			return nil
+		}
+		return &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   StorageBucketIAMPolicy.String(),
+				Method: sdp.QueryMethod_GET,
+				Query:  bucketName,
+				Scope:  projectID,
+			},
+		}
+	},
 	// OrgPolicyPolicy name field can reference parent project, folder, or organization
 	// This linker is registered for all three parent types since the name field can reference any of them
 	// Format: projects/{project_number}/policies/{constraint} or
