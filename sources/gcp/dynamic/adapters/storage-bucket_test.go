@@ -71,6 +71,13 @@ func TestStorageBucket(t *testing.T) {
 					ExpectedQuery:  shared.CompositeLookupKey("global", "my-keyring", "my-key"),
 					ExpectedScope:  projectID,
 				},
+				{
+					// name -> StorageBucketIAMPolicy (parent-to-child: one policy per bucket, GET by bucket name)
+					ExpectedType:   gcpshared.StorageBucketIAMPolicy.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  bucketName,
+					ExpectedScope:  projectID,
+				},
 			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
