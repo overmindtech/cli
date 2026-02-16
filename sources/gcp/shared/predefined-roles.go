@@ -43,14 +43,15 @@ var PredefinedRoles = map[string]role{
 		},
 	},
 	"overmind_custom_role": {
-		// This is a custom role for Overmind service account with additional BigQuery and Spanner permissions
-		// It is created in deploy/sources.tf
+		// Custom role for Overmind with permissions not available in a single least-privilege predefined role.
+		// Created in deploy/sources.tf. Includes read-only Storage Bucket IAM (getIamPolicy) and BigQuery/Spanner extras.
 		Role: "overmind_custom_role",
 		Link: "deploy/sources.tf",
 		IAMPermissions: []string{
 			"bigquery.transfers.get",
 			"spanner.databases.get",
 			"spanner.databases.list",
+			"storage.buckets.getIamPolicy",
 		},
 	},
 	"roles/bigquery.metadataViewer": {

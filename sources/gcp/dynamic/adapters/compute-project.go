@@ -91,6 +91,11 @@ var _ = registerableAdapter{
 				TerraformMethod:   sdp.QueryMethod_GET,
 				TerraformQueryMap: "google_project_iam_policy.project",
 			},
+			{
+				// Configures which services and log types are audited for the project.
+				TerraformMethod:   sdp.QueryMethod_GET,
+				TerraformQueryMap: "google_project_iam_audit_config.project",
+			},
 		},
 	},
 }.Register()

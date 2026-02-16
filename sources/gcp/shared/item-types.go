@@ -66,6 +66,7 @@ var (
 	StorageBucketAccessControl                                           = shared.NewItemType(GCP, Storage, BucketAccessControl)
 	StorageDefaultObjectAccessControl                                    = shared.NewItemType(GCP, Storage, DefaultObjectAccessControl)
 	StorageNotificationConfig                                            = shared.NewItemType(GCP, Storage, NotificationConfig)
+	StorageBucketIAMPolicy                                               = shared.NewItemType(GCP, Storage, BucketIAMPolicy)
 	ComputeNetworkAttachment                                             = shared.NewItemType(GCP, Compute, NetworkAttachment)
 	ComputeStoragePool                                                   = shared.NewItemType(GCP, Compute, StoragePool)
 	ComputeStoragePoolType                                               = shared.NewItemType(GCP, Compute, StoragePoolType)

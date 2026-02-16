@@ -40,11 +40,17 @@ var _ = registerableAdapter{
 			ToSDPItemType:    gcpshared.LoggingBucket,
 			Description:      "If the Logging Bucket is deleted or updated: The Storage Bucket may fail to write logs. If the Storage Bucket is updated: The Logging Bucket remains unaffected.",
 		},
+		// Parent-to-child: bucket name links to this bucket's IAM policy (SEARCH returns one policy item).
+		"name": {
+			ToSDPItemType:   gcpshared.StorageBucketIAMPolicy,
+			Description:     "If the Storage Bucket is deleted or updated: Its IAM policy may become invalid. If the IAM policy is updated: The bucket remains unaffected.",
+			IsParentToChild: true,
+		},
 		// TODO: Add parent-to-child links once the child adapters are implemented:
 		// - StorageBucketAccessControl (requires adapter implementation)
 		// - StorageDefaultObjectAccessControl (requires adapter implementation)
 		// - StorageNotificationConfig (requires adapter implementation)
-		// Note: Parent-to-child links must use the "name" field (not array fields like "acl")
+		// Note: Only one parent-to-child link per field (map limitation). "name" is used for StorageBucketIAMPolicy.
 		// since the linkItem function iterates into arrays before calling AutoLink, causing
 		// keys like "acl.entity" instead of "acl" which would never match.
 		// The framework only supports one parent-to-child link per field (map limitation).

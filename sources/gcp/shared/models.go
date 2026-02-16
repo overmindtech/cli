@@ -115,6 +115,7 @@ const (
 	KeyRing                                      shared.Resource = "key-ring"
 	InstanceSettings                             shared.Resource = "instance-settings"
 	Bucket                                       shared.Resource = "bucket"
+	BucketIAMPolicy                              shared.Resource = "bucket-iam-policy"
 	BucketAccessControl                          shared.Resource = "bucket-access-control"
 	DefaultObjectAccessControl                   shared.Resource = "default-object-access-control"
 	NotificationConfig                           shared.Resource = "storage-notification-config"
