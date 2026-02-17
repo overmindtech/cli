@@ -10,9 +10,9 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	"github.com/overmindtech/cli/aws-source/proc"
-	"github.com/overmindtech/workspace/discovery"
-	"github.com/overmindtech/workspace/logging"
-	"github.com/overmindtech/workspace/tracing"
+	"github.com/overmindtech/cli/go/discovery"
+	"github.com/overmindtech/cli/go/logging"
+	"github.com/overmindtech/cli/go/tracing"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"

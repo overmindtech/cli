@@ -12,8 +12,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/iam/types"
 	"github.com/micahhausler/aws-iam-policy/policy"
 
-	"github.com/overmindtech/workspace/sdp-go"
-	"github.com/overmindtech/workspace/sdpcache"
+	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdpcache"
 	log "github.com/sirupsen/logrus"
 	"github.com/sourcegraph/conc/iter"
 	"go.opentelemetry.io/otel/trace"

@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"buf.build/go/protovalidate"
-	"github.com/overmindtech/workspace/sdp-go"
-	"github.com/overmindtech/workspace/sdpcache"
+	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdpcache"
 )
 
 // GetListAdapter A adapter for AWS APIs where the Get and List functions both

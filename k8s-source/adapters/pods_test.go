@@ -6,8 +6,8 @@ import (
 	"regexp"
 	"testing"
 
-	"github.com/overmindtech/workspace/sdp-go"
-	"github.com/overmindtech/workspace/sdpcache"
+	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdpcache"
 	v1 "k8s.io/api/core/v1"
 )
 

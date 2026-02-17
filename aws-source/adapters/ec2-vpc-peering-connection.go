@@ -6,8 +6,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
 
-	"github.com/overmindtech/workspace/sdp-go"
-	"github.com/overmindtech/workspace/sdpcache"
+	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdpcache"
 )
 
 func vpcPeeringConnectionOutputMapper(_ context.Context, _ *ec2.Client, scope string, input *ec2.DescribeVpcPeeringConnectionsInput, output *ec2.DescribeVpcPeeringConnectionsOutput) ([]*sdp.Item, error) {

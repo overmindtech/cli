@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/openrdap/rdap"
-	"github.com/overmindtech/workspace/sdp-go"
-	"github.com/overmindtech/workspace/sdpcache"
+	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdpcache"
 )
 
 type RdapNameserverAdapter struct {

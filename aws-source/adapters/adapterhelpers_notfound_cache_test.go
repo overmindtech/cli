@@ -6,8 +6,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/overmindtech/workspace/sdp-go"
-	"github.com/overmindtech/workspace/sdpcache"
+	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdpcache"
 )
 
 // TestGetListAdapterV2_GetNotFoundCaching tests that GetListAdapterV2 caches not-found error results

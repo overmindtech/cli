@@ -5,9 +5,9 @@ import (
 	"errors"
 
 	armcompute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
-	discovery "github.com/overmindtech/workspace/discovery"
-	"github.com/overmindtech/workspace/sdp-go"
-	sdpcache "github.com/overmindtech/workspace/sdpcache"
+	discovery "github.com/overmindtech/cli/go/discovery"
+	"github.com/overmindtech/cli/go/sdp-go"
+	sdpcache "github.com/overmindtech/cli/go/sdpcache"
 	sources "github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
