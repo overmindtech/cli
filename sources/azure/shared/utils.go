@@ -62,6 +62,10 @@ func ExtractResourceName(resourceID string) string {
 // For example, for input="/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Storage/storageAccounts/{account}/queueServices/default/queues/{queue}"
 // and keys=["storageAccounts", "queues"], it will return ["{account}", "{queue}"].
 //
+// Key matching is case-insensitive (Azure resource IDs are case-insensitive) but
+// only matches at even-indexed path positions (structural key slots) to avoid
+// misidentifying a resource name that happens to equal a key.
+//
 // If a key is not found, the function will return nil.
 func ExtractPathParamsFromResourceID(resourceID string, keys []string) []string {
 	if resourceID == "" || len(keys) == 0 {
@@ -74,7 +78,11 @@ func ExtractPathParamsFromResourceID(resourceID string, keys []string) []string 
 	for _, key := range keys {
 		found := false
 		for i, part := range parts {
-			if part == key && i+1 < len(parts) {
+			// Azure resource IDs alternate key/value segments after trimming:
+			// key0/value0/key1/value1/... Keys are at even indices (0, 2, 4, ...),
+			// values at odd indices. Only match at key positions to prevent a
+			// resource name like "images" from being treated as a path key.
+			if i%2 == 0 && strings.EqualFold(part, key) && i+1 < len(parts) {
 				results = append(results, parts[i+1])
 				found = true
 				break
