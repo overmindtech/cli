@@ -3,6 +3,7 @@ package manual
 import (
 	"context"
 	"errors"
+	"net"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
@@ -16,25 +17,26 @@ import (
 	"github.com/overmindtech/cli/sources/stdlib"
 )
 
-var ComputeDiskLookupByName = shared.NewItemTypeLookup("name", azureshared.ComputeDisk)
+var ComputeSnapshotLookupByName = shared.NewItemTypeLookup("name", azureshared.ComputeSnapshot)
 
-type computeDiskWrapper struct {
-	client clients.DisksClient
+type computeSnapshotWrapper struct {
+	client clients.SnapshotsClient
 	*azureshared.MultiResourceGroupBase
 }
 
-func NewComputeDisk(client clients.DisksClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.ListableWrapper {
-	return &computeDiskWrapper{
+func NewComputeSnapshot(client clients.SnapshotsClient, resourceGroupScopes []azureshared.ResourceGroupScope) sources.ListableWrapper {
+	return &computeSnapshotWrapper{
 		client: client,
 		MultiResourceGroupBase: azureshared.NewMultiResourceGroupBase(
 			resourceGroupScopes,
 			sdp.AdapterCategory_ADAPTER_CATEGORY_STORAGE,
-			azureshared.ComputeDisk,
+			azureshared.ComputeSnapshot,
 		),
 	}
 }
 
-func (c computeDiskWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
+// ref: https://learn.microsoft.com/en-us/rest/api/compute/snapshots/list-by-resource-group
+func (c computeSnapshotWrapper) List(ctx context.Context, scope string) ([]*sdp.Item, *sdp.QueryError) {
 	rgScope, err := c.ResourceGroupScopeFromScope(scope)
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, c.Type())
@@ -47,11 +49,11 @@ func (c computeDiskWrapper) List(ctx context.Context, scope string) ([]*sdp.Item
 		if err != nil {
 			return nil, azureshared.QueryError(err, scope, c.Type())
 		}
-		for _, disk := range page.Value {
-			if disk.Name == nil {
+		for _, snapshot := range page.Value {
+			if snapshot.Name == nil {
 				continue
 			}
-			item, sdpErr := c.azureDiskToSDPItem(disk, scope)
+			item, sdpErr := c.azureSnapshotToSDPItem(snapshot, scope)
 			if sdpErr != nil {
 				return nil, sdpErr
 			}
@@ -61,7 +63,7 @@ func (c computeDiskWrapper) List(ctx context.Context, scope string) ([]*sdp.Item
 	return items, nil
 }
 
-func (c computeDiskWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+func (c computeSnapshotWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
 	rgScope, err := c.ResourceGroupScopeFromScope(scope)
 	if err != nil {
 		stream.SendError(azureshared.QueryError(err, scope, c.Type()))
@@ -74,11 +76,11 @@ func (c computeDiskWrapper) ListStream(ctx context.Context, stream discovery.Que
 			stream.SendError(azureshared.QueryError(err, scope, c.Type()))
 			return
 		}
-		for _, disk := range page.Value {
-			if disk.Name == nil {
+		for _, snapshot := range page.Value {
+			if snapshot.Name == nil {
 				continue
 			}
-			item, sdpErr := c.azureDiskToSDPItem(disk, scope)
+			item, sdpErr := c.azureSnapshotToSDPItem(snapshot, scope)
 			if sdpErr != nil {
 				stream.SendError(sdpErr)
 				continue
@@ -89,125 +91,65 @@ func (c computeDiskWrapper) ListStream(ctx context.Context, stream discovery.Que
 	}
 }
 
-func (c computeDiskWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
+// ref: https://learn.microsoft.com/en-us/rest/api/compute/snapshots/get
+func (c computeSnapshotWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) < 1 {
-		return nil, azureshared.QueryError(errors.New("queryParts must be at least 1 and be the disk name"), scope, c.Type())
+		return nil, azureshared.QueryError(errors.New("queryParts must be at least 1 and be the snapshot name"), scope, c.Type())
 	}
-	diskName := queryParts[0]
+	snapshotName := queryParts[0]
+	if snapshotName == "" {
+		return nil, azureshared.QueryError(errors.New("snapshotName cannot be empty"), scope, c.Type())
+	}
+
 	rgScope, err := c.ResourceGroupScopeFromScope(scope)
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, c.Type())
 	}
-	disk, err := c.client.Get(ctx, rgScope.ResourceGroup, diskName, nil)
+	result, err := c.client.Get(ctx, rgScope.ResourceGroup, snapshotName, nil)
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, c.Type())
 	}
-	return c.azureDiskToSDPItem(&disk.Disk, scope)
+	return c.azureSnapshotToSDPItem(&result.Snapshot, scope)
 }
 
-func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope string) (*sdp.Item, *sdp.QueryError) {
-	if disk.Name == nil {
-		return nil, azureshared.QueryError(errors.New("name is nil"), scope, c.Type())
+func (c computeSnapshotWrapper) azureSnapshotToSDPItem(snapshot *armcompute.Snapshot, scope string) (*sdp.Item, *sdp.QueryError) {
+	if snapshot.Name == nil {
+		return nil, azureshared.QueryError(errors.New("snapshot name is nil"), scope, c.Type())
 	}
-	attributes, err := shared.ToAttributesWithExclude(disk, "tags")
+	attributes, err := shared.ToAttributesWithExclude(snapshot, "tags")
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, c.Type())
 	}
+
 	sdpItem := &sdp.Item{
-		Type:              azureshared.ComputeDisk.String(),
+		Type:              azureshared.ComputeSnapshot.String(),
 		UniqueAttribute:   "name",
 		Attributes:        attributes,
 		Scope:             scope,
-		Tags:              azureshared.ConvertAzureTags(disk.Tags),
+		Tags:              azureshared.ConvertAzureTags(snapshot.Tags),
 		LinkedItemQueries: []*sdp.LinkedItemQuery{},
 	}
 
-	// Link to Virtual Machine from ManagedBy
-	// Reference: https://learn.microsoft.com/en-us/rest/api/compute/virtual-machines/get
-	if disk.ManagedBy != nil && *disk.ManagedBy != "" {
-		vmName := azureshared.ExtractResourceName(*disk.ManagedBy)
-		if vmName != "" {
-			extractedScope := azureshared.ExtractScopeFromResourceID(*disk.ManagedBy)
-			if extractedScope == "" {
-				extractedScope = scope
-			}
-			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-				Query: &sdp.Query{
-					Type:   azureshared.ComputeVirtualMachine.String(),
-					Method: sdp.QueryMethod_GET,
-					Query:  vmName,
-					Scope:  extractedScope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // If VM is deleted/modified → disk becomes detached (In: true)
-					Out: false, // If disk is deleted → VM remains but loses disk (Out: false)
-				},
-			})
-		}
-	}
-
-	// Link to Virtual Machines from ManagedByExtended (for shared disks)
-	// Reference: https://learn.microsoft.com/en-us/rest/api/compute/virtual-machines/get
-	if disk.ManagedByExtended != nil {
-		for _, vmID := range disk.ManagedByExtended {
-			if vmID != nil && *vmID != "" {
-				vmName := azureshared.ExtractResourceName(*vmID)
-				if vmName != "" {
-					extractedScope := azureshared.ExtractScopeFromResourceID(*vmID)
-					if extractedScope == "" {
-						extractedScope = scope
-					}
-					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-						Query: &sdp.Query{
-							Type:   azureshared.ComputeVirtualMachine.String(),
-							Method: sdp.QueryMethod_GET,
-							Query:  vmName,
-							Scope:  extractedScope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If VM is deleted/modified → disk becomes detached (In: true)
-							Out: false, // If disk is deleted → VM remains but loses disk (Out: false)
-						},
-					})
-				}
-			}
-		}
-	}
-
-	// Link to Virtual Machines from ShareInfo
-	// Reference: https://learn.microsoft.com/en-us/rest/api/compute/virtual-machines/get
-	if disk.Properties != nil && disk.Properties.ShareInfo != nil {
-		for _, shareInfo := range disk.Properties.ShareInfo {
-			if shareInfo != nil && shareInfo.VMURI != nil && *shareInfo.VMURI != "" {
-				vmName := azureshared.ExtractResourceName(*shareInfo.VMURI)
-				if vmName != "" {
-					extractedScope := azureshared.ExtractScopeFromResourceID(*shareInfo.VMURI)
-					if extractedScope == "" {
-						extractedScope = scope
-					}
-					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-						Query: &sdp.Query{
-							Type:   azureshared.ComputeVirtualMachine.String(),
-							Method: sdp.QueryMethod_GET,
-							Query:  vmName,
-							Scope:  extractedScope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If VM is deleted/modified → disk becomes detached (In: true)
-							Out: false, // If disk is deleted → VM remains but loses disk (Out: false)
-						},
-					})
-				}
-			}
+	// Health status from ProvisioningState
+	if snapshot.Properties != nil && snapshot.Properties.ProvisioningState != nil {
+		switch *snapshot.Properties.ProvisioningState {
+		case "Succeeded":
+			sdpItem.Health = sdp.Health_HEALTH_OK.Enum()
+		case "Creating", "Updating", "Deleting":
+			sdpItem.Health = sdp.Health_HEALTH_PENDING.Enum()
+		case "Failed", "Canceled":
+			sdpItem.Health = sdp.Health_HEALTH_ERROR.Enum()
+		default:
+			sdpItem.Health = sdp.Health_HEALTH_UNKNOWN.Enum()
 		}
 	}
 
 	// Link to Disk Access from Properties.DiskAccessID
-	// Reference: https://learn.microsoft.com/en-us/rest/api/compute/diskaccesses/get
-	if disk.Properties != nil && disk.Properties.DiskAccessID != nil && *disk.Properties.DiskAccessID != "" {
-		diskAccessName := azureshared.ExtractResourceName(*disk.Properties.DiskAccessID)
+	// Reference: https://learn.microsoft.com/en-us/rest/api/compute/disk-accesses/get
+	if snapshot.Properties != nil && snapshot.Properties.DiskAccessID != nil && *snapshot.Properties.DiskAccessID != "" {
+		diskAccessName := azureshared.ExtractResourceName(*snapshot.Properties.DiskAccessID)
 		if diskAccessName != "" {
-			extractedScope := azureshared.ExtractScopeFromResourceID(*disk.Properties.DiskAccessID)
+			extractedScope := azureshared.ExtractScopeFromResourceID(*snapshot.Properties.DiskAccessID)
 			if extractedScope == "" {
 				extractedScope = scope
 			}
@@ -219,8 +161,8 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 					Scope:  extractedScope,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // If Disk Access is deleted/modified → disk private endpoint access is affected (In: true)
-					Out: false, // If disk is deleted → Disk Access remains (Out: false)
+					In:  true,  // If Disk Access is deleted/modified → snapshot private endpoint access is affected
+					Out: false, // If snapshot is deleted → Disk Access remains
 				},
 			})
 		}
@@ -228,10 +170,10 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 
 	// Link to Disk Encryption Set from Properties.Encryption.DiskEncryptionSetID
 	// Reference: https://learn.microsoft.com/en-us/rest/api/compute/disk-encryption-sets/get
-	if disk.Properties != nil && disk.Properties.Encryption != nil && disk.Properties.Encryption.DiskEncryptionSetID != nil && *disk.Properties.Encryption.DiskEncryptionSetID != "" {
-		encryptionSetName := azureshared.ExtractResourceName(*disk.Properties.Encryption.DiskEncryptionSetID)
+	if snapshot.Properties != nil && snapshot.Properties.Encryption != nil && snapshot.Properties.Encryption.DiskEncryptionSetID != nil && *snapshot.Properties.Encryption.DiskEncryptionSetID != "" {
+		encryptionSetName := azureshared.ExtractResourceName(*snapshot.Properties.Encryption.DiskEncryptionSetID)
 		if encryptionSetName != "" {
-			extractedScope := azureshared.ExtractScopeFromResourceID(*disk.Properties.Encryption.DiskEncryptionSetID)
+			extractedScope := azureshared.ExtractScopeFromResourceID(*snapshot.Properties.Encryption.DiskEncryptionSetID)
 			if extractedScope == "" {
 				extractedScope = scope
 			}
@@ -243,8 +185,8 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 					Scope:  extractedScope,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // If Disk Encryption Set is deleted/modified → disk encryption is affected (In: true)
-					Out: false, // If disk is deleted → Disk Encryption Set remains (Out: false)
+					In:  true,  // If Disk Encryption Set is deleted/modified → snapshot encryption is affected
+					Out: false, // If snapshot is deleted → Disk Encryption Set remains
 				},
 			})
 		}
@@ -252,10 +194,10 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 
 	// Link to Disk Encryption Set from Properties.SecurityProfile.SecureVMDiskEncryptionSetID
 	// Reference: https://learn.microsoft.com/en-us/rest/api/compute/disk-encryption-sets/get
-	if disk.Properties != nil && disk.Properties.SecurityProfile != nil && disk.Properties.SecurityProfile.SecureVMDiskEncryptionSetID != nil && *disk.Properties.SecurityProfile.SecureVMDiskEncryptionSetID != "" {
-		encryptionSetName := azureshared.ExtractResourceName(*disk.Properties.SecurityProfile.SecureVMDiskEncryptionSetID)
+	if snapshot.Properties != nil && snapshot.Properties.SecurityProfile != nil && snapshot.Properties.SecurityProfile.SecureVMDiskEncryptionSetID != nil && *snapshot.Properties.SecurityProfile.SecureVMDiskEncryptionSetID != "" {
+		encryptionSetName := azureshared.ExtractResourceName(*snapshot.Properties.SecurityProfile.SecureVMDiskEncryptionSetID)
 		if encryptionSetName != "" {
-			extractedScope := azureshared.ExtractScopeFromResourceID(*disk.Properties.SecurityProfile.SecureVMDiskEncryptionSetID)
+			extractedScope := azureshared.ExtractScopeFromResourceID(*snapshot.Properties.SecurityProfile.SecureVMDiskEncryptionSetID)
 			if extractedScope == "" {
 				extractedScope = scope
 			}
@@ -267,24 +209,24 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 					Scope:  extractedScope,
 				},
 				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // If Disk Encryption Set is deleted/modified → disk encryption is affected (In: true)
-					Out: false, // If disk is deleted → Disk Encryption Set remains (Out: false)
+					In:  true,  // If Disk Encryption Set is deleted/modified → snapshot encryption is affected
+					Out: false, // If snapshot is deleted → Disk Encryption Set remains
 				},
 			})
 		}
 	}
 
 	// Link to source resources from Properties.CreationData
-	if disk.Properties != nil && disk.Properties.CreationData != nil {
-		creationData := disk.Properties.CreationData
+	if snapshot.Properties != nil && snapshot.Properties.CreationData != nil {
+		creationData := snapshot.Properties.CreationData
 
 		// Link to source Disk or Snapshot from SourceResourceID
-		// Reference: https://learn.microsoft.com/en-us/rest/api/compute/disks/get?view=rest-compute-2025-04-01&tabs=HTTP
-		// Reference: https://learn.microsoft.com/en-us/rest/api/compute/snapshots/get?view=rest-compute-2025-04-01&tabs=HTTP
+		// Reference: https://learn.microsoft.com/en-us/rest/api/compute/disks/get
+		// Reference: https://learn.microsoft.com/en-us/rest/api/compute/snapshots/get
 		if creationData.SourceResourceID != nil && *creationData.SourceResourceID != "" {
 			sourceResourceID := *creationData.SourceResourceID
-			// Determine if it's a disk or snapshot based on the resource type in the ID
-			if strings.Contains(sourceResourceID, "/disks/") {
+			sourceResourceIDLower := strings.ToLower(sourceResourceID)
+			if strings.Contains(sourceResourceIDLower, "/disks/") {
 				diskName := azureshared.ExtractResourceName(sourceResourceID)
 				if diskName != "" {
 					extractedScope := azureshared.ExtractScopeFromResourceID(sourceResourceID)
@@ -299,12 +241,12 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 							Scope:  extractedScope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If source disk is deleted/modified → this disk may be affected (In: true)
-							Out: false, // If this disk is deleted → source disk remains (Out: false)
+							In:  true,  // If source disk is deleted/modified → snapshot may be affected
+							Out: false, // If snapshot is deleted → source disk remains
 						},
 					})
 				}
-			} else if strings.Contains(sourceResourceID, "/snapshots/") {
+			} else if strings.Contains(sourceResourceIDLower, "/snapshots/") {
 				snapshotName := azureshared.ExtractResourceName(sourceResourceID)
 				if snapshotName != "" {
 					extractedScope := azureshared.ExtractScopeFromResourceID(sourceResourceID)
@@ -319,8 +261,8 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 							Scope:  extractedScope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If source snapshot is deleted/modified → this disk may be affected (In: true)
-							Out: false, // If this disk is deleted → source snapshot remains (Out: false)
+							In:  true,  // If source snapshot is deleted/modified → this snapshot may be affected
+							Out: false, // If this snapshot is deleted → source snapshot remains
 						},
 					})
 				}
@@ -344,10 +286,93 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 						Scope:  extractedScope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,  // If Storage Account is deleted/modified → disk import may fail (In: true)
-						Out: false, // If disk is deleted → Storage Account remains (Out: false)
+						In:  true,  // If Storage Account is deleted/modified → snapshot import may fail
+						Out: false, // If snapshot is deleted → Storage Account remains
 					},
 				})
+			}
+		}
+
+		// Link to Storage Account and DNS from SourceURI (blob URI used for Import)
+		// Reference: https://learn.microsoft.com/en-us/rest/api/compute/snapshots/create-or-update
+		if creationData.SourceURI != nil && *creationData.SourceURI != "" {
+			sourceURI := *creationData.SourceURI
+			storageAccountName := azureshared.ExtractStorageAccountNameFromBlobURI(sourceURI)
+			if storageAccountName != "" {
+				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   azureshared.StorageAccount.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  storageAccountName,
+						Scope:  scope,
+					},
+					BlastPropagation: &sdp.BlastPropagation{
+						In:  true,  // If Storage Account is deleted/modified → snapshot import blob becomes inaccessible
+						Out: false, // If snapshot is deleted → Storage Account remains
+					},
+				})
+
+				containerName := azureshared.ExtractContainerNameFromBlobURI(sourceURI)
+				if containerName != "" {
+					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   azureshared.StorageBlobContainer.String(),
+							Method: sdp.QueryMethod_GET,
+							Query:  shared.CompositeLookupKey(storageAccountName, containerName),
+							Scope:  scope,
+						},
+						BlastPropagation: &sdp.BlastPropagation{
+							In:  true,  // If blob container is deleted/modified → snapshot import source is lost
+							Out: false, // If snapshot is deleted → blob container remains
+						},
+					})
+				}
+			}
+
+			if strings.HasPrefix(sourceURI, "http://") || strings.HasPrefix(sourceURI, "https://") {
+				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   stdlib.NetworkHTTP.String(),
+						Method: sdp.QueryMethod_SEARCH,
+						Query:  sourceURI,
+						Scope:  "global",
+					},
+					BlastPropagation: &sdp.BlastPropagation{
+						In:  true, // If HTTP endpoint is unavailable → snapshot import source is lost
+						Out: true, // Bidirectional: changes to either side may affect the other
+					},
+				})
+			}
+
+			host := azureshared.ExtractDNSFromURL(sourceURI)
+			if host != "" {
+				if net.ParseIP(host) != nil {
+					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   stdlib.NetworkIP.String(),
+							Method: sdp.QueryMethod_GET,
+							Query:  host,
+							Scope:  "global",
+						},
+						BlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: true,
+						},
+					})
+				} else {
+					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   stdlib.NetworkDNS.String(),
+							Method: sdp.QueryMethod_SEARCH,
+							Query:  host,
+							Scope:  "global",
+						},
+						BlastPropagation: &sdp.BlastPropagation{
+							In:  true,
+							Out: true,
+						},
+					})
+				}
 			}
 		}
 
@@ -355,8 +380,8 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 		// Reference: https://learn.microsoft.com/en-us/rest/api/compute/images/get
 		if creationData.ImageReference != nil && creationData.ImageReference.ID != nil && *creationData.ImageReference.ID != "" {
 			imageID := *creationData.ImageReference.ID
-			// Check if it's a regular image or gallery image
-			if strings.Contains(imageID, "/images/") && !strings.Contains(imageID, "/galleries/") {
+			imageIDLower := strings.ToLower(imageID)
+			if strings.Contains(imageIDLower, "/images/") && !strings.Contains(imageIDLower, "/galleries/") {
 				imageName := azureshared.ExtractResourceName(imageID)
 				if imageName != "" {
 					extractedScope := azureshared.ExtractScopeFromResourceID(imageID)
@@ -371,8 +396,8 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 							Scope:  extractedScope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Image is deleted/modified → disk created from image may be affected (In: true)
-							Out: false, // If disk is deleted → Image remains (Out: false)
+							In:  true,  // If Image is deleted/modified → snapshot created from image may be affected
+							Out: false, // If snapshot is deleted → Image remains
 						},
 					})
 				}
@@ -382,10 +407,8 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 		// Link to Gallery Image from GalleryImageReference
 		// Reference: https://learn.microsoft.com/en-us/rest/api/compute/gallery-images/get
 		if creationData.GalleryImageReference != nil {
-			// Link from ID (shared gallery image)
 			if creationData.GalleryImageReference.ID != nil && *creationData.GalleryImageReference.ID != "" {
 				galleryImageID := *creationData.GalleryImageReference.ID
-				// Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/galleries/{galleryName}/images/{imageName}/versions/{version}
 				parts := azureshared.ExtractPathParamsFromResourceID(galleryImageID, []string{"galleries", "images", "versions"})
 				if len(parts) >= 3 {
 					galleryName := parts[0]
@@ -403,17 +426,15 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 							Scope:  extractedScope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Gallery Image is deleted/modified → disk created from image may be affected (In: true)
-							Out: false, // If disk is deleted → Gallery Image remains (Out: false)
+							In:  true,  // If Gallery Image is deleted/modified → snapshot created from image may be affected
+							Out: false, // If snapshot is deleted → Gallery Image remains
 						},
 					})
 				}
 			}
 
-			// Link from SharedGalleryImageID
 			if creationData.GalleryImageReference.SharedGalleryImageID != nil && *creationData.GalleryImageReference.SharedGalleryImageID != "" {
 				sharedGalleryImageID := *creationData.GalleryImageReference.SharedGalleryImageID
-				// Format: /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/galleries/{galleryName}/images/{imageName}/versions/{version}
 				parts := azureshared.ExtractPathParamsFromResourceID(sharedGalleryImageID, []string{"galleries", "images", "versions"})
 				if len(parts) >= 3 {
 					galleryName := parts[0]
@@ -431,23 +452,19 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 							Scope:  extractedScope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Gallery Image is deleted/modified → disk created from image may be affected (In: true)
-							Out: false, // If disk is deleted → Gallery Image remains (Out: false)
+							In:  true,  // If Gallery Image is deleted/modified → snapshot created from image may be affected
+							Out: false, // If snapshot is deleted → Gallery Image remains
 						},
 					})
 				}
 			}
 
-			// Link from CommunityGalleryImageID
 			if creationData.GalleryImageReference.CommunityGalleryImageID != nil && *creationData.GalleryImageReference.CommunityGalleryImageID != "" {
 				communityGalleryImageID := *creationData.GalleryImageReference.CommunityGalleryImageID
-				// Format: /CommunityGalleries/{communityGalleryName}/Images/{imageName}/Versions/{version}
-				// Note: Community gallery images may not have subscription/resource group in the ID
 				parts := azureshared.ExtractPathParamsFromResourceID(communityGalleryImageID, []string{"Images", "Versions"})
 				if len(parts) >= 2 {
 					imageName := parts[0]
 					version := parts[1]
-					// Extract community gallery name (before "Images")
 					allParts := strings.Split(strings.Trim(communityGalleryImageID, "/"), "/")
 					communityGalleryName := ""
 					for i, part := range allParts {
@@ -469,8 +486,8 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 								Scope:  extractedScope,
 							},
 							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,  // If Community Gallery Image is deleted/modified → disk created from image may be affected (In: true)
-								Out: false, // If disk is deleted → Community Gallery Image remains (Out: false)
+								In:  true,  // If Community Gallery Image is deleted/modified → snapshot may be affected
+								Out: false, // If snapshot is deleted → Community Gallery Image remains
 							},
 						})
 					}
@@ -480,16 +497,13 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 
 		// Link to Elastic SAN Volume Snapshot from ElasticSanResourceID
 		// Reference: https://learn.microsoft.com/en-us/rest/api/elasticsan/volume-snapshots/get
-		// GET /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.ElasticSan/elasticSans/{elasticSanName}/volumegroups/{volumeGroupName}/snapshots/{snapshotName}
 		if creationData.ElasticSanResourceID != nil && *creationData.ElasticSanResourceID != "" {
 			elasticSanResourceID := *creationData.ElasticSanResourceID
-			// Elastic SAN snapshot IDs follow format:
-			// /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.ElasticSan/elasticSans/{elasticSanName}/volumegroups/{volumeGroupName}/snapshots/{snapshotName}
 			parts := azureshared.ExtractPathParamsFromResourceID(elasticSanResourceID, []string{"elasticSans", "volumegroups", "snapshots"})
 			if len(parts) >= 3 {
 				elasticSanName := parts[0]
 				volumeGroupName := parts[1]
-				snapshotName := parts[2]
+				esSnapshotName := parts[2]
 				extractedScope := azureshared.ExtractScopeFromResourceID(elasticSanResourceID)
 				if extractedScope == "" {
 					extractedScope = scope
@@ -498,12 +512,12 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 					Query: &sdp.Query{
 						Type:   azureshared.ElasticSanVolumeSnapshot.String(),
 						Method: sdp.QueryMethod_GET,
-						Query:  shared.CompositeLookupKey(elasticSanName, volumeGroupName, snapshotName),
+						Query:  shared.CompositeLookupKey(elasticSanName, volumeGroupName, esSnapshotName),
 						Scope:  extractedScope,
 					},
 					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,  // If Elastic SAN snapshot is deleted/modified → disk created from snapshot may be affected (In: true)
-						Out: false, // If disk is deleted → Elastic SAN snapshot remains (Out: false)
+						In:  true,  // If Elastic SAN snapshot is deleted/modified → this snapshot may be affected
+						Out: false, // If this snapshot is deleted → Elastic SAN snapshot remains
 					},
 				})
 			}
@@ -512,10 +526,8 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 
 	// Link to Key Vault resources from EncryptionSettingsCollection
 	// Reference: https://learn.microsoft.com/en-us/rest/api/keyvault/vaults/get
-	// Reference: https://learn.microsoft.com/en-us/rest/api/keyvault/secrets/get-secret
-	// Reference: https://learn.microsoft.com/en-us/rest/api/keyvault/keys/get-key
-	if disk.Properties != nil && disk.Properties.EncryptionSettingsCollection != nil && disk.Properties.EncryptionSettingsCollection.EncryptionSettings != nil {
-		for _, encryptionSetting := range disk.Properties.EncryptionSettingsCollection.EncryptionSettings {
+	if snapshot.Properties != nil && snapshot.Properties.EncryptionSettingsCollection != nil && snapshot.Properties.EncryptionSettingsCollection.EncryptionSettings != nil {
+		for _, encryptionSetting := range snapshot.Properties.EncryptionSettingsCollection.EncryptionSettings {
 			if encryptionSetting == nil {
 				continue
 			}
@@ -536,8 +548,8 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 							Scope:  extractedScope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Key Vault is deleted/modified → disk encryption key access is affected (In: true)
-							Out: false, // If disk is deleted → Key Vault remains (Out: false)
+							In:  true,  // If Key Vault is deleted/modified → snapshot encryption key access is affected
+							Out: false, // If snapshot is deleted → Key Vault remains
 						},
 					})
 				}
@@ -549,37 +561,56 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 				vaultName := azureshared.ExtractVaultNameFromURI(secretURL)
 				secretName := azureshared.ExtractSecretNameFromURI(secretURL)
 				if vaultName != "" && secretName != "" {
-					// Key Vault URI doesn't contain resource group, use disk's scope as best effort
+					// Derive scope from the DiskEncryptionKey's SourceVault when available
+					secretScope := scope
+					if encryptionSetting.DiskEncryptionKey.SourceVault != nil && encryptionSetting.DiskEncryptionKey.SourceVault.ID != nil {
+						if extracted := azureshared.ExtractScopeFromResourceID(*encryptionSetting.DiskEncryptionKey.SourceVault.ID); extracted != "" {
+							secretScope = extracted
+						}
+					}
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   azureshared.KeyVaultSecret.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  shared.CompositeLookupKey(vaultName, secretName),
-							Scope:  scope, // Limitation: Key Vault URI doesn't contain resource group info
+							Scope:  secretScope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Key Vault Secret is deleted/modified → disk encryption key is affected (In: true)
-							Out: false, // If disk is deleted → Key Vault Secret remains (Out: false)
+							In:  true,  // If Key Vault Secret is deleted/modified → snapshot encryption key is affected
+							Out: false, // If snapshot is deleted → Key Vault Secret remains
 						},
 					})
 				}
 
-				// Link to DNS name (standard library) from SecretURL
-				dnsName := azureshared.ExtractDNSFromURL(secretURL)
-				if dnsName != "" {
-					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-						Query: &sdp.Query{
-							Type:   "dns",
-							Method: sdp.QueryMethod_SEARCH,
-							Query:  dnsName,
-							Scope:  "global",
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// DNS names are always linked
-							In:  true,
-							Out: true,
-						},
-					})
+				secretHost := azureshared.ExtractDNSFromURL(secretURL)
+				if secretHost != "" {
+					if net.ParseIP(secretHost) != nil {
+						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+							Query: &sdp.Query{
+								Type:   stdlib.NetworkIP.String(),
+								Method: sdp.QueryMethod_GET,
+								Query:  secretHost,
+								Scope:  "global",
+							},
+							BlastPropagation: &sdp.BlastPropagation{
+								In:  true,
+								Out: true,
+							},
+						})
+					} else {
+						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+							Query: &sdp.Query{
+								Type:   stdlib.NetworkDNS.String(),
+								Method: sdp.QueryMethod_SEARCH,
+								Query:  secretHost,
+								Scope:  "global",
+							},
+							BlastPropagation: &sdp.BlastPropagation{
+								In:  true,
+								Out: true,
+							},
+						})
+					}
 				}
 			}
 
@@ -599,8 +630,8 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 							Scope:  extractedScope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Key Vault is deleted/modified → key encryption key access is affected (In: true)
-							Out: false, // If disk is deleted → Key Vault remains (Out: false)
+							In:  true,  // If Key Vault is deleted/modified → key encryption key access is affected
+							Out: false, // If snapshot is deleted → Key Vault remains
 						},
 					})
 				}
@@ -612,37 +643,56 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 				vaultName := azureshared.ExtractVaultNameFromURI(keyURL)
 				keyName := azureshared.ExtractKeyNameFromURI(keyURL)
 				if vaultName != "" && keyName != "" {
-					// Key Vault URI doesn't contain resource group, use disk's scope as best effort
+					// Derive scope from the KeyEncryptionKey's SourceVault when available
+					keyScope := scope
+					if encryptionSetting.KeyEncryptionKey.SourceVault != nil && encryptionSetting.KeyEncryptionKey.SourceVault.ID != nil {
+						if extracted := azureshared.ExtractScopeFromResourceID(*encryptionSetting.KeyEncryptionKey.SourceVault.ID); extracted != "" {
+							keyScope = extracted
+						}
+					}
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 						Query: &sdp.Query{
 							Type:   azureshared.KeyVaultKey.String(),
 							Method: sdp.QueryMethod_GET,
 							Query:  shared.CompositeLookupKey(vaultName, keyName),
-							Scope:  scope, // Limitation: Key Vault URI doesn't contain resource group info
+							Scope:  keyScope,
 						},
 						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Key Vault Key is deleted/modified → key encryption key is affected (In: true)
-							Out: false, // If disk is deleted → Key Vault Key remains (Out: false)
+							In:  true,  // If Key Vault Key is deleted/modified → key encryption key is affected
+							Out: false, // If snapshot is deleted → Key Vault Key remains
 						},
 					})
 				}
 
-				// Link to DNS name (standard library) from KeyURL
-				dnsName := azureshared.ExtractDNSFromURL(keyURL)
-				if dnsName != "" {
-					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-						Query: &sdp.Query{
-							Type:   "dns",
-							Method: sdp.QueryMethod_SEARCH,
-							Query:  dnsName,
-							Scope:  "global",
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// DNS names are always linked
-							In:  true,
-							Out: true,
-						},
-					})
+				keyHost := azureshared.ExtractDNSFromURL(keyURL)
+				if keyHost != "" {
+					if net.ParseIP(keyHost) != nil {
+						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+							Query: &sdp.Query{
+								Type:   stdlib.NetworkIP.String(),
+								Method: sdp.QueryMethod_GET,
+								Query:  keyHost,
+								Scope:  "global",
+							},
+							BlastPropagation: &sdp.BlastPropagation{
+								In:  true,
+								Out: true,
+							},
+						})
+					} else {
+						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+							Query: &sdp.Query{
+								Type:   stdlib.NetworkDNS.String(),
+								Method: sdp.QueryMethod_SEARCH,
+								Query:  keyHost,
+								Scope:  "global",
+							},
+							BlastPropagation: &sdp.BlastPropagation{
+								In:  true,
+								Out: true,
+							},
+						})
+					}
 				}
 			}
 		}
@@ -651,15 +701,14 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 	return sdpItem, nil
 }
 
-func (c computeDiskWrapper) GetLookups() sources.ItemTypeLookups {
+func (c computeSnapshotWrapper) GetLookups() sources.ItemTypeLookups {
 	return sources.ItemTypeLookups{
-		ComputeDiskLookupByName,
+		ComputeSnapshotLookupByName,
 	}
 }
 
-func (c computeDiskWrapper) PotentialLinks() map[shared.ItemType]bool {
+func (c computeSnapshotWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
-		azureshared.ComputeVirtualMachine,
 		azureshared.ComputeDisk,
 		azureshared.ComputeSnapshot,
 		azureshared.ComputeDiskAccess,
@@ -668,20 +717,35 @@ func (c computeDiskWrapper) PotentialLinks() map[shared.ItemType]bool {
 		azureshared.ComputeSharedGalleryImage,
 		azureshared.ComputeCommunityGalleryImage,
 		azureshared.StorageAccount,
+		azureshared.StorageBlobContainer,
 		azureshared.ElasticSanVolumeSnapshot,
 		azureshared.KeyVaultVault,
 		azureshared.KeyVaultSecret,
 		azureshared.KeyVaultKey,
 		stdlib.NetworkDNS,
+		stdlib.NetworkHTTP,
+		stdlib.NetworkIP,
 	)
 }
 
-// ref: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/managed_disk
-func (c computeDiskWrapper) TerraformMappings() []*sdp.TerraformMapping {
+// ref: https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/snapshot
+func (c computeSnapshotWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
 			TerraformMethod:   sdp.QueryMethod_GET,
-			TerraformQueryMap: "azurerm_managed_disk.name",
+			TerraformQueryMap: "azurerm_snapshot.name",
 		},
 	}
+}
+
+// ref: https://learn.microsoft.com/en-us/azure/role-based-access-control/permissions/compute#microsoftcompute
+func (c computeSnapshotWrapper) IAMPermissions() []string {
+	return []string{
+		"Microsoft.Compute/snapshots/read",
+	}
+}
+
+// ref: https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles/compute
+func (c computeSnapshotWrapper) PredefinedRole() string {
+	return "Reader"
 }
