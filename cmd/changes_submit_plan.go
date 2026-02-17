@@ -305,7 +305,7 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 	}
 
 	app, _ = strings.CutSuffix(app, "/")
-	changeUrl := fmt.Sprintf("%v/changes/%v/blast-radius", app, changeUUID)
+	changeUrl := fmt.Sprintf("%v/changes/%v", app, changeUUID)
 	log.WithContext(ctx).WithFields(lf).WithField("change-url", changeUrl).Info("Change ready")
 	fmt.Println(changeUrl)
 

@@ -327,7 +327,7 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 	uploadPlannedChange.Success("Uploaded planned changes: Done")
 
 	changeUrl := *oi.FrontendUrl
-	changeUrl.Path = fmt.Sprintf("%v/changes/%v/blast-radius", changeUrl.Path, changeUuid)
+	changeUrl.Path = fmt.Sprintf("%v/changes/%v", changeUrl.Path, changeUuid)
 	log.WithField("change-url", changeUrl.String()).Info("Change ready")
 
 	///////////////////////////////////////////////////////////////////
