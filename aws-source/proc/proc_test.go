@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/aws/smithy-go"
-	"github.com/overmindtech/workspace/discovery"
-	"github.com/overmindtech/workspace/sdp-go"
+	"github.com/overmindtech/cli/go/discovery"
+	"github.com/overmindtech/cli/go/sdp-go"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )

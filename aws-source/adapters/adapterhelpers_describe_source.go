@@ -8,9 +8,9 @@ import (
 	"time"
 
 	"buf.build/go/protovalidate"
-	"github.com/overmindtech/workspace/discovery"
-	"github.com/overmindtech/workspace/sdp-go"
-	"github.com/overmindtech/workspace/sdpcache"
+	"github.com/overmindtech/cli/go/discovery"
+	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdpcache"
 )
 
 // relatively short cache duration to cover a single Change Analysis run.

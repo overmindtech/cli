@@ -5,8 +5,8 @@ import (
 
 	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 
-	"github.com/overmindtech/workspace/sdp-go"
-	"github.com/overmindtech/workspace/sdpcache"
+	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdpcache"
 )
 
 func elbv2LoadBalancerOutputMapper(ctx context.Context, client elbv2Client, scope string, _ *elbv2.DescribeLoadBalancersInput, output *elbv2.DescribeLoadBalancersOutput) ([]*sdp.Item, error) {

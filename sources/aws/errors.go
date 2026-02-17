@@ -6,7 +6,7 @@ import (
 
 	awsHttp "github.com/aws/smithy-go/transport/http"
 
-	"github.com/overmindtech/workspace/sdp-go"
+	"github.com/overmindtech/cli/go/sdp-go"
 )
 
 // queryError takes an error and returns a sdp.QueryError.

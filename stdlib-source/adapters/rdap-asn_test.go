@@ -5,7 +5,7 @@ import (
 	"testing"
 
 	"github.com/openrdap/rdap"
-	"github.com/overmindtech/workspace/sdpcache"
+	"github.com/overmindtech/cli/go/sdpcache"
 )
 
 func TestASNAdapterGet(t *testing.T) {

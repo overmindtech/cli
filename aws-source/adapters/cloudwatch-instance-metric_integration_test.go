@@ -9,7 +9,7 @@ import (
 	"testing"
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudwatch"
-	"github.com/overmindtech/workspace/sdpcache"
+	"github.com/overmindtech/cli/go/sdpcache"
 )
 
 // TestCloudwatchInstanceMetricIntegration fetches real CloudWatch metrics for an EC2 instance

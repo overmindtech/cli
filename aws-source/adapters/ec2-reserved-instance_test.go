@@ -7,7 +7,7 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 	"github.com/aws/aws-sdk-go-v2/service/ec2/types"
-	"github.com/overmindtech/workspace/sdpcache"
+	"github.com/overmindtech/cli/go/sdpcache"
 )
 
 func TestReservedInstanceInputMapperGet(t *testing.T) {

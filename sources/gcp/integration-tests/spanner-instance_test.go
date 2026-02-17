@@ -13,8 +13,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc/codes"
 
-	"github.com/overmindtech/workspace/discovery"
-	"github.com/overmindtech/workspace/sdpcache"
+	"github.com/overmindtech/cli/go/discovery"
+	"github.com/overmindtech/cli/go/sdpcache"
 	"github.com/overmindtech/cli/sources/gcp/dynamic"
 	"github.com/overmindtech/cli/sources/gcp/shared"
 )

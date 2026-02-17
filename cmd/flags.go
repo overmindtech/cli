@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/overmindtech/workspace/sdp-go"
+	"github.com/overmindtech/cli/go/sdp-go"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )

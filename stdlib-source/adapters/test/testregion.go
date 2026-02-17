@@ -3,7 +3,7 @@ package test
 import (
 	"context"
 
-	"github.com/overmindtech/workspace/sdp-go"
+	"github.com/overmindtech/cli/go/sdp-go"
 )
 
 // TestRegionAdapter A adapter of `region` items for automated tests.

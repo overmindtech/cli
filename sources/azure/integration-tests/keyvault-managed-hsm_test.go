@@ -14,9 +14,9 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	log "github.com/sirupsen/logrus"
 
-	"github.com/overmindtech/workspace/discovery"
-	"github.com/overmindtech/workspace/sdp-go"
-	"github.com/overmindtech/workspace/sdpcache"
+	"github.com/overmindtech/cli/go/discovery"
+	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	"github.com/overmindtech/cli/sources/azure/manual"

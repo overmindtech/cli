@@ -6,8 +6,8 @@ import (
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/service/apigateway"
-	"github.com/overmindtech/workspace/sdp-go"
-	"github.com/overmindtech/workspace/sdpcache"
+	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdpcache"
 )
 
 func apiGatewayMethodResponseGetFunc(ctx context.Context, client apigatewayClient, scope string, input *apigateway.GetMethodResponseInput) (*sdp.Item, error) {

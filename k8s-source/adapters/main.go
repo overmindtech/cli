@@ -1,8 +1,8 @@
 package adapters
 
 import (
-	"github.com/overmindtech/workspace/discovery"
-	"github.com/overmindtech/workspace/sdpcache"
+	"github.com/overmindtech/cli/go/discovery"
+	"github.com/overmindtech/cli/go/sdpcache"
 	"k8s.io/client-go/kubernetes"
 )
 

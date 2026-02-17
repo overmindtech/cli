@@ -13,7 +13,7 @@ import (
 	"github.com/google/uuid"
 	awsAdapters "github.com/overmindtech/cli/aws-source/adapters"
 	k8sAdapters "github.com/overmindtech/cli/k8s-source/adapters"
-	"github.com/overmindtech/workspace/sdp-go"
+	"github.com/overmindtech/cli/go/sdp-go"
 	gcpAdapters "github.com/overmindtech/cli/sources/gcp/proc"
 	azureAdapters "github.com/overmindtech/cli/sources/azure/proc"
 	log "github.com/sirupsen/logrus"

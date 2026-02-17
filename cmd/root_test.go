@@ -8,7 +8,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/overmindtech/workspace/auth"
+	"github.com/overmindtech/cli/go/auth"
 	"golang.org/x/oauth2"
 )
 

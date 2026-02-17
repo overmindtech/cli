@@ -3,7 +3,7 @@ package test
 import (
 	"context"
 
-	"github.com/overmindtech/workspace/sdp-go"
+	"github.com/overmindtech/cli/go/sdp-go"
 )
 
 // TestPersonAdapter A adapter of `person` items for automated tests.

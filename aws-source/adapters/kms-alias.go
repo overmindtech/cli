@@ -7,8 +7,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 
-	"github.com/overmindtech/workspace/sdp-go"
-	"github.com/overmindtech/workspace/sdpcache"
+	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdpcache"
 )
 
 func aliasOutputMapper(_ context.Context, _ *kms.Client, scope string, _ *kms.ListAliasesInput, output *kms.ListAliasesOutput) ([]*sdp.Item, error) {

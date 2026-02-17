@@ -4,7 +4,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/overmindtech/workspace/sdp-go"
+	"github.com/overmindtech/cli/go/sdp-go"
 )
 
 func TestValidateChangeStatus(t *testing.T) {

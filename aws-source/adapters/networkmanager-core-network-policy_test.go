@@ -4,7 +4,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 	"testing"
 
-	"github.com/overmindtech/workspace/sdp-go"
+	"github.com/overmindtech/cli/go/sdp-go"
 )
 
 func TestCoreNetworkPolicyItemMapper(t *testing.T) {

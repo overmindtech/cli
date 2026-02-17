@@ -8,7 +8,7 @@ import (
 
 	"google.golang.org/api/cloudresourcemanager/v3"
 
-	"github.com/overmindtech/workspace/sdpcache"
+	"github.com/overmindtech/cli/go/sdpcache"
 	"github.com/overmindtech/cli/sources/gcp/dynamic"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"

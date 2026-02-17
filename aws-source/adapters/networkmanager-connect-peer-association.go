@@ -8,8 +8,8 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager"
 	"github.com/aws/aws-sdk-go-v2/service/networkmanager/types"
 
-	"github.com/overmindtech/workspace/sdp-go"
-	"github.com/overmindtech/workspace/sdpcache"
+	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdpcache"
 )
 
 func connectPeerAssociationsOutputMapper(_ context.Context, _ *networkmanager.Client, scope string, _ *networkmanager.GetConnectPeerAssociationsInput, output *networkmanager.GetConnectPeerAssociationsOutput) ([]*sdp.Item, error) {

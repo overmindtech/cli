@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/overmindtech/workspace/discovery"
-	"github.com/overmindtech/workspace/sdp-go"
+	"github.com/overmindtech/cli/go/discovery"
+	"github.com/overmindtech/cli/go/sdp-go"
 )
 
 var chain = `-----BEGIN CERTIFICATE-----
