@@ -5,8 +5,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/rds"
 
-	"github.com/overmindtech/workspace/sdp-go"
-	"github.com/overmindtech/workspace/sdpcache"
+	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdpcache"
 )
 
 func optionGroupOutputMapper(ctx context.Context, client rdsClient, scope string, _ *rds.DescribeOptionGroupsInput, output *rds.DescribeOptionGroupsOutput) ([]*sdp.Item, error) {

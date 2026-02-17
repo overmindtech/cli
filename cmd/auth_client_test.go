@@ -14,8 +14,8 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
-	"github.com/overmindtech/workspace/auth"
-	"github.com/overmindtech/workspace/tracing"
+	"github.com/overmindtech/cli/go/auth"
+	"github.com/overmindtech/cli/go/tracing"
 )
 
 // testProxyServer is a simple HTTP proxy server for testing

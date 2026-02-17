@@ -3,7 +3,7 @@ package example
 import (
 	"context"
 
-	"github.com/overmindtech/workspace/sdp-go"
+	"github.com/overmindtech/cli/go/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	exampleshared "github.com/overmindtech/cli/sources/example/shared"
 	"github.com/overmindtech/cli/sources/shared"

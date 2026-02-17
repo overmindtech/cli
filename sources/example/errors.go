@@ -3,7 +3,7 @@ package example
 import (
 	"errors"
 
-	"github.com/overmindtech/workspace/sdp-go"
+	"github.com/overmindtech/cli/go/sdp-go"
 )
 
 // queryError is a helper function to convert errors into sdp.QueryError

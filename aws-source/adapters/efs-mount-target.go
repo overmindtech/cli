@@ -6,8 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/efs"
 
-	"github.com/overmindtech/workspace/sdp-go"
-	"github.com/overmindtech/workspace/sdpcache"
+	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdpcache"
 )
 
 func MountTargetOutputMapper(_ context.Context, _ *efs.Client, scope string, input *efs.DescribeMountTargetsInput, output *efs.DescribeMountTargetsOutput) ([]*sdp.Item, error) {

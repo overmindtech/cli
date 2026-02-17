@@ -5,8 +5,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/ec2"
 
-	"github.com/overmindtech/workspace/sdp-go"
-	"github.com/overmindtech/workspace/sdpcache"
+	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdpcache"
 )
 
 func iamInstanceProfileAssociationOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2.DescribeIamInstanceProfileAssociationsInput, output *ec2.DescribeIamInstanceProfileAssociationsOutput) ([]*sdp.Item, error) {

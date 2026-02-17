@@ -1,0 +1,165 @@
+package discovery
+
+import (
+	"context"
+	"errors"
+	"time"
+
+	"connectrpc.com/connect"
+	"github.com/google/uuid"
+	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/tracing"
+	log "github.com/sirupsen/logrus"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
+	"google.golang.org/protobuf/types/known/durationpb"
+)
+
+const DefaultHeartbeatFrequency = 5 * time.Minute
+
+var ErrNoHealthcheckDefined = errors.New("no healthcheck defined")
+
+// HeartbeatSender sends a heartbeat to the management API, this is called at
+// `DefaultHeartbeatFrequency` by default when the engine is running, or
+// `StartSendingHeartbeats` has been called manually. Users can also call this
+// method to immediately send a heartbeat if required. Pass non-`nil` error
+// to indicate that the engine is in an error state, this will be sent to the
+// management API and will be displayed in the UI.
+func (e *Engine) SendHeartbeat(ctx context.Context, customErr error) error {
+	// Get span from context
+	span := trace.SpanFromContext(ctx)
+
+	// Read memory stats and add them to the span
+	memStats := tracing.ReadMemoryStats()
+	tracing.SetMemoryAttributes(span, "ovm.heartbeat", memStats)
+	span.SetAttributes(
+		attribute.String("ovm.sdp.source_name", e.EngineConfig.SourceName),
+		attribute.String("ovm.engine.type", e.EngineConfig.EngineType),
+		attribute.String("ovm.engine.version", e.EngineConfig.Version),
+	)
+
+	if e.EngineConfig.HeartbeatOptions == nil {
+		return ErrNoHealthcheckDefined
+	}
+
+	// No-op when running without management API (e.g. ALLOW_UNAUTHENTICATED local dev)
+	if e.EngineConfig.HeartbeatOptions.ManagementClient == nil {
+		log.WithFields(log.Fields{
+			"source_name": e.EngineConfig.SourceName,
+			"engine_type": e.EngineConfig.EngineType,
+		}).Info("Running in unauthenticated mode; no heartbeats will be sent")
+		return nil
+	}
+
+	// Collect all health check errors
+	var allErrors []error
+	if customErr != nil {
+		allErrors = append(allErrors, customErr)
+	}
+
+	// Check for persistent initialization errors first
+	if initErr := e.GetInitError(); initErr != nil {
+		allErrors = append(allErrors, initErr)
+	}
+
+	// Check adapter readiness (ReadinessCheck) - with timeout to prevent hanging
+	if e.EngineConfig.HeartbeatOptions.ReadinessCheck != nil {
+		// Add timeout for readiness checks to prevent hanging heartbeats
+		readinessCtx, cancel := context.WithTimeout(ctx, 5*time.Second)
+		defer cancel()
+		if err := e.EngineConfig.HeartbeatOptions.ReadinessCheck(readinessCtx); err != nil {
+			allErrors = append(allErrors, err)
+		}
+	}
+
+	// Combine all errors
+	var heartbeatError *string
+	if len(allErrors) > 0 {
+		combinedError := errors.Join(allErrors...)
+		heartbeatError = new(string)
+		*heartbeatError = combinedError.Error()
+	}
+
+	var engineUUID []byte
+
+	if e.EngineConfig.SourceUUID != uuid.Nil {
+		engineUUID = e.EngineConfig.SourceUUID[:]
+	}
+
+	availableScopes, adapterMetadata := e.GetAvailableScopesAndMetadata()
+
+	// Calculate the duration for the next heartbeat, based on the current
+	// frequency x2.5 to give us some leeway
+	nextHeartbeat := time.Duration(float64(e.EngineConfig.HeartbeatOptions.Frequency) * 2.5)
+
+	_, err := e.EngineConfig.HeartbeatOptions.ManagementClient.SubmitSourceHeartbeat(ctx, &connect.Request[sdp.SubmitSourceHeartbeatRequest]{
+		Msg: &sdp.SubmitSourceHeartbeatRequest{
+			UUID:             engineUUID,
+			Version:          e.EngineConfig.Version,
+			Name:             e.EngineConfig.SourceName,
+			Type:             e.EngineConfig.EngineType,
+			AvailableScopes:  availableScopes,
+			AdapterMetadata:  adapterMetadata,
+			Managed:          e.EngineConfig.OvermindManagedSource,
+			Error:            heartbeatError,
+			NextHeartbeatMax: durationpb.New(nextHeartbeat),
+		},
+	})
+
+	// Update heartbeat status tracking
+	e.heartbeatStatusMutex.Lock()
+	if err != nil {
+		e.lastHeartbeatError = err
+	} else {
+		e.lastSuccessfulHeartbeat = time.Now()
+		e.lastHeartbeatError = nil
+	}
+	e.heartbeatStatusMutex.Unlock()
+
+	return err
+}
+
+// Starts sending heartbeats at the specified frequency. These will be sent in
+// the background and this function will return immediately. Heartbeats are
+// automatically started when the engine started, but if an adapter has startup
+// steps that take a long time, or are liable to fail, the user may want to
+// start the heartbeats first so that users can see that the adapter has failed
+// to start.
+//
+// If this is called multiple times, nothing will happen. Heartbeats will be
+// stopped when the engine is stopped, or when the provided context is canceled.
+//
+// This will send one heartbeat initially when the method is called, and will
+// then run in a background goroutine that sends heartbeats at the specified
+// frequency, and will stop when the provided context is canceled.
+func (e *Engine) StartSendingHeartbeats(ctx context.Context) {
+	if e.EngineConfig.HeartbeatOptions == nil || e.EngineConfig.HeartbeatOptions.Frequency == 0 || e.heartbeatCancel != nil {
+		return
+	}
+
+	var heartbeatContext context.Context
+	heartbeatContext, e.heartbeatCancel = context.WithCancel(ctx)
+
+	// Send one heartbeat at the beginning
+	err := e.SendHeartbeat(heartbeatContext, nil)
+	if err != nil {
+		log.WithError(err).Error("Failed to send heartbeat")
+	}
+
+	go func() {
+		ticker := time.NewTicker(e.EngineConfig.HeartbeatOptions.Frequency)
+		defer ticker.Stop()
+
+		for {
+			select {
+			case <-heartbeatContext.Done():
+				return
+			case <-ticker.C:
+				err := e.SendHeartbeat(heartbeatContext, nil)
+				if err != nil {
+					log.WithError(err).Error("Failed to send heartbeat")
+				}
+			}
+		}
+	}()
+}

@@ -3,7 +3,7 @@ package adapters
 import (
 	"testing"
 
-	"github.com/overmindtech/workspace/sdpcache"
+	"github.com/overmindtech/cli/go/sdpcache"
 )
 
 var clusterRoleYAML = `

@@ -6,8 +6,8 @@ import (
 
 	"github.com/aws/aws-sdk-go-v2/service/cloudfront"
 
-	"github.com/overmindtech/workspace/sdp-go"
-	"github.com/overmindtech/workspace/sdpcache"
+	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdpcache"
 )
 
 func streamingDistributionGetFunc(ctx context.Context, client CloudFrontClient, scope string, input *cloudfront.GetStreamingDistributionInput) (*sdp.Item, error) {

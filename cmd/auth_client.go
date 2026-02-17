@@ -7,10 +7,10 @@ import (
 	"time"
 
 	"github.com/hashicorp/go-retryablehttp"
-	"github.com/overmindtech/workspace/auth"
-	"github.com/overmindtech/workspace/sdp-go"
-	"github.com/overmindtech/workspace/sdp-go/sdpconnect"
-	"github.com/overmindtech/workspace/tracing"
+	"github.com/overmindtech/cli/go/auth"
+	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdp-go/sdpconnect"
+	"github.com/overmindtech/cli/go/tracing"
 	log "github.com/sirupsen/logrus"
 )
 

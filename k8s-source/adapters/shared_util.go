@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/overmindtech/workspace/sdp-go"
+	"github.com/overmindtech/cli/go/sdp-go"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 

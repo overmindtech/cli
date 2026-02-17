@@ -3,7 +3,7 @@ package shared
 import (
 	"strings"
 
-	"github.com/overmindtech/workspace/sdp-go"
+	"github.com/overmindtech/cli/go/sdp-go"
 )
 
 // ToAttributesWithExclude converts an interface to SDP attributes using the `sdp.ToAttributesSorted`
