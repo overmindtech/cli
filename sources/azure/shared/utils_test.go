@@ -205,6 +205,36 @@ func TestExtractPathParamsFromResourceID(t *testing.T) {
 			keys:       []string{"storageAccounts", "queues"},
 			expected:   []string{"test-storage-account_123", "test_queue-name"},
 		},
+		{
+			name:       "case-insensitive key matching - lowercase keys match uppercase segments",
+			resourceID: "/CommunityGalleries/test-gallery/Images/test-image/Versions/1.0.0",
+			keys:       []string{"communitygalleries", "images", "versions"},
+			expected:   []string{"test-gallery", "test-image", "1.0.0"},
+		},
+		{
+			name:       "case-insensitive key matching - uppercase keys match lowercase segments",
+			resourceID: "/communitygalleries/test-gallery/images/test-image/versions/1.0.0",
+			keys:       []string{"CommunityGalleries", "Images", "Versions"},
+			expected:   []string{"test-gallery", "test-image", "1.0.0"},
+		},
+		{
+			name:       "case-insensitive key matching - mixed case",
+			resourceID: "/subscriptions/12345678/resourcegroups/test-rg/providers/Microsoft.Storage/storageaccounts/myaccount",
+			keys:       []string{"storageAccounts"},
+			expected:   []string{"myaccount"},
+		},
+		{
+			name:       "value matching key name is not misidentified - gallery named 'images'",
+			resourceID: "/galleries/images/images/real-image/versions/1.0.0",
+			keys:       []string{"images", "versions"},
+			expected:   []string{"real-image", "1.0.0"},
+		},
+		{
+			name:       "value matching key name is not misidentified - gallery named 'versions'",
+			resourceID: "/galleries/versions/images/real-image/versions/1.0.0",
+			keys:       []string{"images", "versions"},
+			expected:   []string{"real-image", "1.0.0"},
+		},
 	}
 
 	for _, tc := range tests {
