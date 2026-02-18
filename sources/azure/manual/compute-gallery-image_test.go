@@ -138,7 +138,7 @@ func TestComputeGalleryImage(t *testing.T) {
 
 		t.Run("StaticTests", func(t *testing.T) {
 			queryTests := shared.QueryTests{
-				{ExpectedType: azureshared.ComputeGallery.String(), ExpectedMethod: sdp.QueryMethod_GET, ExpectedQuery: galleryName, ExpectedScope: scope, ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false}},
+				{ExpectedType: azureshared.ComputeGallery.String(), ExpectedMethod: sdp.QueryMethod_GET, ExpectedQuery: galleryName, ExpectedScope: scope},
 			}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
@@ -164,13 +164,13 @@ func TestComputeGalleryImage(t *testing.T) {
 
 		t.Run("StaticTests", func(t *testing.T) {
 			queryTests := shared.QueryTests{
-				{ExpectedType: azureshared.ComputeGallery.String(), ExpectedMethod: sdp.QueryMethod_GET, ExpectedQuery: galleryName, ExpectedScope: scope, ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false}},
-				{ExpectedType: stdlib.NetworkHTTP.String(), ExpectedMethod: sdp.QueryMethod_SEARCH, ExpectedQuery: "https://eula.example.com/terms", ExpectedScope: "global", ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false}},
-				{ExpectedType: stdlib.NetworkDNS.String(), ExpectedMethod: sdp.QueryMethod_SEARCH, ExpectedQuery: "eula.example.com", ExpectedScope: "global", ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false}},
-				{ExpectedType: stdlib.NetworkHTTP.String(), ExpectedMethod: sdp.QueryMethod_SEARCH, ExpectedQuery: "https://example.com/privacy", ExpectedScope: "global", ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false}},
-				{ExpectedType: stdlib.NetworkDNS.String(), ExpectedMethod: sdp.QueryMethod_SEARCH, ExpectedQuery: "example.com", ExpectedScope: "global", ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false}},
-				{ExpectedType: stdlib.NetworkHTTP.String(), ExpectedMethod: sdp.QueryMethod_SEARCH, ExpectedQuery: "https://releases.example.com/notes", ExpectedScope: "global", ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false}},
-				{ExpectedType: stdlib.NetworkDNS.String(), ExpectedMethod: sdp.QueryMethod_SEARCH, ExpectedQuery: "releases.example.com", ExpectedScope: "global", ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false}},
+				{ExpectedType: azureshared.ComputeGallery.String(), ExpectedMethod: sdp.QueryMethod_GET, ExpectedQuery: galleryName, ExpectedScope: scope},
+				{ExpectedType: stdlib.NetworkHTTP.String(), ExpectedMethod: sdp.QueryMethod_SEARCH, ExpectedQuery: "https://eula.example.com/terms", ExpectedScope: "global"},
+				{ExpectedType: stdlib.NetworkDNS.String(), ExpectedMethod: sdp.QueryMethod_SEARCH, ExpectedQuery: "eula.example.com", ExpectedScope: "global"},
+				{ExpectedType: stdlib.NetworkHTTP.String(), ExpectedMethod: sdp.QueryMethod_SEARCH, ExpectedQuery: "https://example.com/privacy", ExpectedScope: "global"},
+				{ExpectedType: stdlib.NetworkDNS.String(), ExpectedMethod: sdp.QueryMethod_SEARCH, ExpectedQuery: "example.com", ExpectedScope: "global"},
+				{ExpectedType: stdlib.NetworkHTTP.String(), ExpectedMethod: sdp.QueryMethod_SEARCH, ExpectedQuery: "https://releases.example.com/notes", ExpectedScope: "global"},
+				{ExpectedType: stdlib.NetworkDNS.String(), ExpectedMethod: sdp.QueryMethod_SEARCH, ExpectedQuery: "releases.example.com", ExpectedScope: "global"},
 			}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})

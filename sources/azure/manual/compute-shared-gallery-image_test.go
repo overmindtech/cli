@@ -64,7 +64,7 @@ func TestComputeSharedGalleryImage(t *testing.T) {
 
 		t.Run("StaticTests", func(t *testing.T) {
 			queryTests := shared.QueryTests{
-				{ExpectedType: azureshared.ComputeSharedGallery.String(), ExpectedMethod: sdp.QueryMethod_GET, ExpectedQuery: shared.CompositeLookupKey(location, galleryUniqueName), ExpectedScope: subscriptionID, ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false}},
+				{ExpectedType: azureshared.ComputeSharedGallery.String(), ExpectedMethod: sdp.QueryMethod_GET, ExpectedQuery: shared.CompositeLookupKey(location, galleryUniqueName), ExpectedScope: subscriptionID},
 			}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
@@ -90,11 +90,11 @@ func TestComputeSharedGalleryImage(t *testing.T) {
 
 		t.Run("StaticTests", func(t *testing.T) {
 			queryTests := shared.QueryTests{
-				{ExpectedType: azureshared.ComputeSharedGallery.String(), ExpectedMethod: sdp.QueryMethod_GET, ExpectedQuery: shared.CompositeLookupKey(location, galleryUniqueName), ExpectedScope: subscriptionID, ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false}},
-				{ExpectedType: stdlib.NetworkHTTP.String(), ExpectedMethod: sdp.QueryMethod_SEARCH, ExpectedQuery: "https://eula.example.com/terms", ExpectedScope: "global", ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false}},
-				{ExpectedType: stdlib.NetworkDNS.String(), ExpectedMethod: sdp.QueryMethod_SEARCH, ExpectedQuery: "eula.example.com", ExpectedScope: "global", ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false}},
-				{ExpectedType: stdlib.NetworkHTTP.String(), ExpectedMethod: sdp.QueryMethod_SEARCH, ExpectedQuery: "https://example.com/privacy", ExpectedScope: "global", ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false}},
-				{ExpectedType: stdlib.NetworkDNS.String(), ExpectedMethod: sdp.QueryMethod_SEARCH, ExpectedQuery: "example.com", ExpectedScope: "global", ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false}},
+				{ExpectedType: azureshared.ComputeSharedGallery.String(), ExpectedMethod: sdp.QueryMethod_GET, ExpectedQuery: shared.CompositeLookupKey(location, galleryUniqueName), ExpectedScope: subscriptionID},
+				{ExpectedType: stdlib.NetworkHTTP.String(), ExpectedMethod: sdp.QueryMethod_SEARCH, ExpectedQuery: "https://eula.example.com/terms", ExpectedScope: "global"},
+				{ExpectedType: stdlib.NetworkDNS.String(), ExpectedMethod: sdp.QueryMethod_SEARCH, ExpectedQuery: "eula.example.com", ExpectedScope: "global"},
+				{ExpectedType: stdlib.NetworkHTTP.String(), ExpectedMethod: sdp.QueryMethod_SEARCH, ExpectedQuery: "https://example.com/privacy", ExpectedScope: "global"},
+				{ExpectedType: stdlib.NetworkDNS.String(), ExpectedMethod: sdp.QueryMethod_SEARCH, ExpectedQuery: "example.com", ExpectedScope: "global"},
 			}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
