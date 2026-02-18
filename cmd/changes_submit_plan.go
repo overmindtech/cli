@@ -11,6 +11,7 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
+	"github.com/overmindtech/cli/knowledge"
 	"github.com/overmindtech/cli/tfutils"
 	"github.com/overmindtech/cli/go/sdp-go"
 	log "github.com/sirupsen/logrus"
@@ -287,6 +288,9 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 		routineChangesConfigOverride = signalConfigOverride.RoutineChangesConfig
 	}
 
+	// Discover and convert knowledge files
+	sdpKnowledge := knowledge.DiscoverAndConvert(ctx, ".overmind/knowledge/")
+
 	_, err = client.StartChangeAnalysis(ctx, &connect.Request[sdp.StartChangeAnalysisRequest]{
 		Msg: &sdp.StartChangeAnalysisRequest{
 			ChangeUUID:                        changeUUID[:],
@@ -294,6 +298,7 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 			BlastRadiusConfigOverride:         blastRadiusConfigOverride,
 			RoutineChangesConfigOverride:      routineChangesConfigOverride,
 			GithubOrganisationProfileOverride: githubOrganisationProfileOverride,
+			Knowledge:                         sdpKnowledge,
 		},
 	})
 	if err != nil {
