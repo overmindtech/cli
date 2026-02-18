@@ -132,6 +132,9 @@ const (
 	// ManagementServiceUnsetGithubInstallationIDProcedure is the fully-qualified name of the
 	// ManagementService's UnsetGithubInstallationID RPC.
 	ManagementServiceUnsetGithubInstallationIDProcedure = "/account.ManagementService/UnsetGithubInstallationID"
+	// ManagementServiceGetOrCreateAWSExternalIdProcedure is the fully-qualified name of the
+	// ManagementService's GetOrCreateAWSExternalId RPC.
+	ManagementServiceGetOrCreateAWSExternalIdProcedure = "/account.ManagementService/GetOrCreateAWSExternalId"
 )
 
 // AdminServiceClient is a client for the account.AdminService service.
@@ -583,6 +586,9 @@ type ManagementServiceClient interface {
 	// this will unset the github installation ID for the account, allowing the user to install the github app again
 	// it will also remove the organisation profile, so we no longer generate signals for that org
 	UnsetGithubInstallationID(context.Context, *connect.Request[sdp_go.UnsetGithubInstallationIDRequest]) (*connect.Response[sdp_go.UnsetGithubInstallationIDResponse], error)
+	// Returns a stable, per-account external ID for AWS IAM trust policies.
+	// Generates a UUID on first call; returns the same UUID on subsequent calls.
+	GetOrCreateAWSExternalId(context.Context, *connect.Request[sdp_go.GetOrCreateAWSExternalIdRequest]) (*connect.Response[sdp_go.GetOrCreateAWSExternalIdResponse], error)
 }
 
 // NewManagementServiceClient constructs a client for the account.ManagementService service. By
@@ -722,6 +728,12 @@ func NewManagementServiceClient(httpClient connect.HTTPClient, baseURL string, o
 			connect.WithSchema(managementServiceMethods.ByName("UnsetGithubInstallationID")),
 			connect.WithClientOptions(opts...),
 		),
+		getOrCreateAWSExternalId: connect.NewClient[sdp_go.GetOrCreateAWSExternalIdRequest, sdp_go.GetOrCreateAWSExternalIdResponse](
+			httpClient,
+			baseURL+ManagementServiceGetOrCreateAWSExternalIdProcedure,
+			connect.WithSchema(managementServiceMethods.ByName("GetOrCreateAWSExternalId")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -748,6 +760,7 @@ type managementServiceClient struct {
 	getWelcomeScreenInformation *connect.Client[sdp_go.GetWelcomeScreenInformationRequest, sdp_go.GetWelcomeScreenInformationResponse]
 	setGithubInstallationID     *connect.Client[sdp_go.SetGithubInstallationIDRequest, sdp_go.SetGithubInstallationIDResponse]
 	unsetGithubInstallationID   *connect.Client[sdp_go.UnsetGithubInstallationIDRequest, sdp_go.UnsetGithubInstallationIDResponse]
+	getOrCreateAWSExternalId    *connect.Client[sdp_go.GetOrCreateAWSExternalIdRequest, sdp_go.GetOrCreateAWSExternalIdResponse]
 }
 
 // GetAccount calls account.ManagementService.GetAccount.
@@ -855,6 +868,11 @@ func (c *managementServiceClient) UnsetGithubInstallationID(ctx context.Context,
 	return c.unsetGithubInstallationID.CallUnary(ctx, req)
 }
 
+// GetOrCreateAWSExternalId calls account.ManagementService.GetOrCreateAWSExternalId.
+func (c *managementServiceClient) GetOrCreateAWSExternalId(ctx context.Context, req *connect.Request[sdp_go.GetOrCreateAWSExternalIdRequest]) (*connect.Response[sdp_go.GetOrCreateAWSExternalIdResponse], error) {
+	return c.getOrCreateAWSExternalId.CallUnary(ctx, req)
+}
+
 // ManagementServiceHandler is an implementation of the account.ManagementService service.
 type ManagementServiceHandler interface {
 	// Get the details of the account that this user belongs to
@@ -914,6 +932,9 @@ type ManagementServiceHandler interface {
 	// this will unset the github installation ID for the account, allowing the user to install the github app again
 	// it will also remove the organisation profile, so we no longer generate signals for that org
 	UnsetGithubInstallationID(context.Context, *connect.Request[sdp_go.UnsetGithubInstallationIDRequest]) (*connect.Response[sdp_go.UnsetGithubInstallationIDResponse], error)
+	// Returns a stable, per-account external ID for AWS IAM trust policies.
+	// Generates a UUID on first call; returns the same UUID on subsequent calls.
+	GetOrCreateAWSExternalId(context.Context, *connect.Request[sdp_go.GetOrCreateAWSExternalIdRequest]) (*connect.Response[sdp_go.GetOrCreateAWSExternalIdResponse], error)
 }
 
 // NewManagementServiceHandler builds an HTTP handler from the service implementation. It returns
@@ -1049,6 +1070,12 @@ func NewManagementServiceHandler(svc ManagementServiceHandler, opts ...connect.H
 		connect.WithSchema(managementServiceMethods.ByName("UnsetGithubInstallationID")),
 		connect.WithHandlerOptions(opts...),
 	)
+	managementServiceGetOrCreateAWSExternalIdHandler := connect.NewUnaryHandler(
+		ManagementServiceGetOrCreateAWSExternalIdProcedure,
+		svc.GetOrCreateAWSExternalId,
+		connect.WithSchema(managementServiceMethods.ByName("GetOrCreateAWSExternalId")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/account.ManagementService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case ManagementServiceGetAccountProcedure:
@@ -1093,6 +1120,8 @@ func NewManagementServiceHandler(svc ManagementServiceHandler, opts ...connect.H
 			managementServiceSetGithubInstallationIDHandler.ServeHTTP(w, r)
 		case ManagementServiceUnsetGithubInstallationIDProcedure:
 			managementServiceUnsetGithubInstallationIDHandler.ServeHTTP(w, r)
+		case ManagementServiceGetOrCreateAWSExternalIdProcedure:
+			managementServiceGetOrCreateAWSExternalIdHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -1184,4 +1213,8 @@ func (UnimplementedManagementServiceHandler) SetGithubInstallationID(context.Con
 
 func (UnimplementedManagementServiceHandler) UnsetGithubInstallationID(context.Context, *connect.Request[sdp_go.UnsetGithubInstallationIDRequest]) (*connect.Response[sdp_go.UnsetGithubInstallationIDResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("account.ManagementService.UnsetGithubInstallationID is not implemented"))
+}
+
+func (UnimplementedManagementServiceHandler) GetOrCreateAWSExternalId(context.Context, *connect.Request[sdp_go.GetOrCreateAWSExternalIdRequest]) (*connect.Response[sdp_go.GetOrCreateAWSExternalIdResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("account.ManagementService.GetOrCreateAWSExternalId is not implemented"))
 }
