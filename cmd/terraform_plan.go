@@ -336,73 +336,63 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 	log.WithField("change-url", changeUrl.String()).Info("Change ready")
 
 	///////////////////////////////////////////////////////////////////
-	// wait for change analysis to complete
+	// wait for change analysis to complete (poll GetChange by change_analysis_status)
 	///////////////////////////////////////////////////////////////////
 	changeAnalysisSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Change Analysis")
 
-	var timeLine *sdp.GetChangeTimelineV2Response
-	milestoneSpinners := []*pterm.SpinnerPrinter{}
 retryLoop:
 	for {
-		rawTimeLine, timelineErr := client.GetChangeTimelineV2(ctx, &connect.Request[sdp.GetChangeTimelineV2Request]{
-			Msg: &sdp.GetChangeTimelineV2Request{
-				ChangeUUID: changeUuid[:],
+		changeRes, err := client.GetChange(ctx, &connect.Request[sdp.GetChangeRequest]{
+			Msg: &sdp.GetChangeRequest{
+				UUID: changeUuid[:],
 			},
 		})
-		if timelineErr != nil || rawTimeLine.Msg == nil {
-			changeAnalysisSpinner.Fail(fmt.Sprintf("Change Analysis failed to get timeline: %v", timelineErr))
-			return nil
+		if err != nil {
+			changeAnalysisSpinner.Fail(fmt.Sprintf("Change Analysis failed to get change: %v", err))
+			return fmt.Errorf("failed to get change during change analysis: %w", err)
 		}
-		timeLine = rawTimeLine.Msg
-
-		// display the status for the timeline entries
-		for i, entry := range timeLine.GetEntries() {
-			// populate the spinner list on the first run
-			if i <= len(milestoneSpinners) {
-				milestoneSpinners = append(milestoneSpinners, pterm.DefaultSpinner.
-					WithWriter(multi.NewWriter()).
-					WithIndentation(IndentSymbol()).
-					WithText(entry.GetName()))
-			}
-			// render the spinner for this entry
-			switch entry.GetStatus() {
-			case sdp.ChangeTimelineEntryStatus_PENDING:
-				continue
-			case sdp.ChangeTimelineEntryStatus_IN_PROGRESS:
-				if !milestoneSpinners[i].IsActive {
-					milestoneSpinners[i], _ = milestoneSpinners[i].Start()
-				}
-			case sdp.ChangeTimelineEntryStatus_ERROR:
-				milestoneSpinners[i].Fail()
-			case sdp.ChangeTimelineEntryStatus_DONE:
-				milestoneSpinners[i].Success()
-			case sdp.ChangeTimelineEntryStatus_UNSPECIFIED:
-				// do nothing
-			default:
-				milestoneSpinners[i].Fail(fmt.Sprintf("Unknown status: %v", entry.GetStatus()))
-			}
-
-			// ENG-1993: This is temporary to still track the auto tagging entry in the timeline. this is to prevent the cli from hanging
-			// check if change analysis is done
-			if entry.GetName() == sdp.ChangeTimelineEntryV2IDAutoTagging.Name && entry.GetStatus() == sdp.ChangeTimelineEntryStatus_DONE {
-				changeAnalysisSpinner.Success()
-				break retryLoop
-			}
+		if changeRes.Msg == nil || changeRes.Msg.GetChange() == nil {
+			changeAnalysisSpinner.Fail("Change Analysis failed: received empty change response")
+			return fmt.Errorf("change analysis failed: received empty change response")
 		}
-		// retry
+		ch := changeRes.Msg.GetChange()
+		md := ch.GetMetadata()
+		if md == nil || md.GetChangeAnalysisStatus() == nil {
+			changeAnalysisSpinner.Fail("Change Analysis failed: change metadata or analysis status missing")
+			return fmt.Errorf("change analysis failed: change metadata or change analysis status is nil")
+		}
+		status := md.GetChangeAnalysisStatus().GetStatus()
+		switch status {
+		case sdp.ChangeAnalysisStatus_STATUS_DONE, sdp.ChangeAnalysisStatus_STATUS_SKIPPED:
+			changeAnalysisSpinner.Success()
+			break retryLoop
+		case sdp.ChangeAnalysisStatus_STATUS_ERROR:
+			changeAnalysisSpinner.Fail("Change analysis failed")
+			return fmt.Errorf("change analysis completed with error status")
+		case sdp.ChangeAnalysisStatus_STATUS_UNSPECIFIED, sdp.ChangeAnalysisStatus_STATUS_INPROGRESS:
+			// keep polling
+		}
 		time.Sleep(3 * time.Second)
-	}
-	var calculateRiskStep *sdp.ChangeTimelineEntryV2
-	for _, entry := range timeLine.GetEntries() {
-		if entry.GetName() == sdp.ChangeTimelineEntryV2IDCalculatedRisks.Name {
-			calculateRiskStep = entry
-			break
+		if ctx.Err() != nil {
+			changeAnalysisSpinner.Fail("Cancelled")
+			return ctx.Err()
 		}
 	}
-	if calculateRiskStep == nil || calculateRiskStep.GetCalculatedRisks() == nil {
-		return fmt.Errorf("Failed to get calculated risks")
+	risksRes, err := client.GetChangeRisks(ctx, &connect.Request[sdp.GetChangeRisksRequest]{
+		Msg: &sdp.GetChangeRisksRequest{
+			UUID: changeUuid[:],
+		},
+	})
+	if err != nil {
+		return fmt.Errorf("failed to get calculated risks: %w", err)
 	}
-	calculatedRisks := calculateRiskStep.GetCalculatedRisks().GetRisks()
+	if risksRes.Msg == nil {
+		return fmt.Errorf("failed to get calculated risks: response message was nil")
+	}
+	if risksRes.Msg.GetChangeRiskMetadata() == nil {
+		return fmt.Errorf("failed to get calculated risks: change risk metadata was nil")
+	}
+	calculatedRisks := risksRes.Msg.GetChangeRiskMetadata().GetRisks()
 	// Submit milestone for tracing
 	if cmdSpan != nil {
 		cmdSpan.AddEvent("Change Analysis finished", trace.WithAttributes(
