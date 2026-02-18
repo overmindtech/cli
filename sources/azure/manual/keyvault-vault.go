@@ -65,7 +65,6 @@ func (k keyvaultVaultWrapper) List(ctx context.Context, scope string) ([]*sdp.It
 	return items, nil
 }
 
-
 func (k keyvaultVaultWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
 	rgScope, err := k.ResourceGroupScopeFromScope(scope)
 	if err != nil {

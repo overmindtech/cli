@@ -71,78 +71,43 @@ func TestNetworkNetworkSecurityGroup(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(nsgName, "test-security-rule"),
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// DefaultSecurityRule link
 					ExpectedType:   azureshared.NetworkDefaultSecurityRule.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(nsgName, "AllowVnetInBound"),
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Subnet link
 					ExpectedType:   azureshared.NetworkSubnet.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("test-vnet", "test-subnet"),
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// NetworkInterface link
 					ExpectedType:   azureshared.NetworkNetworkInterface.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-nic",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  false,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// ApplicationSecurityGroup link (from SecurityRule Source)
 					ExpectedType:   azureshared.NetworkApplicationSecurityGroup.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-asg-source",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// ApplicationSecurityGroup link (from SecurityRule Destination)
 					ExpectedType:   azureshared.NetworkApplicationSecurityGroup.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-asg-dest",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// ApplicationSecurityGroup link (from DefaultSecurityRule Source)
 					ExpectedType:   azureshared.NetworkApplicationSecurityGroup.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-asg-default-source",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-			}
+				}}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})

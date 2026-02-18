@@ -7,14 +7,14 @@ import (
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v8"
+	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
 	"github.com/overmindtech/cli/sources/shared"
 	"github.com/overmindtech/cli/sources/stdlib"
-	"github.com/overmindtech/cli/go/sdpcache"
-	"github.com/overmindtech/cli/go/discovery"
 )
 
 var NetworkLoadBalancerLookupByName = shared.NewItemTypeLookup("name", azureshared.NetworkLoadBalancer)
@@ -65,7 +65,6 @@ func (n networkLoadBalancerWrapper) List(ctx context.Context, scope string) ([]*
 
 	return items, nil
 }
-
 
 func (n networkLoadBalancerWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
 	rgScope, err := n.ResourceGroupScopeFromScope(scope)

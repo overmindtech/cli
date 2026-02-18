@@ -71,23 +71,13 @@ func TestNetworkVirtualNetwork(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  vnetName,
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  false,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// NetworkVirtualNetworkPeering link
 					ExpectedType:   azureshared.NetworkVirtualNetworkPeering.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  vnetName,
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  false,
-						Out: true,
-					},
-				},
-			}
+				}}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
@@ -118,52 +108,27 @@ func TestNetworkVirtualNetwork(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  vnetName,
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  false,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					ExpectedType:   azureshared.NetworkVirtualNetworkPeering.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  vnetName,
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  false,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					ExpectedType:   azureshared.NetworkNatGateway.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-nat-gateway",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					ExpectedType:   stdlib.NetworkIP.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "10.0.0.1",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					ExpectedType:   stdlib.NetworkDNS.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  "dns.internal",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-			}
+				}}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
 	})

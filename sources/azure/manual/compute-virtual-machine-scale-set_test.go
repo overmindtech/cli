@@ -75,254 +75,139 @@ func TestComputeVirtualMachineScaleSet(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(scaleSetName, "CustomScriptExtension"),
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  false,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// VM instances - always linked via SEARCH
 					ExpectedType:   azureshared.ComputeVirtualMachine.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  scaleSetName,
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  false,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// Network Security Group
 					ExpectedType:   azureshared.NetworkNetworkSecurityGroup.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-nsg",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Virtual Network
 					ExpectedType:   azureshared.NetworkVirtualNetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-vnet",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Subnet - uses composite lookup key
 					ExpectedType:   azureshared.NetworkSubnet.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("test-vnet", "default"),
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Public IP Prefix
 					ExpectedType:   azureshared.NetworkPublicIPPrefix.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-pip-prefix",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Load Balancer
 					ExpectedType:   azureshared.NetworkLoadBalancer.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-lb",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Load Balancer Backend Address Pool - uses composite lookup key
 					ExpectedType:   azureshared.NetworkLoadBalancerBackendAddressPool.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("test-lb", "test-backend-pool"),
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// Load Balancer Inbound NAT Pool - uses composite lookup key
 					ExpectedType:   azureshared.NetworkLoadBalancerInboundNatPool.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("test-lb", "test-nat-pool"),
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// Application Gateway
 					ExpectedType:   azureshared.NetworkApplicationGateway.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-ag",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Application Gateway Backend Address Pool - uses composite lookup key
 					ExpectedType:   azureshared.NetworkApplicationGatewayBackendAddressPool.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("test-ag", "test-ag-pool"),
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// Application Security Group
 					ExpectedType:   azureshared.NetworkApplicationSecurityGroup.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-asg",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Load Balancer Health Probe - uses composite lookup key
 					ExpectedType:   azureshared.NetworkLoadBalancerProbe.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("test-lb", "test-probe"),
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Disk Encryption Set (OS Disk)
 					ExpectedType:   azureshared.ComputeDiskEncryptionSet.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-disk-encryption-set",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Disk Encryption Set (Data Disk)
 					ExpectedType:   azureshared.ComputeDiskEncryptionSet.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-disk-encryption-set-data",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Image (custom image)
 					ExpectedType:   azureshared.ComputeImage.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-image",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Proximity Placement Group
 					ExpectedType:   azureshared.ComputeProximityPlacementGroup.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-ppg",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Dedicated Host Group
 					ExpectedType:   azureshared.ComputeDedicatedHostGroup.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-host-group",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// User Assigned Identity
 					ExpectedType:   azureshared.ManagedIdentityUserAssignedIdentity.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-identity",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// DNS name (boot diagnostics storage URI)
 					ExpectedType:   "dns",
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  "teststorageaccount.blob.core.windows.net",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// Storage Account (boot diagnostics)
 					ExpectedType:   azureshared.StorageAccount.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "teststorageaccount",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Key Vault (OS profile secrets)
 					ExpectedType:   azureshared.KeyVaultVault.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-keyvault",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Key Vault (extension protected settings)
 					ExpectedType:   azureshared.KeyVaultVault.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-keyvault-ext",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-			}
+				}}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})

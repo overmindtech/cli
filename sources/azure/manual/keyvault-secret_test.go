@@ -123,34 +123,19 @@ func TestKeyVaultSecret(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  vaultName,
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,  // If Key Vault is deleted/modified → secret access and configuration are affected
-						Out: false, // If secret is deleted → Key Vault remains
-					},
-				},
-				{
+				}, {
 					// stdlib.NetworkDNS from SecretURI hostname
 					ExpectedType:   stdlib.NetworkDNS.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  vaultName + ".vault.azure.net",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// stdlib.NetworkHTTP from SecretURI
 					ExpectedType:   stdlib.NetworkHTTP.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  fmt.Sprintf("https://%s.vault.azure.net/secrets/%s", vaultName, secretName),
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-			}
+				}}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})

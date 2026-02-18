@@ -95,22 +95,12 @@ func TestComputeDedicatedHostGroup(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(hostGroupName, "host-1"),
 					ExpectedScope:  scope,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					ExpectedType:   azureshared.ComputeDedicatedHost.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(hostGroupName, "host-2"),
 					ExpectedScope:  scope,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-			}
+				}}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
 	})
@@ -323,11 +313,11 @@ func createAzureDedicatedHostGroup(hostGroupName string) *armcompute.DedicatedHo
 			"project": to.Ptr("testing"),
 		},
 		Properties: &armcompute.DedicatedHostGroupProperties{
-			PlatformFaultDomainCount:   to.Ptr(int32(2)),
-			SupportAutomaticPlacement:   to.Ptr(false),
-			AdditionalCapabilities:     nil,
-			Hosts:                      nil,
-			InstanceView:               nil,
+			PlatformFaultDomainCount:  to.Ptr(int32(2)),
+			SupportAutomaticPlacement: to.Ptr(false),
+			AdditionalCapabilities:    nil,
+			Hosts:                     nil,
+			InstanceView:              nil,
 		},
 	}
 }

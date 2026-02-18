@@ -71,10 +71,6 @@ func TestNetworkRouteTable(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(routeTableName, "test-route"),
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					// Route with NextHopIPAddress link (IP address to stdlib)
@@ -82,10 +78,6 @@ func TestNetworkRouteTable(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "10.0.0.1",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					// Subnet link (external resource)
@@ -93,10 +85,6 @@ func TestNetworkRouteTable(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("test-vnet", "test-subnet"),
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 			}
 

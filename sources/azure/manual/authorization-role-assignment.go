@@ -14,7 +14,6 @@ import (
 	"github.com/overmindtech/cli/go/sdpcache"
 	"github.com/overmindtech/cli/go/discovery"
 )
-
 var AuthorizationRoleAssignmentLookupByName = shared.NewItemTypeLookup("name", azureshared.AuthorizationRoleAssignment)
 
 type authorizationRoleAssignmentWrapper struct {
@@ -61,7 +60,6 @@ func (a authorizationRoleAssignmentWrapper) List(ctx context.Context, scope stri
 
 	return items, nil
 }
-
 
 func (a authorizationRoleAssignmentWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
 	rgScope, err := a.ResourceGroupScopeFromScope(scope)

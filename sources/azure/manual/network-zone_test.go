@@ -72,67 +72,37 @@ func TestNetworkZone(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  zoneName,
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// Virtual Network from RegistrationVirtualNetworks
 					ExpectedType:   azureshared.NetworkVirtualNetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-reg-vnet",
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Virtual Network from ResolutionVirtualNetworks
 					ExpectedType:   azureshared.NetworkVirtualNetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-res-vnet",
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// DNS Record Set (child resource)
 					ExpectedType:   azureshared.NetworkDNSRecordSet.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  zoneName,
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// DNS name server (standard library)
 					ExpectedType:   "dns",
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  "ns1.example.com",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// DNS name server (standard library)
 					ExpectedType:   "dns",
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  "ns2.example.com",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-			}
+				}}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})

@@ -110,10 +110,6 @@ t.Run("StaticTests", func(t *testing.T) {
             ExpectedMethod: sdp.QueryMethod_GET,
             ExpectedQuery:  "test-disk",
             ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-            ExpectedBlastPropagation: &sdp.BlastPropagation{
-                In:  true,
-                Out: true,
-            },
         },
         // ... more test cases
     }
