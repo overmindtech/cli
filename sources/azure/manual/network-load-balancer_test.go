@@ -71,122 +71,67 @@ func TestNetworkLoadBalancer(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(lbName, "frontend-ip-config"),
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// PublicIPAddress external resource
 					ExpectedType:   azureshared.NetworkPublicIPAddress.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-public-ip",
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Subnet external resource
 					ExpectedType:   azureshared.NetworkSubnet.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("test-vnet", "test-subnet"),
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Private IP address link (standard library)
 					ExpectedType:   "ip",
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "10.2.0.5",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// BackendAddressPool child resource
 					ExpectedType:   azureshared.NetworkLoadBalancerBackendAddressPool.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(lbName, "backend-pool"),
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// InboundNatRule child resource
 					ExpectedType:   azureshared.NetworkLoadBalancerInboundNatRule.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(lbName, "inbound-nat-rule"),
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// NetworkInterface via InboundNatRule BackendIPConfiguration
 					ExpectedType:   azureshared.NetworkNetworkInterface.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-nic",
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// LoadBalancingRule child resource
 					ExpectedType:   azureshared.NetworkLoadBalancerLoadBalancingRule.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(lbName, "lb-rule"),
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// Probe child resource
 					ExpectedType:   azureshared.NetworkLoadBalancerProbe.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(lbName, "probe"),
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// OutboundRule child resource
 					ExpectedType:   azureshared.NetworkLoadBalancerOutboundRule.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(lbName, "outbound-rule"),
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// InboundNatPool child resource
 					ExpectedType:   azureshared.NetworkLoadBalancerInboundNatPool.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(lbName, "nat-pool"),
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-			}
+				}}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})

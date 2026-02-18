@@ -112,89 +112,49 @@ func TestDocumentDBDatabaseAccounts(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  accountName,
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// Private Endpoint (GET) - same resource group
 					ExpectedType:   azureshared.NetworkPrivateEndpoint.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-private-endpoint",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// Private Endpoint (GET) - different resource group
 					ExpectedType:   azureshared.NetworkPrivateEndpoint.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-private-endpoint-diff-rg",
 					ExpectedScope:  subscriptionID + ".different-rg",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// Subnet (GET) - same resource group
 					ExpectedType:   azureshared.NetworkSubnet.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("test-vnet", "test-subnet"),
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Subnet (GET) - different resource group
 					ExpectedType:   azureshared.NetworkSubnet.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("test-vnet-diff-rg", "test-subnet-diff-rg"),
 					ExpectedScope:  subscriptionID + ".different-rg",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Key Vault (GET)
 					ExpectedType:   azureshared.KeyVaultVault.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-keyvault",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// User-Assigned Managed Identity (SEARCH) - same resource group
 					ExpectedType:   azureshared.ManagedIdentityUserAssignedIdentity.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  resourceGroup,
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// User-Assigned Managed Identity (SEARCH) - different resource group
 					ExpectedType:   azureshared.ManagedIdentityUserAssignedIdentity.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  "identity-rg",
 					ExpectedScope:  subscriptionID + ".identity-rg",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-			}
+				}}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})

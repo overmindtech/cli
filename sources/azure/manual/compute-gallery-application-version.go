@@ -211,40 +211,40 @@ func (c computeGalleryApplicationVersionWrapper) azureGalleryApplicationVersionT
 				}
 			}
 			if accountName := azureshared.ExtractStorageAccountNameFromBlobURI(link); accountName != "" {
-					if _, seen := seenStorageAccounts[accountName]; !seen {
-						seenStorageAccounts[accountName] = struct{}{}
+				if _, seen := seenStorageAccounts[accountName]; !seen {
+					seenStorageAccounts[accountName] = struct{}{}
+					linkedItemQueries = append(linkedItemQueries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   azureshared.StorageAccount.String(),
+							Method: sdp.QueryMethod_GET,
+							Query:  accountName,
+							Scope:  scope,
+						},
+						BlastPropagation: &sdp.BlastPropagation{
+							In:  true,  // If storage account is unavailable → version artifact cannot be accessed (In: true)
+							Out: false, // If version is deleted → storage account remains (Out: false)
+						},
+					})
+				}
+				containerName := azureshared.ExtractContainerNameFromBlobURI(link)
+				if containerName != "" {
+					containerKey := shared.CompositeLookupKey(accountName, containerName)
+					if _, seen := seenBlobContainers[containerKey]; !seen {
+						seenBlobContainers[containerKey] = struct{}{}
 						linkedItemQueries = append(linkedItemQueries, &sdp.LinkedItemQuery{
 							Query: &sdp.Query{
-								Type:   azureshared.StorageAccount.String(),
+								Type:   azureshared.StorageBlobContainer.String(),
 								Method: sdp.QueryMethod_GET,
-								Query:  accountName,
+								Query:  containerKey,
 								Scope:  scope,
 							},
 							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,  // If storage account is unavailable → version artifact cannot be accessed (In: true)
-								Out: false, // If version is deleted → storage account remains (Out: false)
+								In:  true,  // If blob container is unavailable → version artifact cannot be accessed (In: true)
+								Out: false, // If version is deleted → blob container remains (Out: false)
 							},
 						})
 					}
-					containerName := azureshared.ExtractContainerNameFromBlobURI(link)
-					if containerName != "" {
-						containerKey := shared.CompositeLookupKey(accountName, containerName)
-						if _, seen := seenBlobContainers[containerKey]; !seen {
-							seenBlobContainers[containerKey] = struct{}{}
-							linkedItemQueries = append(linkedItemQueries, &sdp.LinkedItemQuery{
-								Query: &sdp.Query{
-									Type:   azureshared.StorageBlobContainer.String(),
-									Method: sdp.QueryMethod_GET,
-									Query:  containerKey,
-									Scope:  scope,
-								},
-								BlastPropagation: &sdp.BlastPropagation{
-									In:  true,  // If blob container is unavailable → version artifact cannot be accessed (In: true)
-									Out: false, // If version is deleted → blob container remains (Out: false)
-								},
-							})
-						}
-					}
+				}
 			}
 		}
 		if src.MediaLink != nil && *src.MediaLink != "" {

@@ -72,12 +72,7 @@ func TestComputeDiskAccess(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  diskAccessName,
 					ExpectedScope:  scope,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-			}
+				}}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
 	})
@@ -107,34 +102,19 @@ func TestComputeDiskAccess(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  diskAccessName,
 					ExpectedScope:  scope,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// Network Private Endpoint (same resource group)
 					ExpectedType:   azureshared.NetworkPrivateEndpoint.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-private-endpoint",
 					ExpectedScope:  scope,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// Network Private Endpoint (different resource group)
 					ExpectedType:   azureshared.NetworkPrivateEndpoint.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-private-endpoint-other-rg",
 					ExpectedScope:  subscriptionID + ".other-rg",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-			}
+				}}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
 	})

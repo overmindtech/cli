@@ -5,14 +5,14 @@ import (
 	"errors"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v8"
+	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
 	"github.com/overmindtech/cli/sources/shared"
 	"github.com/overmindtech/cli/sources/stdlib"
-	"github.com/overmindtech/cli/go/sdpcache"
-	"github.com/overmindtech/cli/go/discovery"
 )
 
 var NetworkNetworkInterfaceLookupByName = shared.NewItemTypeLookup("name", azureshared.NetworkNetworkInterface)
@@ -60,7 +60,6 @@ func (n networkNetworkInterfaceWrapper) List(ctx context.Context, scope string) 
 	return items, nil
 }
 
-
 func (n networkNetworkInterfaceWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
 	rgScope, err := n.ResourceGroupScopeFromScope(scope)
 	if err != nil {
@@ -88,6 +87,7 @@ func (n networkNetworkInterfaceWrapper) ListStream(ctx context.Context, stream d
 		}
 	}
 }
+
 // reference: https://learn.microsoft.com/en-us/rest/api/virtualnetwork/network-interfaces/get?view=rest-virtualnetwork-2025-03-01&tabs=HTTP#response
 func (n networkNetworkInterfaceWrapper) azureNetworkInterfaceToSDPItem(networkInterface *armnetwork.Interface) (*sdp.Item, *sdp.QueryError) {
 	if networkInterface.Name == nil {

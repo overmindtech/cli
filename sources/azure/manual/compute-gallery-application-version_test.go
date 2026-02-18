@@ -146,12 +146,12 @@ func TestComputeGalleryApplicationVersion(t *testing.T) {
 
 		t.Run("StaticTests", func(t *testing.T) {
 			queryTests := shared.QueryTests{
-				{ExpectedType: azureshared.ComputeGallery.String(), ExpectedMethod: sdp.QueryMethod_GET, ExpectedQuery: galleryName, ExpectedScope: scope, ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false}},
-				{ExpectedType: azureshared.ComputeGalleryApplication.String(), ExpectedMethod: sdp.QueryMethod_GET, ExpectedQuery: shared.CompositeLookupKey(galleryName, galleryApplicationName), ExpectedScope: scope, ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false}},
-				{ExpectedType: azureshared.StorageAccount.String(), ExpectedMethod: sdp.QueryMethod_GET, ExpectedQuery: "mystorageaccount", ExpectedScope: scope, ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false}},
-				{ExpectedType: azureshared.StorageBlobContainer.String(), ExpectedMethod: sdp.QueryMethod_GET, ExpectedQuery: shared.CompositeLookupKey("mystorageaccount", "packages"), ExpectedScope: scope, ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false}},
-				{ExpectedType: stdlib.NetworkHTTP.String(), ExpectedMethod: sdp.QueryMethod_SEARCH, ExpectedQuery: "https://mystorageaccount.blob.core.windows.net/packages/app.zip", ExpectedScope: "global", ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: true}},
-				{ExpectedType: stdlib.NetworkDNS.String(), ExpectedMethod: sdp.QueryMethod_SEARCH, ExpectedQuery: "mystorageaccount.blob.core.windows.net", ExpectedScope: "global", ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: true}},
+				{ExpectedType: azureshared.ComputeGallery.String(), ExpectedMethod: sdp.QueryMethod_GET, ExpectedQuery: galleryName, ExpectedScope: scope},
+				{ExpectedType: azureshared.ComputeGalleryApplication.String(), ExpectedMethod: sdp.QueryMethod_GET, ExpectedQuery: shared.CompositeLookupKey(galleryName, galleryApplicationName), ExpectedScope: scope},
+				{ExpectedType: azureshared.StorageAccount.String(), ExpectedMethod: sdp.QueryMethod_GET, ExpectedQuery: "mystorageaccount", ExpectedScope: scope},
+				{ExpectedType: azureshared.StorageBlobContainer.String(), ExpectedMethod: sdp.QueryMethod_GET, ExpectedQuery: shared.CompositeLookupKey("mystorageaccount", "packages"), ExpectedScope: scope},
+				{ExpectedType: stdlib.NetworkHTTP.String(), ExpectedMethod: sdp.QueryMethod_SEARCH, ExpectedQuery: "https://mystorageaccount.blob.core.windows.net/packages/app.zip", ExpectedScope: "global"},
+				{ExpectedType: stdlib.NetworkDNS.String(), ExpectedMethod: sdp.QueryMethod_SEARCH, ExpectedQuery: "mystorageaccount.blob.core.windows.net", ExpectedScope: "global"},
 			}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
@@ -177,15 +177,15 @@ func TestComputeGalleryApplicationVersion(t *testing.T) {
 
 		t.Run("StaticTests", func(t *testing.T) {
 			queryTests := shared.QueryTests{
-				{ExpectedType: azureshared.ComputeGallery.String(), ExpectedMethod: sdp.QueryMethod_GET, ExpectedQuery: galleryName, ExpectedScope: scope, ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false}},
-				{ExpectedType: azureshared.ComputeGalleryApplication.String(), ExpectedMethod: sdp.QueryMethod_GET, ExpectedQuery: shared.CompositeLookupKey(galleryName, galleryApplicationName), ExpectedScope: scope, ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false}},
-				{ExpectedType: azureshared.StorageAccount.String(), ExpectedMethod: sdp.QueryMethod_GET, ExpectedQuery: "mystorageaccount", ExpectedScope: scope, ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false}},
-				{ExpectedType: azureshared.StorageBlobContainer.String(), ExpectedMethod: sdp.QueryMethod_GET, ExpectedQuery: shared.CompositeLookupKey("mystorageaccount", "packages"), ExpectedScope: scope, ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false}},
-				{ExpectedType: azureshared.StorageBlobContainer.String(), ExpectedMethod: sdp.QueryMethod_GET, ExpectedQuery: shared.CompositeLookupKey("mystorageaccount", "config"), ExpectedScope: scope, ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false}},
-				{ExpectedType: stdlib.NetworkHTTP.String(), ExpectedMethod: sdp.QueryMethod_SEARCH, ExpectedQuery: "https://mystorageaccount.blob.core.windows.net/packages/app.zip", ExpectedScope: "global", ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: true}},
-				{ExpectedType: stdlib.NetworkDNS.String(), ExpectedMethod: sdp.QueryMethod_SEARCH, ExpectedQuery: "mystorageaccount.blob.core.windows.net", ExpectedScope: "global", ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: true}},
-				{ExpectedType: stdlib.NetworkHTTP.String(), ExpectedMethod: sdp.QueryMethod_SEARCH, ExpectedQuery: "https://mystorageaccount.blob.core.windows.net/config/default.json", ExpectedScope: "global", ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: true}},
-				{ExpectedType: azureshared.ComputeDiskEncryptionSet.String(), ExpectedMethod: sdp.QueryMethod_GET, ExpectedQuery: "test-des", ExpectedScope: scope, ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false}},
+				{ExpectedType: azureshared.ComputeGallery.String(), ExpectedMethod: sdp.QueryMethod_GET, ExpectedQuery: galleryName, ExpectedScope: scope},
+				{ExpectedType: azureshared.ComputeGalleryApplication.String(), ExpectedMethod: sdp.QueryMethod_GET, ExpectedQuery: shared.CompositeLookupKey(galleryName, galleryApplicationName), ExpectedScope: scope},
+				{ExpectedType: azureshared.StorageAccount.String(), ExpectedMethod: sdp.QueryMethod_GET, ExpectedQuery: "mystorageaccount", ExpectedScope: scope},
+				{ExpectedType: azureshared.StorageBlobContainer.String(), ExpectedMethod: sdp.QueryMethod_GET, ExpectedQuery: shared.CompositeLookupKey("mystorageaccount", "packages"), ExpectedScope: scope},
+				{ExpectedType: azureshared.StorageBlobContainer.String(), ExpectedMethod: sdp.QueryMethod_GET, ExpectedQuery: shared.CompositeLookupKey("mystorageaccount", "config"), ExpectedScope: scope},
+				{ExpectedType: stdlib.NetworkHTTP.String(), ExpectedMethod: sdp.QueryMethod_SEARCH, ExpectedQuery: "https://mystorageaccount.blob.core.windows.net/packages/app.zip", ExpectedScope: "global"},
+				{ExpectedType: stdlib.NetworkDNS.String(), ExpectedMethod: sdp.QueryMethod_SEARCH, ExpectedQuery: "mystorageaccount.blob.core.windows.net", ExpectedScope: "global"},
+				{ExpectedType: stdlib.NetworkHTTP.String(), ExpectedMethod: sdp.QueryMethod_SEARCH, ExpectedQuery: "https://mystorageaccount.blob.core.windows.net/config/default.json", ExpectedScope: "global"},
+				{ExpectedType: azureshared.ComputeDiskEncryptionSet.String(), ExpectedMethod: sdp.QueryMethod_GET, ExpectedQuery: "test-des", ExpectedScope: scope},
 			}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
@@ -425,12 +425,12 @@ func TestComputeGalleryApplicationVersion(t *testing.T) {
 		expected := map[shared.ItemType]bool{
 			azureshared.ComputeGallery:            true,
 			azureshared.ComputeGalleryApplication: true,
-			azureshared.ComputeDiskEncryptionSet:   true,
+			azureshared.ComputeDiskEncryptionSet:  true,
 			azureshared.StorageAccount:            true,
 			azureshared.StorageBlobContainer:      true,
-			stdlib.NetworkDNS:                      true,
-			stdlib.NetworkHTTP:                     true,
-			stdlib.NetworkIP:                       true,
+			stdlib.NetworkDNS:                     true,
+			stdlib.NetworkHTTP:                    true,
+			stdlib.NetworkIP:                      true,
 		}
 		for itemType, want := range expected {
 			if got := links[itemType]; got != want {

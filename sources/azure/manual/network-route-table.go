@@ -14,7 +14,6 @@ import (
 	"github.com/overmindtech/cli/go/sdpcache"
 	"github.com/overmindtech/cli/go/discovery"
 )
-
 var NetworkRouteTableLookupByName = shared.NewItemTypeLookup("name", azureshared.NetworkRouteTable)
 
 type networkRouteTableWrapper struct {

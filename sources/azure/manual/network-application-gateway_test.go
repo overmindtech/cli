@@ -72,265 +72,145 @@ func TestNetworkApplicationGateway(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(agName, "gateway-ip-config"),
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// Subnet from GatewayIPConfiguration
 					ExpectedType:   azureshared.NetworkSubnet.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("test-vnet", "test-subnet"),
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// VirtualNetwork from GatewayIPConfiguration subnet
 					ExpectedType:   azureshared.NetworkVirtualNetwork.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-vnet",
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// FrontendIPConfiguration child resource
 					ExpectedType:   azureshared.NetworkApplicationGatewayFrontendIPConfiguration.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(agName, "frontend-ip-config"),
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// PublicIPAddress external resource
 					ExpectedType:   azureshared.NetworkPublicIPAddress.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-public-ip",
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Private IP address link (standard library)
 					ExpectedType:   stdlib.NetworkIP.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "10.2.0.5",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// BackendAddressPool child resource
 					ExpectedType:   azureshared.NetworkApplicationGatewayBackendAddressPool.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(agName, "backend-pool"),
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// Backend IP address link (standard library)
 					ExpectedType:   stdlib.NetworkIP.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "10.0.1.4",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// HTTPListener child resource
 					ExpectedType:   azureshared.NetworkApplicationGatewayHTTPListener.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(agName, "http-listener"),
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// BackendHTTPSettings child resource
 					ExpectedType:   azureshared.NetworkApplicationGatewayBackendHTTPSettings.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(agName, "backend-http-settings"),
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// RequestRoutingRule child resource
 					ExpectedType:   azureshared.NetworkApplicationGatewayRequestRoutingRule.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(agName, "routing-rule"),
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// Probe child resource
 					ExpectedType:   azureshared.NetworkApplicationGatewayProbe.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(agName, "health-probe"),
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// SSLCertificate child resource
 					ExpectedType:   azureshared.NetworkApplicationGatewaySSLCertificate.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(agName, "ssl-cert"),
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// Key Vault Secret from SSLCertificate KeyVaultSecretID
 					ExpectedType:   azureshared.KeyVaultSecret.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("test-keyvault", "test-secret"),
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// DNS name from SSLCertificate KeyVaultSecretID
 					ExpectedType:   stdlib.NetworkDNS.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  "test-keyvault.vault.azure.net",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// URLPathMap child resource
 					ExpectedType:   azureshared.NetworkApplicationGatewayURLPathMap.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(agName, "url-path-map"),
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// AuthenticationCertificate child resource
 					ExpectedType:   azureshared.NetworkApplicationGatewayAuthenticationCertificate.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(agName, "auth-cert"),
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// TrustedRootCertificate child resource
 					ExpectedType:   azureshared.NetworkApplicationGatewayTrustedRootCertificate.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(agName, "trusted-root-cert"),
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// Key Vault Secret from TrustedRootCertificate KeyVaultSecretID
 					ExpectedType:   azureshared.KeyVaultSecret.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("test-trusted-keyvault", "test-trusted-secret"),
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// DNS name from TrustedRootCertificate KeyVaultSecretID
 					ExpectedType:   stdlib.NetworkDNS.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  "test-trusted-keyvault.vault.azure.net",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// RewriteRuleSet child resource
 					ExpectedType:   azureshared.NetworkApplicationGatewayRewriteRuleSet.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(agName, "rewrite-rule-set"),
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// RedirectConfiguration child resource
 					ExpectedType:   azureshared.NetworkApplicationGatewayRedirectConfiguration.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(agName, "redirect-config"),
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// WAF Policy external resource
 					ExpectedType:   azureshared.NetworkApplicationGatewayWebApplicationFirewallPolicy.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-waf-policy",
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// User Assigned Managed Identity external resource
 					ExpectedType:   azureshared.ManagedIdentityUserAssignedIdentity.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-identity",
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-			}
+				}}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})

@@ -91,144 +91,79 @@ func TestComputeImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-os-disk",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// OSDisk.Snapshot.ID - Compute Snapshot
 					ExpectedType:   azureshared.ComputeSnapshot.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-os-snapshot",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// OSDisk.BlobURI - Storage Account
 					ExpectedType:   azureshared.StorageAccount.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "teststorageaccount",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// OSDisk.BlobURI - NetworkHTTP
 					ExpectedType:   stdlib.NetworkHTTP.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  "https://teststorageaccount.blob.core.windows.net/vhds/osdisk.vhd",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// OSDisk.BlobURI - NetworkDNS
 					ExpectedType:   stdlib.NetworkDNS.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  "teststorageaccount.blob.core.windows.net",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// OSDisk.DiskEncryptionSet.ID - Disk Encryption Set
 					ExpectedType:   azureshared.ComputeDiskEncryptionSet.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-os-disk-encryption-set",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// DataDisks[0].ManagedDisk.ID - Compute Disk
 					ExpectedType:   azureshared.ComputeDisk.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-data-disk-1",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// DataDisks[0].Snapshot.ID - Compute Snapshot
 					ExpectedType:   azureshared.ComputeSnapshot.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-data-snapshot-1",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// DataDisks[0].BlobURI - Storage Account
 					ExpectedType:   azureshared.StorageAccount.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "teststorageaccount2",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// DataDisks[0].BlobURI - NetworkHTTP
 					ExpectedType:   stdlib.NetworkHTTP.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  "https://teststorageaccount2.blob.core.windows.net/vhds/datadisk1.vhd",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// DataDisks[0].BlobURI - NetworkDNS
 					ExpectedType:   stdlib.NetworkDNS.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  "teststorageaccount2.blob.core.windows.net",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// DataDisks[0].DiskEncryptionSet.ID - Disk Encryption Set
 					ExpectedType:   azureshared.ComputeDiskEncryptionSet.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-data-disk-encryption-set",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// SourceVirtualMachine.ID - Virtual Machine
 					ExpectedType:   azureshared.ComputeVirtualMachine.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-source-vm",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-			}
+				}}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})

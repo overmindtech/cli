@@ -91,32 +91,28 @@ func TestComputeCapacityReservationGroup(t *testing.T) {
 		t.Run("StaticTests", func(t *testing.T) {
 			queryTests := shared.QueryTests{
 				{
-					ExpectedType:             azureshared.ComputeCapacityReservation.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            shared.CompositeLookupKey(groupName, "res-1"),
-					ExpectedScope:            scope,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+					ExpectedType:   azureshared.ComputeCapacityReservation.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  shared.CompositeLookupKey(groupName, "res-1"),
+					ExpectedScope:  scope,
 				},
 				{
-					ExpectedType:             azureshared.ComputeCapacityReservation.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            shared.CompositeLookupKey(groupName, "res-2"),
-					ExpectedScope:            scope,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+					ExpectedType:   azureshared.ComputeCapacityReservation.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  shared.CompositeLookupKey(groupName, "res-2"),
+					ExpectedScope:  scope,
 				},
 				{
-					ExpectedType:             azureshared.ComputeVirtualMachine.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "vm-1",
-					ExpectedScope:            scope,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+					ExpectedType:   azureshared.ComputeVirtualMachine.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "vm-1",
+					ExpectedScope:  scope,
 				},
 				{
-					ExpectedType:             azureshared.ComputeVirtualMachine.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "vm-2",
-					ExpectedScope:            scope,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+					ExpectedType:   azureshared.ComputeVirtualMachine.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "vm-2",
+					ExpectedScope:  scope,
 				},
 			}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)

@@ -5,14 +5,14 @@ import (
 	"errors"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/batch/armbatch/v3"
+	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
 	"github.com/overmindtech/cli/sources/shared"
 	"github.com/overmindtech/cli/sources/stdlib"
-	"github.com/overmindtech/cli/go/sdpcache"
-	"github.com/overmindtech/cli/go/discovery"
 )
 
 var BatchAccountLookupByName = shared.NewItemTypeLookup("name", azureshared.BatchBatchAccount)

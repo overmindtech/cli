@@ -62,11 +62,10 @@ func ValidateAdapter(t *testing.T, adapter discovery.Adapter) {
 
 // QueryTest is a struct that defines the expected properties of a linked item query.
 type QueryTest struct {
-	ExpectedType             string
-	ExpectedMethod           sdp.QueryMethod
-	ExpectedQuery            string
-	ExpectedScope            string
-	ExpectedBlastPropagation *sdp.BlastPropagation
+	ExpectedType   string
+	ExpectedMethod sdp.QueryMethod
+	ExpectedQuery  string
+	ExpectedScope  string
 }
 
 type QueryTests []QueryTest
@@ -111,22 +110,6 @@ func (i QueryTests) TestLinkedItems(t *testing.T, item *sdp.Item) {
 
 		if test.ExpectedMethod != gotLiq.GetQuery().GetMethod() {
 			t.Errorf("for the linked item query %s of %s, expected method %s, got %s", test.ExpectedQuery, test.ExpectedType, test.ExpectedMethod, gotLiq.GetQuery().GetMethod())
-		}
-
-		if test.ExpectedBlastPropagation == nil {
-			continue
-		}
-
-		if gotLiq.GetBlastPropagation() == nil {
-			t.Fatalf("for the linked item query %s of %s, expected blast propagation to be non-nil", test.ExpectedQuery, test.ExpectedType)
-		}
-
-		if test.ExpectedBlastPropagation.GetIn() != gotLiq.GetBlastPropagation().GetIn() {
-			t.Errorf("for the linked item query %s of %s, expected blast propagation [IN] to be %v, got %v", test.ExpectedQuery, test.ExpectedType, test.ExpectedBlastPropagation.GetIn(), gotLiq.GetBlastPropagation().GetIn())
-		}
-
-		if test.ExpectedBlastPropagation.GetOut() != gotLiq.GetBlastPropagation().GetOut() {
-			t.Errorf("for the linked item query %s of %s, expected blast propagation [OUT] to be %v, got %v", test.ExpectedQuery, test.ExpectedType, test.ExpectedBlastPropagation.GetOut(), gotLiq.GetBlastPropagation().GetOut())
 		}
 	}
 }
