@@ -531,7 +531,7 @@ func (x StartChangeResponse_State) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use StartChangeResponse_State.Descriptor instead.
 func (StartChangeResponse_State) EnumDescriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{84, 0}
+	return file_changes_proto_rawDescGZIP(), []int{86, 0}
 }
 
 type EndChangeResponse_State int32
@@ -587,7 +587,7 @@ func (x EndChangeResponse_State) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use EndChangeResponse_State.Descriptor instead.
 func (EndChangeResponse_State) EnumDescriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{86, 0}
+	return file_changes_proto_rawDescGZIP(), []int{88, 0}
 }
 
 type Risk_Severity int32
@@ -639,7 +639,7 @@ func (x Risk_Severity) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use Risk_Severity.Descriptor instead.
 func (Risk_Severity) EnumDescriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{89, 0}
+	return file_changes_proto_rawDescGZIP(), []int{91, 0}
 }
 
 type ChangeAnalysisStatus_Status int32
@@ -694,7 +694,7 @@ func (x ChangeAnalysisStatus_Status) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use ChangeAnalysisStatus_Status.Descriptor instead.
 func (ChangeAnalysisStatus_Status) EnumDescriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{90, 0}
+	return file_changes_proto_rawDescGZIP(), []int{92, 0}
 }
 
 type LabelRule struct {
@@ -1523,6 +1523,126 @@ func (x *ReapplyLabelRuleInTimeRangeResponse) GetChangeUUID() [][]byte {
 	return nil
 }
 
+type KnowledgeReference struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	FileName      string                 `protobuf:"bytes,2,opt,name=fileName,proto3" json:"fileName,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *KnowledgeReference) Reset() {
+	*x = KnowledgeReference{}
+	mi := &file_changes_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *KnowledgeReference) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*KnowledgeReference) ProtoMessage() {}
+
+func (x *KnowledgeReference) ProtoReflect() protoreflect.Message {
+	mi := &file_changes_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use KnowledgeReference.ProtoReflect.Descriptor instead.
+func (*KnowledgeReference) Descriptor() ([]byte, []int) {
+	return file_changes_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *KnowledgeReference) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *KnowledgeReference) GetFileName() string {
+	if x != nil {
+		return x.FileName
+	}
+	return ""
+}
+
+type Knowledge struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Name          string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Description   string                 `protobuf:"bytes,2,opt,name=description,proto3" json:"description,omitempty"`
+	Content       string                 `protobuf:"bytes,3,opt,name=content,proto3" json:"content,omitempty"`
+	FileName      string                 `protobuf:"bytes,4,opt,name=fileName,proto3" json:"fileName,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Knowledge) Reset() {
+	*x = Knowledge{}
+	mi := &file_changes_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Knowledge) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Knowledge) ProtoMessage() {}
+
+func (x *Knowledge) ProtoReflect() protoreflect.Message {
+	mi := &file_changes_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Knowledge.ProtoReflect.Descriptor instead.
+func (*Knowledge) Descriptor() ([]byte, []int) {
+	return file_changes_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *Knowledge) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *Knowledge) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *Knowledge) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
+func (x *Knowledge) GetFileName() string {
+	if x != nil {
+		return x.FileName
+	}
+	return ""
+}
+
 type GetHypothesesDetailsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ChangeUUID    []byte                 `protobuf:"bytes,1,opt,name=changeUUID,proto3" json:"changeUUID,omitempty"`
@@ -1532,7 +1652,7 @@ type GetHypothesesDetailsRequest struct {
 
 func (x *GetHypothesesDetailsRequest) Reset() {
 	*x = GetHypothesesDetailsRequest{}
-	mi := &file_changes_proto_msgTypes[17]
+	mi := &file_changes_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1544,7 +1664,7 @@ func (x *GetHypothesesDetailsRequest) String() string {
 func (*GetHypothesesDetailsRequest) ProtoMessage() {}
 
 func (x *GetHypothesesDetailsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[17]
+	mi := &file_changes_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1557,7 +1677,7 @@ func (x *GetHypothesesDetailsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetHypothesesDetailsRequest.ProtoReflect.Descriptor instead.
 func (*GetHypothesesDetailsRequest) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{17}
+	return file_changes_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *GetHypothesesDetailsRequest) GetChangeUUID() []byte {
@@ -1576,7 +1696,7 @@ type GetHypothesesDetailsResponse struct {
 
 func (x *GetHypothesesDetailsResponse) Reset() {
 	*x = GetHypothesesDetailsResponse{}
-	mi := &file_changes_proto_msgTypes[18]
+	mi := &file_changes_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1588,7 +1708,7 @@ func (x *GetHypothesesDetailsResponse) String() string {
 func (*GetHypothesesDetailsResponse) ProtoMessage() {}
 
 func (x *GetHypothesesDetailsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[18]
+	mi := &file_changes_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1601,7 +1721,7 @@ func (x *GetHypothesesDetailsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetHypothesesDetailsResponse.ProtoReflect.Descriptor instead.
 func (*GetHypothesesDetailsResponse) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{18}
+	return file_changes_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *GetHypothesesDetailsResponse) GetHypotheses() []*HypothesesDetails {
@@ -1623,13 +1743,15 @@ type HypothesesDetails struct {
 	Status HypothesisStatus `protobuf:"varint,4,opt,name=status,proto3,enum=changes.HypothesisStatus" json:"status,omitempty"`
 	// The results of the investigation of the hypothesis
 	InvestigationResults string `protobuf:"bytes,5,opt,name=investigationResults,proto3" json:"investigationResults,omitempty"`
-	unknownFields        protoimpl.UnknownFields
-	sizeCache            protoimpl.SizeCache
+	// Knowledge used when investigating this hypothesis
+	KnowledgeUsed []*KnowledgeReference `protobuf:"bytes,6,rep,name=knowledgeUsed,proto3" json:"knowledgeUsed,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *HypothesesDetails) Reset() {
 	*x = HypothesesDetails{}
-	mi := &file_changes_proto_msgTypes[19]
+	mi := &file_changes_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1641,7 +1763,7 @@ func (x *HypothesesDetails) String() string {
 func (*HypothesesDetails) ProtoMessage() {}
 
 func (x *HypothesesDetails) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[19]
+	mi := &file_changes_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1654,7 +1776,7 @@ func (x *HypothesesDetails) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HypothesesDetails.ProtoReflect.Descriptor instead.
 func (*HypothesesDetails) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{19}
+	return file_changes_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *HypothesesDetails) GetTitle() string {
@@ -1692,6 +1814,13 @@ func (x *HypothesesDetails) GetInvestigationResults() string {
 	return ""
 }
 
+func (x *HypothesesDetails) GetKnowledgeUsed() []*KnowledgeReference {
+	if x != nil {
+		return x.KnowledgeUsed
+	}
+	return nil
+}
+
 type GetChangeTimelineV2Request struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ChangeUUID    []byte                 `protobuf:"bytes,1,opt,name=changeUUID,proto3" json:"changeUUID,omitempty"`
@@ -1701,7 +1830,7 @@ type GetChangeTimelineV2Request struct {
 
 func (x *GetChangeTimelineV2Request) Reset() {
 	*x = GetChangeTimelineV2Request{}
-	mi := &file_changes_proto_msgTypes[20]
+	mi := &file_changes_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1713,7 +1842,7 @@ func (x *GetChangeTimelineV2Request) String() string {
 func (*GetChangeTimelineV2Request) ProtoMessage() {}
 
 func (x *GetChangeTimelineV2Request) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[20]
+	mi := &file_changes_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1726,7 +1855,7 @@ func (x *GetChangeTimelineV2Request) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetChangeTimelineV2Request.ProtoReflect.Descriptor instead.
 func (*GetChangeTimelineV2Request) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{20}
+	return file_changes_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *GetChangeTimelineV2Request) GetChangeUUID() []byte {
@@ -1746,7 +1875,7 @@ type GetChangeTimelineV2Response struct {
 
 func (x *GetChangeTimelineV2Response) Reset() {
 	*x = GetChangeTimelineV2Response{}
-	mi := &file_changes_proto_msgTypes[21]
+	mi := &file_changes_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1758,7 +1887,7 @@ func (x *GetChangeTimelineV2Response) String() string {
 func (*GetChangeTimelineV2Response) ProtoMessage() {}
 
 func (x *GetChangeTimelineV2Response) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[21]
+	mi := &file_changes_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1771,7 +1900,7 @@ func (x *GetChangeTimelineV2Response) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetChangeTimelineV2Response.ProtoReflect.Descriptor instead.
 func (*GetChangeTimelineV2Response) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{21}
+	return file_changes_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *GetChangeTimelineV2Response) GetEntries() []*ChangeTimelineEntryV2 {
@@ -1829,7 +1958,7 @@ type ChangeTimelineEntryV2 struct {
 
 func (x *ChangeTimelineEntryV2) Reset() {
 	*x = ChangeTimelineEntryV2{}
-	mi := &file_changes_proto_msgTypes[22]
+	mi := &file_changes_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1841,7 +1970,7 @@ func (x *ChangeTimelineEntryV2) String() string {
 func (*ChangeTimelineEntryV2) ProtoMessage() {}
 
 func (x *ChangeTimelineEntryV2) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[22]
+	mi := &file_changes_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1854,7 +1983,7 @@ func (x *ChangeTimelineEntryV2) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChangeTimelineEntryV2.ProtoReflect.Descriptor instead.
 func (*ChangeTimelineEntryV2) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{22}
+	return file_changes_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *ChangeTimelineEntryV2) GetName() string {
@@ -2094,7 +2223,7 @@ type EmptyContent struct {
 
 func (x *EmptyContent) Reset() {
 	*x = EmptyContent{}
-	mi := &file_changes_proto_msgTypes[23]
+	mi := &file_changes_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2106,7 +2235,7 @@ func (x *EmptyContent) String() string {
 func (*EmptyContent) ProtoMessage() {}
 
 func (x *EmptyContent) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[23]
+	mi := &file_changes_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2119,7 +2248,7 @@ func (x *EmptyContent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EmptyContent.ProtoReflect.Descriptor instead.
 func (*EmptyContent) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{23}
+	return file_changes_proto_rawDescGZIP(), []int{25}
 }
 
 // Per-item summary for timeline display - only what the UI needs
@@ -2137,7 +2266,7 @@ type MappedItemTimelineSummary struct {
 
 func (x *MappedItemTimelineSummary) Reset() {
 	*x = MappedItemTimelineSummary{}
-	mi := &file_changes_proto_msgTypes[24]
+	mi := &file_changes_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2149,7 +2278,7 @@ func (x *MappedItemTimelineSummary) String() string {
 func (*MappedItemTimelineSummary) ProtoMessage() {}
 
 func (x *MappedItemTimelineSummary) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[24]
+	mi := &file_changes_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2162,7 +2291,7 @@ func (x *MappedItemTimelineSummary) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MappedItemTimelineSummary.ProtoReflect.Descriptor instead.
 func (*MappedItemTimelineSummary) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{24}
+	return file_changes_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *MappedItemTimelineSummary) GetDisplayName() string {
@@ -2202,7 +2331,7 @@ type MappedItemsTimelineEntry struct {
 
 func (x *MappedItemsTimelineEntry) Reset() {
 	*x = MappedItemsTimelineEntry{}
-	mi := &file_changes_proto_msgTypes[25]
+	mi := &file_changes_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2214,7 +2343,7 @@ func (x *MappedItemsTimelineEntry) String() string {
 func (*MappedItemsTimelineEntry) ProtoMessage() {}
 
 func (x *MappedItemsTimelineEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[25]
+	mi := &file_changes_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2227,7 +2356,7 @@ func (x *MappedItemsTimelineEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MappedItemsTimelineEntry.ProtoReflect.Descriptor instead.
 func (*MappedItemsTimelineEntry) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{25}
+	return file_changes_proto_rawDescGZIP(), []int{27}
 }
 
 // Deprecated: Marked as deprecated in changes.proto.
@@ -2255,7 +2384,7 @@ type CalculatedBlastRadiusTimelineEntry struct {
 
 func (x *CalculatedBlastRadiusTimelineEntry) Reset() {
 	*x = CalculatedBlastRadiusTimelineEntry{}
-	mi := &file_changes_proto_msgTypes[26]
+	mi := &file_changes_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2267,7 +2396,7 @@ func (x *CalculatedBlastRadiusTimelineEntry) String() string {
 func (*CalculatedBlastRadiusTimelineEntry) ProtoMessage() {}
 
 func (x *CalculatedBlastRadiusTimelineEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[26]
+	mi := &file_changes_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2280,7 +2409,7 @@ func (x *CalculatedBlastRadiusTimelineEntry) ProtoReflect() protoreflect.Message
 
 // Deprecated: Use CalculatedBlastRadiusTimelineEntry.ProtoReflect.Descriptor instead.
 func (*CalculatedBlastRadiusTimelineEntry) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{26}
+	return file_changes_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *CalculatedBlastRadiusTimelineEntry) GetNumItems() uint32 {
@@ -2308,7 +2437,7 @@ type RecordObservationsTimelineEntry struct {
 
 func (x *RecordObservationsTimelineEntry) Reset() {
 	*x = RecordObservationsTimelineEntry{}
-	mi := &file_changes_proto_msgTypes[27]
+	mi := &file_changes_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2320,7 +2449,7 @@ func (x *RecordObservationsTimelineEntry) String() string {
 func (*RecordObservationsTimelineEntry) ProtoMessage() {}
 
 func (x *RecordObservationsTimelineEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[27]
+	mi := &file_changes_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2333,7 +2462,7 @@ func (x *RecordObservationsTimelineEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RecordObservationsTimelineEntry.ProtoReflect.Descriptor instead.
 func (*RecordObservationsTimelineEntry) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{27}
+	return file_changes_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *RecordObservationsTimelineEntry) GetNumObservations() uint32 {
@@ -2356,7 +2485,7 @@ type FormHypothesesTimelineEntry struct {
 
 func (x *FormHypothesesTimelineEntry) Reset() {
 	*x = FormHypothesesTimelineEntry{}
-	mi := &file_changes_proto_msgTypes[28]
+	mi := &file_changes_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2368,7 +2497,7 @@ func (x *FormHypothesesTimelineEntry) String() string {
 func (*FormHypothesesTimelineEntry) ProtoMessage() {}
 
 func (x *FormHypothesesTimelineEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[28]
+	mi := &file_changes_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2381,7 +2510,7 @@ func (x *FormHypothesesTimelineEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FormHypothesesTimelineEntry.ProtoReflect.Descriptor instead.
 func (*FormHypothesesTimelineEntry) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{28}
+	return file_changes_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *FormHypothesesTimelineEntry) GetNumHypotheses() uint32 {
@@ -2414,7 +2543,7 @@ type InvestigateHypothesesTimelineEntry struct {
 
 func (x *InvestigateHypothesesTimelineEntry) Reset() {
 	*x = InvestigateHypothesesTimelineEntry{}
-	mi := &file_changes_proto_msgTypes[29]
+	mi := &file_changes_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2426,7 +2555,7 @@ func (x *InvestigateHypothesesTimelineEntry) String() string {
 func (*InvestigateHypothesesTimelineEntry) ProtoMessage() {}
 
 func (x *InvestigateHypothesesTimelineEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[29]
+	mi := &file_changes_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2439,7 +2568,7 @@ func (x *InvestigateHypothesesTimelineEntry) ProtoReflect() protoreflect.Message
 
 // Deprecated: Use InvestigateHypothesesTimelineEntry.ProtoReflect.Descriptor instead.
 func (*InvestigateHypothesesTimelineEntry) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{29}
+	return file_changes_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *InvestigateHypothesesTimelineEntry) GetNumProven() uint32 {
@@ -2488,7 +2617,7 @@ type HypothesisSummary struct {
 
 func (x *HypothesisSummary) Reset() {
 	*x = HypothesisSummary{}
-	mi := &file_changes_proto_msgTypes[30]
+	mi := &file_changes_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2500,7 +2629,7 @@ func (x *HypothesisSummary) String() string {
 func (*HypothesisSummary) ProtoMessage() {}
 
 func (x *HypothesisSummary) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[30]
+	mi := &file_changes_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2513,7 +2642,7 @@ func (x *HypothesisSummary) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use HypothesisSummary.ProtoReflect.Descriptor instead.
 func (*HypothesisSummary) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{30}
+	return file_changes_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *HypothesisSummary) GetStatus() HypothesisStatus {
@@ -2546,7 +2675,7 @@ type CalculatedRisksTimelineEntry struct {
 
 func (x *CalculatedRisksTimelineEntry) Reset() {
 	*x = CalculatedRisksTimelineEntry{}
-	mi := &file_changes_proto_msgTypes[31]
+	mi := &file_changes_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2558,7 +2687,7 @@ func (x *CalculatedRisksTimelineEntry) String() string {
 func (*CalculatedRisksTimelineEntry) ProtoMessage() {}
 
 func (x *CalculatedRisksTimelineEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[31]
+	mi := &file_changes_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2571,7 +2700,7 @@ func (x *CalculatedRisksTimelineEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CalculatedRisksTimelineEntry.ProtoReflect.Descriptor instead.
 func (*CalculatedRisksTimelineEntry) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{31}
+	return file_changes_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *CalculatedRisksTimelineEntry) GetRisks() []*Risk {
@@ -2591,7 +2720,7 @@ type CalculatedLabelsTimelineEntry struct {
 
 func (x *CalculatedLabelsTimelineEntry) Reset() {
 	*x = CalculatedLabelsTimelineEntry{}
-	mi := &file_changes_proto_msgTypes[32]
+	mi := &file_changes_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2603,7 +2732,7 @@ func (x *CalculatedLabelsTimelineEntry) String() string {
 func (*CalculatedLabelsTimelineEntry) ProtoMessage() {}
 
 func (x *CalculatedLabelsTimelineEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[32]
+	mi := &file_changes_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2616,7 +2745,7 @@ func (x *CalculatedLabelsTimelineEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CalculatedLabelsTimelineEntry.ProtoReflect.Descriptor instead.
 func (*CalculatedLabelsTimelineEntry) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{32}
+	return file_changes_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *CalculatedLabelsTimelineEntry) GetLabels() []*Label {
@@ -2639,7 +2768,7 @@ type ChangeValidationTimelineEntry struct {
 
 func (x *ChangeValidationTimelineEntry) Reset() {
 	*x = ChangeValidationTimelineEntry{}
-	mi := &file_changes_proto_msgTypes[33]
+	mi := &file_changes_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2651,7 +2780,7 @@ func (x *ChangeValidationTimelineEntry) String() string {
 func (*ChangeValidationTimelineEntry) ProtoMessage() {}
 
 func (x *ChangeValidationTimelineEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[33]
+	mi := &file_changes_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2664,7 +2793,7 @@ func (x *ChangeValidationTimelineEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChangeValidationTimelineEntry.ProtoReflect.Descriptor instead.
 func (*ChangeValidationTimelineEntry) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{33}
+	return file_changes_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *ChangeValidationTimelineEntry) GetBriefAnalysis() string {
@@ -2696,7 +2825,7 @@ type ChangeValidationCategory struct {
 
 func (x *ChangeValidationCategory) Reset() {
 	*x = ChangeValidationCategory{}
-	mi := &file_changes_proto_msgTypes[34]
+	mi := &file_changes_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2708,7 +2837,7 @@ func (x *ChangeValidationCategory) String() string {
 func (*ChangeValidationCategory) ProtoMessage() {}
 
 func (x *ChangeValidationCategory) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[34]
+	mi := &file_changes_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2721,7 +2850,7 @@ func (x *ChangeValidationCategory) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChangeValidationCategory.ProtoReflect.Descriptor instead.
 func (*ChangeValidationCategory) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{34}
+	return file_changes_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *ChangeValidationCategory) GetTitle() string {
@@ -2747,7 +2876,7 @@ type GetDiffRequest struct {
 
 func (x *GetDiffRequest) Reset() {
 	*x = GetDiffRequest{}
-	mi := &file_changes_proto_msgTypes[35]
+	mi := &file_changes_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2759,7 +2888,7 @@ func (x *GetDiffRequest) String() string {
 func (*GetDiffRequest) ProtoMessage() {}
 
 func (x *GetDiffRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[35]
+	mi := &file_changes_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2772,7 +2901,7 @@ func (x *GetDiffRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDiffRequest.ProtoReflect.Descriptor instead.
 func (*GetDiffRequest) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{35}
+	return file_changes_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *GetDiffRequest) GetChangeUUID() []byte {
@@ -2797,7 +2926,7 @@ type GetDiffResponse struct {
 
 func (x *GetDiffResponse) Reset() {
 	*x = GetDiffResponse{}
-	mi := &file_changes_proto_msgTypes[36]
+	mi := &file_changes_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2809,7 +2938,7 @@ func (x *GetDiffResponse) String() string {
 func (*GetDiffResponse) ProtoMessage() {}
 
 func (x *GetDiffResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[36]
+	mi := &file_changes_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2822,7 +2951,7 @@ func (x *GetDiffResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDiffResponse.ProtoReflect.Descriptor instead.
 func (*GetDiffResponse) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{36}
+	return file_changes_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *GetDiffResponse) GetExpectedItems() []*ItemDiff {
@@ -2862,7 +2991,7 @@ type ListChangingItemsSummaryRequest struct {
 
 func (x *ListChangingItemsSummaryRequest) Reset() {
 	*x = ListChangingItemsSummaryRequest{}
-	mi := &file_changes_proto_msgTypes[37]
+	mi := &file_changes_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2874,7 +3003,7 @@ func (x *ListChangingItemsSummaryRequest) String() string {
 func (*ListChangingItemsSummaryRequest) ProtoMessage() {}
 
 func (x *ListChangingItemsSummaryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[37]
+	mi := &file_changes_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2887,7 +3016,7 @@ func (x *ListChangingItemsSummaryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListChangingItemsSummaryRequest.ProtoReflect.Descriptor instead.
 func (*ListChangingItemsSummaryRequest) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{37}
+	return file_changes_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *ListChangingItemsSummaryRequest) GetChangeUUID() []byte {
@@ -2906,7 +3035,7 @@ type ListChangingItemsSummaryResponse struct {
 
 func (x *ListChangingItemsSummaryResponse) Reset() {
 	*x = ListChangingItemsSummaryResponse{}
-	mi := &file_changes_proto_msgTypes[38]
+	mi := &file_changes_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2918,7 +3047,7 @@ func (x *ListChangingItemsSummaryResponse) String() string {
 func (*ListChangingItemsSummaryResponse) ProtoMessage() {}
 
 func (x *ListChangingItemsSummaryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[38]
+	mi := &file_changes_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2931,7 +3060,7 @@ func (x *ListChangingItemsSummaryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListChangingItemsSummaryResponse.ProtoReflect.Descriptor instead.
 func (*ListChangingItemsSummaryResponse) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{38}
+	return file_changes_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *ListChangingItemsSummaryResponse) GetItems() []*ItemDiffSummary {
@@ -2961,7 +3090,7 @@ type MappedItemDiff struct {
 
 func (x *MappedItemDiff) Reset() {
 	*x = MappedItemDiff{}
-	mi := &file_changes_proto_msgTypes[39]
+	mi := &file_changes_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2973,7 +3102,7 @@ func (x *MappedItemDiff) String() string {
 func (*MappedItemDiff) ProtoMessage() {}
 
 func (x *MappedItemDiff) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[39]
+	mi := &file_changes_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2986,7 +3115,7 @@ func (x *MappedItemDiff) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MappedItemDiff.ProtoReflect.Descriptor instead.
 func (*MappedItemDiff) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{39}
+	return file_changes_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *MappedItemDiff) GetItem() *ItemDiff {
@@ -3033,13 +3162,15 @@ type StartChangeAnalysisRequest struct {
 	RoutineChangesConfigOverride *RoutineChangesConfig `protobuf:"bytes,5,opt,name=routineChangesConfigOverride,proto3,oneof" json:"routineChangesConfigOverride,omitempty"`
 	// github organisation profile to use for this change
 	GithubOrganisationProfileOverride *GithubOrganisationProfile `protobuf:"bytes,6,opt,name=githubOrganisationProfileOverride,proto3,oneof" json:"githubOrganisationProfileOverride,omitempty"`
-	unknownFields                     protoimpl.UnknownFields
-	sizeCache                         protoimpl.SizeCache
+	// Knowledge to be used for change analysis
+	Knowledge     []*Knowledge `protobuf:"bytes,7,rep,name=knowledge,proto3" json:"knowledge,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *StartChangeAnalysisRequest) Reset() {
 	*x = StartChangeAnalysisRequest{}
-	mi := &file_changes_proto_msgTypes[40]
+	mi := &file_changes_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3051,7 +3182,7 @@ func (x *StartChangeAnalysisRequest) String() string {
 func (*StartChangeAnalysisRequest) ProtoMessage() {}
 
 func (x *StartChangeAnalysisRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[40]
+	mi := &file_changes_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3064,7 +3195,7 @@ func (x *StartChangeAnalysisRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StartChangeAnalysisRequest.ProtoReflect.Descriptor instead.
 func (*StartChangeAnalysisRequest) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{40}
+	return file_changes_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *StartChangeAnalysisRequest) GetChangeUUID() []byte {
@@ -3102,6 +3233,13 @@ func (x *StartChangeAnalysisRequest) GetGithubOrganisationProfileOverride() *Git
 	return nil
 }
 
+func (x *StartChangeAnalysisRequest) GetKnowledge() []*Knowledge {
+	if x != nil {
+		return x.Knowledge
+	}
+	return nil
+}
+
 // StartChangeAnalysisResponse is used to signal that the change analysis has been successfully started
 // we use HTTP response codes to signal errors
 type StartChangeAnalysisResponse struct {
@@ -3112,7 +3250,7 @@ type StartChangeAnalysisResponse struct {
 
 func (x *StartChangeAnalysisResponse) Reset() {
 	*x = StartChangeAnalysisResponse{}
-	mi := &file_changes_proto_msgTypes[41]
+	mi := &file_changes_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3124,7 +3262,7 @@ func (x *StartChangeAnalysisResponse) String() string {
 func (*StartChangeAnalysisResponse) ProtoMessage() {}
 
 func (x *StartChangeAnalysisResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[41]
+	mi := &file_changes_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3137,7 +3275,7 @@ func (x *StartChangeAnalysisResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StartChangeAnalysisResponse.ProtoReflect.Descriptor instead.
 func (*StartChangeAnalysisResponse) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{41}
+	return file_changes_proto_rawDescGZIP(), []int{43}
 }
 
 type ListHomeChangesRequest struct {
@@ -3150,7 +3288,7 @@ type ListHomeChangesRequest struct {
 
 func (x *ListHomeChangesRequest) Reset() {
 	*x = ListHomeChangesRequest{}
-	mi := &file_changes_proto_msgTypes[42]
+	mi := &file_changes_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3162,7 +3300,7 @@ func (x *ListHomeChangesRequest) String() string {
 func (*ListHomeChangesRequest) ProtoMessage() {}
 
 func (x *ListHomeChangesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[42]
+	mi := &file_changes_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3175,7 +3313,7 @@ func (x *ListHomeChangesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListHomeChangesRequest.ProtoReflect.Descriptor instead.
 func (*ListHomeChangesRequest) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{42}
+	return file_changes_proto_rawDescGZIP(), []int{44}
 }
 
 func (x *ListHomeChangesRequest) GetPagination() *PaginationRequest {
@@ -3209,7 +3347,7 @@ type ChangeFiltersRequest struct {
 
 func (x *ChangeFiltersRequest) Reset() {
 	*x = ChangeFiltersRequest{}
-	mi := &file_changes_proto_msgTypes[43]
+	mi := &file_changes_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3221,7 +3359,7 @@ func (x *ChangeFiltersRequest) String() string {
 func (*ChangeFiltersRequest) ProtoMessage() {}
 
 func (x *ChangeFiltersRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[43]
+	mi := &file_changes_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3234,7 +3372,7 @@ func (x *ChangeFiltersRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChangeFiltersRequest.ProtoReflect.Descriptor instead.
 func (*ChangeFiltersRequest) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{43}
+	return file_changes_proto_rawDescGZIP(), []int{45}
 }
 
 func (x *ChangeFiltersRequest) GetRepos() []string {
@@ -3289,7 +3427,7 @@ type ListHomeChangesResponse struct {
 
 func (x *ListHomeChangesResponse) Reset() {
 	*x = ListHomeChangesResponse{}
-	mi := &file_changes_proto_msgTypes[44]
+	mi := &file_changes_proto_msgTypes[46]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3301,7 +3439,7 @@ func (x *ListHomeChangesResponse) String() string {
 func (*ListHomeChangesResponse) ProtoMessage() {}
 
 func (x *ListHomeChangesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[44]
+	mi := &file_changes_proto_msgTypes[46]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3314,7 +3452,7 @@ func (x *ListHomeChangesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListHomeChangesResponse.ProtoReflect.Descriptor instead.
 func (*ListHomeChangesResponse) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{44}
+	return file_changes_proto_rawDescGZIP(), []int{46}
 }
 
 func (x *ListHomeChangesResponse) GetChanges() []*ChangeSummary {
@@ -3339,7 +3477,7 @@ type PopulateChangeFiltersRequest struct {
 
 func (x *PopulateChangeFiltersRequest) Reset() {
 	*x = PopulateChangeFiltersRequest{}
-	mi := &file_changes_proto_msgTypes[45]
+	mi := &file_changes_proto_msgTypes[47]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3351,7 +3489,7 @@ func (x *PopulateChangeFiltersRequest) String() string {
 func (*PopulateChangeFiltersRequest) ProtoMessage() {}
 
 func (x *PopulateChangeFiltersRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[45]
+	mi := &file_changes_proto_msgTypes[47]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3364,7 +3502,7 @@ func (x *PopulateChangeFiltersRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PopulateChangeFiltersRequest.ProtoReflect.Descriptor instead.
 func (*PopulateChangeFiltersRequest) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{45}
+	return file_changes_proto_rawDescGZIP(), []int{47}
 }
 
 type PopulateChangeFiltersResponse struct {
@@ -3377,7 +3515,7 @@ type PopulateChangeFiltersResponse struct {
 
 func (x *PopulateChangeFiltersResponse) Reset() {
 	*x = PopulateChangeFiltersResponse{}
-	mi := &file_changes_proto_msgTypes[46]
+	mi := &file_changes_proto_msgTypes[48]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3389,7 +3527,7 @@ func (x *PopulateChangeFiltersResponse) String() string {
 func (*PopulateChangeFiltersResponse) ProtoMessage() {}
 
 func (x *PopulateChangeFiltersResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[46]
+	mi := &file_changes_proto_msgTypes[48]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3402,7 +3540,7 @@ func (x *PopulateChangeFiltersResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PopulateChangeFiltersResponse.ProtoReflect.Descriptor instead.
 func (*PopulateChangeFiltersResponse) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{46}
+	return file_changes_proto_rawDescGZIP(), []int{48}
 }
 
 func (x *PopulateChangeFiltersResponse) GetRepos() []string {
@@ -3433,7 +3571,7 @@ type ItemDiffSummary struct {
 
 func (x *ItemDiffSummary) Reset() {
 	*x = ItemDiffSummary{}
-	mi := &file_changes_proto_msgTypes[47]
+	mi := &file_changes_proto_msgTypes[49]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3445,7 +3583,7 @@ func (x *ItemDiffSummary) String() string {
 func (*ItemDiffSummary) ProtoMessage() {}
 
 func (x *ItemDiffSummary) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[47]
+	mi := &file_changes_proto_msgTypes[49]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3458,7 +3596,7 @@ func (x *ItemDiffSummary) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ItemDiffSummary.ProtoReflect.Descriptor instead.
 func (*ItemDiffSummary) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{47}
+	return file_changes_proto_rawDescGZIP(), []int{49}
 }
 
 func (x *ItemDiffSummary) GetItem() *Reference {
@@ -3500,7 +3638,7 @@ type ItemDiff struct {
 
 func (x *ItemDiff) Reset() {
 	*x = ItemDiff{}
-	mi := &file_changes_proto_msgTypes[48]
+	mi := &file_changes_proto_msgTypes[50]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3512,7 +3650,7 @@ func (x *ItemDiff) String() string {
 func (*ItemDiff) ProtoMessage() {}
 
 func (x *ItemDiff) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[48]
+	mi := &file_changes_proto_msgTypes[50]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3525,7 +3663,7 @@ func (x *ItemDiff) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ItemDiff.ProtoReflect.Descriptor instead.
 func (*ItemDiff) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{48}
+	return file_changes_proto_rawDescGZIP(), []int{50}
 }
 
 func (x *ItemDiff) GetItem() *Reference {
@@ -3572,7 +3710,7 @@ type EnrichedTags struct {
 
 func (x *EnrichedTags) Reset() {
 	*x = EnrichedTags{}
-	mi := &file_changes_proto_msgTypes[49]
+	mi := &file_changes_proto_msgTypes[51]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3584,7 +3722,7 @@ func (x *EnrichedTags) String() string {
 func (*EnrichedTags) ProtoMessage() {}
 
 func (x *EnrichedTags) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[49]
+	mi := &file_changes_proto_msgTypes[51]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3597,7 +3735,7 @@ func (x *EnrichedTags) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EnrichedTags.ProtoReflect.Descriptor instead.
 func (*EnrichedTags) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{49}
+	return file_changes_proto_rawDescGZIP(), []int{51}
 }
 
 func (x *EnrichedTags) GetTagValue() map[string]*TagValue {
@@ -3622,7 +3760,7 @@ type TagValue struct {
 
 func (x *TagValue) Reset() {
 	*x = TagValue{}
-	mi := &file_changes_proto_msgTypes[50]
+	mi := &file_changes_proto_msgTypes[52]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3634,7 +3772,7 @@ func (x *TagValue) String() string {
 func (*TagValue) ProtoMessage() {}
 
 func (x *TagValue) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[50]
+	mi := &file_changes_proto_msgTypes[52]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3647,7 +3785,7 @@ func (x *TagValue) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TagValue.ProtoReflect.Descriptor instead.
 func (*TagValue) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{50}
+	return file_changes_proto_rawDescGZIP(), []int{52}
 }
 
 func (x *TagValue) GetValue() isTagValue_Value {
@@ -3701,7 +3839,7 @@ type UserTagValue struct {
 
 func (x *UserTagValue) Reset() {
 	*x = UserTagValue{}
-	mi := &file_changes_proto_msgTypes[51]
+	mi := &file_changes_proto_msgTypes[53]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3713,7 +3851,7 @@ func (x *UserTagValue) String() string {
 func (*UserTagValue) ProtoMessage() {}
 
 func (x *UserTagValue) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[51]
+	mi := &file_changes_proto_msgTypes[53]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3726,7 +3864,7 @@ func (x *UserTagValue) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UserTagValue.ProtoReflect.Descriptor instead.
 func (*UserTagValue) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{51}
+	return file_changes_proto_rawDescGZIP(), []int{53}
 }
 
 func (x *UserTagValue) GetValue() string {
@@ -3748,7 +3886,7 @@ type AutoTagValue struct {
 
 func (x *AutoTagValue) Reset() {
 	*x = AutoTagValue{}
-	mi := &file_changes_proto_msgTypes[52]
+	mi := &file_changes_proto_msgTypes[54]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3760,7 +3898,7 @@ func (x *AutoTagValue) String() string {
 func (*AutoTagValue) ProtoMessage() {}
 
 func (x *AutoTagValue) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[52]
+	mi := &file_changes_proto_msgTypes[54]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3773,7 +3911,7 @@ func (x *AutoTagValue) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AutoTagValue.ProtoReflect.Descriptor instead.
 func (*AutoTagValue) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{52}
+	return file_changes_proto_rawDescGZIP(), []int{54}
 }
 
 func (x *AutoTagValue) GetValue() string {
@@ -3816,7 +3954,7 @@ type Label struct {
 
 func (x *Label) Reset() {
 	*x = Label{}
-	mi := &file_changes_proto_msgTypes[53]
+	mi := &file_changes_proto_msgTypes[55]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3828,7 +3966,7 @@ func (x *Label) String() string {
 func (*Label) ProtoMessage() {}
 
 func (x *Label) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[53]
+	mi := &file_changes_proto_msgTypes[55]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3841,7 +3979,7 @@ func (x *Label) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Label.ProtoReflect.Descriptor instead.
 func (*Label) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{53}
+	return file_changes_proto_rawDescGZIP(), []int{55}
 }
 
 func (x *Label) GetType() LabelType {
@@ -3940,7 +4078,7 @@ type ChangeSummary struct {
 
 func (x *ChangeSummary) Reset() {
 	*x = ChangeSummary{}
-	mi := &file_changes_proto_msgTypes[54]
+	mi := &file_changes_proto_msgTypes[56]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3952,7 +4090,7 @@ func (x *ChangeSummary) String() string {
 func (*ChangeSummary) ProtoMessage() {}
 
 func (x *ChangeSummary) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[54]
+	mi := &file_changes_proto_msgTypes[56]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3965,7 +4103,7 @@ func (x *ChangeSummary) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChangeSummary.ProtoReflect.Descriptor instead.
 func (*ChangeSummary) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{54}
+	return file_changes_proto_rawDescGZIP(), []int{56}
 }
 
 func (x *ChangeSummary) GetUUID() []byte {
@@ -4108,7 +4246,7 @@ type Change struct {
 
 func (x *Change) Reset() {
 	*x = Change{}
-	mi := &file_changes_proto_msgTypes[55]
+	mi := &file_changes_proto_msgTypes[57]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4120,7 +4258,7 @@ func (x *Change) String() string {
 func (*Change) ProtoMessage() {}
 
 func (x *Change) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[55]
+	mi := &file_changes_proto_msgTypes[57]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4133,7 +4271,7 @@ func (x *Change) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Change.ProtoReflect.Descriptor instead.
 func (*Change) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{55}
+	return file_changes_proto_rawDescGZIP(), []int{57}
 }
 
 func (x *Change) GetMetadata() *ChangeMetadata {
@@ -4201,7 +4339,7 @@ type ChangeMetadata struct {
 
 func (x *ChangeMetadata) Reset() {
 	*x = ChangeMetadata{}
-	mi := &file_changes_proto_msgTypes[56]
+	mi := &file_changes_proto_msgTypes[58]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4213,7 +4351,7 @@ func (x *ChangeMetadata) String() string {
 func (*ChangeMetadata) ProtoMessage() {}
 
 func (x *ChangeMetadata) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[56]
+	mi := &file_changes_proto_msgTypes[58]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4226,7 +4364,7 @@ func (x *ChangeMetadata) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChangeMetadata.ProtoReflect.Descriptor instead.
 func (*ChangeMetadata) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{56}
+	return file_changes_proto_rawDescGZIP(), []int{58}
 }
 
 func (x *ChangeMetadata) GetUUID() []byte {
@@ -4431,7 +4569,7 @@ type ChangeProperties struct {
 
 func (x *ChangeProperties) Reset() {
 	*x = ChangeProperties{}
-	mi := &file_changes_proto_msgTypes[57]
+	mi := &file_changes_proto_msgTypes[59]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4443,7 +4581,7 @@ func (x *ChangeProperties) String() string {
 func (*ChangeProperties) ProtoMessage() {}
 
 func (x *ChangeProperties) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[57]
+	mi := &file_changes_proto_msgTypes[59]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4456,7 +4594,7 @@ func (x *ChangeProperties) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChangeProperties.ProtoReflect.Descriptor instead.
 func (*ChangeProperties) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{57}
+	return file_changes_proto_rawDescGZIP(), []int{59}
 }
 
 func (x *ChangeProperties) GetTitle() string {
@@ -4590,7 +4728,7 @@ type GithubChangeInfo struct {
 
 func (x *GithubChangeInfo) Reset() {
 	*x = GithubChangeInfo{}
-	mi := &file_changes_proto_msgTypes[58]
+	mi := &file_changes_proto_msgTypes[60]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4602,7 +4740,7 @@ func (x *GithubChangeInfo) String() string {
 func (*GithubChangeInfo) ProtoMessage() {}
 
 func (x *GithubChangeInfo) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[58]
+	mi := &file_changes_proto_msgTypes[60]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4615,7 +4753,7 @@ func (x *GithubChangeInfo) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GithubChangeInfo.ProtoReflect.Descriptor instead.
 func (*GithubChangeInfo) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{58}
+	return file_changes_proto_rawDescGZIP(), []int{60}
 }
 
 func (x *GithubChangeInfo) GetAuthorUsername() string {
@@ -4655,7 +4793,7 @@ type ListChangesRequest struct {
 
 func (x *ListChangesRequest) Reset() {
 	*x = ListChangesRequest{}
-	mi := &file_changes_proto_msgTypes[59]
+	mi := &file_changes_proto_msgTypes[61]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4667,7 +4805,7 @@ func (x *ListChangesRequest) String() string {
 func (*ListChangesRequest) ProtoMessage() {}
 
 func (x *ListChangesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[59]
+	mi := &file_changes_proto_msgTypes[61]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4680,7 +4818,7 @@ func (x *ListChangesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListChangesRequest.ProtoReflect.Descriptor instead.
 func (*ListChangesRequest) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{59}
+	return file_changes_proto_rawDescGZIP(), []int{61}
 }
 
 type ListChangesResponse struct {
@@ -4692,7 +4830,7 @@ type ListChangesResponse struct {
 
 func (x *ListChangesResponse) Reset() {
 	*x = ListChangesResponse{}
-	mi := &file_changes_proto_msgTypes[60]
+	mi := &file_changes_proto_msgTypes[62]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4704,7 +4842,7 @@ func (x *ListChangesResponse) String() string {
 func (*ListChangesResponse) ProtoMessage() {}
 
 func (x *ListChangesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[60]
+	mi := &file_changes_proto_msgTypes[62]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4717,7 +4855,7 @@ func (x *ListChangesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListChangesResponse.ProtoReflect.Descriptor instead.
 func (*ListChangesResponse) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{60}
+	return file_changes_proto_rawDescGZIP(), []int{62}
 }
 
 func (x *ListChangesResponse) GetChanges() []*Change {
@@ -4737,7 +4875,7 @@ type ListChangesByStatusRequest struct {
 
 func (x *ListChangesByStatusRequest) Reset() {
 	*x = ListChangesByStatusRequest{}
-	mi := &file_changes_proto_msgTypes[61]
+	mi := &file_changes_proto_msgTypes[63]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4749,7 +4887,7 @@ func (x *ListChangesByStatusRequest) String() string {
 func (*ListChangesByStatusRequest) ProtoMessage() {}
 
 func (x *ListChangesByStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[61]
+	mi := &file_changes_proto_msgTypes[63]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4762,7 +4900,7 @@ func (x *ListChangesByStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListChangesByStatusRequest.ProtoReflect.Descriptor instead.
 func (*ListChangesByStatusRequest) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{61}
+	return file_changes_proto_rawDescGZIP(), []int{63}
 }
 
 func (x *ListChangesByStatusRequest) GetStatus() ChangeStatus {
@@ -4781,7 +4919,7 @@ type ListChangesByStatusResponse struct {
 
 func (x *ListChangesByStatusResponse) Reset() {
 	*x = ListChangesByStatusResponse{}
-	mi := &file_changes_proto_msgTypes[62]
+	mi := &file_changes_proto_msgTypes[64]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4793,7 +4931,7 @@ func (x *ListChangesByStatusResponse) String() string {
 func (*ListChangesByStatusResponse) ProtoMessage() {}
 
 func (x *ListChangesByStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[62]
+	mi := &file_changes_proto_msgTypes[64]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4806,7 +4944,7 @@ func (x *ListChangesByStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListChangesByStatusResponse.ProtoReflect.Descriptor instead.
 func (*ListChangesByStatusResponse) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{62}
+	return file_changes_proto_rawDescGZIP(), []int{64}
 }
 
 func (x *ListChangesByStatusResponse) GetChanges() []*Change {
@@ -4826,7 +4964,7 @@ type CreateChangeRequest struct {
 
 func (x *CreateChangeRequest) Reset() {
 	*x = CreateChangeRequest{}
-	mi := &file_changes_proto_msgTypes[63]
+	mi := &file_changes_proto_msgTypes[65]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4838,7 +4976,7 @@ func (x *CreateChangeRequest) String() string {
 func (*CreateChangeRequest) ProtoMessage() {}
 
 func (x *CreateChangeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[63]
+	mi := &file_changes_proto_msgTypes[65]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4851,7 +4989,7 @@ func (x *CreateChangeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateChangeRequest.ProtoReflect.Descriptor instead.
 func (*CreateChangeRequest) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{63}
+	return file_changes_proto_rawDescGZIP(), []int{65}
 }
 
 func (x *CreateChangeRequest) GetProperties() *ChangeProperties {
@@ -4870,7 +5008,7 @@ type CreateChangeResponse struct {
 
 func (x *CreateChangeResponse) Reset() {
 	*x = CreateChangeResponse{}
-	mi := &file_changes_proto_msgTypes[64]
+	mi := &file_changes_proto_msgTypes[66]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4882,7 +5020,7 @@ func (x *CreateChangeResponse) String() string {
 func (*CreateChangeResponse) ProtoMessage() {}
 
 func (x *CreateChangeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[64]
+	mi := &file_changes_proto_msgTypes[66]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4895,7 +5033,7 @@ func (x *CreateChangeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateChangeResponse.ProtoReflect.Descriptor instead.
 func (*CreateChangeResponse) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{64}
+	return file_changes_proto_rawDescGZIP(), []int{66}
 }
 
 func (x *CreateChangeResponse) GetChange() *Change {
@@ -4920,7 +5058,7 @@ type GetChangeRequest struct {
 
 func (x *GetChangeRequest) Reset() {
 	*x = GetChangeRequest{}
-	mi := &file_changes_proto_msgTypes[65]
+	mi := &file_changes_proto_msgTypes[67]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4932,7 +5070,7 @@ func (x *GetChangeRequest) String() string {
 func (*GetChangeRequest) ProtoMessage() {}
 
 func (x *GetChangeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[65]
+	mi := &file_changes_proto_msgTypes[67]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4945,7 +5083,7 @@ func (x *GetChangeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetChangeRequest.ProtoReflect.Descriptor instead.
 func (*GetChangeRequest) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{65}
+	return file_changes_proto_rawDescGZIP(), []int{67}
 }
 
 func (x *GetChangeRequest) GetUUID() []byte {
@@ -4971,7 +5109,7 @@ type GetChangeByTicketLinkRequest struct {
 
 func (x *GetChangeByTicketLinkRequest) Reset() {
 	*x = GetChangeByTicketLinkRequest{}
-	mi := &file_changes_proto_msgTypes[66]
+	mi := &file_changes_proto_msgTypes[68]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4983,7 +5121,7 @@ func (x *GetChangeByTicketLinkRequest) String() string {
 func (*GetChangeByTicketLinkRequest) ProtoMessage() {}
 
 func (x *GetChangeByTicketLinkRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[66]
+	mi := &file_changes_proto_msgTypes[68]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4996,7 +5134,7 @@ func (x *GetChangeByTicketLinkRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetChangeByTicketLinkRequest.ProtoReflect.Descriptor instead.
 func (*GetChangeByTicketLinkRequest) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{66}
+	return file_changes_proto_rawDescGZIP(), []int{68}
 }
 
 func (x *GetChangeByTicketLinkRequest) GetTicketLink() string {
@@ -5026,7 +5164,7 @@ type GetChangeSummaryRequest struct {
 
 func (x *GetChangeSummaryRequest) Reset() {
 	*x = GetChangeSummaryRequest{}
-	mi := &file_changes_proto_msgTypes[67]
+	mi := &file_changes_proto_msgTypes[69]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5038,7 +5176,7 @@ func (x *GetChangeSummaryRequest) String() string {
 func (*GetChangeSummaryRequest) ProtoMessage() {}
 
 func (x *GetChangeSummaryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[67]
+	mi := &file_changes_proto_msgTypes[69]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5051,7 +5189,7 @@ func (x *GetChangeSummaryRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetChangeSummaryRequest.ProtoReflect.Descriptor instead.
 func (*GetChangeSummaryRequest) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{67}
+	return file_changes_proto_rawDescGZIP(), []int{69}
 }
 
 func (x *GetChangeSummaryRequest) GetUUID() []byte {
@@ -5098,7 +5236,7 @@ type GetChangeSummaryResponse struct {
 
 func (x *GetChangeSummaryResponse) Reset() {
 	*x = GetChangeSummaryResponse{}
-	mi := &file_changes_proto_msgTypes[68]
+	mi := &file_changes_proto_msgTypes[70]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5110,7 +5248,7 @@ func (x *GetChangeSummaryResponse) String() string {
 func (*GetChangeSummaryResponse) ProtoMessage() {}
 
 func (x *GetChangeSummaryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[68]
+	mi := &file_changes_proto_msgTypes[70]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5123,7 +5261,7 @@ func (x *GetChangeSummaryResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetChangeSummaryResponse.ProtoReflect.Descriptor instead.
 func (*GetChangeSummaryResponse) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{68}
+	return file_changes_proto_rawDescGZIP(), []int{70}
 }
 
 func (x *GetChangeSummaryResponse) GetChange() string {
@@ -5144,7 +5282,7 @@ type GetChangeSignalsRequest struct {
 
 func (x *GetChangeSignalsRequest) Reset() {
 	*x = GetChangeSignalsRequest{}
-	mi := &file_changes_proto_msgTypes[69]
+	mi := &file_changes_proto_msgTypes[71]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5156,7 +5294,7 @@ func (x *GetChangeSignalsRequest) String() string {
 func (*GetChangeSignalsRequest) ProtoMessage() {}
 
 func (x *GetChangeSignalsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[69]
+	mi := &file_changes_proto_msgTypes[71]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5169,7 +5307,7 @@ func (x *GetChangeSignalsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetChangeSignalsRequest.ProtoReflect.Descriptor instead.
 func (*GetChangeSignalsRequest) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{69}
+	return file_changes_proto_rawDescGZIP(), []int{71}
 }
 
 func (x *GetChangeSignalsRequest) GetUUID() []byte {
@@ -5195,7 +5333,7 @@ type GetChangeSignalsResponse struct {
 
 func (x *GetChangeSignalsResponse) Reset() {
 	*x = GetChangeSignalsResponse{}
-	mi := &file_changes_proto_msgTypes[70]
+	mi := &file_changes_proto_msgTypes[72]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5207,7 +5345,7 @@ func (x *GetChangeSignalsResponse) String() string {
 func (*GetChangeSignalsResponse) ProtoMessage() {}
 
 func (x *GetChangeSignalsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[70]
+	mi := &file_changes_proto_msgTypes[72]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5220,7 +5358,7 @@ func (x *GetChangeSignalsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetChangeSignalsResponse.ProtoReflect.Descriptor instead.
 func (*GetChangeSignalsResponse) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{70}
+	return file_changes_proto_rawDescGZIP(), []int{72}
 }
 
 func (x *GetChangeSignalsResponse) GetSignals() string {
@@ -5239,7 +5377,7 @@ type GetChangeResponse struct {
 
 func (x *GetChangeResponse) Reset() {
 	*x = GetChangeResponse{}
-	mi := &file_changes_proto_msgTypes[71]
+	mi := &file_changes_proto_msgTypes[73]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5251,7 +5389,7 @@ func (x *GetChangeResponse) String() string {
 func (*GetChangeResponse) ProtoMessage() {}
 
 func (x *GetChangeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[71]
+	mi := &file_changes_proto_msgTypes[73]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5264,7 +5402,7 @@ func (x *GetChangeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetChangeResponse.ProtoReflect.Descriptor instead.
 func (*GetChangeResponse) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{71}
+	return file_changes_proto_rawDescGZIP(), []int{73}
 }
 
 func (x *GetChangeResponse) GetChange() *Change {
@@ -5284,7 +5422,7 @@ type GetChangeRisksRequest struct {
 
 func (x *GetChangeRisksRequest) Reset() {
 	*x = GetChangeRisksRequest{}
-	mi := &file_changes_proto_msgTypes[72]
+	mi := &file_changes_proto_msgTypes[74]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5296,7 +5434,7 @@ func (x *GetChangeRisksRequest) String() string {
 func (*GetChangeRisksRequest) ProtoMessage() {}
 
 func (x *GetChangeRisksRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[72]
+	mi := &file_changes_proto_msgTypes[74]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5309,7 +5447,7 @@ func (x *GetChangeRisksRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetChangeRisksRequest.ProtoReflect.Descriptor instead.
 func (*GetChangeRisksRequest) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{72}
+	return file_changes_proto_rawDescGZIP(), []int{74}
 }
 
 func (x *GetChangeRisksRequest) GetUUID() []byte {
@@ -5337,7 +5475,7 @@ type ChangeRiskMetadata struct {
 
 func (x *ChangeRiskMetadata) Reset() {
 	*x = ChangeRiskMetadata{}
-	mi := &file_changes_proto_msgTypes[73]
+	mi := &file_changes_proto_msgTypes[75]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5349,7 +5487,7 @@ func (x *ChangeRiskMetadata) String() string {
 func (*ChangeRiskMetadata) ProtoMessage() {}
 
 func (x *ChangeRiskMetadata) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[73]
+	mi := &file_changes_proto_msgTypes[75]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5362,7 +5500,7 @@ func (x *ChangeRiskMetadata) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChangeRiskMetadata.ProtoReflect.Descriptor instead.
 func (*ChangeRiskMetadata) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{73}
+	return file_changes_proto_rawDescGZIP(), []int{75}
 }
 
 func (x *ChangeRiskMetadata) GetChangeAnalysisStatus() *ChangeAnalysisStatus {
@@ -5409,7 +5547,7 @@ type GetChangeRisksResponse struct {
 
 func (x *GetChangeRisksResponse) Reset() {
 	*x = GetChangeRisksResponse{}
-	mi := &file_changes_proto_msgTypes[74]
+	mi := &file_changes_proto_msgTypes[76]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5421,7 +5559,7 @@ func (x *GetChangeRisksResponse) String() string {
 func (*GetChangeRisksResponse) ProtoMessage() {}
 
 func (x *GetChangeRisksResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[74]
+	mi := &file_changes_proto_msgTypes[76]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5434,7 +5572,7 @@ func (x *GetChangeRisksResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetChangeRisksResponse.ProtoReflect.Descriptor instead.
 func (*GetChangeRisksResponse) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{74}
+	return file_changes_proto_rawDescGZIP(), []int{76}
 }
 
 func (x *GetChangeRisksResponse) GetChangeRiskMetadata() *ChangeRiskMetadata {
@@ -5455,7 +5593,7 @@ type UpdateChangeRequest struct {
 
 func (x *UpdateChangeRequest) Reset() {
 	*x = UpdateChangeRequest{}
-	mi := &file_changes_proto_msgTypes[75]
+	mi := &file_changes_proto_msgTypes[77]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5467,7 +5605,7 @@ func (x *UpdateChangeRequest) String() string {
 func (*UpdateChangeRequest) ProtoMessage() {}
 
 func (x *UpdateChangeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[75]
+	mi := &file_changes_proto_msgTypes[77]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5480,7 +5618,7 @@ func (x *UpdateChangeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateChangeRequest.ProtoReflect.Descriptor instead.
 func (*UpdateChangeRequest) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{75}
+	return file_changes_proto_rawDescGZIP(), []int{77}
 }
 
 func (x *UpdateChangeRequest) GetUUID() []byte {
@@ -5506,7 +5644,7 @@ type UpdateChangeResponse struct {
 
 func (x *UpdateChangeResponse) Reset() {
 	*x = UpdateChangeResponse{}
-	mi := &file_changes_proto_msgTypes[76]
+	mi := &file_changes_proto_msgTypes[78]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5518,7 +5656,7 @@ func (x *UpdateChangeResponse) String() string {
 func (*UpdateChangeResponse) ProtoMessage() {}
 
 func (x *UpdateChangeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[76]
+	mi := &file_changes_proto_msgTypes[78]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5531,7 +5669,7 @@ func (x *UpdateChangeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateChangeResponse.ProtoReflect.Descriptor instead.
 func (*UpdateChangeResponse) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{76}
+	return file_changes_proto_rawDescGZIP(), []int{78}
 }
 
 func (x *UpdateChangeResponse) GetChange() *Change {
@@ -5551,7 +5689,7 @@ type DeleteChangeRequest struct {
 
 func (x *DeleteChangeRequest) Reset() {
 	*x = DeleteChangeRequest{}
-	mi := &file_changes_proto_msgTypes[77]
+	mi := &file_changes_proto_msgTypes[79]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5563,7 +5701,7 @@ func (x *DeleteChangeRequest) String() string {
 func (*DeleteChangeRequest) ProtoMessage() {}
 
 func (x *DeleteChangeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[77]
+	mi := &file_changes_proto_msgTypes[79]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5576,7 +5714,7 @@ func (x *DeleteChangeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteChangeRequest.ProtoReflect.Descriptor instead.
 func (*DeleteChangeRequest) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{77}
+	return file_changes_proto_rawDescGZIP(), []int{79}
 }
 
 func (x *DeleteChangeRequest) GetUUID() []byte {
@@ -5596,7 +5734,7 @@ type ListChangesBySnapshotUUIDRequest struct {
 
 func (x *ListChangesBySnapshotUUIDRequest) Reset() {
 	*x = ListChangesBySnapshotUUIDRequest{}
-	mi := &file_changes_proto_msgTypes[78]
+	mi := &file_changes_proto_msgTypes[80]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5608,7 +5746,7 @@ func (x *ListChangesBySnapshotUUIDRequest) String() string {
 func (*ListChangesBySnapshotUUIDRequest) ProtoMessage() {}
 
 func (x *ListChangesBySnapshotUUIDRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[78]
+	mi := &file_changes_proto_msgTypes[80]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5621,7 +5759,7 @@ func (x *ListChangesBySnapshotUUIDRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListChangesBySnapshotUUIDRequest.ProtoReflect.Descriptor instead.
 func (*ListChangesBySnapshotUUIDRequest) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{78}
+	return file_changes_proto_rawDescGZIP(), []int{80}
 }
 
 func (x *ListChangesBySnapshotUUIDRequest) GetUUID() []byte {
@@ -5640,7 +5778,7 @@ type ListChangesBySnapshotUUIDResponse struct {
 
 func (x *ListChangesBySnapshotUUIDResponse) Reset() {
 	*x = ListChangesBySnapshotUUIDResponse{}
-	mi := &file_changes_proto_msgTypes[79]
+	mi := &file_changes_proto_msgTypes[81]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5652,7 +5790,7 @@ func (x *ListChangesBySnapshotUUIDResponse) String() string {
 func (*ListChangesBySnapshotUUIDResponse) ProtoMessage() {}
 
 func (x *ListChangesBySnapshotUUIDResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[79]
+	mi := &file_changes_proto_msgTypes[81]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5665,7 +5803,7 @@ func (x *ListChangesBySnapshotUUIDResponse) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use ListChangesBySnapshotUUIDResponse.ProtoReflect.Descriptor instead.
 func (*ListChangesBySnapshotUUIDResponse) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{79}
+	return file_changes_proto_rawDescGZIP(), []int{81}
 }
 
 func (x *ListChangesBySnapshotUUIDResponse) GetChanges() []*Change {
@@ -5683,7 +5821,7 @@ type DeleteChangeResponse struct {
 
 func (x *DeleteChangeResponse) Reset() {
 	*x = DeleteChangeResponse{}
-	mi := &file_changes_proto_msgTypes[80]
+	mi := &file_changes_proto_msgTypes[82]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5695,7 +5833,7 @@ func (x *DeleteChangeResponse) String() string {
 func (*DeleteChangeResponse) ProtoMessage() {}
 
 func (x *DeleteChangeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[80]
+	mi := &file_changes_proto_msgTypes[82]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5708,7 +5846,7 @@ func (x *DeleteChangeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteChangeResponse.ProtoReflect.Descriptor instead.
 func (*DeleteChangeResponse) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{80}
+	return file_changes_proto_rawDescGZIP(), []int{82}
 }
 
 type RefreshStateRequest struct {
@@ -5719,7 +5857,7 @@ type RefreshStateRequest struct {
 
 func (x *RefreshStateRequest) Reset() {
 	*x = RefreshStateRequest{}
-	mi := &file_changes_proto_msgTypes[81]
+	mi := &file_changes_proto_msgTypes[83]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5731,7 +5869,7 @@ func (x *RefreshStateRequest) String() string {
 func (*RefreshStateRequest) ProtoMessage() {}
 
 func (x *RefreshStateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[81]
+	mi := &file_changes_proto_msgTypes[83]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5744,7 +5882,7 @@ func (x *RefreshStateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RefreshStateRequest.ProtoReflect.Descriptor instead.
 func (*RefreshStateRequest) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{81}
+	return file_changes_proto_rawDescGZIP(), []int{83}
 }
 
 type RefreshStateResponse struct {
@@ -5755,7 +5893,7 @@ type RefreshStateResponse struct {
 
 func (x *RefreshStateResponse) Reset() {
 	*x = RefreshStateResponse{}
-	mi := &file_changes_proto_msgTypes[82]
+	mi := &file_changes_proto_msgTypes[84]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5767,7 +5905,7 @@ func (x *RefreshStateResponse) String() string {
 func (*RefreshStateResponse) ProtoMessage() {}
 
 func (x *RefreshStateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[82]
+	mi := &file_changes_proto_msgTypes[84]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5780,7 +5918,7 @@ func (x *RefreshStateResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RefreshStateResponse.ProtoReflect.Descriptor instead.
 func (*RefreshStateResponse) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{82}
+	return file_changes_proto_rawDescGZIP(), []int{84}
 }
 
 type StartChangeRequest struct {
@@ -5792,7 +5930,7 @@ type StartChangeRequest struct {
 
 func (x *StartChangeRequest) Reset() {
 	*x = StartChangeRequest{}
-	mi := &file_changes_proto_msgTypes[83]
+	mi := &file_changes_proto_msgTypes[85]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5804,7 +5942,7 @@ func (x *StartChangeRequest) String() string {
 func (*StartChangeRequest) ProtoMessage() {}
 
 func (x *StartChangeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[83]
+	mi := &file_changes_proto_msgTypes[85]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5817,7 +5955,7 @@ func (x *StartChangeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StartChangeRequest.ProtoReflect.Descriptor instead.
 func (*StartChangeRequest) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{83}
+	return file_changes_proto_rawDescGZIP(), []int{85}
 }
 
 func (x *StartChangeRequest) GetChangeUUID() []byte {
@@ -5838,7 +5976,7 @@ type StartChangeResponse struct {
 
 func (x *StartChangeResponse) Reset() {
 	*x = StartChangeResponse{}
-	mi := &file_changes_proto_msgTypes[84]
+	mi := &file_changes_proto_msgTypes[86]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5850,7 +5988,7 @@ func (x *StartChangeResponse) String() string {
 func (*StartChangeResponse) ProtoMessage() {}
 
 func (x *StartChangeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[84]
+	mi := &file_changes_proto_msgTypes[86]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5863,7 +6001,7 @@ func (x *StartChangeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StartChangeResponse.ProtoReflect.Descriptor instead.
 func (*StartChangeResponse) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{84}
+	return file_changes_proto_rawDescGZIP(), []int{86}
 }
 
 func (x *StartChangeResponse) GetState() StartChangeResponse_State {
@@ -5896,7 +6034,7 @@ type EndChangeRequest struct {
 
 func (x *EndChangeRequest) Reset() {
 	*x = EndChangeRequest{}
-	mi := &file_changes_proto_msgTypes[85]
+	mi := &file_changes_proto_msgTypes[87]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5908,7 +6046,7 @@ func (x *EndChangeRequest) String() string {
 func (*EndChangeRequest) ProtoMessage() {}
 
 func (x *EndChangeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[85]
+	mi := &file_changes_proto_msgTypes[87]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5921,7 +6059,7 @@ func (x *EndChangeRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EndChangeRequest.ProtoReflect.Descriptor instead.
 func (*EndChangeRequest) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{85}
+	return file_changes_proto_rawDescGZIP(), []int{87}
 }
 
 func (x *EndChangeRequest) GetChangeUUID() []byte {
@@ -5942,7 +6080,7 @@ type EndChangeResponse struct {
 
 func (x *EndChangeResponse) Reset() {
 	*x = EndChangeResponse{}
-	mi := &file_changes_proto_msgTypes[86]
+	mi := &file_changes_proto_msgTypes[88]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5954,7 +6092,7 @@ func (x *EndChangeResponse) String() string {
 func (*EndChangeResponse) ProtoMessage() {}
 
 func (x *EndChangeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[86]
+	mi := &file_changes_proto_msgTypes[88]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5967,7 +6105,7 @@ func (x *EndChangeResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EndChangeResponse.ProtoReflect.Descriptor instead.
 func (*EndChangeResponse) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{86}
+	return file_changes_proto_rawDescGZIP(), []int{88}
 }
 
 func (x *EndChangeResponse) GetState() EndChangeResponse_State {
@@ -5999,7 +6137,7 @@ type StartChangeSimpleResponse struct {
 
 func (x *StartChangeSimpleResponse) Reset() {
 	*x = StartChangeSimpleResponse{}
-	mi := &file_changes_proto_msgTypes[87]
+	mi := &file_changes_proto_msgTypes[89]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6011,7 +6149,7 @@ func (x *StartChangeSimpleResponse) String() string {
 func (*StartChangeSimpleResponse) ProtoMessage() {}
 
 func (x *StartChangeSimpleResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[87]
+	mi := &file_changes_proto_msgTypes[89]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6024,7 +6162,7 @@ func (x *StartChangeSimpleResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use StartChangeSimpleResponse.ProtoReflect.Descriptor instead.
 func (*StartChangeSimpleResponse) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{87}
+	return file_changes_proto_rawDescGZIP(), []int{89}
 }
 
 type EndChangeSimpleResponse struct {
@@ -6039,7 +6177,7 @@ type EndChangeSimpleResponse struct {
 
 func (x *EndChangeSimpleResponse) Reset() {
 	*x = EndChangeSimpleResponse{}
-	mi := &file_changes_proto_msgTypes[88]
+	mi := &file_changes_proto_msgTypes[90]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6051,7 +6189,7 @@ func (x *EndChangeSimpleResponse) String() string {
 func (*EndChangeSimpleResponse) ProtoMessage() {}
 
 func (x *EndChangeSimpleResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[88]
+	mi := &file_changes_proto_msgTypes[90]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6064,7 +6202,7 @@ func (x *EndChangeSimpleResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EndChangeSimpleResponse.ProtoReflect.Descriptor instead.
 func (*EndChangeSimpleResponse) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{88}
+	return file_changes_proto_rawDescGZIP(), []int{90}
 }
 
 func (x *EndChangeSimpleResponse) GetQueued() bool {
@@ -6094,7 +6232,7 @@ type Risk struct {
 
 func (x *Risk) Reset() {
 	*x = Risk{}
-	mi := &file_changes_proto_msgTypes[89]
+	mi := &file_changes_proto_msgTypes[91]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6106,7 +6244,7 @@ func (x *Risk) String() string {
 func (*Risk) ProtoMessage() {}
 
 func (x *Risk) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[89]
+	mi := &file_changes_proto_msgTypes[91]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6119,7 +6257,7 @@ func (x *Risk) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Risk.ProtoReflect.Descriptor instead.
 func (*Risk) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{89}
+	return file_changes_proto_rawDescGZIP(), []int{91}
 }
 
 func (x *Risk) GetUUID() []byte {
@@ -6166,7 +6304,7 @@ type ChangeAnalysisStatus struct {
 
 func (x *ChangeAnalysisStatus) Reset() {
 	*x = ChangeAnalysisStatus{}
-	mi := &file_changes_proto_msgTypes[90]
+	mi := &file_changes_proto_msgTypes[92]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6178,7 +6316,7 @@ func (x *ChangeAnalysisStatus) String() string {
 func (*ChangeAnalysisStatus) ProtoMessage() {}
 
 func (x *ChangeAnalysisStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[90]
+	mi := &file_changes_proto_msgTypes[92]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6191,7 +6329,7 @@ func (x *ChangeAnalysisStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChangeAnalysisStatus.ProtoReflect.Descriptor instead.
 func (*ChangeAnalysisStatus) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{90}
+	return file_changes_proto_rawDescGZIP(), []int{92}
 }
 
 func (x *ChangeAnalysisStatus) GetStatus() ChangeAnalysisStatus_Status {
@@ -6212,7 +6350,7 @@ type GenerateRiskFixRequest struct {
 
 func (x *GenerateRiskFixRequest) Reset() {
 	*x = GenerateRiskFixRequest{}
-	mi := &file_changes_proto_msgTypes[91]
+	mi := &file_changes_proto_msgTypes[93]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6224,7 +6362,7 @@ func (x *GenerateRiskFixRequest) String() string {
 func (*GenerateRiskFixRequest) ProtoMessage() {}
 
 func (x *GenerateRiskFixRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[91]
+	mi := &file_changes_proto_msgTypes[93]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6237,7 +6375,7 @@ func (x *GenerateRiskFixRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateRiskFixRequest.ProtoReflect.Descriptor instead.
 func (*GenerateRiskFixRequest) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{91}
+	return file_changes_proto_rawDescGZIP(), []int{93}
 }
 
 func (x *GenerateRiskFixRequest) GetRiskUUID() []byte {
@@ -6257,7 +6395,7 @@ type GenerateRiskFixResponse struct {
 
 func (x *GenerateRiskFixResponse) Reset() {
 	*x = GenerateRiskFixResponse{}
-	mi := &file_changes_proto_msgTypes[92]
+	mi := &file_changes_proto_msgTypes[94]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6269,7 +6407,7 @@ func (x *GenerateRiskFixResponse) String() string {
 func (*GenerateRiskFixResponse) ProtoMessage() {}
 
 func (x *GenerateRiskFixResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[92]
+	mi := &file_changes_proto_msgTypes[94]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6282,7 +6420,7 @@ func (x *GenerateRiskFixResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GenerateRiskFixResponse.ProtoReflect.Descriptor instead.
 func (*GenerateRiskFixResponse) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{92}
+	return file_changes_proto_rawDescGZIP(), []int{94}
 }
 
 func (x *GenerateRiskFixResponse) GetFixSuggestion() string {
@@ -6312,7 +6450,7 @@ type ChangeMetadata_HealthChange struct {
 
 func (x *ChangeMetadata_HealthChange) Reset() {
 	*x = ChangeMetadata_HealthChange{}
-	mi := &file_changes_proto_msgTypes[95]
+	mi := &file_changes_proto_msgTypes[97]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6324,7 +6462,7 @@ func (x *ChangeMetadata_HealthChange) String() string {
 func (*ChangeMetadata_HealthChange) ProtoMessage() {}
 
 func (x *ChangeMetadata_HealthChange) ProtoReflect() protoreflect.Message {
-	mi := &file_changes_proto_msgTypes[95]
+	mi := &file_changes_proto_msgTypes[97]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6337,7 +6475,7 @@ func (x *ChangeMetadata_HealthChange) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChangeMetadata_HealthChange.ProtoReflect.Descriptor instead.
 func (*ChangeMetadata_HealthChange) Descriptor() ([]byte, []int) {
-	return file_changes_proto_rawDescGZIP(), []int{56, 0}
+	return file_changes_proto_rawDescGZIP(), []int{58, 0}
 }
 
 func (x *ChangeMetadata_HealthChange) GetAdded() int32 {
@@ -6423,7 +6561,15 @@ const file_changes_proto_rawDesc = "" +
 	"#ReapplyLabelRuleInTimeRangeResponse\x12\x1e\n" +
 	"\n" +
 	"changeUUID\x18\x01 \x03(\fR\n" +
-	"changeUUID\"=\n" +
+	"changeUUID\"D\n" +
+	"\x12KnowledgeReference\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1a\n" +
+	"\bfileName\x18\x02 \x01(\tR\bfileName\"w\n" +
+	"\tKnowledge\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12 \n" +
+	"\vdescription\x18\x02 \x01(\tR\vdescription\x12\x18\n" +
+	"\acontent\x18\x03 \x01(\tR\acontent\x12\x1a\n" +
+	"\bfileName\x18\x04 \x01(\tR\bfileName\"=\n" +
 	"\x1bGetHypothesesDetailsRequest\x12\x1e\n" +
 	"\n" +
 	"changeUUID\x18\x01 \x01(\fR\n" +
@@ -6431,13 +6577,14 @@ const file_changes_proto_rawDesc = "" +
 	"\x1cGetHypothesesDetailsResponse\x12:\n" +
 	"\n" +
 	"hypotheses\x18\x01 \x03(\v2\x1a.changes.HypothesesDetailsR\n" +
-	"hypotheses\"\xd2\x01\n" +
+	"hypotheses\"\x95\x02\n" +
 	"\x11HypothesesDetails\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x12(\n" +
 	"\x0fnumObservations\x18\x02 \x01(\rR\x0fnumObservations\x12\x16\n" +
 	"\x06detail\x18\x03 \x01(\tR\x06detail\x121\n" +
 	"\x06status\x18\x04 \x01(\x0e2\x19.changes.HypothesisStatusR\x06status\x122\n" +
-	"\x14investigationResults\x18\x05 \x01(\tR\x14investigationResults\"<\n" +
+	"\x14investigationResults\x18\x05 \x01(\tR\x14investigationResults\x12A\n" +
+	"\rknowledgeUsed\x18\x06 \x03(\v2\x1b.changes.KnowledgeReferenceR\rknowledgeUsed\"<\n" +
 	"\x1aGetChangeTimelineV2Request\x12\x1e\n" +
 	"\n" +
 	"changeUUID\x18\x01 \x01(\fR\n" +
@@ -6529,7 +6676,7 @@ const file_changes_proto_rawDesc = "" +
 	"\x0emapping_status\x18\x04 \x01(\x0e2 .changes.MappedItemMappingStatusH\x02R\rmappingStatus\x88\x01\x01B\x0f\n" +
 	"\r_mappingQueryB\x0f\n" +
 	"\r_mappingErrorB\x11\n" +
-	"\x0f_mapping_status\"\xa1\x04\n" +
+	"\x0f_mapping_status\"\xd3\x04\n" +
 	"\x1aStartChangeAnalysisRequest\x12\x1e\n" +
 	"\n" +
 	"changeUUID\x18\x01 \x01(\fR\n" +
@@ -6537,7 +6684,8 @@ const file_changes_proto_rawDesc = "" +
 	"\rchangingItems\x18\x02 \x03(\v2\x17.changes.MappedItemDiffR\rchangingItems\x12\\\n" +
 	"\x19blastRadiusConfigOverride\x18\x03 \x01(\v2\x19.config.BlastRadiusConfigH\x00R\x19blastRadiusConfigOverride\x88\x01\x01\x12e\n" +
 	"\x1croutineChangesConfigOverride\x18\x05 \x01(\v2\x1c.config.RoutineChangesConfigH\x01R\x1croutineChangesConfigOverride\x88\x01\x01\x12t\n" +
-	"!githubOrganisationProfileOverride\x18\x06 \x01(\v2!.config.GithubOrganisationProfileH\x02R!githubOrganisationProfileOverride\x88\x01\x01B\x1c\n" +
+	"!githubOrganisationProfileOverride\x18\x06 \x01(\v2!.config.GithubOrganisationProfileH\x02R!githubOrganisationProfileOverride\x88\x01\x01\x120\n" +
+	"\tknowledge\x18\a \x03(\v2\x12.changes.KnowledgeR\tknowledgeB\x1c\n" +
 	"\x1a_blastRadiusConfigOverrideB\x1f\n" +
 	"\x1d_routineChangesConfigOverrideB$\n" +
 	"\"_githubOrganisationProfileOverrideJ\x04\b\x04\x10\x05\"\x1d\n" +
@@ -6904,7 +7052,7 @@ func file_changes_proto_rawDescGZIP() []byte {
 }
 
 var file_changes_proto_enumTypes = make([]protoimpl.EnumInfo, 12)
-var file_changes_proto_msgTypes = make([]protoimpl.MessageInfo, 97)
+var file_changes_proto_msgTypes = make([]protoimpl.MessageInfo, 99)
 var file_changes_proto_goTypes = []any{
 	(MappedItemTimelineStatus)(0),               // 0: changes.MappedItemTimelineStatus
 	(MappedItemMappingStatus)(0),                // 1: changes.MappedItemMappingStatus
@@ -6935,105 +7083,107 @@ var file_changes_proto_goTypes = []any{
 	(*TestLabelRuleResponse)(nil),               // 26: changes.TestLabelRuleResponse
 	(*ReapplyLabelRuleInTimeRangeRequest)(nil),  // 27: changes.ReapplyLabelRuleInTimeRangeRequest
 	(*ReapplyLabelRuleInTimeRangeResponse)(nil), // 28: changes.ReapplyLabelRuleInTimeRangeResponse
-	(*GetHypothesesDetailsRequest)(nil),         // 29: changes.GetHypothesesDetailsRequest
-	(*GetHypothesesDetailsResponse)(nil),        // 30: changes.GetHypothesesDetailsResponse
-	(*HypothesesDetails)(nil),                   // 31: changes.HypothesesDetails
-	(*GetChangeTimelineV2Request)(nil),          // 32: changes.GetChangeTimelineV2Request
-	(*GetChangeTimelineV2Response)(nil),         // 33: changes.GetChangeTimelineV2Response
-	(*ChangeTimelineEntryV2)(nil),               // 34: changes.ChangeTimelineEntryV2
-	(*EmptyContent)(nil),                        // 35: changes.EmptyContent
-	(*MappedItemTimelineSummary)(nil),           // 36: changes.MappedItemTimelineSummary
-	(*MappedItemsTimelineEntry)(nil),            // 37: changes.MappedItemsTimelineEntry
-	(*CalculatedBlastRadiusTimelineEntry)(nil),  // 38: changes.CalculatedBlastRadiusTimelineEntry
-	(*RecordObservationsTimelineEntry)(nil),     // 39: changes.RecordObservationsTimelineEntry
-	(*FormHypothesesTimelineEntry)(nil),         // 40: changes.FormHypothesesTimelineEntry
-	(*InvestigateHypothesesTimelineEntry)(nil),  // 41: changes.InvestigateHypothesesTimelineEntry
-	(*HypothesisSummary)(nil),                   // 42: changes.HypothesisSummary
-	(*CalculatedRisksTimelineEntry)(nil),        // 43: changes.CalculatedRisksTimelineEntry
-	(*CalculatedLabelsTimelineEntry)(nil),       // 44: changes.CalculatedLabelsTimelineEntry
-	(*ChangeValidationTimelineEntry)(nil),       // 45: changes.ChangeValidationTimelineEntry
-	(*ChangeValidationCategory)(nil),            // 46: changes.ChangeValidationCategory
-	(*GetDiffRequest)(nil),                      // 47: changes.GetDiffRequest
-	(*GetDiffResponse)(nil),                     // 48: changes.GetDiffResponse
-	(*ListChangingItemsSummaryRequest)(nil),     // 49: changes.ListChangingItemsSummaryRequest
-	(*ListChangingItemsSummaryResponse)(nil),    // 50: changes.ListChangingItemsSummaryResponse
-	(*MappedItemDiff)(nil),                      // 51: changes.MappedItemDiff
-	(*StartChangeAnalysisRequest)(nil),          // 52: changes.StartChangeAnalysisRequest
-	(*StartChangeAnalysisResponse)(nil),         // 53: changes.StartChangeAnalysisResponse
-	(*ListHomeChangesRequest)(nil),              // 54: changes.ListHomeChangesRequest
-	(*ChangeFiltersRequest)(nil),                // 55: changes.ChangeFiltersRequest
-	(*ListHomeChangesResponse)(nil),             // 56: changes.ListHomeChangesResponse
-	(*PopulateChangeFiltersRequest)(nil),        // 57: changes.PopulateChangeFiltersRequest
-	(*PopulateChangeFiltersResponse)(nil),       // 58: changes.PopulateChangeFiltersResponse
-	(*ItemDiffSummary)(nil),                     // 59: changes.ItemDiffSummary
-	(*ItemDiff)(nil),                            // 60: changes.ItemDiff
-	(*EnrichedTags)(nil),                        // 61: changes.EnrichedTags
-	(*TagValue)(nil),                            // 62: changes.TagValue
-	(*UserTagValue)(nil),                        // 63: changes.UserTagValue
-	(*AutoTagValue)(nil),                        // 64: changes.AutoTagValue
-	(*Label)(nil),                               // 65: changes.Label
-	(*ChangeSummary)(nil),                       // 66: changes.ChangeSummary
-	(*Change)(nil),                              // 67: changes.Change
-	(*ChangeMetadata)(nil),                      // 68: changes.ChangeMetadata
-	(*ChangeProperties)(nil),                    // 69: changes.ChangeProperties
-	(*GithubChangeInfo)(nil),                    // 70: changes.GithubChangeInfo
-	(*ListChangesRequest)(nil),                  // 71: changes.ListChangesRequest
-	(*ListChangesResponse)(nil),                 // 72: changes.ListChangesResponse
-	(*ListChangesByStatusRequest)(nil),          // 73: changes.ListChangesByStatusRequest
-	(*ListChangesByStatusResponse)(nil),         // 74: changes.ListChangesByStatusResponse
-	(*CreateChangeRequest)(nil),                 // 75: changes.CreateChangeRequest
-	(*CreateChangeResponse)(nil),                // 76: changes.CreateChangeResponse
-	(*GetChangeRequest)(nil),                    // 77: changes.GetChangeRequest
-	(*GetChangeByTicketLinkRequest)(nil),        // 78: changes.GetChangeByTicketLinkRequest
-	(*GetChangeSummaryRequest)(nil),             // 79: changes.GetChangeSummaryRequest
-	(*GetChangeSummaryResponse)(nil),            // 80: changes.GetChangeSummaryResponse
-	(*GetChangeSignalsRequest)(nil),             // 81: changes.GetChangeSignalsRequest
-	(*GetChangeSignalsResponse)(nil),            // 82: changes.GetChangeSignalsResponse
-	(*GetChangeResponse)(nil),                   // 83: changes.GetChangeResponse
-	(*GetChangeRisksRequest)(nil),               // 84: changes.GetChangeRisksRequest
-	(*ChangeRiskMetadata)(nil),                  // 85: changes.ChangeRiskMetadata
-	(*GetChangeRisksResponse)(nil),              // 86: changes.GetChangeRisksResponse
-	(*UpdateChangeRequest)(nil),                 // 87: changes.UpdateChangeRequest
-	(*UpdateChangeResponse)(nil),                // 88: changes.UpdateChangeResponse
-	(*DeleteChangeRequest)(nil),                 // 89: changes.DeleteChangeRequest
-	(*ListChangesBySnapshotUUIDRequest)(nil),    // 90: changes.ListChangesBySnapshotUUIDRequest
-	(*ListChangesBySnapshotUUIDResponse)(nil),   // 91: changes.ListChangesBySnapshotUUIDResponse
-	(*DeleteChangeResponse)(nil),                // 92: changes.DeleteChangeResponse
-	(*RefreshStateRequest)(nil),                 // 93: changes.RefreshStateRequest
-	(*RefreshStateResponse)(nil),                // 94: changes.RefreshStateResponse
-	(*StartChangeRequest)(nil),                  // 95: changes.StartChangeRequest
-	(*StartChangeResponse)(nil),                 // 96: changes.StartChangeResponse
-	(*EndChangeRequest)(nil),                    // 97: changes.EndChangeRequest
-	(*EndChangeResponse)(nil),                   // 98: changes.EndChangeResponse
-	(*StartChangeSimpleResponse)(nil),           // 99: changes.StartChangeSimpleResponse
-	(*EndChangeSimpleResponse)(nil),             // 100: changes.EndChangeSimpleResponse
-	(*Risk)(nil),                                // 101: changes.Risk
-	(*ChangeAnalysisStatus)(nil),                // 102: changes.ChangeAnalysisStatus
-	(*GenerateRiskFixRequest)(nil),              // 103: changes.GenerateRiskFixRequest
-	(*GenerateRiskFixResponse)(nil),             // 104: changes.GenerateRiskFixResponse
-	nil,                                         // 105: changes.EnrichedTags.TagValueEntry
-	nil,                                         // 106: changes.ChangeSummary.TagsEntry
-	(*ChangeMetadata_HealthChange)(nil),         // 107: changes.ChangeMetadata.HealthChange
-	nil,                                         // 108: changes.ChangeProperties.TagsEntry
-	(*timestamppb.Timestamp)(nil),               // 109: google.protobuf.Timestamp
-	(*Edge)(nil),                                // 110: Edge
-	(*Query)(nil),                               // 111: Query
-	(*QueryError)(nil),                          // 112: QueryError
-	(*BlastRadiusConfig)(nil),                   // 113: config.BlastRadiusConfig
-	(*RoutineChangesConfig)(nil),                // 114: config.RoutineChangesConfig
-	(*GithubOrganisationProfile)(nil),           // 115: config.GithubOrganisationProfile
-	(*PaginationRequest)(nil),                   // 116: PaginationRequest
-	(SortOrder)(0),                              // 117: SortOrder
-	(*PaginationResponse)(nil),                  // 118: PaginationResponse
-	(*Reference)(nil),                           // 119: Reference
-	(Health)(0),                                 // 120: Health
-	(*Item)(nil),                                // 121: Item
+	(*KnowledgeReference)(nil),                  // 29: changes.KnowledgeReference
+	(*Knowledge)(nil),                           // 30: changes.Knowledge
+	(*GetHypothesesDetailsRequest)(nil),         // 31: changes.GetHypothesesDetailsRequest
+	(*GetHypothesesDetailsResponse)(nil),        // 32: changes.GetHypothesesDetailsResponse
+	(*HypothesesDetails)(nil),                   // 33: changes.HypothesesDetails
+	(*GetChangeTimelineV2Request)(nil),          // 34: changes.GetChangeTimelineV2Request
+	(*GetChangeTimelineV2Response)(nil),         // 35: changes.GetChangeTimelineV2Response
+	(*ChangeTimelineEntryV2)(nil),               // 36: changes.ChangeTimelineEntryV2
+	(*EmptyContent)(nil),                        // 37: changes.EmptyContent
+	(*MappedItemTimelineSummary)(nil),           // 38: changes.MappedItemTimelineSummary
+	(*MappedItemsTimelineEntry)(nil),            // 39: changes.MappedItemsTimelineEntry
+	(*CalculatedBlastRadiusTimelineEntry)(nil),  // 40: changes.CalculatedBlastRadiusTimelineEntry
+	(*RecordObservationsTimelineEntry)(nil),     // 41: changes.RecordObservationsTimelineEntry
+	(*FormHypothesesTimelineEntry)(nil),         // 42: changes.FormHypothesesTimelineEntry
+	(*InvestigateHypothesesTimelineEntry)(nil),  // 43: changes.InvestigateHypothesesTimelineEntry
+	(*HypothesisSummary)(nil),                   // 44: changes.HypothesisSummary
+	(*CalculatedRisksTimelineEntry)(nil),        // 45: changes.CalculatedRisksTimelineEntry
+	(*CalculatedLabelsTimelineEntry)(nil),       // 46: changes.CalculatedLabelsTimelineEntry
+	(*ChangeValidationTimelineEntry)(nil),       // 47: changes.ChangeValidationTimelineEntry
+	(*ChangeValidationCategory)(nil),            // 48: changes.ChangeValidationCategory
+	(*GetDiffRequest)(nil),                      // 49: changes.GetDiffRequest
+	(*GetDiffResponse)(nil),                     // 50: changes.GetDiffResponse
+	(*ListChangingItemsSummaryRequest)(nil),     // 51: changes.ListChangingItemsSummaryRequest
+	(*ListChangingItemsSummaryResponse)(nil),    // 52: changes.ListChangingItemsSummaryResponse
+	(*MappedItemDiff)(nil),                      // 53: changes.MappedItemDiff
+	(*StartChangeAnalysisRequest)(nil),          // 54: changes.StartChangeAnalysisRequest
+	(*StartChangeAnalysisResponse)(nil),         // 55: changes.StartChangeAnalysisResponse
+	(*ListHomeChangesRequest)(nil),              // 56: changes.ListHomeChangesRequest
+	(*ChangeFiltersRequest)(nil),                // 57: changes.ChangeFiltersRequest
+	(*ListHomeChangesResponse)(nil),             // 58: changes.ListHomeChangesResponse
+	(*PopulateChangeFiltersRequest)(nil),        // 59: changes.PopulateChangeFiltersRequest
+	(*PopulateChangeFiltersResponse)(nil),       // 60: changes.PopulateChangeFiltersResponse
+	(*ItemDiffSummary)(nil),                     // 61: changes.ItemDiffSummary
+	(*ItemDiff)(nil),                            // 62: changes.ItemDiff
+	(*EnrichedTags)(nil),                        // 63: changes.EnrichedTags
+	(*TagValue)(nil),                            // 64: changes.TagValue
+	(*UserTagValue)(nil),                        // 65: changes.UserTagValue
+	(*AutoTagValue)(nil),                        // 66: changes.AutoTagValue
+	(*Label)(nil),                               // 67: changes.Label
+	(*ChangeSummary)(nil),                       // 68: changes.ChangeSummary
+	(*Change)(nil),                              // 69: changes.Change
+	(*ChangeMetadata)(nil),                      // 70: changes.ChangeMetadata
+	(*ChangeProperties)(nil),                    // 71: changes.ChangeProperties
+	(*GithubChangeInfo)(nil),                    // 72: changes.GithubChangeInfo
+	(*ListChangesRequest)(nil),                  // 73: changes.ListChangesRequest
+	(*ListChangesResponse)(nil),                 // 74: changes.ListChangesResponse
+	(*ListChangesByStatusRequest)(nil),          // 75: changes.ListChangesByStatusRequest
+	(*ListChangesByStatusResponse)(nil),         // 76: changes.ListChangesByStatusResponse
+	(*CreateChangeRequest)(nil),                 // 77: changes.CreateChangeRequest
+	(*CreateChangeResponse)(nil),                // 78: changes.CreateChangeResponse
+	(*GetChangeRequest)(nil),                    // 79: changes.GetChangeRequest
+	(*GetChangeByTicketLinkRequest)(nil),        // 80: changes.GetChangeByTicketLinkRequest
+	(*GetChangeSummaryRequest)(nil),             // 81: changes.GetChangeSummaryRequest
+	(*GetChangeSummaryResponse)(nil),            // 82: changes.GetChangeSummaryResponse
+	(*GetChangeSignalsRequest)(nil),             // 83: changes.GetChangeSignalsRequest
+	(*GetChangeSignalsResponse)(nil),            // 84: changes.GetChangeSignalsResponse
+	(*GetChangeResponse)(nil),                   // 85: changes.GetChangeResponse
+	(*GetChangeRisksRequest)(nil),               // 86: changes.GetChangeRisksRequest
+	(*ChangeRiskMetadata)(nil),                  // 87: changes.ChangeRiskMetadata
+	(*GetChangeRisksResponse)(nil),              // 88: changes.GetChangeRisksResponse
+	(*UpdateChangeRequest)(nil),                 // 89: changes.UpdateChangeRequest
+	(*UpdateChangeResponse)(nil),                // 90: changes.UpdateChangeResponse
+	(*DeleteChangeRequest)(nil),                 // 91: changes.DeleteChangeRequest
+	(*ListChangesBySnapshotUUIDRequest)(nil),    // 92: changes.ListChangesBySnapshotUUIDRequest
+	(*ListChangesBySnapshotUUIDResponse)(nil),   // 93: changes.ListChangesBySnapshotUUIDResponse
+	(*DeleteChangeResponse)(nil),                // 94: changes.DeleteChangeResponse
+	(*RefreshStateRequest)(nil),                 // 95: changes.RefreshStateRequest
+	(*RefreshStateResponse)(nil),                // 96: changes.RefreshStateResponse
+	(*StartChangeRequest)(nil),                  // 97: changes.StartChangeRequest
+	(*StartChangeResponse)(nil),                 // 98: changes.StartChangeResponse
+	(*EndChangeRequest)(nil),                    // 99: changes.EndChangeRequest
+	(*EndChangeResponse)(nil),                   // 100: changes.EndChangeResponse
+	(*StartChangeSimpleResponse)(nil),           // 101: changes.StartChangeSimpleResponse
+	(*EndChangeSimpleResponse)(nil),             // 102: changes.EndChangeSimpleResponse
+	(*Risk)(nil),                                // 103: changes.Risk
+	(*ChangeAnalysisStatus)(nil),                // 104: changes.ChangeAnalysisStatus
+	(*GenerateRiskFixRequest)(nil),              // 105: changes.GenerateRiskFixRequest
+	(*GenerateRiskFixResponse)(nil),             // 106: changes.GenerateRiskFixResponse
+	nil,                                         // 107: changes.EnrichedTags.TagValueEntry
+	nil,                                         // 108: changes.ChangeSummary.TagsEntry
+	(*ChangeMetadata_HealthChange)(nil),         // 109: changes.ChangeMetadata.HealthChange
+	nil,                                         // 110: changes.ChangeProperties.TagsEntry
+	(*timestamppb.Timestamp)(nil),               // 111: google.protobuf.Timestamp
+	(*Edge)(nil),                                // 112: Edge
+	(*Query)(nil),                               // 113: Query
+	(*QueryError)(nil),                          // 114: QueryError
+	(*BlastRadiusConfig)(nil),                   // 115: config.BlastRadiusConfig
+	(*RoutineChangesConfig)(nil),                // 116: config.RoutineChangesConfig
+	(*GithubOrganisationProfile)(nil),           // 117: config.GithubOrganisationProfile
+	(*PaginationRequest)(nil),                   // 118: PaginationRequest
+	(SortOrder)(0),                              // 119: SortOrder
+	(*PaginationResponse)(nil),                  // 120: PaginationResponse
+	(*Reference)(nil),                           // 121: Reference
+	(Health)(0),                                 // 122: Health
+	(*Item)(nil),                                // 123: Item
 }
 var file_changes_proto_depIdxs = []int32{
 	13,  // 0: changes.LabelRule.metadata:type_name -> changes.LabelRuleMetadata
 	14,  // 1: changes.LabelRule.properties:type_name -> changes.LabelRuleProperties
-	109, // 2: changes.LabelRuleMetadata.createdAt:type_name -> google.protobuf.Timestamp
-	109, // 3: changes.LabelRuleMetadata.updatedAt:type_name -> google.protobuf.Timestamp
+	111, // 2: changes.LabelRuleMetadata.createdAt:type_name -> google.protobuf.Timestamp
+	111, // 3: changes.LabelRuleMetadata.updatedAt:type_name -> google.protobuf.Timestamp
 	12,  // 4: changes.ListLabelRulesResponse.rules:type_name -> changes.LabelRule
 	14,  // 5: changes.CreateLabelRuleRequest.properties:type_name -> changes.LabelRuleProperties
 	12,  // 6: changes.CreateLabelRuleResponse.rule:type_name -> changes.LabelRule
@@ -7041,174 +7191,176 @@ var file_changes_proto_depIdxs = []int32{
 	14,  // 8: changes.UpdateLabelRuleRequest.properties:type_name -> changes.LabelRuleProperties
 	12,  // 9: changes.UpdateLabelRuleResponse.rule:type_name -> changes.LabelRule
 	14,  // 10: changes.TestLabelRuleRequest.properties:type_name -> changes.LabelRuleProperties
-	65,  // 11: changes.TestLabelRuleResponse.label:type_name -> changes.Label
-	109, // 12: changes.ReapplyLabelRuleInTimeRangeRequest.startAt:type_name -> google.protobuf.Timestamp
-	109, // 13: changes.ReapplyLabelRuleInTimeRangeRequest.endAt:type_name -> google.protobuf.Timestamp
-	31,  // 14: changes.GetHypothesesDetailsResponse.hypotheses:type_name -> changes.HypothesesDetails
+	67,  // 11: changes.TestLabelRuleResponse.label:type_name -> changes.Label
+	111, // 12: changes.ReapplyLabelRuleInTimeRangeRequest.startAt:type_name -> google.protobuf.Timestamp
+	111, // 13: changes.ReapplyLabelRuleInTimeRangeRequest.endAt:type_name -> google.protobuf.Timestamp
+	33,  // 14: changes.GetHypothesesDetailsResponse.hypotheses:type_name -> changes.HypothesesDetails
 	2,   // 15: changes.HypothesesDetails.status:type_name -> changes.HypothesisStatus
-	34,  // 16: changes.GetChangeTimelineV2Response.entries:type_name -> changes.ChangeTimelineEntryV2
-	3,   // 17: changes.ChangeTimelineEntryV2.status:type_name -> changes.ChangeTimelineEntryStatus
-	109, // 18: changes.ChangeTimelineEntryV2.startedAt:type_name -> google.protobuf.Timestamp
-	109, // 19: changes.ChangeTimelineEntryV2.endedAt:type_name -> google.protobuf.Timestamp
-	37,  // 20: changes.ChangeTimelineEntryV2.mappedItems:type_name -> changes.MappedItemsTimelineEntry
-	38,  // 21: changes.ChangeTimelineEntryV2.calculatedBlastRadius:type_name -> changes.CalculatedBlastRadiusTimelineEntry
-	43,  // 22: changes.ChangeTimelineEntryV2.calculatedRisks:type_name -> changes.CalculatedRisksTimelineEntry
-	35,  // 23: changes.ChangeTimelineEntryV2.empty:type_name -> changes.EmptyContent
-	45,  // 24: changes.ChangeTimelineEntryV2.changeValidation:type_name -> changes.ChangeValidationTimelineEntry
-	44,  // 25: changes.ChangeTimelineEntryV2.calculatedLabels:type_name -> changes.CalculatedLabelsTimelineEntry
-	40,  // 26: changes.ChangeTimelineEntryV2.formHypotheses:type_name -> changes.FormHypothesesTimelineEntry
-	41,  // 27: changes.ChangeTimelineEntryV2.investigateHypotheses:type_name -> changes.InvestigateHypothesesTimelineEntry
-	39,  // 28: changes.ChangeTimelineEntryV2.recordObservations:type_name -> changes.RecordObservationsTimelineEntry
-	0,   // 29: changes.MappedItemTimelineSummary.status:type_name -> changes.MappedItemTimelineStatus
-	51,  // 30: changes.MappedItemsTimelineEntry.mappedItems:type_name -> changes.MappedItemDiff
-	36,  // 31: changes.MappedItemsTimelineEntry.items:type_name -> changes.MappedItemTimelineSummary
-	42,  // 32: changes.FormHypothesesTimelineEntry.hypotheses:type_name -> changes.HypothesisSummary
-	42,  // 33: changes.InvestigateHypothesesTimelineEntry.hypotheses:type_name -> changes.HypothesisSummary
-	2,   // 34: changes.HypothesisSummary.status:type_name -> changes.HypothesisStatus
-	101, // 35: changes.CalculatedRisksTimelineEntry.risks:type_name -> changes.Risk
-	65,  // 36: changes.CalculatedLabelsTimelineEntry.labels:type_name -> changes.Label
-	46,  // 37: changes.ChangeValidationTimelineEntry.validationChecklist:type_name -> changes.ChangeValidationCategory
-	60,  // 38: changes.GetDiffResponse.expectedItems:type_name -> changes.ItemDiff
-	60,  // 39: changes.GetDiffResponse.unexpectedItems:type_name -> changes.ItemDiff
-	110, // 40: changes.GetDiffResponse.edges:type_name -> Edge
-	60,  // 41: changes.GetDiffResponse.missingItems:type_name -> changes.ItemDiff
-	59,  // 42: changes.ListChangingItemsSummaryResponse.items:type_name -> changes.ItemDiffSummary
-	60,  // 43: changes.MappedItemDiff.item:type_name -> changes.ItemDiff
-	111, // 44: changes.MappedItemDiff.mappingQuery:type_name -> Query
-	112, // 45: changes.MappedItemDiff.mappingError:type_name -> QueryError
-	1,   // 46: changes.MappedItemDiff.mapping_status:type_name -> changes.MappedItemMappingStatus
-	51,  // 47: changes.StartChangeAnalysisRequest.changingItems:type_name -> changes.MappedItemDiff
-	113, // 48: changes.StartChangeAnalysisRequest.blastRadiusConfigOverride:type_name -> config.BlastRadiusConfig
-	114, // 49: changes.StartChangeAnalysisRequest.routineChangesConfigOverride:type_name -> config.RoutineChangesConfig
-	115, // 50: changes.StartChangeAnalysisRequest.githubOrganisationProfileOverride:type_name -> config.GithubOrganisationProfile
-	116, // 51: changes.ListHomeChangesRequest.pagination:type_name -> PaginationRequest
-	55,  // 52: changes.ListHomeChangesRequest.filters:type_name -> changes.ChangeFiltersRequest
-	10,  // 53: changes.ChangeFiltersRequest.risks:type_name -> changes.Risk.Severity
-	7,   // 54: changes.ChangeFiltersRequest.statuses:type_name -> changes.ChangeStatus
-	117, // 55: changes.ChangeFiltersRequest.sortOrder:type_name -> SortOrder
-	66,  // 56: changes.ListHomeChangesResponse.changes:type_name -> changes.ChangeSummary
-	118, // 57: changes.ListHomeChangesResponse.pagination:type_name -> PaginationResponse
-	119, // 58: changes.ItemDiffSummary.item:type_name -> Reference
-	4,   // 59: changes.ItemDiffSummary.status:type_name -> changes.ItemDiffStatus
-	120, // 60: changes.ItemDiffSummary.healthAfter:type_name -> Health
-	119, // 61: changes.ItemDiff.item:type_name -> Reference
-	4,   // 62: changes.ItemDiff.status:type_name -> changes.ItemDiffStatus
-	121, // 63: changes.ItemDiff.before:type_name -> Item
-	121, // 64: changes.ItemDiff.after:type_name -> Item
-	105, // 65: changes.EnrichedTags.tagValue:type_name -> changes.EnrichedTags.TagValueEntry
-	63,  // 66: changes.TagValue.userTagValue:type_name -> changes.UserTagValue
-	64,  // 67: changes.TagValue.autoTagValue:type_name -> changes.AutoTagValue
-	6,   // 68: changes.Label.type:type_name -> changes.LabelType
-	7,   // 69: changes.ChangeSummary.status:type_name -> changes.ChangeStatus
-	109, // 70: changes.ChangeSummary.createdAt:type_name -> google.protobuf.Timestamp
-	106, // 71: changes.ChangeSummary.tags:type_name -> changes.ChangeSummary.TagsEntry
-	61,  // 72: changes.ChangeSummary.enrichedTags:type_name -> changes.EnrichedTags
-	65,  // 73: changes.ChangeSummary.labels:type_name -> changes.Label
-	70,  // 74: changes.ChangeSummary.githubChangeInfo:type_name -> changes.GithubChangeInfo
-	68,  // 75: changes.Change.metadata:type_name -> changes.ChangeMetadata
-	69,  // 76: changes.Change.properties:type_name -> changes.ChangeProperties
-	109, // 77: changes.ChangeMetadata.createdAt:type_name -> google.protobuf.Timestamp
-	109, // 78: changes.ChangeMetadata.updatedAt:type_name -> google.protobuf.Timestamp
-	7,   // 79: changes.ChangeMetadata.status:type_name -> changes.ChangeStatus
-	107, // 80: changes.ChangeMetadata.UnknownHealthChange:type_name -> changes.ChangeMetadata.HealthChange
-	107, // 81: changes.ChangeMetadata.OkHealthChange:type_name -> changes.ChangeMetadata.HealthChange
-	107, // 82: changes.ChangeMetadata.WarningHealthChange:type_name -> changes.ChangeMetadata.HealthChange
-	107, // 83: changes.ChangeMetadata.ErrorHealthChange:type_name -> changes.ChangeMetadata.HealthChange
-	107, // 84: changes.ChangeMetadata.PendingHealthChange:type_name -> changes.ChangeMetadata.HealthChange
-	70,  // 85: changes.ChangeMetadata.githubChangeInfo:type_name -> changes.GithubChangeInfo
-	102, // 86: changes.ChangeMetadata.changeAnalysisStatus:type_name -> changes.ChangeAnalysisStatus
-	60,  // 87: changes.ChangeProperties.plannedChanges:type_name -> changes.ItemDiff
-	108, // 88: changes.ChangeProperties.tags:type_name -> changes.ChangeProperties.TagsEntry
-	61,  // 89: changes.ChangeProperties.enrichedTags:type_name -> changes.EnrichedTags
-	65,  // 90: changes.ChangeProperties.labels:type_name -> changes.Label
-	67,  // 91: changes.ListChangesResponse.changes:type_name -> changes.Change
-	7,   // 92: changes.ListChangesByStatusRequest.status:type_name -> changes.ChangeStatus
-	67,  // 93: changes.ListChangesByStatusResponse.changes:type_name -> changes.Change
-	69,  // 94: changes.CreateChangeRequest.properties:type_name -> changes.ChangeProperties
-	67,  // 95: changes.CreateChangeResponse.change:type_name -> changes.Change
-	5,   // 96: changes.GetChangeSummaryRequest.changeOutputFormat:type_name -> changes.ChangeOutputFormat
-	10,  // 97: changes.GetChangeSummaryRequest.riskSeverityFilter:type_name -> changes.Risk.Severity
-	5,   // 98: changes.GetChangeSignalsRequest.changeOutputFormat:type_name -> changes.ChangeOutputFormat
-	67,  // 99: changes.GetChangeResponse.change:type_name -> changes.Change
-	102, // 100: changes.ChangeRiskMetadata.changeAnalysisStatus:type_name -> changes.ChangeAnalysisStatus
-	101, // 101: changes.ChangeRiskMetadata.risks:type_name -> changes.Risk
-	85,  // 102: changes.GetChangeRisksResponse.changeRiskMetadata:type_name -> changes.ChangeRiskMetadata
-	69,  // 103: changes.UpdateChangeRequest.properties:type_name -> changes.ChangeProperties
-	67,  // 104: changes.UpdateChangeResponse.change:type_name -> changes.Change
-	67,  // 105: changes.ListChangesBySnapshotUUIDResponse.changes:type_name -> changes.Change
-	8,   // 106: changes.StartChangeResponse.state:type_name -> changes.StartChangeResponse.State
-	9,   // 107: changes.EndChangeResponse.state:type_name -> changes.EndChangeResponse.State
-	10,  // 108: changes.Risk.severity:type_name -> changes.Risk.Severity
-	119, // 109: changes.Risk.relatedItems:type_name -> Reference
-	11,  // 110: changes.ChangeAnalysisStatus.status:type_name -> changes.ChangeAnalysisStatus.Status
-	62,  // 111: changes.EnrichedTags.TagValueEntry.value:type_name -> changes.TagValue
-	71,  // 112: changes.ChangesService.ListChanges:input_type -> changes.ListChangesRequest
-	73,  // 113: changes.ChangesService.ListChangesByStatus:input_type -> changes.ListChangesByStatusRequest
-	75,  // 114: changes.ChangesService.CreateChange:input_type -> changes.CreateChangeRequest
-	77,  // 115: changes.ChangesService.GetChange:input_type -> changes.GetChangeRequest
-	78,  // 116: changes.ChangesService.GetChangeByTicketLink:input_type -> changes.GetChangeByTicketLinkRequest
-	79,  // 117: changes.ChangesService.GetChangeSummary:input_type -> changes.GetChangeSummaryRequest
-	32,  // 118: changes.ChangesService.GetChangeTimelineV2:input_type -> changes.GetChangeTimelineV2Request
-	84,  // 119: changes.ChangesService.GetChangeRisks:input_type -> changes.GetChangeRisksRequest
-	87,  // 120: changes.ChangesService.UpdateChange:input_type -> changes.UpdateChangeRequest
-	89,  // 121: changes.ChangesService.DeleteChange:input_type -> changes.DeleteChangeRequest
-	90,  // 122: changes.ChangesService.ListChangesBySnapshotUUID:input_type -> changes.ListChangesBySnapshotUUIDRequest
-	93,  // 123: changes.ChangesService.RefreshState:input_type -> changes.RefreshStateRequest
-	95,  // 124: changes.ChangesService.StartChange:input_type -> changes.StartChangeRequest
-	97,  // 125: changes.ChangesService.EndChange:input_type -> changes.EndChangeRequest
-	95,  // 126: changes.ChangesService.StartChangeSimple:input_type -> changes.StartChangeRequest
-	97,  // 127: changes.ChangesService.EndChangeSimple:input_type -> changes.EndChangeRequest
-	54,  // 128: changes.ChangesService.ListHomeChanges:input_type -> changes.ListHomeChangesRequest
-	52,  // 129: changes.ChangesService.StartChangeAnalysis:input_type -> changes.StartChangeAnalysisRequest
-	49,  // 130: changes.ChangesService.ListChangingItemsSummary:input_type -> changes.ListChangingItemsSummaryRequest
-	47,  // 131: changes.ChangesService.GetDiff:input_type -> changes.GetDiffRequest
-	57,  // 132: changes.ChangesService.PopulateChangeFilters:input_type -> changes.PopulateChangeFiltersRequest
-	103, // 133: changes.ChangesService.GenerateRiskFix:input_type -> changes.GenerateRiskFixRequest
-	29,  // 134: changes.ChangesService.GetHypothesesDetails:input_type -> changes.GetHypothesesDetailsRequest
-	81,  // 135: changes.ChangesService.GetChangeSignals:input_type -> changes.GetChangeSignalsRequest
-	15,  // 136: changes.LabelService.ListLabelRules:input_type -> changes.ListLabelRulesRequest
-	17,  // 137: changes.LabelService.CreateLabelRule:input_type -> changes.CreateLabelRuleRequest
-	19,  // 138: changes.LabelService.GetLabelRule:input_type -> changes.GetLabelRuleRequest
-	21,  // 139: changes.LabelService.UpdateLabelRule:input_type -> changes.UpdateLabelRuleRequest
-	23,  // 140: changes.LabelService.DeleteLabelRule:input_type -> changes.DeleteLabelRuleRequest
-	25,  // 141: changes.LabelService.TestLabelRule:input_type -> changes.TestLabelRuleRequest
-	27,  // 142: changes.LabelService.ReapplyLabelRuleInTimeRange:input_type -> changes.ReapplyLabelRuleInTimeRangeRequest
-	72,  // 143: changes.ChangesService.ListChanges:output_type -> changes.ListChangesResponse
-	74,  // 144: changes.ChangesService.ListChangesByStatus:output_type -> changes.ListChangesByStatusResponse
-	76,  // 145: changes.ChangesService.CreateChange:output_type -> changes.CreateChangeResponse
-	83,  // 146: changes.ChangesService.GetChange:output_type -> changes.GetChangeResponse
-	83,  // 147: changes.ChangesService.GetChangeByTicketLink:output_type -> changes.GetChangeResponse
-	80,  // 148: changes.ChangesService.GetChangeSummary:output_type -> changes.GetChangeSummaryResponse
-	33,  // 149: changes.ChangesService.GetChangeTimelineV2:output_type -> changes.GetChangeTimelineV2Response
-	86,  // 150: changes.ChangesService.GetChangeRisks:output_type -> changes.GetChangeRisksResponse
-	88,  // 151: changes.ChangesService.UpdateChange:output_type -> changes.UpdateChangeResponse
-	92,  // 152: changes.ChangesService.DeleteChange:output_type -> changes.DeleteChangeResponse
-	91,  // 153: changes.ChangesService.ListChangesBySnapshotUUID:output_type -> changes.ListChangesBySnapshotUUIDResponse
-	94,  // 154: changes.ChangesService.RefreshState:output_type -> changes.RefreshStateResponse
-	96,  // 155: changes.ChangesService.StartChange:output_type -> changes.StartChangeResponse
-	98,  // 156: changes.ChangesService.EndChange:output_type -> changes.EndChangeResponse
-	99,  // 157: changes.ChangesService.StartChangeSimple:output_type -> changes.StartChangeSimpleResponse
-	100, // 158: changes.ChangesService.EndChangeSimple:output_type -> changes.EndChangeSimpleResponse
-	56,  // 159: changes.ChangesService.ListHomeChanges:output_type -> changes.ListHomeChangesResponse
-	53,  // 160: changes.ChangesService.StartChangeAnalysis:output_type -> changes.StartChangeAnalysisResponse
-	50,  // 161: changes.ChangesService.ListChangingItemsSummary:output_type -> changes.ListChangingItemsSummaryResponse
-	48,  // 162: changes.ChangesService.GetDiff:output_type -> changes.GetDiffResponse
-	58,  // 163: changes.ChangesService.PopulateChangeFilters:output_type -> changes.PopulateChangeFiltersResponse
-	104, // 164: changes.ChangesService.GenerateRiskFix:output_type -> changes.GenerateRiskFixResponse
-	30,  // 165: changes.ChangesService.GetHypothesesDetails:output_type -> changes.GetHypothesesDetailsResponse
-	82,  // 166: changes.ChangesService.GetChangeSignals:output_type -> changes.GetChangeSignalsResponse
-	16,  // 167: changes.LabelService.ListLabelRules:output_type -> changes.ListLabelRulesResponse
-	18,  // 168: changes.LabelService.CreateLabelRule:output_type -> changes.CreateLabelRuleResponse
-	20,  // 169: changes.LabelService.GetLabelRule:output_type -> changes.GetLabelRuleResponse
-	22,  // 170: changes.LabelService.UpdateLabelRule:output_type -> changes.UpdateLabelRuleResponse
-	24,  // 171: changes.LabelService.DeleteLabelRule:output_type -> changes.DeleteLabelRuleResponse
-	26,  // 172: changes.LabelService.TestLabelRule:output_type -> changes.TestLabelRuleResponse
-	28,  // 173: changes.LabelService.ReapplyLabelRuleInTimeRange:output_type -> changes.ReapplyLabelRuleInTimeRangeResponse
-	143, // [143:174] is the sub-list for method output_type
-	112, // [112:143] is the sub-list for method input_type
-	112, // [112:112] is the sub-list for extension type_name
-	112, // [112:112] is the sub-list for extension extendee
-	0,   // [0:112] is the sub-list for field type_name
+	29,  // 16: changes.HypothesesDetails.knowledgeUsed:type_name -> changes.KnowledgeReference
+	36,  // 17: changes.GetChangeTimelineV2Response.entries:type_name -> changes.ChangeTimelineEntryV2
+	3,   // 18: changes.ChangeTimelineEntryV2.status:type_name -> changes.ChangeTimelineEntryStatus
+	111, // 19: changes.ChangeTimelineEntryV2.startedAt:type_name -> google.protobuf.Timestamp
+	111, // 20: changes.ChangeTimelineEntryV2.endedAt:type_name -> google.protobuf.Timestamp
+	39,  // 21: changes.ChangeTimelineEntryV2.mappedItems:type_name -> changes.MappedItemsTimelineEntry
+	40,  // 22: changes.ChangeTimelineEntryV2.calculatedBlastRadius:type_name -> changes.CalculatedBlastRadiusTimelineEntry
+	45,  // 23: changes.ChangeTimelineEntryV2.calculatedRisks:type_name -> changes.CalculatedRisksTimelineEntry
+	37,  // 24: changes.ChangeTimelineEntryV2.empty:type_name -> changes.EmptyContent
+	47,  // 25: changes.ChangeTimelineEntryV2.changeValidation:type_name -> changes.ChangeValidationTimelineEntry
+	46,  // 26: changes.ChangeTimelineEntryV2.calculatedLabels:type_name -> changes.CalculatedLabelsTimelineEntry
+	42,  // 27: changes.ChangeTimelineEntryV2.formHypotheses:type_name -> changes.FormHypothesesTimelineEntry
+	43,  // 28: changes.ChangeTimelineEntryV2.investigateHypotheses:type_name -> changes.InvestigateHypothesesTimelineEntry
+	41,  // 29: changes.ChangeTimelineEntryV2.recordObservations:type_name -> changes.RecordObservationsTimelineEntry
+	0,   // 30: changes.MappedItemTimelineSummary.status:type_name -> changes.MappedItemTimelineStatus
+	53,  // 31: changes.MappedItemsTimelineEntry.mappedItems:type_name -> changes.MappedItemDiff
+	38,  // 32: changes.MappedItemsTimelineEntry.items:type_name -> changes.MappedItemTimelineSummary
+	44,  // 33: changes.FormHypothesesTimelineEntry.hypotheses:type_name -> changes.HypothesisSummary
+	44,  // 34: changes.InvestigateHypothesesTimelineEntry.hypotheses:type_name -> changes.HypothesisSummary
+	2,   // 35: changes.HypothesisSummary.status:type_name -> changes.HypothesisStatus
+	103, // 36: changes.CalculatedRisksTimelineEntry.risks:type_name -> changes.Risk
+	67,  // 37: changes.CalculatedLabelsTimelineEntry.labels:type_name -> changes.Label
+	48,  // 38: changes.ChangeValidationTimelineEntry.validationChecklist:type_name -> changes.ChangeValidationCategory
+	62,  // 39: changes.GetDiffResponse.expectedItems:type_name -> changes.ItemDiff
+	62,  // 40: changes.GetDiffResponse.unexpectedItems:type_name -> changes.ItemDiff
+	112, // 41: changes.GetDiffResponse.edges:type_name -> Edge
+	62,  // 42: changes.GetDiffResponse.missingItems:type_name -> changes.ItemDiff
+	61,  // 43: changes.ListChangingItemsSummaryResponse.items:type_name -> changes.ItemDiffSummary
+	62,  // 44: changes.MappedItemDiff.item:type_name -> changes.ItemDiff
+	113, // 45: changes.MappedItemDiff.mappingQuery:type_name -> Query
+	114, // 46: changes.MappedItemDiff.mappingError:type_name -> QueryError
+	1,   // 47: changes.MappedItemDiff.mapping_status:type_name -> changes.MappedItemMappingStatus
+	53,  // 48: changes.StartChangeAnalysisRequest.changingItems:type_name -> changes.MappedItemDiff
+	115, // 49: changes.StartChangeAnalysisRequest.blastRadiusConfigOverride:type_name -> config.BlastRadiusConfig
+	116, // 50: changes.StartChangeAnalysisRequest.routineChangesConfigOverride:type_name -> config.RoutineChangesConfig
+	117, // 51: changes.StartChangeAnalysisRequest.githubOrganisationProfileOverride:type_name -> config.GithubOrganisationProfile
+	30,  // 52: changes.StartChangeAnalysisRequest.knowledge:type_name -> changes.Knowledge
+	118, // 53: changes.ListHomeChangesRequest.pagination:type_name -> PaginationRequest
+	57,  // 54: changes.ListHomeChangesRequest.filters:type_name -> changes.ChangeFiltersRequest
+	10,  // 55: changes.ChangeFiltersRequest.risks:type_name -> changes.Risk.Severity
+	7,   // 56: changes.ChangeFiltersRequest.statuses:type_name -> changes.ChangeStatus
+	119, // 57: changes.ChangeFiltersRequest.sortOrder:type_name -> SortOrder
+	68,  // 58: changes.ListHomeChangesResponse.changes:type_name -> changes.ChangeSummary
+	120, // 59: changes.ListHomeChangesResponse.pagination:type_name -> PaginationResponse
+	121, // 60: changes.ItemDiffSummary.item:type_name -> Reference
+	4,   // 61: changes.ItemDiffSummary.status:type_name -> changes.ItemDiffStatus
+	122, // 62: changes.ItemDiffSummary.healthAfter:type_name -> Health
+	121, // 63: changes.ItemDiff.item:type_name -> Reference
+	4,   // 64: changes.ItemDiff.status:type_name -> changes.ItemDiffStatus
+	123, // 65: changes.ItemDiff.before:type_name -> Item
+	123, // 66: changes.ItemDiff.after:type_name -> Item
+	107, // 67: changes.EnrichedTags.tagValue:type_name -> changes.EnrichedTags.TagValueEntry
+	65,  // 68: changes.TagValue.userTagValue:type_name -> changes.UserTagValue
+	66,  // 69: changes.TagValue.autoTagValue:type_name -> changes.AutoTagValue
+	6,   // 70: changes.Label.type:type_name -> changes.LabelType
+	7,   // 71: changes.ChangeSummary.status:type_name -> changes.ChangeStatus
+	111, // 72: changes.ChangeSummary.createdAt:type_name -> google.protobuf.Timestamp
+	108, // 73: changes.ChangeSummary.tags:type_name -> changes.ChangeSummary.TagsEntry
+	63,  // 74: changes.ChangeSummary.enrichedTags:type_name -> changes.EnrichedTags
+	67,  // 75: changes.ChangeSummary.labels:type_name -> changes.Label
+	72,  // 76: changes.ChangeSummary.githubChangeInfo:type_name -> changes.GithubChangeInfo
+	70,  // 77: changes.Change.metadata:type_name -> changes.ChangeMetadata
+	71,  // 78: changes.Change.properties:type_name -> changes.ChangeProperties
+	111, // 79: changes.ChangeMetadata.createdAt:type_name -> google.protobuf.Timestamp
+	111, // 80: changes.ChangeMetadata.updatedAt:type_name -> google.protobuf.Timestamp
+	7,   // 81: changes.ChangeMetadata.status:type_name -> changes.ChangeStatus
+	109, // 82: changes.ChangeMetadata.UnknownHealthChange:type_name -> changes.ChangeMetadata.HealthChange
+	109, // 83: changes.ChangeMetadata.OkHealthChange:type_name -> changes.ChangeMetadata.HealthChange
+	109, // 84: changes.ChangeMetadata.WarningHealthChange:type_name -> changes.ChangeMetadata.HealthChange
+	109, // 85: changes.ChangeMetadata.ErrorHealthChange:type_name -> changes.ChangeMetadata.HealthChange
+	109, // 86: changes.ChangeMetadata.PendingHealthChange:type_name -> changes.ChangeMetadata.HealthChange
+	72,  // 87: changes.ChangeMetadata.githubChangeInfo:type_name -> changes.GithubChangeInfo
+	104, // 88: changes.ChangeMetadata.changeAnalysisStatus:type_name -> changes.ChangeAnalysisStatus
+	62,  // 89: changes.ChangeProperties.plannedChanges:type_name -> changes.ItemDiff
+	110, // 90: changes.ChangeProperties.tags:type_name -> changes.ChangeProperties.TagsEntry
+	63,  // 91: changes.ChangeProperties.enrichedTags:type_name -> changes.EnrichedTags
+	67,  // 92: changes.ChangeProperties.labels:type_name -> changes.Label
+	69,  // 93: changes.ListChangesResponse.changes:type_name -> changes.Change
+	7,   // 94: changes.ListChangesByStatusRequest.status:type_name -> changes.ChangeStatus
+	69,  // 95: changes.ListChangesByStatusResponse.changes:type_name -> changes.Change
+	71,  // 96: changes.CreateChangeRequest.properties:type_name -> changes.ChangeProperties
+	69,  // 97: changes.CreateChangeResponse.change:type_name -> changes.Change
+	5,   // 98: changes.GetChangeSummaryRequest.changeOutputFormat:type_name -> changes.ChangeOutputFormat
+	10,  // 99: changes.GetChangeSummaryRequest.riskSeverityFilter:type_name -> changes.Risk.Severity
+	5,   // 100: changes.GetChangeSignalsRequest.changeOutputFormat:type_name -> changes.ChangeOutputFormat
+	69,  // 101: changes.GetChangeResponse.change:type_name -> changes.Change
+	104, // 102: changes.ChangeRiskMetadata.changeAnalysisStatus:type_name -> changes.ChangeAnalysisStatus
+	103, // 103: changes.ChangeRiskMetadata.risks:type_name -> changes.Risk
+	87,  // 104: changes.GetChangeRisksResponse.changeRiskMetadata:type_name -> changes.ChangeRiskMetadata
+	71,  // 105: changes.UpdateChangeRequest.properties:type_name -> changes.ChangeProperties
+	69,  // 106: changes.UpdateChangeResponse.change:type_name -> changes.Change
+	69,  // 107: changes.ListChangesBySnapshotUUIDResponse.changes:type_name -> changes.Change
+	8,   // 108: changes.StartChangeResponse.state:type_name -> changes.StartChangeResponse.State
+	9,   // 109: changes.EndChangeResponse.state:type_name -> changes.EndChangeResponse.State
+	10,  // 110: changes.Risk.severity:type_name -> changes.Risk.Severity
+	121, // 111: changes.Risk.relatedItems:type_name -> Reference
+	11,  // 112: changes.ChangeAnalysisStatus.status:type_name -> changes.ChangeAnalysisStatus.Status
+	64,  // 113: changes.EnrichedTags.TagValueEntry.value:type_name -> changes.TagValue
+	73,  // 114: changes.ChangesService.ListChanges:input_type -> changes.ListChangesRequest
+	75,  // 115: changes.ChangesService.ListChangesByStatus:input_type -> changes.ListChangesByStatusRequest
+	77,  // 116: changes.ChangesService.CreateChange:input_type -> changes.CreateChangeRequest
+	79,  // 117: changes.ChangesService.GetChange:input_type -> changes.GetChangeRequest
+	80,  // 118: changes.ChangesService.GetChangeByTicketLink:input_type -> changes.GetChangeByTicketLinkRequest
+	81,  // 119: changes.ChangesService.GetChangeSummary:input_type -> changes.GetChangeSummaryRequest
+	34,  // 120: changes.ChangesService.GetChangeTimelineV2:input_type -> changes.GetChangeTimelineV2Request
+	86,  // 121: changes.ChangesService.GetChangeRisks:input_type -> changes.GetChangeRisksRequest
+	89,  // 122: changes.ChangesService.UpdateChange:input_type -> changes.UpdateChangeRequest
+	91,  // 123: changes.ChangesService.DeleteChange:input_type -> changes.DeleteChangeRequest
+	92,  // 124: changes.ChangesService.ListChangesBySnapshotUUID:input_type -> changes.ListChangesBySnapshotUUIDRequest
+	95,  // 125: changes.ChangesService.RefreshState:input_type -> changes.RefreshStateRequest
+	97,  // 126: changes.ChangesService.StartChange:input_type -> changes.StartChangeRequest
+	99,  // 127: changes.ChangesService.EndChange:input_type -> changes.EndChangeRequest
+	97,  // 128: changes.ChangesService.StartChangeSimple:input_type -> changes.StartChangeRequest
+	99,  // 129: changes.ChangesService.EndChangeSimple:input_type -> changes.EndChangeRequest
+	56,  // 130: changes.ChangesService.ListHomeChanges:input_type -> changes.ListHomeChangesRequest
+	54,  // 131: changes.ChangesService.StartChangeAnalysis:input_type -> changes.StartChangeAnalysisRequest
+	51,  // 132: changes.ChangesService.ListChangingItemsSummary:input_type -> changes.ListChangingItemsSummaryRequest
+	49,  // 133: changes.ChangesService.GetDiff:input_type -> changes.GetDiffRequest
+	59,  // 134: changes.ChangesService.PopulateChangeFilters:input_type -> changes.PopulateChangeFiltersRequest
+	105, // 135: changes.ChangesService.GenerateRiskFix:input_type -> changes.GenerateRiskFixRequest
+	31,  // 136: changes.ChangesService.GetHypothesesDetails:input_type -> changes.GetHypothesesDetailsRequest
+	83,  // 137: changes.ChangesService.GetChangeSignals:input_type -> changes.GetChangeSignalsRequest
+	15,  // 138: changes.LabelService.ListLabelRules:input_type -> changes.ListLabelRulesRequest
+	17,  // 139: changes.LabelService.CreateLabelRule:input_type -> changes.CreateLabelRuleRequest
+	19,  // 140: changes.LabelService.GetLabelRule:input_type -> changes.GetLabelRuleRequest
+	21,  // 141: changes.LabelService.UpdateLabelRule:input_type -> changes.UpdateLabelRuleRequest
+	23,  // 142: changes.LabelService.DeleteLabelRule:input_type -> changes.DeleteLabelRuleRequest
+	25,  // 143: changes.LabelService.TestLabelRule:input_type -> changes.TestLabelRuleRequest
+	27,  // 144: changes.LabelService.ReapplyLabelRuleInTimeRange:input_type -> changes.ReapplyLabelRuleInTimeRangeRequest
+	74,  // 145: changes.ChangesService.ListChanges:output_type -> changes.ListChangesResponse
+	76,  // 146: changes.ChangesService.ListChangesByStatus:output_type -> changes.ListChangesByStatusResponse
+	78,  // 147: changes.ChangesService.CreateChange:output_type -> changes.CreateChangeResponse
+	85,  // 148: changes.ChangesService.GetChange:output_type -> changes.GetChangeResponse
+	85,  // 149: changes.ChangesService.GetChangeByTicketLink:output_type -> changes.GetChangeResponse
+	82,  // 150: changes.ChangesService.GetChangeSummary:output_type -> changes.GetChangeSummaryResponse
+	35,  // 151: changes.ChangesService.GetChangeTimelineV2:output_type -> changes.GetChangeTimelineV2Response
+	88,  // 152: changes.ChangesService.GetChangeRisks:output_type -> changes.GetChangeRisksResponse
+	90,  // 153: changes.ChangesService.UpdateChange:output_type -> changes.UpdateChangeResponse
+	94,  // 154: changes.ChangesService.DeleteChange:output_type -> changes.DeleteChangeResponse
+	93,  // 155: changes.ChangesService.ListChangesBySnapshotUUID:output_type -> changes.ListChangesBySnapshotUUIDResponse
+	96,  // 156: changes.ChangesService.RefreshState:output_type -> changes.RefreshStateResponse
+	98,  // 157: changes.ChangesService.StartChange:output_type -> changes.StartChangeResponse
+	100, // 158: changes.ChangesService.EndChange:output_type -> changes.EndChangeResponse
+	101, // 159: changes.ChangesService.StartChangeSimple:output_type -> changes.StartChangeSimpleResponse
+	102, // 160: changes.ChangesService.EndChangeSimple:output_type -> changes.EndChangeSimpleResponse
+	58,  // 161: changes.ChangesService.ListHomeChanges:output_type -> changes.ListHomeChangesResponse
+	55,  // 162: changes.ChangesService.StartChangeAnalysis:output_type -> changes.StartChangeAnalysisResponse
+	52,  // 163: changes.ChangesService.ListChangingItemsSummary:output_type -> changes.ListChangingItemsSummaryResponse
+	50,  // 164: changes.ChangesService.GetDiff:output_type -> changes.GetDiffResponse
+	60,  // 165: changes.ChangesService.PopulateChangeFilters:output_type -> changes.PopulateChangeFiltersResponse
+	106, // 166: changes.ChangesService.GenerateRiskFix:output_type -> changes.GenerateRiskFixResponse
+	32,  // 167: changes.ChangesService.GetHypothesesDetails:output_type -> changes.GetHypothesesDetailsResponse
+	84,  // 168: changes.ChangesService.GetChangeSignals:output_type -> changes.GetChangeSignalsResponse
+	16,  // 169: changes.LabelService.ListLabelRules:output_type -> changes.ListLabelRulesResponse
+	18,  // 170: changes.LabelService.CreateLabelRule:output_type -> changes.CreateLabelRuleResponse
+	20,  // 171: changes.LabelService.GetLabelRule:output_type -> changes.GetLabelRuleResponse
+	22,  // 172: changes.LabelService.UpdateLabelRule:output_type -> changes.UpdateLabelRuleResponse
+	24,  // 173: changes.LabelService.DeleteLabelRule:output_type -> changes.DeleteLabelRuleResponse
+	26,  // 174: changes.LabelService.TestLabelRule:output_type -> changes.TestLabelRuleResponse
+	28,  // 175: changes.LabelService.ReapplyLabelRuleInTimeRange:output_type -> changes.ReapplyLabelRuleInTimeRangeResponse
+	145, // [145:176] is the sub-list for method output_type
+	114, // [114:145] is the sub-list for method input_type
+	114, // [114:114] is the sub-list for extension type_name
+	114, // [114:114] is the sub-list for extension extendee
+	0,   // [0:114] is the sub-list for field type_name
 }
 
 func init() { file_changes_proto_init() }
@@ -7219,7 +7371,7 @@ func file_changes_proto_init() {
 	file_config_proto_init()
 	file_items_proto_init()
 	file_util_proto_init()
-	file_changes_proto_msgTypes[22].OneofWrappers = []any{
+	file_changes_proto_msgTypes[24].OneofWrappers = []any{
 		(*ChangeTimelineEntryV2_MappedItems)(nil),
 		(*ChangeTimelineEntryV2_CalculatedBlastRadius)(nil),
 		(*ChangeTimelineEntryV2_CalculatedRisks)(nil),
@@ -7232,24 +7384,24 @@ func file_changes_proto_init() {
 		(*ChangeTimelineEntryV2_InvestigateHypotheses)(nil),
 		(*ChangeTimelineEntryV2_RecordObservations)(nil),
 	}
-	file_changes_proto_msgTypes[24].OneofWrappers = []any{}
-	file_changes_proto_msgTypes[39].OneofWrappers = []any{}
-	file_changes_proto_msgTypes[40].OneofWrappers = []any{}
+	file_changes_proto_msgTypes[26].OneofWrappers = []any{}
+	file_changes_proto_msgTypes[41].OneofWrappers = []any{}
 	file_changes_proto_msgTypes[42].OneofWrappers = []any{}
-	file_changes_proto_msgTypes[43].OneofWrappers = []any{}
-	file_changes_proto_msgTypes[48].OneofWrappers = []any{}
-	file_changes_proto_msgTypes[50].OneofWrappers = []any{
+	file_changes_proto_msgTypes[44].OneofWrappers = []any{}
+	file_changes_proto_msgTypes[45].OneofWrappers = []any{}
+	file_changes_proto_msgTypes[50].OneofWrappers = []any{}
+	file_changes_proto_msgTypes[52].OneofWrappers = []any{
 		(*TagValue_UserTagValue)(nil),
 		(*TagValue_AutoTagValue)(nil),
 	}
-	file_changes_proto_msgTypes[56].OneofWrappers = []any{}
+	file_changes_proto_msgTypes[58].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_changes_proto_rawDesc), len(file_changes_proto_rawDesc)),
 			NumEnums:      12,
-			NumMessages:   97,
+			NumMessages:   99,
 			NumExtensions: 0,
 			NumServices:   2,
 		},
