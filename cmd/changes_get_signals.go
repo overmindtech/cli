@@ -55,47 +55,43 @@ func GetSignals(cmd *cobra.Command, args []string) error {
 	}
 
 	client := AuthenticatedChangesClient(ctx, oi)
-	var timeLine *sdp.GetChangeTimelineV2Response
 fetch:
 	for {
-		rawTimeLine, timelineErr := client.GetChangeTimelineV2(ctx, &connect.Request[sdp.GetChangeTimelineV2Request]{
-			Msg: &sdp.GetChangeTimelineV2Request{
-				ChangeUUID: changeUuid[:],
+		changeRes, err := client.GetChange(ctx, &connect.Request[sdp.GetChangeRequest]{
+			Msg: &sdp.GetChangeRequest{
+				UUID: changeUuid[:],
 			},
 		})
-		if timelineErr != nil || rawTimeLine.Msg == nil {
-			return loggedError{
-				err:     timelineErr,
-				fields:  lf,
-				message: "failed to get timeline",
-			}
-		}
-		timeLine = rawTimeLine.Msg
-		for _, entry := range timeLine.GetEntries() {
-			// ENG-1993: This is temporary to still track the auto tagging entry in the timeline. this is to prevent the cli from hanging
-			if entry.GetName() == sdp.ChangeTimelineEntryV2IDAutoTagging.Name && entry.GetStatus() == sdp.ChangeTimelineEntryStatus_DONE {
-				break fetch
-			}
-		}
-		// display the running entry
-		runningEntry, contentDescription, status, err := sdp.TimelineFindInProgressEntry(timeLine.GetEntries())
-		if err != nil {
+		if err != nil || changeRes.Msg == nil || changeRes.Msg.GetChange() == nil {
 			return loggedError{
 				err:     err,
 				fields:  lf,
-				message: "failed to find running entry",
+				message: "failed to get change",
 			}
 		}
-		// find the running timeline entry
-		log.WithContext(ctx).WithFields(log.Fields{
-			"status":  status.String(),
-			"running": runningEntry,
-			"content": contentDescription,
-		}).Info("Waiting for change analysis to complete")
-		// retry
+		ch := changeRes.Msg.GetChange()
+		md := ch.GetMetadata()
+		if md == nil || md.GetChangeAnalysisStatus() == nil {
+			return loggedError{
+				err:     fmt.Errorf("change metadata or change analysis status is nil"),
+				fields:  lf,
+				message: "failed to get change",
+			}
+		}
+		status := md.GetChangeAnalysisStatus().GetStatus()
+		switch status {
+		case sdp.ChangeAnalysisStatus_STATUS_DONE, sdp.ChangeAnalysisStatus_STATUS_SKIPPED:
+			break fetch
+		case sdp.ChangeAnalysisStatus_STATUS_ERROR:
+			return loggedError{
+				err:     fmt.Errorf("change analysis completed with error status"),
+				fields:  lf,
+				message: "change analysis failed",
+			}
+		case sdp.ChangeAnalysisStatus_STATUS_UNSPECIFIED, sdp.ChangeAnalysisStatus_STATUS_INPROGRESS:
+			log.WithContext(ctx).WithFields(lf).WithField("status", status.String()).Info("Waiting for change analysis to complete")
+		}
 		time.Sleep(3 * time.Second)
-
-		// check if the context is cancelled
 		if ctx.Err() != nil {
 			return loggedError{
 				err:     ctx.Err(),
