@@ -87,10 +87,6 @@ func TestComputeDiskEncryptionSet(t *testing.T) {
 				ExpectedMethod: sdp.QueryMethod_GET,
 				ExpectedQuery:  "test-vault",
 				ExpectedScope:  subscriptionID + "." + resourceGroup,
-				ExpectedBlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			},
 			{
 				// Properties.ActiveKey.KeyURL - Key Vault Key
@@ -98,10 +94,6 @@ func TestComputeDiskEncryptionSet(t *testing.T) {
 				ExpectedMethod: sdp.QueryMethod_GET,
 				ExpectedQuery:  shared.CompositeLookupKey("test-vault", "test-key"),
 				ExpectedScope:  subscriptionID + "." + resourceGroup, // Key Vault URI doesn't contain resource group, use DES scope
-				ExpectedBlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			},
 			{
 				// Properties.ActiveKey.KeyURL - DNS name
@@ -109,10 +101,6 @@ func TestComputeDiskEncryptionSet(t *testing.T) {
 				ExpectedMethod: sdp.QueryMethod_SEARCH,
 				ExpectedQuery:  "test-vault.vault.azure.net",
 				ExpectedScope:  "global",
-				ExpectedBlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: true,
-				},
 			},
 			{
 				// Identity.UserAssignedIdentities[{id}] - User Assigned Identity
@@ -120,10 +108,6 @@ func TestComputeDiskEncryptionSet(t *testing.T) {
 				ExpectedMethod: sdp.QueryMethod_GET,
 				ExpectedQuery:  "test-identity",
 				ExpectedScope:  subscriptionID + "." + resourceGroup,
-				ExpectedBlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			},
 		}
 
@@ -155,10 +139,6 @@ func TestComputeDiskEncryptionSet(t *testing.T) {
 				ExpectedMethod: sdp.QueryMethod_GET,
 				ExpectedQuery:  "test-vault",
 				ExpectedScope:  subscriptionID + "." + resourceGroup,
-				ExpectedBlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			},
 			{
 				// Properties.ActiveKey.KeyURL - Key Vault Key
@@ -166,10 +146,6 @@ func TestComputeDiskEncryptionSet(t *testing.T) {
 				ExpectedMethod: sdp.QueryMethod_GET,
 				ExpectedQuery:  shared.CompositeLookupKey("test-vault", "test-key"),
 				ExpectedScope:  subscriptionID + "." + resourceGroup, // Key Vault URI doesn't contain resource group, use DES scope
-				ExpectedBlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			},
 			{
 				// Properties.ActiveKey.KeyURL - DNS name
@@ -177,10 +153,6 @@ func TestComputeDiskEncryptionSet(t *testing.T) {
 				ExpectedMethod: sdp.QueryMethod_SEARCH,
 				ExpectedQuery:  "test-vault.vault.azure.net",
 				ExpectedScope:  "global",
-				ExpectedBlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: true,
-				},
 			},
 			{
 				// Identity.UserAssignedIdentities[{id}] - User Assigned Identity
@@ -188,10 +160,6 @@ func TestComputeDiskEncryptionSet(t *testing.T) {
 				ExpectedMethod: sdp.QueryMethod_GET,
 				ExpectedQuery:  "test-identity",
 				ExpectedScope:  subscriptionID + "." + resourceGroup,
-				ExpectedBlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			},
 			{
 				// Properties.PreviousKeys[].SourceVault.ID - Key Vault Vault
@@ -199,10 +167,6 @@ func TestComputeDiskEncryptionSet(t *testing.T) {
 				ExpectedMethod: sdp.QueryMethod_GET,
 				ExpectedQuery:  "test-old-vault",
 				ExpectedScope:  subscriptionID + "." + resourceGroup,
-				ExpectedBlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			},
 			{
 				// Properties.PreviousKeys[].KeyURL - Key Vault Key
@@ -210,10 +174,6 @@ func TestComputeDiskEncryptionSet(t *testing.T) {
 				ExpectedMethod: sdp.QueryMethod_GET,
 				ExpectedQuery:  shared.CompositeLookupKey("test-old-vault", "test-old-key"),
 				ExpectedScope:  subscriptionID + "." + resourceGroup, // Key Vault URI doesn't contain resource group, use DES scope
-				ExpectedBlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			},
 			{
 				// Properties.PreviousKeys[].KeyURL - DNS name
@@ -221,10 +181,6 @@ func TestComputeDiskEncryptionSet(t *testing.T) {
 				ExpectedMethod: sdp.QueryMethod_SEARCH,
 				ExpectedQuery:  "test-old-vault.vault.azure.net",
 				ExpectedScope:  "global",
-				ExpectedBlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: true,
-				},
 			},
 		}
 

@@ -14,7 +14,6 @@ import (
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdpcache"
 )
-
 var StorageAccountLookupByName = shared.NewItemTypeLookup("name", azureshared.StorageAccount)
 
 type storageAccountWrapper struct {
@@ -89,7 +88,7 @@ func (s storageAccountWrapper) ListStream(ctx context.Context, stream discovery.
 			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
 			stream.SendItem(item)
 		}
-}
+	}
 }
 
 func (s storageAccountWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {

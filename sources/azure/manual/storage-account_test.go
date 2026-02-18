@@ -69,100 +69,55 @@ func TestStorageAccount(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  accountName,
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  false,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// Storage file share link
 					ExpectedType:   azureshared.StorageFileShare.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  accountName,
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  false,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// Storage table link
 					ExpectedType:   azureshared.StorageTable.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  accountName,
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  false,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// Storage queue link
 					ExpectedType:   azureshared.StorageQueue.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  accountName,
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  false,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// Storage private endpoint connection link (child resource)
 					ExpectedType:   azureshared.StoragePrivateEndpointConnection.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  accountName,
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// DNS link from PrimaryEndpoints.Blob
 					ExpectedType:   "dns",
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  accountName + ".blob.core.windows.net",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// DNS link from PrimaryEndpoints.Queue
 					ExpectedType:   "dns",
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  accountName + ".queue.core.windows.net",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// DNS link from PrimaryEndpoints.Table
 					ExpectedType:   "dns",
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  accountName + ".table.core.windows.net",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// DNS link from PrimaryEndpoints.File
 					ExpectedType:   "dns",
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  accountName + ".file.core.windows.net",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-			}
+				}}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})

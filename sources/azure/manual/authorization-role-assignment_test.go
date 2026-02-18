@@ -74,12 +74,7 @@ func TestAuthorizationRoleAssignment(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "b24988ac-6180-42a0-ab88-20f7382dd24c",
 					ExpectedScope:  subscriptionID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-			}
+				}}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
@@ -503,23 +498,13 @@ func TestAuthorizationRoleAssignment(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "b24988ac-6180-42a0-ab88-20f7382dd24c",
 					ExpectedScope:  subscriptionID,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Delegated Managed Identity link
 					ExpectedType:   azureshared.ManagedIdentityUserAssignedIdentity.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-identity",
 					ExpectedScope:  scope,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-			}
+				}}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})

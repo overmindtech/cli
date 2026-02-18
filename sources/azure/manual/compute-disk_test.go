@@ -90,210 +90,115 @@ func TestComputeDisk(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-vm",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// ManagedByExtended[0] - Virtual Machine
 					ExpectedType:   azureshared.ComputeVirtualMachine.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-vm-2",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// ShareInfo[0].VMURI - Virtual Machine
 					ExpectedType:   azureshared.ComputeVirtualMachine.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-vm-3",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Properties.DiskAccessID - Disk Access
 					ExpectedType:   azureshared.ComputeDiskAccess.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-disk-access",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Properties.Encryption.DiskEncryptionSetID - Disk Encryption Set
 					ExpectedType:   azureshared.ComputeDiskEncryptionSet.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-disk-encryption-set",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Properties.SecurityProfile.SecureVMDiskEncryptionSetID - Disk Encryption Set
 					ExpectedType:   azureshared.ComputeDiskEncryptionSet.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-secure-vm-disk-encryption-set",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Properties.CreationData.SourceResourceID (Disk) - Source Disk
 					ExpectedType:   azureshared.ComputeDisk.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "source-disk",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Properties.CreationData.StorageAccountID - Storage Account
 					ExpectedType:   azureshared.StorageAccount.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-storage-account",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Properties.CreationData.ImageReference.ID - Image
 					ExpectedType:   azureshared.ComputeImage.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-image",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Properties.CreationData.GalleryImageReference.ID - Shared Gallery Image
 					ExpectedType:   azureshared.ComputeSharedGalleryImage.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("test-gallery", "test-gallery-image", "1.0.0"),
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Properties.CreationData.GalleryImageReference.SharedGalleryImageID - Shared Gallery Image
 					ExpectedType:   azureshared.ComputeSharedGalleryImage.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("test-gallery-2", "test-gallery-image-2", "2.0.0"),
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Properties.CreationData.GalleryImageReference.CommunityGalleryImageID - Community Gallery Image
 					ExpectedType:   azureshared.ComputeCommunityGalleryImage.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("test-community-gallery", "test-community-image", "1.0.0"),
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Properties.CreationData.ElasticSanResourceID - Elastic SAN Volume Snapshot
 					ExpectedType:   azureshared.ElasticSanVolumeSnapshot.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("test-elastic-san", "test-volume-group", "test-snapshot"),
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Properties.EncryptionSettingsCollection.EncryptionSettings[0].DiskEncryptionKey.SourceVault.ID - Key Vault
 					ExpectedType:   azureshared.KeyVaultVault.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-keyvault",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Properties.EncryptionSettingsCollection.EncryptionSettings[0].DiskEncryptionKey.SecretURL - Key Vault Secret
 					ExpectedType:   azureshared.KeyVaultSecret.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("test-keyvault", "test-secret"),
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Properties.EncryptionSettingsCollection.EncryptionSettings[0].DiskEncryptionKey.SecretURL - DNS name
 					ExpectedType:   "dns",
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  "test-keyvault.vault.azure.net",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-				{
+				}, {
 					// Properties.EncryptionSettingsCollection.EncryptionSettings[0].KeyEncryptionKey.SourceVault.ID - Key Vault
 					ExpectedType:   azureshared.KeyVaultVault.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-keyvault-2",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Properties.EncryptionSettingsCollection.EncryptionSettings[0].KeyEncryptionKey.KeyURL - Key Vault Key
 					ExpectedType:   azureshared.KeyVaultKey.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("test-keyvault-2", "test-key"),
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
-				},
-				{
+				}, {
 					// Properties.EncryptionSettingsCollection.EncryptionSettings[0].KeyEncryptionKey.KeyURL - DNS name
 					ExpectedType:   "dns",
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  "test-keyvault-2.vault.azure.net",
 					ExpectedScope:  "global",
-					ExpectedBlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
-				},
-			}
+				}}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})

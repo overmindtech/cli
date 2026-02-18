@@ -13,11 +13,11 @@ import (
 	"github.com/overmindtech/cli/go/sdpcache"
 	"github.com/overmindtech/cli/go/discovery"
 )
-
 var ComputeProximityPlacementGroupLookupByName = shared.NewItemTypeLookup("name", azureshared.ComputeProximityPlacementGroup)
 
 type computeProximityPlacementGroupWrapper struct {
 	client clients.ProximityPlacementGroupsClient
+
 	*azureshared.MultiResourceGroupBase
 }
 

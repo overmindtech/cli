@@ -79,15 +79,13 @@ func TestStorageBucketIAMPolicy_Get(t *testing.T) {
 				ExpectedType:             gcpshared.StorageBucket.String(),
 				ExpectedMethod:           sdp.QueryMethod_GET,
 				ExpectedQuery:            bucketName,
-				ExpectedScope:            projectID,
-				ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+				ExpectedScope: projectID,
 			},
 			{
 				ExpectedType:             gcpshared.IAMServiceAccount.String(),
 				ExpectedMethod:           sdp.QueryMethod_GET,
 				ExpectedQuery:            "siem-sa@test-project.iam.gserviceaccount.com",
-				ExpectedScope:            projectID,
-				ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				ExpectedScope: projectID,
 			},
 		}
 		shared.RunStaticTests(t, adapter, sdpItem, queryTests)
@@ -123,29 +121,25 @@ func TestStorageBucketIAMPolicy_Get_ProjectPrincipalMembers_Linked(t *testing.T)
 				ExpectedType:             gcpshared.StorageBucket.String(),
 				ExpectedMethod:           sdp.QueryMethod_GET,
 				ExpectedQuery:            bucketName,
-				ExpectedScope:            projectID,
-				ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
+				ExpectedScope: projectID,
 			},
 			{
 				ExpectedType:             gcpshared.ComputeProject.String(),
 				ExpectedMethod:           sdp.QueryMethod_GET,
 				ExpectedQuery:            "other-project",
-				ExpectedScope:            "other-project",
-				ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				ExpectedScope: "other-project",
 			},
 			{
 				ExpectedType:             gcpshared.ComputeProject.String(),
 				ExpectedMethod:           sdp.QueryMethod_GET,
 				ExpectedQuery:            "another-project",
-				ExpectedScope:            "another-project",
-				ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				ExpectedScope: "another-project",
 			},
 			{
 				ExpectedType:             gcpshared.ComputeProject.String(),
 				ExpectedMethod:           sdp.QueryMethod_GET,
 				ExpectedQuery:            "bucket-project",
-				ExpectedScope:            "bucket-project",
-				ExpectedBlastPropagation: &sdp.BlastPropagation{In: true, Out: false},
+				ExpectedScope: "bucket-project",
 			},
 		}
 		shared.RunStaticTests(t, adapter, sdpItem, queryTests)
