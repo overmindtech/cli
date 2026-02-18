@@ -29,6 +29,7 @@ func GetResourceIDPathKeys(resourceType string) []string {
 		"azure-compute-virtual-machine-run-command": {"virtualMachines", "runCommands"},        // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/virtualMachines/{virtualMachineName}/runCommands/{runCommandName}",
 		"azure-compute-virtual-machine-extension":   {"virtualMachines", "extensions"},         // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/virtualMachines/{virtualMachineName}/extensions/{extensionName}",
 		"azure-compute-gallery-application-version": {"galleries", "applications", "versions"}, // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/galleries/{galleryName}/applications/{applicationName}/versions/{versionName}",
+		"azure-compute-gallery-image":                {"galleries", "images"},                    // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/galleries/{galleryName}/images/{imageName}",
 	}
 
 	if keys, ok := pathKeysMap[resourceType]; ok {

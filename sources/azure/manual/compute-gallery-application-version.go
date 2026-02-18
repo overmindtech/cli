@@ -3,7 +3,6 @@ package manual
 import (
 	"context"
 	"errors"
-	"net"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
@@ -169,47 +168,7 @@ func (c computeGalleryApplicationVersionWrapper) azureGalleryApplicationVersionT
 			if link == "" || (!strings.HasPrefix(link, "http://") && !strings.HasPrefix(link, "https://")) {
 				return
 			}
-			linkedItemQueries = append(linkedItemQueries, &sdp.LinkedItemQuery{
-				Query: &sdp.Query{
-					Type:   stdlib.NetworkHTTP.String(),
-					Method: sdp.QueryMethod_SEARCH,
-					Query:  link,
-					Scope:  "global",
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true, // If endpoint is unavailable → version artifact cannot be accessed (In: true)
-					Out: true, // Endpoint may be used by other resources (Out: true)
-				},
-			})
-			hostFromURL := azureshared.ExtractDNSFromURL(link)
-			if hostFromURL != "" {
-				hostOnly := hostFromURL
-				if h, _, err := net.SplitHostPort(hostFromURL); err == nil {
-					hostOnly = h
-				}
-				if net.ParseIP(hostOnly) != nil {
-					if _, seen := seenIPs[hostOnly]; !seen {
-						seenIPs[hostOnly] = struct{}{}
-						linkedItemQueries = append(linkedItemQueries, networkIPQuery(hostOnly))
-					}
-				} else {
-					if _, seen := linkedDNSHostnames[hostOnly]; !seen {
-						linkedDNSHostnames[hostOnly] = struct{}{}
-						linkedItemQueries = append(linkedItemQueries, &sdp.LinkedItemQuery{
-							Query: &sdp.Query{
-								Type:   stdlib.NetworkDNS.String(),
-								Method: sdp.QueryMethod_SEARCH,
-								Query:  hostOnly,
-								Scope:  "global",
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,
-								Out: true,
-							},
-						})
-					}
-				}
-			}
+			AppendURILinks(&linkedItemQueries, link, linkedDNSHostnames, seenIPs, true, true)
 			if accountName := azureshared.ExtractStorageAccountNameFromBlobURI(link); accountName != "" {
 				if _, seen := seenStorageAccounts[accountName]; !seen {
 					seenStorageAccounts[accountName] = struct{}{}

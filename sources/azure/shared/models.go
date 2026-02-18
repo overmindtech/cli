@@ -72,9 +72,11 @@ const (
 	DiskAccess                          shared.Resource = "disk-access"
 	DiskAccessPrivateEndpointConnection shared.Resource = "disk-access-private-endpoint-connection"
 	SharedGalleryImage                  shared.Resource = "shared-gallery-image"
+	SharedGallery                       shared.Resource = "shared-gallery"
 	CommunityGalleryImage               shared.Resource = "community-gallery-image"
 	GalleryApplicationVersion           shared.Resource = "gallery-application-version"
 	GalleryApplication                  shared.Resource = "gallery-application"
+	GalleryImage                        shared.Resource = "gallery-image"
 	Gallery                             shared.Resource = "gallery"
 
 	// Network resources
