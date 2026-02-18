@@ -16,6 +16,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/muesli/reflow/wordwrap"
 	"github.com/overmindtech/pterm"
+	"github.com/overmindtech/cli/knowledge"
 	"github.com/overmindtech/cli/tfutils"
 	"github.com/overmindtech/cli/go/sdp-go"
 	log "github.com/sirupsen/logrus"
@@ -314,10 +315,14 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 	uploadPlannedChange, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Uploading planned changes")
 	log.WithField("change", changeUuid).Debug("Uploading planned changes")
 
+	// Discover and convert knowledge files
+	sdpKnowledge := knowledge.DiscoverAndConvert(ctx, ".overmind/knowledge/")
+
 	_, err = client.StartChangeAnalysis(ctx, &connect.Request[sdp.StartChangeAnalysisRequest]{
 		Msg: &sdp.StartChangeAnalysisRequest{
 			ChangeUUID:    changeUuid[:],
 			ChangingItems: mappingResponse.GetItemDiffs(),
+			Knowledge:     sdpKnowledge,
 		},
 	})
 	if err != nil {
