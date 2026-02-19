@@ -20,10 +20,11 @@ import (
 	"github.com/overmindtech/cli/tfutils"
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/tracing"
 	azureproc "github.com/overmindtech/cli/sources/azure/proc"
 	gcpproc "github.com/overmindtech/cli/sources/gcp/proc"
+	snapshotadapters "github.com/overmindtech/cli/sources/snapshot/adapters"
 	stdlibSource "github.com/overmindtech/cli/stdlib-source/adapters"
-	"github.com/overmindtech/cli/go/tracing"
 	"github.com/pkg/browser"
 	log "github.com/sirupsen/logrus"
 	"github.com/sourcegraph/conc/pool"
@@ -42,6 +43,8 @@ The CLI automatically discovers and uses:
 - AWS providers from your Terraform configuration
 - GCP providers from your Terraform configuration (google and google-beta)
 - Falls back to default cloud provider credentials if no Terraform providers are found
+
+Set SNAPSHOT_SOURCE to a snapshot file path or URL to run only the snapshot source (no cloud sources will be started). Useful for local testing with fixed data.
 
 For GCP, ensure you have appropriate permissions (roles/browser or equivalent) to access project metadata.`,
 
@@ -73,6 +76,47 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 	hostname, err := os.Hostname()
 	if err != nil {
 		return func() {}, fmt.Errorf("failed to get hostname: %w", err)
+	}
+
+	// If SNAPSHOT_SOURCE is set, run ONLY the snapshot source -- skip all live sources.
+	// Snapshot mode replays pre-recorded data, so cloud providers are unnecessary.
+	if snapshotSourcePath := os.Getenv("SNAPSHOT_SOURCE"); snapshotSourcePath != "" {
+		snapshotSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Starting snapshot source engine (snapshot-only mode)")
+
+		ec := discovery.EngineConfig{
+			EngineType:            "cli-snapshot",
+			Version:               fmt.Sprintf("cli-%v", tracing.Version()),
+			SourceName:            fmt.Sprintf("snapshot-source-%v", hostname),
+			SourceUUID:            uuid.New(),
+			App:                   oi.ApiUrl.Host,
+			ApiKey:                token.AccessToken,
+			NATSOptions:           &natsOpts,
+			MaxParallelExecutions: 2_000,
+			HeartbeatOptions:      heartbeatOptions(oi, token),
+		}
+		snapshotEngine, err := discovery.NewEngine(&ec)
+		if err != nil {
+			snapshotSpinner.Fail(fmt.Sprintf("Failed to create snapshot source engine: %v", err))
+			return func() {}, fmt.Errorf("failed to create snapshot source engine: %w", err)
+		}
+		err = snapshotadapters.InitializeAdapters(ctx, snapshotEngine, snapshotSourcePath)
+		if err != nil {
+			snapshotSpinner.Fail(fmt.Sprintf("Failed to initialize snapshot source adapters: %v", err))
+			return func() {}, fmt.Errorf("failed to initialize snapshot source adapters: %w", err)
+		}
+		err = snapshotEngine.Start(ctx)
+		if err != nil {
+			snapshotSpinner.Fail(fmt.Sprintf("Failed to start snapshot source engine: %v", err))
+			return func() {}, fmt.Errorf("failed to start snapshot source engine: %w", err)
+		}
+		snapshotEngine.StartSendingHeartbeats(ctx)
+		snapshotSpinner.Success("Snapshot source engine started (snapshot-only mode)")
+
+		return func() {
+			if err := snapshotEngine.Stop(); err != nil {
+				log.WithError(err).Error("failed to stop snapshot engine")
+			}
+		}, nil
 	}
 
 	p := pool.NewWithResults[[]*discovery.Engine]().WithErrors()
