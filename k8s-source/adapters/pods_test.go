@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"regexp"
 	"testing"
+	"time"
 
 	"github.com/overmindtech/cli/go/sdp-go"
 	"github.com/overmindtech/cli/go/sdpcache"
@@ -183,23 +184,33 @@ func TestPodAdapter(t *testing.T) {
 	}
 
 	st.Execute(t)
-	// the pods are still running let check their health
 
-	// get the bad pod
-	item, err := adapter.Get(context.Background(), sd.String(), "pod-bad-pod", true)
+	// Wait for the bad pod's image pull to fail before asserting health.
+	// The kubelet needs time to attempt the pull and enter
+	// ErrImagePull / ImagePullBackOff, which surfaces as HEALTH_ERROR.
+	var badPodItem *sdp.Item
+	err := WaitFor(60*time.Second, func() bool {
+		item, err := adapter.Get(context.Background(), sd.String(), "pod-bad-pod", true)
+		if err != nil {
+			return false
+		}
+		badPodItem = item
+		return item.GetHealth() == sdp.Health_HEALTH_ERROR
+	})
 	if err != nil {
-		t.Fatal(fmt.Errorf("failed to get pod: %w", err))
-	}
-	if item.GetHealth() != sdp.Health_HEALTH_ERROR {
-		t.Errorf("expected status to be unhealthy, got %s", item.GetHealth())
+		health := sdp.Health_HEALTH_UNKNOWN
+		if badPodItem != nil {
+			health = badPodItem.GetHealth()
+		}
+		t.Fatalf("expected bad pod health to reach HEALTH_ERROR, still %s after timeout", health)
 	}
 	// get the healthy pod
-	item, err = adapter.Get(context.Background(), sd.String(), "pod-test-pod", true)
+	healthyItem, err := adapter.Get(context.Background(), sd.String(), "pod-test-pod", true)
 	if err != nil {
 		t.Fatal(fmt.Errorf("failed to get pod: %w", err))
 	}
-	if item.GetHealth() != sdp.Health_HEALTH_OK {
-		t.Errorf("expected status to be healthy, got %s", item.GetHealth())
+	if healthyItem.GetHealth() != sdp.Health_HEALTH_OK {
+		t.Errorf("expected status to be healthy, got %s", healthyItem.GetHealth())
 	}
 }
 
