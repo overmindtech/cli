@@ -18,7 +18,7 @@ provider "aws" {
 }
 
 module "overmind_aws_source" {
-  source = "overmindtech/aws-source-setup/overmind"
+  source = "overmindtech/aws-source/overmind"
 
   name = "production"
 }
@@ -41,7 +41,7 @@ module "overmind_aws_source" {
 | `source_id` | UUID of the Overmind source |
 | `external_id` | AWS STS external ID used in the trust policy |
 
-## Multi-account example
+## Multi-Account Example
 
 Use AWS provider aliases to onboard several accounts at once:
 
@@ -61,7 +61,7 @@ provider "aws" {
 }
 
 module "overmind_production" {
-  source = "overmindtech/aws-source-setup/overmind"
+  source = "overmindtech/aws-source/overmind"
   name   = "production"
 
   providers = {
@@ -71,7 +71,7 @@ module "overmind_production" {
 }
 
 module "overmind_staging" {
-  source  = "overmindtech/aws-source-setup/overmind"
+  source  = "overmindtech/aws-source/overmind"
   name    = "staging"
   regions = ["eu-west-1"]
 
@@ -81,6 +81,20 @@ module "overmind_staging" {
   }
 }
 ```
+
+## Importing Existing Sources
+
+If you already created an Overmind AWS source through the UI and want to manage it
+with Terraform, you can import it using the source UUID (visible on the source
+details page in [Settings > Sources](https://app.overmind.tech/settings/sources)):
+
+```shell
+terraform import module.overmind_aws_source.overmind_aws_source.this <source-uuid>
+```
+
+After importing, run `terraform plan` to verify the state matches your
+configuration. Terraform will show any drift between the imported resource and
+your HCL.
 
 ## Authentication
 

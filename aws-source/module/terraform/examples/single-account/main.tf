@@ -5,7 +5,7 @@ provider "aws" {
 }
 
 module "overmind_aws_source" {
-  source = "overmindtech/aws-source-setup/overmind"
+  source = "overmindtech/aws-source/overmind"
 
   name = "production"
 }

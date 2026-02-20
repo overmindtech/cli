@@ -19,7 +19,7 @@ provider "aws" {
 }
 
 module "overmind_production" {
-  source = "overmindtech/aws-source-setup/overmind"
+  source = "overmindtech/aws-source/overmind"
   name   = "production"
 
   providers = {
@@ -29,7 +29,7 @@ module "overmind_production" {
 }
 
 module "overmind_staging" {
-  source  = "overmindtech/aws-source-setup/overmind"
+  source  = "overmindtech/aws-source/overmind"
   name    = "staging"
   regions = ["eu-west-1"]
 
