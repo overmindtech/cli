@@ -50,8 +50,10 @@ func TestCronJobAdapter(t *testing.T) {
 	// created it
 	jobAdapter := newJobAdapter(CurrentCluster.ClientSet, sd.ClusterName, []string{sd.Namespace}, sdpcache.NewNoOpCache())
 
-	// Wait for the job to be created
-	err := WaitFor(60*time.Second, func() bool {
+	// Wait for the CronJob controller to spawn a Job. The schedule is
+	// "* * * * *" (once per minute), so in the worst case we wait just over
+	// 60 seconds. 120 s gives comfortable headroom and avoids flakes.
+	err := WaitFor(120*time.Second, func() bool {
 		jobs, err := jobAdapter.List(context.Background(), sd.String(), false)
 
 		if err != nil {
