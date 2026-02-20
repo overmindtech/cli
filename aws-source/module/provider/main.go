@@ -11,11 +11,9 @@ import (
 	"github.com/uptrace/opentelemetry-go-extra/otellogrus"
 )
 
-const (
-	version = "0.1.0"
+var version = "dev" //nolint:gochecknoglobals // injected by GoReleaser ldflags
 
-	defaultHoneycombAPIKey = "hcaik_01j03qe0exnn2jxpj2vxkqb7yrqtr083kyk9rxxt2wzjamz8be94znqmwa" //nolint:gosec // public ingest key, same as CLI
-)
+const defaultHoneycombAPIKey = "hcaik_01j03qe0exnn2jxpj2vxkqb7yrqtr083kyk9rxxt2wzjamz8be94znqmwa" //nolint:gosec // public ingest key, same as CLI
 
 func main() {
 	if err := run(); err != nil {
