@@ -8,7 +8,7 @@ resource "aws_iam_role" "overmind" {
     Statement = [
       {
         Effect    = "Allow"
-        Principal = { AWS = "arn:aws:iam::942836531449:root" }
+        Principal = { AWS = "arn:aws:iam::${var.overmind_aws_account_id}:root" }
         Action    = "sts:AssumeRole"
         Condition = {
           StringEquals = {
@@ -18,7 +18,7 @@ resource "aws_iam_role" "overmind" {
       },
       {
         Effect    = "Allow"
-        Principal = { AWS = "arn:aws:iam::942836531449:root" }
+        Principal = { AWS = "arn:aws:iam::${var.overmind_aws_account_id}:root" }
         Action    = "sts:TagSession"
       },
     ]

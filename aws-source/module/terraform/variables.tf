@@ -38,3 +38,9 @@ variable "tags" {
   default     = {}
   description = "Additional tags to apply to IAM resources."
 }
+
+variable "overmind_aws_account_id" {
+  type        = string
+  default     = "942836531449"
+  description = "Internal override for the Overmind AWS account that runs source pods. Do not change this unless you are an Overmind engineer deploying to a non-production environment. All customers should use the default."
+}
