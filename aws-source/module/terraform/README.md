@@ -98,8 +98,15 @@ your HCL.
 
 ## Authentication
 
-The Overmind provider reads `OVERMIND_API_KEY` from the environment. The API key
+The Overmind provider accepts an API key via the `api_key` attribute or the
+`OVERMIND_API_KEY` environment variable. The attribute takes precedence. The key
 must have `sources:write` scope.
+
+```hcl
+provider "overmind" {
+  api_key = var.overmind_api_key
+}
+```
 
 The AWS provider must have permissions to create IAM roles and policies in the
 target account.

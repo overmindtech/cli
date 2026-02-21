@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"strings"
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
@@ -130,7 +129,7 @@ func (r *awsSourceResource) Create(ctx context.Context, req resource.CreateReque
 		"aws-access-strategy": "external-id",
 		"aws-external-id":     externalID,
 		"aws-target-role-arn": plan.AWSRoleARN.ValueString(),
-		"aws-regions":         strings.Join(regions, ","),
+		"aws-regions":         toAnySlice(regions),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to build source config", err.Error())
@@ -216,8 +215,7 @@ func (r *awsSourceResource) Read(ctx context.Context, req resource.ReadRequest, 
 			state.AWSRoleARN = types.StringValue(v.GetStringValue())
 		}
 		if v, ok := fields["aws-regions"]; ok {
-			regionStr := v.GetStringValue()
-			regionVals := splitNonEmpty(regionStr, ",")
+			regionVals := regionsFromStructValue(v)
 			listVal, diags := types.ListValueFrom(ctx, types.StringType, regionVals)
 			resp.Diagnostics.Append(diags...)
 			state.AWSRegions = listVal
@@ -271,7 +269,7 @@ func (r *awsSourceResource) Update(ctx context.Context, req resource.UpdateReque
 		"aws-access-strategy": "external-id",
 		"aws-external-id":     externalID,
 		"aws-target-role-arn": plan.AWSRoleARN.ValueString(),
-		"aws-regions":         strings.Join(regions, ","),
+		"aws-regions":         toAnySlice(regions),
 	})
 	if err != nil {
 		resp.Diagnostics.AddError("Failed to build source config", err.Error())
@@ -361,14 +359,25 @@ func regionsFromList(ctx context.Context, list types.List) ([]string, diag.Diagn
 	return regions, diags
 }
 
-func splitNonEmpty(s, sep string) []string {
-	parts := strings.Split(s, sep)
-	result := make([]string, 0, len(parts))
-	for _, p := range parts {
-		trimmed := strings.TrimSpace(p)
-		if trimmed != "" {
-			result = append(result, trimmed)
+func toAnySlice(ss []string) []any {
+	out := make([]any, len(ss))
+	for i, s := range ss {
+		out[i] = s
+	}
+	return out
+}
+
+func regionsFromStructValue(v *structpb.Value) []string {
+	lv := v.GetListValue()
+	if lv == nil {
+		return []string{}
+	}
+	vals := lv.GetValues()
+	out := make([]string, 0, len(vals))
+	for _, item := range vals {
+		if s := item.GetStringValue(); s != "" {
+			out = append(out, s)
 		}
 	}
-	return result
+	return out
 }
