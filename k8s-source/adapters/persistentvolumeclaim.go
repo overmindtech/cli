@@ -25,13 +25,6 @@ func PersistentVolumeClaimExtractor(resource *v1.PersistentVolumeClaim, scope st
 				Query:  resource.Spec.VolumeName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Changes to the volume could affect the claim
-				In: true,
-				// Changes to the claim could affect the volume if there are
-				// other claims
-				Out: true,
-			},
 		})
 	}
 

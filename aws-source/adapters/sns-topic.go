@@ -54,12 +54,6 @@ func getTopicFunc(ctx context.Context, client topicClient, scope string, input *
 				Query:  fmt.Sprint(kmsMasterKeyID),
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Changing the key will affect the topic
-				In: true,
-				// Changing the topic won't affect the key
-				Out: false,
-			},
 		})
 	}
 

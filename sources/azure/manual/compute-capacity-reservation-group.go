@@ -154,11 +154,6 @@ func (c *computeCapacityReservationGroupWrapper) azureCapacityReservationGroupTo
 						Query:  shared.CompositeLookupKey(groupName, reservationName),
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Reservations are children of the group; group view depends on them (In). Group deletion removes reservations (Out).
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 		}
@@ -183,11 +178,6 @@ func (c *computeCapacityReservationGroupWrapper) azureCapacityReservationGroupTo
 						Method: sdp.QueryMethod_GET,
 						Query:  vmName,
 						Scope:  linkScope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Group view lists associated VMs (In). VM deletion affects group's association list (Out).
-						In:  true,
-						Out: true,
 					},
 				})
 			}

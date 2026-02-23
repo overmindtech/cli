@@ -143,10 +143,6 @@ func (c computeImageWrapper) azureImageToSDPItem(image *armcompute.Image, scope 
 							Query:  diskName,
 							Scope:  extractedScope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If source disk is deleted/modified → image becomes invalid (In: true)
-							Out: false, // If image is deleted → source disk remains (Out: false)
-						},
 					})
 				}
 			}
@@ -167,10 +163,6 @@ func (c computeImageWrapper) azureImageToSDPItem(image *armcompute.Image, scope 
 							Query:  snapshotName,
 							Scope:  extractedScope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If source snapshot is deleted/modified → image becomes invalid (In: true)
-							Out: false, // If image is deleted → source snapshot remains (Out: false)
-						},
 					})
 				}
 			}
@@ -190,10 +182,6 @@ func (c computeImageWrapper) azureImageToSDPItem(image *armcompute.Image, scope 
 							Query:  storageAccountName,
 							Scope:  scope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Storage Account is deleted/modified → image blob becomes inaccessible (In: true)
-							Out: false, // If image is deleted → Storage Account remains (Out: false)
-						},
 					})
 				}
 
@@ -205,10 +193,6 @@ func (c computeImageWrapper) azureImageToSDPItem(image *armcompute.Image, scope 
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  blobURI,
 							Scope:  "global",
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true, // If HTTP endpoint is unavailable → image cannot be accessed (In: true)
-							Out: true, // If image is deleted → HTTP endpoint may still be used by other resources (Out: true)
 						},
 					})
 				}
@@ -222,11 +206,6 @@ func (c computeImageWrapper) azureImageToSDPItem(image *armcompute.Image, scope 
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  dnsName,
 							Scope:  "global",
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// DNS names are always linked
-							In:  true,
-							Out: true,
 						},
 					})
 				}
@@ -247,10 +226,6 @@ func (c computeImageWrapper) azureImageToSDPItem(image *armcompute.Image, scope 
 							Method: sdp.QueryMethod_GET,
 							Query:  encryptionSetName,
 							Scope:  extractedScope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Disk Encryption Set is deleted/modified → image encryption is affected (In: true)
-							Out: false, // If image is deleted → Disk Encryption Set remains (Out: false)
 						},
 					})
 				}
@@ -280,10 +255,6 @@ func (c computeImageWrapper) azureImageToSDPItem(image *armcompute.Image, scope 
 								Query:  diskName,
 								Scope:  extractedScope,
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,  // If source disk is deleted/modified → image becomes invalid (In: true)
-								Out: false, // If image is deleted → source disk remains (Out: false)
-							},
 						})
 					}
 				}
@@ -304,10 +275,6 @@ func (c computeImageWrapper) azureImageToSDPItem(image *armcompute.Image, scope 
 								Query:  snapshotName,
 								Scope:  extractedScope,
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,  // If source snapshot is deleted/modified → image becomes invalid (In: true)
-								Out: false, // If image is deleted → source snapshot remains (Out: false)
-							},
 						})
 					}
 				}
@@ -325,10 +292,6 @@ func (c computeImageWrapper) azureImageToSDPItem(image *armcompute.Image, scope 
 								Query:  storageAccountName,
 								Scope:  scope,
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,  // If Storage Account is deleted/modified → image blob becomes inaccessible (In: true)
-								Out: false, // If image is deleted → Storage Account remains (Out: false)
-							},
 						})
 					}
 
@@ -340,10 +303,6 @@ func (c computeImageWrapper) azureImageToSDPItem(image *armcompute.Image, scope 
 								Method: sdp.QueryMethod_SEARCH,
 								Query:  blobURI,
 								Scope:  "global",
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true, // If HTTP endpoint is unavailable → image cannot be accessed (In: true)
-								Out: true, // If image is deleted → HTTP endpoint may still be used by other resources (Out: true)
 							},
 						})
 					}
@@ -357,11 +316,6 @@ func (c computeImageWrapper) azureImageToSDPItem(image *armcompute.Image, scope 
 								Method: sdp.QueryMethod_SEARCH,
 								Query:  dnsName,
 								Scope:  "global",
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								// DNS names are always linked
-								In:  true,
-								Out: true,
 							},
 						})
 					}
@@ -382,10 +336,6 @@ func (c computeImageWrapper) azureImageToSDPItem(image *armcompute.Image, scope 
 								Method: sdp.QueryMethod_GET,
 								Query:  encryptionSetName,
 								Scope:  extractedScope,
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,  // If Disk Encryption Set is deleted/modified → image encryption is affected (In: true)
-								Out: false, // If image is deleted → Disk Encryption Set remains (Out: false)
 							},
 						})
 					}
@@ -409,10 +359,6 @@ func (c computeImageWrapper) azureImageToSDPItem(image *armcompute.Image, scope 
 					Method: sdp.QueryMethod_GET,
 					Query:  vmName,
 					Scope:  extractedScope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // If source VM is deleted/modified → image source becomes invalid (In: true)
-					Out: false, // If image is deleted → source VM remains (Out: false)
 				},
 			})
 		}

@@ -46,12 +46,6 @@ func instanceProfileItemMapper(_ *string, scope string, awsItem *types.InstanceP
 					Query:  *role.Arn,
 					Scope:  FormatScope(arn.AccountID, arn.Region),
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changes to the role will affect this
-					In: true,
-					// We can't affect the role
-					Out: false,
-				},
 			})
 		}
 
@@ -63,12 +57,6 @@ func instanceProfileItemMapper(_ *string, scope string, awsItem *types.InstanceP
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *role.PermissionsBoundary.PermissionsBoundaryArn,
 						Scope:  FormatScope(arn.AccountID, arn.Region),
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changes to the policy will affect this
-						In: true,
-						// We can't affect the policy
-						Out: false,
 					},
 				})
 			}

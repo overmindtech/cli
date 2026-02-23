@@ -157,10 +157,6 @@ func (s storageBlobContainerWrapper) azureBlobContainerToSDPItem(container *arms
 			Query:  storageAccountName,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  true,
-			Out: false,
-		},
 	})
 
 	// Link to DNS name (standard library) from blob container URI
@@ -176,10 +172,6 @@ func (s storageBlobContainerWrapper) azureBlobContainerToSDPItem(container *arms
 				Query:  dnsName,
 				Scope:  "global",
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true, // If DNS name is unavailable → blob container becomes inaccessible (In: true)
-				Out: true, // If blob container is deleted → DNS name may still be used by other resources (Out: true)
-			}, // Blob container depends on DNS name for endpoint resolution
 		})
 	}
 
@@ -192,10 +184,6 @@ func (s storageBlobContainerWrapper) azureBlobContainerToSDPItem(container *arms
 				Query:  blobContainerURI,
 				Scope:  "global",
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true, // If HTTP endpoint is unavailable → blob container becomes inaccessible (In: true)
-				Out: true, // If blob container is deleted → HTTP endpoint may still be used by other resources (Out: true)
-			}, // Blob container depends on HTTP endpoint for access
 		})
 	}
 
@@ -207,10 +195,6 @@ func (s storageBlobContainerWrapper) azureBlobContainerToSDPItem(container *arms
 				Method: sdp.QueryMethod_GET,
 				Query:  shared.CompositeLookupKey(storageAccountName, *container.ContainerProperties.DefaultEncryptionScope),
 				Scope:  scope,
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,  // If encryption scope is removed or changed → container's default encryption is affected
-				Out: false, // Container deletion does not affect the encryption scope
 			},
 		})
 	}

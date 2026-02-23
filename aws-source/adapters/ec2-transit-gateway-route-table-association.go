@@ -161,7 +161,6 @@ func transitGatewayRouteTableAssociationItemMapper(query, scope string, awsItem 
 			Query:  awsItem.RouteTableID,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 	})
 	if a.TransitGatewayAttachmentId != nil {
 		item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -171,7 +170,6 @@ func transitGatewayRouteTableAssociationItemMapper(query, scope string, awsItem 
 				Query:  *a.TransitGatewayAttachmentId,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 		})
 	}
 	if a.ResourceId != nil && *a.ResourceId != "" {
@@ -184,7 +182,6 @@ func transitGatewayRouteTableAssociationItemMapper(query, scope string, awsItem 
 					Query:  *a.ResourceId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 			})
 		case types.TransitGatewayAttachmentResourceTypeVpn:
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -194,7 +191,6 @@ func transitGatewayRouteTableAssociationItemMapper(query, scope string, awsItem 
 					Query:  *a.ResourceId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 			})
 		case types.TransitGatewayAttachmentResourceTypeDirectConnectGateway:
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -204,7 +200,6 @@ func transitGatewayRouteTableAssociationItemMapper(query, scope string, awsItem 
 					Query:  *a.ResourceId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 			})
 		case types.TransitGatewayAttachmentResourceTypePeering,
 			types.TransitGatewayAttachmentResourceTypeTgwPeering:
@@ -216,7 +211,6 @@ func transitGatewayRouteTableAssociationItemMapper(query, scope string, awsItem 
 					Query:  *a.ResourceId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 			})
 		case types.TransitGatewayAttachmentResourceTypeVpnConcentrator,
 			types.TransitGatewayAttachmentResourceTypeConnect,

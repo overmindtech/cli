@@ -64,11 +64,6 @@ func apiKeyOutputMapper(scope string, awsItem *types.ApiKey) (*sdp.Item, error) 
 						Query:  restAPIID,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// They are tightly coupled, so we need to propagate both ways
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 		}

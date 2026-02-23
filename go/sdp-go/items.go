@@ -74,12 +74,11 @@ func (i *Item) Hash() string {
 	return HashSum(([]byte(fmt.Sprint(i.GloballyUniqueName()))))
 }
 
-// IsEqual compares two Edges for equality by checking the From reference,
-// To reference, and BlastPropagation settings.
+// IsEqual compares two Edges for equality by checking the From reference
+// and To reference.
 func (e *Edge) IsEqual(other *Edge) bool {
 	return e.GetFrom().IsEqual(other.GetFrom()) &&
-		e.GetTo().IsEqual(other.GetTo()) &&
-		e.GetBlastPropagation().IsEqual(other.GetBlastPropagation())
+		e.GetTo().IsEqual(other.GetTo())
 }
 
 // Hash Returns a 12 character hash for the item. This is likely but not

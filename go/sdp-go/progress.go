@@ -664,17 +664,15 @@ func TranslateLinksToEdges(item *Item) (*Item, []*Edge) {
 
 	for _, li := range lis {
 		edges = append(edges, &Edge{
-			From:             item.Reference(),
-			To:               li.GetItem(),
-			BlastPropagation: li.GetBlastPropagation(),
+			From: item.Reference(),
+			To:   li.GetItem(),
 		})
 	}
 
 	for _, liq := range liqs {
 		edges = append(edges, &Edge{
-			From:             item.Reference(),
-			To:               liq.GetQuery().Reference(),
-			BlastPropagation: liq.GetBlastPropagation(),
+			From: item.Reference(),
+			To:   liq.GetQuery().Reference(),
 		})
 	}
 

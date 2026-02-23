@@ -86,10 +86,6 @@ func (s storageTablesWrapper) azureTableToSDPItem(table *armstorage.Table, stora
 			Query:  storageAccountName,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  true,  // Table is affected if parent storage account changes or is deleted
-			Out: false, // Table changes/deletes do not affect the storage account
-		},
 	})
 
 	return sdpItem, nil

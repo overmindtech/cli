@@ -54,12 +54,6 @@ func egressOnlyInternetGatewayOutputMapper(_ context.Context, _ *ec2.Client, sco
 						Query:  *attachment.VpcId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the VPC won't affect the gateway
-						In: false,
-						// Changing the gateway will affect the VPC
-						Out: true,
-					},
 				})
 			}
 		}

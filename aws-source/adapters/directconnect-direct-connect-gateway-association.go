@@ -47,12 +47,6 @@ func directConnectGatewayAssociationOutputMapper(_ context.Context, _ *directcon
 					Query:  *association.DirectConnectGatewayId,
 					Scope:  "global",
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Deleting a direct connect gateway will change the state of the association
-					In: true,
-					// We can't affect the direct connect gateway
-					Out: false,
-				},
 			})
 		}
 
@@ -63,12 +57,6 @@ func directConnectGatewayAssociationOutputMapper(_ context.Context, _ *directcon
 					Method: sdp.QueryMethod_GET,
 					Query:  *association.VirtualGatewayId,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Deleting a virtual gateway will change the state of the association
-					In: true,
-					// We can't affect the virtual gateway
-					Out: false,
 				},
 			})
 		}

@@ -29,13 +29,6 @@ func roleBindingExtractor(resource *v1.RoleBinding, scope string) ([]*sdp.Linked
 					Namespace:   subject.Namespace,
 				}.String(),
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Changes to the subject (the group we're applying permissions
-				// to) won't affect the role or the binding
-				In: false,
-				// Changes to the binding will affect the subject
-				Out: true,
-			},
 		})
 	}
 
@@ -60,13 +53,6 @@ func roleBindingExtractor(resource *v1.RoleBinding, scope string) ([]*sdp.Linked
 			Method: sdp.QueryMethod_GET,
 			Query:  resource.RoleRef.Name,
 			Type:   resource.RoleRef.Kind,
-		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// Changes to the role will affect the things bound to it since the
-			// role contains the permissions
-			In: true,
-			// Changes to the binding won't affect the role
-			Out: false,
 		},
 	})
 

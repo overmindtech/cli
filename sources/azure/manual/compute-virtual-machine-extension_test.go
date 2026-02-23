@@ -116,12 +116,6 @@ func TestComputeVirtualMachineExtension(t *testing.T) {
 				if liq.GetQuery().GetScope() != scope {
 					t.Errorf("Expected scope %s, got %s", scope, liq.GetQuery().GetScope())
 				}
-				if liq.GetBlastPropagation().GetIn() != true {
-					t.Error("Expected blast propagation In=true for Key Vault")
-				}
-				if liq.GetBlastPropagation().GetOut() != false {
-					t.Error("Expected blast propagation Out=false for Key Vault")
-				}
 			case azureshared.ComputeVirtualMachine.String():
 				hasVMLink = true
 			}
@@ -182,9 +176,6 @@ func TestComputeVirtualMachineExtension(t *testing.T) {
 					}
 					if liq.GetQuery().GetMethod() != sdp.QueryMethod_SEARCH {
 						t.Errorf("Expected method SEARCH for DNS link, got %v", liq.GetQuery().GetMethod())
-					}
-					if liq.GetBlastPropagation().GetIn() != true || liq.GetBlastPropagation().GetOut() != true {
-						t.Errorf("Expected blast propagation In: true, Out: true for DNS link, got In: %v, Out: %v", liq.GetBlastPropagation().GetIn(), liq.GetBlastPropagation().GetOut())
 					}
 				}
 			}

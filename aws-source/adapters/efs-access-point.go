@@ -41,11 +41,6 @@ func AccessPointOutputMapper(_ context.Context, _ *efs.Client, scope string, inp
 					Query:  *ap.FileSystemId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Access points are tightly coupled with filesystems
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 

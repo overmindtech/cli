@@ -154,12 +154,6 @@ func alarmOutputMapper(ctx context.Context, client CloudwatchClient, scope strin
 						Query:  arn.ResourceID(),
 						Scope:  FormatScope(arn.AccountID, arn.Region),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changes to the suppressor alarm will affect this alarm
-						In: true,
-						// Changes to this alarm won't affect the suppressor alarm
-						Out: false,
-					},
 				})
 			}
 		}
@@ -308,12 +302,6 @@ func actionToLink(action string) (*sdp.LinkedItemQuery, error) {
 				Query:  action,
 				Scope:  FormatScope(arn.AccountID, arn.Region),
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Changes to the policy won't affect the alarm
-				In: false,
-				// Changes to the metric alarm will affect the policy
-				Out: true,
-			},
 		}, nil
 	case "sns":
 		return &sdp.LinkedItemQuery{
@@ -322,12 +310,6 @@ func actionToLink(action string) (*sdp.LinkedItemQuery, error) {
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  action,
 				Scope:  FormatScope(arn.AccountID, arn.Region),
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Changes to the topic won't affect the alarm
-				In: false,
-				// Changes to the alarm will affect the topic
-				Out: true,
 			},
 		}, nil
 	case "ssm":
@@ -338,12 +320,6 @@ func actionToLink(action string) (*sdp.LinkedItemQuery, error) {
 				Query:  action,
 				Scope:  FormatScope(arn.AccountID, arn.Region),
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Changes to an ops item won't affect the alarm
-				In: false,
-				// Changes to the alarm will affect the ops item
-				Out: true,
-			},
 		}, nil
 	case "ssm-incidents":
 		return &sdp.LinkedItemQuery{
@@ -352,12 +328,6 @@ func actionToLink(action string) (*sdp.LinkedItemQuery, error) {
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  action,
 				Scope:  FormatScope(arn.AccountID, arn.Region),
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Changes to a response plan won't affect the alarm
-				In: false,
-				// Changes to the alarm will affect the response plan
-				Out: true,
 			},
 		}, nil
 	default:

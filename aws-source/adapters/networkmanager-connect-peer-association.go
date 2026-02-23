@@ -46,10 +46,6 @@ func connectPeerAssociationsOutputMapper(_ context.Context, _ *networkmanager.Cl
 						Query:  *a.GlobalNetworkId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					Query: &sdp.Query{
@@ -57,10 +53,6 @@ func connectPeerAssociationsOutputMapper(_ context.Context, _ *networkmanager.Cl
 						Method: sdp.QueryMethod_GET,
 						Query:  *a.ConnectPeerId,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
 					},
 				},
 			},
@@ -85,10 +77,6 @@ func connectPeerAssociationsOutputMapper(_ context.Context, _ *networkmanager.Cl
 					Query:  idWithGlobalNetwork(*a.GlobalNetworkId, *a.DeviceId),
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			})
 		}
 
@@ -99,10 +87,6 @@ func connectPeerAssociationsOutputMapper(_ context.Context, _ *networkmanager.Cl
 					Method: sdp.QueryMethod_GET,
 					Query:  idWithGlobalNetwork(*a.GlobalNetworkId, *a.LinkId),
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
 				},
 			})
 		}

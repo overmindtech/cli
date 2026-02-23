@@ -184,10 +184,6 @@ func (w *storageBucketIAMPolicyWrapper) policyToItem(location gcpshared.Location
 			Query:  bucketName,
 			Scope:  location.ProjectID,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  true,
-			Out: true,
-		},
 	})
 
 	// Collect unique linked SAs, projects, domains, and custom IAM roles across all bindings.
@@ -231,10 +227,6 @@ func (w *storageBucketIAMPolicyWrapper) policyToItem(location gcpshared.Location
 				Query:  saEmail,
 				Scope:  projectID,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
-			},
 		})
 	}
 	for projectID, roleIDs := range linkedRoles {
@@ -245,10 +237,6 @@ func (w *storageBucketIAMPolicyWrapper) policyToItem(location gcpshared.Location
 					Method: sdp.QueryMethod_GET,
 					Query:  roleID,
 					Scope:  projectID,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
 				},
 			})
 		}
@@ -261,10 +249,6 @@ func (w *storageBucketIAMPolicyWrapper) policyToItem(location gcpshared.Location
 				Query:  projectID,
 				Scope:  projectID,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
-			},
 		})
 	}
 	for domainName := range linkedDomains {
@@ -274,10 +258,6 @@ func (w *storageBucketIAMPolicyWrapper) policyToItem(location gcpshared.Location
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  domainName,
 				Scope:  "global",
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
 			},
 		})
 	}

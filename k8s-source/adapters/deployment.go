@@ -55,11 +55,6 @@ func newDeploymentAdapter(cs *kubernetes.Clientset, cluster string, namespaces [
 								Query:  matches[1],
 								Scope:  scope,
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								// These are tightly bound
-								In:  true,
-								Out: true,
-							},
 						})
 					}
 				}

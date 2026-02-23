@@ -56,11 +56,6 @@ func apiGatewayMethodResponseGetFunc(ctx context.Context, client apigatewayClien
 			Query:  fmt.Sprintf("%s/%s/%s", *input.RestApiId, *input.ResourceId, *input.HttpMethod),
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// They are tightly coupled
-			In:  true,
-			Out: true,
-		},
 	})
 
 	return item, nil

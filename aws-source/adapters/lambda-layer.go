@@ -53,11 +53,6 @@ func layerItemMapper(_, scope string, awsItem *types.LayersListItem) (*sdp.Item,
 				Query:  fmt.Sprintf("%v:%v", *awsItem.LayerName, awsItem.LatestMatchingVersion.Version),
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Tightly coupled
-				In:  true,
-				Out: true,
-			},
 		})
 	}
 

@@ -52,12 +52,6 @@ func autoScalingGroupOutputMapper(_ context.Context, _ *autoscaling.Client, scop
 								Query:  *asg.MixedInstancesPolicy.LaunchTemplate.LaunchTemplateSpecification.LaunchTemplateId,
 								Scope:  scope,
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								// Changes to a launch template will affect the ASG
-								In: true,
-								// Changes to an ASG won't affect the template
-								Out: false,
-							},
 						})
 					}
 				}
@@ -76,12 +70,6 @@ func autoScalingGroupOutputMapper(_ context.Context, _ *autoscaling.Client, scop
 						Query:  tgARN,
 						Scope:  FormatScope(a.AccountID, a.Region),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changes to a target group won't affect the ASG
-						In: false,
-						// Changes to an ASG will affect the target group
-						Out: true,
-					},
 				})
 			}
 		}
@@ -95,14 +83,6 @@ func autoScalingGroupOutputMapper(_ context.Context, _ *autoscaling.Client, scop
 						Query:  *instance.InstanceId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changes to an instance could affect the ASG since it
-						// could cause it to scale
-						In: true,
-						// Changes to an ASG can definitely affect an instance
-						// since it might be terminated
-						Out: true,
-					},
 				})
 			}
 
@@ -114,12 +94,6 @@ func autoScalingGroupOutputMapper(_ context.Context, _ *autoscaling.Client, scop
 							Method: sdp.QueryMethod_GET,
 							Query:  *instance.LaunchTemplate.LaunchTemplateId,
 							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changes to a launch template will affect the ASG
-							In: true,
-							// Changes to an ASG won't affect the template
-							Out: false,
 						},
 					})
 				}
@@ -135,13 +109,6 @@ func autoScalingGroupOutputMapper(_ context.Context, _ *autoscaling.Client, scop
 						Query:  *asg.ServiceLinkedRoleARN,
 						Scope:  FormatScope(a.AccountID, a.Region),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changes to a role can affect the functioning of the
-						// ASG
-						In: true,
-						// ASG changes wont affect the role though
-						Out: false,
-					},
 				})
 			}
 		}
@@ -153,11 +120,6 @@ func autoScalingGroupOutputMapper(_ context.Context, _ *autoscaling.Client, scop
 					Method: sdp.QueryMethod_GET,
 					Query:  *asg.LaunchConfigurationName,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Very tightly coupled
-					In:  true,
-					Out: true,
 				},
 			})
 		}
@@ -171,12 +133,6 @@ func autoScalingGroupOutputMapper(_ context.Context, _ *autoscaling.Client, scop
 						Query:  *asg.LaunchTemplate.LaunchTemplateId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changes to a launch template will affect the ASG
-						In: true,
-						// Changes to an ASG won't affect the template
-						Out: false,
-					},
 				})
 			}
 		}
@@ -188,12 +144,6 @@ func autoScalingGroupOutputMapper(_ context.Context, _ *autoscaling.Client, scop
 					Method: sdp.QueryMethod_GET,
 					Query:  *asg.PlacementGroup,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changes to a placement group can affect the ASG
-					In: true,
-					// Changes to an ASG can affect the placement group
-					Out: true,
 				},
 			})
 		}

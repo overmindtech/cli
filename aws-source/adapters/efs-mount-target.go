@@ -58,12 +58,6 @@ func MountTargetOutputMapper(_ context.Context, _ *efs.Client, scope string, inp
 					Query:  *mt.SubnetId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changes to the subnet could affect the mount but no the
-					// other way around
-					In:  true,
-					Out: false,
-				},
 			})
 		}
 
@@ -74,11 +68,6 @@ func MountTargetOutputMapper(_ context.Context, _ *efs.Client, scope string, inp
 					Method: sdp.QueryMethod_GET,
 					Query:  *mt.IpAddress,
 					Scope:  "global",
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// IPs are always bidirectional
-					In:  true,
-					Out: true,
 				},
 			})
 		}
@@ -91,11 +80,6 @@ func MountTargetOutputMapper(_ context.Context, _ *efs.Client, scope string, inp
 					Query:  *mt.NetworkInterfaceId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Tightly coupled
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 
@@ -106,12 +90,6 @@ func MountTargetOutputMapper(_ context.Context, _ *efs.Client, scope string, inp
 					Method: sdp.QueryMethod_GET,
 					Query:  *mt.VpcId,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changes to the VPC will affect us
-					In: true,
-					// We can't affect the VPC
-					Out: false,
 				},
 			})
 		}

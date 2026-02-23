@@ -422,10 +422,6 @@ func TestSqlServer(t *testing.T) {
 				if link.GetQuery().GetMethod() != sdp.QueryMethod_GET {
 					t.Errorf("Expected NetworkPrivateEndpoint method GET, got %v", link.GetQuery().GetMethod())
 				}
-				if link.GetBlastPropagation().GetIn() != true || link.GetBlastPropagation().GetOut() != true {
-					t.Errorf("Expected NetworkPrivateEndpoint BlastPropagation In=true, Out=true, got In=%v, Out=%v",
-						link.GetBlastPropagation().GetIn(), link.GetBlastPropagation().GetOut())
-				}
 			}
 		}
 
@@ -484,10 +480,6 @@ func TestSqlServer(t *testing.T) {
 				}
 				if link.GetQuery().GetMethod() != sdp.QueryMethod_GET {
 					t.Errorf("Expected KeyVault method GET, got %v", link.GetQuery().GetMethod())
-				}
-				if link.GetBlastPropagation().GetIn() != true || link.GetBlastPropagation().GetOut() != false {
-					t.Errorf("Expected KeyVault BlastPropagation In=true, Out=false, got In=%v, Out=%v",
-						link.GetBlastPropagation().GetIn(), link.GetBlastPropagation().GetOut())
 				}
 			}
 		}

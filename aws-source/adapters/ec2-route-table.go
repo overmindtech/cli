@@ -55,14 +55,6 @@ func routeTableOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *e
 						Query:  *assoc.SubnetId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// All things in a route table could affect each other
-						// since changing the target could affect the
-						// traffic that is routed to it. And changing the route
-						// table could affect the target
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 
@@ -73,10 +65,6 @@ func routeTableOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *e
 						Method: sdp.QueryMethod_GET,
 						Query:  *assoc.GatewayId,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
 					},
 				})
 			}
@@ -92,10 +80,6 @@ func routeTableOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *e
 							Query:  *route.GatewayId,
 							Scope:  scope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: true,
-						},
 					})
 				}
 				if strings.HasPrefix(*route.GatewayId, "vpce") {
@@ -105,10 +89,6 @@ func routeTableOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *e
 							Method: sdp.QueryMethod_GET,
 							Query:  *route.GatewayId,
 							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: true,
 						},
 					})
 				}
@@ -121,10 +101,6 @@ func routeTableOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *e
 						Query:  *route.CarrierGatewayId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 			if route.EgressOnlyInternetGatewayId != nil {
@@ -134,10 +110,6 @@ func routeTableOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *e
 						Method: sdp.QueryMethod_GET,
 						Query:  *route.EgressOnlyInternetGatewayId,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
 					},
 				})
 			}
@@ -149,10 +121,6 @@ func routeTableOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *e
 						Query:  *route.InstanceId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 			if route.LocalGatewayId != nil {
@@ -162,10 +130,6 @@ func routeTableOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *e
 						Method: sdp.QueryMethod_GET,
 						Query:  *route.LocalGatewayId,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
 					},
 				})
 			}
@@ -177,10 +141,6 @@ func routeTableOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *e
 						Query:  *route.NatGatewayId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 			if route.NetworkInterfaceId != nil {
@@ -190,10 +150,6 @@ func routeTableOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *e
 						Method: sdp.QueryMethod_GET,
 						Query:  *route.NetworkInterfaceId,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
 					},
 				})
 			}
@@ -205,10 +161,6 @@ func routeTableOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *e
 						Query:  *route.TransitGatewayId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 			if route.VpcPeeringConnectionId != nil {
@@ -218,10 +170,6 @@ func routeTableOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *e
 						Method: sdp.QueryMethod_GET,
 						Query:  *route.VpcPeeringConnectionId,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
 					},
 				})
 			}
@@ -234,10 +182,6 @@ func routeTableOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *e
 					Method: sdp.QueryMethod_GET,
 					Query:  *rt.VpcId,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: true,
 				},
 			})
 		}

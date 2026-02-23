@@ -171,8 +171,7 @@ func CreateQuery() (*sdp.Query, error) {
 		Deadline: timestamppb.New(time.Now().Add(10 * time.Hour)),
 		UUID:     u[:],
 		RecursionBehaviour: &sdp.Query_RecursionBehaviour{
-			LinkDepth:                  viper.GetUint32("link-depth"),
-			FollowOnlyBlastPropagation: viper.GetBool("blast-radius"),
+			LinkDepth: viper.GetUint32("link-depth"),
 		},
 		IgnoreCache: viper.GetBool("ignore-cache"),
 	}, nil
@@ -196,5 +195,4 @@ func init() {
 	requestQueryCmd.PersistentFlags().String("snapshot-description", "none", "The snapshot description of the query results")
 
 	requestQueryCmd.PersistentFlags().Uint32("link-depth", 0, "How deeply to link")
-	requestQueryCmd.PersistentFlags().Bool("blast-radius", false, "Whether to query using blast radius, note that if using this option, link-depth should be set to > 0")
 }

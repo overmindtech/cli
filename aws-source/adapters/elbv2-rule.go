@@ -60,11 +60,6 @@ func ruleOutputMapper(ctx context.Context, client elbv2Client, scope string, _ *
 							Query:  value,
 							Scope:  "global",
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Tightly coupled
-							In:  true,
-							Out: true,
-						},
 					})
 				}
 			}

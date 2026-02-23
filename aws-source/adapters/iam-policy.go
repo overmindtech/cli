@@ -172,12 +172,6 @@ func policyItemMapper(_ *string, scope string, awsItem *PolicyDetails) (*sdp.Ite
 				Method: sdp.QueryMethod_GET,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Changing the group won't affect the policy
-				In: false,
-				// Changing the policy will affect the group
-				Out: true,
-			},
 		})
 	}
 
@@ -189,12 +183,6 @@ func policyItemMapper(_ *string, scope string, awsItem *PolicyDetails) (*sdp.Ite
 				Query:  *user.UserName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Changing the user won't affect the policy
-				In: false,
-				// Changing the policy will affect the user
-				Out: true,
-			},
 		})
 	}
 
@@ -205,12 +193,6 @@ func policyItemMapper(_ *string, scope string, awsItem *PolicyDetails) (*sdp.Ite
 				Method: sdp.QueryMethod_GET,
 				Query:  *role.RoleName,
 				Scope:  scope,
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Changing the role won't affect the policy
-				In: false,
-				// Changing the policy will affect the role
-				Out: true,
 			},
 		})
 	}

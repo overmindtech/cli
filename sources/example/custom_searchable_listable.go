@@ -142,10 +142,6 @@ func (d *customComputeInstanceWrapper) externalTypeToSDPItem(external *ExternalT
 					Query:  external.LinkedItemID,
 					Scope:  d.Scopes()[0],
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: true,
-				},
 			},
 		},
 	}

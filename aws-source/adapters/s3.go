@@ -441,11 +441,6 @@ func getImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope s
 					Query:  url,
 					Scope:  "global",
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// HTTP always linked
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 	}
@@ -462,11 +457,6 @@ func getImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope s
 						Query:  *lambdaConfig.LambdaFunctionArn,
 						Scope:  FormatScope(a.AccountID, a.Region),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Tightly coupled
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 		}
@@ -481,11 +471,6 @@ func getImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope s
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *q.QueueArn,
 						Scope:  FormatScope(a.AccountID, a.Region),
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Tightly coupled
-						In:  true,
-						Out: true,
 					},
 				})
 			}
@@ -502,11 +487,6 @@ func getImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope s
 						Query:  *topic.TopicArn,
 						Scope:  FormatScope(a.AccountID, a.Region),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Tightly coupled
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 		}
@@ -520,11 +500,6 @@ func getImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope s
 					Method: sdp.QueryMethod_GET,
 					Query:  *bucket.LoggingEnabled.TargetBucket,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Tightly coupled
-					In:  true,
-					Out: true,
 				},
 			})
 		}
@@ -541,11 +516,6 @@ func getImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope s
 								Method: sdp.QueryMethod_SEARCH,
 								Query:  *bucket.InventoryConfiguration.Destination.S3BucketDestination.Bucket,
 								Scope:  FormatScope(a.AccountID, a.Region),
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								// Tightly coupled
-								In:  true,
-								Out: true,
 							},
 						})
 					}
@@ -569,11 +539,6 @@ func getImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope s
 										Method: sdp.QueryMethod_SEARCH,
 										Query:  *bucket.AnalyticsConfiguration.StorageClassAnalysis.DataExport.Destination.S3BucketDestination.Bucket,
 										Scope:  FormatScope(a.AccountID, a.Region),
-									},
-									BlastPropagation: &sdp.BlastPropagation{
-										// Tightly coupled
-										In:  true,
-										Out: true,
 									},
 								})
 							}

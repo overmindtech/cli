@@ -55,12 +55,6 @@ func internetGatewayOutputMapper(_ context.Context, _ *ec2.Client, scope string,
 						Query:  *attachment.VpcId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the VPC won't affect the gateway
-						In: false,
-						// Changing the gateway will affect the VPC
-						Out: true,
-					},
 				})
 			}
 		}

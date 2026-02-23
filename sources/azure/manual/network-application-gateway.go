@@ -125,10 +125,6 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 						Query:  shared.CompositeLookupKey(applicationGatewayName, *gatewayIPConfig.Name),
 						Scope:  n.DefaultScope(),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true, // GatewayIPConfiguration changes affect the Application Gateway's network configuration
-						Out: true, // Application Gateway changes (like deletion) affect the gateway IP configuration
-					},
 				})
 
 				// Link to Subnet from GatewayIPConfiguration
@@ -150,10 +146,6 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 								Query:  shared.CompositeLookupKey(vnetName, subnetName),
 								Scope:  scope,
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,  // Subnet changes affect the Application Gateway's network configuration
-								Out: false, // Application Gateway changes don't affect the subnet itself
-							},
 						})
 
 						// Link to VirtualNetwork (extracted from subnet ID)
@@ -167,10 +159,6 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 								Method: sdp.QueryMethod_GET,
 								Query:  vnetName,
 								Scope:  scope,
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,  // VirtualNetwork changes affect the Application Gateway's network configuration
-								Out: false, // Application Gateway changes don't affect the virtual network itself
 							},
 						})
 					}
@@ -191,10 +179,6 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 						Query:  shared.CompositeLookupKey(applicationGatewayName, *frontendIPConfig.Name),
 						Scope:  n.DefaultScope(),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true, // FrontendIPConfiguration changes affect the Application Gateway's frontend configuration
-						Out: true, // Application Gateway changes (like deletion) affect the frontend IP configuration
-					},
 				})
 			}
 
@@ -214,10 +198,6 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 								Method: sdp.QueryMethod_GET,
 								Query:  publicIPName,
 								Scope:  scope,
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,  // Public IP changes affect the Application Gateway's frontend configuration
-								Out: false, // Application Gateway changes don't affect the public IP address itself
 							},
 						})
 					}
@@ -242,10 +222,6 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 								Query:  shared.CompositeLookupKey(vnetName, subnetName),
 								Scope:  scope,
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,  // Subnet changes affect the Application Gateway's frontend configuration
-								Out: false, // Application Gateway changes don't affect the subnet itself
-							},
 						})
 					}
 				}
@@ -258,10 +234,6 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 							Method: sdp.QueryMethod_GET,
 							Query:  *frontendIPConfig.Properties.PrivateIPAddress,
 							Scope:  "global",
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true, // IPs are always linked bidirectionally
-							Out: true,
 						},
 					})
 				}
@@ -281,10 +253,6 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 						Query:  shared.CompositeLookupKey(applicationGatewayName, *backendPool.Name),
 						Scope:  n.DefaultScope(),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true, // BackendAddressPool changes affect which backends receive traffic
-						Out: true, // Application Gateway changes (like deletion) affect the backend address pool
-					},
 				})
 			}
 
@@ -299,10 +267,6 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 								Query:  *backendAddress.IPAddress,
 								Scope:  "global",
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true, // IPs are always linked bidirectionally
-								Out: true,
-							},
 						})
 					}
 
@@ -314,10 +278,6 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 								Method: sdp.QueryMethod_SEARCH,
 								Query:  *backendAddress.Fqdn,
 								Scope:  "global",
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true, // DNS names are always linked bidirectionally
-								Out: true,
 							},
 						})
 					}
@@ -338,10 +298,6 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 						Query:  shared.CompositeLookupKey(applicationGatewayName, *httpListener.Name),
 						Scope:  n.DefaultScope(),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true, // HTTPListener changes affect how the Application Gateway receives traffic
-						Out: true, // Application Gateway changes (like deletion) affect the HTTP listener
-					},
 				})
 			}
 
@@ -357,10 +313,6 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 							Query:  *httpListener.Properties.HostName,
 							Scope:  "global",
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true, // DNS name changes affect how the Application Gateway receives traffic
-							Out: true, // DNS names are always linked bidirectionally
-						},
 					})
 				}
 
@@ -374,10 +326,6 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 									Method: sdp.QueryMethod_SEARCH,
 									Query:  *hostName,
 									Scope:  "global",
-								},
-								BlastPropagation: &sdp.BlastPropagation{
-									In:  true, // DNS name changes affect how the Application Gateway receives traffic
-									Out: true, // DNS names are always linked bidirectionally
 								},
 							})
 						}
@@ -399,10 +347,6 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 						Query:  shared.CompositeLookupKey(applicationGatewayName, *backendHTTPSettings.Name),
 						Scope:  n.DefaultScope(),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true, // BackendHTTPSettings changes affect how the Application Gateway communicates with backends
-						Out: true, // Application Gateway changes (like deletion) affect the backend HTTP settings
-					},
 				})
 			}
 
@@ -415,10 +359,6 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *backendHTTPSettings.Properties.HostName,
 						Scope:  "global",
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true, // DNS name changes affect backend communication
-						Out: true, // DNS names are always linked bidirectionally
 					},
 				})
 			}
@@ -437,10 +377,6 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 						Query:  shared.CompositeLookupKey(applicationGatewayName, *rule.Name),
 						Scope:  n.DefaultScope(),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true, // RequestRoutingRule changes affect how traffic is routed
-						Out: true, // Application Gateway changes (like deletion) affect the routing rule
-					},
 				})
 			}
 		}
@@ -458,10 +394,6 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 						Query:  shared.CompositeLookupKey(applicationGatewayName, *probe.Name),
 						Scope:  n.DefaultScope(),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true, // Probe changes affect backend health monitoring
-						Out: true, // Application Gateway changes (like deletion) affect the probe
-					},
 				})
 			}
 
@@ -474,10 +406,6 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *probe.Properties.Host,
 						Scope:  "global",
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true, // DNS name changes affect health probe targets
-						Out: true, // DNS names are always linked bidirectionally
 					},
 				})
 			}
@@ -495,10 +423,6 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 						Method: sdp.QueryMethod_GET,
 						Query:  shared.CompositeLookupKey(applicationGatewayName, *sslCert.Name),
 						Scope:  n.DefaultScope(),
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true, // SSLCertificate changes affect HTTPS listeners
-						Out: true, // Application Gateway changes (like deletion) affect the SSL certificate
 					},
 				})
 			}
@@ -518,10 +442,6 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 							Query:  shared.CompositeLookupKey(vaultName, secretName),
 							Scope:  n.DefaultScope(), // Limitation: Key Vault URI doesn't contain resource group info
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Key Vault Secret is deleted/modified → SSL certificate access is affected (In: true)
-							Out: false, // If Application Gateway is deleted → Key Vault Secret remains (Out: false)
-						},
 					})
 				}
 
@@ -534,11 +454,6 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  dnsName,
 							Scope:  "global",
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// DNS names are always linked bidirectionally
-							In:  true,
-							Out: true,
 						},
 					})
 				}
@@ -558,10 +473,6 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 						Query:  shared.CompositeLookupKey(applicationGatewayName, *urlPathMap.Name),
 						Scope:  n.DefaultScope(),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true, // URLPathMap changes affect path-based routing
-						Out: true, // Application Gateway changes (like deletion) affect the URL path map
-					},
 				})
 			}
 		}
@@ -579,10 +490,6 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 						Query:  shared.CompositeLookupKey(applicationGatewayName, *authCert.Name),
 						Scope:  n.DefaultScope(),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true, // AuthenticationCertificate changes affect backend authentication
-						Out: true, // Application Gateway changes (like deletion) affect the authentication certificate
-					},
 				})
 			}
 		}
@@ -599,10 +506,6 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 						Method: sdp.QueryMethod_GET,
 						Query:  shared.CompositeLookupKey(applicationGatewayName, *trustedRootCert.Name),
 						Scope:  n.DefaultScope(),
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true, // TrustedRootCertificate changes affect backend server validation
-						Out: true, // Application Gateway changes (like deletion) affect the trusted root certificate
 					},
 				})
 			}
@@ -622,10 +525,6 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 							Query:  shared.CompositeLookupKey(vaultName, secretName),
 							Scope:  n.DefaultScope(), // Limitation: Key Vault URI doesn't contain resource group info
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Key Vault Secret is deleted/modified → TrustedRootCertificate access is affected (In: true)
-							Out: false, // If Application Gateway is deleted → Key Vault Secret remains (Out: false)
-						},
 					})
 				}
 
@@ -638,11 +537,6 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  dnsName,
 							Scope:  "global",
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// DNS names are always linked bidirectionally
-							In:  true,
-							Out: true,
 						},
 					})
 				}
@@ -662,10 +556,6 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 						Query:  shared.CompositeLookupKey(applicationGatewayName, *rewriteRuleSet.Name),
 						Scope:  n.DefaultScope(),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true, // RewriteRuleSet changes affect request/response modification
-						Out: true, // Application Gateway changes (like deletion) affect the rewrite rule set
-					},
 				})
 			}
 		}
@@ -683,10 +573,6 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 						Query:  shared.CompositeLookupKey(applicationGatewayName, *redirectConfig.Name),
 						Scope:  n.DefaultScope(),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true, // RedirectConfiguration changes affect URL redirection behavior
-						Out: true, // Application Gateway changes (like deletion) affect the redirect configuration
-					},
 				})
 			}
 
@@ -701,10 +587,6 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  dnsName,
 							Scope:  "global",
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true, // DNS name changes affect redirect target availability
-							Out: true, // DNS names are always linked bidirectionally
 						},
 					})
 				}
@@ -728,10 +610,6 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 					Query:  firewallPolicyName,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // WAF Policy changes affect the Application Gateway's security configuration
-					Out: false, // Application Gateway changes don't affect the WAF policy itself
-				},
 			})
 		}
 	}
@@ -753,12 +631,6 @@ func (n networkApplicationGatewayWrapper) azureApplicationGatewayToSDPItem(appli
 						Method: sdp.QueryMethod_GET,
 						Query:  identityName,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Application Gateway depends on managed identity for authentication (e.g., Key Vault integration for SSL certificates)
-						// If identity is deleted/modified, Application Gateway operations may fail
-						In:  true,
-						Out: false,
 					},
 				})
 			}

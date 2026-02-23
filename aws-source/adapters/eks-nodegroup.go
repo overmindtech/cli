@@ -65,12 +65,6 @@ func nodegroupGetFunc(ctx context.Context, client EKSClient, scope string, input
 					Query:  *ng.RemoteAccess.Ec2SshKey,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// The key pair can affect the node group
-					In: true,
-					// The node group can't affect the key pair
-					Out: false,
-				},
 			})
 		}
 
@@ -81,12 +75,6 @@ func nodegroupGetFunc(ctx context.Context, client EKSClient, scope string, input
 					Method: sdp.QueryMethod_GET,
 					Query:  sg,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// The security group can affect the node group
-					In: true,
-					// The node group can't affect the security group
-					Out: false,
 				},
 			})
 		}
@@ -99,12 +87,6 @@ func nodegroupGetFunc(ctx context.Context, client EKSClient, scope string, input
 				Method: sdp.QueryMethod_GET,
 				Query:  subnet,
 				Scope:  scope,
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// The subnet can affect the node group
-				In: true,
-				// The node group can't affect the subnet
-				Out: false,
 			},
 		})
 	}
@@ -119,11 +101,6 @@ func nodegroupGetFunc(ctx context.Context, client EKSClient, scope string, input
 						Query:  *g.Name,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// These are tightly coupled
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 		}
@@ -135,12 +112,6 @@ func nodegroupGetFunc(ctx context.Context, client EKSClient, scope string, input
 					Method: sdp.QueryMethod_GET,
 					Query:  *ng.Resources.RemoteAccessSecurityGroup,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// The security group can affect the node group
-					In: true,
-					// The node group can't affect the security group
-					Out: false,
 				},
 			})
 		}
@@ -154,12 +125,6 @@ func nodegroupGetFunc(ctx context.Context, client EKSClient, scope string, input
 					Method: sdp.QueryMethod_GET,
 					Query:  *ng.LaunchTemplate.Id,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// The launch template can affect the node group
-					In: true,
-					// The node group can't affect the launch template
-					Out: false,
 				},
 			})
 		}

@@ -117,12 +117,6 @@ func (m managedIdentityUserAssignedIdentityWrapper) azureManagedIdentityUserAssi
 			Query:  *identity.Name, // Identity name is sufficient since resource group is available to the adapter
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// Federated credentials are tightly coupled to the identity
-			// Changes to the identity affect credentials, and credential changes affect identity usage
-			In:  true,
-			Out: true,
-		},
 	})
 
 	return sdpItem, nil

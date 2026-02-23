@@ -99,11 +99,6 @@ func eventSourceMappingOutputMapper(query, scope string, awsItem *types.EventSou
 					Query:  *awsItem.FunctionArn,
 					Scope:  FormatScope(parsedARN.AccountID, parsedARN.Region),
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// They are tightly linked
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 	}
@@ -142,12 +137,6 @@ func eventSourceMappingOutputMapper(query, scope string, awsItem *types.EventSou
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *awsItem.EventSourceArn,
 						Scope:  FormatScope(parsedARN.AccountID, parsedARN.Region),
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the event source will affect the mapping
-						In: true,
-						// Changing the mapping won't affect the event source
-						Out: false,
 					},
 				})
 			}

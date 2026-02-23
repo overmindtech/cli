@@ -51,7 +51,6 @@ func AppendURILinks(
 			Query:  uri,
 			Scope:  "global",
 		},
-		BlastPropagation: &sdp.BlastPropagation{In: blastIn, Out: blastOut},
 	})
 	hostFromURL := azureshared.ExtractDNSFromURL(uri)
 	if hostFromURL != "" {
@@ -69,7 +68,6 @@ func AppendURILinks(
 						Query:  hostOnly,
 						Scope:  "global",
 					},
-					BlastPropagation: &sdp.BlastPropagation{In: blastIn, Out: blastOut},
 				})
 			}
 		} else {
@@ -82,7 +80,6 @@ func AppendURILinks(
 						Query:  hostOnly,
 						Scope:  "global",
 					},
-					BlastPropagation: &sdp.BlastPropagation{In: blastIn, Out: blastOut},
 				})
 			}
 		}
@@ -98,6 +95,5 @@ func networkIPQuery(query string) *sdp.LinkedItemQuery {
 			Query:  query,
 			Scope:  "global",
 		},
-		BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 	}
 }

@@ -35,12 +35,6 @@ func capacityReservationOutputMapper(_ context.Context, _ *ec2.Client, scope str
 					Query:  *cr.CapacityReservationFleetId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changes to the fleet will affect this
-					In: true,
-					// We can't affect the fleet
-					Out: false,
-				},
 			})
 		}
 
@@ -52,12 +46,6 @@ func capacityReservationOutputMapper(_ context.Context, _ *ec2.Client, scope str
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *cr.OutpostArn,
 						Scope:  FormatScope(arn.AccountID, arn.Region),
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changes to the outpost will affect this
-						In: true,
-						// We can't affect the outpost
-						Out: false,
 					},
 				})
 			}
@@ -71,12 +59,6 @@ func capacityReservationOutputMapper(_ context.Context, _ *ec2.Client, scope str
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *cr.PlacementGroupArn,
 						Scope:  FormatScope(arn.AccountID, arn.Region),
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changes to the placement group will affect this
-						In: true,
-						// We can't affect the placement group
-						Out: false,
 					},
 				})
 			}

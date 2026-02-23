@@ -51,14 +51,6 @@ func getDataProtectionPolicyFunc(ctx context.Context, client dataProtectionPolic
 			Query:  *input.ResourceArn,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// Deleting the topic will delete the inline policy
-			In: true,
-			// Changing policy will affect the topic:
-			//	a new statement denying credit card numbers will make the topic stop delivering messages
-			//	containing credit card numbers
-			Out: true,
-		},
 	})
 
 	return item, nil

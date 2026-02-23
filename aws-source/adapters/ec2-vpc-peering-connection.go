@@ -63,12 +63,6 @@ func vpcPeeringConnectionOutputMapper(_ context.Context, _ *ec2.Client, scope st
 							Query:  *connection.AccepterVpcInfo.VpcId,
 							Scope:  pairedScope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// The VPC will affect everything in it
-							In: true,
-							// We can't affect the VPC
-							Out: false,
-						},
 					})
 				}
 			}
@@ -86,12 +80,6 @@ func vpcPeeringConnectionOutputMapper(_ context.Context, _ *ec2.Client, scope st
 							Method: sdp.QueryMethod_GET,
 							Query:  *connection.RequesterVpcInfo.VpcId,
 							Scope:  pairedScope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// The VPC will affect everything in it
-							In: true,
-							// We can't affect the VPC
-							Out: false,
 						},
 					})
 				}

@@ -160,10 +160,6 @@ func (c computeSnapshotWrapper) azureSnapshotToSDPItem(snapshot *armcompute.Snap
 					Query:  diskAccessName,
 					Scope:  extractedScope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // If Disk Access is deleted/modified → snapshot private endpoint access is affected
-					Out: false, // If snapshot is deleted → Disk Access remains
-				},
 			})
 		}
 	}
@@ -184,10 +180,6 @@ func (c computeSnapshotWrapper) azureSnapshotToSDPItem(snapshot *armcompute.Snap
 					Query:  encryptionSetName,
 					Scope:  extractedScope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // If Disk Encryption Set is deleted/modified → snapshot encryption is affected
-					Out: false, // If snapshot is deleted → Disk Encryption Set remains
-				},
 			})
 		}
 	}
@@ -207,10 +199,6 @@ func (c computeSnapshotWrapper) azureSnapshotToSDPItem(snapshot *armcompute.Snap
 					Method: sdp.QueryMethod_GET,
 					Query:  encryptionSetName,
 					Scope:  extractedScope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // If Disk Encryption Set is deleted/modified → snapshot encryption is affected
-					Out: false, // If snapshot is deleted → Disk Encryption Set remains
 				},
 			})
 		}
@@ -240,10 +228,6 @@ func (c computeSnapshotWrapper) azureSnapshotToSDPItem(snapshot *armcompute.Snap
 							Query:  diskName,
 							Scope:  extractedScope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If source disk is deleted/modified → snapshot may be affected
-							Out: false, // If snapshot is deleted → source disk remains
-						},
 					})
 				}
 			} else if strings.Contains(sourceResourceIDLower, "/snapshots/") {
@@ -259,10 +243,6 @@ func (c computeSnapshotWrapper) azureSnapshotToSDPItem(snapshot *armcompute.Snap
 							Method: sdp.QueryMethod_GET,
 							Query:  snapshotName,
 							Scope:  extractedScope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If source snapshot is deleted/modified → this snapshot may be affected
-							Out: false, // If this snapshot is deleted → source snapshot remains
 						},
 					})
 				}
@@ -285,10 +265,6 @@ func (c computeSnapshotWrapper) azureSnapshotToSDPItem(snapshot *armcompute.Snap
 						Query:  storageAccountName,
 						Scope:  extractedScope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,  // If Storage Account is deleted/modified → snapshot import may fail
-						Out: false, // If snapshot is deleted → Storage Account remains
-					},
 				})
 			}
 		}
@@ -306,10 +282,6 @@ func (c computeSnapshotWrapper) azureSnapshotToSDPItem(snapshot *armcompute.Snap
 						Query:  storageAccountName,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,  // If Storage Account is deleted/modified → snapshot import blob becomes inaccessible
-						Out: false, // If snapshot is deleted → Storage Account remains
-					},
 				})
 
 				containerName := azureshared.ExtractContainerNameFromBlobURI(sourceURI)
@@ -320,10 +292,6 @@ func (c computeSnapshotWrapper) azureSnapshotToSDPItem(snapshot *armcompute.Snap
 							Method: sdp.QueryMethod_GET,
 							Query:  shared.CompositeLookupKey(storageAccountName, containerName),
 							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If blob container is deleted/modified → snapshot import source is lost
-							Out: false, // If snapshot is deleted → blob container remains
 						},
 					})
 				}
@@ -336,10 +304,6 @@ func (c computeSnapshotWrapper) azureSnapshotToSDPItem(snapshot *armcompute.Snap
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  sourceURI,
 						Scope:  "global",
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true, // If HTTP endpoint is unavailable → snapshot import source is lost
-						Out: true, // Bidirectional: changes to either side may affect the other
 					},
 				})
 			}
@@ -354,10 +318,6 @@ func (c computeSnapshotWrapper) azureSnapshotToSDPItem(snapshot *armcompute.Snap
 							Query:  host,
 							Scope:  "global",
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: true,
-						},
 					})
 				} else {
 					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -366,10 +326,6 @@ func (c computeSnapshotWrapper) azureSnapshotToSDPItem(snapshot *armcompute.Snap
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  host,
 							Scope:  "global",
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: true,
 						},
 					})
 				}
@@ -394,10 +350,6 @@ func (c computeSnapshotWrapper) azureSnapshotToSDPItem(snapshot *armcompute.Snap
 							Method: sdp.QueryMethod_GET,
 							Query:  imageName,
 							Scope:  extractedScope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Image is deleted/modified → snapshot created from image may be affected
-							Out: false, // If snapshot is deleted → Image remains
 						},
 					})
 				}
@@ -425,10 +377,6 @@ func (c computeSnapshotWrapper) azureSnapshotToSDPItem(snapshot *armcompute.Snap
 							Query:  shared.CompositeLookupKey(galleryName, imageName, version),
 							Scope:  extractedScope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Gallery Image is deleted/modified → snapshot created from image may be affected
-							Out: false, // If snapshot is deleted → Gallery Image remains
-						},
 					})
 				}
 			}
@@ -450,10 +398,6 @@ func (c computeSnapshotWrapper) azureSnapshotToSDPItem(snapshot *armcompute.Snap
 							Method: sdp.QueryMethod_GET,
 							Query:  shared.CompositeLookupKey(galleryName, imageName, version),
 							Scope:  extractedScope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Gallery Image is deleted/modified → snapshot created from image may be affected
-							Out: false, // If snapshot is deleted → Gallery Image remains
 						},
 					})
 				}
@@ -485,10 +429,6 @@ func (c computeSnapshotWrapper) azureSnapshotToSDPItem(snapshot *armcompute.Snap
 								Query:  shared.CompositeLookupKey(communityGalleryName, imageName, version),
 								Scope:  extractedScope,
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,  // If Community Gallery Image is deleted/modified → snapshot may be affected
-								Out: false, // If snapshot is deleted → Community Gallery Image remains
-							},
 						})
 					}
 				}
@@ -514,10 +454,6 @@ func (c computeSnapshotWrapper) azureSnapshotToSDPItem(snapshot *armcompute.Snap
 						Method: sdp.QueryMethod_GET,
 						Query:  shared.CompositeLookupKey(elasticSanName, volumeGroupName, esSnapshotName),
 						Scope:  extractedScope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,  // If Elastic SAN snapshot is deleted/modified → this snapshot may be affected
-						Out: false, // If this snapshot is deleted → Elastic SAN snapshot remains
 					},
 				})
 			}
@@ -547,10 +483,6 @@ func (c computeSnapshotWrapper) azureSnapshotToSDPItem(snapshot *armcompute.Snap
 							Query:  vaultName,
 							Scope:  extractedScope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Key Vault is deleted/modified → snapshot encryption key access is affected
-							Out: false, // If snapshot is deleted → Key Vault remains
-						},
 					})
 				}
 			}
@@ -575,10 +507,6 @@ func (c computeSnapshotWrapper) azureSnapshotToSDPItem(snapshot *armcompute.Snap
 							Query:  shared.CompositeLookupKey(vaultName, secretName),
 							Scope:  secretScope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Key Vault Secret is deleted/modified → snapshot encryption key is affected
-							Out: false, // If snapshot is deleted → Key Vault Secret remains
-						},
 					})
 				}
 
@@ -592,10 +520,6 @@ func (c computeSnapshotWrapper) azureSnapshotToSDPItem(snapshot *armcompute.Snap
 								Query:  secretHost,
 								Scope:  "global",
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,
-								Out: true,
-							},
 						})
 					} else {
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -604,10 +528,6 @@ func (c computeSnapshotWrapper) azureSnapshotToSDPItem(snapshot *armcompute.Snap
 								Method: sdp.QueryMethod_SEARCH,
 								Query:  secretHost,
 								Scope:  "global",
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,
-								Out: true,
 							},
 						})
 					}
@@ -628,10 +548,6 @@ func (c computeSnapshotWrapper) azureSnapshotToSDPItem(snapshot *armcompute.Snap
 							Method: sdp.QueryMethod_GET,
 							Query:  vaultName,
 							Scope:  extractedScope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Key Vault is deleted/modified → key encryption key access is affected
-							Out: false, // If snapshot is deleted → Key Vault remains
 						},
 					})
 				}
@@ -657,10 +573,6 @@ func (c computeSnapshotWrapper) azureSnapshotToSDPItem(snapshot *armcompute.Snap
 							Query:  shared.CompositeLookupKey(vaultName, keyName),
 							Scope:  keyScope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Key Vault Key is deleted/modified → key encryption key is affected
-							Out: false, // If snapshot is deleted → Key Vault Key remains
-						},
 					})
 				}
 
@@ -674,10 +586,6 @@ func (c computeSnapshotWrapper) azureSnapshotToSDPItem(snapshot *armcompute.Snap
 								Query:  keyHost,
 								Scope:  "global",
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,
-								Out: true,
-							},
 						})
 					} else {
 						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -686,10 +594,6 @@ func (c computeSnapshotWrapper) azureSnapshotToSDPItem(snapshot *armcompute.Snap
 								Method: sdp.QueryMethod_SEARCH,
 								Query:  keyHost,
 								Scope:  "global",
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,
-								Out: true,
 							},
 						})
 					}

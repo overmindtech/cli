@@ -48,10 +48,6 @@ func transitGatewayRouteTableAttachmentItemMapper(_, scope string, awsItem *type
 				Query:  *awsItem.Attachment.CoreNetworkId,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
-			},
 		})
 	}
 
@@ -62,10 +58,6 @@ func transitGatewayRouteTableAttachmentItemMapper(_, scope string, awsItem *type
 				Method: sdp.QueryMethod_GET,
 				Query:  *awsItem.PeeringId,
 				Scope:  scope,
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: true,
 			},
 		})
 	}
@@ -79,10 +71,6 @@ func transitGatewayRouteTableAttachmentItemMapper(_, scope string, awsItem *type
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *awsItem.TransitGatewayRouteTableArn,
 					Scope:  FormatScope(arn.AccountID, arn.Region),
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
 				},
 			})
 		}

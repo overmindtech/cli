@@ -50,10 +50,6 @@ func connectAttachmentItemMapper(_, scope string, ca *types.ConnectAttachment) (
 				Query:  *ca.Attachment.CoreNetworkId,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
-			},
 		})
 	}
 
@@ -65,10 +61,6 @@ func connectAttachmentItemMapper(_, scope string, ca *types.ConnectAttachment) (
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *ca.Attachment.CoreNetworkArn,
 					Scope:  FormatScope(arn.AccountID, arn.Region),
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
 				},
 			})
 		}

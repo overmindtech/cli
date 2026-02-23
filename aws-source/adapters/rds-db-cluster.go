@@ -50,11 +50,6 @@ func dBClusterOutputMapper(ctx context.Context, client rdsClient, scope string, 
 					Query:  *cluster.DBSubnetGroup,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Tightly coupled
-					In:  true,
-					Out: false,
-				},
 			})
 		}
 
@@ -66,11 +61,6 @@ func dBClusterOutputMapper(ctx context.Context, client rdsClient, scope string, 
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *endpoint,
 						Scope:  "global",
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// DNS always linked
-						In:  true,
-						Out: true,
 					},
 				})
 			}
@@ -85,11 +75,6 @@ func dBClusterOutputMapper(ctx context.Context, client rdsClient, scope string, 
 						Query:  replica,
 						Scope:  FormatScope(a.AccountID, a.Region),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Tightly coupled
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 		}
@@ -102,11 +87,6 @@ func dBClusterOutputMapper(ctx context.Context, client rdsClient, scope string, 
 						Method: sdp.QueryMethod_GET,
 						Query:  *member.DBInstanceIdentifier,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Tightly coupled
-						In:  true,
-						Out: true,
 					},
 				})
 			}
@@ -121,12 +101,6 @@ func dBClusterOutputMapper(ctx context.Context, client rdsClient, scope string, 
 						Query:  *sg.VpcSecurityGroupId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changes to the security group can affect the cluster
-						In: true,
-						// The cluster won't affect the security group
-						Out: false,
-					},
 				})
 			}
 		}
@@ -138,12 +112,6 @@ func dBClusterOutputMapper(ctx context.Context, client rdsClient, scope string, 
 					Method: sdp.QueryMethod_GET,
 					Query:  *cluster.HostedZoneId,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changes to the hosted zone can affect the cluster
-					In: true,
-					// The cluster won't affect the hosted zone
-					Out: false,
 				},
 			})
 		}
@@ -157,12 +125,6 @@ func dBClusterOutputMapper(ctx context.Context, client rdsClient, scope string, 
 						Query:  *cluster.KmsKeyId,
 						Scope:  FormatScope(a.AccountID, a.Region),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changes to the KMS key can affect the cluster
-						In: true,
-						// The cluster won't affect the KMS key
-						Out: false,
-					},
 				})
 			}
 		}
@@ -175,12 +137,6 @@ func dBClusterOutputMapper(ctx context.Context, client rdsClient, scope string, 
 					Query:  *cluster.ActivityStreamKinesisStreamName,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changes to the Kinesis stream can affect the cluster
-					In: true,
-					// Changes to the cluster can affect the Kinesis stream
-					Out: true,
-				},
 			})
 		}
 
@@ -191,11 +147,6 @@ func dBClusterOutputMapper(ctx context.Context, client rdsClient, scope string, 
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  endpoint,
 					Scope:  "global",
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// DNS always linked
-					In:  true,
-					Out: true,
 				},
 			})
 		}
@@ -208,12 +159,6 @@ func dBClusterOutputMapper(ctx context.Context, client rdsClient, scope string, 
 						Method: sdp.QueryMethod_GET,
 						Query:  *optionGroup.DBClusterOptionGroupName,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changes to the option group can affect the cluster
-						In: true,
-						// Changes to the cluster won't affect the option group
-						Out: false,
 					},
 				})
 			}
@@ -229,12 +174,6 @@ func dBClusterOutputMapper(ctx context.Context, client rdsClient, scope string, 
 							Query:  *cluster.MasterUserSecret.KmsKeyId,
 							Scope:  FormatScope(a.AccountID, a.Region),
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changes to the KMS key can affect the cluster
-							In: true,
-							// The cluster won't affect the KMS key
-							Out: false,
-						},
 					})
 				}
 			}
@@ -247,12 +186,6 @@ func dBClusterOutputMapper(ctx context.Context, client rdsClient, scope string, 
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  *cluster.MasterUserSecret.SecretArn,
 							Scope:  FormatScope(a.AccountID, a.Region),
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changes to the secret can affect the cluster
-							In: true,
-							// The cluster won't affect the secret
-							Out: false,
 						},
 					})
 				}
@@ -268,12 +201,6 @@ func dBClusterOutputMapper(ctx context.Context, client rdsClient, scope string, 
 						Query:  *cluster.MonitoringRoleArn,
 						Scope:  FormatScope(a.AccountID, a.Region),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changes to the IAM role can affect the cluster
-						In: true,
-						// The cluster won't affect the IAM role
-						Out: false,
-					},
 				})
 			}
 		}
@@ -288,12 +215,6 @@ func dBClusterOutputMapper(ctx context.Context, client rdsClient, scope string, 
 						Query:  *cluster.PerformanceInsightsKMSKeyId,
 						Scope:  FormatScope(a.AccountID, a.Region),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changes to the KMS key can affect the cluster
-						In: true,
-						// The cluster won't affect the KMS key
-						Out: false,
-					},
 				})
 			}
 		}
@@ -306,11 +227,6 @@ func dBClusterOutputMapper(ctx context.Context, client rdsClient, scope string, 
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *cluster.ReplicationSourceIdentifier,
 						Scope:  FormatScope(a.AccountID, a.Region),
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Tightly coupled
-						In:  true,
-						Out: true,
 					},
 				})
 			}

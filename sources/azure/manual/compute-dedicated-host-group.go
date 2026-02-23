@@ -132,11 +132,6 @@ func (c *computeDedicatedHostGroupWrapper) azureDedicatedHostGroupToSDPItem(dedi
 					Query:  shared.CompositeLookupKey(hostGroupName, hostName),
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Hosts are children of the group; host failure affects group view (In). Group deletion removes hosts (Out).
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 	}

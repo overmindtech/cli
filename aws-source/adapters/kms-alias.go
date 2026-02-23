@@ -64,12 +64,6 @@ func aliasOutputMapper(_ context.Context, _ *kms.Client, scope string, _ *kms.Li
 					Query:  *alias.TargetKeyId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// These are tightly linked
-					// Adding, deleting, or updating an alias can allow or deny permission to the KMS key.
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 

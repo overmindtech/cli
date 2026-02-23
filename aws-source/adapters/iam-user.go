@@ -99,12 +99,6 @@ func userItemMapper(_ *string, scope string, awsItem *UserDetails) (*sdp.Item, e
 				Query:  *group.GroupName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Changing the group can affect the user
-				In: true,
-				// Changing the user won't affect the group
-				Out: false,
-			},
 		})
 	}
 

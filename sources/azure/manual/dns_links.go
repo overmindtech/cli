@@ -22,7 +22,6 @@ func appendDNSServerLinkIfValid(queries *[]*sdp.LinkedItemQuery, server string, 
 				Query:  s,
 				Scope:  "global",
 			},
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 		}
 	})
 }

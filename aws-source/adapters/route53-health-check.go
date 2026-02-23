@@ -103,11 +103,6 @@ func healthCheckItemMapper(_, scope string, awsItem *HealthCheck) (*sdp.Item, er
 				Method: sdp.QueryMethod_SEARCH,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Tightly coupled
-				In:  true,
-				Out: true,
-			},
 		})
 	}
 

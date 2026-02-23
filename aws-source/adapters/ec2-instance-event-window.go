@@ -52,12 +52,6 @@ func instanceEventWindowOutputMapper(_ context.Context, _ *ec2.Client, scope str
 						Query:  id,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the host won't affect the window
-						In: false,
-						// Changing the windows will affect the host
-						Out: true,
-					},
 				})
 			}
 
@@ -68,12 +62,6 @@ func instanceEventWindowOutputMapper(_ context.Context, _ *ec2.Client, scope str
 						Method: sdp.QueryMethod_GET,
 						Query:  id,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the host won't affect the window
-						In: false,
-						// Changing the windows will affect the instance
-						Out: true,
 					},
 				})
 			}

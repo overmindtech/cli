@@ -73,11 +73,6 @@ func instanceHealthOutputMapper(_ context.Context, _ *elb.Client, scope string, 
 					Query:  *is.InstanceId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// These are tightly linked
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 

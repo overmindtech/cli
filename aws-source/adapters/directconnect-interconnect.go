@@ -53,12 +53,6 @@ func interconnectOutputMapper(_ context.Context, _ *directconnect.Client, scope 
 					Query:  *interconnect.InterconnectId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Interconnect and hosted connections are tightly coupled
-					// Changing one will affect the other
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 
@@ -69,12 +63,6 @@ func interconnectOutputMapper(_ context.Context, _ *directconnect.Client, scope 
 					Method: sdp.QueryMethod_GET,
 					Query:  *interconnect.LagId,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Interconnect and LAG are tightly coupled
-					// Changing one will affect the other
-					In:  true,
-					Out: true,
 				},
 			})
 		}
@@ -87,12 +75,6 @@ func interconnectOutputMapper(_ context.Context, _ *directconnect.Client, scope 
 					Query:  *interconnect.InterconnectId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changes to the loa will affect this
-					In: true,
-					// We can't affect the loa
-					Out: false,
-				},
 			})
 		}
 
@@ -103,12 +85,6 @@ func interconnectOutputMapper(_ context.Context, _ *directconnect.Client, scope 
 					Method: sdp.QueryMethod_GET,
 					Query:  *interconnect.Location,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changes to the location will affect this, i.e., its speed, provider, etc.
-					In: true,
-					// We can't affect the location
-					Out: false,
 				},
 			})
 		}

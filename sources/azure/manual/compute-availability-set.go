@@ -149,10 +149,6 @@ func (c computeAvailabilitySetWrapper) azureAvailabilitySetToSDPItem(availabilit
 					Query:  ppgName,
 					Scope:  linkedScope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // If PPG changes → Availability Set placement changes (In: true)
-					Out: false, // If Availability Set is deleted → PPG remains (Out: false)
-				},
 			})
 		}
 	}
@@ -175,10 +171,6 @@ func (c computeAvailabilitySetWrapper) azureAvailabilitySetToSDPItem(availabilit
 							Method: sdp.QueryMethod_GET,
 							Query:  vmName,
 							Scope:  linkedScope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If VM changes → Availability Set membership changes (In: true)
-							Out: false, // If Availability Set is deleted → VMs remain but lose availability set association (Out: false)
 						},
 					})
 				}

@@ -43,10 +43,6 @@ func linkOutputMapper(_ context.Context, _ *networkmanager.Client, scope string,
 						Query:  *s.GlobalNetworkId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					Query: &sdp.Query{
@@ -54,10 +50,6 @@ func linkOutputMapper(_ context.Context, _ *networkmanager.Client, scope string,
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  idWithTypeAndGlobalNetwork(*s.GlobalNetworkId, "link", *s.LinkId),
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
 					},
 				},
 			},
@@ -71,10 +63,6 @@ func linkOutputMapper(_ context.Context, _ *networkmanager.Client, scope string,
 					Query:  idWithGlobalNetwork(*s.GlobalNetworkId, *s.SiteId),
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 
@@ -85,10 +73,6 @@ func linkOutputMapper(_ context.Context, _ *networkmanager.Client, scope string,
 					Method: sdp.QueryMethod_GET,
 					Query:  idWithGlobalNetwork(*s.GlobalNetworkId, *s.LinkArn),
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: true,
 				},
 			})
 		}

@@ -148,11 +148,6 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 						Query:  u.String(),
 						Scope:  "global",
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// These are tightly linked
-						In:  true,
-						Out: false,
-					},
 				})
 			}
 		}
@@ -165,12 +160,6 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 					Query:  *function.Code.ImageUri,
 					Scope:  "global",
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changing the image will affect the function
-					In: true,
-					// Changing the function won't affect the image
-					Out: false,
-				},
 			})
 		}
 
@@ -181,12 +170,6 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *function.Code.ResolvedImageUri,
 					Scope:  "global",
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changing the image will affect the function
-					In: true,
-					// Changing the function won't affect the image
-					Out: false,
 				},
 			})
 		}
@@ -223,12 +206,6 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 						Query:  *function.Configuration.Role,
 						Scope:  FormatScope(a.AccountID, a.Region),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the role will affect the function
-						In: true,
-						// Changing the function won't affect the role
-						Out: false,
-					},
 				})
 			}
 		}
@@ -259,11 +236,6 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 							Query:  *fsConfig.Arn,
 							Scope:  FormatScope(a.AccountID, a.Region),
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// These are really tightly linked
-							In:  true,
-							Out: true,
-						},
 					})
 				}
 			}
@@ -277,12 +249,6 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *function.Configuration.KMSKeyArn,
 						Scope:  FormatScope(a.AccountID, a.Region),
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the key will affect the function
-						In: true,
-						// Changing the function won't affect the key
-						Out: false,
 					},
 				})
 			}
@@ -301,11 +267,6 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 							Query:  name,
 							Scope:  FormatScope(a.AccountID, a.Region),
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// These are tightly linked
-							In:  true,
-							Out: true,
-						},
 					})
 				}
 			}
@@ -319,12 +280,6 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 							Query:  *layer.SigningJobArn,
 							Scope:  FormatScope(a.AccountID, a.Region),
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changing the signing will affect the function
-							In: true,
-							// Changing the function won't affect the signing
-							Out: false,
-						},
 					})
 				}
 			}
@@ -337,12 +292,6 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  *layer.SigningProfileVersionArn,
 							Scope:  FormatScope(a.AccountID, a.Region),
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changing the signing will affect the function
-							In: true,
-							// Changing the function won't affect the signing
-							Out: false,
 						},
 					})
 				}
@@ -358,11 +307,6 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 						Query:  *function.Configuration.MasterArn,
 						Scope:  FormatScope(a.AccountID, a.Region),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Tightly linked
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 		}
@@ -375,12 +319,6 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *function.Configuration.SigningJobArn,
 						Scope:  FormatScope(a.AccountID, a.Region),
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the signing will affect the function
-						In: true,
-						// Changing the function won't affect the signing
-						Out: false,
 					},
 				})
 			}
@@ -395,12 +333,6 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 						Query:  *function.Configuration.SigningProfileVersionArn,
 						Scope:  FormatScope(a.AccountID, a.Region),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the signing will affect the function
-						In: true,
-						// Changing the function won't affect the signing
-						Out: false,
-					},
 				})
 			}
 		}
@@ -414,12 +346,6 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 						Query:  id,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the security group will affect the function
-						In: true,
-						// Changing the function won't affect the security group
-						Out: false,
-					},
 				})
 			}
 
@@ -430,12 +356,6 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 						Method: sdp.QueryMethod_GET,
 						Query:  id,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the subnet will affect the function
-						In: true,
-						// Changing the function won't affect the subnet
-						Out: false,
 					},
 				})
 			}
@@ -448,7 +368,6 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 						Query:  *function.Configuration.VpcConfig.VpcId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{},
 				})
 			}
 		}
@@ -462,11 +381,6 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *config.FunctionUrl,
 					Scope:  "global",
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// These are tightly linked
-					In:  true,
-					Out: true,
 				},
 			})
 		}
@@ -550,12 +464,6 @@ func ExtractLinksFromPolicy(policy *PolicyDocument) []*sdp.LinkedItemQuery {
 				Query:  statement.Condition.ArnLike.AWSSourceArn,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Changing a lambda shouldn't affect the upstream source
-				Out: false,
-				// Changing the source should affect the lambda
-				In: true,
-			},
 		})
 	}
 
@@ -582,11 +490,6 @@ func GetEventLinkedItem(destinationARN string) (*sdp.LinkedItemQuery, error) {
 				Query:  destinationARN,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// These are tightly linked
-				In:  true,
-				Out: true,
-			},
 		}, nil
 	case "sqs":
 		return &sdp.LinkedItemQuery{
@@ -595,11 +498,6 @@ func GetEventLinkedItem(destinationARN string) (*sdp.LinkedItemQuery, error) {
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  destinationARN,
 				Scope:  scope,
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// These are tightly linked
-				In:  true,
-				Out: true,
 			},
 		}, nil
 	case "lambda":
@@ -610,11 +508,6 @@ func GetEventLinkedItem(destinationARN string) (*sdp.LinkedItemQuery, error) {
 				Query:  destinationARN,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// These are tightly linked
-				In:  true,
-				Out: true,
-			},
 		}, nil
 	case "events":
 		return &sdp.LinkedItemQuery{
@@ -623,11 +516,6 @@ func GetEventLinkedItem(destinationARN string) (*sdp.LinkedItemQuery, error) {
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  destinationARN,
 				Scope:  scope,
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// These are tightly linked
-				In:  true,
-				Out: true,
 			},
 		}, nil
 	}

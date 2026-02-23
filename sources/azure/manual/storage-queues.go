@@ -80,10 +80,6 @@ func (s storageQueuesWrapper) azureQueueToSDPItem(queue *armstorage.Queue, stora
 			Query:  storageAccountName,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  true,  // Queue depends on storage account; account deletion/change affects the queue.
-			Out: false, // Storage account is not affected by queue create/update/delete.
-		},
 	})
 
 	return sdpItem, nil

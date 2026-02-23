@@ -98,12 +98,6 @@ func restApiOutputMapper(scope string, awsItem *types.RestApi) (*sdp.Item, error
 					Query:  vpcEndpointID,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Any change on the VPC endpoint should affect the REST API
-					In: true,
-					// We can't affect the VPC endpoint
-					Out: false,
-				},
 			})
 		}
 	}
@@ -116,11 +110,6 @@ func restApiOutputMapper(scope string, awsItem *types.RestApi) (*sdp.Item, error
 				Query:  fmt.Sprintf("%s/%s", *awsItem.Id, *awsItem.RootResourceId),
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// They are tightly linked
-				In:  true,
-				Out: true,
-			},
 		})
 	}
 
@@ -131,12 +120,6 @@ func restApiOutputMapper(scope string, awsItem *types.RestApi) (*sdp.Item, error
 			Query:  *awsItem.Id,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// Updating a resource won't affect the REST API
-			In: false,
-			// Updating the REST API will affect the resources
-			Out: true,
-		},
 	})
 
 	item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -145,11 +128,6 @@ func restApiOutputMapper(scope string, awsItem *types.RestApi) (*sdp.Item, error
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  *awsItem.Id,
 			Scope:  scope,
-		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// They are tightly linked
-			In:  true,
-			Out: true,
 		},
 	})
 
@@ -160,11 +138,6 @@ func restApiOutputMapper(scope string, awsItem *types.RestApi) (*sdp.Item, error
 			Query:  *awsItem.Id,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// They are tightly linked
-			In:  false,
-			Out: true,
-		},
 	})
 
 	item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -174,11 +147,6 @@ func restApiOutputMapper(scope string, awsItem *types.RestApi) (*sdp.Item, error
 			Query:  *awsItem.Id,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// They are tightly linked
-			In:  true,
-			Out: true,
-		},
 	})
 
 	item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -187,11 +155,6 @@ func restApiOutputMapper(scope string, awsItem *types.RestApi) (*sdp.Item, error
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  *awsItem.Id,
 			Scope:  scope,
-		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// They are tightly linked
-			In:  true,
-			Out: true,
 		},
 	})
 

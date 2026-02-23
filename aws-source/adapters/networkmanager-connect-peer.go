@@ -43,10 +43,6 @@ func connectPeerGetFunc(ctx context.Context, client NetworkManagerClient, scope 
 					Query:  *cn.Configuration.CoreNetworkAddress,
 					Scope:  "global",
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 
@@ -58,10 +54,6 @@ func connectPeerGetFunc(ctx context.Context, client NetworkManagerClient, scope 
 					Method: sdp.QueryMethod_GET,
 					Query:  *cn.Configuration.PeerAddress,
 					Scope:  "global",
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: true,
 				},
 			})
 		}
@@ -76,10 +68,6 @@ func connectPeerGetFunc(ctx context.Context, client NetworkManagerClient, scope 
 						Query:  *config.CoreNetworkAddress,
 						Scope:  "global",
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				})
 
 				if config.PeerAddress != nil {
@@ -90,10 +78,6 @@ func connectPeerGetFunc(ctx context.Context, client NetworkManagerClient, scope 
 							Method: sdp.QueryMethod_GET,
 							Query:  *config.PeerAddress,
 							Scope:  "global",
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: true,
 						},
 					})
 				}
@@ -107,10 +91,6 @@ func connectPeerGetFunc(ctx context.Context, client NetworkManagerClient, scope 
 							Query:  strconv.FormatInt(*config.CoreNetworkAsn, 10),
 							Scope:  "global",
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
-						},
 					})
 				}
 
@@ -122,10 +102,6 @@ func connectPeerGetFunc(ctx context.Context, client NetworkManagerClient, scope 
 							Method: sdp.QueryMethod_GET,
 							Query:  strconv.FormatInt(*config.PeerAsn, 10),
 							Scope:  "global",
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
 						},
 					})
 				}
@@ -141,10 +117,6 @@ func connectPeerGetFunc(ctx context.Context, client NetworkManagerClient, scope 
 				Query:  *cn.CoreNetworkId,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
-			},
 		})
 	}
 
@@ -158,10 +130,6 @@ func connectPeerGetFunc(ctx context.Context, client NetworkManagerClient, scope 
 					Query:  *cn.SubnetArn,
 					Scope:  FormatScope(arn.AccountID, arn.Region),
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			})
 		}
 	}
@@ -174,10 +142,6 @@ func connectPeerGetFunc(ctx context.Context, client NetworkManagerClient, scope 
 				Method: sdp.QueryMethod_GET,
 				Query:  *cn.ConnectAttachmentId,
 				Scope:  scope,
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: true,
 			},
 		})
 	}

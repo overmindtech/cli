@@ -234,12 +234,6 @@ func (c certificateManagerCertificateWrapper) gcpCertificateToSDPItem(certificat
 					Query:  dnsName,
 					Scope:  "global",
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Certificate depends on DNS resolution
-					// DNS changes affect certificate validity
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 	}
@@ -256,12 +250,6 @@ func (c certificateManagerCertificateWrapper) gcpCertificateToSDPItem(certificat
 						Query:  domain,
 						Scope:  "global",
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Certificate depends on DNS resolution for domain validation
-						// DNS changes affect certificate provisioning
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 		}
@@ -276,13 +264,6 @@ func (c certificateManagerCertificateWrapper) gcpCertificateToSDPItem(certificat
 						Method: sdp.QueryMethod_GET,
 						Query:  shared.CompositeLookupKey(values[0], values[1]),
 						Scope:  location.ProjectID,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Certificate depends on DNS authorization for domain validation
-						// If DNS authorization is deleted, certificate provisioning fails
-						// Deleting certificate doesn't affect the DNS authorization
-						In:  true,
-						Out: false,
 					},
 				})
 			}
@@ -300,13 +281,6 @@ func (c certificateManagerCertificateWrapper) gcpCertificateToSDPItem(certificat
 						Method: sdp.QueryMethod_GET,
 						Query:  shared.CompositeLookupKey(values[0], values[1]),
 						Scope:  location.ProjectID,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Certificate depends on issuance config for private PKI
-						// If issuance config is deleted, certificate provisioning fails
-						// Deleting certificate doesn't affect the issuance config
-						In:  true,
-						Out: false,
 					},
 				})
 			}
