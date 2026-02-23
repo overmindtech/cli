@@ -19,13 +19,6 @@ func serviceAccountExtractor(resource *v1.ServiceAccount, scope string) ([]*sdp.
 				Query:  secret.Name,
 				Type:   "Secret",
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Changing the secret will affect the service account and the
-				// things that use it
-				In: true,
-				// The service account cannot affect the secret
-				Out: false,
-			},
 		})
 	}
 
@@ -36,13 +29,6 @@ func serviceAccountExtractor(resource *v1.ServiceAccount, scope string) ([]*sdp.
 				Method: sdp.QueryMethod_GET,
 				Query:  ipSecret.Name,
 				Type:   "Secret",
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Changing the secret will affect the service account and the
-				// things that use it
-				In: true,
-				// The service account cannot affect the secret
-				Out: false,
 			},
 		})
 	}

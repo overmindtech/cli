@@ -48,10 +48,6 @@ func vpcAttachmentItemMapper(_, scope string, awsItem *types.VpcAttachment) (*sd
 				Query:  *awsItem.Attachment.CoreNetworkId,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: true,
-			},
 		})
 	}
 

@@ -34,13 +34,6 @@ func directConnectGatewayAssociationProposalOutputMapper(_ context.Context, _ *d
 					Query:  fmt.Sprintf("%s/%s", *associationProposal.DirectConnectGatewayId, *associationProposal.AssociatedGateway.Id),
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Any change on the association won't have an impact on the proposal
-					// Its life cycle ends when the association is accepted or rejected
-					In: true,
-					// Accepting a proposal will establish the association
-					Out: true,
-				},
 			})
 		}
 

@@ -19,11 +19,6 @@ func volumeAttachmentExtractor(resource *v1.VolumeAttachment, scope string) ([]*
 				Query:  *resource.Spec.Source.PersistentVolumeName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Changes to the PV could affect the attachment and vice versa
-				In:  true,
-				Out: true,
-			},
 		})
 	}
 
@@ -34,12 +29,6 @@ func volumeAttachmentExtractor(resource *v1.VolumeAttachment, scope string) ([]*
 				Method: sdp.QueryMethod_GET,
 				Query:  resource.Spec.NodeName,
 				Scope:  scope,
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Changes to the node could affect the attachment and vice
-				// versa
-				In:  true,
-				Out: true,
 			},
 		})
 	}

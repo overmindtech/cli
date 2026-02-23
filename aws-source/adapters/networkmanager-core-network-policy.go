@@ -45,10 +45,6 @@ func coreNetworkPolicyItemMapper(_, scope string, cn *types.CoreNetworkPolicy) (
 					Query:  *cn.CoreNetworkId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			},
 		},
 	}

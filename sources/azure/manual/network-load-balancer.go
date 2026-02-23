@@ -154,10 +154,6 @@ func (n networkLoadBalancerWrapper) azureLoadBalancerToSDPItem(loadBalancer *arm
 						Query:  shared.CompositeLookupKey(loadBalancerName, *frontendIPConfig.Name),
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true, // FrontendIPConfiguration changes affect the load balancer's frontend configuration
-						Out: true, // Load balancer changes (like deletion) affect the frontend IP configuration
-					}, // FrontendIPConfiguration is a child resource of the Load Balancer; bidirectional dependency
 				})
 			}
 
@@ -184,10 +180,6 @@ func (n networkLoadBalancerWrapper) azureLoadBalancerToSDPItem(loadBalancer *arm
 								Query:  publicIPName,
 								Scope:  linkedScope,
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,  // Public IP changes (like deletion or reassignment) affect the load balancer's frontend
-								Out: false, // Load balancer changes don't affect the public IP address itself
-							}, // Public IP provides the frontend IP for the load balancer
 						})
 					}
 				}
@@ -210,10 +202,6 @@ func (n networkLoadBalancerWrapper) azureLoadBalancerToSDPItem(loadBalancer *arm
 								Query:  shared.CompositeLookupKey(vnetName, subnetName),
 								Scope:  linkedScope,
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,  // Subnet changes (like address space modifications) affect the load balancer's network configuration
-								Out: false, // Load balancer changes don't affect the subnet itself
-							},
 						})
 					}
 				}
@@ -233,10 +221,6 @@ func (n networkLoadBalancerWrapper) azureLoadBalancerToSDPItem(loadBalancer *arm
 								Method: sdp.QueryMethod_GET,
 								Query:  shared.CompositeLookupKey(params[0], params[1]),
 								Scope:  linkedScope,
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,  // Gateway LB frontend changes affect this load balancer's chained configuration
-								Out: false, // This LB changes don't affect the gateway LB frontend
 							},
 						})
 					}
@@ -258,10 +242,6 @@ func (n networkLoadBalancerWrapper) azureLoadBalancerToSDPItem(loadBalancer *arm
 								Query:  publicIPPrefixName,
 								Scope:  linkedScope,
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,  // Public IP prefix changes affect the load balancer's frontend allocation
-								Out: false, // Load balancer changes don't affect the public IP prefix
-							},
 						})
 					}
 				}
@@ -274,11 +254,6 @@ func (n networkLoadBalancerWrapper) azureLoadBalancerToSDPItem(loadBalancer *arm
 							Method: sdp.QueryMethod_GET,
 							Query:  *frontendIPConfig.Properties.PrivateIPAddress,
 							Scope:  "global",
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// IPs are always linked
-							In:  true,
-							Out: true,
 						},
 					})
 				}
@@ -299,10 +274,6 @@ func (n networkLoadBalancerWrapper) azureLoadBalancerToSDPItem(loadBalancer *arm
 						Query:  shared.CompositeLookupKey(loadBalancerName, *backendPool.Name),
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true, // BackendAddressPool changes affect which backends receive traffic
-						Out: true, // Load balancer changes (like deletion) affect the backend address pool
-					},
 				})
 			}
 
@@ -321,10 +292,6 @@ func (n networkLoadBalancerWrapper) azureLoadBalancerToSDPItem(loadBalancer *arm
 							Method: sdp.QueryMethod_GET,
 							Query:  vnetName,
 							Scope:  linkedScope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // VNet changes affect backend pool scope/connectivity
-							Out: false, // Load balancer changes don't affect the virtual network
 						},
 					})
 				}
@@ -351,10 +318,6 @@ func (n networkLoadBalancerWrapper) azureLoadBalancerToSDPItem(loadBalancer *arm
 									Query:  shared.CompositeLookupKey(params[0], params[1]),
 									Scope:  linkedScope,
 								},
-								BlastPropagation: &sdp.BlastPropagation{
-									In:  true,
-									Out: true,
-								},
 							})
 						}
 					}
@@ -372,10 +335,6 @@ func (n networkLoadBalancerWrapper) azureLoadBalancerToSDPItem(loadBalancer *arm
 									Method: sdp.QueryMethod_GET,
 									Query:  shared.CompositeLookupKey(params[0], params[1]),
 									Scope:  linkedScope,
-								},
-								BlastPropagation: &sdp.BlastPropagation{
-									In:  true,
-									Out: false,
 								},
 							})
 						}
@@ -395,10 +354,6 @@ func (n networkLoadBalancerWrapper) azureLoadBalancerToSDPItem(loadBalancer *arm
 									Query:  vnetName,
 									Scope:  linkedScope,
 								},
-								BlastPropagation: &sdp.BlastPropagation{
-									In:  true,
-									Out: false,
-								},
 							})
 						}
 					}
@@ -410,10 +365,6 @@ func (n networkLoadBalancerWrapper) azureLoadBalancerToSDPItem(loadBalancer *arm
 								Method: sdp.QueryMethod_GET,
 								Query:  *addr.Properties.IPAddress,
 								Scope:  "global",
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,
-								Out: true,
 							},
 						})
 					}
@@ -435,10 +386,6 @@ func (n networkLoadBalancerWrapper) azureLoadBalancerToSDPItem(loadBalancer *arm
 						Query:  shared.CompositeLookupKey(loadBalancerName, *natRule.Name),
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true, // InboundNatRule changes affect the load balancer's NAT configuration
-						Out: true, // Load balancer changes (like deletion) affect the NAT rules
-					}, // InboundNatRule is a child resource of the Load Balancer; bidirectional dependency
 				})
 			}
 
@@ -461,10 +408,6 @@ func (n networkLoadBalancerWrapper) azureLoadBalancerToSDPItem(loadBalancer *arm
 							Query:  nicName,
 							Scope:  scope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true, // Network interface changes affect NAT rule routing
-							Out: true, // NAT rule changes affect which network interface receives inbound traffic
-						}, // Inbound NAT rules map traffic to specific network interfaces; bidirectional operational dependency
 					})
 				}
 			}
@@ -484,10 +427,6 @@ func (n networkLoadBalancerWrapper) azureLoadBalancerToSDPItem(loadBalancer *arm
 						Query:  shared.CompositeLookupKey(loadBalancerName, *lbRule.Name),
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true, // LoadBalancingRule changes affect how traffic is distributed
-						Out: true, // Load balancer changes (like deletion) affect the load balancing rules
-					}, // LoadBalancingRule is a child resource of the Load Balancer; bidirectional dependency
 				})
 			}
 		}
@@ -506,10 +445,6 @@ func (n networkLoadBalancerWrapper) azureLoadBalancerToSDPItem(loadBalancer *arm
 						Query:  shared.CompositeLookupKey(loadBalancerName, *probe.Name),
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true, // Probe changes affect health monitoring of backend instances
-						Out: true, // Load balancer changes (like deletion) affect the probes
-					}, // Probe is a child resource of the Load Balancer; bidirectional dependency
 				})
 			}
 		}
@@ -528,10 +463,6 @@ func (n networkLoadBalancerWrapper) azureLoadBalancerToSDPItem(loadBalancer *arm
 						Query:  shared.CompositeLookupKey(loadBalancerName, *outboundRule.Name),
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true, // OutboundRule changes affect outbound connectivity configuration
-						Out: true, // Load balancer changes (like deletion) affect the outbound rules
-					}, // OutboundRule is a child resource of the Load Balancer; bidirectional dependency
 				})
 			}
 		}
@@ -550,10 +481,6 @@ func (n networkLoadBalancerWrapper) azureLoadBalancerToSDPItem(loadBalancer *arm
 						Query:  shared.CompositeLookupKey(loadBalancerName, *natPool.Name),
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true, // InboundNatPool changes affect NAT pool configuration
-						Out: true, // Load balancer changes (like deletion) affect the NAT pools
-					}, // InboundNatPool is a child resource of the Load Balancer; bidirectional dependency
 				})
 			}
 		}

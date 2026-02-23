@@ -96,10 +96,6 @@ func extractLinksFromStringValue(val string) []*LinkedItemQuery {
 					Query:  ip.String(),
 					Scope:  "global",
 				},
-				BlastPropagation: &BlastPropagation{
-					In:  true,
-					Out: true,
-				},
 			},
 		}
 	}
@@ -118,15 +114,6 @@ func extractLinksFromStringValue(val string) []*LinkedItemQuery {
 						Query:  val,
 						Scope:  "global",
 					},
-					BlastPropagation: &BlastPropagation{
-						// If we are referencing a HTTP URL, I think it's safe
-						// to assume that this is something that the current
-						// resource depends on and therefore that the blast
-						// radius should propagate inwards. This is a bit of a
-						// guess though...
-						In:  true,
-						Out: false,
-					},
 				},
 			}
 		}
@@ -144,10 +131,6 @@ func extractLinksFromStringValue(val string) []*LinkedItemQuery {
 					Method: QueryMethod_SEARCH,
 					Query:  val,
 					Scope:  "global",
-				},
-				BlastPropagation: &BlastPropagation{
-					In:  true,
-					Out: false,
 				},
 			},
 		}
@@ -213,10 +196,6 @@ func extractLinksFromStringValue(val string) []*LinkedItemQuery {
 						Method: QueryMethod_SEARCH,
 						Query:  val,
 						Scope:  scope,
-					},
-					BlastPropagation: &BlastPropagation{
-						In:  true,
-						Out: false,
 					},
 				},
 			}

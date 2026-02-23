@@ -19,12 +19,6 @@ func podDisruptionBudgetExtractor(resource *v1.PodDisruptionBudget, scope string
 				Query:  LabelSelectorToQuery(resource.Spec.Selector),
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Changes to pods won't affect the disruption budget
-				In: false,
-				// Changes to the disruption budget will affect pods
-				Out: true,
-			},
 		})
 	}
 

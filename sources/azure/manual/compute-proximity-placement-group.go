@@ -138,10 +138,6 @@ func (c computeProximityPlacementGroupWrapper) azureProximityPlacementGroupToSDP
 							Query:  vmName,
 							Scope:  linkedScope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true, // PPG change affects VM placement
-							Out: true, // VM add/remove changes PPG membership
-						},
 					})
 				}
 			}
@@ -166,10 +162,6 @@ func (c computeProximityPlacementGroupWrapper) azureProximityPlacementGroupToSDP
 							Query:  avSetName,
 							Scope:  linkedScope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true, // PPG change affects Availability Set placement
-							Out: true, // Availability Set add/remove changes PPG membership
-						},
 					})
 				}
 			}
@@ -193,10 +185,6 @@ func (c computeProximityPlacementGroupWrapper) azureProximityPlacementGroupToSDP
 							Method: sdp.QueryMethod_GET,
 							Query:  vmssName,
 							Scope:  linkedScope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true, // PPG change affects VMSS placement
-							Out: true, // VMSS add/remove changes PPG membership
 						},
 					})
 				}

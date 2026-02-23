@@ -50,12 +50,6 @@ func dBSubnetGroupOutputMapper(ctx context.Context, client rdsClient, scope stri
 					Query:  *sg.VpcId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changing the VPC can affect the subnet group
-					In: true,
-					// The subnet group won't affect the VPC
-					Out: false,
-				},
 			})
 		}
 
@@ -67,12 +61,6 @@ func dBSubnetGroupOutputMapper(ctx context.Context, client rdsClient, scope stri
 						Method: sdp.QueryMethod_GET,
 						Query:  *subnet.SubnetIdentifier,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the subnet can affect the subnet group
-						In: true,
-						// The subnet group won't affect the subnet
-						Out: false,
 					},
 				})
 			}
@@ -86,12 +74,6 @@ func dBSubnetGroupOutputMapper(ctx context.Context, client rdsClient, scope stri
 								Method: sdp.QueryMethod_SEARCH,
 								Query:  *subnet.SubnetOutpost.Arn,
 								Scope:  FormatScope(a.AccountID, a.Region),
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								// Changing the outpost can affect the subnet group
-								In: true,
-								// The subnet group won't affect the outpost
-								Out: false,
 							},
 						})
 					}

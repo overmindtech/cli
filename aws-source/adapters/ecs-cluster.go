@@ -75,13 +75,6 @@ func ecsClusterGetFunc(ctx context.Context, client ECSClient, scope string, inpu
 					Query:  *cluster.ClusterName,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Container instances can affect the cluster
-					In: true,
-					// The cluster will definitely affect the container
-					// instances
-					Out: true,
-				},
 			},
 			{
 				Query: &sdp.Query{
@@ -90,12 +83,6 @@ func ecsClusterGetFunc(ctx context.Context, client ECSClient, scope string, inpu
 					Query:  *cluster.ClusterName,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Services won't affect the cluster
-					In: false,
-					// The cluster will definitely affect the services
-					Out: true,
-				},
 			},
 			{
 				Query: &sdp.Query{
@@ -103,12 +90,6 @@ func ecsClusterGetFunc(ctx context.Context, client ECSClient, scope string, inpu
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *cluster.ClusterName,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Tasks won't affect the cluster
-					In: false,
-					// The cluster will definitely affect the tasks
-					Out: true,
 				},
 			},
 		},
@@ -140,12 +121,6 @@ func ecsClusterGetFunc(ctx context.Context, client ECSClient, scope string, inpu
 						Query:  *cluster.Configuration.ExecuteCommandConfiguration.KmsKeyId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the KMS key will probably affect the cluster
-						In: true,
-						// The cluster won't affect the KMS key though
-						Out: false,
-					},
 				})
 			}
 
@@ -158,11 +133,6 @@ func ecsClusterGetFunc(ctx context.Context, client ECSClient, scope string, inpu
 							Query:  *cluster.Configuration.ExecuteCommandConfiguration.LogConfiguration.CloudWatchLogGroupName,
 							Scope:  scope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// These are tightly linked
-							In:  true,
-							Out: true,
-						},
 					})
 				}
 
@@ -173,11 +143,6 @@ func ecsClusterGetFunc(ctx context.Context, client ECSClient, scope string, inpu
 							Method: sdp.QueryMethod_GET,
 							Query:  *cluster.Configuration.ExecuteCommandConfiguration.LogConfiguration.S3BucketName,
 							Scope:  FormatScope(accountID, ""),
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// These are tightly linked
-							In:  true,
-							Out: true,
 						},
 					})
 				}
@@ -192,11 +157,6 @@ func ecsClusterGetFunc(ctx context.Context, client ECSClient, scope string, inpu
 				Method: sdp.QueryMethod_GET,
 				Query:  provider,
 				Scope:  scope,
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// These are tightly linked
-				In:  true,
-				Out: true,
 			},
 		})
 	}

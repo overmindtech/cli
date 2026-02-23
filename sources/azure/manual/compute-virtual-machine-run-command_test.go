@@ -198,12 +198,6 @@ func TestComputeVirtualMachineRunCommand(t *testing.T) {
 				if liq.GetQuery().GetMethod() != sdp.QueryMethod_GET {
 					t.Errorf("Expected method GET, got %s", liq.GetQuery().GetMethod())
 				}
-				if liq.GetBlastPropagation().GetIn() != true {
-					t.Error("Expected blast propagation In=true for Storage Account")
-				}
-				if liq.GetBlastPropagation().GetOut() != false {
-					t.Error("Expected blast propagation Out=false for Storage Account")
-				}
 			case azureshared.StorageBlobContainer.String():
 				blobContainerLinks++
 				expectedQuery := shared.CompositeLookupKey("mystorageaccount", "outputcontainer")

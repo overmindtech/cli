@@ -75,11 +75,6 @@ func getKeyPolicyFunc(ctx context.Context, client keyPolicyClient, scope string,
 			Query:  *input.KeyId,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// These are tightly coupled
-			In:  true,
-			Out: true,
-		},
 	})
 
 	return item, nil

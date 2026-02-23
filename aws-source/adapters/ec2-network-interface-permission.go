@@ -52,11 +52,6 @@ func networkInterfacePermissionOutputMapper(_ context.Context, _ *ec2.Client, sc
 					Query:  *ni.NetworkInterfaceId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// These permissions are tightly linked
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 

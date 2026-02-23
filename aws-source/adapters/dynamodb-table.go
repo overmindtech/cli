@@ -83,14 +83,6 @@ func tableGetFunc(ctx context.Context, client Client, scope string, input *dynam
 							Query:  *dest.StreamArn,
 							Scope:  FormatScope(a.AccountID, a.Region),
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// If you change the stream, it could mean the table
-							// is no longer replicated
-							In: true,
-							// Changing this table will affect the stream and
-							// whatever is listening to it
-							Out: true,
-						},
 					})
 				}
 			}
@@ -107,14 +99,6 @@ func tableGetFunc(ctx context.Context, client Client, scope string, input *dynam
 						Query:  *table.RestoreSummary.SourceBackupArn,
 						Scope:  FormatScope(a.AccountID, a.Region),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// The backup is just the source from which the table
-						// was created, so I guess you'd say that the recovery
-						// point affects the table
-						In: true,
-						// Changing the table won't affect the recovery point
-						Out: false,
-					},
 				})
 			}
 		}
@@ -127,14 +111,6 @@ func tableGetFunc(ctx context.Context, client Client, scope string, input *dynam
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *table.RestoreSummary.SourceTableArn,
 						Scope:  FormatScope(a.AccountID, a.Region),
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// If the table was restored from another table, and
-						// this is normal, then changing the source table could
-						// affect this one
-						In: true,
-						// Changing this table won't affect the source table
-						Out: false,
 					},
 				})
 			}
@@ -150,12 +126,6 @@ func tableGetFunc(ctx context.Context, client Client, scope string, input *dynam
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *table.SSEDescription.KMSMasterKeyArn,
 						Scope:  FormatScope(a.AccountID, a.Region),
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the key could affect the table
-						In: true,
-						// Changing the table won't affect the key
-						Out: false,
 					},
 				})
 			}

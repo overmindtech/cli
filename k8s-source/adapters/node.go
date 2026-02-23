@@ -24,11 +24,6 @@ func linkedItemExtractor(resource *v1.Node, scope string) ([]*sdp.LinkedItemQuer
 					Query:  addr.Address,
 					Scope:  "global",
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Always propagate over DNS
-					In:  true,
-					Out: true,
-				},
 			})
 
 		case v1.NodeExternalIP, v1.NodeInternalIP:
@@ -38,11 +33,6 @@ func linkedItemExtractor(resource *v1.Node, scope string) ([]*sdp.LinkedItemQuer
 					Method: sdp.QueryMethod_GET,
 					Query:  addr.Address,
 					Scope:  "global",
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Always propagate over IP
-					In:  true,
-					Out: true,
 				},
 			})
 		}
@@ -61,12 +51,6 @@ func linkedItemExtractor(resource *v1.Node, scope string) ([]*sdp.LinkedItemQuer
 						Method: sdp.QueryMethod_GET,
 						Query:  sections[1],
 						Scope:  "*",
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changes to the volume can affect the node
-						In: true,
-						// Changes to the node cannot affect the volume
-						Out: true,
 					},
 				})
 			}

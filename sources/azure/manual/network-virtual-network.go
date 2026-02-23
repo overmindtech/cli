@@ -140,10 +140,6 @@ func (n networkVirtualNetworkWrapper) azureVirtualNetworkToSDPItem(network *armn
 			Scope:  scope,
 			Query:  *network.Name, // List subnets in the virtual network
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  false,
-			Out: true,
-		},
 	})
 
 	sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -152,10 +148,6 @@ func (n networkVirtualNetworkWrapper) azureVirtualNetworkToSDPItem(network *armn
 			Method: sdp.QueryMethod_SEARCH,
 			Scope:  scope,
 			Query:  *network.Name, // List virtual network peerings in the virtual network
-		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  false, // Peering changes don't affect the Virtual Network itself
-			Out: true,  // Virtual Network changes (especially deletion) affect peerings
 		},
 	})
 
@@ -176,10 +168,6 @@ func (n networkVirtualNetworkWrapper) azureVirtualNetworkToSDPItem(network *armn
 					Method: sdp.QueryMethod_GET,
 					Query:  ddosPlanName,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // If DDoS protection plan changes → Virtual Network protection affected (In: true)
-					Out: false, // If Virtual Network is deleted → DDoS protection plan remains (Out: false)
 				},
 			})
 		}
@@ -210,10 +198,6 @@ func (n networkVirtualNetworkWrapper) azureVirtualNetworkToSDPItem(network *armn
 							Query:  nsgName,
 							Scope:  scope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If NSG changes → Subnet security rules affected (In: true)
-							Out: false, // If Virtual Network is deleted → NSG remains (Out: false)
-						},
 					})
 				}
 			}
@@ -236,10 +220,6 @@ func (n networkVirtualNetworkWrapper) azureVirtualNetworkToSDPItem(network *armn
 							Query:  routeTableName,
 							Scope:  scope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Route Table changes → Subnet routing affected (In: true)
-							Out: false, // If Virtual Network is deleted → Route Table remains (Out: false)
-						},
 					})
 				}
 			}
@@ -261,10 +241,6 @@ func (n networkVirtualNetworkWrapper) azureVirtualNetworkToSDPItem(network *armn
 							Method: sdp.QueryMethod_GET,
 							Query:  natGatewayName,
 							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If NAT Gateway changes → Subnet outbound connectivity affected (In: true)
-							Out: false, // If Virtual Network is deleted → NAT Gateway remains (Out: false)
 						},
 					})
 				}
@@ -289,10 +265,6 @@ func (n networkVirtualNetworkWrapper) azureVirtualNetworkToSDPItem(network *armn
 									Method: sdp.QueryMethod_GET,
 									Query:  privateEndpointName,
 									Scope:  scope,
-								},
-								BlastPropagation: &sdp.BlastPropagation{
-									In:  true,  // If Private Endpoint changes → Subnet connectivity affected (In: true)
-									Out: false, // If Virtual Network is deleted → Private Endpoint may become invalid (Out: false, but could be true)
 								},
 							})
 						}
@@ -322,10 +294,6 @@ func (n networkVirtualNetworkWrapper) azureVirtualNetworkToSDPItem(network *armn
 							Query:  remoteVNetName,
 							Scope:  scope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true, // If remote VNet changes → Peering connectivity affected (In: true)
-							Out: true, // If this VNet changes → Remote VNet peering affected (Out: true)
-						},
 					})
 				}
 			}
@@ -348,10 +316,6 @@ func (n networkVirtualNetworkWrapper) azureVirtualNetworkToSDPItem(network *armn
 					Method: sdp.QueryMethod_GET,
 					Query:  natGatewayName,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // If NAT Gateway changes → VNet outbound connectivity affected (In: true)
-					Out: false, // If Virtual Network is deleted → NAT Gateway remains (Out: false)
 				},
 			})
 		}

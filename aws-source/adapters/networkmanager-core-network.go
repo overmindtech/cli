@@ -44,10 +44,6 @@ func coreNetworkGetFunc(ctx context.Context, client NetworkManagerClient, scope 
 					Query:  *cn.CoreNetworkId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  false,
-					Out: true,
-				},
 			},
 			{
 				Query: &sdp.Query{
@@ -55,10 +51,6 @@ func coreNetworkGetFunc(ctx context.Context, client NetworkManagerClient, scope 
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *cn.CoreNetworkId,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  false,
-					Out: true,
 				},
 			},
 		},
@@ -72,10 +64,6 @@ func coreNetworkGetFunc(ctx context.Context, client NetworkManagerClient, scope 
 				Query:  *cn.GlobalNetworkId,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
-			},
 		})
 	}
 
@@ -87,10 +75,6 @@ func coreNetworkGetFunc(ctx context.Context, client NetworkManagerClient, scope 
 					Method: sdp.QueryMethod_GET,
 					Query:  strconv.FormatInt(*edge.Asn, 10),
 					Scope:  "global",
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
 				},
 			})
 		}

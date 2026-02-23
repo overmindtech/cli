@@ -47,10 +47,6 @@ func connectionOutputMapper(_ context.Context, _ *networkmanager.Client, scope s
 						Query:  *s.GlobalNetworkId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			},
 		}
@@ -63,10 +59,6 @@ func connectionOutputMapper(_ context.Context, _ *networkmanager.Client, scope s
 					Query:  idWithGlobalNetwork(*s.GlobalNetworkId, *s.LinkId),
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 
@@ -77,10 +69,6 @@ func connectionOutputMapper(_ context.Context, _ *networkmanager.Client, scope s
 					Method: sdp.QueryMethod_GET,
 					Query:  idWithGlobalNetwork(*s.GlobalNetworkId, *s.ConnectedLinkId),
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: true,
 				},
 			})
 		}
@@ -93,10 +81,6 @@ func connectionOutputMapper(_ context.Context, _ *networkmanager.Client, scope s
 					Query:  idWithGlobalNetwork(*s.GlobalNetworkId, *s.DeviceId),
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 
@@ -107,10 +91,6 @@ func connectionOutputMapper(_ context.Context, _ *networkmanager.Client, scope s
 					Method: sdp.QueryMethod_GET,
 					Query:  idWithGlobalNetwork(*s.GlobalNetworkId, *s.ConnectedDeviceId),
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: true,
 				},
 			})
 		}

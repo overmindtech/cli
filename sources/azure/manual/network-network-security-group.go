@@ -152,10 +152,6 @@ func (n networkNetworkSecurityGroupWrapper) azureNetworkSecurityGroupToSDPItem(n
 						Query:  shared.CompositeLookupKey(nsgName, *securityRule.Name),
 						Scope:  n.DefaultScope(),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,  // Security rule changes affect the NSG's behavior
-						Out: false, // NSG changes don't affect individual rules (rules are part of NSG)
-					},
 				})
 			}
 		}
@@ -172,10 +168,6 @@ func (n networkNetworkSecurityGroupWrapper) azureNetworkSecurityGroupToSDPItem(n
 						Method: sdp.QueryMethod_GET,
 						Query:  shared.CompositeLookupKey(nsgName, *defaultSecurityRule.Name),
 						Scope:  n.DefaultScope(),
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,  // Default security rule changes affect the NSG's behavior
-						Out: false, // NSG changes don't affect individual default rules (rules are part of NSG)
 					},
 				})
 			}
@@ -213,10 +205,6 @@ func (n networkNetworkSecurityGroupWrapper) azureNetworkSecurityGroupToSDPItem(n
 								Query:  shared.CompositeLookupKey(vnetName, subnetName),
 								Scope:  scope,
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true, // Subnet changes (like deletion) affect the NSG association
-								Out: true, // NSG rule changes affect traffic in the subnet
-							},
 						})
 					}
 				}
@@ -242,10 +230,6 @@ func (n networkNetworkSecurityGroupWrapper) azureNetworkSecurityGroupToSDPItem(n
 							Method: sdp.QueryMethod_GET,
 							Query:  nicName,
 							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  false, // Network interface changes don't affect the NSG
-							Out: true,  // NSG rule changes affect traffic on the network interface
 						},
 					})
 				}
@@ -276,10 +260,6 @@ func (n networkNetworkSecurityGroupWrapper) azureNetworkSecurityGroupToSDPItem(n
 							Method: sdp.QueryMethod_GET,
 							Query:  shared.CompositeLookupKey(networkWatcherName, flowLogName),
 							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // Flow log config changes affect the NSG's observability
-							Out: false, // NSG changes don't affect the flow log resource
 						},
 					})
 				}
@@ -313,10 +293,6 @@ func (n networkNetworkSecurityGroupWrapper) azureNetworkSecurityGroupToSDPItem(n
 											Query:  asgName,
 											Scope:  scope,
 										},
-										BlastPropagation: &sdp.BlastPropagation{
-											In:  true,  // ASG changes affect the security rule's source criteria
-											Out: false, // Security rule changes don't affect the ASG
-										},
 									})
 								}
 							}
@@ -340,10 +316,6 @@ func (n networkNetworkSecurityGroupWrapper) azureNetworkSecurityGroupToSDPItem(n
 											Method: sdp.QueryMethod_GET,
 											Query:  asgName,
 											Scope:  scope,
-										},
-										BlastPropagation: &sdp.BlastPropagation{
-											In:  true,  // ASG changes affect the security rule's destination criteria
-											Out: false, // Security rule changes don't affect the ASG
 										},
 									})
 								}
@@ -394,10 +366,6 @@ func (n networkNetworkSecurityGroupWrapper) azureNetworkSecurityGroupToSDPItem(n
 											Query:  asgName,
 											Scope:  scope,
 										},
-										BlastPropagation: &sdp.BlastPropagation{
-											In:  true,  // ASG changes affect the default security rule's source criteria
-											Out: false, // Default security rule changes don't affect the ASG
-										},
 									})
 								}
 							}
@@ -421,10 +389,6 @@ func (n networkNetworkSecurityGroupWrapper) azureNetworkSecurityGroupToSDPItem(n
 											Method: sdp.QueryMethod_GET,
 											Query:  asgName,
 											Scope:  scope,
-										},
-										BlastPropagation: &sdp.BlastPropagation{
-											In:  true,  // ASG changes affect the default security rule's destination criteria
-											Out: false, // Default security rule changes don't affect the ASG
 										},
 									})
 								}

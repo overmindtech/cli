@@ -48,11 +48,6 @@ func authorizerOutputMapper(query, scope string, awsItem *types.Authorizer) (*sd
 			Query:  strings.Split(query, "/")[0],
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// They are tightly coupled, so we need to propagate the blast to the linked item
-			In:  true,
-			Out: true,
-		},
 	})
 
 	return &item, nil

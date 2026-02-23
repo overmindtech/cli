@@ -79,11 +79,6 @@ func launchTemplateVersionOutputMapper(_ context.Context, _ *ec2.Client, scope s
 								Query:  *ip.Ipv6Address,
 								Scope:  "global",
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								// IPs are always linked
-								In:  true,
-								Out: true,
-							},
 						})
 					}
 				}
@@ -95,12 +90,6 @@ func launchTemplateVersionOutputMapper(_ context.Context, _ *ec2.Client, scope s
 							Method: sdp.QueryMethod_GET,
 							Query:  *ni.NetworkInterfaceId,
 							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changing the network interface will affect the
-							// template and vice versa
-							In:  true,
-							Out: true,
 						},
 					})
 				}
@@ -114,11 +103,6 @@ func launchTemplateVersionOutputMapper(_ context.Context, _ *ec2.Client, scope s
 								Query:  *ip.PrivateIpAddress,
 								Scope:  "global",
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								// IPs are always linked
-								In:  true,
-								Out: true,
-							},
 						})
 					}
 				}
@@ -131,12 +115,6 @@ func launchTemplateVersionOutputMapper(_ context.Context, _ *ec2.Client, scope s
 							Query:  *ni.SubnetId,
 							Scope:  scope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changing the subnet will affect the template
-							In: true,
-							// Changing the template won't affect the subnet
-							Out: false,
-						},
 					})
 				}
 
@@ -147,14 +125,6 @@ func launchTemplateVersionOutputMapper(_ context.Context, _ *ec2.Client, scope s
 							Method: sdp.QueryMethod_GET,
 							Query:  group,
 							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changing the security group will affect the
-							// template
-							In: true,
-							// Changing the template won't affect the security
-							// group
-							Out: false,
 						},
 					})
 				}
@@ -168,12 +138,6 @@ func launchTemplateVersionOutputMapper(_ context.Context, _ *ec2.Client, scope s
 						Query:  *lt.ImageId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the image will affect the template
-						In: true,
-						// Changing the template won't affect the image
-						Out: false,
-					},
 				})
 			}
 
@@ -184,12 +148,6 @@ func launchTemplateVersionOutputMapper(_ context.Context, _ *ec2.Client, scope s
 						Method: sdp.QueryMethod_GET,
 						Query:  *lt.KeyName,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the key pair will affect the template
-						In: true,
-						// Changing the template won't affect the key pair
-						Out: false,
 					},
 				})
 			}
@@ -202,12 +160,6 @@ func launchTemplateVersionOutputMapper(_ context.Context, _ *ec2.Client, scope s
 							Method: sdp.QueryMethod_GET,
 							Query:  *mapping.Ebs.SnapshotId,
 							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changing the snapshot will affect the template
-							In: true,
-							// Changing the template won't affect the snapshot
-							Out: false,
 						},
 					})
 				}
@@ -223,14 +175,6 @@ func launchTemplateVersionOutputMapper(_ context.Context, _ *ec2.Client, scope s
 								Query:  *target.CapacityReservationId,
 								Scope:  scope,
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								// Changing the capacity reservation will affect
-								// the template
-								In: true,
-								// Changing the template could affect the
-								// capacity reservation since it uses it up
-								Out: true,
-							},
 						})
 					}
 				}
@@ -245,14 +189,6 @@ func launchTemplateVersionOutputMapper(_ context.Context, _ *ec2.Client, scope s
 							Query:  *lt.Placement.GroupId,
 							Scope:  scope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changing the placement group will affect the
-							// template
-							In: true,
-							// Changing the template won't affect the placement
-							// group
-							Out: false,
-						},
 					})
 				}
 
@@ -263,12 +199,6 @@ func launchTemplateVersionOutputMapper(_ context.Context, _ *ec2.Client, scope s
 							Method: sdp.QueryMethod_GET,
 							Query:  *lt.Placement.HostId,
 							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changing the host will affect the template
-							In: true,
-							// Changing the template could affect the host also
-							Out: true,
 						},
 					})
 				}
@@ -281,13 +211,6 @@ func launchTemplateVersionOutputMapper(_ context.Context, _ *ec2.Client, scope s
 						Method: sdp.QueryMethod_GET,
 						Query:  id,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the security group will affect the template
-						In: true,
-						// Changing the template won't affect the security
-						// group
-						Out: false,
 					},
 				})
 			}

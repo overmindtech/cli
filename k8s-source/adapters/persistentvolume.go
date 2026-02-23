@@ -28,12 +28,6 @@ func PersistentVolumeExtractor(resource *v1.PersistentVolume, scope string) ([]*
 				Query:  resource.Spec.PersistentVolumeSource.AWSElasticBlockStore.VolumeID,
 				Scope:  "*",
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Changes to the EBS volume can affect the PV
-				In: true,
-				// Changes to the PV might affect the EBS volume
-				Out: true,
-			},
 		})
 	}
 
@@ -52,24 +46,13 @@ func PersistentVolumeExtractor(resource *v1.PersistentVolume, scope string) ([]*
 						Query:  matches[1],
 						Scope:  "*",
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changes to the EFS access point can affect the PV
-						In: true,
-						// Changes to the PV won't affect the EFS access point
-						Out: false,
-					},
 				})
 			}
 		}
 	}
 
 	if resource.Spec.ClaimRef != nil {
-		queries = append(queries, ObjectReferenceToQuery(resource.Spec.ClaimRef, sd, &sdp.BlastPropagation{
-			// Changing claim might not affect the PV
-			In: false,
-			// Changing the PV will definitely affect the claim
-			Out: true,
-		}))
+		queries = append(queries, ObjectReferenceToQuery(resource.Spec.ClaimRef, sd))
 	}
 
 	if resource.Spec.StorageClassName != "" {
@@ -79,12 +62,6 @@ func PersistentVolumeExtractor(resource *v1.PersistentVolume, scope string) ([]*
 				Method: sdp.QueryMethod_GET,
 				Query:  resource.Spec.StorageClassName,
 				Scope:  sd.ClusterName,
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Changes to the storage class can affect the PV
-				In: true,
-				// Changes to the PV cannot affect the storage class
-				Out: false,
 			},
 		})
 	}

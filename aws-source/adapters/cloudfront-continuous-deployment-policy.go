@@ -33,11 +33,6 @@ func continuousDeploymentPolicyItemMapper(_, scope string, awsItem *types.Contin
 					Query:  name,
 					Scope:  "global",
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// DNS is always linked
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 	}

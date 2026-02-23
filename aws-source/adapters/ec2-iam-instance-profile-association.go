@@ -35,12 +35,6 @@ func iamInstanceProfileAssociationOutputMapper(_ context.Context, _ *ec2.Client,
 						Query:  *assoc.IamInstanceProfile.Arn,
 						Scope:  FormatScope(arn.AccountID, arn.Region),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changes to the profile will affect this
-						In: true,
-						// We can't affect the profile
-						Out: false,
-					},
 				})
 			}
 		}
@@ -52,12 +46,6 @@ func iamInstanceProfileAssociationOutputMapper(_ context.Context, _ *ec2.Client,
 					Method: sdp.QueryMethod_GET,
 					Query:  *assoc.InstanceId,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changes to the instance will not affect the association
-					In: false,
-					// changes to the association will affect the instance
-					Out: true,
 				},
 			})
 		}

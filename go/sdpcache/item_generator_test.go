@@ -82,8 +82,7 @@ func GenerateRandomItem() *sdp.Item {
 			Method: sdp.QueryMethod(rand.Intn(3)),
 			Query:  randSeq(rand.Intn(MaxAttributeValueLength)),
 			RecursionBehaviour: &sdp.Query_RecursionBehaviour{
-				LinkDepth:                  rand.Uint32(),
-				FollowOnlyBlastPropagation: rand.Intn(2) == 0,
+				LinkDepth: rand.Uint32(),
 			},
 			Scope: randSeq(rand.Intn(MaxAttributeKeyLength)),
 		}}

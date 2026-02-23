@@ -61,11 +61,6 @@ func apiGatewayMethodGetFunc(ctx context.Context, client apigatewayClient, scope
 				Query:  methodID,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// They are tightly coupled
-				In:  true,
-				Out: true,
-			},
 		})
 	}
 
@@ -76,12 +71,6 @@ func apiGatewayMethodGetFunc(ctx context.Context, client apigatewayClient, scope
 				Method: sdp.QueryMethod_GET,
 				Query:  fmt.Sprintf("%s/%s", *input.RestApiId, *output.AuthorizerId),
 				Scope:  scope,
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Deleting authorizer will affect the method
-				In: true,
-				// Deleting method won't affect the authorizer
-				Out: false,
 			},
 		})
 	}
@@ -94,12 +83,6 @@ func apiGatewayMethodGetFunc(ctx context.Context, client apigatewayClient, scope
 				Query:  fmt.Sprintf("%s/%s", *input.RestApiId, *output.RequestValidatorId),
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Deleting request validator will affect the method
-				In: true,
-				// Deleting method won't affect the request validator
-				Out: false,
-			},
 		})
 	}
 
@@ -111,11 +94,6 @@ func apiGatewayMethodGetFunc(ctx context.Context, client apigatewayClient, scope
 					Method: sdp.QueryMethod_GET,
 					Query:  fmt.Sprintf("%s/%s/%s/%s", *input.RestApiId, *input.ResourceId, *input.HttpMethod, statusCode),
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// They are tightly coupled
-					In:  true,
-					Out: true,
 				},
 			})
 		}

@@ -19,13 +19,6 @@ func clusterRoleBindingExtractor(resource *v1.ClusterRoleBinding, scope string) 
 			Query:  resource.RoleRef.Name,
 			Type:   resource.RoleRef.Kind,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// Changes to the role will affect the things bound to it since the
-			// role contains the permissions
-			In: true,
-			// Changes to the binding won't affect the role
-			Out: false,
-		},
 	})
 
 	for _, subject := range resource.Subjects {
@@ -43,12 +36,6 @@ func clusterRoleBindingExtractor(resource *v1.ClusterRoleBinding, scope string) 
 				Method: sdp.QueryMethod_GET,
 				Query:  subject.Name,
 				Type:   subject.Kind,
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Changes to the group won't affect the binding itself
-				In: false,
-				// Changes to the binding will affect the group it's bound to
-				Out: true,
 			},
 		})
 	}

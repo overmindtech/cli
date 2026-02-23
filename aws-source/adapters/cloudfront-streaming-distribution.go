@@ -74,11 +74,6 @@ func streamingDistributionGetFunc(ctx context.Context, client CloudFrontClient, 
 				Query:  *d.DomainName,
 				Scope:  "global",
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// DNS is always linked
-				In:  true,
-				Out: true,
-			},
 		})
 	}
 
@@ -92,11 +87,6 @@ func streamingDistributionGetFunc(ctx context.Context, client CloudFrontClient, 
 						Query:  *dc.S3Origin.DomainName,
 						Scope:  "global",
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Tightly linked
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 
@@ -107,12 +97,6 @@ func streamingDistributionGetFunc(ctx context.Context, client CloudFrontClient, 
 						Method: sdp.QueryMethod_GET,
 						Query:  *dc.S3Origin.OriginAccessIdentity,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the access identity will affect the distribution
-						In: true,
-						// The distribution won't affect the access identity
-						Out: false,
 					},
 				})
 			}
@@ -127,11 +111,6 @@ func streamingDistributionGetFunc(ctx context.Context, client CloudFrontClient, 
 						Query:  alias,
 						Scope:  "global",
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Tightly linked
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 		}
@@ -143,11 +122,6 @@ func streamingDistributionGetFunc(ctx context.Context, client CloudFrontClient, 
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *dc.Logging.Bucket,
 					Scope:  "global",
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Tightly linked
-					In:  true,
-					Out: true,
 				},
 			})
 		}

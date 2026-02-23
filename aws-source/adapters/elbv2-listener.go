@@ -74,11 +74,6 @@ func listenerOutputMapper(ctx context.Context, client elbv2Client, scope string,
 						Query:  *listener.LoadBalancerArn,
 						Scope:  FormatScope(a.AccountID, a.Region),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Load balancers and their listeners are tightly coupled
-						In:  true,
-						Out: true,
-					},
 				})
 
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -87,11 +82,6 @@ func listenerOutputMapper(ctx context.Context, client elbv2Client, scope string,
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *listener.ListenerArn,
 						Scope:  FormatScope(a.AccountID, a.Region),
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Tightly coupled
-						In:  true,
-						Out: true,
 					},
 				})
 			}
@@ -106,12 +96,6 @@ func listenerOutputMapper(ctx context.Context, client elbv2Client, scope string,
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  *cert.CertificateArn,
 							Scope:  FormatScope(a.AccountID, a.Region),
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changing the cert will affect the LB
-							In: true,
-							// The LB won't affect the cert
-							Out: false,
 						},
 					})
 				}

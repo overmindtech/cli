@@ -85,10 +85,6 @@ func (s sqlDatabaseWrapper) azureSqlDatabaseToSDPItem(database *armsql.Database,
 					Query:  extractedServerName,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // SQL Server changes (especially deletion) affect the database's availability and configuration
-					Out: false, // Database changes don't affect the SQL Server itself
-				}, // SQL Database is a child resource that depends on its parent SQL Server
 			})
 		}
 	}
@@ -103,10 +99,6 @@ func (s sqlDatabaseWrapper) azureSqlDatabaseToSDPItem(database *armsql.Database,
 					Query:  elasticPoolName,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // Elastic pool changes (especially deletion or resource configuration changes) affect the database's performance and availability
-					Out: false, // Database changes don't affect the elastic pool itself (though they may affect pool resource usage)
-				}, // SQL Database depends on its Elastic Pool for resource allocation and management
 			})
 		}
 	}
@@ -124,10 +116,6 @@ func (s sqlDatabaseWrapper) azureSqlDatabaseToSDPItem(database *armsql.Database,
 					Query:  shared.CompositeLookupKey(recoverableServerName, recoverableDatabaseName),
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // Recoverable database deletion or unavailability affects the SQL Database's ability to restore from that point
-					Out: false, // SQL Database changes don't affect the recoverable database itself (it's a point-in-time snapshot)
-				}, // SQL Database depends on its recoverable database for disaster recovery and restore capabilities
 			})
 		}
 	}
@@ -145,10 +133,6 @@ func (s sqlDatabaseWrapper) azureSqlDatabaseToSDPItem(database *armsql.Database,
 					Query:  shared.CompositeLookupKey(restorableDroppedServerName, restorableDroppedDatabaseName),
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // Restorable dropped database deletion/purge affects the SQL Database's ability to restore from that dropped database
-					Out: false, // SQL Database changes don't affect the restorable dropped database itself (it's already dropped)
-				}, // SQL Database depends on its restorable dropped database for restore capabilities after accidental deletion
 			})
 		}
 	}
@@ -161,10 +145,6 @@ func (s sqlDatabaseWrapper) azureSqlDatabaseToSDPItem(database *armsql.Database,
 				Query:  serverName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,  // Recovery point deletion affects the SQL Database's ability to restore from that specific backup point
-				Out: false, // SQL Database changes don't affect the recovery point itself (it's a point-in-time snapshot)
-			}, // SQL Database depends on Recovery Services recovery points for backup and restore capabilities
 		})
 	}
 
@@ -180,10 +160,6 @@ func (s sqlDatabaseWrapper) azureSqlDatabaseToSDPItem(database *armsql.Database,
 					Query:  shared.CompositeLookupKey(sourceServerName, sourceDatabaseName),
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  false, // Source database changes don't affect the copy (copy is independent after creation)
-					Out: false, // Copy database changes don't affect the source database
-				}, // Database copy is independent from its source after the copy operation completes
 			})
 		}
 	}
@@ -205,10 +181,6 @@ func (s sqlDatabaseWrapper) azureSqlDatabaseToSDPItem(database *armsql.Database,
 					Query:  shared.CompositeLookupKey(serverName, databaseName),
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // Source database changes (especially deletion) affect the database's ability to restore
-					Out: false, // Database changes don't affect the source database itself
-				}, // SQL Database depends on the source SQL database for restore/recovery operations
 			})
 
 		case azureshared.SourceResourceTypeSQLElasticPool:
@@ -220,10 +192,6 @@ func (s sqlDatabaseWrapper) azureSqlDatabaseToSDPItem(database *armsql.Database,
 					Query:  elasticPoolName,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // Source elastic pool changes (especially deletion) affect the database's ability to restore
-					Out: false, // Database changes don't affect the source elastic pool itself
-				}, // SQL Database depends on the source SQL elastic pool for restore/recovery operations
 			})
 
 		case azureshared.SourceResourceTypeUnknown:
@@ -250,10 +218,6 @@ func (s sqlDatabaseWrapper) azureSqlDatabaseToSDPItem(database *armsql.Database,
 					Query:  shared.CompositeLookupKey(failoverServerName, failoverGroupName),
 					Scope:  linkedScope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // Failover group deletion or failover affects the database's availability and replication
-					Out: false, // Database membership in the group doesn't change the failover group configuration
-				}, // SQL Database belongs to a Failover Group for high availability
 			})
 		}
 	}
@@ -272,10 +236,6 @@ func (s sqlDatabaseWrapper) azureSqlDatabaseToSDPItem(database *armsql.Database,
 					Query:  shared.CompositeLookupKey(locationName, ltrServerName, ltrDatabaseName, backupName),
 					Scope:  linkedScope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // LTR backup deletion affects the database's ability to restore from that backup
-					Out: false, // SQL Database changes don't affect the LTR backup itself
-				}, // SQL Database depends on LTR backup for long-term retention restore
 			})
 		}
 	}
@@ -297,10 +257,6 @@ func (s sqlDatabaseWrapper) azureSqlDatabaseToSDPItem(database *armsql.Database,
 					Query:  configName,
 					Scope:  linkedScope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // Maintenance config changes affect when maintenance updates occur for the database
-					Out: false, // Database changes don't affect the maintenance configuration itself
-				}, // SQL Database uses Maintenance Configuration for update scheduling
 			})
 		}
 	}
@@ -323,10 +279,6 @@ func (s sqlDatabaseWrapper) azureSqlDatabaseToSDPItem(database *armsql.Database,
 				Query:  shared.CompositeLookupKey(vaultName, keyName),
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,  // Key Vault Key deletion/rotation affects database encryption
-				Out: false, // Database changes don't affect the Key Vault Key
-			}, // SQL Database uses Key Vault Key for per-database CMK and encryption at rest
 		})
 	}
 	if database.Properties != nil && database.Properties.EncryptionProtector != nil && *database.Properties.EncryptionProtector != "" {
@@ -359,10 +311,6 @@ func (s sqlDatabaseWrapper) azureSqlDatabaseToSDPItem(database *armsql.Database,
 						Query:  identityName,
 						Scope:  linkedScope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,  // User Assigned Identity deletion affects database identity and CMK access
-						Out: false, // Database changes don't affect the User Assigned Identity
-					}, // SQL Database uses User Assigned Identity for Azure AD auth and CMK
 				})
 			}
 		}
@@ -377,10 +325,6 @@ func (s sqlDatabaseWrapper) azureSqlDatabaseToSDPItem(database *armsql.Database,
 			Query:  shared.CompositeLookupKey(serverName, databaseName),
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  false, // Schema changes don't affect the parent database resource
-			Out: true,  // Database deletion removes all schemas
-		}, // Database Schemas are child resources of the SQL Database
 	})
 
 	return sdpItem, nil

@@ -95,11 +95,6 @@ func vpcEndpointOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *
 					Query:  *endpoint.VpcId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// We can't affect the VPC overall
-					In:  true,
-					Out: false,
-				},
 			})
 		}
 
@@ -115,11 +110,6 @@ func vpcEndpointOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *
 					Query:  routeTableID,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// We can't affect the route table overall
-					In:  true,
-					Out: false,
-				},
 			})
 		}
 
@@ -130,11 +120,6 @@ func vpcEndpointOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *
 					Method: sdp.QueryMethod_GET,
 					Query:  subnetID,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// We can't affect the subnet overall
-					In:  true,
-					Out: false,
 				},
 			})
 		}
@@ -147,11 +132,6 @@ func vpcEndpointOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *
 						Method: sdp.QueryMethod_GET,
 						Query:  *group.GroupId,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// We can't affect the security group overall
-						In:  true,
-						Out: false,
 					},
 				})
 			}
@@ -166,11 +146,6 @@ func vpcEndpointOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *
 						Query:  *dnsEntry.DnsName,
 						Scope:  "global",
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// These are tightly linked
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 
@@ -181,11 +156,6 @@ func vpcEndpointOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *
 						Method: sdp.QueryMethod_GET,
 						Query:  *dnsEntry.HostedZoneId,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// We can't affect the hosted zone overall
-						In:  true,
-						Out: false,
 					},
 				})
 			}
@@ -198,11 +168,6 @@ func vpcEndpointOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *
 					Method: sdp.QueryMethod_GET,
 					Query:  networkInterfaceID,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// These are tightly linked
-					In:  true,
-					Out: true,
 				},
 			})
 		}

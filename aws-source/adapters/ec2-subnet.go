@@ -53,12 +53,6 @@ func subnetOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2.D
 					Query:  *subnet.VpcId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changing the VPC would affect the subnet
-					In: true,
-					// Changing the subnet won't affect the VPC
-					Out: false,
-				},
 			})
 		}
 

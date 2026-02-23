@@ -54,12 +54,6 @@ func natGatewayOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *e
 						Query:  *address.NetworkInterfaceId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// The nat gateway and it's interfaces will affect each
-						// other
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 
@@ -71,11 +65,6 @@ func natGatewayOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *e
 						Query:  *address.PrivateIp,
 						Scope:  "global",
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// IPs always link
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 
@@ -86,11 +75,6 @@ func natGatewayOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *e
 						Method: sdp.QueryMethod_GET,
 						Query:  *address.PublicIp,
 						Scope:  "global",
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// IPs always link
-						In:  true,
-						Out: true,
 					},
 				})
 			}
@@ -104,13 +88,6 @@ func natGatewayOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *e
 					Query:  *ng.SubnetId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changing the subnet won't affect the gateway
-					In: false,
-					// Changing the gateway will affect the subnet since this
-					// will be gateway that subnet uses to access the internet
-					Out: true,
-				},
 			})
 		}
 
@@ -121,12 +98,6 @@ func natGatewayOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *e
 					Method: sdp.QueryMethod_GET,
 					Query:  *ng.VpcId,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changing the VPC could affect the gateway
-					In: true,
-					// Changing the gateway won't affect the VPC
-					Out: false,
 				},
 			})
 		}

@@ -158,10 +158,6 @@ func (c computeDiskEncryptionSetWrapper) azureDiskEncryptionSetToSDPItem(diskEnc
 					Query:  vaultName,
 					Scope:  extractedScope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // If Key Vault is deleted/locked down → DES can't access key material (In: true)
-					Out: false, // If DES is deleted/modified → Key Vault remains (Out: false)
-				},
 			})
 		}
 	}
@@ -192,10 +188,6 @@ func (c computeDiskEncryptionSetWrapper) azureDiskEncryptionSetToSDPItem(diskEnc
 								Query:  vaultName,
 								Scope:  extractedScope,
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,  // If Key Vault is deleted/locked down → DES can't access key material (In: true)
-								Out: false, // If DES is deleted/modified → Key Vault remains (Out: false)
-							},
 						})
 					}
 				}
@@ -218,10 +210,6 @@ func (c computeDiskEncryptionSetWrapper) azureDiskEncryptionSetToSDPItem(diskEnc
 								Query:  keyQuery,
 								Scope:  scope, // Limitation: Key Vault URI doesn't contain resource group info
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,  // If Key Vault Key is deleted/modified → DES can't access key material (In: true)
-								Out: false, // If DES is deleted/modified → Key remains (Out: false)
-							},
 						})
 					}
 				}
@@ -234,11 +222,6 @@ func (c computeDiskEncryptionSetWrapper) azureDiskEncryptionSetToSDPItem(diskEnc
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  dnsName,
 							Scope:  "global",
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// DNS names are always linked
-							In:  true,
-							Out: true,
 						},
 					})
 				}
@@ -266,10 +249,6 @@ func (c computeDiskEncryptionSetWrapper) azureDiskEncryptionSetToSDPItem(diskEnc
 						Query:  keyQuery,
 						Scope:  scope, // Limitation: Key Vault URI doesn't contain resource group info
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,  // If Key Vault Key is deleted/modified → DES can't access key material (In: true)
-						Out: false, // If DES is deleted/modified → Key remains (Out: false)
-					},
 				})
 			}
 		}
@@ -283,11 +262,6 @@ func (c computeDiskEncryptionSetWrapper) azureDiskEncryptionSetToSDPItem(diskEnc
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  dnsName,
 					Scope:  "global",
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// DNS names are always linked
-					In:  true,
-					Out: true,
 				},
 			})
 		}
@@ -314,10 +288,6 @@ func (c computeDiskEncryptionSetWrapper) azureDiskEncryptionSetToSDPItem(diskEnc
 					Method: sdp.QueryMethod_GET,
 					Query:  identityName,
 					Scope:  extractedScope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // If identity is deleted/permissions change → DES can't authenticate to Key Vault (In: true)
-					Out: false, // If DES is deleted/modified → identity remains (Out: false)
 				},
 			})
 		}

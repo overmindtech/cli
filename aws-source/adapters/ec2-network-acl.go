@@ -54,12 +54,6 @@ func networkAclOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *e
 						Query:  *assoc.SubnetId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the subnet won't affect the ACL
-						In: false,
-						// Changing the ACL will affect the subnet
-						Out: true,
-					},
 				})
 			}
 		}
@@ -71,12 +65,6 @@ func networkAclOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *e
 					Method: sdp.QueryMethod_GET,
 					Query:  *networkAcl.VpcId,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changing the VPC won't affect the ACL
-					In: false,
-					// Changing the ACL will affect the VPC
-					Out: true,
 				},
 			})
 		}

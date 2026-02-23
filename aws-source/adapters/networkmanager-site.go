@@ -47,10 +47,6 @@ func siteOutputMapper(_ context.Context, _ *networkmanager.Client, scope string,
 						Query:  *s.GlobalNetworkId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					Query: &sdp.Query{
@@ -59,10 +55,6 @@ func siteOutputMapper(_ context.Context, _ *networkmanager.Client, scope string,
 						Query:  idWithGlobalNetwork(*s.GlobalNetworkId, *s.SiteId),
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					Query: &sdp.Query{
@@ -70,10 +62,6 @@ func siteOutputMapper(_ context.Context, _ *networkmanager.Client, scope string,
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  idWithGlobalNetwork(*s.GlobalNetworkId, *s.SiteId),
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
 					},
 				},
 			},

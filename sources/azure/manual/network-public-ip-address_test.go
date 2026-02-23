@@ -159,9 +159,6 @@ func TestNetworkPublicIPAddress(t *testing.T) {
 			if linkedQuery.GetQuery().GetType() == azureshared.NetworkPublicIPAddress.String() &&
 				linkedQuery.GetQuery().GetQuery() == linkedIPName {
 				foundLinkedIP = true
-				if linkedQuery.GetBlastPropagation().GetIn() != true || linkedQuery.GetBlastPropagation().GetOut() != true {
-					t.Error("Expected linked public IP to have In: true, Out: true")
-				}
 				break
 			}
 		}
@@ -195,9 +192,6 @@ func TestNetworkPublicIPAddress(t *testing.T) {
 			if linkedQuery.GetQuery().GetType() == azureshared.NetworkPublicIPAddress.String() &&
 				linkedQuery.GetQuery().GetQuery() == serviceIPName {
 				foundServiceIP = true
-				if linkedQuery.GetBlastPropagation().GetIn() != true || linkedQuery.GetBlastPropagation().GetOut() != false {
-					t.Error("Expected service public IP to have In: true, Out: false")
-				}
 				break
 			}
 		}

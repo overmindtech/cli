@@ -75,12 +75,6 @@ func layerVersionGetFunc(ctx context.Context, client LambdaClient, scope string,
 						Query:  *out.Content.SigningJobArn,
 						Scope:  FormatScope(a.AccountID, a.Region),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Signing jobs can affect layers
-						In: true,
-						// Changing the layer won't affect the signing job
-						Out: false,
-					},
 				})
 			}
 		}
@@ -93,12 +87,6 @@ func layerVersionGetFunc(ctx context.Context, client LambdaClient, scope string,
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *out.Content.SigningProfileVersionArn,
 						Scope:  FormatScope(a.AccountID, a.Region),
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Signing profiles can affect layers
-						In: true,
-						// Changing the layer won't affect the signing profile
-						Out: false,
 					},
 				})
 			}

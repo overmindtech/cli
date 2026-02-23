@@ -104,10 +104,6 @@ func (s computeVirtualMachineRunCommandWrapper) azureVirtualMachineRunCommandToS
 				Query:  virtualMachineName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,  // If VM is deleted/modified → Run Command becomes invalid (In: true)
-				Out: false, // If Run Command is deleted → VM remains functional (Out: false)
-			}, // Run Command is a child resource of VM
 		})
 	}
 
@@ -139,10 +135,6 @@ func (s computeVirtualMachineRunCommandWrapper) azureVirtualMachineRunCommandToS
 					Query:  identityQuery,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // If Managed Identity is deleted/modified → Run Command cannot access blob/script (In: true)
-					Out: false, // If Run Command is deleted → Managed Identity remains (Out: false)
-				}, // Run Command depends on Managed Identity for blob/script access
 			})
 		}
 
@@ -165,10 +157,6 @@ func (s computeVirtualMachineRunCommandWrapper) azureVirtualMachineRunCommandToS
 						Query:  storageAccountName,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,  // If Storage Account is deleted/modified → blob becomes inaccessible (In: true)
-						Out: false, // If Run Command is deleted → Storage Account remains (Out: false)
-					}, // Run Command depends on Storage Account for blob access
 				})
 
 				// Extract container name and link to Blob Container
@@ -184,10 +172,6 @@ func (s computeVirtualMachineRunCommandWrapper) azureVirtualMachineRunCommandToS
 							Query:  shared.CompositeLookupKey(storageAccountName, containerName),
 							Scope:  scope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Blob Container is deleted/modified → blob becomes inaccessible (In: true)
-							Out: false, // If Run Command is deleted → Blob Container remains (Out: false)
-						}, // Run Command depends on Blob Container for blob access
 					})
 				}
 			}
@@ -202,10 +186,6 @@ func (s computeVirtualMachineRunCommandWrapper) azureVirtualMachineRunCommandToS
 						Query:  uri,
 						Scope:  "global",
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true, // If HTTP endpoint is unavailable → Run Command cannot access script/blob (In: true)
-						Out: true, // If Run Command is deleted → HTTP endpoint may still be used by other resources (Out: true)
-					}, // Run Command depends on HTTP endpoint for script/blob access
 				})
 
 				// Link to DNS name (standard library) from URI
@@ -218,10 +198,6 @@ func (s computeVirtualMachineRunCommandWrapper) azureVirtualMachineRunCommandToS
 							Query:  dnsName,
 							Scope:  "global",
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true, // If DNS name is unavailable → Run Command cannot resolve endpoint (In: true)
-							Out: true, // If Run Command is deleted → DNS name may still be used by other resources (Out: true)
-						}, // Run Command depends on DNS name for endpoint resolution
 					})
 				}
 			}

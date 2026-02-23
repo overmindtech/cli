@@ -61,11 +61,6 @@ func apiGatewayIntegrationGetFunc(ctx context.Context, client apiGatewayIntegrat
 			Query:  fmt.Sprintf("%s/%s/%s", *input.RestApiId, *input.ResourceId, *input.HttpMethod),
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// They are tightly coupled
-			In:  true,
-			Out: true,
-		},
 	})
 
 	if output.ConnectionId != nil {
@@ -75,12 +70,6 @@ func apiGatewayIntegrationGetFunc(ctx context.Context, client apiGatewayIntegrat
 				Method: sdp.QueryMethod_GET,
 				Query:  *output.ConnectionId,
 				Scope:  scope,
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// If VPC link goes away, so does the integration
-				In: true,
-				// If integration goes away, VPC link is still there
-				Out: false,
 			},
 		})
 	}

@@ -95,12 +95,6 @@ func taskDefinitionGetFunc(ctx context.Context, client ECSClient, scope string, 
 					Query:  *td.ExecutionRoleArn,
 					Scope:  FormatScope(a.AccountID, a.Region),
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// The role can affect the task definition
-					In: true,
-					// The task definition can't affect the role
-					Out: false,
-				},
 			})
 		}
 	}
@@ -113,12 +107,6 @@ func taskDefinitionGetFunc(ctx context.Context, client ECSClient, scope string, 
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *td.TaskRoleArn,
 					Scope:  FormatScope(a.AccountID, a.Region),
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// The role can affect the task definition
-					In: true,
-					// The task definition can't affect the role
-					Out: false,
 				},
 			})
 		}
@@ -145,12 +133,6 @@ func getSecretLinkedItem(secret types.Secret) *sdp.LinkedItemQuery {
 						Query:  *secret.ValueFrom,
 						Scope:  secretScope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// The secret can affect the task definition
-						In: true,
-						// The task definition can't affect the secret
-						Out: false,
-					},
 				}
 			case "ssm":
 				return &sdp.LinkedItemQuery{
@@ -159,12 +141,6 @@ func getSecretLinkedItem(secret types.Secret) *sdp.LinkedItemQuery {
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *secret.ValueFrom,
 						Scope:  secretScope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// The secret can affect the task definition
-						In: true,
-						// The task definition can't affect the secret
-						Out: false,
 					},
 				}
 			}

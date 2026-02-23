@@ -82,10 +82,6 @@ func tlsInspectionConfigurationGetFunc(ctx context.Context, client networkFirewa
 						Query:  *utic.Properties.CertificateAuthority.CertificateArn,
 						Scope:  FormatScope(a.AccountID, a.Region),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				})
 			}
 		}
@@ -101,10 +97,6 @@ func tlsInspectionConfigurationGetFunc(ctx context.Context, client networkFirewa
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *cert.CertificateArn,
 						Scope:  FormatScope(a.AccountID, a.Region),
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
 					},
 				})
 			}
@@ -124,10 +116,6 @@ func tlsInspectionConfigurationGetFunc(ctx context.Context, client networkFirewa
 						Query:  *config.CertificateAuthorityArn,
 						Scope:  FormatScope(a.AccountID, a.Region),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				})
 			}
 		}
@@ -142,10 +130,6 @@ func tlsInspectionConfigurationGetFunc(ctx context.Context, client networkFirewa
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  *serverCert.ResourceArn,
 							Scope:  FormatScope(a.AccountID, a.Region),
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,
-							Out: false,
 						},
 					})
 				}

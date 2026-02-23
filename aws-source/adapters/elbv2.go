@@ -72,12 +72,6 @@ func ActionToRequests(action types.Action) []*sdp.LinkedItemQuery {
 						Query:  *action.AuthenticateCognitoConfig.UserPoolArn,
 						Scope:  FormatScope(a.AccountID, a.Region),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the user pool could affect the LB
-						In: true,
-						// The LB won't affect the user pool
-						Out: false,
-					},
 				})
 			}
 		}
@@ -92,12 +86,6 @@ func ActionToRequests(action types.Action) []*sdp.LinkedItemQuery {
 					Query:  *action.AuthenticateOidcConfig.AuthorizationEndpoint,
 					Scope:  "global",
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changing the authorization endpoint could affect the LB
-					In: true,
-					// The LB won't affect the authorization endpoint
-					Out: false,
-				},
 			})
 		}
 
@@ -109,12 +97,6 @@ func ActionToRequests(action types.Action) []*sdp.LinkedItemQuery {
 					Query:  *action.AuthenticateOidcConfig.TokenEndpoint,
 					Scope:  "global",
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changing the authorization endpoint could affect the LB
-					In: true,
-					// The LB won't affect the authorization endpoint
-					Out: false,
-				},
 			})
 		}
 
@@ -125,12 +107,6 @@ func ActionToRequests(action types.Action) []*sdp.LinkedItemQuery {
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *action.AuthenticateOidcConfig.UserInfoEndpoint,
 					Scope:  "global",
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changing the authorization endpoint could affect the LB
-					In: true,
-					// The LB won't affect the authorization endpoint
-					Out: false,
 				},
 			})
 		}
@@ -146,12 +122,6 @@ func ActionToRequests(action types.Action) []*sdp.LinkedItemQuery {
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  *tg.TargetGroupArn,
 							Scope:  FormatScope(a.AccountID, a.Region),
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changing the target group could affect the LB
-							In: true,
-							// The LB could also affect the target group
-							Out: true,
 						},
 					})
 				}
@@ -194,11 +164,6 @@ func ActionToRequests(action types.Action) []*sdp.LinkedItemQuery {
 					Query:  u.String(),
 					Scope:  "global",
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// These are closely linked
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 	}
@@ -211,11 +176,6 @@ func ActionToRequests(action types.Action) []*sdp.LinkedItemQuery {
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *action.TargetGroupArn,
 					Scope:  FormatScope(a.AccountID, a.Region),
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// These are closely linked
-					In:  true,
-					Out: true,
 				},
 			})
 		}

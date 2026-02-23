@@ -118,10 +118,6 @@ func firewallGetFunc(ctx context.Context, client networkFirewallClient, scope st
 							Query:  logGroup,
 							Scope:  scope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  false,
-							Out: true,
-						},
 					})
 				}
 			case types.LogDestinationTypeS3:
@@ -136,10 +132,6 @@ func firewallGetFunc(ctx context.Context, client networkFirewallClient, scope st
 							Query:  bucketName,
 							Scope:  scope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  false,
-							Out: true,
-						},
 					})
 				}
 			case types.LogDestinationTypeKinesisDataFirehose:
@@ -153,10 +145,6 @@ func firewallGetFunc(ctx context.Context, client networkFirewallClient, scope st
 							Method: sdp.QueryMethod_GET,
 							Query:  deliveryStream,
 							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  false,
-							Out: true,
 						},
 					})
 				}
@@ -173,10 +161,6 @@ func firewallGetFunc(ctx context.Context, client networkFirewallClient, scope st
 				Query:  *uf.ResourcePolicy,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
-			},
 		})
 	}
 
@@ -189,11 +173,6 @@ func firewallGetFunc(ctx context.Context, client networkFirewallClient, scope st
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *config.FirewallPolicyArn,
 					Scope:  FormatScope(a.AccountID, a.Region),
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Policy will affect the firewall but not the other way around
-					In:  true,
-					Out: false,
 				},
 			})
 		}
@@ -209,11 +188,6 @@ func firewallGetFunc(ctx context.Context, client networkFirewallClient, scope st
 					Query:  *mapping.SubnetId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changes to public subnets could affect the firewall
-					In:  true,
-					Out: false,
-				},
 			})
 		}
 	}
@@ -226,11 +200,6 @@ func firewallGetFunc(ctx context.Context, client networkFirewallClient, scope st
 				Method: sdp.QueryMethod_GET,
 				Query:  *config.VpcId,
 				Scope:  scope,
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Changes to the VPC could affect the firewall
-				In:  true,
-				Out: false,
 			},
 		})
 	}
@@ -247,11 +216,6 @@ func firewallGetFunc(ctx context.Context, client networkFirewallClient, scope st
 					Method: sdp.QueryMethod_GET,
 					Query:  *state.Attachment.SubnetId,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changes to public subnets could affect the firewall
-					In:  true,
-					Out: false,
 				},
 			})
 		}

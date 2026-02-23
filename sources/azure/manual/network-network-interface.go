@@ -115,10 +115,6 @@ func (n networkNetworkInterfaceWrapper) azureNetworkInterfaceToSDPItem(networkIn
 			Query:  *networkInterface.Name,
 			Scope:  n.DefaultScope(),
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  false, // IP configuration changes don't affect the network interface itself
-			Out: true,  // Network interface changes (especially deletion) affect IP configurations
-		}, // IP configurations are child resources of the network interface
 	})
 
 	if networkInterface.Properties != nil && networkInterface.Properties.VirtualMachine != nil {
@@ -132,10 +128,6 @@ func (n networkNetworkInterfaceWrapper) azureNetworkInterfaceToSDPItem(networkIn
 						Query:  vmName,
 						Scope:  n.DefaultScope(),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  false, // VM changes (like deletion) may detach the interface but don't delete it
-						Out: true,  // Network interface changes/deletion directly affect VM network connectivity
-					}, // Network interface provides connectivity to the VM; bidirectional operational dependency
 				})
 			}
 		}
@@ -152,10 +144,6 @@ func (n networkNetworkInterfaceWrapper) azureNetworkInterfaceToSDPItem(networkIn
 						Query:  nsgName,
 						Scope:  n.DefaultScope(),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,  // NSG rule changes affect the network interface's security and traffic flow
-						Out: false, // Network interface changes don't affect the NSG itself
-					}, // NSG controls security rules applied to the network interface
 				})
 			}
 		}
@@ -177,10 +165,6 @@ func (n networkNetworkInterfaceWrapper) azureNetworkInterfaceToSDPItem(networkIn
 					Query:  peName,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true, // Private endpoint changes affect the NIC's role
-					Out: true, // NIC changes affect the private endpoint's connectivity
-				},
 			})
 		}
 	}
@@ -200,10 +184,6 @@ func (n networkNetworkInterfaceWrapper) azureNetworkInterfaceToSDPItem(networkIn
 					Method: sdp.QueryMethod_GET,
 					Query:  plsName,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true, // Private link service changes affect the NIC
-					Out: true, // NIC changes affect the private link service
 				},
 			})
 		}
@@ -225,10 +205,6 @@ func (n networkNetworkInterfaceWrapper) azureNetworkInterfaceToSDPItem(networkIn
 					Query:  dscpName,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // DSCP config changes affect NIC QoS
-					Out: false, // NIC changes don't affect the DSCP configuration resource
-				},
 			})
 		}
 	}
@@ -240,10 +216,6 @@ func (n networkNetworkInterfaceWrapper) azureNetworkInterfaceToSDPItem(networkIn
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  *networkInterface.Name,
 			Scope:  n.DefaultScope(),
-		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  false, // Tap config changes don't affect the NIC itself
-			Out: true,  // NIC changes (e.g. deletion) affect tap configurations
 		},
 	})
 
@@ -271,10 +243,6 @@ func (n networkNetworkInterfaceWrapper) azureNetworkInterfaceToSDPItem(networkIn
 							Query:  shared.CompositeLookupKey(vnetName, subnetName),
 							Scope:  scope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // Subnet changes (e.g. address space) affect the NIC's IP config
-							Out: false, // NIC changes don't affect the subnet resource
-						},
 					})
 				}
 			}
@@ -294,10 +262,6 @@ func (n networkNetworkInterfaceWrapper) azureNetworkInterfaceToSDPItem(networkIn
 							Query:  pipName,
 							Scope:  scope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true, // Public IP changes affect the NIC's connectivity
-							Out: true, // NIC detachment affects the public IP's association
-						},
 					})
 				}
 			}
@@ -311,10 +275,6 @@ func (n networkNetworkInterfaceWrapper) azureNetworkInterfaceToSDPItem(networkIn
 						Method: sdp.QueryMethod_GET,
 						Query:  addr,
 						Scope:  "global",
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
 					},
 				})
 			}
@@ -335,10 +295,6 @@ func (n networkNetworkInterfaceWrapper) azureNetworkInterfaceToSDPItem(networkIn
 									Method: sdp.QueryMethod_GET,
 									Query:  asgName,
 									Scope:  scope,
-								},
-								BlastPropagation: &sdp.BlastPropagation{
-									In:  true,  // ASG rule changes affect the NIC's effective rules
-									Out: false, // NIC changes don't affect the ASG
 								},
 							})
 						}
@@ -363,10 +319,6 @@ func (n networkNetworkInterfaceWrapper) azureNetworkInterfaceToSDPItem(networkIn
 									Query:  shared.CompositeLookupKey(params[0], params[1]),
 									Scope:  scope,
 								},
-								BlastPropagation: &sdp.BlastPropagation{
-									In:  true, // Pool config changes affect which backends receive traffic
-									Out: true, // NIC removal affects the pool's members
-								},
 							})
 						}
 					}
@@ -389,10 +341,6 @@ func (n networkNetworkInterfaceWrapper) azureNetworkInterfaceToSDPItem(networkIn
 									Method: sdp.QueryMethod_GET,
 									Query:  shared.CompositeLookupKey(params[0], params[1]),
 									Scope:  scope,
-								},
-								BlastPropagation: &sdp.BlastPropagation{
-									In:  true, // NAT rule changes affect the NIC
-									Out: true, // NIC removal affects the NAT rule's target
 								},
 							})
 						}
@@ -417,10 +365,6 @@ func (n networkNetworkInterfaceWrapper) azureNetworkInterfaceToSDPItem(networkIn
 									Query:  shared.CompositeLookupKey(params[0], params[1]),
 									Scope:  scope,
 								},
-								BlastPropagation: &sdp.BlastPropagation{
-									In:  true, // App GW pool changes affect backend targets
-									Out: true, // NIC removal affects the pool's members
-								},
 							})
 						}
 					}
@@ -442,10 +386,6 @@ func (n networkNetworkInterfaceWrapper) azureNetworkInterfaceToSDPItem(networkIn
 							Query:  shared.CompositeLookupKey(params[0], params[1]),
 							Scope:  scope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true, // Gateway LB frontend changes affect traffic path
-							Out: true, // NIC changes affect the gateway LB association
-						},
 					})
 				}
 			}
@@ -466,10 +406,6 @@ func (n networkNetworkInterfaceWrapper) azureNetworkInterfaceToSDPItem(networkIn
 									Method: sdp.QueryMethod_GET,
 									Query:  tapName,
 									Scope:  scope,
-								},
-								BlastPropagation: &sdp.BlastPropagation{
-									In:  true, // Tap config changes affect what is mirrored
-									Out: true, // NIC removal affects the tap's sources
 								},
 							})
 						}
@@ -498,10 +434,6 @@ func (n networkNetworkInterfaceWrapper) azureNetworkInterfaceToSDPItem(networkIn
 					Query:  *dns.InternalDNSNameLabel,
 					Scope:  "global",
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 		if dns.InternalFqdn != nil && *dns.InternalFqdn != "" {
@@ -511,10 +443,6 @@ func (n networkNetworkInterfaceWrapper) azureNetworkInterfaceToSDPItem(networkIn
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *dns.InternalFqdn,
 					Scope:  "global",
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: true,
 				},
 			})
 		}

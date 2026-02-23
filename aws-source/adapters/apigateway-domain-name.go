@@ -74,12 +74,6 @@ func domainNameOutputMapper(_, scope string, awsItem *types.DomainName) (*sdp.It
 				Query:  *awsItem.RegionalHostedZoneId,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Changing the hosted zone can affect the domain name
-				In: true,
-				// The domain name won't affect the hosted zone
-				Out: false,
-			},
 		})
 	}
 
@@ -91,12 +85,6 @@ func domainNameOutputMapper(_, scope string, awsItem *types.DomainName) (*sdp.It
 				Method: sdp.QueryMethod_GET,
 				Query:  *awsItem.DistributionHostedZoneId,
 				Scope:  scope,
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Changing the hosted zone can affect the domain name
-				In: true,
-				// The domain name won't affect the hosted zone
-				Out: false,
 			},
 		})
 	}
@@ -110,11 +98,6 @@ func domainNameOutputMapper(_, scope string, awsItem *types.DomainName) (*sdp.It
 					Method: sdp.QueryMethod_GET,
 					Query:  *awsItem.CertificateArn,
 					Scope:  FormatScope(a.AccountID, a.Region),
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// They are tightly linked
-					In:  true,
-					Out: true,
 				},
 			})
 		}
@@ -130,11 +113,6 @@ func domainNameOutputMapper(_, scope string, awsItem *types.DomainName) (*sdp.It
 					Query:  *awsItem.RegionalCertificateArn,
 					Scope:  FormatScope(a.AccountID, a.Region),
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// They are tightly linked
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 	}
@@ -148,11 +126,6 @@ func domainNameOutputMapper(_, scope string, awsItem *types.DomainName) (*sdp.It
 				Query:  *awsItem.RegionalDomainName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// They are tightly linked
-				In:  true,
-				Out: true,
-			},
 		})
 	}
 
@@ -165,11 +138,6 @@ func domainNameOutputMapper(_, scope string, awsItem *types.DomainName) (*sdp.It
 					Method: sdp.QueryMethod_GET,
 					Query:  *awsItem.OwnershipVerificationCertificateArn,
 					Scope:  FormatScope(a.AccountID, a.Region),
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// They are tightly linked
-					In:  true,
-					Out: true,
 				},
 			})
 		}

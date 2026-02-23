@@ -57,10 +57,6 @@ func transitGatewayRouteTableOutputMapper(_ context.Context, _ *ec2.Client, scop
 					Query:  *rt.TransitGatewayId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 
@@ -75,7 +71,6 @@ func transitGatewayRouteTableOutputMapper(_ context.Context, _ *ec2.Client, scop
 						Query:  rtID,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 				})
 			}
 		}

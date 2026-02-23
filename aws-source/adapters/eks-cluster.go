@@ -46,11 +46,6 @@ func clusterGetFunc(ctx context.Context, client EKSClient, scope string, input *
 					Query:  *cluster.Name,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// These are tightly linked
-					In:  true,
-					Out: true,
-				},
 			},
 			{
 				Query: &sdp.Query{
@@ -59,11 +54,6 @@ func clusterGetFunc(ctx context.Context, client EKSClient, scope string, input *
 					Query:  *cluster.Name,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// These are tightly linked
-					In:  true,
-					Out: true,
-				},
 			},
 			{
 				Query: &sdp.Query{
@@ -71,11 +61,6 @@ func clusterGetFunc(ctx context.Context, client EKSClient, scope string, input *
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *cluster.Name,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// These are tightly linked
-					In:  true,
-					Out: true,
 				},
 			},
 		},
@@ -108,12 +93,6 @@ func clusterGetFunc(ctx context.Context, client EKSClient, scope string, input *
 						Query:  *cluster.ConnectorConfig.RoleArn,
 						Scope:  FormatScope(a.AccountID, a.Region),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// The role can affect the cluster
-						In: true,
-						// The cluster can't affect the role
-						Out: false,
-					},
 				})
 			}
 		}
@@ -130,12 +109,6 @@ func clusterGetFunc(ctx context.Context, client EKSClient, scope string, input *
 							Query:  *conf.Provider.KeyArn,
 							Scope:  FormatScope(a.AccountID, a.Region),
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// The key can affect the cluster
-							In: true,
-							// The cluster can't affect the key
-							Out: false,
-						},
 					})
 				}
 			}
@@ -150,11 +123,6 @@ func clusterGetFunc(ctx context.Context, client EKSClient, scope string, input *
 				Query:  *cluster.Endpoint,
 				Scope:  "global",
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// HTTP should be linked bidirectionally
-				In:  true,
-				Out: true,
-			},
 		})
 	}
 
@@ -167,12 +135,6 @@ func clusterGetFunc(ctx context.Context, client EKSClient, scope string, input *
 					Query:  *cluster.ResourcesVpcConfig.ClusterSecurityGroupId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// The SG can affect the cluster
-					In: true,
-					// The cluster can't affect the SG
-					Out: false,
-				},
 			})
 		}
 
@@ -183,12 +145,6 @@ func clusterGetFunc(ctx context.Context, client EKSClient, scope string, input *
 					Method: sdp.QueryMethod_GET,
 					Query:  id,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// The SG can affect the cluster
-					In: true,
-					// The cluster can't affect the SG
-					Out: false,
 				},
 			})
 		}
@@ -201,12 +157,6 @@ func clusterGetFunc(ctx context.Context, client EKSClient, scope string, input *
 					Query:  id,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// The subnet can affect the cluster
-					In: true,
-					// The cluster can't affect the subnet
-					Out: false,
-				},
 			})
 		}
 
@@ -217,12 +167,6 @@ func clusterGetFunc(ctx context.Context, client EKSClient, scope string, input *
 					Method: sdp.QueryMethod_GET,
 					Query:  *cluster.ResourcesVpcConfig.VpcId,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// The VPC can affect the cluster
-					In: true,
-					// The cluster can't affect the VPC
-					Out: false,
 				},
 			})
 		}
@@ -236,12 +180,6 @@ func clusterGetFunc(ctx context.Context, client EKSClient, scope string, input *
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *cluster.RoleArn,
 					Scope:  FormatScope(a.AccountID, a.Region),
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// The role can affect the cluster
-					In: true,
-					// The cluster can't affect the role
-					Out: false,
 				},
 			})
 		}

@@ -138,10 +138,6 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 					Query:  vmName,
 					Scope:  extractedScope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // If VM is deleted/modified → disk becomes detached (In: true)
-					Out: false, // If disk is deleted → VM remains but loses disk (Out: false)
-				},
 			})
 		}
 	}
@@ -163,10 +159,6 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 							Method: sdp.QueryMethod_GET,
 							Query:  vmName,
 							Scope:  extractedScope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If VM is deleted/modified → disk becomes detached (In: true)
-							Out: false, // If disk is deleted → VM remains but loses disk (Out: false)
 						},
 					})
 				}
@@ -192,10 +184,6 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 							Query:  vmName,
 							Scope:  extractedScope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If VM is deleted/modified → disk becomes detached (In: true)
-							Out: false, // If disk is deleted → VM remains but loses disk (Out: false)
-						},
 					})
 				}
 			}
@@ -218,10 +206,6 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 					Query:  diskAccessName,
 					Scope:  extractedScope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // If Disk Access is deleted/modified → disk private endpoint access is affected (In: true)
-					Out: false, // If disk is deleted → Disk Access remains (Out: false)
-				},
 			})
 		}
 	}
@@ -242,10 +226,6 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 					Query:  encryptionSetName,
 					Scope:  extractedScope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // If Disk Encryption Set is deleted/modified → disk encryption is affected (In: true)
-					Out: false, // If disk is deleted → Disk Encryption Set remains (Out: false)
-				},
 			})
 		}
 	}
@@ -265,10 +245,6 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 					Method: sdp.QueryMethod_GET,
 					Query:  encryptionSetName,
 					Scope:  extractedScope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // If Disk Encryption Set is deleted/modified → disk encryption is affected (In: true)
-					Out: false, // If disk is deleted → Disk Encryption Set remains (Out: false)
 				},
 			})
 		}
@@ -298,10 +274,6 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 							Query:  diskName,
 							Scope:  extractedScope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If source disk is deleted/modified → this disk may be affected (In: true)
-							Out: false, // If this disk is deleted → source disk remains (Out: false)
-						},
 					})
 				}
 			} else if strings.Contains(sourceResourceID, "/snapshots/") {
@@ -317,10 +289,6 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 							Method: sdp.QueryMethod_GET,
 							Query:  snapshotName,
 							Scope:  extractedScope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If source snapshot is deleted/modified → this disk may be affected (In: true)
-							Out: false, // If this disk is deleted → source snapshot remains (Out: false)
 						},
 					})
 				}
@@ -342,10 +310,6 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 						Method: sdp.QueryMethod_GET,
 						Query:  storageAccountName,
 						Scope:  extractedScope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,  // If Storage Account is deleted/modified → disk import may fail (In: true)
-						Out: false, // If disk is deleted → Storage Account remains (Out: false)
 					},
 				})
 			}
@@ -369,10 +333,6 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 							Method: sdp.QueryMethod_GET,
 							Query:  imageName,
 							Scope:  extractedScope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Image is deleted/modified → disk created from image may be affected (In: true)
-							Out: false, // If disk is deleted → Image remains (Out: false)
 						},
 					})
 				}
@@ -402,10 +362,6 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 							Query:  shared.CompositeLookupKey(galleryName, imageName, version),
 							Scope:  extractedScope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Gallery Image is deleted/modified → disk created from image may be affected (In: true)
-							Out: false, // If disk is deleted → Gallery Image remains (Out: false)
-						},
 					})
 				}
 			}
@@ -429,10 +385,6 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 							Method: sdp.QueryMethod_GET,
 							Query:  shared.CompositeLookupKey(galleryName, imageName, version),
 							Scope:  extractedScope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Gallery Image is deleted/modified → disk created from image may be affected (In: true)
-							Out: false, // If disk is deleted → Gallery Image remains (Out: false)
 						},
 					})
 				}
@@ -468,10 +420,6 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 								Query:  shared.CompositeLookupKey(communityGalleryName, imageName, version),
 								Scope:  extractedScope,
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,  // If Community Gallery Image is deleted/modified → disk created from image may be affected (In: true)
-								Out: false, // If disk is deleted → Community Gallery Image remains (Out: false)
-							},
 						})
 					}
 				}
@@ -500,10 +448,6 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 						Method: sdp.QueryMethod_GET,
 						Query:  shared.CompositeLookupKey(elasticSanName, volumeGroupName, snapshotName),
 						Scope:  extractedScope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,  // If Elastic SAN snapshot is deleted/modified → disk created from snapshot may be affected (In: true)
-						Out: false, // If disk is deleted → Elastic SAN snapshot remains (Out: false)
 					},
 				})
 			}
@@ -535,10 +479,6 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 							Query:  vaultName,
 							Scope:  extractedScope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Key Vault is deleted/modified → disk encryption key access is affected (In: true)
-							Out: false, // If disk is deleted → Key Vault remains (Out: false)
-						},
 					})
 				}
 			}
@@ -557,10 +497,6 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 							Query:  shared.CompositeLookupKey(vaultName, secretName),
 							Scope:  scope, // Limitation: Key Vault URI doesn't contain resource group info
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Key Vault Secret is deleted/modified → disk encryption key is affected (In: true)
-							Out: false, // If disk is deleted → Key Vault Secret remains (Out: false)
-						},
 					})
 				}
 
@@ -573,11 +509,6 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  dnsName,
 							Scope:  "global",
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// DNS names are always linked
-							In:  true,
-							Out: true,
 						},
 					})
 				}
@@ -598,10 +529,6 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 							Query:  vaultName,
 							Scope:  extractedScope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Key Vault is deleted/modified → key encryption key access is affected (In: true)
-							Out: false, // If disk is deleted → Key Vault remains (Out: false)
-						},
 					})
 				}
 			}
@@ -620,10 +547,6 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 							Query:  shared.CompositeLookupKey(vaultName, keyName),
 							Scope:  scope, // Limitation: Key Vault URI doesn't contain resource group info
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Key Vault Key is deleted/modified → key encryption key is affected (In: true)
-							Out: false, // If disk is deleted → Key Vault Key remains (Out: false)
-						},
 					})
 				}
 
@@ -636,11 +559,6 @@ func (c computeDiskWrapper) azureDiskToSDPItem(disk *armcompute.Disk, scope stri
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  dnsName,
 							Scope:  "global",
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// DNS names are always linked
-							In:  true,
-							Out: true,
 						},
 					})
 				}

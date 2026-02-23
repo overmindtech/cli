@@ -66,12 +66,6 @@ func ReplicationConfigurationOutputMapper(_ context.Context, _ *efs.Client, scop
 						Query:  *destination.FileSystemId,
 						Scope:  FormatScope(accountID, *destination.Region),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changes to the destination shouldn't affect the source
-						In: false,
-						// Changes to this can affect the destination
-						Out: true,
-					},
 				})
 			}
 		}
@@ -106,12 +100,6 @@ func ReplicationConfigurationOutputMapper(_ context.Context, _ *efs.Client, scop
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *replication.OriginalSourceFileSystemArn,
 						Scope:  FormatScope(arn.AccountID, arn.Region),
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the source file system will affect its replication
-						In: true,
-						// Changing replication shouldn't affect the filesystem itself
-						Out: false,
 					},
 				})
 			}

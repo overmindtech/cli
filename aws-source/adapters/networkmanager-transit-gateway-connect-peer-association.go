@@ -41,10 +41,6 @@ func transitGatewayConnectPeerAssociationsOutputMapper(_ context.Context, _ *net
 						Query:  *a.GlobalNetworkId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			},
 		}
@@ -57,10 +53,6 @@ func transitGatewayConnectPeerAssociationsOutputMapper(_ context.Context, _ *net
 					Query:  idWithGlobalNetwork(*a.GlobalNetworkId, *a.DeviceId),
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 
@@ -71,10 +63,6 @@ func transitGatewayConnectPeerAssociationsOutputMapper(_ context.Context, _ *net
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  idWithGlobalNetwork(*a.GlobalNetworkId, *a.LinkId),
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: true,
 				},
 			})
 		}

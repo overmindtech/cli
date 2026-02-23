@@ -88,10 +88,6 @@ func (c computeVirtualMachineExtensionWrapper) azureVirtualMachineExtensionToSDP
 				Query:  virtualMachineName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,  // If VM is deleted → Extension becomes invalid/unusable (In: true)
-				Out: false, // If Extension is deleted → VM remains functional (Out: false)
-			}, // Extension is a child resource of VM
 		})
 	}
 
@@ -115,10 +111,6 @@ func (c computeVirtualMachineExtensionWrapper) azureVirtualMachineExtensionToSDP
 					Query:  vaultName,
 					Scope:  extractedScope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // If Key Vault changes → Extension settings access changes (In: true)
-					Out: false, // If Extension is deleted → Key Vault remains (Out: false)
-				}, // Extension depends on Key Vault for protected settings
 			})
 		}
 	}
@@ -138,11 +130,6 @@ func (c computeVirtualMachineExtensionWrapper) azureVirtualMachineExtensionToSDP
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  dnsName,
 					Scope:  "global",
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// DNS names are always linked
-					In:  true,
-					Out: true,
 				},
 			})
 		}
@@ -166,10 +153,6 @@ func (c computeVirtualMachineExtensionWrapper) azureVirtualMachineExtensionToSDP
 								Query:  dnsName,
 								Scope:  "global",
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true, // If DNS name is unavailable → Extension cannot resolve endpoint (In: true)
-								Out: true, // If Extension is deleted → DNS name may still be used by other resources (Out: true)
-							}, // Extension depends on DNS name for endpoint resolution
 						})
 					}
 				}
@@ -195,10 +178,6 @@ func (c computeVirtualMachineExtensionWrapper) azureVirtualMachineExtensionToSDP
 								Query:  dnsName,
 								Scope:  "global",
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true, // If DNS name is unavailable → Extension cannot resolve endpoint (In: true)
-								Out: true, // If Extension is deleted → DNS name may still be used by other resources (Out: true)
-							}, // Extension depends on DNS name for endpoint resolution
 						})
 					}
 				}

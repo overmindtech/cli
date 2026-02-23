@@ -143,11 +143,6 @@ func (n networkPublicIPAddressWrapper) azurePublicIPAddressToSDPItem(publicIPAdd
 				Query:  *publicIPAddress.Properties.IPAddress,
 				Scope:  "global",
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// IPs are always linked
-				In:  true,
-				Out: true,
-			},
 		})
 	}
 
@@ -159,11 +154,6 @@ func (n networkPublicIPAddressWrapper) azurePublicIPAddressToSDPItem(publicIPAdd
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  *publicIPAddress.Properties.DNSSettings.Fqdn,
 				Scope:  "global",
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// DNS names are always linked
-				In:  true,
-				Out: true,
 			},
 		})
 	}
@@ -189,10 +179,6 @@ func (n networkPublicIPAddressWrapper) azurePublicIPAddressToSDPItem(publicIPAdd
 							Query:  nicName[0],
 							Scope:  linkedScope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // Network interface IP configuration changes affect the public IP address
-							Out: false, // Public IP address changes don't affect the network interface itself
-						}, // Public IP address is associated with the network interface's IP configuration
 					})
 				}
 			}
@@ -217,10 +203,6 @@ func (n networkPublicIPAddressWrapper) azurePublicIPAddressToSDPItem(publicIPAdd
 						Query:  linkedIPName,
 						Scope:  linkedScope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true, // Linked public IP address changes can affect this public IP address
-						Out: true, // This public IP address changes can affect the linked public IP address
-					}, // Linked public IP addresses are tightly coupled and affect each other
 				})
 			}
 		}
@@ -244,10 +226,6 @@ func (n networkPublicIPAddressWrapper) azurePublicIPAddressToSDPItem(publicIPAdd
 						Query:  serviceIPName,
 						Scope:  linkedScope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,  // Service public IP address changes can affect this public IP address
-						Out: false, // This public IP address changes don't affect the service public IP address
-					}, // Service public IP address is the underlying resource for this public IP address
 				})
 			}
 		}
@@ -271,10 +249,6 @@ func (n networkPublicIPAddressWrapper) azurePublicIPAddressToSDPItem(publicIPAdd
 						Query:  prefixName,
 						Scope:  linkedScope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,  // Public IP prefix changes can affect this public IP address
-						Out: false, // This public IP address changes don't affect the public IP prefix
-					}, // Public IP address is allocated from the public IP prefix
 				})
 			}
 		}
@@ -298,10 +272,6 @@ func (n networkPublicIPAddressWrapper) azurePublicIPAddressToSDPItem(publicIPAdd
 						Query:  natGatewayName,
 						Scope:  linkedScope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,  // NAT gateway changes can affect this public IP address
-						Out: false, // This public IP address changes don't affect the NAT gateway
-					}, // Public IP address is associated with the NAT gateway for outbound connectivity
 				})
 			}
 		}
@@ -326,10 +296,6 @@ func (n networkPublicIPAddressWrapper) azurePublicIPAddressToSDPItem(publicIPAdd
 							Query:  ddosPlanName,
 							Scope:  linkedScope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // DDoS protection plan changes can affect this public IP address protection
-							Out: false, // This public IP address changes don't affect the DDoS protection plan
-						}, // Public IP address is protected by the DDoS protection plan
 					})
 				}
 			}
@@ -357,10 +323,6 @@ func (n networkPublicIPAddressWrapper) azurePublicIPAddressToSDPItem(publicIPAdd
 							Query:  lbName[0],
 							Scope:  linkedScope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // Load balancer frontend IP configuration changes affect the public IP address
-							Out: false, // Public IP address changes don't affect the load balancer itself
-						}, // Public IP address is associated with the load balancer's frontend IP configuration
 					})
 				}
 			}

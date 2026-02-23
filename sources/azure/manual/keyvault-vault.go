@@ -163,10 +163,6 @@ func (k keyvaultVaultWrapper) azureKeyVaultToSDPItem(vault *armkeyvault.Vault, s
 								Query:  privateEndpointName,
 								Scope:  scope, // Use the private endpoint's scope, not the vault's scope
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true, // Private endpoint changes (deletion, network configuration) affect the Key Vault's private connectivity
-								Out: true, // Key Vault deletion or configuration changes may affect the private endpoint's connection state
-							}, // Private endpoints are tightly coupled to the Key Vault - changes affect connectivity
 						})
 					}
 				}
@@ -207,10 +203,6 @@ func (k keyvaultVaultWrapper) azureKeyVaultToSDPItem(vault *armkeyvault.Vault, s
 							Query:  query,
 							Scope:  scope, // Use the subnet's scope, not the vault's scope
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // Subnet changes (deletion, network configuration) affect the Key Vault's network accessibility
-							Out: false, // Key Vault changes don't directly affect the subnet configuration
-						}, // Key Vault depends on subnet for network access - subnet changes impact connectivity
 					})
 				}
 			}
@@ -229,11 +221,6 @@ func (k keyvaultVaultWrapper) azureKeyVaultToSDPItem(vault *armkeyvault.Vault, s
 						Query:  *ipRule.Value,
 						Scope:  "global",
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// IPs are always linked - IP rule changes affect Key Vault network accessibility
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 		}
@@ -248,11 +235,6 @@ func (k keyvaultVaultWrapper) azureKeyVaultToSDPItem(vault *armkeyvault.Vault, s
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  vaultURI,
 				Scope:  "global",
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Vault endpoint connectivity affects Key Vault operations; Key Vault changes may affect endpoint
-				In:  true,
-				Out: true,
 			},
 		})
 	}
@@ -283,10 +265,6 @@ func (k keyvaultVaultWrapper) azureKeyVaultToSDPItem(vault *armkeyvault.Vault, s
 						Query:  hsmName,
 						Scope:  scope, // Use the Managed HSM's scope, not the vault's scope
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,  // Managed HSM changes (deletion, configuration) affect the Key Vault's functionality and availability
-						Out: false, // Key Vault changes don't directly affect the Managed HSM itself
-					}, // Key Vault depends on Managed HSM for hardware-backed security - HSM changes impact vault operations
 				})
 			}
 		}

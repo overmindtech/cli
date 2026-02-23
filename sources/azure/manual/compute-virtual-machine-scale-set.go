@@ -150,10 +150,6 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 						Query:  shared.CompositeLookupKey(scaleSetName, *extension.Name),
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  false, // If Extensions are deleted → VMSS remains functional (In: false)
-						Out: true,  // If VMSS is deleted → Extensions become invalid/unusable (Out: true)
-					},
 				})
 			}
 		}
@@ -169,10 +165,6 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  scaleSetName,
 				Scope:  scope,
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  false, // If VM instances are deleted → VMSS remains functional (In: false)
-				Out: true,  // If VMSS is deleted → VM instances become invalid/unusable (Out: true)
 			},
 		})
 	}
@@ -199,10 +191,6 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 								Method: sdp.QueryMethod_GET,
 								Query:  nsgName,
 								Scope:  extractedScope,
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,  // If NSG changes → VMSS network behavior changes (In: true)
-								Out: false, // If VMSS is deleted → NSG remains (Out: false)
 							},
 						})
 					}
@@ -236,10 +224,6 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 											Query:  vnetName,
 											Scope:  extractedScope,
 										},
-										BlastPropagation: &sdp.BlastPropagation{
-											In:  true,  // If Virtual Network changes → VMSS network behavior changes (In: true)
-											Out: false, // If VMSS is deleted → Virtual Network remains (Out: false)
-										},
 									})
 									// Link to Subnet
 									sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -248,10 +232,6 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 											Method: sdp.QueryMethod_GET,
 											Query:  shared.CompositeLookupKey(vnetName, subnetName),
 											Scope:  extractedScope,
-										},
-										BlastPropagation: &sdp.BlastPropagation{
-											In:  true,  // If Subnet changes → VMSS network behavior changes (In: true)
-											Out: false, // If VMSS is deleted → Subnet remains (Out: false)
 										},
 									})
 								}
@@ -276,10 +256,6 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 											Method: sdp.QueryMethod_GET,
 											Query:  publicIPPrefixName,
 											Scope:  extractedScope,
-										},
-										BlastPropagation: &sdp.BlastPropagation{
-											In:  true,  // If Public IP Prefix changes → VMSS public IP allocation changes (In: true)
-											Out: false, // If VMSS is deleted → Public IP Prefix remains (Out: false)
 										},
 									})
 								}
@@ -311,10 +287,6 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 													Query:  lbName,
 													Scope:  extractedScope,
 												},
-												BlastPropagation: &sdp.BlastPropagation{
-													In:  true,  // If Load Balancer changes → VMSS load balancing changes (In: true)
-													Out: false, // If VMSS is deleted → Load Balancer remains (Out: false)
-												},
 											})
 											// Link to Backend Address Pool
 											sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -323,10 +295,6 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 													Method: sdp.QueryMethod_GET,
 													Query:  shared.CompositeLookupKey(lbName, poolName),
 													Scope:  extractedScope,
-												},
-												BlastPropagation: &sdp.BlastPropagation{
-													In:  true, // If Backend Pool changes → VMSS load balancing changes (In: true)
-													Out: true, // If VMSS is deleted → Backend Pool loses members (Out: true)
 												},
 											})
 										}
@@ -360,10 +328,6 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 													Query:  lbName,
 													Scope:  extractedScope,
 												},
-												BlastPropagation: &sdp.BlastPropagation{
-													In:  true,  // If Load Balancer changes → VMSS load balancing changes (In: true)
-													Out: false, // If VMSS is deleted → Load Balancer remains (Out: false)
-												},
 											})
 											// Link to Inbound NAT Pool
 											sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -372,10 +336,6 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 													Method: sdp.QueryMethod_GET,
 													Query:  shared.CompositeLookupKey(lbName, poolName),
 													Scope:  extractedScope,
-												},
-												BlastPropagation: &sdp.BlastPropagation{
-													In:  true, // If NAT Pool changes → VMSS NAT behavior changes (In: true)
-													Out: true, // If VMSS is deleted → NAT Pool loses members (Out: true)
 												},
 											})
 										}
@@ -409,10 +369,6 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 													Query:  agName,
 													Scope:  extractedScope,
 												},
-												BlastPropagation: &sdp.BlastPropagation{
-													In:  true,  // If Application Gateway changes → VMSS routing changes (In: true)
-													Out: false, // If VMSS is deleted → Application Gateway remains (Out: false)
-												},
 											})
 											// Link to Backend Address Pool
 											sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -421,10 +377,6 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 													Method: sdp.QueryMethod_GET,
 													Query:  shared.CompositeLookupKey(agName, poolName),
 													Scope:  extractedScope,
-												},
-												BlastPropagation: &sdp.BlastPropagation{
-													In:  true, // If Backend Pool changes → VMSS routing changes (In: true)
-													Out: true, // If VMSS is deleted → Backend Pool loses members (Out: true)
 												},
 											})
 										}
@@ -450,10 +402,6 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 													Method: sdp.QueryMethod_GET,
 													Query:  asgName,
 													Scope:  extractedScope,
-												},
-												BlastPropagation: &sdp.BlastPropagation{
-													In:  true,  // If ASG changes → VMSS network rules change (In: true)
-													Out: false, // If VMSS is deleted → ASG remains (Out: false)
 												},
 											})
 										}
@@ -495,10 +443,6 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 					Query:  lbName,
 					Scope:  extractedScope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // If Load Balancer changes → VMSS load balancing changes (In: true)
-					Out: false, // If VMSS is deleted → Load Balancer remains (Out: false)
-				},
 			})
 			// Link to Health Probe
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -507,10 +451,6 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 					Method: sdp.QueryMethod_GET,
 					Query:  shared.CompositeLookupKey(lbName, probeName),
 					Scope:  extractedScope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // If Health Probe changes → VMSS health checks change (In: true)
-					Out: false, // If VMSS is deleted → Health Probe remains (Out: false)
 				},
 			})
 		}
@@ -539,10 +479,6 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 						Query:  encryptionSetName,
 						Scope:  extractedScope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,  // If Disk Encryption Set changes → VMSS disk encryption changes (In: true)
-						Out: false, // If VMSS is deleted → Disk Encryption Set remains (Out: false)
-					},
 				})
 			}
 		}
@@ -565,10 +501,6 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 								Method: sdp.QueryMethod_GET,
 								Query:  encryptionSetName,
 								Scope:  extractedScope,
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,  // If Disk Encryption Set changes → VMSS disk encryption changes (In: true)
-								Out: false, // If VMSS is deleted → Disk Encryption Set remains (Out: false)
 							},
 						})
 					}
@@ -603,10 +535,6 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 							Query:  imageName,
 							Scope:  extractedScope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Image changes → VMSS VM configuration changes (In: true)
-							Out: false, // If VMSS is deleted → Image remains (Out: false)
-						},
 					})
 				}
 			}
@@ -635,10 +563,6 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 								Query:  shared.CompositeLookupKey(galleryName, imageName, version),
 								Scope:  extractedScope,
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,  // If Gallery Image changes → VMSS VM configuration changes (In: true)
-								Out: false, // If VMSS is deleted → Gallery Image remains (Out: false)
-							},
 						})
 					}
 				}
@@ -663,10 +587,6 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 								Method: sdp.QueryMethod_GET,
 								Query:  shared.CompositeLookupKey(communityGalleryName, imageName, version),
 								Scope:  scope, // Community galleries are subscription-level
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,  // If Gallery Image changes → VMSS VM configuration changes (In: true)
-								Out: false, // If VMSS is deleted → Gallery Image remains (Out: false)
 							},
 						})
 					}
@@ -703,10 +623,6 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 								Query:  shared.CompositeLookupKey(galleryName, applicationName, version),
 								Scope:  extractedScope,
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,  // If Gallery Application Version changes → VMSS application configuration changes (In: true)
-								Out: false, // If VMSS is deleted → Gallery Application Version remains (Out: false)
-							},
 						})
 					}
 				}
@@ -733,10 +649,6 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 						Query:  ppgName,
 						Scope:  extractedScope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,  // If PPG changes → VMSS placement changes (In: true)
-						Out: false, // If VMSS is deleted → PPG remains (Out: false)
-					},
 				})
 			}
 		}
@@ -757,10 +669,6 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 						Method: sdp.QueryMethod_GET,
 						Query:  hostGroupName,
 						Scope:  extractedScope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,  // If Host Group changes → VMSS host placement changes (In: true)
-						Out: false, // If VMSS is deleted → Host Group remains (Out: false)
 					},
 				})
 			}
@@ -787,10 +695,6 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 					Query:  capacityReservationGroupName,
 					Scope:  extractedScope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // If Capacity Reservation Group changes → VMSS capacity reservation changes (In: true)
-					Out: false, // If VMSS is deleted → Capacity Reservation Group remains (Out: false)
-				},
 			})
 		}
 	}
@@ -813,10 +717,6 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 							Method: sdp.QueryMethod_GET,
 							Query:  identityName,
 							Scope:  extractedScope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Identity changes → VMSS access changes (In: true)
-							Out: false, // If VMSS is deleted → Identity remains (Out: false)
 						},
 					})
 				}
@@ -846,11 +746,6 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 						Query:  dnsName,
 						Scope:  "global",
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// DNS names are always linked
-						In:  true,
-						Out: true,
-					},
 				})
 
 				// Extract account name (everything before the first dot)
@@ -870,10 +765,6 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 							Method: sdp.QueryMethod_GET,
 							Query:  accountName,
 							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Storage Account changes → VMSS boot diagnostics affected (In: true)
-							Out: false, // If VMSS is deleted → Storage Account remains (Out: false)
 						},
 					})
 				}
@@ -902,10 +793,6 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 							Query:  vaultName,
 							Scope:  extractedScope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Key Vault changes → VMSS secrets access changes (In: true)
-							Out: false, // If VMSS is deleted → Key Vault remains (Out: false)
-						},
 					})
 				}
 			}
@@ -933,10 +820,6 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 							Method: sdp.QueryMethod_GET,
 							Query:  vaultName,
 							Scope:  extractedScope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Key Vault changes → VMSS extension settings access changes (In: true)
-							Out: false, // If VMSS is deleted → Key Vault remains (Out: false)
 						},
 					})
 				}

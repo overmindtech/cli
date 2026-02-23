@@ -129,10 +129,6 @@ func (k keyvaultManagedHSMsWrapper) azureManagedHSMToSDPItem(hsm *armkeyvault.Ma
 							Query:  shared.CompositeLookupKey(*hsm.Name, connectionName),
 							Scope:  scope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true, // Connection state changes affect the Managed HSM's private connectivity
-							Out: true, // Managed HSM deletion removes the connection
-						},
 					})
 				}
 			}
@@ -166,10 +162,6 @@ func (k keyvaultManagedHSMsWrapper) azureManagedHSMToSDPItem(hsm *armkeyvault.Ma
 								Method: sdp.QueryMethod_GET,
 								Query:  privateEndpointName,
 								Scope:  peScope, // Use the private endpoint's scope, not the Managed HSM's scope
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true, // Private endpoint changes (deletion, network configuration) affect the Managed HSM's private connectivity
-								Out: true, // Managed HSM deletion or configuration changes may affect the private endpoint's connection state
 							},
 						})
 					}
@@ -211,10 +203,6 @@ func (k keyvaultManagedHSMsWrapper) azureManagedHSMToSDPItem(hsm *armkeyvault.Ma
 							Query:  query,
 							Scope:  scope, // Use the subnet's scope, not the Managed HSM's scope
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // Subnet changes (deletion, network configuration) affect the Managed HSM's network accessibility
-							Out: false, // Managed HSM changes don't directly affect the subnet configuration
-						}, // Managed HSM depends on subnet for network access - subnet changes impact connectivity
 					})
 				}
 			}
@@ -232,11 +220,6 @@ func (k keyvaultManagedHSMsWrapper) azureManagedHSMToSDPItem(hsm *armkeyvault.Ma
 						Method: sdp.QueryMethod_GET,
 						Query:  *ipRule.Value,
 						Scope:  "global",
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// IPs are always linked
-						In:  true,
-						Out: true,
 					},
 				})
 			}
@@ -265,12 +248,6 @@ func (k keyvaultManagedHSMsWrapper) azureManagedHSMToSDPItem(hsm *armkeyvault.Ma
 						Query:  identityName,
 						Scope:  linkedScope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Managed HSM depends on managed identity for authentication and access control
-						// If identity is deleted/modified, Managed HSM operations may fail
-						In:  true,
-						Out: false,
-					},
 				})
 			}
 		}
@@ -290,11 +267,6 @@ func (k keyvaultManagedHSMsWrapper) azureManagedHSMToSDPItem(hsm *armkeyvault.Ma
 					Query:  dnsName,
 					Scope:  "global",
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// DNS names are always linked
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 		// Link to HTTP/HTTPS endpoint (standard library) from HsmURI
@@ -304,11 +276,6 @@ func (k keyvaultManagedHSMsWrapper) azureManagedHSMToSDPItem(hsm *armkeyvault.Ma
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  hsmURI,
 				Scope:  "global",
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Endpoint connectivity affects HSM access and vice versa
-				In:  true,
-				Out: true,
 			},
 		})
 	}

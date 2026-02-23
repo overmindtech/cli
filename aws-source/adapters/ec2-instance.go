@@ -62,12 +62,6 @@ func instanceOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2
 							Query:  *instance.InstanceId,
 							Scope:  scope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// The status and the instance are closely linked and
-							// affect each other
-							In:  true,
-							Out: true,
-						},
 					},
 					{
 						Query: &sdp.Query{
@@ -76,12 +70,6 @@ func instanceOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2
 							Method: sdp.QueryMethod_GET,
 							Query:  *instance.InstanceId,
 							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Metrics inform decisions about the instance
-							In: true,
-							// Instance changes don't affect historical metrics
-							Out: false,
 						},
 					},
 				},
@@ -113,12 +101,6 @@ func instanceOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2
 								Query:  *instance.IamInstanceProfile.Arn,
 								Scope:  FormatScope(arn.AccountID, arn.Region),
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								// Changes to the profile will affect this instance
-								In: true,
-								// We can't affect the profile
-								Out: false,
-							},
 						})
 					}
 				} else if instance.IamInstanceProfile.Id != nil {
@@ -128,12 +110,6 @@ func instanceOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2
 							Method: sdp.QueryMethod_GET,
 							Query:  *instance.IamInstanceProfile.Id,
 							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changes to the profile will affect this instance
-							In: true,
-							// We can't affect the profile
-							Out: false,
 						},
 					})
 				}
@@ -147,12 +123,6 @@ func instanceOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2
 						Query:  *instance.CapacityReservationId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the reservation will affect the instance
-						In: true,
-						// Changing the instance won't affect the reservation
-						Out: false,
-					},
 				})
 			}
 
@@ -164,12 +134,6 @@ func instanceOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2
 							Method: sdp.QueryMethod_GET,
 							Query:  *assoc.ElasticGpuId,
 							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changing the GPU will affect the instance
-							In: true,
-							// Changing the instance won't affect the GPU
-							Out: false,
 						},
 					})
 				}
@@ -184,12 +148,6 @@ func instanceOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2
 								Method: sdp.QueryMethod_SEARCH,
 								Query:  *assoc.ElasticInferenceAcceleratorArn,
 								Scope:  FormatScope(arn.AccountID, arn.Region),
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								// Changing the accelerator will affect the instance
-								In: true,
-								// Changing the instance won't affect the accelerator
-								Out: false,
 							},
 						})
 					}
@@ -206,12 +164,6 @@ func instanceOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2
 								Query:  *license.LicenseConfigurationArn,
 								Scope:  FormatScope(arn.AccountID, arn.Region),
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								// Changing the license will affect the instance
-								In: true,
-								// Changing the instance won't affect the license
-								Out: false,
-							},
 						})
 					}
 				}
@@ -226,12 +178,6 @@ func instanceOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2
 							Query:  *instance.OutpostArn,
 							Scope:  FormatScope(arn.AccountID, arn.Region),
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changing the outpost will affect the instance
-							In: true,
-							// Changing the instance won't affect the outpost
-							Out: false,
-						},
 					})
 				}
 			}
@@ -244,12 +190,6 @@ func instanceOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2
 						Query:  *instance.SpotInstanceRequestId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the spot request will affect the instance
-						In: true,
-						// Changing the instance won't affect the spot request
-						Out: false,
-					},
 				})
 			}
 
@@ -261,12 +201,6 @@ func instanceOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2
 						Query:  *instance.ImageId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the image can't affect the instance once it
-						// has been created
-						In:  false,
-						Out: false,
-					},
 				})
 			}
 
@@ -277,13 +211,6 @@ func instanceOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2
 						Method: sdp.QueryMethod_GET,
 						Query:  *instance.KeyName,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the key pair will affect your ability to
-						// connect to the instance
-						In: true,
-						// Changing the instance won't affect the key pair
-						Out: false,
 					},
 				})
 			}
@@ -297,12 +224,6 @@ func instanceOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2
 							Query:  *instance.Placement.GroupId,
 							Scope:  scope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changing a placement group will affect instances
-							In: true,
-							// Changing an instance won't affect the group
-							Out: false,
-						},
 					})
 				}
 			}
@@ -314,11 +235,6 @@ func instanceOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2
 						Method: sdp.QueryMethod_GET,
 						Query:  *instance.Ipv6Address,
 						Scope:  "global",
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// IPs are always linked
-						In:  true,
-						Out: true,
 					},
 				})
 			}
@@ -334,11 +250,6 @@ func instanceOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2
 								Query:  *ip.Ipv6Address,
 								Scope:  "global",
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								// IPs are always linked
-								In:  true,
-								Out: true,
-							},
 						})
 					}
 				}
@@ -351,11 +262,6 @@ func instanceOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2
 								Method: sdp.QueryMethod_GET,
 								Query:  *ip.PrivateIpAddress,
 								Scope:  "global",
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								// IPs are always linked
-								In:  true,
-								Out: true,
 							},
 						})
 					}
@@ -370,12 +276,6 @@ func instanceOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2
 							Query:  *nic.SubnetId,
 							Scope:  scope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changing the subnet will affect the instance
-							In: true,
-							// Changing the instance won't affect the subnet
-							Out: false,
-						},
 					})
 				}
 
@@ -387,12 +287,6 @@ func instanceOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2
 							Method: sdp.QueryMethod_GET,
 							Query:  *nic.VpcId,
 							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changing the VPC will affect the instance
-							In: true,
-							// Changing the instance won't affect the VPC
-							Out: false,
 						},
 					})
 				}
@@ -406,11 +300,6 @@ func instanceOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2
 						Query:  *instance.PublicDnsName,
 						Scope:  "global",
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// DNS records are always linked
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 
@@ -421,11 +310,6 @@ func instanceOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2
 						Method: sdp.QueryMethod_GET,
 						Query:  *instance.PublicIpAddress,
 						Scope:  "global",
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// IPs are always propagating
-						In:  true,
-						Out: true,
 					},
 				})
 			}
@@ -440,12 +324,6 @@ func instanceOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2
 							Query:  *group.GroupId,
 							Scope:  scope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changing the security group will affect the instance
-							In: true,
-							// Changing the instance won't affect the security group
-							Out: false,
-						},
 					})
 				}
 			}
@@ -458,13 +336,6 @@ func instanceOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2
 							Method: sdp.QueryMethod_GET,
 							Query:  *mapping.Ebs.VolumeId,
 							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changing the volume will affect the instance
-							In: true,
-							// Changing the instance could also affect the
-							// volume since it's writing to it
-							Out: true,
 						},
 					})
 				}

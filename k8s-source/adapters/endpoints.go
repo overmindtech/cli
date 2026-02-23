@@ -27,11 +27,6 @@ func EndpointsExtractor(resource *v1.Endpoints, scope string) ([]*sdp.LinkedItem
 						Query:  address.Hostname,
 						Type:   "dns",
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Always propagate over DNS
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 
@@ -42,12 +37,6 @@ func EndpointsExtractor(resource *v1.Endpoints, scope string) ([]*sdp.LinkedItem
 						Scope:  sd.ClusterName,
 						Method: sdp.QueryMethod_GET,
 						Query:  *address.NodeName,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changes to the node can affect the endpoint
-						In: true,
-						// Changes to the endpoint cannot affect the node
-						Out: false,
 					},
 				})
 			}
@@ -60,20 +49,11 @@ func EndpointsExtractor(resource *v1.Endpoints, scope string) ([]*sdp.LinkedItem
 						Query:  address.IP,
 						Scope:  "global",
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Always propagate over IP
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 
 			if address.TargetRef != nil {
-				queries = append(queries, ObjectReferenceToQuery(address.TargetRef, sd, &sdp.BlastPropagation{
-					// These are tightly coupled
-					In:  true,
-					Out: true,
-				}))
+				queries = append(queries, ObjectReferenceToQuery(address.TargetRef, sd))
 			}
 		}
 	}

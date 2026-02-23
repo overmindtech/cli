@@ -55,12 +55,6 @@ func securityGroupOutputMapper(_ context.Context, _ *ec2.Client, scope string, _
 					Query:  *securityGroup.VpcId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changes to the VPC could affect the security group
-					In: true,
-					// The security group won't affect the VPC though
-					Out: false,
-				},
 			})
 		}
 
@@ -74,13 +68,6 @@ func securityGroupOutputMapper(_ context.Context, _ *ec2.Client, scope string, _
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *securityGroup.GroupId,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Network interfaces don't affect the security group
-					In: false,
-					// Changes to the security group affect network interfaces
-					// (and through them, EC2 instances)
-					Out: true,
 				},
 			})
 		}
@@ -164,11 +151,6 @@ func extractLinkedSecurityGroups(permissions []types.IpPermission, scope string)
 						Method: sdp.QueryMethod_GET,
 						Query:  *idGroup.GroupId,
 						Scope:  FormatScope(relatedAccount, region),
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Linked security groups affect each other
-						In:  true,
-						Out: true,
 					},
 				})
 			}

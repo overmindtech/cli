@@ -116,10 +116,6 @@ func (s documentDBDatabaseAccountsWrapper) azureDocumentDBDatabaseAccountToSDPIt
 				Query:  *account.Name,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true, // Private endpoint connection changes (deletion, status changes) affect the Database Account's network connectivity and accessibility
-				Out: true, // Database Account deletion makes the private endpoint connection invalid, and account configuration changes may affect connection status
-			}, // Private endpoint connections are tightly coupled to the Database Account - changes on either side affect connectivity and validity
 		})
 
 		// Link to Private Endpoint resources
@@ -149,10 +145,6 @@ func (s documentDBDatabaseAccountsWrapper) azureDocumentDBDatabaseAccountToSDPIt
 								Query:  privateEndpointName,
 								Scope:  scope, // Use the private endpoint's scope, not the database account's scope
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true, // Private endpoint changes (deletion, network configuration) affect the Database Account's private connectivity
-								Out: true, // Database Account deletion or configuration changes may affect the private endpoint's connection state
-							}, // Private endpoints are tightly coupled to the Database Account - changes affect connectivity
 						})
 					}
 				}
@@ -193,10 +185,6 @@ func (s documentDBDatabaseAccountsWrapper) azureDocumentDBDatabaseAccountToSDPIt
 							Query:  query,
 							Scope:  scope, // Use the subnet's scope, not the database account's scope
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // Subnet changes (deletion, network configuration) affect the Database Account's network accessibility
-							Out: false, // Database Account changes don't directly affect the subnet configuration
-						}, // Database Account depends on subnet for network access - subnet changes impact connectivity
 					})
 				}
 			}
@@ -224,10 +212,6 @@ func (s documentDBDatabaseAccountsWrapper) azureDocumentDBDatabaseAccountToSDPIt
 					Query:  vaultName,
 					Scope:  scope, // Limitation: Key Vault URI doesn't contain resource group info
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // Key Vault changes (key deletion, rotation, access policy) affect the Database Account's encryption
-					Out: false, // Database Account changes don't directly affect the Key Vault
-				}, // Database Account depends on Key Vault for encryption keys - key changes impact encryption/decryption
 			})
 		}
 	}
@@ -271,10 +255,6 @@ func (s documentDBDatabaseAccountsWrapper) azureDocumentDBDatabaseAccountToSDPIt
 							Query:  resourceGroupName,
 							Scope:  scope, // Use the identity's scope, not the database account's scope
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // Identity changes (deletion, role assignments) affect the Database Account's authentication and authorization
-							Out: false, // Database Account changes don't directly affect the managed identity
-						}, // Database Account depends on managed identity for authentication - identity changes impact access
 					})
 				}
 			}

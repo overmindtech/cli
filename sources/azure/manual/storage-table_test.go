@@ -129,12 +129,6 @@ func TestStorageTables(t *testing.T) {
 			if linkedQuery.GetQuery().GetQuery() != storageAccountName {
 				t.Errorf("Expected linked query %s, got %s", storageAccountName, linkedQuery.GetQuery().GetQuery())
 			}
-			if linkedQuery.GetBlastPropagation().GetIn() != true {
-				t.Error("Expected BlastPropagation.In to be true")
-			}
-			if linkedQuery.GetBlastPropagation().GetOut() != false {
-				t.Error("Expected BlastPropagation.Out to be false")
-			}
 		})
 	})
 

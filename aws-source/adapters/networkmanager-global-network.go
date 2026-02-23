@@ -41,10 +41,6 @@ func globalNetworkOutputMapper(_ context.Context, client *networkmanager.Client,
 						Query:  *gn.GlobalNetworkId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  false,
-						Out: true,
-					},
 				},
 				{
 					Query: &sdp.Query{
@@ -52,10 +48,6 @@ func globalNetworkOutputMapper(_ context.Context, client *networkmanager.Client,
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *gn.GlobalNetworkId,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  false,
-						Out: true,
 					},
 				},
 				{
@@ -65,10 +57,6 @@ func globalNetworkOutputMapper(_ context.Context, client *networkmanager.Client,
 						Query:  *gn.GlobalNetworkId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  false,
-						Out: true,
-					},
 				},
 				{
 					Query: &sdp.Query{
@@ -76,10 +64,6 @@ func globalNetworkOutputMapper(_ context.Context, client *networkmanager.Client,
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *gn.GlobalNetworkId,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  false,
-						Out: true,
 					},
 				},
 				{
@@ -89,10 +73,6 @@ func globalNetworkOutputMapper(_ context.Context, client *networkmanager.Client,
 						Query:  *gn.GlobalNetworkId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  false,
-						Out: true,
-					},
 				},
 				{
 					Query: &sdp.Query{
@@ -100,10 +80,6 @@ func globalNetworkOutputMapper(_ context.Context, client *networkmanager.Client,
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *gn.GlobalNetworkId,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  false,
-						Out: true,
 					},
 				},
 				{
@@ -113,10 +89,6 @@ func globalNetworkOutputMapper(_ context.Context, client *networkmanager.Client,
 						Query:  *gn.GlobalNetworkId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  false,
-						Out: true,
-					},
 				},
 				{
 					Query: &sdp.Query{
@@ -125,10 +97,6 @@ func globalNetworkOutputMapper(_ context.Context, client *networkmanager.Client,
 						Query:  *gn.GlobalNetworkId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  false,
-						Out: true,
-					},
 				},
 				{
 					Query: &sdp.Query{
@@ -136,10 +104,6 @@ func globalNetworkOutputMapper(_ context.Context, client *networkmanager.Client,
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *gn.GlobalNetworkId,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  false,
-						Out: true,
 					},
 				},
 			},
