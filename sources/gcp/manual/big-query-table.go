@@ -57,7 +57,7 @@ func (b BigQueryTableWrapper) PotentialLinks() map[shared.ItemType]bool {
 	)
 }
 
-// TerraformMappings returns the Terraform mappings for the BigQuery dataset wrapper
+// TerraformMappings returns the Terraform mappings for the BigQuery table wrapper
 func (b BigQueryTableWrapper) TerraformMappings() []*sdp.TerraformMapping {
 	return []*sdp.TerraformMapping{
 		{
@@ -67,6 +67,25 @@ func (b BigQueryTableWrapper) TerraformMappings() []*sdp.TerraformMapping {
 			// The framework automatically intercepts queries starting with "projects/" and converts
 			// them to GET operations by extracting the last N path parameters (based on GetLookups count).
 			TerraformQueryMap: "google_bigquery_table.id",
+		},
+		// IAM resources for BigQuery Tables. These are Terraform-only constructs
+		// (no standalone GCP API resource exists). We use the dataset_id attribute
+		// because table_id is a bare name that the SEARCH handler would misinterpret
+		// as a dataset ID. Using dataset_id lists all tables in the affected dataset,
+		// providing dataset-level blast radius for table IAM changes.
+		//
+		// Reference: https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/bigquery_table_iam
+		{
+			TerraformMethod:   sdp.QueryMethod_SEARCH,
+			TerraformQueryMap: "google_bigquery_table_iam_binding.dataset_id",
+		},
+		{
+			TerraformMethod:   sdp.QueryMethod_SEARCH,
+			TerraformQueryMap: "google_bigquery_table_iam_member.dataset_id",
+		},
+		{
+			TerraformMethod:   sdp.QueryMethod_SEARCH,
+			TerraformQueryMap: "google_bigquery_table_iam_policy.dataset_id",
 		},
 	}
 }

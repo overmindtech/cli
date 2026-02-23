@@ -46,6 +46,26 @@ var _ = registerableAdapter{
 				TerraformMethod:   sdp.QueryMethod_SEARCH,
 				TerraformQueryMap: "google_bigtable_table.id",
 			},
+			// IAM resources for Bigtable Tables. These are Terraform-only constructs
+			// (no standalone GCP API resource exists). We use the instance_name
+			// attribute because the table attribute is a bare name that the SEARCH
+			// handler would misinterpret as an instance name. Using instance_name
+			// lists all tables in the affected instance, providing instance-level
+			// blast radius for table IAM changes.
+			//
+			// Reference: https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/bigtable_table_iam
+			{
+				TerraformMethod:   sdp.QueryMethod_SEARCH,
+				TerraformQueryMap: "google_bigtable_table_iam_binding.instance_name",
+			},
+			{
+				TerraformMethod:   sdp.QueryMethod_SEARCH,
+				TerraformQueryMap: "google_bigtable_table_iam_member.instance_name",
+			},
+			{
+				TerraformMethod:   sdp.QueryMethod_SEARCH,
+				TerraformQueryMap: "google_bigtable_table_iam_policy.instance_name",
+			},
 		},
 	},
 }.Register()

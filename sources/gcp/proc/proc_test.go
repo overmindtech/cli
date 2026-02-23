@@ -829,6 +829,96 @@ func TestCriticalTerraformMappingsRegistered(t *testing.T) {
 			expectedMethod: sdp.QueryMethod_GET,
 			reason:         "IAM policy on topic — resolves to parent topic for blast radius",
 		},
+		// BigQuery Dataset IAM
+		{
+			terraformType:  "google_bigquery_dataset_iam_binding",
+			expectedType:   gcpshared.BigQueryDataset.String(),
+			expectedField:  "dataset_id",
+			expectedMethod: sdp.QueryMethod_GET,
+			reason:         "IAM binding on dataset — resolves to parent dataset for blast radius",
+		},
+		{
+			terraformType:  "google_bigquery_dataset_iam_member",
+			expectedType:   gcpshared.BigQueryDataset.String(),
+			expectedField:  "dataset_id",
+			expectedMethod: sdp.QueryMethod_GET,
+			reason:         "IAM member on dataset — resolves to parent dataset for blast radius",
+		},
+		{
+			terraformType:  "google_bigquery_dataset_iam_policy",
+			expectedType:   gcpshared.BigQueryDataset.String(),
+			expectedField:  "dataset_id",
+			expectedMethod: sdp.QueryMethod_GET,
+			reason:         "IAM policy on dataset — resolves to parent dataset for blast radius",
+		},
+		// BigQuery Table IAM — resolves via dataset_id (bare table_id would be
+		// misinterpreted as a dataset ID by the SEARCH handler)
+		{
+			terraformType:  "google_bigquery_table_iam_binding",
+			expectedType:   gcpshared.BigQueryTable.String(),
+			expectedField:  "dataset_id",
+			expectedMethod: sdp.QueryMethod_SEARCH,
+			reason:         "IAM binding on table — resolves via dataset_id to list tables in affected dataset",
+		},
+		{
+			terraformType:  "google_bigquery_table_iam_member",
+			expectedType:   gcpshared.BigQueryTable.String(),
+			expectedField:  "dataset_id",
+			expectedMethod: sdp.QueryMethod_SEARCH,
+			reason:         "IAM member on table — resolves via dataset_id to list tables in affected dataset",
+		},
+		{
+			terraformType:  "google_bigquery_table_iam_policy",
+			expectedType:   gcpshared.BigQueryTable.String(),
+			expectedField:  "dataset_id",
+			expectedMethod: sdp.QueryMethod_SEARCH,
+			reason:         "IAM policy on table — resolves via dataset_id to list tables in affected dataset",
+		},
+		// Bigtable Instance IAM
+		{
+			terraformType:  "google_bigtable_instance_iam_binding",
+			expectedType:   gcpshared.BigTableAdminInstance.String(),
+			expectedField:  "instance",
+			expectedMethod: sdp.QueryMethod_GET,
+			reason:         "IAM binding on instance — resolves to parent instance for blast radius",
+		},
+		{
+			terraformType:  "google_bigtable_instance_iam_member",
+			expectedType:   gcpshared.BigTableAdminInstance.String(),
+			expectedField:  "instance",
+			expectedMethod: sdp.QueryMethod_GET,
+			reason:         "IAM member on instance — resolves to parent instance for blast radius",
+		},
+		{
+			terraformType:  "google_bigtable_instance_iam_policy",
+			expectedType:   gcpshared.BigTableAdminInstance.String(),
+			expectedField:  "instance",
+			expectedMethod: sdp.QueryMethod_GET,
+			reason:         "IAM policy on instance — resolves to parent instance for blast radius",
+		},
+		// Bigtable Table IAM — resolves via instance_name (the table attribute is
+		// a bare name that the SEARCH handler would misinterpret as an instance name)
+		{
+			terraformType:  "google_bigtable_table_iam_binding",
+			expectedType:   gcpshared.BigTableAdminTable.String(),
+			expectedField:  "instance_name",
+			expectedMethod: sdp.QueryMethod_SEARCH,
+			reason:         "IAM binding on table — resolves via instance_name to list tables in affected instance",
+		},
+		{
+			terraformType:  "google_bigtable_table_iam_member",
+			expectedType:   gcpshared.BigTableAdminTable.String(),
+			expectedField:  "instance_name",
+			expectedMethod: sdp.QueryMethod_SEARCH,
+			reason:         "IAM member on table — resolves via instance_name to list tables in affected instance",
+		},
+		{
+			terraformType:  "google_bigtable_table_iam_policy",
+			expectedType:   gcpshared.BigTableAdminTable.String(),
+			expectedField:  "instance_name",
+			expectedMethod: sdp.QueryMethod_SEARCH,
+			reason:         "IAM policy on table — resolves via instance_name to list tables in affected instance",
+		},
 	}
 
 	for _, tc := range criticalMappings {
