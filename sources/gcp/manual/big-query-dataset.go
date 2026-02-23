@@ -62,6 +62,23 @@ func (b BigQueryDatasetWrapper) TerraformMappings() []*sdp.TerraformMapping {
 			TerraformMethod:   sdp.QueryMethod_GET,
 			TerraformQueryMap: "google_bigquery_dataset.dataset_id",
 		},
+		// IAM resources for BigQuery Datasets. These are Terraform-only constructs
+		// (no standalone GCP API resource exists). When an IAM binding/member/policy
+		// changes, we resolve it to the parent dataset for blast radius analysis.
+		//
+		// Reference: https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/bigquery_dataset_iam
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "google_bigquery_dataset_iam_binding.dataset_id",
+		},
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "google_bigquery_dataset_iam_member.dataset_id",
+		},
+		{
+			TerraformMethod:   sdp.QueryMethod_GET,
+			TerraformQueryMap: "google_bigquery_dataset_iam_policy.dataset_id",
+		},
 	}
 }
 

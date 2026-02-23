@@ -37,6 +37,23 @@ var _ = registerableAdapter{
 				TerraformMethod:   sdp.QueryMethod_GET,
 				TerraformQueryMap: "google_bigtable_instance.name",
 			},
+			// IAM resources for Bigtable Instances. These are Terraform-only constructs
+			// (no standalone GCP API resource exists). When an IAM binding/member/policy
+			// changes, we resolve it to the parent instance for blast radius analysis.
+			//
+			// Reference: https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/bigtable_instance_iam
+			{
+				TerraformMethod:   sdp.QueryMethod_GET,
+				TerraformQueryMap: "google_bigtable_instance_iam_binding.instance",
+			},
+			{
+				TerraformMethod:   sdp.QueryMethod_GET,
+				TerraformQueryMap: "google_bigtable_instance_iam_member.instance",
+			},
+			{
+				TerraformMethod:   sdp.QueryMethod_GET,
+				TerraformQueryMap: "google_bigtable_instance_iam_policy.instance",
+			},
 		},
 	},
 }.Register()

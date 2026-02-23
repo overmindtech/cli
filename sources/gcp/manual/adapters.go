@@ -295,6 +295,7 @@ func Adapters(ctx context.Context, projectLocations, regionLocations, zoneLocati
 			sources.WrapperToAdapter(NewCloudKMSCryptoKey(kmsLoader, projectLocations), cache),
 			sources.WrapperToAdapter(NewCloudKMSCryptoKeyVersion(kmsLoader, projectLocations), cache),
 			sources.WrapperToAdapter(NewBigQueryDataset(shared.NewBigQueryDatasetClient(bigQueryDatasetCli), projectLocations), cache),
+			sources.WrapperToAdapter(NewBigQueryTable(shared.NewBigQueryTableClient(bigQueryDatasetCli), projectLocations), cache),
 			sources.WrapperToAdapter(NewLoggingSink(shared.NewLoggingConfigClient(loggingConfigCli), projectLocations), cache),
 			sources.WrapperToAdapter(NewBigQueryRoutine(shared.NewBigQueryRoutineClient(bigQueryDatasetCli), projectLocations), cache),
 			sources.WrapperToAdapter(NewStorageBucketIAMPolicy(shared.NewStorageBucketIAMPolicyGetter(storageCli), projectLocations), cache),
