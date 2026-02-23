@@ -259,35 +259,15 @@ func TestNetworkRouteTableIntegration(t *testing.T) {
 					t.Error("Linked item query has empty Scope")
 				}
 
-				// Verify blast propagation is set
-				bp := liq.GetBlastPropagation()
-				if bp == nil {
-					t.Error("Linked item query has nil BlastPropagation")
-				} else {
-					// Blast propagation should have In and Out set (even if false)
-					_ = bp.GetIn()
-					_ = bp.GetOut()
-				}
-
-				log.Printf("Verified linked item query: Type=%s, Method=%s, Query=%s, Scope=%s, In=%v, Out=%v",
-					query.GetType(), query.GetMethod(), query.GetQuery(), query.GetScope(),
-					bp.GetIn(), bp.GetOut())
+				log.Printf("Verified linked item query: Type=%s, Method=%s, Query=%s, Scope=%s",
+					query.GetType(), query.GetMethod(), query.GetQuery(), query.GetScope())
 			}
 
 			// Verify that routes are linked (we created one named integrationTestRouteName)
 			var hasRouteLink bool
 			for _, liq := range linkedQueries {
 				if liq.GetQuery().GetType() == azureshared.NetworkRoute.String() {
-					hasRouteLink = true
-					// Verify blast propagation for routes
-					bp := liq.GetBlastPropagation()
-					if bp.GetIn() != true {
-						t.Error("Expected route blast propagation In=true, got false")
-					}
-					if bp.GetOut() != false {
-						t.Error("Expected route blast propagation Out=false, got true")
-					}
-					// Verify the query contains the route table name and route name
+					hasRouteLink = true // Verify the query contains the route table name and route name
 					query := liq.GetQuery().GetQuery()
 					if query == "" {
 						t.Error("Expected route query to be non-empty")

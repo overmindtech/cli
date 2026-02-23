@@ -271,11 +271,6 @@ func TestComputeSnapshotIntegration(t *testing.T) {
 					t.Error("Linked item query has empty Scope")
 				}
 
-				bp := liq.GetBlastPropagation()
-				if bp == nil {
-					t.Error("Linked item query has nil BlastPropagation")
-				}
-
 				if query.GetType() == azureshared.ComputeDisk.String() {
 					hasDiskLink = true
 					if query.GetMethod() != sdp.QueryMethod_GET {
@@ -283,14 +278,6 @@ func TestComputeSnapshotIntegration(t *testing.T) {
 					}
 					if query.GetQuery() != integrationTestDiskForSnapName {
 						t.Errorf("Expected disk link query to be %s, got %s", integrationTestDiskForSnapName, query.GetQuery())
-					}
-					if bp != nil {
-						if bp.GetIn() != true {
-							t.Error("Expected disk blast propagation In=true, got false")
-						}
-						if bp.GetOut() != false {
-							t.Error("Expected disk blast propagation Out=false, got true")
-						}
 					}
 				}
 
@@ -344,7 +331,7 @@ func createSnapshot(ctx context.Context, client *armcompute.SnapshotsClient, res
 		Location: ptr.To(location),
 		Properties: &armcompute.SnapshotProperties{
 			CreationData: &armcompute.CreationData{
-				CreateOption:    ptr.To(armcompute.DiskCreateOptionCopy),
+				CreateOption:     ptr.To(armcompute.DiskCreateOptionCopy),
 				SourceResourceID: ptr.To(sourceDiskID),
 			},
 		},

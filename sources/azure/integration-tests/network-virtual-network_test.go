@@ -185,12 +185,6 @@ func TestNetworkVirtualNetworkIntegration(t *testing.T) {
 					if liq.GetQuery().GetQuery() != integrationTestVNetName {
 						t.Errorf("Expected subnet link query to be %s, got %s", integrationTestVNetName, liq.GetQuery().GetQuery())
 					}
-					if liq.GetBlastPropagation().GetIn() != false {
-						t.Error("Expected subnet blast propagation In=false, got true")
-					}
-					if liq.GetBlastPropagation().GetOut() != true {
-						t.Error("Expected subnet blast propagation Out=true, got false")
-					}
 					break
 				}
 			}
@@ -208,12 +202,6 @@ func TestNetworkVirtualNetworkIntegration(t *testing.T) {
 					}
 					if liq.GetQuery().GetQuery() != integrationTestVNetName {
 						t.Errorf("Expected peering link query to be %s, got %s", integrationTestVNetName, liq.GetQuery().GetQuery())
-					}
-					if liq.GetBlastPropagation().GetIn() != false {
-						t.Error("Expected peering blast propagation In=false, got true")
-					}
-					if liq.GetBlastPropagation().GetOut() != true {
-						t.Error("Expected peering blast propagation Out=true, got false")
 					}
 					break
 				}

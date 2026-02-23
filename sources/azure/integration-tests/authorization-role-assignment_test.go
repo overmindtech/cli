@@ -272,12 +272,6 @@ func TestAuthorizationRoleAssignmentIntegration(t *testing.T) {
 					if linkedQuery.GetQuery().GetScope() != subscriptionID {
 						t.Errorf("Expected role definition link scope to be subscription ID %s, got %s", subscriptionID, linkedQuery.GetQuery().GetScope())
 					}
-					if linkedQuery.GetBlastPropagation().GetIn() != true {
-						t.Error("Expected role definition link BlastPropagation.In to be true")
-					}
-					if linkedQuery.GetBlastPropagation().GetOut() != false {
-						t.Error("Expected role definition link BlastPropagation.Out to be false")
-					}
 					break
 				}
 			}

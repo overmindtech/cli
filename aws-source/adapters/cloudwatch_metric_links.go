@@ -24,14 +24,6 @@ func SuggestedQuery(namespace string, scope string, dimensions []types.Dimension
 	var query *sdp.Query
 	var err error
 
-	bp := &sdp.BlastPropagation{
-		// These links are the metrics that feed the alarms. If the thing that
-		// we're measuring changes, we definitely want the alarm to be in the
-		// blast radius. But an alarm on its own doesn't affect these things
-		In:  false,
-		Out: true,
-	}
-
 	accountID, _, err := ParseScope(scope)
 
 	if err != nil {
@@ -244,7 +236,6 @@ func SuggestedQuery(namespace string, scope string, dimensions []types.Dimension
 
 	return &sdp.LinkedItemQuery{
 		Query:            query,
-		BlastPropagation: bp,
 	}, err
 }
 

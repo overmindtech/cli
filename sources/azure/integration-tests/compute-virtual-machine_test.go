@@ -239,25 +239,11 @@ func TestComputeVirtualMachineIntegration(t *testing.T) {
 					if liq.GetQuery().GetQuery() != integrationTestVMName {
 						t.Errorf("Expected run command link query to be %s, got %s", integrationTestVMName, liq.GetQuery().GetQuery())
 					}
-					// Verify blast propagation (In: false, Out: true)
-					if liq.GetBlastPropagation().GetIn() != false {
-						t.Error("Expected run command blast propagation In=false, got true")
-					}
-					if liq.GetBlastPropagation().GetOut() != true {
-						t.Error("Expected run command blast propagation Out=true, got false")
-					}
 				case azureshared.ComputeVirtualMachineExtension.String():
 					// Extensions may or may not be present depending on VM setup
 					// Verify extension link properties if present
 					if liq.GetQuery().GetMethod() != sdp.QueryMethod_GET {
 						t.Errorf("Expected extension link method to be GET, got %s", liq.GetQuery().GetMethod())
-					}
-					// Verify blast propagation (In: false, Out: true)
-					if liq.GetBlastPropagation().GetIn() != false {
-						t.Error("Expected extension blast propagation In=false, got true")
-					}
-					if liq.GetBlastPropagation().GetOut() != true {
-						t.Error("Expected extension blast propagation Out=true, got false")
 					}
 				}
 			}

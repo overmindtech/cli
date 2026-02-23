@@ -274,32 +274,13 @@ func TestComputeImageIntegration(t *testing.T) {
 					t.Error("Linked item query has empty Scope")
 				}
 
-				// Verify blast propagation is set
-				bp := liq.GetBlastPropagation()
-				if bp == nil {
-					t.Error("Linked item query has nil BlastPropagation")
-					continue
-				}
-
-				// Blast propagation should have In and Out set (even if false)
-				_ = bp.GetIn()
-				_ = bp.GetOut()
-
 				// Check if this is a link to the source disk
 				if query.GetType() == azureshared.ComputeDisk.String() && query.GetQuery() == integrationTestImageDiskName {
 					foundDiskLink = true
-					// Verify blast propagation for disk link
-					if !bp.GetIn() {
-						t.Error("Expected In=true for disk link (if source disk is deleted/modified, image becomes invalid)")
-					}
-					if bp.GetOut() {
-						t.Error("Expected Out=false for disk link (if image is deleted, source disk remains)")
-					}
 				}
 
-				log.Printf("Verified linked item query: Type=%s, Method=%s, Query=%s, Scope=%s, In=%v, Out=%v",
-					query.GetType(), query.GetMethod(), query.GetQuery(), query.GetScope(),
-					bp.GetIn(), bp.GetOut())
+				log.Printf("Verified linked item query: Type=%s, Method=%s, Query=%s, Scope=%s",
+					query.GetType(), query.GetMethod(), query.GetQuery(), query.GetScope())
 			}
 
 			// Verify we found the expected disk link

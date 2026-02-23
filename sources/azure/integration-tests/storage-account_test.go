@@ -200,18 +200,6 @@ func TestStorageAccountIntegration(t *testing.T) {
 					if liq.GetQuery().GetMethod() != sdp.QueryMethod_SEARCH {
 						t.Errorf("Expected linked query method to be SEARCH, got %s", liq.GetQuery().GetMethod())
 					}
-
-					// Verify blast propagation (parent to child: In=false, Out=true)
-					if liq.GetBlastPropagation() == nil {
-						t.Errorf("Expected blast propagation to be set for linked type %s", linkedType)
-					} else {
-						if liq.GetBlastPropagation().GetIn() != false {
-							t.Errorf("Expected blast propagation In=false for linked type %s, got true", linkedType)
-						}
-						if liq.GetBlastPropagation().GetOut() != true {
-							t.Errorf("Expected blast propagation Out=true for linked type %s, got false", linkedType)
-						}
-					}
 				}
 			}
 

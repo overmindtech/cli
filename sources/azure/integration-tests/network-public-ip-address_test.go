@@ -250,18 +250,6 @@ func TestNetworkPublicIPAddressIntegration(t *testing.T) {
 					if liq.GetQuery().GetScope() != scope {
 						t.Errorf("Expected linked query scope %s, got %s", scope, liq.GetQuery().GetScope())
 					}
-					// Verify blast propagation
-					bp := liq.GetBlastPropagation()
-					if bp == nil {
-						t.Error("Expected BlastPropagation to be set for network interface link")
-					} else {
-						if !bp.GetIn() {
-							t.Error("Expected BlastPropagation.In to be true for network interface link")
-						}
-						if bp.GetOut() {
-							t.Error("Expected BlastPropagation.Out to be false for network interface link")
-						}
-					}
 					break
 				}
 			}

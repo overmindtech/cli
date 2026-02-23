@@ -269,49 +269,14 @@ func TestComputeVirtualMachineRunCommandIntegration(t *testing.T) {
 					if liq.GetQuery().GetQuery() != integrationTestRunCommandVMName {
 						t.Errorf("Expected VM link query to be %s, got %s", integrationTestRunCommandVMName, liq.GetQuery().GetQuery())
 					}
-					// Verify blast propagation (In: true, Out: false)
-					if liq.GetBlastPropagation().GetIn() != true {
-						t.Error("Expected VM blast propagation In=true, got false")
-					}
-					if liq.GetBlastPropagation().GetOut() != false {
-						t.Error("Expected VM blast propagation Out=false, got true")
-					}
 				case azureshared.StorageAccount.String():
 					// Storage account links may be present if outputBlobUri, errorBlobUri, or scriptUri are set
-					// Verify blast propagation (In: true, Out: false)
-					if liq.GetBlastPropagation().GetIn() != true {
-						t.Error("Expected Storage Account blast propagation In=true, got false")
-					}
-					if liq.GetBlastPropagation().GetOut() != false {
-						t.Error("Expected Storage Account blast propagation Out=false, got true")
-					}
 				case azureshared.StorageBlobContainer.String():
 					// Blob container links may be present if outputBlobUri, errorBlobUri, or scriptUri are set
-					// Verify blast propagation (In: true, Out: false)
-					if liq.GetBlastPropagation().GetIn() != true {
-						t.Error("Expected Blob Container blast propagation In=true, got false")
-					}
-					if liq.GetBlastPropagation().GetOut() != false {
-						t.Error("Expected Blob Container blast propagation Out=false, got true")
-					}
 				case stdlib.NetworkHTTP.String():
 					// HTTP links may be present if scriptUri is HTTP/HTTPS
-					// Verify blast propagation (In: true, Out: true)
-					if liq.GetBlastPropagation().GetIn() != true {
-						t.Error("Expected HTTP blast propagation In=true, got false")
-					}
-					if liq.GetBlastPropagation().GetOut() != true {
-						t.Error("Expected HTTP blast propagation Out=true, got false")
-					}
 				case stdlib.NetworkDNS.String():
 					// DNS links may be present if scriptUri contains a DNS name
-					// Verify blast propagation (In: true, Out: true)
-					if liq.GetBlastPropagation().GetIn() != true {
-						t.Error("Expected DNS blast propagation In=true, got false")
-					}
-					if liq.GetBlastPropagation().GetOut() != true {
-						t.Error("Expected DNS blast propagation Out=true, got false")
-					}
 				}
 			}
 
