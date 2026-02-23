@@ -148,6 +148,8 @@ const (
 	HypothesisStatus_INVESTIGATED_HYPOTHESIS_STATUS_PROVEN HypothesisStatus = 3
 	// The hypothesis has been disproven, no risk has been found
 	HypothesisStatus_INVESTIGATED_HYPOTHESIS_STATUS_DISPROVEN HypothesisStatus = 4
+	// The hypothesis was skipped and not investigated
+	HypothesisStatus_INVESTIGATED_HYPOTHESIS_STATUS_SKIPPED HypothesisStatus = 5
 )
 
 // Enum value maps for HypothesisStatus.
@@ -158,6 +160,7 @@ var (
 		2: "INVESTIGATED_HYPOTHESIS_STATUS_INVESTIGATING",
 		3: "INVESTIGATED_HYPOTHESIS_STATUS_PROVEN",
 		4: "INVESTIGATED_HYPOTHESIS_STATUS_DISPROVEN",
+		5: "INVESTIGATED_HYPOTHESIS_STATUS_SKIPPED",
 	}
 	HypothesisStatus_value = map[string]int32{
 		"INVESTIGATED_HYPOTHESIS_STATUS_UNSPECIFIED":   0,
@@ -165,6 +168,7 @@ var (
 		"INVESTIGATED_HYPOTHESIS_STATUS_INVESTIGATING": 2,
 		"INVESTIGATED_HYPOTHESIS_STATUS_PROVEN":        3,
 		"INVESTIGATED_HYPOTHESIS_STATUS_DISPROVEN":     4,
+		"INVESTIGATED_HYPOTHESIS_STATUS_SKIPPED":       5,
 	}
 )
 
@@ -2536,7 +2540,9 @@ type InvestigateHypothesesTimelineEntry struct {
 	// Number of hypotheses that are still being investigated
 	NumInvestigating uint32 `protobuf:"varint,3,opt,name=numInvestigating,proto3" json:"numInvestigating,omitempty"`
 	// The current state of the hypotheses under investigation
-	Hypotheses    []*HypothesisSummary `protobuf:"bytes,4,rep,name=hypotheses,proto3" json:"hypotheses,omitempty"`
+	Hypotheses []*HypothesisSummary `protobuf:"bytes,4,rep,name=hypotheses,proto3" json:"hypotheses,omitempty"`
+	// Number of hypotheses that were skipped
+	NumSkipped    uint32 `protobuf:"varint,5,opt,name=numSkipped,proto3" json:"numSkipped,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2597,6 +2603,13 @@ func (x *InvestigateHypothesesTimelineEntry) GetHypotheses() []*HypothesisSummar
 		return x.Hypotheses
 	}
 	return nil
+}
+
+func (x *InvestigateHypothesesTimelineEntry) GetNumSkipped() uint32 {
+	if x != nil {
+		return x.NumSkipped
+	}
+	return 0
 }
 
 type HypothesisSummary struct {
@@ -6632,14 +6645,17 @@ const file_changes_proto_rawDesc = "" +
 	"\rnumHypotheses\x18\x01 \x01(\rR\rnumHypotheses\x12:\n" +
 	"\n" +
 	"hypotheses\x18\x02 \x03(\v2\x1a.changes.HypothesisSummaryR\n" +
-	"hypotheses\"\xce\x01\n" +
+	"hypotheses\"\xee\x01\n" +
 	"\"InvestigateHypothesesTimelineEntry\x12\x1c\n" +
 	"\tnumProven\x18\x01 \x01(\rR\tnumProven\x12\"\n" +
 	"\fnumDisproven\x18\x02 \x01(\rR\fnumDisproven\x12*\n" +
 	"\x10numInvestigating\x18\x03 \x01(\rR\x10numInvestigating\x12:\n" +
 	"\n" +
 	"hypotheses\x18\x04 \x03(\v2\x1a.changes.HypothesisSummaryR\n" +
-	"hypotheses\"t\n" +
+	"hypotheses\x12\x1e\n" +
+	"\n" +
+	"numSkipped\x18\x05 \x01(\rR\n" +
+	"numSkipped\"t\n" +
 	"\x11HypothesisSummary\x121\n" +
 	"\x06status\x18\x01 \x01(\x0e2\x19.changes.HypothesisStatusR\x06status\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x16\n" +
@@ -6971,13 +6987,14 @@ const file_changes_proto_rawDesc = "" +
 	"\"MAPPED_ITEM_MAPPING_STATUS_SUCCESS\x10\x01\x12*\n" +
 	"&MAPPED_ITEM_MAPPING_STATUS_UNSUPPORTED\x10\x02\x12/\n" +
 	"+MAPPED_ITEM_MAPPING_STATUS_PENDING_CREATION\x10\x03\x12$\n" +
-	" MAPPED_ITEM_MAPPING_STATUS_ERROR\x10\x04*\xf9\x01\n" +
+	" MAPPED_ITEM_MAPPING_STATUS_ERROR\x10\x04*\xa5\x02\n" +
 	"\x10HypothesisStatus\x12.\n" +
 	"*INVESTIGATED_HYPOTHESIS_STATUS_UNSPECIFIED\x10\x00\x12*\n" +
 	"&INVESTIGATED_HYPOTHESIS_STATUS_FORMING\x10\x01\x120\n" +
 	",INVESTIGATED_HYPOTHESIS_STATUS_INVESTIGATING\x10\x02\x12)\n" +
 	"%INVESTIGATED_HYPOTHESIS_STATUS_PROVEN\x10\x03\x12,\n" +
-	"(INVESTIGATED_HYPOTHESIS_STATUS_DISPROVEN\x10\x04*_\n" +
+	"(INVESTIGATED_HYPOTHESIS_STATUS_DISPROVEN\x10\x04\x12*\n" +
+	"&INVESTIGATED_HYPOTHESIS_STATUS_SKIPPED\x10\x05*_\n" +
 	"\x19ChangeTimelineEntryStatus\x12\x0f\n" +
 	"\vUNSPECIFIED\x10\x00\x12\v\n" +
 	"\aPENDING\x10\x01\x12\x0f\n" +
