@@ -393,17 +393,6 @@ func (s *KubeTypeAdapter[Resource, ResourceList]) resourceToItem(resource Resour
 				Query:  ref.Name,
 				Scope:  sd.String(),
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Changes to the owner will definitely affect the owned e.g.
-				// changes to a deployment will affect the pods in that
-				// deployment
-				In: true,
-				// Changes to the owned may affect the owner e.g. changing a
-				// secret could affect a pod, but if all pods used that secret
-				// then the change should propagate from the pods to the
-				// deployment too
-				Out: true,
-			},
 		})
 	}
 
@@ -434,7 +423,7 @@ func (s *KubeTypeAdapter[Resource, ResourceList]) resourceToItem(resource Resour
 // request. Note that you must provide the parent scope since the reference
 // could be an object in a different namespace, if it is we need to re-use the
 // cluster name from the parent scope
-func ObjectReferenceToQuery(ref *corev1.ObjectReference, parentScope ScopeDetails, blastProp *sdp.BlastPropagation) *sdp.LinkedItemQuery {
+func ObjectReferenceToQuery(ref *corev1.ObjectReference, parentScope ScopeDetails) *sdp.LinkedItemQuery {
 	if ref == nil {
 		return nil
 	}
@@ -449,7 +438,6 @@ func ObjectReferenceToQuery(ref *corev1.ObjectReference, parentScope ScopeDetail
 			Query:  ref.Name,
 			Scope:  parentScope.String(),
 		},
-		BlastPropagation: blastProp,
 	}
 }
 

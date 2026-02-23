@@ -48,8 +48,7 @@ func TestProtoCloneReplacesCustomCopy(t *testing.T) {
 			Scope:  "scope",
 			UUID:   u[:],
 			RecursionBehaviour: &Query_RecursionBehaviour{
-				LinkDepth:                  5,
-				FollowOnlyBlastPropagation: true,
+				LinkDepth: 5,
 			},
 			IgnoreCache: true,
 			Deadline:    timestamppb.Now(),
@@ -97,17 +96,9 @@ func TestProtoCloneReplacesCustomCopy(t *testing.T) {
 	})
 
 	t.Run("All other SDP types", func(t *testing.T) {
-		// BlastPropagation
-		bp := &BlastPropagation{In: true, Out: false}
-		bpClone := proto.Clone(bp).(*BlastPropagation)
-		if !proto.Equal(bp, bpClone) {
-			t.Errorf("proto.Clone failed for BlastPropagation")
-		}
-
 		// LinkedItemQuery
 		liq := &LinkedItemQuery{
-			Query:            &Query{Type: "test", Method: QueryMethod_LIST},
-			BlastPropagation: bp,
+			Query: &Query{Type: "test", Method: QueryMethod_LIST},
 		}
 		liqClone := proto.Clone(liq).(*LinkedItemQuery)
 		if !proto.Equal(liq, liqClone) {
@@ -116,8 +107,7 @@ func TestProtoCloneReplacesCustomCopy(t *testing.T) {
 
 		// LinkedItem
 		li := &LinkedItem{
-			Item:             &Reference{Type: "test", Scope: "scope"},
-			BlastPropagation: bp,
+			Item: &Reference{Type: "test", Scope: "scope"},
 		}
 		liClone := proto.Clone(li).(*LinkedItem)
 		if !proto.Equal(li, liClone) {

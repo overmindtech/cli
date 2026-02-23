@@ -19,13 +19,6 @@ func NetworkPolicyExtractor(resource *v1.NetworkPolicy, scope string) ([]*sdp.Li
 			Query:  LabelSelectorToQuery(&resource.Spec.PodSelector),
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// Changes to pods won't affect the network policy or anything else
-			// that shares it
-			In: false,
-			// Changes to the network policy will affect pods
-			Out: true,
-		},
 	})
 
 	var peers []v1.NetworkPolicyPeer
@@ -52,13 +45,6 @@ func NetworkPolicyExtractor(resource *v1.NetworkPolicy, scope string) ([]*sdp.Li
 					Method: sdp.QueryMethod_GET,
 					Query:  LabelSelectorToQuery(ps),
 					Type:   "Pod",
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changes to pods won't affect the network policy or anything else
-					// that shares it
-					In: false,
-					// Changes to the network policy will affect pods
-					Out: true,
 				},
 			})
 		}

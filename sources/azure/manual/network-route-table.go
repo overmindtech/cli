@@ -121,10 +121,6 @@ func (n networkRouteTableWrapper) azureRouteTableToSDPItem(routeTable *armnetwor
 						Query:  shared.CompositeLookupKey(routeTableName, *route.Name),
 						Scope:  n.DefaultScope(),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,  // Route changes affect the route table's routing behavior
-						Out: false, // Route table changes don't affect individual routes (routes are part of the table)
-					},
 				})
 
 				// Link to NextHopIPAddress (IP address to stdlib)
@@ -136,11 +132,6 @@ func (n networkRouteTableWrapper) azureRouteTableToSDPItem(routeTable *armnetwor
 							Method: sdp.QueryMethod_GET,
 							Query:  *route.Properties.NextHopIPAddress,
 							Scope:  "global",
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// IPs are always linked bidirectionally
-							In:  true,
-							Out: true,
 						},
 					})
 				}
@@ -178,10 +169,6 @@ func (n networkRouteTableWrapper) azureRouteTableToSDPItem(routeTable *armnetwor
 							Method: sdp.QueryMethod_GET,
 							Query:  shared.CompositeLookupKey(vnetName, subnetName),
 							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true, // Subnet changes (like route table association) affect the route table's usage
-							Out: true, // Route table changes affect traffic routing in the subnet
 						},
 					})
 				}

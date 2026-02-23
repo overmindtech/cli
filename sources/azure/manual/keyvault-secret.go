@@ -161,10 +161,6 @@ func (k keyvaultSecretWrapper) azureSecretToSDPItem(secret *armkeyvault.Secret, 
 						Query:  vaultName,
 						Scope:  linkedScope, // Use the vault's scope from the resource ID
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,  // If Key Vault is deleted/modified → secret access and configuration are affected (In: true)
-						Out: false, // If secret is deleted → Key Vault remains (Out: false)
-					}, // Secret depends on Key Vault - vault changes impact secret availability and access
 				})
 			}
 		}
@@ -185,10 +181,6 @@ func (k keyvaultSecretWrapper) azureSecretToSDPItem(secret *armkeyvault.Secret, 
 					Query:  dnsName,
 					Scope:  "global",
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 		sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -197,10 +189,6 @@ func (k keyvaultSecretWrapper) azureSecretToSDPItem(secret *armkeyvault.Secret, 
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  secretURI,
 				Scope:  "global",
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: true,
 			},
 		})
 	}
@@ -217,10 +205,6 @@ func (k keyvaultSecretWrapper) azureSecretToSDPItem(secret *armkeyvault.Secret, 
 					Query:  dnsName,
 					Scope:  "global",
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 		sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -229,10 +213,6 @@ func (k keyvaultSecretWrapper) azureSecretToSDPItem(secret *armkeyvault.Secret, 
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  secretURIWithVersion,
 				Scope:  "global",
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: true,
 			},
 		})
 	}

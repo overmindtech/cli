@@ -71,10 +71,6 @@ func networkResourceRelationshipOutputMapper(_ context.Context, _ *networkmanage
 					Query:  idWithGlobalNetwork(*input.GlobalNetworkId, toArn.ResourceID()),
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			})
 		case "networkmanager-device":
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -83,10 +79,6 @@ func networkResourceRelationshipOutputMapper(_ context.Context, _ *networkmanage
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  idWithGlobalNetwork(*input.GlobalNetworkId, toArn.ResourceID()),
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
 				},
 			})
 		case "networkmanager-link":
@@ -97,10 +89,6 @@ func networkResourceRelationshipOutputMapper(_ context.Context, _ *networkmanage
 					Query:  idWithGlobalNetwork(*input.GlobalNetworkId, toArn.ResourceID()),
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			})
 		case "networkmanager-site":
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -109,10 +97,6 @@ func networkResourceRelationshipOutputMapper(_ context.Context, _ *networkmanage
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  idWithGlobalNetwork(*input.GlobalNetworkId, toArn.ResourceID()),
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
 				},
 			})
 		case "directconnect-connection":
@@ -123,10 +107,6 @@ func networkResourceRelationshipOutputMapper(_ context.Context, _ *networkmanage
 					Query:  toArn.ResourceID(),
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			})
 		case "directconnect-direct-connect-gateway":
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -135,10 +115,6 @@ func networkResourceRelationshipOutputMapper(_ context.Context, _ *networkmanage
 					Method: sdp.QueryMethod_GET,
 					Query:  toArn.ResourceID(),
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
 				},
 			})
 		case "directconnect-virtual-interface":
@@ -149,10 +125,6 @@ func networkResourceRelationshipOutputMapper(_ context.Context, _ *networkmanage
 					Query:  toArn.ResourceID(),
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			})
 		case "ec2-customer-gateway":
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -161,10 +133,6 @@ func networkResourceRelationshipOutputMapper(_ context.Context, _ *networkmanage
 					Method: sdp.QueryMethod_GET,
 					Query:  toArn.ResourceID(),
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
 				},
 			})
 		case "ec2-transit-gateway":
@@ -175,10 +143,6 @@ func networkResourceRelationshipOutputMapper(_ context.Context, _ *networkmanage
 					Query:  toArn.ResourceID(),
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			})
 		case "ec2-transit-gateway-attachment":
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -187,10 +151,6 @@ func networkResourceRelationshipOutputMapper(_ context.Context, _ *networkmanage
 					Method: sdp.QueryMethod_GET,
 					Query:  toArn.ResourceID(),
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
 				},
 			})
 		case "ec2-transit-gateway-connect-peer":
@@ -201,10 +161,6 @@ func networkResourceRelationshipOutputMapper(_ context.Context, _ *networkmanage
 					Query:  toArn.ResourceID(),
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			})
 		case "ec2-transit-gateway-route-table":
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -214,10 +170,6 @@ func networkResourceRelationshipOutputMapper(_ context.Context, _ *networkmanage
 					Query:  toArn.ResourceID(),
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			})
 		case "ec2-vpn-connection":
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -226,10 +178,6 @@ func networkResourceRelationshipOutputMapper(_ context.Context, _ *networkmanage
 					Method: sdp.QueryMethod_GET,
 					Query:  toArn.ResourceID(),
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
 				},
 			})
 		default:

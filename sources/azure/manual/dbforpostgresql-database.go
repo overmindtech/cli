@@ -91,10 +91,6 @@ func (s dbforPostgreSQLDatabaseWrapper) azureDBforPostgreSQLDatabaseToSDPItem(da
 			Query:  serverName,
 			Scope:  scope, // Server is in the same resource group as the database
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  true,  // Server changes (deletion, configuration, maintenance) directly affect database availability and functionality
-			Out: false, // Database changes (schema, data) don't directly affect the server's configuration or operation
-		}, // Database depends on server - server is the parent resource that hosts the database
 	})
 
 	return sdpItem, nil

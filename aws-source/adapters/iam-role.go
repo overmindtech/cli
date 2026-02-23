@@ -201,12 +201,6 @@ func roleItemMapper(_ *string, scope string, awsItem *RoleDetails) (*sdp.Item, e
 						Query:  *policy.PolicyArn,
 						Scope:  FormatScope(a.AccountID, a.Region),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the policy will affect the role
-						In: true,
-						// Changing the role won't affect the policy
-						Out: false,
-					},
 				})
 			}
 		}

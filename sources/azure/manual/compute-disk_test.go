@@ -228,12 +228,6 @@ func TestComputeDisk(t *testing.T) {
 			if linkedQuery.GetQuery().GetType() == azureshared.ComputeSnapshot.String() &&
 				linkedQuery.GetQuery().GetQuery() == "test-snapshot" {
 				foundSnapshotLink = true
-				if linkedQuery.GetBlastPropagation().GetIn() != true {
-					t.Errorf("Expected BlastPropagation.In to be true for snapshot link")
-				}
-				if linkedQuery.GetBlastPropagation().GetOut() != false {
-					t.Errorf("Expected BlastPropagation.Out to be false for snapshot link")
-				}
 				break
 			}
 		}

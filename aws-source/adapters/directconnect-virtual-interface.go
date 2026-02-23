@@ -37,12 +37,6 @@ func virtualInterfaceOutputMapper(_ context.Context, _ *directconnect.Client, sc
 					Query:  *virtualInterface.ConnectionId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// We cannot delete a connection if it has virtual interfaces
-					In: true,
-					// We can't affect the connection
-					Out: false,
-				},
 			})
 		}
 
@@ -53,12 +47,6 @@ func virtualInterfaceOutputMapper(_ context.Context, _ *directconnect.Client, sc
 					Method: sdp.QueryMethod_GET,
 					Query:  *virtualInterface.DirectConnectGatewayId,
 					Scope:  "global",
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// We cannot delete a direct connect gateway if it has virtual interfaces
-					In: true,
-					// We can't affect the direct connect gateway
-					Out: false,
 				},
 			})
 		}
@@ -71,11 +59,6 @@ func virtualInterfaceOutputMapper(_ context.Context, _ *directconnect.Client, sc
 					Query:  *virtualInterface.AmazonAddress,
 					Scope:  "global",
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// do not link through rdap definitions to avoid huge blast radius
-					In:  false,
-					Out: false,
-				},
 			})
 		}
 
@@ -86,11 +69,6 @@ func virtualInterfaceOutputMapper(_ context.Context, _ *directconnect.Client, sc
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *virtualInterface.CustomerAddress,
 					Scope:  "global",
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// do not link through rdap definitions to avoid huge blast radius
-					In:  false,
-					Out: false,
 				},
 			})
 		}
@@ -105,13 +83,6 @@ func virtualInterfaceOutputMapper(_ context.Context, _ *directconnect.Client, sc
 					Query: fmt.Sprintf("%s/%s", *virtualInterface.DirectConnectGatewayId, *virtualInterface.VirtualInterfaceId),
 					Scope: scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changes to the attachment won't affect virtual interface
-					In: false,
-					// If virtual interface is deleted, the attachment state will change to detaching
-					// https://docs.aws.amazon.com/directconnect/latest/APIReference/API_DirectConnectGatewayAttachment.html#API_DirectConnectGatewayAttachment_Contents
-					Out: true,
-				},
 			})
 		}
 
@@ -124,13 +95,6 @@ func virtualInterfaceOutputMapper(_ context.Context, _ *directconnect.Client, sc
 					// returns list of attachments for the given virtual interface id
 					Query: *virtualInterface.VirtualInterfaceId,
 					Scope: scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changes to the attachment won't affect virtual interface
-					In: false,
-					// If virtual interface is deleted, the attachment state will change to detaching
-					// https://docs.aws.amazon.com/directconnect/latest/APIReference/API_DirectConnectGatewayAttachment.html#API_DirectConnectGatewayAttachment_Contents
-					Out: true,
 				},
 			})
 		}

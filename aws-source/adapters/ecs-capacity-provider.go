@@ -43,11 +43,6 @@ func capacityProviderOutputMapper(_ context.Context, _ ECSClient, scope string, 
 							Query:  *provider.AutoScalingGroupProvider.AutoScalingGroupArn,
 							Scope:  FormatScope(a.AccountID, a.Region),
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// These are tightly linked
-							In:  true,
-							Out: true,
-						},
 					})
 				}
 			}

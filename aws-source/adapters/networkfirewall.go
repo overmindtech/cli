@@ -36,10 +36,6 @@ func encryptionConfigurationLink(config *types.EncryptionConfiguration, scope st
 				Query:  *config.KeyId,
 				Scope:  FormatScope(a.AccountID, a.Region),
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
-			},
 		}
 	} else {
 		return &sdp.LinkedItemQuery{
@@ -48,10 +44,6 @@ func encryptionConfigurationLink(config *types.EncryptionConfiguration, scope st
 				Method: sdp.QueryMethod_GET,
 				Query:  *config.KeyId,
 				Scope:  scope,
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: false,
 			},
 		}
 	}

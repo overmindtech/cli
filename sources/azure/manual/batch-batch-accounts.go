@@ -128,12 +128,6 @@ func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Accoun
 					Query:  storageAccountName,
 					Scope:  linkedScope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Batch account depends on storage account for auto-storage functionality
-					// If storage account is deleted/modified, batch account operations may fail
-					In:  true,
-					Out: false,
-				},
 			})
 		}
 	}
@@ -155,12 +149,6 @@ func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Accoun
 					Method: sdp.QueryMethod_GET,
 					Query:  keyVaultName,
 					Scope:  linkedScope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Batch account depends on Key Vault for certificate management and encryption
-					// If Key Vault is deleted/modified, batch account operations may fail
-					In:  true,
-					Out: false,
 				},
 			})
 		}
@@ -188,12 +176,6 @@ func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Accoun
 						Query:  vaultName,
 						Scope:  scope, // Limitation: Key Vault URI doesn't contain resource group info
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Batch account depends on Key Vault for customer-managed encryption keys
-						// If Key Vault is deleted/modified or key is rotated, batch account encryption may be affected
-						In:  true,
-						Out: false,
-					},
 				})
 			}
 		}
@@ -219,12 +201,6 @@ func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Accoun
 							Query:  privateEndpointName,
 							Scope:  linkedScope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Private endpoint connection is tightly coupled with the batch account
-							// Changes to either affect the other
-							In:  true,
-							Out: true,
-						},
 					})
 				}
 			}
@@ -249,12 +225,6 @@ func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Accoun
 						Query:  identityName,
 						Scope:  linkedScope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Batch account depends on managed identity for authentication
-						// If identity is deleted/modified, batch account operations may fail
-						In:  true,
-						Out: false,
-					},
 				})
 			}
 		}
@@ -278,12 +248,6 @@ func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Accoun
 					Query:  nodeIdentityName,
 					Scope:  linkedScope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Batch account compute nodes depend on managed identity for auto-storage access
-					// If identity is deleted/modified, compute nodes may fail to access storage
-					In:  true,
-					Out: false,
-				},
 			})
 		}
 	}
@@ -298,12 +262,6 @@ func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Accoun
 			Query:  accountName,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// Applications are child resources of the batch account
-			// Changes to batch account affect applications, and vice versa
-			In:  true,
-			Out: true,
-		},
 	})
 
 	// Link to Pools (child resource)
@@ -315,12 +273,6 @@ func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Accoun
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  accountName,
 			Scope:  scope,
-		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// Pools are child resources of the batch account
-			// Changes to batch account affect pools, and vice versa
-			In:  true,
-			Out: true,
 		},
 	})
 
@@ -334,12 +286,6 @@ func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Accoun
 			Query:  accountName,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// Certificates are child resources of the batch account
-			// Changes to batch account affect certificates, and vice versa
-			In:  true,
-			Out: true,
-		},
 	})
 
 	// Link to Private Endpoint Connections (child resource)
@@ -351,12 +297,6 @@ func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Accoun
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  accountName,
 			Scope:  scope,
-		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// Private endpoint connections are child resources of the batch account
-			// Changes to batch account affect connections, and vice versa
-			In:  true,
-			Out: true,
 		},
 	})
 
@@ -370,12 +310,6 @@ func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Accoun
 			Query:  accountName,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// Private link resources are child resources of the batch account
-			// Changes to batch account affect resources, and vice versa
-			In:  true,
-			Out: true,
-		},
 	})
 
 	// Link to Detectors (child resource)
@@ -388,12 +322,6 @@ func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Accoun
 			Query:  accountName,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// Detectors are child resources of the batch account
-			// Changes to batch account affect detectors, and vice versa
-			In:  true,
-			Out: true,
-		},
 	})
 
 	// Link to DNS name (standard library) if AccountEndpoint is configured
@@ -404,11 +332,6 @@ func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Accoun
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  *account.Properties.AccountEndpoint,
 				Scope:  "global",
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// DNS names are shared resources; changes can affect connectivity both ways
-				In:  true,
-				Out: true,
 			},
 		})
 	}
@@ -424,11 +347,6 @@ func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Accoun
 							Method: sdp.QueryMethod_GET,
 							Query:  *ipRule.Value,
 							Scope:  "global",
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// IPs are shared resources; changes can affect connectivity both ways
-							In:  true,
-							Out: true,
 						},
 					})
 				}
@@ -447,11 +365,6 @@ func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Accoun
 							Method: sdp.QueryMethod_GET,
 							Query:  *ipRule.Value,
 							Scope:  "global",
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// IPs are shared resources; changes can affect connectivity both ways
-							In:  true,
-							Out: true,
 						},
 					})
 				}

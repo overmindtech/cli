@@ -52,11 +52,6 @@ func volumeStatusOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ 
 						Query:  *volume.VolumeId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Volume and status are tightly coupled
-						In:  true,
-						Out: true,
-					},
 				},
 			},
 		}
@@ -82,11 +77,6 @@ func volumeStatusOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ 
 						Method: sdp.QueryMethod_GET,
 						Query:  *event.InstanceId,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Instances and volumes can affect each other
-						In:  true,
-						Out: true,
 					},
 				})
 			}

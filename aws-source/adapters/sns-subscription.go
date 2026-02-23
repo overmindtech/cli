@@ -54,12 +54,6 @@ func getSubsFunc(ctx context.Context, client subsCli, scope string, input *sns.G
 				Query:  topicArn.(string),
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// If topic is not healthy, subscription will not work
-				In: true,
-				// Subscription won't affect the topic
-				Out: false,
-			},
 		})
 	}
 
@@ -71,12 +65,6 @@ func getSubsFunc(ctx context.Context, client subsCli, scope string, input *sns.G
 					Method: sdp.QueryMethod_GET,
 					Query:  arn.ResourceID(),
 					Scope:  FormatScope(arn.AccountID, arn.Region),
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// If role is not healthy, subscription will not work
-					In: true,
-					// Subscription won't affect the role
-					Out: false,
 				},
 			})
 		}

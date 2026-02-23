@@ -49,11 +49,6 @@ func modelOutputMapper(query, scope string, awsItem *types.Model) (*sdp.Item, er
 			Query:  restAPIID,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// They are tightly coupled, so we need to propagate the blast to the linked item
-			In:  true,
-			Out: true,
-		},
 	})
 
 	return &item, nil

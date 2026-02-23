@@ -144,10 +144,6 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 				Query:  serverName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,  // SQL Server changes (especially deletion) affect databases
-				Out: false, // Database changes don't affect the SQL Server itself
-			}, // SQL Databases are child resources that depend on their parent SQL Server
 		})
 
 		// Link to Elastic Pools (child resource)
@@ -160,10 +156,6 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 				Query:  serverName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,  // SQL Server changes affect elastic pools
-				Out: false, // Elastic pool changes don't affect the SQL Server itself
-			}, // SQL Elastic Pools are child resources that depend on their parent SQL Server
 		})
 
 		// Link to Firewall Rules (child resource)
@@ -176,10 +168,6 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 				Query:  serverName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true, // SQL Server changes affect firewall rules
-				Out: true, // Firewall rule changes affect server connectivity
-			}, // SQL Server Firewall Rules are child resources that control server access
 		})
 
 		// Link to Virtual Network Rules (child resource)
@@ -192,10 +180,6 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 				Query:  serverName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true, // SQL Server changes affect virtual network rules
-				Out: true, // Virtual network rule changes affect server connectivity
-			}, // SQL Server Virtual Network Rules are child resources that control server access
 		})
 
 		// Link to Server Keys (child resource)
@@ -208,10 +192,6 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 				Query:  serverName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true, // SQL Server changes affect server keys
-				Out: true, // Server key changes (especially deletion) affect server encryption and availability
-			}, // SQL Server Keys are child resources used for encryption
 		})
 
 		// Link to Failover Groups (child resource)
@@ -224,10 +204,6 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 				Query:  serverName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true, // SQL Server changes affect failover groups
-				Out: true, // Failover group changes affect server availability and failover behavior
-			}, // SQL Server Failover Groups are child resources that manage high availability
 		})
 
 		// Link to Administrators (child resource)
@@ -240,10 +216,6 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 				Query:  serverName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true, // SQL Server changes affect administrators
-				Out: true, // Administrator changes affect server authentication and access control
-			}, // SQL Server Administrators are child resources that control authentication
 		})
 
 		// Link to Sync Groups (child resource)
@@ -256,10 +228,6 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 				Query:  serverName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,  // SQL Server changes affect sync groups
-				Out: false, // Sync group changes don't affect the SQL Server itself
-			}, // SQL Server Sync Groups are child resources for data synchronization
 		})
 
 		// Link to Sync Agents (child resource)
@@ -272,10 +240,6 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 				Query:  serverName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,  // SQL Server changes affect sync agents
-				Out: false, // Sync agent changes don't affect the SQL Server itself
-			}, // SQL Server Sync Agents are child resources for data synchronization
 		})
 
 		// Link to Private Endpoint Connections (child resource)
@@ -288,10 +252,6 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 				Query:  serverName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true, // SQL Server changes affect private endpoint connections
-				Out: true, // Private endpoint connection changes affect server network connectivity
-			}, // SQL Server Private Endpoint Connections are child resources that manage private network access
 		})
 
 		// Link to Network Private Endpoints (external resources) from PrivateEndpointConnections
@@ -315,10 +275,6 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 								Query:  privateEndpointName,
 								Scope:  extractedScope,
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true, // Private endpoint changes (deletion, network configuration) affect the SQL Server's private connectivity
-								Out: true, // SQL Server deletion or configuration changes may affect the private endpoint's connection state
-							}, // Private endpoints are tightly coupled to the SQL Server - changes affect connectivity
 						})
 					}
 				}
@@ -335,10 +291,6 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 				Query:  serverName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true, // SQL Server changes affect auditing settings
-				Out: true, // Auditing setting changes affect server security and compliance
-			}, // SQL Server Auditing Settings are child resources that control audit logging
 		})
 
 		// Link to Security Alert Policies (child resource)
@@ -351,10 +303,6 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 				Query:  serverName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true, // SQL Server changes affect security alert policies
-				Out: true, // Security alert policy changes affect server security monitoring
-			}, // SQL Server Security Alert Policies are child resources that control threat detection
 		})
 
 		// Link to Vulnerability Assessments (child resource)
@@ -367,10 +315,6 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 				Query:  serverName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true, // SQL Server changes affect vulnerability assessments
-				Out: true, // Vulnerability assessment changes affect server security scanning
-			}, // SQL Server Vulnerability Assessments are child resources that control security scanning
 		})
 
 		// Link to Encryption Protector (child resource)
@@ -383,10 +327,6 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 				Query:  serverName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true, // SQL Server changes affect encryption protector
-				Out: true, // Encryption protector changes affect server encryption and data access
-			}, // SQL Server Encryption Protector is a child resource that controls encryption
 		})
 
 		// Link to Blob Auditing Policies (child resource)
@@ -399,10 +339,6 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 				Query:  serverName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true, // SQL Server changes affect blob auditing policies
-				Out: true, // Blob auditing policy changes affect server audit logging
-			}, // SQL Server Blob Auditing Policies are child resources that control blob audit logging
 		})
 
 		// Link to Automatic Tuning (child resource)
@@ -415,10 +351,6 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 				Query:  serverName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true, // SQL Server changes affect automatic tuning
-				Out: true, // Automatic tuning changes affect server performance optimization
-			}, // SQL Server Automatic Tuning is a child resource that controls performance optimization
 		})
 
 		// Link to Advanced Threat Protection Settings (child resource)
@@ -431,10 +363,6 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 				Query:  serverName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true, // SQL Server changes affect advanced threat protection settings
-				Out: true, // Advanced threat protection setting changes affect server security
-			}, // SQL Server Advanced Threat Protection Settings are child resources that control threat protection
 		})
 
 		// Link to DNS Aliases (child resource)
@@ -447,10 +375,6 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 				Query:  serverName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true, // SQL Server changes affect DNS aliases
-				Out: true, // DNS alias changes affect server connectivity and routing
-			}, // SQL Server DNS Aliases are child resources that provide alternate DNS names
 		})
 
 		// Link to Server Usages (child resource)
@@ -463,10 +387,6 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 				Query:  serverName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,  // SQL Server changes affect usage metrics
-				Out: false, // Usage metrics are read-only and don't affect the server
-			}, // SQL Server Usages are child resources that provide usage metrics
 		})
 
 		// Link to Server Operations (child resource)
@@ -479,10 +399,6 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 				Query:  serverName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,  // SQL Server changes affect operations history
-				Out: false, // Operations history is read-only and doesn't affect the server
-			}, // SQL Server Operations are child resources that provide operation history
 		})
 
 		// Link to Server Advisors (child resource)
@@ -495,10 +411,6 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 				Query:  serverName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,  // SQL Server changes affect advisors
-				Out: false, // Advisor recommendations don't affect the server until applied
-			}, // SQL Server Advisors are child resources that provide optimization recommendations
 		})
 
 		// Link to Backup Long-Term Retention Policies (child resource)
@@ -511,10 +423,6 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 				Query:  serverName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true, // SQL Server changes affect backup retention policies
-				Out: true, // Backup retention policy changes affect backup management and storage
-			}, // SQL Server Backup Long-Term Retention Policies are child resources that control backup retention
 		})
 
 		// Link to DevOps Audit Settings (child resource)
@@ -527,10 +435,6 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 				Query:  serverName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true, // SQL Server changes affect DevOps audit settings
-				Out: true, // DevOps audit setting changes affect server audit logging
-			}, // SQL Server DevOps Audit Settings are child resources that control DevOps audit logging
 		})
 
 		// Link to Server Trust Groups (child resource)
@@ -543,10 +447,6 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 				Query:  serverName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true, // SQL Server changes affect trust groups
-				Out: true, // Trust group changes affect server trust relationships
-			}, // SQL Server Trust Groups are child resources that manage trust relationships
 		})
 
 		// Link to Outbound Firewall Rules (child resource)
@@ -559,10 +459,6 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 				Query:  serverName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true, // SQL Server changes affect outbound firewall rules
-				Out: true, // Outbound firewall rule changes affect server outbound connectivity
-			}, // SQL Server Outbound Firewall Rules are child resources that control outbound access
 		})
 
 		// Link to Private Link Resources (child resource)
@@ -575,10 +471,6 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 				Query:  serverName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,  // SQL Server changes affect private link resources
-				Out: false, // Private link resources are metadata about available private endpoints
-			}, // SQL Server Private Link Resources are child resources that provide private link metadata
 		})
 
 		// Link to Long Term Retention Backups (child resource)
@@ -591,10 +483,6 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 				Query:  serverName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  false, // LTR backup changes don't affect the SQL Server itself
-				Out: true,  // SQL Server changes (deletion) affect LTR backups
-			}, // SQL Server Long Term Retention Backups are child resources that can be listed by server
 		})
 	}
 
@@ -620,10 +508,6 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 						Query:  identityName,
 						Scope:  extractedScope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,  // Managed identity deletion/modification affects server authentication and operations
-						Out: false, // Server changes don't affect the managed identity itself
-					}, // SQL Server depends on managed identity for authentication
 				})
 				processedIdentityIDs[*server.Properties.PrimaryUserAssignedIdentityID] = true
 			}
@@ -651,10 +535,6 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 							Query:  identityName,
 							Scope:  extractedScope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // Managed identity deletion/modification affects server authentication and operations
-							Out: false, // Server changes don't affect the managed identity itself
-						}, // SQL Server depends on managed identity for authentication
 					})
 					processedIdentityIDs[identityResourceID] = true
 				}
@@ -682,10 +562,6 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 						Query:  vaultName,
 						Scope:  scope, // Limitation: Key Vault URI doesn't contain resource group info
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,  // Key Vault changes (key deletion, rotation, access policy) affect the SQL Server's encryption
-						Out: false, // SQL Server changes don't directly affect the Key Vault
-					}, // SQL Server depends on Key Vault for customer-managed encryption keys - key changes impact encryption/decryption
 				})
 			}
 		}
@@ -700,10 +576,6 @@ func (s sqlServerWrapper) azureSqlServerToSDPItem(server *armsql.Server, scope s
 					Query:  *server.Properties.FullyQualifiedDomainName,
 					Scope:  "global",
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true, // DNS name changes affect server connectivity
-					Out: true, // DNS names are always linked bidirectionally
-				}, // DNS names are shared resources that affect multiple entities
 			})
 		}
 	}

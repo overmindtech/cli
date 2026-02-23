@@ -35,12 +35,6 @@ func realtimeLogConfigsItemMapper(_, scope string, awsItem *types.RealtimeLogCon
 							Query:  *endpoint.KinesisStreamConfig.RoleARN,
 							Scope:  FormatScope(arn.AccountID, arn.Region),
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changes to the role will affect us
-							In: true,
-							// We can't affect the role
-							Out: false,
-						},
 					})
 				}
 			}
@@ -53,12 +47,6 @@ func realtimeLogConfigsItemMapper(_, scope string, awsItem *types.RealtimeLogCon
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  *endpoint.KinesisStreamConfig.StreamARN,
 							Scope:  FormatScope(arn.AccountID, arn.Region),
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changes to this will affect the stream
-							Out: true,
-							// The stream can affect us
-							In: true,
 						},
 					})
 				}

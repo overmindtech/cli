@@ -63,12 +63,6 @@ func grantOutputMapper(ctx context.Context, _ *kms.Client, scope string, _ *kms.
 				Query:  keyID,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// These are tightly linked
-				// Adding or revoking/retiring a grant can allow or deny permission to the KMS key for the grantee.
-				In:  true,
-				Out: true,
-			},
 		})
 
 		var principals []string
@@ -122,13 +116,6 @@ func grantOutputMapper(ctx context.Context, _ *kms.Client, scope string, _ *kms.
 				Query: &sdp.Query{
 					Method: sdp.QueryMethod_GET,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// These are tightly linked
-					// Adding or revoking/retiring a grant can allow or deny permission to the KMS key for the grantee.
-					// Or, disabling a role will make the grant redundant.
-					In:  true,
-					Out: true,
 				},
 			}
 

@@ -199,12 +199,6 @@ func TestDBforPostgreSQLFlexibleServer(t *testing.T) {
 				if linkedQuery.GetQuery().GetScope() != "sub-id.vnet-rg" {
 					t.Errorf("Expected subnet link scope to be 'sub-id.vnet-rg', got %s", linkedQuery.GetQuery().GetScope())
 				}
-				if !linkedQuery.GetBlastPropagation().GetIn() {
-					t.Error("Expected subnet link to have In=true")
-				}
-				if linkedQuery.GetBlastPropagation().GetOut() {
-					t.Error("Expected subnet link to have Out=false")
-				}
 			}
 			if linkedQuery.GetQuery().GetType() == azureshared.NetworkVirtualNetwork.String() {
 				foundVNetLink = true
@@ -213,12 +207,6 @@ func TestDBforPostgreSQLFlexibleServer(t *testing.T) {
 				}
 				if linkedQuery.GetQuery().GetScope() != "sub-id.vnet-rg" {
 					t.Errorf("Expected virtual network link scope to be 'sub-id.vnet-rg', got %s", linkedQuery.GetQuery().GetScope())
-				}
-				if !linkedQuery.GetBlastPropagation().GetIn() {
-					t.Error("Expected virtual network link to have In=true")
-				}
-				if linkedQuery.GetBlastPropagation().GetOut() {
-					t.Error("Expected virtual network link to have Out=false")
 				}
 			}
 		}
@@ -263,12 +251,6 @@ func TestDBforPostgreSQLFlexibleServer(t *testing.T) {
 				}
 				if linkedQuery.GetQuery().GetScope() != "global" {
 					t.Errorf("Expected DNS link scope to be 'global', got %s", linkedQuery.GetQuery().GetScope())
-				}
-				if !linkedQuery.GetBlastPropagation().GetIn() {
-					t.Error("Expected DNS link to have In=true")
-				}
-				if !linkedQuery.GetBlastPropagation().GetOut() {
-					t.Error("Expected DNS link to have Out=true")
 				}
 			}
 		}
@@ -476,9 +458,6 @@ func TestDBforPostgreSQLFlexibleServer(t *testing.T) {
 				if linkedQuery.GetQuery().GetMethod() != sdp.QueryMethod_GET {
 					t.Errorf("Expected primary identity link to use GET method, got %v", linkedQuery.GetQuery().GetMethod())
 				}
-				if !linkedQuery.GetBlastPropagation().GetIn() {
-					t.Error("Expected primary identity link to have In=true")
-				}
 			}
 			// Primary Key Vault Vault
 			if linkedQuery.GetQuery().GetType() == azureshared.KeyVaultVault.String() &&
@@ -518,9 +497,6 @@ func TestDBforPostgreSQLFlexibleServer(t *testing.T) {
 				foundGeoBackupIdentityLink = true
 				if linkedQuery.GetQuery().GetMethod() != sdp.QueryMethod_GET {
 					t.Errorf("Expected geo backup identity link to use GET method, got %v", linkedQuery.GetQuery().GetMethod())
-				}
-				if !linkedQuery.GetBlastPropagation().GetIn() {
-					t.Error("Expected geo backup identity link to have In=true")
 				}
 			}
 		}
@@ -579,12 +555,6 @@ func TestDBforPostgreSQLFlexibleServer(t *testing.T) {
 				}
 				if linkedQuery.GetQuery().GetScope() != "sub-id.source-rg" {
 					t.Errorf("Expected source server link scope to be 'sub-id.source-rg', got %s", linkedQuery.GetQuery().GetScope())
-				}
-				if !linkedQuery.GetBlastPropagation().GetIn() {
-					t.Error("Expected source server link to have In=true")
-				}
-				if linkedQuery.GetBlastPropagation().GetOut() {
-					t.Error("Expected source server link to have Out=false")
 				}
 			}
 		}

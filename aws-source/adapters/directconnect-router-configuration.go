@@ -34,11 +34,6 @@ func routerConfigurationOutputMapper(_ context.Context, _ *directconnect.Client,
 				Query:  *output.VirtualInterfaceId,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// They are tightly coupled
-				In:  true,
-				Out: true,
-			},
 		})
 	}
 

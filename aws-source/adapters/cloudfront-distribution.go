@@ -72,11 +72,6 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 				Query:  *d.DomainName,
 				Scope:  "global",
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// DNS is always linked
-				In:  true,
-				Out: true,
-			},
 		})
 	}
 
@@ -89,12 +84,6 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 						Method: sdp.QueryMethod_GET,
 						Query:  *keyGroup.KeyGroupId,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// The distribution won't affect the key group
-						Out: false,
-						// The key group could affect the distribution
-						In: true,
 					},
 				})
 			}
@@ -110,11 +99,6 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 					Query:  *record.CNAME,
 					Scope:  "global",
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Tightly linked
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 	}
@@ -129,11 +113,6 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 						Query:  alias,
 						Scope:  "global",
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Tightly linked
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 		}
@@ -145,11 +124,6 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 					Method: sdp.QueryMethod_GET,
 					Query:  *dc.ContinuousDeploymentPolicyId,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// These are tightly linked
-					Out: true,
-					In:  true,
 				},
 			})
 		}
@@ -164,12 +138,6 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 							Query:  *behavior.CachePolicyId,
 							Scope:  scope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changing the policy will affect the distribution
-							In: true,
-							// The distribution won't affect the policy
-							Out: false,
-						},
 					})
 				}
 
@@ -181,12 +149,6 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 							Query:  *behavior.FieldLevelEncryptionId,
 							Scope:  scope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changing the encryption will affect the distribution
-							In: true,
-							// The distribution won't affect the encryption
-							Out: false,
-						},
 					})
 				}
 
@@ -197,12 +159,6 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 							Method: sdp.QueryMethod_GET,
 							Query:  *behavior.OriginRequestPolicyId,
 							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changing the policy will affect the distribution
-							In: true,
-							// The distribution won't affect the policy
-							Out: false,
 						},
 					})
 				}
@@ -216,12 +172,6 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 								Query:  *behavior.RealtimeLogConfigArn,
 								Scope:  FormatScope(arn.AccountID, arn.Region),
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								// Changing the config will affect the distribution
-								In: true,
-								// The distribution won't affect the config
-								Out: false,
-							},
 						})
 					}
 				}
@@ -234,12 +184,6 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 							Query:  *behavior.ResponseHeadersPolicyId,
 							Scope:  scope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changing the policy will affect the distribution
-							In: true,
-							// The distribution won't affect the policy
-							Out: false,
-						},
 					})
 				}
 
@@ -251,12 +195,6 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 								Query:  keyGroup,
 								Method: sdp.QueryMethod_GET,
 								Scope:  scope,
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								// Changing the key group will affect the distribution
-								In: true,
-								// The distribution won't affect the key group
-								Out: false,
 							},
 						})
 					}
@@ -273,12 +211,6 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 										Query:  *function.FunctionARN,
 										Scope:  FormatScope(arn.AccountID, arn.Region),
 									},
-									BlastPropagation: &sdp.BlastPropagation{
-										// Changing the function could affect the distribution
-										In: true,
-										// The distribution could affect the function
-										Out: true,
-									},
 								})
 							}
 						}
@@ -294,12 +226,6 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 									Method: sdp.QueryMethod_SEARCH,
 									Query:  *function.LambdaFunctionARN,
 									Scope:  FormatScope(arn.AccountID, arn.Region),
-								},
-								BlastPropagation: &sdp.BlastPropagation{
-									// Changing the function could affect the distribution
-									In: true,
-									// The distribution could affect the function
-									Out: true,
 								},
 							})
 						}
@@ -318,11 +244,6 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 							Query:  *origin.DomainName,
 							Scope:  "global",
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Tightly linked
-							In:  true,
-							Out: true,
-						},
 					})
 				}
 
@@ -333,12 +254,6 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 							Method: sdp.QueryMethod_GET,
 							Query:  *origin.OriginAccessControlId,
 							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changing the access identity will affect the distribution
-							In: true,
-							// The distribution won't affect the access identity
-							Out: false,
 						},
 					})
 				}
@@ -357,12 +272,6 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 									Query:  matches[1],
 									Scope:  FormatScope(scope, ""), // S3 buckets are global
 								},
-								BlastPropagation: &sdp.BlastPropagation{
-									// Changing the bucket could affect the distribution
-									In: true,
-									// The distribution could affect the bucket
-									Out: true,
-								},
 							})
 						}
 					}
@@ -374,12 +283,6 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 								Method: sdp.QueryMethod_GET,
 								Query:  *origin.S3OriginConfig.OriginAccessIdentity,
 								Scope:  scope,
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								// Changing the access identity will affect the distribution
-								In: true,
-								// The distribution won't affect the access identity
-								Out: false,
 							},
 						})
 					}
@@ -396,12 +299,6 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 						Query:  *dc.DefaultCacheBehavior.CachePolicyId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the policy will affect the distribution
-						In: true,
-						// The distribution won't affect the policy
-						Out: false,
-					},
 				})
 			}
 
@@ -413,12 +310,6 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 						Query:  *dc.DefaultCacheBehavior.FieldLevelEncryptionId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the encryption will affect the distribution
-						In: true,
-						// The distribution won't affect the encryption
-						Out: false,
-					},
 				})
 			}
 
@@ -429,12 +320,6 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 						Method: sdp.QueryMethod_GET,
 						Query:  *dc.DefaultCacheBehavior.OriginRequestPolicyId,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the policy will affect the distribution
-						In: true,
-						// The distribution won't affect the policy
-						Out: false,
 					},
 				})
 			}
@@ -448,12 +333,6 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 							Query:  *dc.DefaultCacheBehavior.RealtimeLogConfigArn,
 							Scope:  FormatScope(arn.AccountID, arn.Region),
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changing the config will affect the distribution
-							In: true,
-							// The distribution won't affect the config
-							Out: false,
-						},
 					})
 				}
 			}
@@ -466,12 +345,6 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 						Query:  *dc.DefaultCacheBehavior.ResponseHeadersPolicyId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the policy will affect the distribution
-						In: true,
-						// The distribution won't affect the policy
-						Out: false,
-					},
 				})
 			}
 
@@ -483,12 +356,6 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 							Query:  keyGroup,
 							Method: sdp.QueryMethod_GET,
 							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changing the key group will affect the distribution
-							In: true,
-							// The distribution won't affect the key group
-							Out: false,
 						},
 					})
 				}
@@ -504,12 +371,6 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 									Method: sdp.QueryMethod_SEARCH,
 									Query:  *function.FunctionARN,
 									Scope:  FormatScope(arn.AccountID, arn.Region),
-								},
-								BlastPropagation: &sdp.BlastPropagation{
-									// Changing the function could affect the distribution
-									In: true,
-									// The distribution could affect the function
-									Out: true,
 								},
 							})
 						}
@@ -527,12 +388,6 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 								Query:  *function.LambdaFunctionARN,
 								Scope:  FormatScope(arn.AccountID, arn.Region),
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								// Changing the function could affect the distribution
-								In: true,
-								// The distribution could affect the function
-								Out: true,
-							},
 						})
 					}
 				}
@@ -547,11 +402,6 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 					Query:  *dc.Logging.Bucket,
 					Scope:  "global",
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Tightly linked
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 
@@ -565,12 +415,6 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 							Query:  *dc.ViewerCertificate.ACMCertificateArn,
 							Scope:  FormatScope(arn.AccountID, arn.Region),
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changing the certificate could affect the distribution
-							In: true,
-							// The distribution could not affect the certificate
-							Out: false,
-						},
 					})
 				}
 			}
@@ -581,12 +425,6 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 						Method: sdp.QueryMethod_GET,
 						Query:  *dc.ViewerCertificate.IAMCertificateId,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the certificate could affect the distribution
-						In: true,
-						// The distribution could not affect the certificate
-						Out: false,
 					},
 				})
 			}
@@ -601,12 +439,6 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 						Query:  *dc.WebACLId,
 						Scope:  FormatScope(arn.AccountID, arn.Region),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the ACL could affect the distribution
-						In: true,
-						// The distribution could not affect the ACL
-						Out: false,
-					},
 				})
 			} else {
 				// Else assume it's a V1 ID
@@ -616,12 +448,6 @@ func distributionGetFunc(ctx context.Context, client CloudFrontClient, scope str
 						Method: sdp.QueryMethod_GET,
 						Query:  *dc.WebACLId,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the ACL could affect the distribution
-						In: true,
-						// The distribution could not affect the ACL
-						Out: false,
 					},
 				})
 			}

@@ -130,12 +130,6 @@ func TestStorageBlobContainer(t *testing.T) {
 					if linkedQuery.GetQuery().GetQuery() != storageAccountName {
 						t.Errorf("Expected StorageAccount linked query %s, got %s", storageAccountName, linkedQuery.GetQuery().GetQuery())
 					}
-					if linkedQuery.GetBlastPropagation().GetIn() != true {
-						t.Error("Expected StorageAccount BlastPropagation.In to be true")
-					}
-					if linkedQuery.GetBlastPropagation().GetOut() != false {
-						t.Error("Expected StorageAccount BlastPropagation.Out to be false")
-					}
 				case "dns":
 					hasDNSLink = true
 					if linkedQuery.GetQuery().GetMethod() != sdp.QueryMethod_SEARCH {
@@ -212,12 +206,6 @@ func TestStorageBlobContainer(t *testing.T) {
 				}
 				if linkedQuery.GetQuery().GetScope() != subscriptionID+"."+resourceGroup {
 					t.Errorf("Expected StorageEncryptionScope scope %s, got %s", subscriptionID+"."+resourceGroup, linkedQuery.GetQuery().GetScope())
-				}
-				if !linkedQuery.GetBlastPropagation().GetIn() {
-					t.Error("Expected StorageEncryptionScope BlastPropagation.In to be true")
-				}
-				if linkedQuery.GetBlastPropagation().GetOut() {
-					t.Error("Expected StorageEncryptionScope BlastPropagation.Out to be false")
 				}
 				break
 			}

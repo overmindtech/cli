@@ -65,10 +65,6 @@ func resourceOutputMapper(query, scope string, awsItem *types.Resource) (*sdp.It
 					Query:  fmt.Sprintf("%s/%s/%s", restApiID, *awsItem.Id, methodString),
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 	}

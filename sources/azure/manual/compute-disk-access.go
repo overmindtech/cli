@@ -132,10 +132,6 @@ func (c *computeDiskAccessWrapper) azureDiskAccessToSDPItem(diskAccess *armcompu
 			Query:  *diskAccess.Name,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  true, // Disk access changes affect private endpoint connections
-			Out: true, // Private endpoint connection state affects disk access connectivity
-		},
 	})
 
 	// Link to Network Private Endpoints (external resources) from PrivateEndpointConnections
@@ -156,10 +152,6 @@ func (c *computeDiskAccessWrapper) azureDiskAccessToSDPItem(diskAccess *armcompu
 							Method: sdp.QueryMethod_GET,
 							Query:  privateEndpointName,
 							Scope:  extractedScope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true, // Private endpoint changes affect disk access private connectivity
-							Out: true, // Disk access deletion or config changes may affect the private endpoint connection state
 						},
 					})
 				}

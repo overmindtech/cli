@@ -91,12 +91,6 @@ func serviceGetFunc(ctx context.Context, client ECSClient, scope string, input *
 					Query:  *service.ClusterArn,
 					Scope:  FormatScope(a.AccountID, a.Region),
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changes to the cluster will affect the service
-					In: true,
-					// The service should be able to affect the cluster
-					Out: false,
-				},
 			})
 		}
 	}
@@ -110,11 +104,6 @@ func serviceGetFunc(ctx context.Context, client ECSClient, scope string, input *
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *lb.TargetGroupArn,
 						Scope:  FormatScope(a.AccountID, a.Region),
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// These are tightly linked
-						In:  true,
-						Out: true,
 					},
 				})
 			}
@@ -131,11 +120,6 @@ func serviceGetFunc(ctx context.Context, client ECSClient, scope string, input *
 						Query:  *sr.RegistryArn,
 						Scope:  FormatScope(a.AccountID, a.Region),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// These are tightly linked
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 		}
@@ -149,12 +133,6 @@ func serviceGetFunc(ctx context.Context, client ECSClient, scope string, input *
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *service.TaskDefinition,
 					Scope:  FormatScope(a.AccountID, a.Region),
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changing the task definition will affect the service
-					In: true,
-					// The service shouldn't affect the task definition itself
-					Out: false,
 				},
 			})
 		}
@@ -170,12 +148,6 @@ func serviceGetFunc(ctx context.Context, client ECSClient, scope string, input *
 						Query:  *deployment.TaskDefinition,
 						Scope:  FormatScope(a.AccountID, a.Region),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the task definition will affect the service
-						In: true,
-						// The service shouldn't affect the task definition itself
-						Out: false,
-					},
 				})
 			}
 		}
@@ -188,12 +160,6 @@ func serviceGetFunc(ctx context.Context, client ECSClient, scope string, input *
 						Method: sdp.QueryMethod_GET,
 						Query:  *strategy.CapacityProvider,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the capacity provider will affect the service
-						In: true,
-						// The service shouldn't affect the capacity provider itself
-						Out: false,
 					},
 				})
 			}
@@ -209,12 +175,6 @@ func serviceGetFunc(ctx context.Context, client ECSClient, scope string, input *
 							Query:  subnet,
 							Scope:  scope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changing the subnet will affect the service
-							In: true,
-							// The service shouldn't affect the subnet
-							Out: false,
-						},
 					})
 				}
 
@@ -225,12 +185,6 @@ func serviceGetFunc(ctx context.Context, client ECSClient, scope string, input *
 							Method: sdp.QueryMethod_GET,
 							Query:  sg,
 							Scope:  scope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changing the security group will affect the service
-							In: true,
-							// The service shouldn't affect the security group
-							Out: false,
 						},
 					})
 				}
@@ -248,11 +202,6 @@ func serviceGetFunc(ctx context.Context, client ECSClient, scope string, input *
 								Query:  *alias.DnsName,
 								Scope:  "global",
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								// DNS always links
-								In:  true,
-								Out: true,
-							},
 						})
 					}
 				}
@@ -268,11 +217,6 @@ func serviceGetFunc(ctx context.Context, client ECSClient, scope string, input *
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  *cr.DiscoveryArn,
 							Scope:  FormatScope(a.AccountID, a.Region),
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// These are tightly linked
-							In:  true,
-							Out: true,
 						},
 					})
 				}
@@ -290,12 +234,6 @@ func serviceGetFunc(ctx context.Context, client ECSClient, scope string, input *
 						Query:  subnet,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the subnet will affect the service
-						In: true,
-						// The service shouldn't affect the subnet
-						Out: false,
-					},
 				})
 			}
 
@@ -306,12 +244,6 @@ func serviceGetFunc(ctx context.Context, client ECSClient, scope string, input *
 						Method: sdp.QueryMethod_GET,
 						Query:  sg,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the security group will affect the service
-						In: true,
-						// The service shouldn't affect the security group
-						Out: false,
 					},
 				})
 			}
@@ -325,11 +257,6 @@ func serviceGetFunc(ctx context.Context, client ECSClient, scope string, input *
 				Method: sdp.QueryMethod_GET,
 				Query:  id,
 				Scope:  scope,
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// These are tightly linked
-				In:  true,
-				Out: true,
 			},
 		})
 	}

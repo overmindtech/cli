@@ -51,12 +51,6 @@ func fargateProfileGetFunc(ctx context.Context, client EKSClient, scope string, 
 					Query:  *out.FargateProfile.PodExecutionRoleArn,
 					Scope:  FormatScope(a.AccountID, a.Region),
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// The execution role will affect the fargate profile
-					In: true,
-					// The fargate profile can't affect the execution role
-					Out: false,
-				},
 			})
 		}
 	}
@@ -68,12 +62,6 @@ func fargateProfileGetFunc(ctx context.Context, client EKSClient, scope string, 
 				Method: sdp.QueryMethod_GET,
 				Query:  subnet,
 				Scope:  scope,
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// The subnet will affect the fargate profile
-				In: true,
-				// The fargate profile can't affect the subnet
-				Out: false,
 			},
 		})
 	}

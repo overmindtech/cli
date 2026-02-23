@@ -49,10 +49,6 @@ func siteToSiteVpnAttachmentItemMapper(_, scope string, awsItem *types.SiteToSit
 					Query:  *awsItem.Attachment.CoreNetworkId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 
@@ -76,10 +72,6 @@ func siteToSiteVpnAttachmentItemMapper(_, scope string, awsItem *types.SiteToSit
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  *awsItem.VpnConnectionArn,
 				Scope:  scope,
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: true,
 			},
 		})
 	}

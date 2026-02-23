@@ -133,12 +133,6 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 					Query:  query,
 					Scope:  scope, // Use the subnet's scope, not the server's scope
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// PostgreSQL Flexible Server depends on subnet for network connectivity
-					// If subnet is deleted/modified, server network access may be affected
-					In:  true,
-					Out: false,
-				}, // Subnet is an external resource that the server depends on
 			})
 
 			// Link to Virtual Network (parent of subnet)
@@ -151,12 +145,6 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 					Query:  vnetName,
 					Scope:  scope, // Use the same scope as the subnet
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// PostgreSQL Flexible Server depends on virtual network for network connectivity
-					// If virtual network is deleted/modified, server network access may be affected
-					In:  true,
-					Out: false,
-				}, // Virtual Network is an external resource that the server depends on
 			})
 		}
 	}
@@ -171,10 +159,6 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 			Query:  serverName,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  true,  // Server changes (deletion, configuration, maintenance) directly affect database availability
-			Out: false, // Database changes (schema, data) don't directly affect the server's configuration
-		}, // Databases are child resources that depend on their parent server
 	})
 
 	// Link to Firewall Rules (child resource)
@@ -187,10 +171,6 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 			Query:  serverName,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  true, // Server changes affect firewall rules
-			Out: true, // Firewall rule changes affect server connectivity
-		}, // Firewall Rules are child resources that control server access
 	})
 
 	// Link to Configurations (child resource)
@@ -203,10 +183,6 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 			Query:  serverName,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  true, // Server changes affect configurations
-			Out: true, // Configuration changes affect server behavior and performance
-		}, // Configurations are child resources that control server settings
 	})
 
 	// Link to Fully Qualified Domain Name (DNS)
@@ -219,10 +195,6 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 				Query:  *server.Properties.FullyQualifiedDomainName,
 				Scope:  "global",
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true, // DNS changes affect server connectivity
-				Out: true, // Server changes may affect DNS resolution
-			}, // DNS names are shared resources that affect connectivity
 		})
 	}
 
@@ -243,12 +215,6 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 						Method: sdp.QueryMethod_GET,
 						Query:  identityName,
 						Scope:  linkedScope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// PostgreSQL Flexible Server depends on managed identity for authentication
-						// If identity is deleted/modified, server operations may fail
-						In:  true,
-						Out: false,
 					},
 				})
 			}
@@ -274,12 +240,6 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 					Query:  privateDNSZoneName,
 					Scope:  linkedScope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// PostgreSQL Flexible Server depends on private DNS zone for DNS resolution
-					// If DNS zone is deleted/modified, server DNS resolution may fail
-					In:  true,
-					Out: false,
-				},
 			})
 		}
 	}
@@ -294,10 +254,6 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 			Query:  serverName,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  true, // Server changes affect administrators
-			Out: true, // Administrator changes affect server access and authentication
-		}, // Administrators are child resources that control server access
 	})
 
 	// Link to Private Endpoint Connections (child resource)
@@ -310,10 +266,6 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 			Query:  serverName,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  true, // Server changes affect private endpoint connections
-			Out: true, // Private endpoint connection changes affect server network connectivity
-		}, // Private Endpoint Connections are child resources that manage private network access
 	})
 
 	// Link to Network Private Endpoints (external resources) from PrivateEndpointConnections
@@ -337,12 +289,6 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 							Query:  privateEndpointName,
 							Scope:  linkedScope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Private endpoint changes (deletion, network configuration) affect the PostgreSQL Flexible Server's private connectivity
-							// Server deletion or configuration changes may affect the private endpoint's connection state
-							In:  true,
-							Out: true,
-						}, // Private endpoints are tightly coupled to the server - changes affect connectivity
 					})
 				}
 			}
@@ -359,10 +305,6 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 			Query:  serverName,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  true, // Server changes affect private link resources
-			Out: true, // Private link resource changes affect server private connectivity
-		}, // Private Link Resources are child resources that define available private link services
 	})
 
 	// Link to Replicas (child resource)
@@ -375,10 +317,6 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 			Query:  serverName,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  true,  // Server changes (deletion, configuration) directly affect replica availability
-			Out: false, // Replica changes don't directly affect the primary server's configuration
-		}, // Replicas are child resources that depend on their parent server
 	})
 
 	// Link to Migrations (child resource)
@@ -391,10 +329,6 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 			Query:  serverName,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  true,  // Server changes affect migration operations
-			Out: false, // Migration changes don't directly affect the server's configuration
-		}, // Migrations are child resources that represent data migration operations
 	})
 
 	// Link to Backups (child resource)
@@ -407,10 +341,6 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 			Query:  serverName,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  true,  // Server changes (deletion, configuration) directly affect backup availability
-			Out: false, // Backup changes don't directly affect the server's configuration
-		}, // Backups are child resources that depend on their parent server
 	})
 
 	// Link to Virtual Endpoints (child resource)
@@ -423,10 +353,6 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 			Query:  serverName,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  true, // Server changes (deletion, configuration) directly affect virtual endpoint availability
-			Out: true, // Virtual endpoint changes affect server connectivity and routing
-		}, // Virtual Endpoints are child resources that control server network access
 	})
 
 	// Link to Key Vault Vault (external resource) from Data Encryption
@@ -445,12 +371,6 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 					Method: sdp.QueryMethod_GET,
 					Query:  vaultName,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// PostgreSQL Flexible Server depends on Key Vault for customer-managed encryption keys
-					// If Key Vault is deleted/modified, server encryption may fail
-					In:  true,
-					Out: false,
 				},
 			})
 		}
@@ -477,12 +397,6 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 					Query:  query,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// PostgreSQL Flexible Server depends on Key Vault key for customer-managed encryption
-					// If key is deleted/modified, server encryption operations may fail
-					In:  true,
-					Out: false,
-				},
 			})
 		}
 	}
@@ -505,12 +419,6 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 					Query:  identityName,
 					Scope:  linkedScope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// PostgreSQL Flexible Server depends on managed identity for accessing encryption keys
-					// If identity is deleted/modified, server encryption operations may fail
-					In:  true,
-					Out: false,
-				},
 			})
 		}
 	}
@@ -531,12 +439,6 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 					Method: sdp.QueryMethod_GET,
 					Query:  vaultName,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// PostgreSQL Flexible Server depends on Key Vault for geo-redundant backup encryption keys
-					// If Key Vault is deleted/modified, server geo-backup encryption may fail
-					In:  true,
-					Out: false,
 				},
 			})
 		}
@@ -563,12 +465,6 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 					Query:  query,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// PostgreSQL Flexible Server depends on Key Vault key for geo-redundant backup encryption
-					// If key is deleted/modified, server geo-backup encryption operations may fail
-					In:  true,
-					Out: false,
-				},
 			})
 		}
 	}
@@ -590,12 +486,6 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 					Method: sdp.QueryMethod_GET,
 					Query:  identityName,
 					Scope:  linkedScope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// PostgreSQL Flexible Server depends on managed identity for accessing geo-backup encryption keys
-					// If identity is deleted/modified, server geo-backup encryption operations may fail
-					In:  true,
-					Out: false,
 				},
 			})
 		}
@@ -619,12 +509,6 @@ func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServer
 					Method: sdp.QueryMethod_GET,
 					Query:  sourceServerName,
 					Scope:  linkedScope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Replica server depends on source server for replication
-					// If source server is deleted/modified, replica operations may fail
-					In:  true,
-					Out: false,
 				},
 			})
 		}

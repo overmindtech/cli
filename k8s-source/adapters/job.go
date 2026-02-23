@@ -20,12 +20,6 @@ func jobExtractor(resource *v1.Job, scope string) ([]*sdp.LinkedItemQuery, error
 				Query:  LabelSelectorToQuery(resource.Spec.Selector),
 				Type:   "Pod",
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Changes to a job will replace the pods, changes to the pods
-				// could break the job
-				In:  true,
-				Out: true,
-			},
 		})
 	}
 

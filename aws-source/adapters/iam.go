@@ -69,10 +69,6 @@ var ssmQueryExtractor = QueryExtractor{
 					Query:  a.String() + "*", // Wildcard at the end
 					Scope:  FormatScope(a.AccountID, a.Region),
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: true,
-				},
 			},
 		}
 	},
@@ -117,10 +113,6 @@ var fallbackQueryExtractor = QueryExtractor{
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  arn.String(),
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  false,
-					Out: true,
 				},
 			},
 		}
@@ -170,13 +162,6 @@ func LinksFromPolicy(document *policy.Policy) []*sdp.LinkedItemQuery {
 									Method: sdp.QueryMethod_SEARCH,
 									Query:  arn.String(),
 									Scope:  FormatScope(arn.AccountID, arn.Region),
-								},
-								BlastPropagation: &sdp.BlastPropagation{
-									// If a user or role iex explicitly
-									// referenced, I think it's reasonable to
-									// assume that they are tightly bound
-									In:  true,
-									Out: true,
 								},
 							})
 						}

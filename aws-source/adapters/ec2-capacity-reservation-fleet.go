@@ -37,12 +37,6 @@ func capacityReservationFleetOutputMapper(_ context.Context, _ *ec2.Client, scop
 						Query:  *spec.CapacityReservationId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changes to the fleet will affect the reservation
-						Out: true,
-						// The reservation won't affect us
-						In: false,
-					},
 				})
 			}
 		}

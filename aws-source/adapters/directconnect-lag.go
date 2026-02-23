@@ -54,12 +54,6 @@ func lagOutputMapper(_ context.Context, _ *directconnect.Client, scope string, _
 						Query:  *connection.ConnectionId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Connection and LAG are tightly coupled
-						// Changing one will affect the other
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 		}
@@ -72,12 +66,6 @@ func lagOutputMapper(_ context.Context, _ *directconnect.Client, scope string, _
 					Query:  *lag.LagId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// LAG and hosted connections are tightly coupled
-					// Changing one will affect the other
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 
@@ -89,12 +77,6 @@ func lagOutputMapper(_ context.Context, _ *directconnect.Client, scope string, _
 					// This is location code, not its name
 					Query: *lag.Location,
 					Scope: scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changes to the location will affect this, i.e., its speed, provider, etc.
-					In: true,
-					// We can't affect the location
-					Out: false,
 				},
 			})
 		}

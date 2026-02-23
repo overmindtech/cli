@@ -34,12 +34,6 @@ func directconnectConnectionOutputMapper(_ context.Context, _ *directconnect.Cli
 					Query:  *connection.LagId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Connection and LAG are tightly coupled
-					// Changing one will affect the other
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 
@@ -50,12 +44,6 @@ func directconnectConnectionOutputMapper(_ context.Context, _ *directconnect.Cli
 					Method: sdp.QueryMethod_GET,
 					Query:  *connection.Location,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changes to the location will affect this, i.e., its speed, provider, etc.
-					In: true,
-					// We can't affect the location
-					Out: false,
 				},
 			})
 		}
@@ -68,12 +56,6 @@ func directconnectConnectionOutputMapper(_ context.Context, _ *directconnect.Cli
 					Query:  *connection.ConnectionId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changes to the loa will affect this
-					In: true,
-					// We can't affect the loa
-					Out: false,
-				},
 			})
 		}
 
@@ -84,12 +66,6 @@ func directconnectConnectionOutputMapper(_ context.Context, _ *directconnect.Cli
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  *connection.ConnectionId,
 				Scope:  scope,
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Changes to the virtual interface won't affect this
-				In: false,
-				// We cannot delete a connection if it has virtual interfaces
-				Out: true,
 			},
 		})
 

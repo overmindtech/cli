@@ -53,11 +53,6 @@ func volumeOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2.D
 					Query:  *attachment.InstanceId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// The instance and the volume are closely linked
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 

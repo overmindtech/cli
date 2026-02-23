@@ -128,11 +128,6 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 						Query:  *instance.Endpoint.Address,
 						Scope:  "global",
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// DNS always links
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 
@@ -143,12 +138,6 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 						Method: sdp.QueryMethod_GET,
 						Query:  *instance.Endpoint.HostedZoneId,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the hosted zone can affect the endpoint
-						In: true,
-						// The instance won't affect the hosted zone
-						Out: false,
 					},
 				})
 			}
@@ -163,12 +152,6 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 						Query:  *sg.VpcSecurityGroupId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the security group can affect the instance
-						In: true,
-						// The instance won't affect the security group
-						Out: false,
-					},
 				})
 			}
 		}
@@ -182,12 +165,6 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 						Query:  *paramGroup.DBParameterGroupName,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the parameter group can affect the instance
-						In: true,
-						// The instance won't affect the parameter group
-						Out: false,
-					},
 				})
 			}
 		}
@@ -200,12 +177,6 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 					Query:  *dbSubnetGroup,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changing the subnet group can affect the instance
-					In: true,
-					// The instance won't affect the subnet group
-					Out: false,
-				},
 			})
 		}
 
@@ -216,11 +187,6 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 					Method: sdp.QueryMethod_GET,
 					Query:  *instance.DBClusterIdentifier,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Tightly coupled
-					In:  true,
-					Out: true,
 				},
 			})
 		}
@@ -235,12 +201,6 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 						Query:  *instance.KmsKeyId,
 						Scope:  FormatScope(a.AccountID, a.Region),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the KMS key can affect the instance
-						In: true,
-						// The instance won't affect the KMS key
-						Out: false,
-					},
 				})
 			}
 		}
@@ -254,11 +214,6 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 						Query:  *instance.EnhancedMonitoringResourceArn,
 						Scope:  FormatScope(a.AccountID, a.Region),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Tightly coupled
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 		}
@@ -271,12 +226,6 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *instance.MonitoringRoleArn,
 						Scope:  FormatScope(a.AccountID, a.Region),
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the role can affect the instance
-						In: true,
-						// The instance won't affect the role
-						Out: false,
 					},
 				})
 			}
@@ -292,12 +241,6 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 						Query:  *instance.PerformanceInsightsKMSKeyId,
 						Scope:  FormatScope(a.AccountID, a.Region),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the KMS key can affect the instance
-						In: true,
-						// The instance won't affect the KMS key
-						Out: false,
-					},
 				})
 			}
 		}
@@ -312,12 +255,6 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 							Query:  *role.RoleArn,
 							Scope:  FormatScope(a.AccountID, a.Region),
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changing the role can affect the instance
-							In: true,
-							// The instance won't affect the role
-							Out: false,
-						},
 					})
 				}
 			}
@@ -331,11 +268,6 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 					Query:  *instance.ActivityStreamKinesisStreamName,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Tightly coupled
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 
@@ -347,11 +279,6 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *instance.AwsBackupRecoveryPointArn,
 						Scope:  FormatScope(a.AccountID, a.Region),
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Tightly coupled
-						In:  true,
-						Out: true,
 					},
 				})
 			}
@@ -367,12 +294,6 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 						Query:  *instance.CustomIamInstanceProfile,
 						Scope:  FormatScope(a.AccountID, a.Region),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the instance profile can affect the instance
-						In: true,
-						// The instance won't affect the instance profile
-						Out: false,
-					},
 				})
 			}
 		}
@@ -386,11 +307,6 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  *replication.DBInstanceAutomatedBackupsArn,
 							Scope:  FormatScope(a.AccountID, a.Region),
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Tightly coupled
-							In:  true,
-							Out: true,
 						},
 					})
 				}
@@ -406,11 +322,6 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 						Query:  *instance.ListenerEndpoint.Address,
 						Scope:  "global",
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// DNS always links
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 
@@ -421,12 +332,6 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 						Method: sdp.QueryMethod_GET,
 						Query:  *instance.ListenerEndpoint.HostedZoneId,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the hosted zone can affect the endpoint
-						In: true,
-						// The instance won't affect the hosted zone
-						Out: false,
 					},
 				})
 			}
@@ -441,12 +346,6 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 						Query:  *instance.MasterUserSecret.KmsKeyId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the KMS key can affect the instance
-						In: true,
-						// The instance won't affect the KMS key
-						Out: false,
-					},
 				})
 			}
 
@@ -458,12 +357,6 @@ func dBInstanceOutputMapper(ctx context.Context, client rdsClient, scope string,
 							Method: sdp.QueryMethod_SEARCH,
 							Query:  *instance.MasterUserSecret.SecretArn,
 							Scope:  FormatScope(a.AccountID, a.Region),
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changing the secret can affect the instance
-							In: true,
-							// The instance won't affect the secret
-							Out: false,
 						},
 					})
 				}

@@ -727,12 +727,10 @@ func TestObjectReferenceToQuery(t *testing.T) {
 			Name:      "foo",
 		}
 
-		b := &sdp.BlastPropagation{}
-
 		query := ObjectReferenceToQuery(ref, ScopeDetails{
 			ClusterName: "test-cluster",
 			Namespace:   "default",
-		}, b)
+		})
 
 		if query.GetQuery().GetType() != "Pod" {
 			t.Errorf("expected type Pod, got %s", query.GetQuery().GetType())
@@ -745,14 +743,10 @@ func TestObjectReferenceToQuery(t *testing.T) {
 		if query.GetQuery().GetScope() != "test-cluster.default" {
 			t.Errorf("expected scope to be test-cluster.default, got %s", query.GetQuery().GetScope())
 		}
-
-		if query.GetBlastPropagation() != b {
-			t.Errorf("expected blast propagation to be %v, got %v", b, query.GetBlastPropagation())
-		}
 	})
 
 	t.Run("with a nil object reference", func(t *testing.T) {
-		query := ObjectReferenceToQuery(nil, ScopeDetails{}, nil)
+		query := ObjectReferenceToQuery(nil, ScopeDetails{})
 
 		if query != nil {
 			t.Errorf("expected nil query, got %v", query)

@@ -124,10 +124,6 @@ func (c computeGalleryImageWrapper) azureGalleryImageToSDPItem(
 			Query:  galleryName,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  true,  // If gallery is deleted → image definition is deleted
-			Out: false, // If image definition is deleted → gallery remains
-		},
 	})
 
 	// URI-based links: Eula, PrivacyStatementURI, ReleaseNoteURI

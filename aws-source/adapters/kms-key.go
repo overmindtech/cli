@@ -62,12 +62,6 @@ func kmsKeyGetFunc(ctx context.Context, client kmsClient, scope string, input *k
 				Query:  *output.KeyMetadata.CustomKeyStoreId,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// A keystore cannot be deleted if it contains a key.
-				In: true,
-				// Any change on the key won't affect the keystore.
-				Out: false,
-			},
 		})
 	}
 
@@ -78,11 +72,6 @@ func kmsKeyGetFunc(ctx context.Context, client kmsClient, scope string, input *k
 			Query:  *input.KeyId,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// These are tightly coupled
-			In:  true,
-			Out: true,
-		},
 	})
 
 	item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -91,11 +80,6 @@ func kmsKeyGetFunc(ctx context.Context, client kmsClient, scope string, input *k
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  *input.KeyId,
 			Scope:  scope,
-		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// These are tightly linked
-			In:  true,
-			Out: true,
 		},
 	})
 

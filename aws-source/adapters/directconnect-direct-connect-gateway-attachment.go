@@ -50,12 +50,6 @@ func directConnectGatewayAttachmentOutputMapper(_ context.Context, _ *directconn
 					Query:  *attachment.DirectConnectGatewayId,
 					Scope:  "global",
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// This is not clearly documented, but it seems that if the gateway is deleted, the attachment state will change to detaching
-					In: true,
-					// We can't affect the direct connect gateway
-					Out: false,
-				},
 			})
 		}
 
@@ -66,13 +60,6 @@ func directConnectGatewayAttachmentOutputMapper(_ context.Context, _ *directconn
 					Method: sdp.QueryMethod_GET,
 					Query:  *attachment.VirtualInterfaceId,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// If virtual interface is deleted, the attachment state will change to detaching
-					// https://docs.aws.amazon.com/directconnect/latest/APIReference/API_DirectConnectGatewayAttachment.html#API_DirectConnectGatewayAttachment_Contents
-					In: true,
-					// We can't affect the virtual interface
-					Out: false,
 				},
 			})
 		}

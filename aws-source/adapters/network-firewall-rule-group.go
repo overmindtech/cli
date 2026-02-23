@@ -79,10 +79,6 @@ func ruleGroupGetFunc(ctx context.Context, client networkFirewallClient, scope s
 					Query:  *resp.RuleGroupResponse.SnsTopic,
 					Scope:  FormatScope(a.AccountID, a.Region),
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  false,
-					Out: true,
-				},
 			})
 		}
 	}
@@ -96,10 +92,6 @@ func ruleGroupGetFunc(ctx context.Context, client networkFirewallClient, scope s
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *resp.RuleGroupResponse.SourceMetadata.SourceArn,
 					Scope:  FormatScope(a.AccountID, a.Region),
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  false,
-					Out: false,
 				},
 			})
 		}

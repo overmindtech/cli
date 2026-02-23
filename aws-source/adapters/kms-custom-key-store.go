@@ -54,12 +54,6 @@ func customKeyStoreOutputMapper(_ context.Context, _ *kms.Client, scope string, 
 					Query:  *customKeyStore.CloudHsmClusterId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changing the CloudHSM cluster will affect the custom key store
-					In: true,
-					// Updating the custom key store will not affect the CloudHSM cluster
-					Out: false,
-				},
 			})
 		}
 
@@ -71,12 +65,6 @@ func customKeyStoreOutputMapper(_ context.Context, _ *kms.Client, scope string, 
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  fmt.Sprintf("name|%s", *customKeyStore.XksProxyConfiguration.VpcEndpointServiceName),
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changing the VPC endpoint service will affect the custom key store
-					In: true,
-					// Updating the custom key store will not affect the VPC endpoint service
-					Out: false,
 				},
 			})
 		}

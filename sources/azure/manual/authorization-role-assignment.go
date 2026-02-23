@@ -167,12 +167,6 @@ func (a authorizationRoleAssignmentWrapper) azureRoleAssignmentToSDPItem(roleAss
 					Query:  identityName,
 					Scope:  linkedScope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Role assignment depends on managed identity for delegated access
-					// If identity is deleted/modified, role assignment operations may fail
-					In:  true,
-					Out: false,
-				},
 			})
 		}
 	}
@@ -204,12 +198,6 @@ func (a authorizationRoleAssignmentWrapper) azureRoleAssignmentToSDPItem(roleAss
 						Method: sdp.QueryMethod_GET,
 						Query:  roleDefinitionGUID,
 						Scope:  linkedScope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Role assignment depends on role definition for permissions
-						// If role definition is deleted/modified, role assignment becomes invalid
-						In:  true,
-						Out: false,
 					},
 				})
 			}

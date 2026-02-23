@@ -143,10 +143,6 @@ func (s storageAccountWrapper) azureStorageAccountToSDPItem(account *armstorage.
 			Query:  accountName,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  false, // Storage account is NOT affected if blob containers change
-			Out: true,  // Blob containers ARE affected if storage account changes/deletes
-		},
 	})
 
 	sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -155,10 +151,6 @@ func (s storageAccountWrapper) azureStorageAccountToSDPItem(account *armstorage.
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  accountName,
 			Scope:  scope,
-		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  false, // Storage account is NOT affected if file shares change
-			Out: true,  // File shares ARE affected if storage account changes/deletes
 		},
 	})
 
@@ -169,10 +161,6 @@ func (s storageAccountWrapper) azureStorageAccountToSDPItem(account *armstorage.
 			Query:  accountName,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  false, // Storage account is NOT affected if tables change
-			Out: true,  // Tables ARE affected if storage account changes/deletes
-		},
 	})
 
 	sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -181,10 +169,6 @@ func (s storageAccountWrapper) azureStorageAccountToSDPItem(account *armstorage.
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  accountName,
 			Scope:  scope,
-		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  false, // Storage account is NOT affected if queues change
-			Out: true,  // Queues ARE affected if storage account changes/deletes
 		},
 	})
 
@@ -197,12 +181,6 @@ func (s storageAccountWrapper) azureStorageAccountToSDPItem(account *armstorage.
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  accountName,
 			Scope:  scope,
-		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// Private endpoint connections are child resources of the storage account
-			// Changes to storage account affect connections, and connection state affects storage access
-			In:  true,
-			Out: true,
 		},
 	})
 
@@ -223,12 +201,6 @@ func (s storageAccountWrapper) azureStorageAccountToSDPItem(account *armstorage.
 						Method: sdp.QueryMethod_GET,
 						Query:  identityName,
 						Scope:  linkedScope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Storage account depends on managed identity for authentication
-						// If identity is deleted/modified, storage account operations may fail
-						In:  true,
-						Out: false,
 					},
 				})
 			}
@@ -257,12 +229,6 @@ func (s storageAccountWrapper) azureStorageAccountToSDPItem(account *armstorage.
 						Query:  vaultName,
 						Scope:  scope, // Limitation: Key Vault URI doesn't contain resource group info
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Storage account depends on Key Vault for customer-managed encryption keys
-						// If Key Vault is deleted/modified or key is rotated, storage account encryption may be affected
-						In:  true,
-						Out: false,
-					},
 				})
 			}
 		}
@@ -286,12 +252,6 @@ func (s storageAccountWrapper) azureStorageAccountToSDPItem(account *armstorage.
 						Method: sdp.QueryMethod_GET,
 						Query:  identityName,
 						Scope:  linkedScope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Storage account depends on managed identity for encryption key access
-						// If identity is deleted/modified, storage account encryption operations may fail
-						In:  true,
-						Out: false,
 					},
 				})
 			}
@@ -326,12 +286,6 @@ func (s storageAccountWrapper) azureStorageAccountToSDPItem(account *armstorage.
 							Query:  query,
 							Scope:  scope, // Use the subnet's scope, not the storage account's scope
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Storage account depends on subnet for network access control
-							// If subnet is deleted/modified, storage account network access may be affected
-							In:  true,
-							Out: false,
-						},
 					})
 				}
 			}
@@ -349,11 +303,6 @@ func (s storageAccountWrapper) azureStorageAccountToSDPItem(account *armstorage.
 						Query:  *ipRule.IPAddressOrRange,
 						Scope:  "global",
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// IPs are always linked
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 		}
@@ -369,11 +318,6 @@ func (s storageAccountWrapper) azureStorageAccountToSDPItem(account *armstorage.
 						Method: sdp.QueryMethod_GET,
 						Query:  *ipRule.IPAddressOrRange,
 						Scope:  "global",
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// IPs are always linked
-						In:  true,
-						Out: true,
 					},
 				})
 			}
@@ -399,12 +343,6 @@ func (s storageAccountWrapper) azureStorageAccountToSDPItem(account *armstorage.
 							Method: sdp.QueryMethod_GET,
 							Query:  privateEndpointName,
 							Scope:  linkedScope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Private endpoint connection is tightly coupled with the storage account
-							// Changes to either affect the other
-							In:  true,
-							Out: true,
 						},
 					})
 				}
@@ -438,11 +376,6 @@ func (s storageAccountWrapper) azureStorageAccountToSDPItem(account *armstorage.
 							Query:  dnsName,
 							Scope:  "global",
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// DNS names are always linked
-							In:  true,
-							Out: true,
-						},
 					})
 				}
 			}
@@ -475,11 +408,6 @@ func (s storageAccountWrapper) azureStorageAccountToSDPItem(account *armstorage.
 							Query:  dnsName,
 							Scope:  "global",
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// DNS names are always linked
-							In:  true,
-							Out: true,
-						},
 					})
 				}
 			}
@@ -494,11 +422,6 @@ func (s storageAccountWrapper) azureStorageAccountToSDPItem(account *armstorage.
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  *account.Properties.CustomDomain.Name,
 				Scope:  "global",
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// DNS names are always linked
-				In:  true,
-				Out: true,
 			},
 		})
 	}

@@ -52,11 +52,6 @@ func targetGroupOutputMapper(ctx context.Context, client elbv2Client, scope stri
 					Query:  *tg.TargetGroupArn,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Target groups and their target health are tightly coupled
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 
@@ -67,12 +62,6 @@ func targetGroupOutputMapper(ctx context.Context, client elbv2Client, scope stri
 					Method: sdp.QueryMethod_GET,
 					Query:  *tg.VpcId,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changing the VPC can affect the target group
-					In: true,
-					// The target group won't affect the VPC
-					Out: false,
 				},
 			})
 		}
@@ -85,11 +74,6 @@ func targetGroupOutputMapper(ctx context.Context, client elbv2Client, scope stri
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  lbArn,
 						Scope:  FormatScope(a.AccountID, a.Region),
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Load balancers and their target groups are tightly coupled
-						In:  true,
-						Out: true,
 					},
 				})
 			}

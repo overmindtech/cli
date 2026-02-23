@@ -45,10 +45,6 @@ func transitGatewayRegistrationOutputMapper(_ context.Context, _ *networkmanager
 						Query:  *r.GlobalNetworkId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 			},
 		}
@@ -62,10 +58,6 @@ func transitGatewayRegistrationOutputMapper(_ context.Context, _ *networkmanager
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *r.TransitGatewayArn,
 						Scope:  FormatScope(arn.AccountID, arn.Region),
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
 					},
 				})
 			}

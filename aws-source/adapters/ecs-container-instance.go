@@ -73,11 +73,6 @@ func containerInstanceGetFunc(ctx context.Context, client ECSClient, scope strin
 				Query:  *containerInstance.Ec2InstanceId,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// These represent the same thing
-				In:  true,
-				Out: true,
-			},
 		})
 	}
 

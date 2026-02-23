@@ -22,12 +22,6 @@ func serviceExtractor(resource *v1.Service, scope string) ([]*sdp.LinkedItemQuer
 				}),
 				Scope: scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Bidirectional propagation since we control the pods, and the
-				// pods host the service
-				In:  true,
-				Out: true,
-			},
 		})
 	}
 
@@ -51,11 +45,6 @@ func serviceExtractor(resource *v1.Service, scope string) ([]*sdp.LinkedItemQuer
 					Query:  ip,
 					Scope:  "global",
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// IPs are always bidirectional
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 	}
@@ -68,11 +57,6 @@ func serviceExtractor(resource *v1.Service, scope string) ([]*sdp.LinkedItemQuer
 				Query:  resource.Spec.ExternalName,
 				Scope:  "global",
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// DNS is always bidirectional
-				In:  true,
-				Out: true,
-			},
 		})
 	}
 
@@ -83,12 +67,6 @@ func serviceExtractor(resource *v1.Service, scope string) ([]*sdp.LinkedItemQuer
 			Method: sdp.QueryMethod_GET,
 			Query:  resource.Name,
 			Scope:  scope,
-		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// The service causes the endpoint to be created, so changes to the
-			// service can affect the endpoint and vice versa
-			In:  true,
-			Out: true,
 		},
 	})
 
@@ -101,11 +79,6 @@ func serviceExtractor(resource *v1.Service, scope string) ([]*sdp.LinkedItemQuer
 					Query:  ingress.IP,
 					Scope:  "global",
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// IPs are always bidirectional
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 
@@ -116,11 +89,6 @@ func serviceExtractor(resource *v1.Service, scope string) ([]*sdp.LinkedItemQuer
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  ingress.Hostname,
 					Scope:  "global",
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// DNS is always bidirectional
-					In:  true,
-					Out: true,
 				},
 			})
 		}

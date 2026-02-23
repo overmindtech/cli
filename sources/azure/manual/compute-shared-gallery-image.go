@@ -127,10 +127,6 @@ func (c computeSharedGalleryImageWrapper) azureSharedGalleryImageToSDPItem(
 			Query:  shared.CompositeLookupKey(location, galleryUniqueName),
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  true,  // If shared gallery is removed → image is no longer visible
-			Out: false, // If image definition is deleted → shared gallery remains
-		},
 	})
 
 	// URI-based links. Note: armcompute.SharedGalleryImageProperties has no ReleaseNoteURI field (unlike GalleryImage).

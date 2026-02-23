@@ -152,11 +152,6 @@ func targetHealthOutputMapper(_ context.Context, _ *elbv2.Client, scope string, 
 						Query:  *desc.Target.Id,
 						Scope:  FormatScope(a.AccountID, a.Region),
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Everything is tightly coupled with target health
-						In:  true,
-						Out: true,
-					},
 				})
 			case "elasticloadbalancing":
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -165,10 +160,6 @@ func targetHealthOutputMapper(_ context.Context, _ *elbv2.Client, scope string, 
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *desc.Target.Id,
 						Scope:  FormatScope(a.AccountID, a.Region),
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
 					},
 				})
 			}
@@ -184,10 +175,6 @@ func targetHealthOutputMapper(_ context.Context, _ *elbv2.Client, scope string, 
 						Query:  *desc.Target.Id,
 						Scope:  "global",
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				})
 			} else {
 				// If all else fails it must be an instance ID
@@ -197,10 +184,6 @@ func targetHealthOutputMapper(_ context.Context, _ *elbv2.Client, scope string, 
 						Method: sdp.QueryMethod_GET,
 						Query:  *desc.Target.Id,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
 					},
 				})
 			}

@@ -61,14 +61,6 @@ func snapshotOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2
 						Query:  *snapshot.VolumeId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the volume will probably affect the snapshot
-						In: true,
-						// Changing the snapshot will affect the volume indirectly
-						// as applications might rely on snapshots as backups
-						// or other use-cases
-						Out: true,
-					},
 				})
 			}
 		}

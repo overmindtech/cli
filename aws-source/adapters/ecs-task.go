@@ -79,11 +79,6 @@ func taskGetFunc(ctx context.Context, client ECSClient, scope string, input *ecs
 							Query:  *attachment.Id,
 							Scope:  scope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// These are tightly linked
-							In:  true,
-							Out: true,
-						},
 					})
 				}
 			}
@@ -99,12 +94,6 @@ func taskGetFunc(ctx context.Context, client ECSClient, scope string, input *ecs
 					Query:  *task.ClusterArn,
 					Scope:  FormatScope(a.AccountID, a.Region),
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// The cluster can affect the task
-					In: true,
-					// The task can't affect the cluster
-					Out: false,
-				},
 			})
 		}
 	}
@@ -117,12 +106,6 @@ func taskGetFunc(ctx context.Context, client ECSClient, scope string, input *ecs
 					Method: sdp.QueryMethod_GET,
 					Query:  a.ResourceID(),
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// The container instance can affect the task
-					In: true,
-					// The task can't affect the container instance
-					Out: false,
 				},
 			})
 		}
@@ -138,11 +121,6 @@ func taskGetFunc(ctx context.Context, client ECSClient, scope string, input *ecs
 						Query:  *ni.Ipv6Address,
 						Scope:  "global",
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// IPs are always linked
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 
@@ -153,11 +131,6 @@ func taskGetFunc(ctx context.Context, client ECSClient, scope string, input *ecs
 						Method: sdp.QueryMethod_GET,
 						Query:  *ni.PrivateIpv4Address,
 						Scope:  "global",
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// IPs are always linked
-						In:  true,
-						Out: true,
 					},
 				})
 			}
@@ -172,12 +145,6 @@ func taskGetFunc(ctx context.Context, client ECSClient, scope string, input *ecs
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *task.TaskDefinitionArn,
 					Scope:  FormatScope(a.AccountID, a.Region),
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// The task definition can affect the task
-					In: true,
-					// The task can't affect the task definition
-					Out: false,
 				},
 			})
 		}

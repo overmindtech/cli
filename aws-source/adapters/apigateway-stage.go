@@ -65,12 +65,6 @@ func stageOutputMapper(query, scope string, awsItem *types.Stage) (*sdp.Item, er
 				Query:  fmt.Sprintf("%s/%s", restAPIID, *awsItem.DeploymentId),
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Deleting a deployment will impact the stage
-				In: true,
-				// Deleting a stage won't impact the deployment
-				Out: false,
-			},
 		})
 	}
 
@@ -80,11 +74,6 @@ func stageOutputMapper(query, scope string, awsItem *types.Stage) (*sdp.Item, er
 			Method: sdp.QueryMethod_GET,
 			Query:  restAPIID,
 			Scope:  scope,
-		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// They are tightly coupled, so we need to propagate the blast to the linked item
-			In:  true,
-			Out: true,
 		},
 	})
 

@@ -51,13 +51,6 @@ func scalingPolicyOutputMapper(_ context.Context, _ *autoscaling.Client, scope s
 				Query:  *policy.AutoScalingGroupName,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Changes to the ASG can affect the policy (e.g., if the
-				// ASG is deleted, the policy is also deleted)
-				In: true,
-				// Changes to the policy can affect the ASG behavior
-				Out: true,
-			},
 		})
 
 		// Link to CloudWatch Alarms
@@ -69,13 +62,6 @@ func scalingPolicyOutputMapper(_ context.Context, _ *autoscaling.Client, scope s
 						Method: sdp.QueryMethod_GET,
 						Query:  *alarm.AlarmName,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Alarms trigger policies, so changes to alarms can
-						// affect policy execution
-						In: true,
-						// Changes to the policy don't affect the alarm itself
-						Out: false,
 					},
 				})
 			}
@@ -146,13 +132,6 @@ func parseResourceLabelLinks(resourceLabel string, scope string) []*sdp.LinkedIt
 				Query:  sections[1],
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Changes to the load balancer can affect the scaling policy
-				// (e.g., if the LB is deleted or modified)
-				In: true,
-				// The scaling policy doesn't directly affect the load balancer
-				Out: false,
-			},
 		})
 	}
 
@@ -165,13 +144,6 @@ func parseResourceLabelLinks(resourceLabel string, scope string) []*sdp.LinkedIt
 					Method: sdp.QueryMethod_GET,
 					Query:  sections[i+1],
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changes to the target group can affect the scaling policy
-					// (e.g., request count metrics come from the target group)
-					In: true,
-					// The scaling policy doesn't directly affect the target group
-					Out: false,
 				},
 			})
 			break

@@ -47,10 +47,6 @@ func deviceOutputMapper(_ context.Context, _ *networkmanager.Client, scope strin
 						Query:  *s.GlobalNetworkId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					Query: &sdp.Query{
@@ -59,10 +55,6 @@ func deviceOutputMapper(_ context.Context, _ *networkmanager.Client, scope strin
 						Query:  idWithTypeAndGlobalNetwork(*s.GlobalNetworkId, "device", *s.DeviceId),
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: true,
-					},
 				},
 				{
 					Query: &sdp.Query{
@@ -70,10 +62,6 @@ func deviceOutputMapper(_ context.Context, _ *networkmanager.Client, scope strin
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  idWithGlobalNetwork(*s.GlobalNetworkId, *s.DeviceId),
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
 					},
 				},
 			},
@@ -87,10 +75,6 @@ func deviceOutputMapper(_ context.Context, _ *networkmanager.Client, scope strin
 					Query:  idWithGlobalNetwork(*s.GlobalNetworkId, *s.SiteId),
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			})
 		}
 
@@ -101,10 +85,6 @@ func deviceOutputMapper(_ context.Context, _ *networkmanager.Client, scope strin
 					Method: sdp.QueryMethod_GET,
 					Query:  idWithGlobalNetwork(*s.GlobalNetworkId, *s.DeviceArn),
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: true,
 				},
 			})
 		}

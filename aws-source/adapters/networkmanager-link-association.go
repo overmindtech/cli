@@ -48,10 +48,6 @@ func linkAssociationOutputMapper(_ context.Context, _ *networkmanager.Client, sc
 						Query:  *s.GlobalNetworkId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					Query: &sdp.Query{
@@ -60,10 +56,6 @@ func linkAssociationOutputMapper(_ context.Context, _ *networkmanager.Client, sc
 						Query:  idWithGlobalNetwork(*s.GlobalNetworkId, *s.LinkId),
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
-					},
 				},
 				{
 					Query: &sdp.Query{
@@ -71,10 +63,6 @@ func linkAssociationOutputMapper(_ context.Context, _ *networkmanager.Client, sc
 						Method: sdp.QueryMethod_GET,
 						Query:  idWithGlobalNetwork(*s.GlobalNetworkId, *s.DeviceId),
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,
-						Out: false,
 					},
 				},
 			},

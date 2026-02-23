@@ -96,12 +96,6 @@ func networkInterfaceOutputMapper(_ context.Context, _ *ec2.Client, scope string
 						Query:  *ni.Attachment.InstanceId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// The instance and the interface are closely linked
-						// and affect each other
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 		}
@@ -115,12 +109,6 @@ func networkInterfaceOutputMapper(_ context.Context, _ *ec2.Client, scope string
 						Query:  *sg.GroupId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// A security group will affect an interface
-						In: true,
-						// An interface won't affect a security group
-						Out: false,
-					},
 				})
 			}
 		}
@@ -133,11 +121,6 @@ func networkInterfaceOutputMapper(_ context.Context, _ *ec2.Client, scope string
 						Method: sdp.QueryMethod_GET,
 						Query:  *ip.Ipv6Address,
 						Scope:  "global",
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// IPs are always linked
-						In:  true,
-						Out: true,
 					},
 				})
 			}
@@ -153,11 +136,6 @@ func networkInterfaceOutputMapper(_ context.Context, _ *ec2.Client, scope string
 							Query:  *assoc.PublicDnsName,
 							Scope:  "global",
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// DNS names are always linked
-							In:  true,
-							Out: true,
-						},
 					})
 				}
 
@@ -168,11 +146,6 @@ func networkInterfaceOutputMapper(_ context.Context, _ *ec2.Client, scope string
 							Method: sdp.QueryMethod_GET,
 							Query:  *assoc.PublicIp,
 							Scope:  "global",
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// IPs are always linked
-							In:  true,
-							Out: true,
 						},
 					})
 				}
@@ -185,11 +158,6 @@ func networkInterfaceOutputMapper(_ context.Context, _ *ec2.Client, scope string
 							Query:  *assoc.CarrierIp,
 							Scope:  "global",
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// IPs are always linked
-							In:  true,
-							Out: true,
-						},
 					})
 				}
 
@@ -200,11 +168,6 @@ func networkInterfaceOutputMapper(_ context.Context, _ *ec2.Client, scope string
 							Method: sdp.QueryMethod_GET,
 							Query:  *assoc.CustomerOwnedIp,
 							Scope:  "global",
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// IPs are always linked
-							In:  true,
-							Out: true,
 						},
 					})
 				}
@@ -218,11 +181,6 @@ func networkInterfaceOutputMapper(_ context.Context, _ *ec2.Client, scope string
 						Query:  *ip.PrivateDnsName,
 						Scope:  "global",
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// DNS names are always linked
-						In:  true,
-						Out: true,
-					},
 				})
 			}
 
@@ -233,11 +191,6 @@ func networkInterfaceOutputMapper(_ context.Context, _ *ec2.Client, scope string
 						Method: sdp.QueryMethod_GET,
 						Query:  *ip.PrivateIpAddress,
 						Scope:  "global",
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// IPs are always linked
-						In:  true,
-						Out: true,
 					},
 				})
 			}
@@ -251,13 +204,6 @@ func networkInterfaceOutputMapper(_ context.Context, _ *ec2.Client, scope string
 					Query:  *ni.SubnetId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changing the subnet will affect interfaces within that
-					// subnet
-					In: true,
-					// Changing the interface won't affect the subnet
-					Out: false,
-				},
 			})
 		}
 
@@ -268,12 +214,6 @@ func networkInterfaceOutputMapper(_ context.Context, _ *ec2.Client, scope string
 					Method: sdp.QueryMethod_GET,
 					Query:  *ni.VpcId,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changing the VPC will affect interfaces within that VPC
-					In: true,
-					// Changing the interface won't affect the VPC
-					Out: false,
 				},
 			})
 		}

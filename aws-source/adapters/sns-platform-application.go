@@ -57,12 +57,6 @@ func getPlatformApplicationFunc(ctx context.Context, client platformApplicationC
 			Query:  *input.PlatformApplicationArn,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// An unhealthy endpoint won't affect the platform application
-			In: false,
-			// If platform application is unhealthy, then endpoints won't get notifications
-			Out: true,
-		},
 	})
 
 	return item, nil

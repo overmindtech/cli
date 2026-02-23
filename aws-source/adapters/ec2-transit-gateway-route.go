@@ -174,7 +174,6 @@ func transitGatewayRouteItemMapper(query, scope string, awsItem *transitGatewayR
 			Query:  awsItem.RouteTableID,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 	})
 	for i := range r.TransitGatewayAttachments {
 		att := &r.TransitGatewayAttachments[i]
@@ -186,7 +185,6 @@ func transitGatewayRouteItemMapper(query, scope string, awsItem *transitGatewayR
 					Query:  *att.TransitGatewayAttachmentId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 			})
 			// Link to the route table association (same route table + attachment).
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -196,7 +194,6 @@ func transitGatewayRouteItemMapper(query, scope string, awsItem *transitGatewayR
 					Query:  transitGatewayRouteTableAssociationID(awsItem.RouteTableID, *att.TransitGatewayAttachmentId),
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 			})
 		}
 		if att.ResourceId != nil && *att.ResourceId != "" {
@@ -209,7 +206,6 @@ func transitGatewayRouteItemMapper(query, scope string, awsItem *transitGatewayR
 						Query:  *att.ResourceId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 				})
 			case types.TransitGatewayAttachmentResourceTypeVpn:
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -219,7 +215,6 @@ func transitGatewayRouteItemMapper(query, scope string, awsItem *transitGatewayR
 						Query:  *att.ResourceId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 				})
 			case types.TransitGatewayAttachmentResourceTypeDirectConnectGateway:
 				item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -229,7 +224,6 @@ func transitGatewayRouteItemMapper(query, scope string, awsItem *transitGatewayR
 						Query:  *att.ResourceId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 				})
 			case types.TransitGatewayAttachmentResourceTypePeering,
 				types.TransitGatewayAttachmentResourceTypeTgwPeering:
@@ -241,7 +235,6 @@ func transitGatewayRouteItemMapper(query, scope string, awsItem *transitGatewayR
 						Query:  *att.ResourceId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 				})
 			case types.TransitGatewayAttachmentResourceTypeVpnConcentrator,
 				types.TransitGatewayAttachmentResourceTypeConnect,
@@ -258,7 +251,6 @@ func transitGatewayRouteItemMapper(query, scope string, awsItem *transitGatewayR
 				Query:  *r.PrefixListId,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 		})
 	}
 	if r.TransitGatewayRouteTableAnnouncementId != nil && *r.TransitGatewayRouteTableAnnouncementId != "" {
@@ -269,7 +261,6 @@ func transitGatewayRouteItemMapper(query, scope string, awsItem *transitGatewayR
 				Query:  *r.TransitGatewayRouteTableAnnouncementId,
 				Scope:  scope,
 			},
-			BlastPropagation: &sdp.BlastPropagation{In: true, Out: true},
 		})
 	}
 	return item, nil

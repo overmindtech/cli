@@ -154,12 +154,6 @@ func (s storageFileShareWrapper) azureFileShareToSDPItem(fileShare *armstorage.F
 			Query:  storageAccountName,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// File Share depends on Storage Account (parent); deletion/change of Storage Account affects File Share.
-			// Storage Account is not affected when a child File Share is deleted.
-			In:  true,
-			Out: false,
-		},
 	})
 
 	return sdpItem, nil

@@ -136,10 +136,6 @@ func (c computeGalleryApplicationVersionWrapper) azureGalleryApplicationVersionT
 			Query:  galleryName,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  true,  // If gallery is deleted → version is deleted (In: true)
-			Out: false, // If version is deleted → gallery remains (Out: false)
-		},
 	})
 
 	// Parent Gallery Application: version depends on application; deleting version does not delete application
@@ -149,10 +145,6 @@ func (c computeGalleryApplicationVersionWrapper) azureGalleryApplicationVersionT
 			Method: sdp.QueryMethod_GET,
 			Query:  shared.CompositeLookupKey(galleryName, galleryApplicationName),
 			Scope:  scope,
-		},
-		BlastPropagation: &sdp.BlastPropagation{
-			In:  true,  // If application is deleted → version is deleted (In: true)
-			Out: false, // If version is deleted → application remains (Out: false)
 		},
 	})
 
@@ -179,10 +171,6 @@ func (c computeGalleryApplicationVersionWrapper) azureGalleryApplicationVersionT
 							Query:  accountName,
 							Scope:  scope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If storage account is unavailable → version artifact cannot be accessed (In: true)
-							Out: false, // If version is deleted → storage account remains (Out: false)
-						},
 					})
 				}
 				containerName := azureshared.ExtractContainerNameFromBlobURI(link)
@@ -196,10 +184,6 @@ func (c computeGalleryApplicationVersionWrapper) azureGalleryApplicationVersionT
 								Method: sdp.QueryMethod_GET,
 								Query:  containerKey,
 								Scope:  scope,
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,  // If blob container is unavailable → version artifact cannot be accessed (In: true)
-								Out: false, // If version is deleted → blob container remains (Out: false)
 							},
 						})
 					}
@@ -244,10 +228,6 @@ func (c computeGalleryApplicationVersionWrapper) azureGalleryApplicationVersionT
 								Query:  name,
 								Scope:  linkScope,
 							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,  // If encryption set changes → replication encryption affected (In: true)
-								Out: false, // If version is deleted → encryption set remains (Out: false)
-							},
 						})
 					}
 				}
@@ -268,10 +248,6 @@ func (c computeGalleryApplicationVersionWrapper) azureGalleryApplicationVersionT
 								Method: sdp.QueryMethod_GET,
 								Query:  name,
 								Scope:  linkScope,
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,
-								Out: false,
 							},
 						})
 					}
@@ -295,10 +271,6 @@ func (c computeGalleryApplicationVersionWrapper) azureGalleryApplicationVersionT
 										Method: sdp.QueryMethod_GET,
 										Query:  name,
 										Scope:  linkScope,
-									},
-									BlastPropagation: &sdp.BlastPropagation{
-										In:  true,
-										Out: false,
 									},
 								})
 							}

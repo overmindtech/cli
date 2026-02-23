@@ -19,12 +19,6 @@ func horizontalPodAutoscalerExtractor(resource *v2.HorizontalPodAutoscaler, scop
 			Query:  resource.Spec.ScaleTargetRef.Name,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// Changes to the target won't affect the hpa
-			In: false,
-			// Changes to the hpa can affect the target i.e. by scaling the pods
-			Out: true,
-		},
 	})
 
 	return queries, nil

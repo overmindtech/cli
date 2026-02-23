@@ -222,10 +222,6 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 						Query:  diskName,
 						Scope:  linkScope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true, // If disk changes → VM affected (In: true)
-						Out: true, // If VM is deleted → disk may be deleted depending on delete option (Out: true)
-					},
 				})
 			}
 			// Link to disk encryption set for OS disk
@@ -243,10 +239,6 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 							Method: sdp.QueryMethod_GET,
 							Query:  diskEncryptionSetName,
 							Scope:  linkScope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If encryption set changes → disk encryption affected (In: true)
-							Out: false, // If VM is deleted → encryption set remains (Out: false)
 						},
 					})
 				}
@@ -272,10 +264,6 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 							Query:  diskName,
 							Scope:  linkScope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true, // If disk changes → VM affected (In: true)
-							Out: true, // If VM is deleted → disk may be deleted depending on delete option (Out: true)
-						},
 					})
 				}
 				// Link to disk encryption set for data disk
@@ -293,10 +281,6 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 								Method: sdp.QueryMethod_GET,
 								Query:  diskEncryptionSetName,
 								Scope:  linkScope,
-							},
-							BlastPropagation: &sdp.BlastPropagation{
-								In:  true,  // If encryption set changes → disk encryption affected (In: true)
-								Out: false, // If VM is deleted → encryption set remains (Out: false)
 							},
 						})
 					}
@@ -324,10 +308,6 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 							Query:  nicName,
 							Scope:  linkScope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If NIC changes → VM network connectivity affected (In: true)
-							Out: false, // If VM is deleted → NIC remains (Out: false)
-						},
 					})
 				}
 			}
@@ -351,10 +331,6 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 					Query:  availabilitySetName,
 					Scope:  linkScope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // If availability set changes → VM placement affected (In: true)
-					Out: false, // If VM is deleted → availability set remains (Out: false)
-				},
 			})
 		}
 	}
@@ -374,10 +350,6 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 					Method: sdp.QueryMethod_GET,
 					Query:  proximityPlacementGroupName,
 					Scope:  linkScope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // If proximity placement group changes → VM placement affected (In: true)
-					Out: false, // If VM is deleted → proximity placement group remains (Out: false)
 				},
 			})
 		}
@@ -399,10 +371,6 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 					Query:  hostGroupName,
 					Scope:  linkScope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // If host group changes → VM host placement affected (In: true)
-					Out: false, // If VM is deleted → host group remains (Out: false)
-				},
 			})
 		}
 	}
@@ -423,10 +391,6 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 					Query:  capacityReservationGroupName,
 					Scope:  linkScope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // If capacity reservation group changes → VM capacity reservation affected (In: true)
-					Out: false, // If VM is deleted → capacity reservation group remains (Out: false)
-				},
 			})
 		}
 	}
@@ -446,10 +410,6 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 					Method: sdp.QueryMethod_GET,
 					Query:  vmssName,
 					Scope:  linkScope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // If VMSS changes → VM configuration affected (In: true)
-					Out: false, // If VM is deleted → VMSS remains (Out: false)
 				},
 			})
 		}
@@ -472,10 +432,6 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 						Method: sdp.QueryMethod_GET,
 						Query:  vmssName[0],
 						Scope:  linkScope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,  // If VMSS changes → VM configuration affected (In: true)
-						Out: false, // If VM is deleted → VMSS remains (Out: false)
 					},
 				})
 			}
@@ -507,10 +463,6 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 							Query:  shared.CompositeLookupKey(galleryName, imageName, versionName),
 							Scope:  linkScope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If image version changes → VM image affected (In: true)
-							Out: false, // If VM is deleted → image version remains (Out: false)
-						},
 					})
 				}
 			} else if strings.Contains(imageID, "/images/") {
@@ -527,10 +479,6 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 							Method: sdp.QueryMethod_GET,
 							Query:  imageName,
 							Scope:  linkScope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If image changes → VM image affected (In: true)
-							Out: false, // If VM is deleted → image remains (Out: false)
 						},
 					})
 				}
@@ -555,10 +503,6 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 						Query:  identityName,
 						Scope:  linkScope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,  // If identity changes → VM identity access affected (In: true)
-						Out: false, // If VM is deleted → identity remains (Out: false)
-					},
 				})
 			}
 		}
@@ -581,10 +525,6 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 							Method: sdp.QueryMethod_GET,
 							Query:  vaultName,
 							Scope:  linkScope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Key Vault changes → VM secrets access affected (In: true)
-							Out: false, // If VM is deleted → Key Vault remains (Out: false)
 						},
 					})
 				}
@@ -612,10 +552,6 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 							Query:  vaultName,
 							Scope:  linkScope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Key Vault changes → disk encryption affected (In: true)
-							Out: false, // If VM is deleted → Key Vault remains (Out: false)
-						},
 					})
 				}
 			}
@@ -633,10 +569,6 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 							Method: sdp.QueryMethod_GET,
 							Query:  vaultName,
 							Scope:  linkScope,
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If Key Vault changes → disk encryption affected (In: true)
-							Out: false, // If VM is deleted → Key Vault remains (Out: false)
 						},
 					})
 				}
@@ -667,10 +599,6 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 							Query:  shared.CompositeLookupKey(galleryName, appName, versionName),
 							Scope:  linkScope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							In:  true,  // If application version changes → VM application affected (In: true)
-							Out: false, // If VM is deleted → application version remains (Out: false)
-						},
 					})
 				}
 			}
@@ -690,10 +618,6 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 					Query:  storageURI,
 					Scope:  "global",
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,  // If storage URI changes → boot diagnostics affected (In: true)
-					Out: false, // If VM is deleted → storage URI remains (Out: false)
-				},
 			})
 			// Extract DNS name from URL and create DNS link
 			// Reference: Any attribute containing a DNS name must create a LinkedItemQuery for dns type
@@ -705,10 +629,6 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  dnsName,
 						Scope:  "global",
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  true,  // If DNS changes → boot diagnostics affected (In: true)
-						Out: false, // If VM is deleted → DNS remains (Out: false)
 					},
 				})
 			}
@@ -727,10 +647,6 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 						Query:  shared.CompositeLookupKey(*vm.Name, *extension.Name),
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						In:  false, // If Extensions are deleted → VM remains functional (In: false)
-						Out: true,  // If VM is deleted → Extensions become invalid/unusable (Out: true)
-					},
 				})
 			}
 		}
@@ -746,10 +662,6 @@ func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcomput
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  *vm.Name,
 				Scope:  scope,
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  false, // If Run Commands are deleted → VM remains functional (In: false)
-				Out: true,  // If VM is deleted → Run Commands become invalid/unusable (Out: true)
 			},
 		})
 	}

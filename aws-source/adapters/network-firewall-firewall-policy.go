@@ -88,10 +88,6 @@ func firewallPolicyGetFunc(ctx context.Context, client networkFirewallClient, sc
 					Method: sdp.QueryMethod_SEARCH,
 					Scope:  FormatScope(a.AccountID, a.Region),
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
-				},
 			})
 		}
 	}
@@ -105,10 +101,6 @@ func firewallPolicyGetFunc(ctx context.Context, client networkFirewallClient, sc
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *resp.FirewallPolicy.TLSInspectionConfigurationArn,
 					Scope:  FormatScope(a.AccountID, a.Region),
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: false,
 				},
 			})
 		}

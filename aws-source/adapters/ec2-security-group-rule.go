@@ -53,11 +53,6 @@ func securityGroupRuleOutputMapper(_ context.Context, _ *ec2.Client, scope strin
 					Query:  *securityGroupRule.GroupId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// These are tightly linked
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 
@@ -69,11 +64,6 @@ func securityGroupRuleOutputMapper(_ context.Context, _ *ec2.Client, scope strin
 						Method: sdp.QueryMethod_GET,
 						Query:  *rg.GroupId,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// These are tightly linked
-						In:  true,
-						Out: true,
 					},
 				})
 			}

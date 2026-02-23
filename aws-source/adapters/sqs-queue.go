@@ -58,10 +58,6 @@ func getFunc(ctx context.Context, client sqsClient, scope string, input *sqs.Get
 				Query:  *input.QueueUrl,
 				Scope:  "global",
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				In:  true,
-				Out: true,
-			},
 		},
 	}
 
@@ -73,12 +69,6 @@ func getFunc(ctx context.Context, client sqsClient, scope string, input *sqs.Get
 				Method: sdp.QueryMethod_SEARCH,
 				Query:  arn,
 				Scope:  scope,
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// If event source mappings change, it doesn't affect the queue itself
-				In: false,
-				// If the SQS queue is updated, event source mappings will be affected
-				Out: true,
 			},
 		})
 	}

@@ -43,13 +43,6 @@ func FileSystemOutputMapper(_ context.Context, _ *efs.Client, scope string, inpu
 						Query:  *fs.FileSystemId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the backup policy could effect the file
-						// system in that it might no longer be backed up
-						In: true,
-						// Changing the file system will not effect the backup
-						Out: false,
-					},
 				},
 				{
 					Query: &sdp.Query{
@@ -57,11 +50,6 @@ func FileSystemOutputMapper(_ context.Context, _ *efs.Client, scope string, inpu
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *fs.FileSystemId,
 						Scope:  scope,
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// These are tightly coupled
-						In:  true,
-						Out: true,
 					},
 				},
 			},
@@ -76,12 +64,6 @@ func FileSystemOutputMapper(_ context.Context, _ *efs.Client, scope string, inpu
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *fs.KmsKeyId,
 						Scope:  FormatScope(arn.AccountID, arn.Region),
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the key will affect us
-						In: true,
-						// We can't affect the key
-						Out: false,
 					},
 				})
 			}

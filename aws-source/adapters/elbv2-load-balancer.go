@@ -52,11 +52,6 @@ func elbv2LoadBalancerOutputMapper(ctx context.Context, client elbv2Client, scop
 					Query:  *lb.LoadBalancerArn,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Load balancers and their target groups are tightly coupled
-					In:  true,
-					Out: true,
-				},
 			})
 
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
@@ -65,11 +60,6 @@ func elbv2LoadBalancerOutputMapper(ctx context.Context, client elbv2Client, scop
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *lb.LoadBalancerArn,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Load balancers and their listeners are tightly coupled
-					In:  true,
-					Out: true,
 				},
 			})
 		}
@@ -82,11 +72,6 @@ func elbv2LoadBalancerOutputMapper(ctx context.Context, client elbv2Client, scop
 					Query:  *lb.DNSName,
 					Scope:  "global",
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// DNS always links
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 
@@ -98,12 +83,6 @@ func elbv2LoadBalancerOutputMapper(ctx context.Context, client elbv2Client, scop
 					Query:  *lb.CanonicalHostedZoneId,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changing the hosted zone could affect the LB
-					In: true,
-					// The LB won't affect the hosted zone
-					Out: false,
-				},
 			})
 		}
 
@@ -114,12 +93,6 @@ func elbv2LoadBalancerOutputMapper(ctx context.Context, client elbv2Client, scop
 					Method: sdp.QueryMethod_GET,
 					Query:  *lb.VpcId,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changing the VPC could affect the LB
-					In: true,
-					// The LB won't affect the VPC
-					Out: false,
 				},
 			})
 		}
@@ -133,12 +106,6 @@ func elbv2LoadBalancerOutputMapper(ctx context.Context, client elbv2Client, scop
 						Query:  *az.SubnetId,
 						Scope:  scope,
 					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// Changing the subnet could affect the LB
-						In: true,
-						// The LB won't affect the subnet
-						Out: false,
-					},
 				})
 			}
 
@@ -151,12 +118,6 @@ func elbv2LoadBalancerOutputMapper(ctx context.Context, client elbv2Client, scop
 							Query:  *address.AllocationId,
 							Scope:  scope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// Changing the address could affect the LB
-							In: true,
-							// The LB can also affect the address
-							Out: true,
-						},
 					})
 				}
 
@@ -167,11 +128,6 @@ func elbv2LoadBalancerOutputMapper(ctx context.Context, client elbv2Client, scop
 							Method: sdp.QueryMethod_GET,
 							Query:  *address.IPv6Address,
 							Scope:  "global",
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// IPs always link
-							In:  true,
-							Out: true,
 						},
 					})
 				}
@@ -184,11 +140,6 @@ func elbv2LoadBalancerOutputMapper(ctx context.Context, client elbv2Client, scop
 							Query:  *address.IpAddress,
 							Scope:  "global",
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// IPs always link
-							In:  true,
-							Out: true,
-						},
 					})
 				}
 
@@ -199,11 +150,6 @@ func elbv2LoadBalancerOutputMapper(ctx context.Context, client elbv2Client, scop
 							Method: sdp.QueryMethod_GET,
 							Query:  *address.PrivateIPv4Address,
 							Scope:  "global",
-						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// IPs always link
-							In:  true,
-							Out: true,
 						},
 					})
 				}
@@ -218,12 +164,6 @@ func elbv2LoadBalancerOutputMapper(ctx context.Context, client elbv2Client, scop
 					Query:  sg,
 					Scope:  scope,
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changing the security group could affect the LB
-					In: true,
-					// The LB won't affect the security group
-					Out: false,
-				},
 			})
 		}
 
@@ -234,12 +174,6 @@ func elbv2LoadBalancerOutputMapper(ctx context.Context, client elbv2Client, scop
 					Method: sdp.QueryMethod_GET,
 					Query:  *lb.CustomerOwnedIpv4Pool,
 					Scope:  scope,
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// Changing the COIP pool could affect the LB
-					In: true,
-					// The LB won't affect the COIP pool
-					Out: false,
 				},
 			})
 		}

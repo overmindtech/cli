@@ -113,7 +113,6 @@ func (e *Engine) HandleQuery(ctx context.Context, query *sdp.Query) {
 	if query.GetRecursionBehaviour() != nil {
 		span.SetAttributes(
 			attribute.Int("ovm.sdp.linkDepth", int(query.GetRecursionBehaviour().GetLinkDepth())),
-			attribute.Bool("ovm.sdp.followOnlyBlastPropagation", query.GetRecursionBehaviour().GetFollowOnlyBlastPropagation()),
 		)
 	}
 

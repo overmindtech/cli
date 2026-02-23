@@ -122,11 +122,6 @@ func (n networkZoneWrapper) azureZoneToSDPItem(zone *armdns.Zone, scope string) 
 				Query:  zoneName,
 				Scope:  "global",
 			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// DNS names are always linked
-				In:  true,
-				Out: true,
-			},
 		})
 	}
 
@@ -150,12 +145,6 @@ func (n networkZoneWrapper) azureZoneToSDPItem(zone *armdns.Zone, scope string) 
 							Query:  vnetName,
 							Scope:  linkedScope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// DNS zone depends on virtual network for registration
-							// If virtual network is deleted/modified, DNS zone registration may fail
-							In:  true,
-							Out: false,
-						}, // Virtual network provides registration capability for the DNS zone
 					})
 				}
 			}
@@ -182,12 +171,6 @@ func (n networkZoneWrapper) azureZoneToSDPItem(zone *armdns.Zone, scope string) 
 							Query:  vnetName,
 							Scope:  linkedScope,
 						},
-						BlastPropagation: &sdp.BlastPropagation{
-							// DNS zone depends on virtual network for resolution
-							// If virtual network is deleted/modified, DNS zone resolution may fail
-							In:  true,
-							Out: false,
-						}, // Virtual network provides resolution capability for the DNS zone
 					})
 				}
 			}
@@ -205,12 +188,6 @@ func (n networkZoneWrapper) azureZoneToSDPItem(zone *armdns.Zone, scope string) 
 			Query:  zoneName,
 			Scope:  scope,
 		},
-		BlastPropagation: &sdp.BlastPropagation{
-			// Record sets are child resources of the DNS zone
-			// Changes to record sets affect DNS resolution for the zone
-			In:  true,
-			Out: true,
-		}, // Record sets are tightly coupled with the DNS zone; bidirectional dependency
 	})
 
 	// Link to DNS names (standard library) from NameServers
@@ -224,11 +201,6 @@ func (n networkZoneWrapper) azureZoneToSDPItem(zone *armdns.Zone, scope string) 
 						Method: sdp.QueryMethod_SEARCH,
 						Query:  *nameServer,
 						Scope:  "global",
-					},
-					BlastPropagation: &sdp.BlastPropagation{
-						// DNS names are always linked
-						In:  true,
-						Out: true,
 					},
 				})
 			}

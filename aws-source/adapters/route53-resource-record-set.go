@@ -125,10 +125,6 @@ func resourceRecordSetItemMapper(_, scope string, awsItem *types.ResourceRecordS
 					Query:  recordName,
 					Scope:  "global",
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 	}
@@ -141,11 +137,6 @@ func resourceRecordSetItemMapper(_, scope string, awsItem *types.ResourceRecordS
 					Method: sdp.QueryMethod_SEARCH,
 					Query:  *awsItem.AliasTarget.DNSName,
 					Scope:  "global",
-				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// DNS aliases links
-					In:  true,
-					Out: true,
 				},
 			})
 		}
@@ -160,11 +151,6 @@ func resourceRecordSetItemMapper(_, scope string, awsItem *types.ResourceRecordS
 					Query:  *record.Value,
 					Scope:  "global",
 				},
-				BlastPropagation: &sdp.BlastPropagation{
-					// DNS aliases links
-					In:  true,
-					Out: true,
-				},
 			})
 		}
 	}
@@ -176,11 +162,6 @@ func resourceRecordSetItemMapper(_, scope string, awsItem *types.ResourceRecordS
 				Method: sdp.QueryMethod_GET,
 				Query:  *awsItem.HealthCheckId,
 				Scope:  scope,
-			},
-			BlastPropagation: &sdp.BlastPropagation{
-				// Health check links tightly
-				In:  true,
-				Out: true,
 			},
 		})
 	}
