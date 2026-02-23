@@ -2,9 +2,12 @@ package manual
 
 import (
 	"context"
+	"errors"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v3"
+	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
@@ -148,6 +151,47 @@ func (s storageQueuesWrapper) Search(ctx context.Context, scope string, queryPar
 	}
 
 	return items, nil
+}
+
+func (s storageQueuesWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string, queryParts ...string) {
+	if len(queryParts) < 1 {
+		stream.SendError(azureshared.QueryError(errors.New("Search requires 1 query part: storageAccountName"), scope, s.Type()))
+		return
+	}
+	storageAccountName := queryParts[0]
+
+	rgScope, err := s.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		stream.SendError(azureshared.QueryError(err, scope, s.Type()))
+		return
+	}
+	pager := s.client.List(ctx, rgScope.ResourceGroup, storageAccountName)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			stream.SendError(azureshared.QueryError(err, scope, s.Type()))
+			return
+		}
+		for _, queue := range page.Value {
+			if queue.Name == nil || queue.QueueProperties == nil {
+				continue
+			}
+			item, sdpErr := s.azureQueueToSDPItem(&armstorage.Queue{
+				ID:   queue.ID,
+				Name: queue.Name,
+				Type: queue.Type,
+				QueueProperties: &armstorage.QueueProperties{
+					Metadata: queue.QueueProperties.Metadata,
+				},
+			}, storageAccountName, *queue.Name, scope)
+			if sdpErr != nil {
+				stream.SendError(sdpErr)
+				continue
+			}
+			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+			stream.SendItem(item)
+		}
+	}
 }
 
 func (s storageQueuesWrapper) SearchLookups() []sources.ItemTypeLookups {

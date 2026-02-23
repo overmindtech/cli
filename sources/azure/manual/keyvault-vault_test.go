@@ -108,6 +108,12 @@ func TestKeyVaultVault(t *testing.T) {
 		t.Run("StaticTests", func(t *testing.T) {
 			queryTests := shared.QueryTests{
 				{
+					// Child resources: secrets in this vault (SEARCH by vault name)
+					ExpectedType:   azureshared.KeyVaultSecret.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  vaultName,
+					ExpectedScope:  subscriptionID + "." + resourceGroup,
+				}, {
 					// Private Endpoint (GET) - same resource group
 					ExpectedType:   azureshared.NetworkPrivateEndpoint.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
@@ -214,9 +220,9 @@ func TestKeyVaultVault(t *testing.T) {
 			t.Fatalf("Expected no error, got: %v", qErr)
 		}
 
-		// Should have no linked item queries
-		if len(sdpItem.GetLinkedItemQueries()) != 0 {
-			t.Errorf("Expected no linked item queries, got %d", len(sdpItem.GetLinkedItemQueries()))
+		// Should only have the child SEARCH link (secrets in vault); no private endpoints, subnets, etc.
+		if len(sdpItem.GetLinkedItemQueries()) != 1 {
+			t.Errorf("Expected 1 linked item query (KeyVaultSecret SEARCH), got %d", len(sdpItem.GetLinkedItemQueries()))
 		}
 	})
 

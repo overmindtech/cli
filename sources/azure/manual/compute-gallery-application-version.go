@@ -6,7 +6,9 @@ import (
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
+	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
@@ -16,7 +18,6 @@ import (
 
 var (
 	ComputeGalleryApplicationVersionLookupByName = shared.NewItemTypeLookup("name", azureshared.ComputeGalleryApplicationVersion)
-	ComputeGalleryLookupByName                   = shared.NewItemTypeLookup("name", azureshared.ComputeGallery)            //todo: move to its adapter file when created, this is just a placeholder
 	ComputeGalleryApplicationLookupByName        = shared.NewItemTypeLookup("name", azureshared.ComputeGalleryApplication) //todo: move to its adapter file when created, this is just a placeholder
 )
 
@@ -101,6 +102,49 @@ func (c computeGalleryApplicationVersionWrapper) Search(ctx context.Context, sco
 		}
 	}
 	return items, nil
+}
+
+func (c computeGalleryApplicationVersionWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string, queryParts ...string) {
+	if len(queryParts) != 2 {
+		stream.SendError(azureshared.QueryError(errors.New("queryParts must be exactly 2 and be the gallery name and gallery application name"), scope, c.Type()))
+		return
+	}
+	galleryName := queryParts[0]
+	if galleryName == "" {
+		stream.SendError(azureshared.QueryError(errors.New("gallery name cannot be empty"), scope, c.Type()))
+		return
+	}
+	galleryApplicationName := queryParts[1]
+	if galleryApplicationName == "" {
+		stream.SendError(azureshared.QueryError(errors.New("gallery application name cannot be empty"), scope, c.Type()))
+		return
+	}
+
+	rgScope, err := c.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		stream.SendError(azureshared.QueryError(err, scope, c.Type()))
+		return
+	}
+	pager := c.client.NewListByGalleryApplicationPager(rgScope.ResourceGroup, galleryName, galleryApplicationName, nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			stream.SendError(azureshared.QueryError(err, scope, c.Type()))
+			return
+		}
+		for _, galleryApplicationVersion := range page.Value {
+			if galleryApplicationVersion == nil || galleryApplicationVersion.Name == nil {
+				continue
+			}
+			item, sdpErr := c.azureGalleryApplicationVersionToSDPItem(galleryApplicationVersion, galleryName, galleryApplicationName, scope)
+			if sdpErr != nil {
+				stream.SendError(sdpErr)
+				continue
+			}
+			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+			stream.SendItem(item)
+		}
+	}
 }
 
 func (c computeGalleryApplicationVersionWrapper) azureGalleryApplicationVersionToSDPItem(
