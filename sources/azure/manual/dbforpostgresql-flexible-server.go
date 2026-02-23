@@ -6,7 +6,9 @@ import (
 	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers/v5"
+	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
@@ -80,6 +82,34 @@ func (s dbforPostgreSQLFlexibleServerWrapper) List(ctx context.Context, scope st
 		}
 	}
 	return items, nil
+}
+
+func (s dbforPostgreSQLFlexibleServerWrapper) ListStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string) {
+	rgScope, err := s.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		stream.SendError(azureshared.QueryError(err, scope, s.Type()))
+		return
+	}
+	pager := s.client.ListByResourceGroup(ctx, rgScope.ResourceGroup, nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			stream.SendError(azureshared.QueryError(err, scope, s.Type()))
+			return
+		}
+		for _, server := range page.Value {
+			if server.Name == nil {
+				continue
+			}
+			item, sdpErr := s.azureDBforPostgreSQLFlexibleServerToSDPItem(server, scope)
+			if sdpErr != nil {
+				stream.SendError(sdpErr)
+				continue
+			}
+			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+			stream.SendItem(item)
+		}
+	}
 }
 
 func (s dbforPostgreSQLFlexibleServerWrapper) azureDBforPostgreSQLFlexibleServerToSDPItem(server *armpostgresqlflexibleservers.Server, scope string) (*sdp.Item, *sdp.QueryError) {

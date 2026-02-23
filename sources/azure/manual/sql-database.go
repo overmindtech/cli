@@ -2,10 +2,13 @@ package manual
 
 import (
 	"context"
+	"errors"
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql/v2"
+	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
@@ -373,6 +376,40 @@ func (s sqlDatabaseWrapper) Search(ctx context.Context, scope string, queryParts
 	}
 
 	return items, nil
+}
+
+func (s sqlDatabaseWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string, queryParts ...string) {
+	if len(queryParts) < 1 {
+		stream.SendError(azureshared.QueryError(errors.New("Search requires 1 query part: serverName"), scope, s.Type()))
+		return
+	}
+	serverName := queryParts[0]
+
+	rgScope, err := s.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		stream.SendError(azureshared.QueryError(err, scope, s.Type()))
+		return
+	}
+	pager := s.client.ListByServer(ctx, rgScope.ResourceGroup, serverName)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			stream.SendError(azureshared.QueryError(err, scope, s.Type()))
+			return
+		}
+		for _, database := range page.Value {
+			if database.Name == nil {
+				continue
+			}
+			item, sdpErr := s.azureSqlDatabaseToSDPItem(database, serverName, *database.Name, scope)
+			if sdpErr != nil {
+				stream.SendError(sdpErr)
+				continue
+			}
+			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+			stream.SendItem(item)
+		}
+	}
 }
 
 func (s sqlDatabaseWrapper) SearchLookups() []sources.ItemTypeLookups {

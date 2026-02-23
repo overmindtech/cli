@@ -5,6 +5,8 @@ import (
 	"errors"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
+	"github.com/overmindtech/cli/go/discovery"
+	"github.com/overmindtech/cli/go/sdpcache"
 	"github.com/overmindtech/cli/go/sdp-go"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
@@ -90,6 +92,46 @@ func (c computeGalleryImageWrapper) Search(ctx context.Context, scope string, qu
 		}
 	}
 	return items, nil
+}
+
+func (c computeGalleryImageWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string, queryParts ...string) {
+	if len(queryParts) != 1 {
+		stream.SendError(azureshared.QueryError(errors.New("queryParts must be exactly 1 and be the gallery name"), scope, c.Type()))
+		return
+	}
+	galleryName := queryParts[0]
+	if galleryName == "" {
+		stream.SendError(azureshared.QueryError(errors.New("gallery name cannot be empty"), scope, c.Type()))
+		return
+	}
+
+	rgScope, err := c.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		stream.SendError(azureshared.QueryError(err, scope, c.Type()))
+		return
+	}
+
+	pager := c.client.NewListByGalleryPager(rgScope.ResourceGroup, galleryName, nil)
+
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			stream.SendError(azureshared.QueryError(err, scope, c.Type()))
+			return
+		}
+		for _, galleryImage := range page.Value {
+			if galleryImage == nil || galleryImage.Name == nil {
+				continue
+			}
+			item, sdpErr := c.azureGalleryImageToSDPItem(galleryImage, galleryName, scope)
+			if sdpErr != nil {
+				stream.SendError(sdpErr)
+				continue
+			}
+			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+			stream.SendItem(item)
+		}
+	}
 }
 
 func (c computeGalleryImageWrapper) azureGalleryImageToSDPItem(

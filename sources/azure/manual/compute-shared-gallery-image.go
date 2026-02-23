@@ -5,7 +5,9 @@ import (
 	"errors"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
+	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
@@ -14,7 +16,7 @@ import (
 )
 
 var (
-	ComputeSharedGalleryImageLookupByLocation         = shared.NewItemTypeLookup("location", azureshared.ComputeSharedGalleryImage)
+	ComputeSharedGalleryImageLookupByLocation          = shared.NewItemTypeLookup("location", azureshared.ComputeSharedGalleryImage)
 	ComputeSharedGalleryImageLookupByGalleryUniqueName = shared.NewItemTypeLookup("galleryUniqueName", azureshared.ComputeSharedGalleryImage)
 	ComputeSharedGalleryImageLookupByName              = shared.NewItemTypeLookup("name", azureshared.ComputeSharedGalleryImage)
 )
@@ -94,6 +96,44 @@ func (c computeSharedGalleryImageWrapper) Search(ctx context.Context, scope stri
 		}
 	}
 	return items, nil
+}
+
+func (c computeSharedGalleryImageWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string, queryParts ...string) {
+	if len(queryParts) != 2 {
+		stream.SendError(azureshared.QueryError(errors.New("queryParts must be exactly 2: location and gallery unique name"), scope, c.Type()))
+		return
+	}
+	location := queryParts[0]
+	if location == "" {
+		stream.SendError(azureshared.QueryError(errors.New("location cannot be empty"), scope, c.Type()))
+		return
+	}
+	galleryUniqueName := queryParts[1]
+	if galleryUniqueName == "" {
+		stream.SendError(azureshared.QueryError(errors.New("gallery unique name cannot be empty"), scope, c.Type()))
+		return
+	}
+
+	pager := c.client.NewListPager(location, galleryUniqueName, nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			stream.SendError(azureshared.QueryError(err, scope, c.Type()))
+			return
+		}
+		for _, image := range page.Value {
+			if image == nil || image.Name == nil {
+				continue
+			}
+			item, sdpErr := c.azureSharedGalleryImageToSDPItem(image, location, galleryUniqueName, scope)
+			if sdpErr != nil {
+				stream.SendError(sdpErr)
+				continue
+			}
+			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+			stream.SendItem(item)
+		}
+	}
 }
 
 func (c computeSharedGalleryImageWrapper) azureSharedGalleryImageToSDPItem(

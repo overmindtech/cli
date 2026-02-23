@@ -5,7 +5,9 @@ import (
 	"errors"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault/v2"
+	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
@@ -108,6 +110,54 @@ func (k keyvaultSecretWrapper) Search(ctx context.Context, scope string, queryPa
 	}
 
 	return items, nil
+}
+
+func (k keyvaultSecretWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string, queryParts ...string) {
+	if len(queryParts) < 1 {
+		stream.SendError(azureshared.QueryError(errors.New("Search requires 1 query part: vaultName"), scope, k.Type()))
+		return
+	}
+	vaultName := queryParts[0]
+	if vaultName == "" {
+		stream.SendError(azureshared.QueryError(errors.New("vaultName cannot be empty"), scope, k.Type()))
+		return
+	}
+
+	rgScope, err := k.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		stream.SendError(azureshared.QueryError(err, scope, k.Type()))
+		return
+	}
+	pager := k.client.NewListPager(rgScope.ResourceGroup, vaultName, nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			stream.SendError(azureshared.QueryError(err, scope, k.Type()))
+			return
+		}
+		for _, secret := range page.Value {
+			if secret.Name == nil {
+				continue
+			}
+			var secretVaultName string
+			if secret.ID != nil && *secret.ID != "" {
+				vaultParams := azureshared.ExtractPathParamsFromResourceID(*secret.ID, []string{"vaults"})
+				if len(vaultParams) > 0 {
+					secretVaultName = vaultParams[0]
+				}
+			}
+			if secretVaultName == "" {
+				secretVaultName = vaultName
+			}
+			item, sdpErr := k.azureSecretToSDPItem(secret, secretVaultName, *secret.Name, scope)
+			if sdpErr != nil {
+				stream.SendError(sdpErr)
+				continue
+			}
+			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+			stream.SendItem(item)
+		}
+	}
 }
 
 func (k keyvaultSecretWrapper) azureSecretToSDPItem(secret *armkeyvault.Secret, vaultName, secretName, scope string) (*sdp.Item, *sdp.QueryError) {
