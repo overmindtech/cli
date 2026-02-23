@@ -280,27 +280,6 @@ func TestNetworkLoadBalancerIntegration(t *testing.T) {
 					linkedType := liq.GetQuery().GetType()
 					if _, exists := expectedLinkedTypes[linkedType]; exists {
 						expectedLinkedTypes[linkedType] = true
-
-						if liq.GetBlastPropagation() == nil {
-							t.Errorf("Expected blast propagation to be set for linked type %s", linkedType)
-						} else {
-							switch linkedType {
-							case azureshared.NetworkLoadBalancerFrontendIPConfiguration.String():
-								if liq.GetBlastPropagation().GetIn() != true {
-									t.Errorf("Expected FrontendIPConfiguration blast propagation In=true, got false")
-								}
-								if liq.GetBlastPropagation().GetOut() != true {
-									t.Errorf("Expected FrontendIPConfiguration blast propagation Out=true, got false")
-								}
-							case azureshared.NetworkPublicIPAddress.String():
-								if liq.GetBlastPropagation().GetIn() != true {
-									t.Errorf("Expected PublicIPAddress blast propagation In=true, got false")
-								}
-								if liq.GetBlastPropagation().GetOut() != false {
-									t.Errorf("Expected PublicIPAddress blast propagation Out=false, got true")
-								}
-							}
-						}
 					}
 				}
 
@@ -336,27 +315,6 @@ func TestNetworkLoadBalancerIntegration(t *testing.T) {
 					linkedType := liq.GetQuery().GetType()
 					if _, exists := expectedLinkedTypes[linkedType]; exists {
 						expectedLinkedTypes[linkedType] = true
-
-						if liq.GetBlastPropagation() == nil {
-							t.Errorf("Expected blast propagation to be set for linked type %s", linkedType)
-						} else {
-							switch linkedType {
-							case azureshared.NetworkLoadBalancerFrontendIPConfiguration.String():
-								if liq.GetBlastPropagation().GetIn() != true {
-									t.Errorf("Expected FrontendIPConfiguration blast propagation In=true, got false")
-								}
-								if liq.GetBlastPropagation().GetOut() != true {
-									t.Errorf("Expected FrontendIPConfiguration blast propagation Out=true, got false")
-								}
-							case azureshared.NetworkSubnet.String():
-								if liq.GetBlastPropagation().GetIn() != true {
-									t.Errorf("Expected Subnet blast propagation In=true, got false")
-								}
-								if liq.GetBlastPropagation().GetOut() != false {
-									t.Errorf("Expected Subnet blast propagation Out=false, got true")
-								}
-							}
-						}
 					}
 				}
 

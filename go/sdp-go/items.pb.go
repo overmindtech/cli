@@ -278,27 +278,13 @@ func (QueryError_ErrorType) EnumDescriptor() ([]byte, []int) {
 	return file_items_proto_rawDescGZIP(), []int{11, 0}
 }
 
-// This message stores additional information on Edges (and edge-like constructs) to determine how configuration changes can impact
-// the linked items.
+// DEPRECATED: BlastPropagation was previously used to determine how configuration
+// changes propagate over links. It has been replaced with an AI-driven approach
+// for blast radius calculation and is no longer used.
 //
-//	Blast Propagation options:
-//
-// |-------|-------|----------------------
-// |   in  |  out  | result
-// |-------|-------|----------------------
-// | false | false | no change in any item can affect the other
-// | false | true  | a change to this item can affect its linked items
-// |       |       | example: a change to an EC2 instance can affect its DNS name (in the sense that other items depending on that DNS name will see the impact)
-// | true  | false | a change to linked items can affect this item
-// |       |       | example: changing the KMS key used by a DynamoDB table can impact the table, but no change to the table can impact the key
-// | true  | true  | changes on both sides of the link can affect the other
-// |       |       | example: changes to both EC2 Instances and their volumes can affect the other side of the relation.
+// Reserved to prevent field number reuse and maintain wire-format compatibility.
 type BlastPropagation struct {
-	state protoimpl.MessageState `protogen:"open.v1"`
-	// is true if changes on linked items can affect this item
-	In bool `protobuf:"varint,1,opt,name=in,proto3" json:"in,omitempty"`
-	// is true if changes on this item can affect linked items
-	Out           bool `protobuf:"varint,2,opt,name=out,proto3" json:"out,omitempty"`
+	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -333,29 +319,13 @@ func (*BlastPropagation) Descriptor() ([]byte, []int) {
 	return file_items_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *BlastPropagation) GetIn() bool {
-	if x != nil {
-		return x.In
-	}
-	return false
-}
-
-func (x *BlastPropagation) GetOut() bool {
-	if x != nil {
-		return x.Out
-	}
-	return false
-}
-
 // An annotated query to indicate potential linked items.
 type LinkedItemQuery struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// the query that would find linked items
-	Query *Query `protobuf:"bytes,1,opt,name=query,proto3" json:"query,omitempty"`
-	// how configuration changes (i.e. the "blast") propagates over this link
-	BlastPropagation *BlastPropagation `protobuf:"bytes,2,opt,name=blastPropagation,proto3" json:"blastPropagation,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	Query         *Query `protobuf:"bytes,1,opt,name=query,proto3" json:"query,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *LinkedItemQuery) Reset() {
@@ -395,22 +365,13 @@ func (x *LinkedItemQuery) GetQuery() *Query {
 	return nil
 }
 
-func (x *LinkedItemQuery) GetBlastPropagation() *BlastPropagation {
-	if x != nil {
-		return x.BlastPropagation
-	}
-	return nil
-}
-
 // An annotated reference to list linked items.
 type LinkedItem struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// the linked item
-	Item *Reference `protobuf:"bytes,1,opt,name=item,proto3" json:"item,omitempty"`
-	// how configuration changes (i.e. the "blast") propagates over this link
-	BlastPropagation *BlastPropagation `protobuf:"bytes,2,opt,name=blastPropagation,proto3" json:"blastPropagation,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	Item          *Reference `protobuf:"bytes,1,opt,name=item,proto3" json:"item,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *LinkedItem) Reset() {
@@ -446,13 +407,6 @@ func (*LinkedItem) Descriptor() ([]byte, []int) {
 func (x *LinkedItem) GetItem() *Reference {
 	if x != nil {
 		return x.Item
-	}
-	return nil
-}
-
-func (x *LinkedItem) GetBlastPropagation() *BlastPropagation {
-	if x != nil {
-		return x.BlastPropagation
 	}
 	return nil
 }
@@ -1477,12 +1431,11 @@ func (x *Reference) GetMethod() QueryMethod {
 // that will be unrolled by the gateway during query processing. Clients are
 // guaranteed that edges are only sent after the referenced items.
 type Edge struct {
-	state            protoimpl.MessageState `protogen:"open.v1"`
-	From             *Reference             `protobuf:"bytes,1,opt,name=from,proto3" json:"from,omitempty"`
-	To               *Reference             `protobuf:"bytes,2,opt,name=to,proto3" json:"to,omitempty"`
-	BlastPropagation *BlastPropagation      `protobuf:"bytes,3,opt,name=blastPropagation,proto3" json:"blastPropagation,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	From          *Reference             `protobuf:"bytes,1,opt,name=from,proto3" json:"from,omitempty"`
+	To            *Reference             `protobuf:"bytes,2,opt,name=to,proto3" json:"to,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Edge) Reset() {
@@ -1529,13 +1482,6 @@ func (x *Edge) GetTo() *Reference {
 	return nil
 }
 
-func (x *Edge) GetBlastPropagation() *BlastPropagation {
-	if x != nil {
-		return x.BlastPropagation
-	}
-	return nil
-}
-
 // Defines how this query should behave when finding new items
 type Query_RecursionBehaviour struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -1543,11 +1489,9 @@ type Query_RecursionBehaviour struct {
 	// To resolve linked items "infinitely" simply set this to a high number, with
 	// the highest being 4,294,967,295. While this isn't truly *infinite*, chances
 	// are that it is effectively the same, think six degrees of separation etc.
-	LinkDepth uint32 `protobuf:"varint,1,opt,name=linkDepth,proto3" json:"linkDepth,omitempty"`
-	// set to true to only follow links that propagate configuration change impact
-	FollowOnlyBlastPropagation bool `protobuf:"varint,2,opt,name=followOnlyBlastPropagation,proto3" json:"followOnlyBlastPropagation,omitempty"`
-	unknownFields              protoimpl.UnknownFields
-	sizeCache                  protoimpl.SizeCache
+	LinkDepth     uint32 `protobuf:"varint,1,opt,name=linkDepth,proto3" json:"linkDepth,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Query_RecursionBehaviour) Reset() {
@@ -1587,29 +1531,18 @@ func (x *Query_RecursionBehaviour) GetLinkDepth() uint32 {
 	return 0
 }
 
-func (x *Query_RecursionBehaviour) GetFollowOnlyBlastPropagation() bool {
-	if x != nil {
-		return x.FollowOnlyBlastPropagation
-	}
-	return false
-}
-
 var File_items_proto protoreflect.FileDescriptor
 
 const file_items_proto_rawDesc = "" +
 	"\n" +
-	"\vitems.proto\x1a\x1egoogle/protobuf/duration.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0fresponses.proto\"4\n" +
-	"\x10BlastPropagation\x12\x0e\n" +
-	"\x02in\x18\x01 \x01(\bR\x02in\x12\x10\n" +
-	"\x03out\x18\x02 \x01(\bR\x03out\"n\n" +
+	"\vitems.proto\x1a\x1egoogle/protobuf/duration.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\x1a\x0fresponses.proto\"'\n" +
+	"\x10BlastPropagationJ\x04\b\x01\x10\x02J\x04\b\x02\x10\x03R\x02inR\x03out\"G\n" +
 	"\x0fLinkedItemQuery\x12\x1c\n" +
-	"\x05query\x18\x01 \x01(\v2\x06.QueryR\x05query\x12=\n" +
-	"\x10blastPropagation\x18\x02 \x01(\v2\x11.BlastPropagationR\x10blastPropagation\"k\n" +
+	"\x05query\x18\x01 \x01(\v2\x06.QueryR\x05queryJ\x04\b\x02\x10\x03R\x10blastPropagation\"D\n" +
 	"\n" +
 	"LinkedItem\x12\x1e\n" +
 	"\x04item\x18\x01 \x01(\v2\n" +
-	".ReferenceR\x04item\x12=\n" +
-	"\x10blastPropagation\x18\x02 \x01(\v2\x11.BlastPropagationR\x10blastPropagation\"\xe3\x03\n" +
+	".ReferenceR\x04itemJ\x04\b\x02\x10\x03R\x10blastPropagation\"\xe3\x03\n" +
 	"\x04Item\x12\x12\n" +
 	"\x04type\x18\x01 \x01(\tR\x04type\x12(\n" +
 	"\x0funiqueAttribute\x18\x02 \x01(\tR\x0funiqueAttribute\x12/\n" +
@@ -1647,7 +1580,7 @@ const file_items_proto_rawDesc = "" +
 	"\x10LogStreamDetails\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
 	"\x05scope\x18\x02 \x01(\tR\x05scope\x12\x14\n" +
-	"\x05query\x18\x03 \x01(\tR\x05query\"\xa0\x03\n" +
+	"\x05query\x18\x03 \x01(\tR\x05query\"\x82\x03\n" +
 	"\x05Query\x12\x12\n" +
 	"\x04type\x18\x01 \x01(\tR\x04type\x12$\n" +
 	"\x06method\x18\x02 \x01(\x0e2\f.QueryMethodR\x06method\x12\x14\n" +
@@ -1656,10 +1589,9 @@ const file_items_proto_rawDesc = "" +
 	"\x05scope\x18\x05 \x01(\tR\x05scope\x12 \n" +
 	"\vignoreCache\x18\x06 \x01(\bR\vignoreCache\x12\x12\n" +
 	"\x04UUID\x18\a \x01(\fR\x04UUID\x126\n" +
-	"\bdeadline\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\bdeadline\x1ar\n" +
+	"\bdeadline\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\bdeadline\x1aT\n" +
 	"\x12RecursionBehaviour\x12\x1c\n" +
-	"\tlinkDepth\x18\x01 \x01(\rR\tlinkDepth\x12>\n" +
-	"\x1afollowOnlyBlastPropagation\x18\x02 \x01(\bR\x1afollowOnlyBlastPropagationJ\x04\b\b\x10\t\"\xae\x01\n" +
+	"\tlinkDepth\x18\x01 \x01(\rR\tlinkDepthJ\x04\b\x02\x10\x03R\x1afollowOnlyBlastPropagationJ\x04\b\b\x10\t\"\xae\x01\n" +
 	"\rQueryResponse\x12!\n" +
 	"\anewItem\x18\x02 \x01(\v2\x05.ItemH\x00R\anewItem\x12'\n" +
 	"\bresponse\x18\x03 \x01(\v2\t.ResponseH\x00R\bresponse\x12#\n" +
@@ -1705,13 +1637,12 @@ const file_items_proto_rawDesc = "" +
 	"\x05scope\x18\x03 \x01(\tR\x05scope\x12\x18\n" +
 	"\aisQuery\x18\x04 \x01(\bR\aisQuery\x12\x14\n" +
 	"\x05query\x18\x05 \x01(\tR\x05query\x12$\n" +
-	"\x06method\x18\x06 \x01(\x0e2\f.QueryMethodR\x06method\"\x81\x01\n" +
+	"\x06method\x18\x06 \x01(\x0e2\f.QueryMethodR\x06method\"Z\n" +
 	"\x04Edge\x12\x1e\n" +
 	"\x04from\x18\x01 \x01(\v2\n" +
 	".ReferenceR\x04from\x12\x1a\n" +
 	"\x02to\x18\x02 \x01(\v2\n" +
-	".ReferenceR\x02to\x12=\n" +
-	"\x10blastPropagation\x18\x03 \x01(\v2\x11.BlastPropagationR\x10blastPropagation*e\n" +
+	".ReferenceR\x02toJ\x04\b\x03\x10\x04R\x10blastPropagation*e\n" +
 	"\x06Health\x12\x12\n" +
 	"\x0eHEALTH_UNKNOWN\x10\x00\x12\r\n" +
 	"\tHEALTH_OK\x10\x01\x12\x12\n" +
@@ -1768,42 +1699,39 @@ var file_items_proto_goTypes = []any{
 }
 var file_items_proto_depIdxs = []int32{
 	12, // 0: LinkedItemQuery.query:type_name -> Query
-	4,  // 1: LinkedItemQuery.blastPropagation:type_name -> BlastPropagation
-	18, // 2: LinkedItem.item:type_name -> Reference
-	4,  // 3: LinkedItem.blastPropagation:type_name -> BlastPropagation
-	8,  // 4: Item.attributes:type_name -> ItemAttributes
-	9,  // 5: Item.metadata:type_name -> Metadata
-	5,  // 6: Item.linkedItemQueries:type_name -> LinkedItemQuery
-	6,  // 7: Item.linkedItems:type_name -> LinkedItem
-	0,  // 8: Item.health:type_name -> Health
-	20, // 9: Item.tags:type_name -> Item.TagsEntry
-	11, // 10: Item.logStreams:type_name -> LogStreamDetails
-	22, // 11: ItemAttributes.attrStruct:type_name -> google.protobuf.Struct
-	12, // 12: Metadata.sourceQuery:type_name -> Query
-	23, // 13: Metadata.timestamp:type_name -> google.protobuf.Timestamp
-	24, // 14: Metadata.sourceDuration:type_name -> google.protobuf.Duration
-	24, // 15: Metadata.sourceDurationPerItem:type_name -> google.protobuf.Duration
-	7,  // 16: Items.items:type_name -> Item
-	1,  // 17: Query.method:type_name -> QueryMethod
-	21, // 18: Query.recursionBehaviour:type_name -> Query.RecursionBehaviour
-	23, // 19: Query.deadline:type_name -> google.protobuf.Timestamp
-	7,  // 20: QueryResponse.newItem:type_name -> Item
-	25, // 21: QueryResponse.response:type_name -> Response
-	15, // 22: QueryResponse.error:type_name -> QueryError
-	19, // 23: QueryResponse.edge:type_name -> Edge
-	2,  // 24: QueryStatus.status:type_name -> QueryStatus.Status
-	3,  // 25: QueryError.errorType:type_name -> QueryError.ErrorType
-	18, // 26: Expand.item:type_name -> Reference
-	23, // 27: Expand.deadline:type_name -> google.protobuf.Timestamp
-	1,  // 28: Reference.method:type_name -> QueryMethod
-	18, // 29: Edge.from:type_name -> Reference
-	18, // 30: Edge.to:type_name -> Reference
-	4,  // 31: Edge.blastPropagation:type_name -> BlastPropagation
-	32, // [32:32] is the sub-list for method output_type
-	32, // [32:32] is the sub-list for method input_type
-	32, // [32:32] is the sub-list for extension type_name
-	32, // [32:32] is the sub-list for extension extendee
-	0,  // [0:32] is the sub-list for field type_name
+	18, // 1: LinkedItem.item:type_name -> Reference
+	8,  // 2: Item.attributes:type_name -> ItemAttributes
+	9,  // 3: Item.metadata:type_name -> Metadata
+	5,  // 4: Item.linkedItemQueries:type_name -> LinkedItemQuery
+	6,  // 5: Item.linkedItems:type_name -> LinkedItem
+	0,  // 6: Item.health:type_name -> Health
+	20, // 7: Item.tags:type_name -> Item.TagsEntry
+	11, // 8: Item.logStreams:type_name -> LogStreamDetails
+	22, // 9: ItemAttributes.attrStruct:type_name -> google.protobuf.Struct
+	12, // 10: Metadata.sourceQuery:type_name -> Query
+	23, // 11: Metadata.timestamp:type_name -> google.protobuf.Timestamp
+	24, // 12: Metadata.sourceDuration:type_name -> google.protobuf.Duration
+	24, // 13: Metadata.sourceDurationPerItem:type_name -> google.protobuf.Duration
+	7,  // 14: Items.items:type_name -> Item
+	1,  // 15: Query.method:type_name -> QueryMethod
+	21, // 16: Query.recursionBehaviour:type_name -> Query.RecursionBehaviour
+	23, // 17: Query.deadline:type_name -> google.protobuf.Timestamp
+	7,  // 18: QueryResponse.newItem:type_name -> Item
+	25, // 19: QueryResponse.response:type_name -> Response
+	15, // 20: QueryResponse.error:type_name -> QueryError
+	19, // 21: QueryResponse.edge:type_name -> Edge
+	2,  // 22: QueryStatus.status:type_name -> QueryStatus.Status
+	3,  // 23: QueryError.errorType:type_name -> QueryError.ErrorType
+	18, // 24: Expand.item:type_name -> Reference
+	23, // 25: Expand.deadline:type_name -> google.protobuf.Timestamp
+	1,  // 26: Reference.method:type_name -> QueryMethod
+	18, // 27: Edge.from:type_name -> Reference
+	18, // 28: Edge.to:type_name -> Reference
+	29, // [29:29] is the sub-list for method output_type
+	29, // [29:29] is the sub-list for method input_type
+	29, // [29:29] is the sub-list for extension type_name
+	29, // [29:29] is the sub-list for extension extendee
+	0,  // [0:29] is the sub-list for field type_name
 }
 
 func init() { file_items_proto_init() }

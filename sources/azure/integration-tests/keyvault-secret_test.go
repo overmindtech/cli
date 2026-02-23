@@ -275,12 +275,6 @@ func TestKeyVaultSecretIntegration(t *testing.T) {
 					if liq.GetQuery().GetQuery() != vaultName {
 						t.Errorf("Expected linked query to Key Vault %s, got %s", vaultName, liq.GetQuery().GetQuery())
 					}
-					if liq.GetBlastPropagation().GetIn() != true {
-						t.Error("Expected BlastPropagation.In to be true")
-					}
-					if liq.GetBlastPropagation().GetOut() != false {
-						t.Error("Expected BlastPropagation.Out to be false")
-					}
 					break
 				}
 			}

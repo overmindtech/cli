@@ -34,14 +34,6 @@ func addressOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2.
 	var err error
 	var attrs *sdp.ItemAttributes
 
-	// An EC2-address, along with an IP is an item that inherently links things
-	// and therefore should propagate blast radius in both directions on all
-	// links
-	bp := &sdp.BlastPropagation{
-		In:  true,
-		Out: true,
-	}
-
 	for _, address := range output.Addresses {
 		attrs, err = ToAttributesWithExclude(address, "tags")
 
@@ -62,7 +54,6 @@ func addressOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2.
 						Query:  *address.PublicIp,
 						Scope:  "global",
 					},
-					BlastPropagation: bp,
 				},
 			},
 			Tags: ec2TagsToMap(address.Tags),
@@ -76,7 +67,6 @@ func addressOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2.
 					Query:  *address.InstanceId,
 					Scope:  scope,
 				},
-				BlastPropagation: bp,
 			})
 		}
 
@@ -88,7 +78,6 @@ func addressOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2.
 					Query:  *address.CarrierIp,
 					Scope:  "global",
 				},
-				BlastPropagation: bp,
 			})
 		}
 
@@ -100,7 +89,6 @@ func addressOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2.
 					Query:  *address.CustomerOwnedIp,
 					Scope:  "global",
 				},
-				BlastPropagation: bp,
 			})
 		}
 
@@ -112,7 +100,6 @@ func addressOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2.
 					Query:  *address.NetworkInterfaceId,
 					Scope:  scope,
 				},
-				BlastPropagation: bp,
 			})
 		}
 
@@ -124,7 +111,6 @@ func addressOutputMapper(_ context.Context, _ *ec2.Client, scope string, _ *ec2.
 					Query:  *address.PrivateIpAddress,
 					Scope:  "global",
 				},
-				BlastPropagation: bp,
 			})
 		}
 

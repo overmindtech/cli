@@ -20,12 +20,6 @@ import (
 
 const WILDCARD = "*"
 
-// IsEqual compares two BlastPropagation settings for equality by checking
-// both the In and Out propagation directions.
-func (bp *BlastPropagation) IsEqual(other *BlastPropagation) bool {
-	return bp.GetIn() == other.GetIn() && bp.GetOut() == other.GetOut()
-}
-
 // UniqueAttributeValue returns the value of whatever the Unique Attribute is
 // for this item. This will then be converted to a string and returned
 func (i *Item) UniqueAttributeValue() string {

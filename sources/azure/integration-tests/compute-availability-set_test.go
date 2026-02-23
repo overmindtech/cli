@@ -272,25 +272,11 @@ func TestComputeAvailabilitySetIntegration(t *testing.T) {
 					if liq.GetQuery().GetMethod() != sdp.QueryMethod_GET {
 						t.Errorf("Expected VM link method to be GET, got %s", liq.GetQuery().GetMethod())
 					}
-					// Verify blast propagation (In: true, Out: false)
-					if liq.GetBlastPropagation().GetIn() != true {
-						t.Error("Expected VM blast propagation In=true, got false")
-					}
-					if liq.GetBlastPropagation().GetOut() != false {
-						t.Error("Expected VM blast propagation Out=false, got true")
-					}
 				case azureshared.ComputeProximityPlacementGroup.String():
 					// PPG may or may not be present depending on availability set setup
 					// Verify PPG link properties if present
 					if liq.GetQuery().GetMethod() != sdp.QueryMethod_GET {
 						t.Errorf("Expected PPG link method to be GET, got %s", liq.GetQuery().GetMethod())
-					}
-					// Verify blast propagation (In: true, Out: false)
-					if liq.GetBlastPropagation().GetIn() != true {
-						t.Error("Expected PPG blast propagation In=true, got false")
-					}
-					if liq.GetBlastPropagation().GetOut() != false {
-						t.Error("Expected PPG blast propagation Out=false, got true")
 					}
 				}
 			}

@@ -318,16 +318,6 @@ func TestNetworkApplicationGatewayIntegration(t *testing.T) {
 				if query.GetScope() == "" {
 					t.Error("Linked item query has empty Scope")
 				}
-
-				// Verify blast propagation is set
-				bp := liq.GetBlastPropagation()
-				if bp == nil {
-					t.Error("Linked item query has nil BlastPropagation")
-				} else {
-					// Blast propagation should have In and Out set (even if false)
-					_ = bp.GetIn()
-					_ = bp.GetOut()
-				}
 			}
 
 			// Verify critical linked types were found

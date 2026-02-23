@@ -269,49 +269,14 @@ func TestComputeVirtualMachineExtensionIntegration(t *testing.T) {
 					if liq.GetQuery().GetQuery() != integrationTestExtensionVMName {
 						t.Errorf("Expected VM link query to be %s, got %s", integrationTestExtensionVMName, liq.GetQuery().GetQuery())
 					}
-					// Verify blast propagation (In: true, Out: false)
-					if liq.GetBlastPropagation().GetIn() != true {
-						t.Error("Expected VM blast propagation In=true, got false")
-					}
-					if liq.GetBlastPropagation().GetOut() != false {
-						t.Error("Expected VM blast propagation Out=false, got true")
-					}
 				case azureshared.KeyVaultVault.String():
 					// Key Vault links may be present if ProtectedSettingsFromKeyVault is set
-					// Verify blast propagation (In: true, Out: false)
-					if liq.GetBlastPropagation().GetIn() != true {
-						t.Error("Expected Key Vault blast propagation In=true, got false")
-					}
-					if liq.GetBlastPropagation().GetOut() != false {
-						t.Error("Expected Key Vault blast propagation Out=false, got true")
-					}
 				case stdlib.NetworkHTTP.String():
 					// HTTP links may be present if settings contain URLs
-					// Verify blast propagation (In: true, Out: true)
-					if liq.GetBlastPropagation().GetIn() != true {
-						t.Error("Expected HTTP blast propagation In=true, got false")
-					}
-					if liq.GetBlastPropagation().GetOut() != true {
-						t.Error("Expected HTTP blast propagation Out=true, got false")
-					}
 				case stdlib.NetworkDNS.String():
 					// DNS links may be present if settings contain DNS names
-					// Verify blast propagation (In: true, Out: true)
-					if liq.GetBlastPropagation().GetIn() != true {
-						t.Error("Expected DNS blast propagation In=true, got false")
-					}
-					if liq.GetBlastPropagation().GetOut() != true {
-						t.Error("Expected DNS blast propagation Out=true, got false")
-					}
 				case stdlib.NetworkIP.String():
 					// IP links may be present if settings contain IP addresses
-					// Verify blast propagation (In: true, Out: true)
-					if liq.GetBlastPropagation().GetIn() != true {
-						t.Error("Expected IP blast propagation In=true, got false")
-					}
-					if liq.GetBlastPropagation().GetOut() != true {
-						t.Error("Expected IP blast propagation Out=true, got false")
-					}
 				}
 			}
 

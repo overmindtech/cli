@@ -246,30 +246,6 @@ func TestBatchAccountIntegration(t *testing.T) {
 							t.Errorf("Expected linked query method to be SEARCH for %s, got %s", linkedType, queryMethod)
 						}
 					}
-
-					// Verify blast propagation
-					if liq.GetBlastPropagation() == nil {
-						t.Errorf("Expected blast propagation to be set for linked type %s", linkedType)
-					} else {
-						bp := liq.GetBlastPropagation()
-						if linkedType == azureshared.StorageAccount.String() {
-							// Storage account: In=true, Out=false (batch depends on storage)
-							if bp.GetIn() != true {
-								t.Errorf("Expected blast propagation In=true for storage account, got false")
-							}
-							if bp.GetOut() != false {
-								t.Errorf("Expected blast propagation Out=false for storage account, got true")
-							}
-						} else {
-							// Child resources: In=true, Out=true (tightly coupled)
-							if bp.GetIn() != true {
-								t.Errorf("Expected blast propagation In=true for %s, got false", linkedType)
-							}
-							if bp.GetOut() != true {
-								t.Errorf("Expected blast propagation Out=true for %s, got false", linkedType)
-							}
-						}
-					}
 				}
 			}
 
