@@ -281,16 +281,6 @@ func TestComputeDiskEncryptionSetIntegration(t *testing.T) {
 					if query.GetScope() != scope {
 						t.Errorf("Expected Key Vault link scope %s, got %s", scope, query.GetScope())
 					}
-					if liq.GetBlastPropagation() == nil {
-						t.Error("Key Vault linked item query has nil BlastPropagation")
-					} else {
-						if liq.GetBlastPropagation().GetIn() != true {
-							t.Error("Expected Key Vault BlastPropagation.In to be true")
-						}
-						if liq.GetBlastPropagation().GetOut() != false {
-							t.Error("Expected Key Vault BlastPropagation.Out to be false")
-						}
-					}
 				case azureshared.KeyVaultKey.String():
 					hasKeyVaultKeyLink = true
 					if query.GetMethod() != sdp.QueryMethod_GET {
@@ -303,16 +293,6 @@ func TestComputeDiskEncryptionSetIntegration(t *testing.T) {
 					if query.GetScope() != scope {
 						t.Errorf("Expected Key Vault Key link scope %s, got %s", scope, query.GetScope())
 					}
-					if liq.GetBlastPropagation() == nil {
-						t.Error("Key Vault Key linked item query has nil BlastPropagation")
-					} else {
-						if liq.GetBlastPropagation().GetIn() != true {
-							t.Error("Expected Key Vault Key BlastPropagation.In to be true")
-						}
-						if liq.GetBlastPropagation().GetOut() != false {
-							t.Error("Expected Key Vault Key BlastPropagation.Out to be false")
-						}
-					}
 				case azureshared.ManagedIdentityUserAssignedIdentity.String():
 					hasUserAssignedIdentityLink = true
 					if query.GetMethod() != sdp.QueryMethod_GET {
@@ -323,16 +303,6 @@ func TestComputeDiskEncryptionSetIntegration(t *testing.T) {
 					}
 					if query.GetScope() != scope {
 						t.Errorf("Expected User Assigned Identity link scope %s, got %s", scope, query.GetScope())
-					}
-					if liq.GetBlastPropagation() == nil {
-						t.Error("User Assigned Identity linked item query has nil BlastPropagation")
-					} else {
-						if liq.GetBlastPropagation().GetIn() != true {
-							t.Error("Expected User Assigned Identity BlastPropagation.In to be true")
-						}
-						if liq.GetBlastPropagation().GetOut() != false {
-							t.Error("Expected User Assigned Identity BlastPropagation.Out to be false")
-						}
 					}
 				case "dns":
 					hasDNSLink = true
@@ -345,16 +315,6 @@ func TestComputeDiskEncryptionSetIntegration(t *testing.T) {
 					}
 					if query.GetScope() != "global" {
 						t.Errorf("Expected DNS link scope global, got %s", query.GetScope())
-					}
-					if liq.GetBlastPropagation() == nil {
-						t.Error("DNS linked item query has nil BlastPropagation")
-					} else {
-						if liq.GetBlastPropagation().GetIn() != true {
-							t.Error("Expected DNS BlastPropagation.In to be true")
-						}
-						if liq.GetBlastPropagation().GetOut() != true {
-							t.Error("Expected DNS BlastPropagation.Out to be true")
-						}
 					}
 				default:
 					t.Errorf("Unexpected linked item type: %s", query.GetType())

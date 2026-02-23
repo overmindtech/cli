@@ -242,12 +242,6 @@ func TestStorageQueuesIntegration(t *testing.T) {
 					if liq.GetQuery().GetQuery() != storageAccountName {
 						t.Errorf("Expected linked query to storage account %s, got %s", storageAccountName, liq.GetQuery().GetQuery())
 					}
-					if liq.GetBlastPropagation().GetIn() != true {
-						t.Error("Expected BlastPropagation.In to be true")
-					}
-					if liq.GetBlastPropagation().GetOut() != false {
-						t.Error("Expected BlastPropagation.Out to be false")
-					}
 					break
 				}
 			}

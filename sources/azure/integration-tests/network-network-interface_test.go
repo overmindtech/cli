@@ -209,31 +209,10 @@ func TestNetworkNetworkInterfaceIntegration(t *testing.T) {
 				switch liq.GetQuery().GetType() {
 				case azureshared.NetworkNetworkInterfaceIPConfiguration.String():
 					hasIPConfigLink = true
-					// Verify blast propagation (In: false, Out: true)
-					if liq.GetBlastPropagation().GetIn() != false {
-						t.Error("Expected IP config blast propagation In=false, got true")
-					}
-					if liq.GetBlastPropagation().GetOut() != true {
-						t.Error("Expected IP config blast propagation Out=true, got false")
-					}
 				case azureshared.ComputeVirtualMachine.String():
 					// VM link may or may not be present depending on whether NIC is attached
-					// Verify blast propagation if present (In: false, Out: true)
-					if liq.GetBlastPropagation().GetIn() != false {
-						t.Error("Expected VM blast propagation In=false, got true")
-					}
-					if liq.GetBlastPropagation().GetOut() != true {
-						t.Error("Expected VM blast propagation Out=true, got false")
-					}
 				case azureshared.NetworkNetworkSecurityGroup.String():
 					// NSG link may or may not be present
-					// Verify blast propagation if present (In: true, Out: false)
-					if liq.GetBlastPropagation().GetIn() != true {
-						t.Error("Expected NSG blast propagation In=true, got false")
-					}
-					if liq.GetBlastPropagation().GetOut() != false {
-						t.Error("Expected NSG blast propagation Out=false, got true")
-					}
 				}
 			}
 

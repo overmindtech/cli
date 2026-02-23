@@ -242,19 +242,8 @@ func TestNetworkNetworkSecurityGroupIntegration(t *testing.T) {
 					t.Error("Linked item query has empty Scope")
 				}
 
-				// Verify blast propagation is set
-				bp := liq.GetBlastPropagation()
-				if bp == nil {
-					t.Error("Linked item query has nil BlastPropagation")
-				} else {
-					// Blast propagation should have In and Out set (even if false)
-					_ = bp.GetIn()
-					_ = bp.GetOut()
-				}
-
-				log.Printf("Verified linked item query: Type=%s, Method=%s, Query=%s, Scope=%s, In=%v, Out=%v",
-					query.GetType(), query.GetMethod(), query.GetQuery(), query.GetScope(),
-					bp.GetIn(), bp.GetOut())
+				log.Printf("Verified linked item query: Type=%s, Method=%s, Query=%s, Scope=%s",
+					query.GetType(), query.GetMethod(), query.GetQuery(), query.GetScope())
 			}
 
 			// Verify that default security rules are linked (they should always exist)
@@ -262,14 +251,6 @@ func TestNetworkNetworkSecurityGroupIntegration(t *testing.T) {
 			for _, liq := range linkedQueries {
 				if liq.GetQuery().GetType() == azureshared.NetworkDefaultSecurityRule.String() {
 					hasDefaultSecurityRuleLink = true
-					// Verify blast propagation for default security rules
-					bp := liq.GetBlastPropagation()
-					if bp.GetIn() != true {
-						t.Error("Expected default security rule blast propagation In=true, got false")
-					}
-					if bp.GetOut() != false {
-						t.Error("Expected default security rule blast propagation Out=false, got true")
-					}
 					break
 				}
 			}
@@ -282,14 +263,6 @@ func TestNetworkNetworkSecurityGroupIntegration(t *testing.T) {
 			for _, liq := range linkedQueries {
 				if liq.GetQuery().GetType() == azureshared.NetworkSecurityRule.String() {
 					hasSecurityRuleLink = true
-					// Verify blast propagation for security rules
-					bp := liq.GetBlastPropagation()
-					if bp.GetIn() != true {
-						t.Error("Expected security rule blast propagation In=true, got false")
-					}
-					if bp.GetOut() != false {
-						t.Error("Expected security rule blast propagation Out=false, got true")
-					}
 					// Verify the query contains the NSG name and rule name
 					query := liq.GetQuery().GetQuery()
 					if query == "" {

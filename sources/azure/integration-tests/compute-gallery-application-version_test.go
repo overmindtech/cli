@@ -244,15 +244,6 @@ func TestComputeGalleryApplicationVersionIntegration(t *testing.T) {
 				if query.GetScope() == "" {
 					t.Error("Linked item query has empty Scope")
 				}
-
-				bp := liq.GetBlastPropagation()
-				if bp == nil {
-					t.Error("Linked item query has nil BlastPropagation")
-				} else {
-					log.Printf("Verified linked item query: Type=%s, Method=%s, Query=%s, Scope=%s, In=%v, Out=%v",
-						query.GetType(), query.GetMethod(), query.GetQuery(), query.GetScope(),
-						bp.GetIn(), bp.GetOut())
-				}
 			}
 		})
 	})

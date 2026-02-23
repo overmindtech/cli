@@ -272,19 +272,6 @@ func TestNetworkZoneIntegration(t *testing.T) {
 					if linkedScope != scope {
 						t.Errorf("Expected linked query scope %s, got %s", scope, linkedScope)
 					}
-
-					// Verify blast propagation
-					bp := liq.GetBlastPropagation()
-					if bp == nil {
-						t.Errorf("Expected BlastPropagation to be set for %s", linkedType)
-					} else {
-						if bp.GetIn() != true {
-							t.Errorf("Expected BlastPropagation.In=true for %s, got false", linkedType)
-						}
-						if bp.GetOut() != true {
-							t.Errorf("Expected BlastPropagation.Out=true for %s, got false", linkedType)
-						}
-					}
 				}
 
 				// Verify DNS name server links (standard library)
@@ -297,38 +284,12 @@ func TestNetworkZoneIntegration(t *testing.T) {
 					if linkedScope != "global" {
 						t.Errorf("Expected linked query scope 'global' for DNS name server, got %s", linkedScope)
 					}
-
-					// Verify blast propagation
-					bp := liq.GetBlastPropagation()
-					if bp == nil {
-						t.Errorf("Expected BlastPropagation to be set for DNS name server")
-					} else {
-						if bp.GetIn() != true {
-							t.Errorf("Expected BlastPropagation.In=true for DNS name server, got false")
-						}
-						if bp.GetOut() != true {
-							t.Errorf("Expected BlastPropagation.Out=true for DNS name server, got false")
-						}
-					}
 				}
 
 				// Verify Virtual Network links (if present)
 				if linkedType == azureshared.NetworkVirtualNetwork.String() {
 					if method != sdp.QueryMethod_GET {
 						t.Errorf("Expected linked query method GET for Virtual Network, got %s", method)
-					}
-
-					// Verify blast propagation
-					bp := liq.GetBlastPropagation()
-					if bp == nil {
-						t.Errorf("Expected BlastPropagation to be set for Virtual Network")
-					} else {
-						if bp.GetIn() != true {
-							t.Errorf("Expected BlastPropagation.In=true for Virtual Network, got false")
-						}
-						if bp.GetOut() != false {
-							t.Errorf("Expected BlastPropagation.Out=false for Virtual Network, got true")
-						}
 					}
 				}
 			}

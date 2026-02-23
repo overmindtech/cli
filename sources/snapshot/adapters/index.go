@@ -111,8 +111,7 @@ func (idx *SnapshotIndex) hydrateLinkedItems() {
 		}
 
 		item.LinkedItems = append(item.LinkedItems, &sdp.LinkedItem{
-			Item:             to,
-			BlastPropagation: edge.GetBlastPropagation(),
+			Item: to,
 		})
 		existingLinks[fromKey][toKey] = true
 	}

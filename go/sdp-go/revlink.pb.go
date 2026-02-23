@@ -27,11 +27,9 @@ type GetReverseEdgesRequest struct {
 	// The account that the item belongs to
 	Account string `protobuf:"bytes,1,opt,name=account,proto3" json:"account,omitempty"`
 	// The item that you would like to find reverse edges for
-	Item *Reference `protobuf:"bytes,2,opt,name=item,proto3" json:"item,omitempty"`
-	// set to true to only return edges that propagate configuration change impact
-	FollowOnlyBlastPropagation bool `protobuf:"varint,3,opt,name=followOnlyBlastPropagation,proto3" json:"followOnlyBlastPropagation,omitempty"`
-	unknownFields              protoimpl.UnknownFields
-	sizeCache                  protoimpl.SizeCache
+	Item          *Reference `protobuf:"bytes,2,opt,name=item,proto3" json:"item,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GetReverseEdgesRequest) Reset() {
@@ -76,13 +74,6 @@ func (x *GetReverseEdgesRequest) GetItem() *Reference {
 		return x.Item
 	}
 	return nil
-}
-
-func (x *GetReverseEdgesRequest) GetFollowOnlyBlastPropagation() bool {
-	if x != nil {
-		return x.FollowOnlyBlastPropagation
-	}
-	return false
 }
 
 type GetReverseEdgesResponse struct {
@@ -351,12 +342,11 @@ var File_revlink_proto protoreflect.FileDescriptor
 
 const file_revlink_proto_rawDesc = "" +
 	"\n" +
-	"\rrevlink.proto\x12\arevlink\x1a\vitems.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x92\x01\n" +
+	"\rrevlink.proto\x12\arevlink\x1a\vitems.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"t\n" +
 	"\x16GetReverseEdgesRequest\x12\x18\n" +
 	"\aaccount\x18\x01 \x01(\tR\aaccount\x12\x1e\n" +
 	"\x04item\x18\x02 \x01(\v2\n" +
-	".ReferenceR\x04item\x12>\n" +
-	"\x1afollowOnlyBlastPropagation\x18\x03 \x01(\bR\x1afollowOnlyBlastPropagation\"6\n" +
+	".ReferenceR\x04itemJ\x04\b\x03\x10\x04R\x1afollowOnlyBlastPropagation\"6\n" +
 	"\x17GetReverseEdgesResponse\x12\x1b\n" +
 	"\x05edges\x18\x01 \x03(\v2\x05.EdgeR\x05edges\"\x8f\x01\n" +
 	"\x1cIngestGatewayResponseRequest\x12\x18\n" +

@@ -229,13 +229,6 @@ func TestComputeVirtualMachineScaleSetIntegration(t *testing.T) {
 					if liq.GetQuery().GetMethod() != sdp.QueryMethod_GET {
 						t.Errorf("Expected subnet link method to be GET, got %s", liq.GetQuery().GetMethod())
 					}
-					// Verify blast propagation (In: true, Out: false)
-					if liq.GetBlastPropagation().GetIn() != true {
-						t.Error("Expected subnet blast propagation In=true, got false")
-					}
-					if liq.GetBlastPropagation().GetOut() != false {
-						t.Error("Expected subnet blast propagation Out=false, got true")
-					}
 				case azureshared.ComputeVirtualMachine.String():
 					hasVMLink = true
 					// Verify VM link properties (VM instances are linked via SEARCH)
@@ -245,25 +238,11 @@ func TestComputeVirtualMachineScaleSetIntegration(t *testing.T) {
 					if liq.GetQuery().GetQuery() != integrationTestVMSSName {
 						t.Errorf("Expected VM link query to be %s, got %s", integrationTestVMSSName, liq.GetQuery().GetQuery())
 					}
-					// Verify blast propagation (In: false, Out: true)
-					if liq.GetBlastPropagation().GetIn() != false {
-						t.Error("Expected VM blast propagation In=false, got true")
-					}
-					if liq.GetBlastPropagation().GetOut() != true {
-						t.Error("Expected VM blast propagation Out=true, got false")
-					}
 				case azureshared.ComputeVirtualMachineExtension.String():
 					// Extensions may or may not be present depending on VMSS setup
 					// Verify extension link properties if present
 					if liq.GetQuery().GetMethod() != sdp.QueryMethod_GET {
 						t.Errorf("Expected extension link method to be GET, got %s", liq.GetQuery().GetMethod())
-					}
-					// Verify blast propagation (In: false, Out: true)
-					if liq.GetBlastPropagation().GetIn() != false {
-						t.Error("Expected extension blast propagation In=false, got true")
-					}
-					if liq.GetBlastPropagation().GetOut() != true {
-						t.Error("Expected extension blast propagation Out=true, got false")
 					}
 				}
 			}

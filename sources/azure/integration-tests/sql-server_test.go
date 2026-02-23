@@ -239,12 +239,6 @@ func TestSQLServerIntegration(t *testing.T) {
 					if liq.GetQuery().GetScope() != scope {
 						t.Errorf("Expected linked query scope %s, got %s", scope, liq.GetQuery().GetScope())
 					}
-
-					// Verify blast propagation is set
-					bp := liq.GetBlastPropagation()
-					if bp == nil {
-						t.Errorf("Expected BlastPropagation to be set for %s", linkedType)
-					}
 				}
 			}
 
@@ -255,85 +249,9 @@ func TestSQLServerIntegration(t *testing.T) {
 				}
 			}
 
-			log.Printf("Verified %d linked item queries for SQL server %s", len(linkedQueries), sqlServerName)
-		})
-
-		t.Run("VerifyChildResourceBlastPropagation", func(t *testing.T) {
-			ctx := t.Context()
-
-			log.Printf("Verifying blast propagation for child resources of SQL server %s", sqlServerName)
-
-			sqlServerWrapper := manual.NewSqlServer(
-				clients.NewSqlServersClient(sqlServerClient),
-				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
-			)
-			scope := sqlServerWrapper.Scopes()[0]
-
-			sqlServerAdapter := sources.WrapperToAdapter(sqlServerWrapper, sdpcache.NewNoOpCache())
-			sdpItem, qErr := sqlServerAdapter.Get(ctx, scope, sqlServerName, true)
-			if qErr != nil {
-				t.Fatalf("Expected no error, got: %v", qErr)
-			}
-
-			linkedQueries := sdpItem.GetLinkedItemQueries()
-
-			// Verify specific blast propagation patterns
-			blastPropagationTests := map[string]struct {
-				in  bool
-				out bool
-			}{
-				// Child resources that depend on server (In: true, Out: false)
-				azureshared.SQLDatabase.String():                  {in: true, out: false},
-				azureshared.SQLElasticPool.String():               {in: true, out: false},
-				azureshared.SQLServerSyncGroup.String():           {in: true, out: false},
-				azureshared.SQLServerSyncAgent.String():           {in: true, out: false},
-				azureshared.SQLServerUsage.String():               {in: true, out: false},
-				azureshared.SQLServerOperation.String():           {in: true, out: false},
-				azureshared.SQLServerAdvisor.String():             {in: true, out: false},
-				azureshared.SQLServerPrivateLinkResource.String(): {in: true, out: false},
-				// Child resources that affect server connectivity/security (In: true, Out: true)
-				azureshared.SQLServerFirewallRule.String():                    {in: true, out: true},
-				azureshared.SQLServerVirtualNetworkRule.String():              {in: true, out: true},
-				azureshared.SQLServerKey.String():                             {in: true, out: true},
-				azureshared.SQLServerFailoverGroup.String():                   {in: true, out: true},
-				azureshared.SQLServerAdministrator.String():                   {in: true, out: true},
-				azureshared.SQLServerPrivateEndpointConnection.String():       {in: true, out: true},
-				azureshared.SQLServerAuditingSetting.String():                 {in: true, out: true},
-				azureshared.SQLServerSecurityAlertPolicy.String():             {in: true, out: true},
-				azureshared.SQLServerVulnerabilityAssessment.String():         {in: true, out: true},
-				azureshared.SQLServerEncryptionProtector.String():             {in: true, out: true},
-				azureshared.SQLServerBlobAuditingPolicy.String():              {in: true, out: true},
-				azureshared.SQLServerAutomaticTuning.String():                 {in: true, out: true},
-				azureshared.SQLServerAdvancedThreatProtectionSetting.String(): {in: true, out: true},
-				azureshared.SQLServerDnsAlias.String():                        {in: true, out: true},
-				azureshared.SQLServerBackupLongTermRetentionPolicy.String():   {in: true, out: true},
-				azureshared.SQLServerDevOpsAuditSetting.String():              {in: true, out: true},
-				azureshared.SQLServerTrustGroup.String():                      {in: true, out: true},
-				azureshared.SQLServerOutboundFirewallRule.String():            {in: true, out: true},
-			}
-
-			for _, liq := range linkedQueries {
-				linkedType := liq.GetQuery().GetType()
-				if expected, ok := blastPropagationTests[linkedType]; ok {
-					bp := liq.GetBlastPropagation()
-					if bp == nil {
-						t.Errorf("Expected BlastPropagation to be set for %s", linkedType)
-						continue
-					}
-
-					if bp.GetIn() != expected.in {
-						t.Errorf("Expected BlastPropagation.In=%v for %s, got %v", expected.in, linkedType, bp.GetIn())
-					}
-
-					if bp.GetOut() != expected.out {
-						t.Errorf("Expected BlastPropagation.Out=%v for %s, got %v", expected.out, linkedType, bp.GetOut())
-					}
-				}
-			}
-
-			log.Printf("Verified blast propagation for all child resources")
-		})
+		log.Printf("Verified %d linked item queries for SQL server %s", len(linkedQueries), sqlServerName)
 	})
+})
 
 	t.Run("Teardown", func(t *testing.T) {
 		ctx := t.Context()

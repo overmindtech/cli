@@ -202,15 +202,6 @@ func TestComputeProximityPlacementGroupIntegration(t *testing.T) {
 				if query.GetScope() == "" {
 					t.Error("Linked item query has empty Scope")
 				}
-				bp := liq.GetBlastPropagation()
-				if bp == nil {
-					t.Error("Linked item query has nil BlastPropagation")
-				} else {
-					// PPG links use In: true, Out: true per adapter
-					if !bp.GetIn() || !bp.GetOut() {
-						t.Errorf("Expected BlastPropagation In=true Out=true for PPG links, got In=%v Out=%v", bp.GetIn(), bp.GetOut())
-					}
-				}
 			}
 		})
 

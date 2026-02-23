@@ -212,13 +212,6 @@ func TestManagedIdentityUserAssignedIdentityIntegration(t *testing.T) {
 					if liq.GetQuery().GetScope() != scope {
 						t.Errorf("Expected federated credential link scope to be %s, got %s", scope, liq.GetQuery().GetScope())
 					}
-					// Verify blast propagation (In: true, Out: true)
-					if liq.GetBlastPropagation().GetIn() != true {
-						t.Error("Expected federated credential blast propagation In=true, got false")
-					}
-					if liq.GetBlastPropagation().GetOut() != true {
-						t.Error("Expected federated credential blast propagation Out=true, got false")
-					}
 				default:
 					t.Errorf("Unexpected linked item type: %s", liq.GetQuery().GetType())
 				}

@@ -226,12 +226,6 @@ func TestDBforPostgreSQLFlexibleServerIntegration(t *testing.T) {
 					if liq.GetQuery().GetScope() != scope {
 						t.Errorf("Expected linked query scope %s, got %s", scope, liq.GetQuery().GetScope())
 					}
-
-					// Verify blast propagation is set
-					bp := liq.GetBlastPropagation()
-					if bp == nil {
-						t.Errorf("Expected BlastPropagation to be set for %s", linkedType)
-					}
 				}
 
 				// Check for conditional links
@@ -253,63 +247,10 @@ func TestDBforPostgreSQLFlexibleServerIntegration(t *testing.T) {
 				}
 			}
 
-			log.Printf("Verified %d linked item queries for PostgreSQL Flexible Server %s (hasSubnet: %v, hasVNet: %v, hasDNS: %v)",
-				len(linkedQueries), postgreSQLServerName, hasSubnetLink, hasVirtualNetworkLink, hasDNSLink)
-		})
-
-		t.Run("VerifyChildResourceBlastPropagation", func(t *testing.T) {
-			ctx := t.Context()
-
-			log.Printf("Verifying blast propagation for child resources of PostgreSQL Flexible Server %s", postgreSQLServerName)
-
-			pgServerWrapper := manual.NewDBforPostgreSQLFlexibleServer(
-				clients.NewPostgreSQLFlexibleServersClient(postgreSQLServerClient),
-				[]azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, integrationTestResourceGroup)},
-			)
-			scope := pgServerWrapper.Scopes()[0]
-
-			pgServerAdapter := sources.WrapperToAdapter(pgServerWrapper, sdpcache.NewNoOpCache())
-			sdpItem, qErr := pgServerAdapter.Get(ctx, scope, postgreSQLServerName, true)
-			if qErr != nil {
-				t.Fatalf("Expected no error, got: %v", qErr)
-			}
-
-			linkedQueries := sdpItem.GetLinkedItemQueries()
-
-			// Verify specific blast propagation patterns
-			blastPropagationTests := map[string]struct {
-				in  bool
-				out bool
-			}{
-				// Child resources that depend on server (In: true, Out: false)
-				azureshared.DBforPostgreSQLDatabase.String(): {in: true, out: false},
-				// Child resources that affect server connectivity/configuration (In: true, Out: true)
-				azureshared.DBforPostgreSQLFlexibleServerFirewallRule.String():  {in: true, out: true},
-				azureshared.DBforPostgreSQLFlexibleServerConfiguration.String(): {in: true, out: true},
-			}
-
-			for _, liq := range linkedQueries {
-				linkedType := liq.GetQuery().GetType()
-				if expected, ok := blastPropagationTests[linkedType]; ok {
-					bp := liq.GetBlastPropagation()
-					if bp == nil {
-						t.Errorf("Expected BlastPropagation to be set for %s", linkedType)
-						continue
-					}
-
-					if bp.GetIn() != expected.in {
-						t.Errorf("Expected BlastPropagation.In=%v for %s, got %v", expected.in, linkedType, bp.GetIn())
-					}
-
-					if bp.GetOut() != expected.out {
-						t.Errorf("Expected BlastPropagation.Out=%v for %s, got %v", expected.out, linkedType, bp.GetOut())
-					}
-				}
-			}
-
-			log.Printf("Verified blast propagation for all child resources")
-		})
+		log.Printf("Verified %d linked item queries for PostgreSQL Flexible Server %s (hasSubnet: %v, hasVNet: %v, hasDNS: %v)",
+			len(linkedQueries), postgreSQLServerName, hasSubnetLink, hasVirtualNetworkLink, hasDNSLink)
 	})
+})
 
 	t.Run("Teardown", func(t *testing.T) {
 		ctx := t.Context()
