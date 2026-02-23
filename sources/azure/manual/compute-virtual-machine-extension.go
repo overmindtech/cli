@@ -5,7 +5,9 @@ import (
 	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
+	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
@@ -226,6 +228,41 @@ func (c computeVirtualMachineExtensionWrapper) Search(ctx context.Context, scope
 		items = append(items, item)
 	}
 	return items, nil
+}
+
+func (c computeVirtualMachineExtensionWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string, queryParts ...string) {
+	if len(queryParts) != 1 {
+		stream.SendError(azureshared.QueryError(fmt.Errorf("queryParts must be 1 query part: virtualMachineName, got %d", len(queryParts)), scope, c.Type()))
+		return
+	}
+	virtualMachineName := queryParts[0]
+	if virtualMachineName == "" {
+		stream.SendError(azureshared.QueryError(fmt.Errorf("virtualMachineName cannot be empty"), scope, c.Type()))
+		return
+	}
+
+	rgScope, err := c.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		stream.SendError(azureshared.QueryError(err, scope, c.Type()))
+		return
+	}
+	resp, err := c.client.List(ctx, rgScope.ResourceGroup, virtualMachineName, nil)
+	if err != nil {
+		stream.SendError(azureshared.QueryError(err, scope, c.Type()))
+		return
+	}
+	for _, extension := range resp.Value {
+		if extension.Name == nil {
+			continue
+		}
+		item, sdpErr := c.azureVirtualMachineExtensionToSDPItem(extension, virtualMachineName, *extension.Name, scope)
+		if sdpErr != nil {
+			stream.SendError(sdpErr)
+			continue
+		}
+		cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+		stream.SendItem(item)
+	}
 }
 
 func (c computeVirtualMachineExtensionWrapper) SearchLookups() []sources.ItemTypeLookups {

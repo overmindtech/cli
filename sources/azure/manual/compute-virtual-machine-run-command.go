@@ -6,7 +6,9 @@ import (
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
+	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
@@ -279,6 +281,44 @@ func (s computeVirtualMachineRunCommandWrapper) Search(ctx context.Context, scop
 		}
 	}
 	return items, nil
+}
+
+func (s computeVirtualMachineRunCommandWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string, queryParts ...string) {
+	if len(queryParts) != 1 {
+		stream.SendError(azureshared.QueryError(errors.New("search requires exactly 1 query part: virtualMachineName"), scope, s.Type()))
+		return
+	}
+	virtualMachineName := queryParts[0]
+	if virtualMachineName == "" {
+		stream.SendError(azureshared.QueryError(errors.New("virtualMachineName cannot be empty"), scope, s.Type()))
+		return
+	}
+
+	rgScope, err := s.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		stream.SendError(azureshared.QueryError(err, scope, s.Type()))
+		return
+	}
+	pager := s.client.NewListByVirtualMachinePager(rgScope.ResourceGroup, virtualMachineName, nil)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			stream.SendError(azureshared.QueryError(err, scope, s.Type()))
+			return
+		}
+		for _, runCommand := range page.Value {
+			if runCommand.Name == nil {
+				continue
+			}
+			item, sdpErr := s.azureVirtualMachineRunCommandToSDPItem(runCommand, virtualMachineName, scope)
+			if sdpErr != nil {
+				stream.SendError(sdpErr)
+				continue
+			}
+			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+			stream.SendItem(item)
+		}
+	}
 }
 
 func (s computeVirtualMachineRunCommandWrapper) SearchLookups() []sources.ItemTypeLookups {

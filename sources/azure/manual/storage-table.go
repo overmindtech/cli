@@ -5,7 +5,9 @@ import (
 	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v3"
+	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
@@ -151,6 +153,49 @@ func (s storageTablesWrapper) Search(ctx context.Context, scope string, queryPar
 	}
 
 	return items, nil
+}
+
+func (s storageTablesWrapper) SearchStream(ctx context.Context, stream discovery.QueryResultStream, cache sdpcache.Cache, cacheKey sdpcache.CacheKey, scope string, queryParts ...string) {
+	if len(queryParts) != 1 {
+		stream.SendError(azureshared.QueryError(fmt.Errorf("queryParts must be 1 query part: storageAccountName, got %d", len(queryParts)), scope, s.Type()))
+		return
+	}
+	storageAccountName := queryParts[0]
+	if storageAccountName == "" {
+		stream.SendError(azureshared.QueryError(fmt.Errorf("storageAccountName cannot be empty"), scope, s.Type()))
+		return
+	}
+
+	rgScope, err := s.ResourceGroupScopeFromScope(scope)
+	if err != nil {
+		stream.SendError(azureshared.QueryError(err, scope, s.Type()))
+		return
+	}
+	pager := s.client.List(ctx, rgScope.ResourceGroup, storageAccountName)
+	for pager.More() {
+		page, err := pager.NextPage(ctx)
+		if err != nil {
+			stream.SendError(azureshared.QueryError(err, scope, s.Type()))
+			return
+		}
+		for _, table := range page.Value {
+			if table.Name == nil {
+				continue
+			}
+			item, sdpErr := s.azureTableToSDPItem(&armstorage.Table{
+				ID:              table.ID,
+				Name:            table.Name,
+				Type:            table.Type,
+				TableProperties: table.TableProperties,
+			}, storageAccountName, *table.Name, scope)
+			if sdpErr != nil {
+				stream.SendError(sdpErr)
+				continue
+			}
+			cache.StoreItem(ctx, item, shared.DefaultCacheDuration, cacheKey)
+			stream.SendItem(item)
+		}
+	}
 }
 
 func (s storageTablesWrapper) SearchLookups() []sources.ItemTypeLookups {
