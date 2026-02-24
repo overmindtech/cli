@@ -263,6 +263,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create gallery application versions client: %w", err)
 		}
 
+		galleryApplicationsClient, err := armcompute.NewGalleryApplicationsClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create gallery applications client: %w", err)
+		}
+
 		galleryImagesClient, err := armcompute.NewGalleryImagesClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create gallery images client: %w", err)
@@ -438,6 +443,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewGalleryApplicationVersionsClient(galleryApplicationVersionsClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewComputeGalleryApplication(
+					clients.NewGalleryApplicationsClient(galleryApplicationsClient),
+					resourceGroupScopes,
+				), cache),
 				sources.WrapperToAdapter(NewComputeGallery(
 					clients.NewGalleriesClient(galleriesClient),
 					resourceGroupScopes,
@@ -511,6 +520,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewComputeDedicatedHostGroup(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeCapacityReservationGroup(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeGalleryApplicationVersion(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewComputeGalleryApplication(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeGallery(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeGalleryImage(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeSnapshot(nil, placeholderResourceGroupScopes), noOpCache),
