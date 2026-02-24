@@ -140,10 +140,10 @@ func (c computeGalleryWrapper) azureGalleryToSDPItem(gallery *armcompute.Gallery
 	if gallery.Properties != nil && gallery.Properties.SharingProfile != nil && gallery.Properties.SharingProfile.CommunityGalleryInfo != nil {
 		info := gallery.Properties.SharingProfile.CommunityGalleryInfo
 		if info.PublisherURI != nil {
-			AppendURILinks(&linkedItemQueries, *info.PublisherURI, linkedDNSHostnames, seenIPs, true, false)
+			AppendURILinks(&linkedItemQueries, *info.PublisherURI, linkedDNSHostnames, seenIPs)
 		}
 		if info.Eula != nil {
-			AppendURILinks(&linkedItemQueries, *info.Eula, linkedDNSHostnames, seenIPs, true, false)
+			AppendURILinks(&linkedItemQueries, *info.Eula, linkedDNSHostnames, seenIPs)
 		}
 	}
 

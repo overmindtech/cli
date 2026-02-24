@@ -108,7 +108,7 @@ var _ = registerableAdapter{
 		},
 		// TODO: Investigate whether we can/should support multiple items for a given key.
 		// In this case, the eventStream can be an AWS SQS ARN in the form 'arn:aws:sqs:region:account_id:queue_name'
-		// https://linear.app/overmind/issue/ENG-1348/investigate-supporting-multiple-items-in-blast-propagations
+		// https://linear.app/overmind/issue/ENG-1348
 		// Required. Specifies a unique name of the resource such as AWS SQS ARN in the form 'arn:aws:sqs:region:account_id:queue_name',
 		// or Pub/Sub subscription resource name in the form 'projects/{project}/subscriptions/{sub}'.
 		"eventStream.name": {

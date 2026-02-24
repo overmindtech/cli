@@ -33,13 +33,11 @@ func appendLinkIfValid(
 
 // AppendURILinks appends linked item queries for a URI: HTTP link plus DNS or IP link from the host (with deduplication).
 // It mutates linkedItemQueries and the dedupe maps. Skips empty or non-http(s) URIs.
-// blastIn and blastOut set BlastPropagation for the added HTTP/DNS/IP links.
 func AppendURILinks(
 	linkedItemQueries *[]*sdp.LinkedItemQuery,
 	uri string,
 	linkedDNSHostnames map[string]struct{},
 	seenIPs map[string]struct{},
-	blastIn, blastOut bool,
 ) {
 	if uri == "" || (!strings.HasPrefix(uri, "http://") && !strings.HasPrefix(uri, "https://")) {
 		return

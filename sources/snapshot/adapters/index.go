@@ -69,8 +69,7 @@ func NewSnapshotIndex(snapshot *sdp.Snapshot) (*SnapshotIndex, error) {
 
 // hydrateLinkedItems populates each item's LinkedItems field from the snapshot
 // edges. For each edge, the item matching edge.From gets a LinkedItem pointing
-// to edge.To (with blast propagation). Edges whose From item is not in the
-// snapshot are skipped.
+// to edge.To. Edges whose From item is not in the snapshot are skipped.
 func (idx *SnapshotIndex) hydrateLinkedItems() {
 	// Build a map from item reference key → existing LinkedItem targets so
 	// we don't add duplicates when the item already carries some LinkedItems.
