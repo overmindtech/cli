@@ -59,8 +59,7 @@ func securityGroupOutputMapper(_ context.Context, _ *ec2.Client, scope string, _
 		}
 
 		// Network Interfaces using this security group
-		// This enables blast radius propagation from security groups to
-		// instances via their network interfaces
+		// Link to network interfaces using this security group so the graph and blast radius analysis can traverse to attached instances.
 		if securityGroup.GroupId != nil {
 			item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
