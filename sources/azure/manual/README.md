@@ -54,7 +54,7 @@ Refer to the [cursor rules](.cursor/rules/azure-manual-adapter-creation.mdc) for
 3. **Handle Complex Resource Linking**:
    - Parse Azure resource IDs to extract resource names and types
    - Extract resource identifiers from Azure resource manager format
-   - Create appropriate linked item queries with correct blast propagation
+   - Create appropriate linked item queries
 
 4. **Include Comprehensive Tests**:
    - Unit tests for all methods
@@ -85,7 +85,7 @@ When reviewing PRs for manual adapters, ensure:
 ### ✅ Linked Item Queries
 - [ ] Example values in tests match actual Azure resource formats
 - [ ] Scopes for linked item queries are correct (verify with linked resource documentation)
-- [ ] Blast propagation rules are appropriate for resource relationships
+- [ ] Linked item queries are appropriately defined
 - [ ] All possible resource references are handled (no missing cases)
 
 ### ✅ Documentation and References

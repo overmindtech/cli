@@ -8,7 +8,7 @@ package adapters_test
 // implementation:
 // 1. Protobuf serializes field names to snake_case (e.g., "batch_prediction_jobs") while the
 //    adapter configuration expects camelCase (e.g., "batchPredictionJobs"), affecting list operations
-// 2. Blast propagation paths in the adapter expect JSON field names but get protobuf field names,
+// 2. Link rule paths in the adapter expect JSON field names but get protobuf field names,
 //    limiting automatic link generation for nested fields like GCS sources and KMS keys
 //
 // These limitations don't affect the core functionality testing but are noted for future improvements.

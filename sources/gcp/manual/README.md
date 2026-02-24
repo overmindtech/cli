@@ -58,7 +58,7 @@ Refer to the [cursor rules](.cursor/rules/gcp-manual-adapter-creation.mdc) for c
 3. **Handle Complex Resource Linking**:
    - Parse non-standard API response formats
    - Extract resource identifiers from various formats
-   - Create appropriate linked item queries with correct blast propagation
+   - Create appropriate linked item queries
 
 4. **Include Comprehensive Tests**:
    - Unit tests for all methods
@@ -89,12 +89,12 @@ When reviewing PRs for manual adapters, ensure:
 ### ✅ Linked Item Queries
 - [ ] Example values in tests match actual GCP resource formats
 - [ ] Scopes for linked item queries are correct (verify with linked resource documentation)
-- [ ] Blast propagation rules are appropriate for resource relationships
+- [ ] Linked item queries are appropriately defined
 - [ ] All possible resource references are handled (no missing cases)
 
 ### ✅ Documentation and References
 - [ ] GCP API documentation URLs are included in comments
-- [ ] Resource relationship explanations are documented
+- [ ] Resource linking explanations are documented
 - [ ] Complex parsing logic is well-commented
 - [ ] Official GCP reference links are provided for linked resources
 

@@ -204,7 +204,7 @@ func (c computeGalleryApplicationVersionWrapper) azureGalleryApplicationVersionT
 			if link == "" || (!strings.HasPrefix(link, "http://") && !strings.HasPrefix(link, "https://")) {
 				return
 			}
-			AppendURILinks(&linkedItemQueries, link, linkedDNSHostnames, seenIPs, true, true)
+			AppendURILinks(&linkedItemQueries, link, linkedDNSHostnames, seenIPs)
 			if accountName := azureshared.ExtractStorageAccountNameFromBlobURI(link); accountName != "" {
 				if _, seen := seenStorageAccounts[accountName]; !seen {
 					seenStorageAccounts[accountName] = struct{}{}

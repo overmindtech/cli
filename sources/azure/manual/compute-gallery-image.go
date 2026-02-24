@@ -173,13 +173,13 @@ func (c computeGalleryImageWrapper) azureGalleryImageToSDPItem(
 	seenIPs := make(map[string]struct{})
 	if galleryImage.Properties != nil {
 		if galleryImage.Properties.Eula != nil {
-			AppendURILinks(&linkedItemQueries, *galleryImage.Properties.Eula, linkedDNSHostnames, seenIPs, true, false)
+			AppendURILinks(&linkedItemQueries, *galleryImage.Properties.Eula, linkedDNSHostnames, seenIPs)
 		}
 		if galleryImage.Properties.PrivacyStatementURI != nil {
-			AppendURILinks(&linkedItemQueries, *galleryImage.Properties.PrivacyStatementURI, linkedDNSHostnames, seenIPs, true, false)
+			AppendURILinks(&linkedItemQueries, *galleryImage.Properties.PrivacyStatementURI, linkedDNSHostnames, seenIPs)
 		}
 		if galleryImage.Properties.ReleaseNoteURI != nil {
-			AppendURILinks(&linkedItemQueries, *galleryImage.Properties.ReleaseNoteURI, linkedDNSHostnames, seenIPs, true, false)
+			AppendURILinks(&linkedItemQueries, *galleryImage.Properties.ReleaseNoteURI, linkedDNSHostnames, seenIPs)
 		}
 	}
 

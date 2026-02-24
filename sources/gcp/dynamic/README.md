@@ -54,8 +54,8 @@ The complete flow from making a GET request to creating an SDP adapter follows t
 1. **Adapter Definition**: Define the adapter metadata in the adapter file (see [dynamic-adapter-creation.mdc](adapters/.cursor/rules/dynamic-adapter-creation.mdc))
 2. **Adapter Creation**: Framework creates the appropriate adapter type based on metadata configuration
 3. **GET Request Processing**: Validate scope, check cache, construct URL, make HTTP request, convert to SDP item
-4. **External Response to SDP Conversion**: Extract attributes, apply blast propagation rules, generate linked item queries
-5. **Unit Test Coverage**: Test GET functionality and static tests for blast propagation
+4. **External Response to SDP Conversion**: Extract attributes, apply link rules, generate linked item queries
+5. **Unit Test Coverage**: Test GET functionality and static tests for link rules
 
 For detailed implementation patterns and code examples, refer to the [dynamic adapter creation rules](adapters/.cursor/rules/dynamic-adapter-creation.mdc).
 
@@ -89,13 +89,13 @@ It is highly recommended to use Cursor for creating adapters. There are comprehe
 ### Adapter Validation
 
 1. **Terraform Mappings GET/Search**: Check from Terraform registry that the mappings are correct
-2. **Blast Propagations**: Verify they are comprehensive and attribute values follow standards
+2. **Link Rules**: Verify they are comprehensive and attribute values follow standards
 3. **Item Selector**: If the item identifier in the API response is something other than `name`, define it properly
 4. **Unique Attribute Keys**: Investigate the GET endpoint format and ensure it's correct
 
 ### Test Completeness
 
-1. **Blast Propagation/Linked Item Queries**: Verify they work as expected
+1. **Linked Item Queries**: Verify they work as expected
 2. **Unique Attribute**: Ensure it matches the GET call response
 3. **Terraform Mapping for Search**: Confirm it exists if search is supported
 

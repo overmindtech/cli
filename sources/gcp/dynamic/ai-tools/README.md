@@ -98,7 +98,7 @@ go run generate-test-ticket-cmd/main.go -v compute-global-address
 ### What it does
 1. **Extract adapter information** from the adapter file in `../adapters/`
 2. **Determine protobuf types** based on adapter name patterns
-3. **Extract blast propagation** configuration from the adapter
+3. **Extract link rules** configuration from the adapter
 4. **Generate a Linear URL** with basic fields pre-filled:
    - Title: "Write unit test for {adapter-name} dynamic adapter"
    - Assignee: Cursor Agent
@@ -115,7 +115,7 @@ The tool generates a Linear URL with basic fields and copies the description to 
 ### Requirements
 - Must be run from the `prompter` directory
 - Adapter file must exist in `../adapters/`
-- Adapter file must contain valid SDP item type and blast propagation configuration
+- Adapter file must contain valid SDP item type and link rules configuration
 - Go 1.19+ required
 
 ## Integration with Cursor Agents
@@ -163,7 +163,7 @@ When a Cursor agent picks up the ticket:
 2. Follow the comprehensive testing patterns
 3. Create the test file with proper structure
 4. Include all required test cases (Get, List, Search if supported)
-5. Add proper blast propagation tests
+5. Add proper link rules tests
 
 ## Example Ticket Content
 
@@ -177,7 +177,7 @@ For `compute-global-forwarding-rule`:
 - **API Endpoints**:
   - GET: `https://compute.googleapis.com/compute/v1/projects/{project}/global/forwardingRules/{forwardingRule}`
   - LIST: `https://compute.googleapis.com/compute/v1/projects/{project}/global/forwardingRules`
-- **Blast Propagation**: network (InOnly), subnetwork (InOnly), IPAddress (BothWays), backendService (BothWays)
+- **Link Rules**: network (InOnly), subnetwork (InOnly), IPAddress (BothWays), backendService (BothWays)
 
 ## Benefits
 
@@ -223,7 +223,7 @@ When you just need tests for an existing adapter:
 The `../adapters/.cursor/rules/dynamic-adapter-creation.md` file ensures that:
 - Proper adapter structure and patterns are followed
 - Correct SDP item types and metadata are defined
-- Appropriate blast propagation is configured
+- Appropriate link rules are configured
 - Terraform mappings are included when applicable
 - IAM permissions are properly defined
 
@@ -233,7 +233,7 @@ The `../adapters/.cursor/rules/dynamic-adapter-testing.md` file ensures that:
 - Proper imports are included
 - Correct protobuf types are used
 - Comprehensive test coverage is provided
-- Static tests with blast propagation are included
+- Static tests with link rules are included
 - Common mistakes are avoided
 
 This ensures consistent, high-quality implementations and unit tests for all dynamic adapters.

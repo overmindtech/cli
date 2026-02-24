@@ -174,10 +174,10 @@ func (c computeSharedGalleryImageWrapper) azureSharedGalleryImageToSDPItem(
 	seenIPs := make(map[string]struct{})
 	if image.Properties != nil {
 		if image.Properties.Eula != nil {
-			AppendURILinks(&linkedItemQueries, *image.Properties.Eula, linkedDNSHostnames, seenIPs, true, false)
+			AppendURILinks(&linkedItemQueries, *image.Properties.Eula, linkedDNSHostnames, seenIPs)
 		}
 		if image.Properties.PrivacyStatementURI != nil {
-			AppendURILinks(&linkedItemQueries, *image.Properties.PrivacyStatementURI, linkedDNSHostnames, seenIPs, true, false)
+			AppendURILinks(&linkedItemQueries, *image.Properties.PrivacyStatementURI, linkedDNSHostnames, seenIPs)
 		}
 	}
 
