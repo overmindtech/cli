@@ -72,6 +72,12 @@ func TestComputeGallery(t *testing.T) {
 					ExpectedQuery:  galleryName,
 					ExpectedScope:  scope,
 				},
+				{
+					ExpectedType:   azureshared.ComputeGalleryApplication.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  galleryName,
+					ExpectedScope:  scope,
+				},
 			}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})

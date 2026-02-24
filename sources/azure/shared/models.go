@@ -130,6 +130,8 @@ const (
 	DscpConfiguration                              shared.Resource = "dscp-configuration"
 	VirtualNetworkTap                              shared.Resource = "virtual-network-tap"
 	NetworkInterfaceTapConfiguration               shared.Resource = "network-interface-tap-configuration"
+	ServiceEndpointPolicy                          shared.Resource = "service-endpoint-policy"
+	IpAllocation                                   shared.Resource = "ip-allocation"
 
 	// Storage resources
 	Account                                 shared.Resource = "account"
