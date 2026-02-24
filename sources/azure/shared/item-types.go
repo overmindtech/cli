@@ -82,6 +82,8 @@ var (
 	NetworkDscpConfiguration                              = shared.NewItemType(Azure, Network, DscpConfiguration)
 	NetworkVirtualNetworkTap                              = shared.NewItemType(Azure, Network, VirtualNetworkTap)
 	NetworkNetworkInterfaceTapConfiguration               = shared.NewItemType(Azure, Network, NetworkInterfaceTapConfiguration)
+	NetworkServiceEndpointPolicy                          = shared.NewItemType(Azure, Network, ServiceEndpointPolicy)
+	NetworkIpAllocation                                   = shared.NewItemType(Azure, Network, IpAllocation)
 
 	//Storage item types
 	StorageAccount                   = shared.NewItemType(Azure, Storage, Account)

@@ -134,6 +134,16 @@ func (c computeGalleryWrapper) azureGalleryToSDPItem(gallery *armcompute.Gallery
 		},
 	})
 
+	// Child resources: list gallery applications under this gallery (Search by gallery name)
+	linkedItemQueries = append(linkedItemQueries, &sdp.LinkedItemQuery{
+		Query: &sdp.Query{
+			Type:   azureshared.ComputeGalleryApplication.String(),
+			Method: sdp.QueryMethod_SEARCH,
+			Query:  galleryName,
+			Scope:  scope,
+		},
+	})
+
 	// URI-based links from community gallery info: PublisherURI, Eula
 	linkedDNSHostnames := make(map[string]struct{})
 	seenIPs := make(map[string]struct{})
