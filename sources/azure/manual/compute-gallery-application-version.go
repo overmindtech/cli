@@ -18,7 +18,6 @@ import (
 
 var (
 	ComputeGalleryApplicationVersionLookupByName = shared.NewItemTypeLookup("name", azureshared.ComputeGalleryApplicationVersion)
-	ComputeGalleryApplicationLookupByName        = shared.NewItemTypeLookup("name", azureshared.ComputeGalleryApplication) //todo: move to its adapter file when created, this is just a placeholder
 )
 
 type computeGalleryApplicationVersionWrapper struct {
