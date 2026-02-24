@@ -1,6 +1,6 @@
 module github.com/overmindtech/cli
 
-go 1.25.1
+go 1.26.0
 
 replace github.com/anthropics/anthropic-sdk-go => github.com/anthropics/anthropic-sdk-go v0.2.0-alpha.4
 
