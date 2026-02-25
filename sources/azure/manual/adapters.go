@@ -12,7 +12,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dns/armdns"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/msi/armmsi"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v8"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers/v5"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql/v2"
@@ -149,6 +149,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 		loadBalancersClient, err := armnetwork.NewLoadBalancersClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create load balancers client: %w", err)
+		}
+
+		privateEndpointsClient, err := armnetwork.NewPrivateEndpointsClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create private endpoints client: %w", err)
 		}
 
 		batchAccountsClient, err := armbatch.NewAccountClient(subscriptionID, cred, nil)
@@ -364,6 +369,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewLoadBalancersClient(loadBalancersClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewNetworkPrivateEndpoint(
+					clients.NewPrivateEndpointsClient(privateEndpointsClient),
+					resourceGroupScopes,
+				), cache),
 				sources.WrapperToAdapter(NewNetworkZone(
 					clients.NewZonesClient(zonesClient),
 					resourceGroupScopes,
@@ -468,7 +477,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewSnapshotsClient(snapshotsClient),
 					resourceGroupScopes,
 				), cache),
-		)
+			)
 		}
 
 		// Subscription-scoped adapters (not resource-group-scoped)
@@ -535,6 +544,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewComputeGalleryImage(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeSnapshot(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeSharedGalleryImage(nil, subscriptionID), noOpCache),
+			sources.WrapperToAdapter(NewNetworkPrivateEndpoint(nil, placeholderResourceGroupScopes), noOpCache),
 		)
 
 		_ = regions
