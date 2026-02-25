@@ -45,6 +45,32 @@ const (
 	maxFileSize = 10 * 1024 * 1024 // 10MB
 )
 
+// FindKnowledgeDir walks up from startDir looking for a .overmind/knowledge/
+// directory. Returns the absolute path if found, or empty string if not.
+// Stops at the repository root (.git boundary) or filesystem root to avoid
+// picking up knowledge files from unrelated parent projects.
+func FindKnowledgeDir(startDir string) string {
+	dir, err := filepath.Abs(startDir)
+	if err != nil {
+		return ""
+	}
+	for {
+		candidate := filepath.Join(dir, ".overmind", "knowledge")
+		if info, err := os.Stat(candidate); err == nil && info.IsDir() {
+			return candidate
+		}
+		if _, err := os.Stat(filepath.Join(dir, ".git")); err == nil {
+			break
+		}
+		parent := filepath.Dir(dir)
+		if parent == dir {
+			break
+		}
+		dir = parent
+	}
+	return ""
+}
+
 // Discover walks the knowledge directory and discovers all valid knowledge files
 // Returns valid files and any warnings encountered during discovery
 func Discover(knowledgeDir string) ([]KnowledgeFile, []Warning) {
@@ -316,6 +342,10 @@ func validateDescription(description string) error {
 // This is a convenience function that combines discovery, warning logging, and conversion
 // to reduce code duplication across commands.
 func DiscoverAndConvert(ctx context.Context, knowledgeDir string) []*sdp.Knowledge {
+	if knowledgeDir != "" {
+		log.WithContext(ctx).WithField("knowledgeDir", knowledgeDir).Debug("Resolved knowledge directory")
+	}
+
 	knowledgeFiles, warnings := Discover(knowledgeDir)
 	
 	// Log warnings
