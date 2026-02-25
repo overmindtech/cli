@@ -319,7 +319,7 @@ func externalCallMulti(ctx context.Context, itemsSelector string, httpCli *http.
 
 func potentialLinksFromLinkRules(itemType shared.ItemType, linkRules map[shared.ItemType]map[string]*gcpshared.Impact) []string {
 	potentialLinksMap := make(map[string]bool)
-	for _, impact := range linkRules[itemType] {
+	for key, impact := range linkRules[itemType] {
 		potentialLinksMap[impact.ToSDPItemType.String()] = true
 		// Special case: stdlib.NetworkIP and stdlib.NetworkDNS are interchangeable
 		// because the linker automatically detects whether a value is an IP address or DNS name
@@ -327,6 +327,17 @@ func potentialLinksFromLinkRules(itemType shared.ItemType, linkRules map[shared.
 		if impact.ToSDPItemType.String() == "ip" || impact.ToSDPItemType.String() == "dns" {
 			potentialLinksMap["ip"] = true
 			potentialLinksMap["dns"] = true
+		}
+		// Network tag keys produce additional links via AutoLink that aren't
+		// captured by ToSDPItemType alone.
+		if gcpshared.IsNetworkTagKey(key) {
+			switch itemType {
+			case gcpshared.ComputeFirewall, gcpshared.ComputeRoute:
+				potentialLinksMap[gcpshared.ComputeInstance.String()] = true
+			case gcpshared.ComputeInstance, gcpshared.ComputeInstanceTemplate:
+				potentialLinksMap[gcpshared.ComputeFirewall.String()] = true
+				potentialLinksMap[gcpshared.ComputeRoute.String()] = true
+			}
 		}
 	}
 

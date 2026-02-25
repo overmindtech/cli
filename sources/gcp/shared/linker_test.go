@@ -226,6 +226,84 @@ func TestLinker_AutoLink(t *testing.T) {
 	}
 }
 
+func TestLinker_AutoLink_NetworkTags(t *testing.T) {
+	projectID := "my-project"
+	l := NewLinker()
+
+	t.Run("Firewall targetTags → SEARCH ComputeInstance", func(t *testing.T) {
+		item := &sdp.Item{}
+		l.AutoLink(context.TODO(), projectID, item, ComputeFirewall, "web-server", []string{"targetTags"})
+
+		assertLinkedItemQuery(t, item, ComputeInstance.String(), sdp.QueryMethod_SEARCH, "web-server", projectID)
+	})
+
+	t.Run("Firewall sourceTags → SEARCH ComputeInstance", func(t *testing.T) {
+		item := &sdp.Item{}
+		l.AutoLink(context.TODO(), projectID, item, ComputeFirewall, "nat-gateway", []string{"sourceTags"})
+
+		assertLinkedItemQuery(t, item, ComputeInstance.String(), sdp.QueryMethod_SEARCH, "nat-gateway", projectID)
+	})
+
+	t.Run("Route tags → SEARCH ComputeInstance", func(t *testing.T) {
+		item := &sdp.Item{}
+		l.AutoLink(context.TODO(), projectID, item, ComputeRoute, "backend", []string{"tags"})
+
+		assertLinkedItemQuery(t, item, ComputeInstance.String(), sdp.QueryMethod_SEARCH, "backend", projectID)
+	})
+
+	t.Run("Instance template tags.items → SEARCH ComputeFirewall and ComputeRoute", func(t *testing.T) {
+		item := &sdp.Item{}
+		l.AutoLink(context.TODO(), projectID, item, ComputeInstanceTemplate, "http-server", []string{"properties", "tags", "items"})
+
+		if len(item.GetLinkedItemQueries()) != 2 {
+			t.Fatalf("expected 2 linked item queries, got %d", len(item.GetLinkedItemQueries()))
+		}
+
+		assertLinkedItemQuery(t, item, ComputeFirewall.String(), sdp.QueryMethod_SEARCH, "http-server", projectID)
+
+		q2 := item.GetLinkedItemQueries()[1].GetQuery()
+		if q2.GetType() != ComputeRoute.String() {
+			t.Errorf("second query type = %s, want %s", q2.GetType(), ComputeRoute.String())
+		}
+		if q2.GetMethod() != sdp.QueryMethod_SEARCH {
+			t.Errorf("second query method = %s, want SEARCH", q2.GetMethod())
+		}
+	})
+
+	t.Run("Empty tag is skipped", func(t *testing.T) {
+		item := &sdp.Item{}
+		l.AutoLink(context.TODO(), projectID, item, ComputeFirewall, "  ", []string{"targetTags"})
+
+		if len(item.GetLinkedItemQueries()) != 0 {
+			t.Fatalf("expected 0 linked item queries for empty tag, got %d", len(item.GetLinkedItemQueries()))
+		}
+	})
+
+	t.Run("URI value on tag key falls through to normal linking", func(t *testing.T) {
+		item := &sdp.Item{}
+		l.AutoLink(context.TODO(), projectID, item, ComputeRoute, "projects/my-project/zones/us-central1-a/instances/my-vm", []string{"tags"})
+
+		// Should NOT be treated as network tag (contains /), falls through to normal link rules
+		for _, liq := range item.GetLinkedItemQueries() {
+			if liq.GetQuery().GetMethod() == sdp.QueryMethod_SEARCH && liq.GetQuery().GetType() == ComputeInstance.String() && liq.GetQuery().GetQuery() == "projects/my-project/zones/us-central1-a/instances/my-vm" {
+				t.Error("URI value on tag key should not produce a network-tag SEARCH link")
+			}
+		}
+	})
+}
+
+func assertLinkedItemQuery(t *testing.T, item *sdp.Item, expectedType string, expectedMethod sdp.QueryMethod, expectedQuery, expectedScope string) {
+	t.Helper()
+	for _, liq := range item.GetLinkedItemQueries() {
+		q := liq.GetQuery()
+		if q.GetType() == expectedType && q.GetMethod() == expectedMethod && q.GetQuery() == expectedQuery && q.GetScope() == expectedScope {
+			return
+		}
+	}
+	t.Errorf("did not find LinkedItemQuery{type=%s, method=%s, query=%s, scope=%s} in %d queries",
+		expectedType, expectedMethod, expectedQuery, expectedScope, len(item.GetLinkedItemQueries()))
+}
+
 func Test_determineScope(t *testing.T) {
 	type args struct {
 		ctx                   context.Context

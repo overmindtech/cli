@@ -108,6 +108,10 @@ var _ = registerableAdapter{
 			Description:      "If the IAM Service Account is deleted or updated: Instances created from this template may fail to authenticate or access required resources. If the template is updated: The service account remains unaffected.",
 			ToSDPItemType:    gcpshared.IAMServiceAccount,
 		},
+		"properties.tags.items": {
+			Description:   "Network tag on the instance template. Changing this tag affects which firewall rules and routes apply to instances created from this template.",
+			ToSDPItemType: gcpshared.ComputeFirewall,
+		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{
 		Reference: "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_instance_template",

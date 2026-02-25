@@ -858,11 +858,6 @@ func (s *standardSearchableAdapterImpl) SearchStream(ctx context.Context, scope 
 		return
 	}
 
-	if s.searchStreamable == nil {
-		log.WithField("adapter", s.Name()).Debug("search stream operation not supported")
-		return
-	}
-
 	// This must be a regular query in the format of:
 	// {{datasetName}}|{{tableName}}
 	queryParts = strings.Split(query, shared.QuerySeparator)
@@ -886,6 +881,38 @@ func (s *standardSearchableAdapterImpl) SearchStream(ctx context.Context, scope 
 			query,
 			expectedSearchQueryFormat(searchLookups),
 		))
+		return
+	}
+
+	if s.searchStreamable == nil {
+		// No streaming implementation; fall back to the batch Search method
+		// and send items individually. Without this, wrappers that implement
+		// SearchableWrapper but not SearchStreamableWrapper would silently
+		// return zero items because the engine always prefers SearchStream.
+		items, qErr := s.searchable.Search(ctx, scope, queryParts...)
+		if qErr != nil {
+			if IsNotFound(qErr) {
+				s.cache.StoreError(ctx, qErr, shared.DefaultCacheDuration, ck)
+			}
+			stream.SendError(qErr)
+			return
+		}
+		if len(items) == 0 {
+			notFoundErr := &sdp.QueryError{
+				ErrorType:     sdp.QueryError_NOTFOUND,
+				ErrorString:   fmt.Sprintf("no %s found for search query '%s'", s.Type(), query),
+				Scope:         scope,
+				SourceName:    s.Name(),
+				ItemType:      s.Type(),
+				ResponderName: s.Name(),
+			}
+			s.cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, ck)
+			return
+		}
+		for _, item := range items {
+			s.cache.StoreItem(ctx, item, shared.DefaultCacheDuration, ck)
+			stream.SendItem(item)
+		}
 		return
 	}
 

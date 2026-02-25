@@ -1,6 +1,9 @@
 package adapters
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/overmindtech/cli/go/sdp-go"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/stdlib"
@@ -19,6 +22,15 @@ var _ = registerableAdapter{
 		UniqueAttributeKeys: []string{"routes"},
 		IAMPermissions:      []string{"compute.routes.get", "compute.routes.list"},
 		PredefinedRole:      "roles/compute.viewer",
+		// Tag-based SEARCH: list all routes then filter by tag.
+		SearchEndpointFunc: func(query string, location gcpshared.LocationInfo) string {
+			if query == "" || strings.Contains(query, "/") {
+				return ""
+			}
+			return fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/global/routes", location.ProjectID)
+		},
+		SearchDescription: "Search for routes by network tag. The query is a plain network tag name.",
+		SearchFilterFunc:  routeTagFilter,
 	},
 	linkRules: map[string]*gcpshared.Impact{
 		// https://cloud.google.com/compute/docs/reference/rest/v1/routes/get
@@ -65,6 +77,10 @@ var _ = registerableAdapter{
 			Description:   "The URL to an InterconnectAttachment which is the next hop for the route. If the Interconnect Attachment is updated or deleted: The route may no longer forward traffic properly. If the route is updated: The interconnect attachment remains unaffected but traffic routed through it may be affected.",
 			ToSDPItemType: gcpshared.ComputeInterconnectAttachment,
 		},
+		"tags": {
+			Description:   "Route applies to instances with this network tag. Changing the tag on either side affects which VMs the route targets.",
+			ToSDPItemType: gcpshared.ComputeInstance,
+		},
 	},
 	terraformMapping: gcpshared.TerraformMapping{
 		Reference: "https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/compute_route",
@@ -76,3 +92,8 @@ var _ = registerableAdapter{
 		},
 	},
 }.Register()
+
+// routeTagFilter keeps routes whose tags array contains the query tag.
+func routeTagFilter(query string, item *sdp.Item) bool {
+	return itemAttributeContainsTag(item, "tags", query)
+}

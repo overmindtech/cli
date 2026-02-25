@@ -72,9 +72,15 @@ func Test_addAdapter(t *testing.T) {
 	testCases := []testCase{
 		{
 			name:      "Listable adapter",
-			sdpType:   gcpshared.ComputeFirewall,
+			sdpType:   gcpshared.ComputeNetwork,
 			locations: projectLocation,
 			listable:  true,
+		},
+		{
+			name:               "SearchableListable adapter (firewall with tag search)",
+			sdpType:            gcpshared.ComputeFirewall,
+			locations:          projectLocation,
+			searchableListable: true,
 		},
 		{
 			name:       "Searchable adapter",
