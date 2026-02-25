@@ -43,6 +43,26 @@ func NewLinker() *Linker {
 	}
 }
 
+// networkTagKeys lists the attribute keys that carry GCP network tags.
+var networkTagKeys = map[string]bool{
+	"targetTags":          true,
+	"sourceTags":          true,
+	"tags":                true,
+	"tags.items":          true,
+	"properties.tags.items": true,
+}
+
+// IsNetworkTagKey returns true when the key is a known network-tag attribute.
+func IsNetworkTagKey(key string) bool {
+	return networkTagKeys[key]
+}
+
+// isNetworkTag returns true when the key is a known network-tag attribute and
+// the value looks like a plain tag (no "/" — not a resource URI).
+func isNetworkTag(key, value string) bool {
+	return networkTagKeys[key] && !strings.Contains(value, "/")
+}
+
 // AutoLink tries to find the item type of the TO item based on its GCP resource name.
 // If the item type is identified, it links the FROM item to the TO item.
 func (l *Linker) AutoLink(ctx context.Context, projectID string, fromSDPItem *sdp.Item, fromSDPItemType shared.ItemType, toItemGCPResourceName string, keys []string) {
@@ -59,6 +79,54 @@ func (l *Linker) AutoLink(ctx context.Context, projectID string, fromSDPItem *sd
 		"ovm.gcp.fromItemType":       fromSDPItemType.String(),
 		"ovm.gcp.toItemResourceName": toItemGCPResourceName,
 		"ovm.gcp.key":                key,
+	}
+
+	// Network tag handling: detect plain tag values on known tag keys and
+	// emit SEARCH-based links instead of the normal resource-path flow.
+	if isNetworkTag(key, toItemGCPResourceName) {
+		tag := strings.TrimSpace(toItemGCPResourceName)
+		if tag == "" {
+			return // skip empty/whitespace-only tags (R2)
+		}
+
+		switch fromSDPItemType {
+		case ComputeFirewall, ComputeRoute:
+			// Tag-based SEARCH lists all instances in scope then filters;
+			// may be slow in very large projects.
+			fromSDPItem.LinkedItemQueries = append(fromSDPItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+				Query: &sdp.Query{
+					Type:   ComputeInstance.String(),
+					Method: sdp.QueryMethod_SEARCH,
+					Query:  tag,
+					Scope:  projectID,
+				},
+			})
+		case ComputeInstance, ComputeInstanceTemplate:
+			// Tag-based SEARCH lists all firewalls/routes in scope then filters;
+			// may be slow in very large projects.
+			fromSDPItem.LinkedItemQueries = append(fromSDPItem.LinkedItemQueries,
+				&sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   ComputeFirewall.String(),
+						Method: sdp.QueryMethod_SEARCH,
+						Query:  tag,
+						Scope:  projectID,
+					},
+				},
+				&sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   ComputeRoute.String(),
+						Method: sdp.QueryMethod_SEARCH,
+						Query:  tag,
+						Scope:  projectID,
+					},
+				},
+			)
+		default:
+			log.WithContext(ctx).WithFields(lf).Debug("network tag on unexpected item type, skipping")
+		}
+
+		return
 	}
 
 	impacts, ok := LinkRules[fromSDPItemType]

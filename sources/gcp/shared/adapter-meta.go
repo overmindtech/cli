@@ -8,6 +8,11 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
+// SearchFilterFunc filters items returned by SEARCH. Takes the search query
+// and an SDP item; returns true to keep the item. Used for tag-based SEARCH
+// where the GCP API does not support server-side filtering.
+type SearchFilterFunc func(query string, item *sdp.Item) bool
+
 // LocationLevel defines at which level of the GCP hierarchy a resource is located.
 type LocationLevel string
 
@@ -48,6 +53,10 @@ type AdapterMeta struct {
 	// However, there is an exception: https://cloud.google.com/dataproc/docs/reference/rest/v1/ListAutoscalingPoliciesResponse
 	// Expected: `autoscalingPolicies` by convention, but the API returns `policies`
 	ListResponseSelector string
+	// SearchFilterFunc, if set, is applied after listing items during SEARCH
+	// to keep only items matching the query. Used for tag-based SEARCH where
+	// the API has no server-side filter.
+	SearchFilterFunc SearchFilterFunc
 }
 
 // =============================================

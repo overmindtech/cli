@@ -29,6 +29,7 @@ type AdapterConfig struct {
 	IAMPermissions       []string // List of IAM permissions required by the adapter
 	NameSelector         string   // By default, it is `name`, but can be overridden for outlier cases
 	ListResponseSelector string
+	SearchFilterFunc     gcpshared.SearchFilterFunc
 }
 
 // Adapter implements discovery.ListableAdapter for GCP dynamic adapters.

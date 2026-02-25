@@ -24,6 +24,7 @@ type SearchableListableDiscoveryAdapter interface {
 type SearchableListableAdapter struct {
 	customSearchMethodDescription string
 	searchEndpointFunc            gcpshared.EndpointFunc
+	searchFilterFunc              gcpshared.SearchFilterFunc
 	ListableAdapter
 }
 
@@ -32,6 +33,7 @@ func NewSearchableListableAdapter(searchURLFunc gcpshared.EndpointFunc, listEndp
 	return SearchableListableAdapter{
 		customSearchMethodDescription: customSearchMethodDesc,
 		searchEndpointFunc:            searchURLFunc,
+		searchFilterFunc:              config.SearchFilterFunc,
 		ListableAdapter: ListableAdapter{
 			listEndpointFunc: listEndpointFunc,
 			Adapter: Adapter{
@@ -131,6 +133,16 @@ func (g SearchableListableAdapter) Search(ctx context.Context, scope, query stri
 		return nil, err
 	}
 
+	if g.searchFilterFunc != nil {
+		filtered := make([]*sdp.Item, 0, len(items))
+		for _, item := range items {
+			if g.searchFilterFunc(query, item) {
+				filtered = append(filtered, item)
+			}
+		}
+		items = filtered
+	}
+
 	if len(items) == 0 {
 		// Cache not-found when no items were found
 		notFoundErr := &sdp.QueryError{
@@ -153,6 +165,20 @@ func (g SearchableListableAdapter) Search(ctx context.Context, scope, query stri
 }
 
 func (g SearchableListableAdapter) SearchStream(ctx context.Context, scope, query string, ignoreCache bool, stream discovery.QueryResultStream) {
+	// When a post-filter is configured, fall back to the non-streaming Search
+	// so we can filter before sending items to the stream.
+	if g.searchFilterFunc != nil {
+		items, err := g.Search(ctx, scope, query, ignoreCache)
+		if err != nil {
+			stream.SendError(err)
+			return
+		}
+		for _, item := range items {
+			stream.SendItem(item)
+		}
+		return
+	}
+
 	location, err := g.validateScope(scope)
 	if err != nil {
 		stream.SendError(err)

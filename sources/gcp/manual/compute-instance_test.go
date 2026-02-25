@@ -255,9 +255,9 @@ func TestComputeInstance(t *testing.T) {
 			t.Fatalf("Expected 2 items, got: %d", len(items))
 		}
 
-		_, ok = adapter.(discovery.SearchStreamableAdapter)
-		if ok {
-			t.Fatalf("Adapter should not support SearchStream operation")
+		_, ok = adapter.(discovery.SearchableAdapter)
+		if !ok {
+			t.Fatalf("Adapter should support Search operation (for network tag search)")
 		}
 	})
 
@@ -874,6 +874,70 @@ func TestComputeInstance(t *testing.T) {
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
+	})
+
+	t.Run("GetWithNetworkTags", func(t *testing.T) {
+		wrapper := manual.NewComputeInstance(mockClient, []gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)})
+
+		instance := createComputeInstance("test-instance", computepb.Instance_RUNNING)
+		instance.Tags = &computepb.Tags{
+			Items: []string{"web-server", "http-server"},
+		}
+
+		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(instance, nil)
+
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-instance", true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		// Verify SEARCH links to ComputeFirewall and ComputeRoute for each tag
+		tagLinkTests := shared.QueryTests{
+			{
+				ExpectedType:   gcpshared.ComputeFirewall.String(),
+				ExpectedMethod: sdp.QueryMethod_SEARCH,
+				ExpectedQuery:  "web-server",
+				ExpectedScope:  projectID,
+			},
+			{
+				ExpectedType:   gcpshared.ComputeRoute.String(),
+				ExpectedMethod: sdp.QueryMethod_SEARCH,
+				ExpectedQuery:  "web-server",
+				ExpectedScope:  projectID,
+			},
+			{
+				ExpectedType:   gcpshared.ComputeFirewall.String(),
+				ExpectedMethod: sdp.QueryMethod_SEARCH,
+				ExpectedQuery:  "http-server",
+				ExpectedScope:  projectID,
+			},
+			{
+				ExpectedType:   gcpshared.ComputeRoute.String(),
+				ExpectedMethod: sdp.QueryMethod_SEARCH,
+				ExpectedQuery:  "http-server",
+				ExpectedScope:  projectID,
+			},
+		}
+
+		for _, qt := range tagLinkTests {
+			found := false
+			for _, liq := range sdpItem.GetLinkedItemQueries() {
+				q := liq.GetQuery()
+				if q.GetType() == qt.ExpectedType &&
+					q.GetMethod() == qt.ExpectedMethod &&
+					q.GetQuery() == qt.ExpectedQuery &&
+					q.GetScope() == qt.ExpectedScope {
+					found = true
+					break
+				}
+			}
+			if !found {
+				t.Errorf("Missing LinkedItemQuery{type=%s, method=%s, query=%s, scope=%s}",
+					qt.ExpectedType, qt.ExpectedMethod, qt.ExpectedQuery, qt.ExpectedScope)
+			}
+		}
 	})
 
 	t.Run("SupportsWildcardScope", func(t *testing.T) {

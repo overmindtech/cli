@@ -21,6 +21,7 @@ import (
 )
 
 var ComputeInstanceLookupByName = shared.NewItemTypeLookup("name", gcpshared.ComputeInstance)
+var ComputeInstanceLookupByNetworkTag = shared.NewItemTypeLookup("networkTag", gcpshared.ComputeInstance)
 
 type computeInstanceWrapper struct {
 	client gcpshared.ComputeInstanceClient
@@ -67,6 +68,8 @@ func (c computeInstanceWrapper) PotentialLinks() map[shared.ItemType]bool {
 		gcpshared.ComputeInstanceTemplate,
 		gcpshared.ComputeRegionInstanceTemplate,
 		gcpshared.ComputeInstanceGroupManager,
+		gcpshared.ComputeFirewall,
+		gcpshared.ComputeRoute,
 	)
 }
 
@@ -90,6 +93,57 @@ func (c computeInstanceWrapper) GetLookups() sources.ItemTypeLookups {
 // Always returns true for compute instances since they use aggregatedList
 func (c computeInstanceWrapper) SupportsWildcardScope() bool {
 	return true
+}
+
+func (c computeInstanceWrapper) SearchLookups() []sources.ItemTypeLookups {
+	return []sources.ItemTypeLookups{
+		{ComputeInstanceLookupByNetworkTag},
+	}
+}
+
+// Search finds compute instances by network tag. The engine routes
+// project-scoped SEARCH queries to zonal scopes via substring matching, so
+// scope is a zonal scope like "project.zone". We list all instances via
+// AggregatedList and filter to the matching zone + tag.
+func (c computeInstanceWrapper) Search(ctx context.Context, scope string, queryParts ...string) ([]*sdp.Item, *sdp.QueryError) {
+	tag := queryParts[0]
+
+	allItems, qErr := c.List(ctx, "*")
+	if qErr != nil {
+		return nil, qErr
+	}
+
+	var matched []*sdp.Item
+	for _, item := range allItems {
+		if item.GetScope() != scope {
+			continue
+		}
+
+		tagsVal, err := item.GetAttributes().Get("tags")
+		if err != nil {
+			continue
+		}
+		tagsMap, ok := tagsVal.(map[string]interface{})
+		if !ok {
+			continue
+		}
+		itemsVal, ok := tagsMap["items"]
+		if !ok {
+			continue
+		}
+		itemsList, ok := itemsVal.([]interface{})
+		if !ok {
+			continue
+		}
+		for _, t := range itemsList {
+			if s, ok := t.(string); ok && s == tag {
+				matched = append(matched, item)
+				break
+			}
+		}
+	}
+
+	return matched, nil
 }
 
 func (c computeInstanceWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
@@ -595,6 +649,36 @@ func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context,
 					}
 				}
 			}
+		}
+	}
+
+	// Link to firewalls and routes by network tag.
+	// Tag-based SEARCH lists all firewalls/routes in scope then filters;
+	// may be slow in very large projects.
+	if tags := instance.GetTags(); tags != nil {
+		for _, tag := range tags.GetItems() {
+			tag = strings.TrimSpace(tag)
+			if tag == "" {
+				continue
+			}
+			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries,
+				&sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   gcpshared.ComputeFirewall.String(),
+						Method: sdp.QueryMethod_SEARCH,
+						Query:  tag,
+						Scope:  location.ProjectID,
+					},
+				},
+				&sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   gcpshared.ComputeRoute.String(),
+						Method: sdp.QueryMethod_SEARCH,
+						Query:  tag,
+						Scope:  location.ProjectID,
+					},
+				},
+			)
 		}
 	}
 
