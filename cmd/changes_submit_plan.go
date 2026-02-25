@@ -289,7 +289,8 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 	}
 
 	// Discover and convert knowledge files
-	sdpKnowledge := knowledge.DiscoverAndConvert(ctx, ".overmind/knowledge/")
+	knowledgeDir := knowledge.FindKnowledgeDir(".")
+	sdpKnowledge := knowledge.DiscoverAndConvert(ctx, knowledgeDir)
 
 	_, err = client.StartChangeAnalysis(ctx, &connect.Request[sdp.StartChangeAnalysisRequest]{
 		Msg: &sdp.StartChangeAnalysisRequest{

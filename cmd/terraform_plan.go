@@ -316,7 +316,8 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 	log.WithField("change", changeUuid).Debug("Uploading planned changes")
 
 	// Discover and convert knowledge files
-	sdpKnowledge := knowledge.DiscoverAndConvert(ctx, ".overmind/knowledge/")
+	knowledgeDir := knowledge.FindKnowledgeDir(".")
+	sdpKnowledge := knowledge.DiscoverAndConvert(ctx, knowledgeDir)
 
 	_, err = client.StartChangeAnalysis(ctx, &connect.Request[sdp.StartChangeAnalysisRequest]{
 		Msg: &sdp.StartChangeAnalysisRequest{

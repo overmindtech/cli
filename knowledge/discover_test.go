@@ -651,6 +651,144 @@ M
 	}
 }
 
+// FindKnowledgeDir tests
+
+func TestFindKnowledgeDir_InCWD(t *testing.T) {
+	root := t.TempDir()
+	knowledgeDir := filepath.Join(root, ".overmind", "knowledge")
+	if err := os.MkdirAll(knowledgeDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	result := FindKnowledgeDir(root)
+
+	if result != knowledgeDir {
+		t.Errorf("expected %q, got %q", knowledgeDir, result)
+	}
+}
+
+func TestFindKnowledgeDir_InParent(t *testing.T) {
+	root := t.TempDir()
+	knowledgeDir := filepath.Join(root, ".overmind", "knowledge")
+	if err := os.MkdirAll(knowledgeDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	childDir := filepath.Join(root, "environments", "prod")
+	if err := os.MkdirAll(childDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	result := FindKnowledgeDir(childDir)
+
+	if result != knowledgeDir {
+		t.Errorf("expected %q, got %q", knowledgeDir, result)
+	}
+}
+
+func TestFindKnowledgeDir_InGrandparent(t *testing.T) {
+	root := t.TempDir()
+	knowledgeDir := filepath.Join(root, ".overmind", "knowledge")
+	if err := os.MkdirAll(knowledgeDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	deepDir := filepath.Join(root, "a", "b", "c")
+	if err := os.MkdirAll(deepDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	result := FindKnowledgeDir(deepDir)
+
+	if result != knowledgeDir {
+		t.Errorf("expected %q, got %q", knowledgeDir, result)
+	}
+}
+
+func TestFindKnowledgeDir_StopsAtGitBoundary(t *testing.T) {
+	root := t.TempDir()
+	// Knowledge above the git boundary -- should NOT be found
+	knowledgeDir := filepath.Join(root, ".overmind", "knowledge")
+	if err := os.MkdirAll(knowledgeDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	// Git repo is a subdirectory
+	repoDir := filepath.Join(root, "my-repo")
+	if err := os.MkdirAll(filepath.Join(repoDir, ".git"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	workDir := filepath.Join(repoDir, "environments", "prod")
+	if err := os.MkdirAll(workDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	result := FindKnowledgeDir(workDir)
+
+	if result != "" {
+		t.Errorf("expected empty string (should not escape .git boundary), got %q", result)
+	}
+}
+
+func TestFindKnowledgeDir_CWDTakesPriority(t *testing.T) {
+	root := t.TempDir()
+	// Knowledge at root
+	rootKnowledge := filepath.Join(root, ".overmind", "knowledge")
+	if err := os.MkdirAll(rootKnowledge, 0755); err != nil {
+		t.Fatal(err)
+	}
+	// Knowledge also in subdirectory
+	childDir := filepath.Join(root, "sub")
+	childKnowledge := filepath.Join(childDir, ".overmind", "knowledge")
+	if err := os.MkdirAll(childKnowledge, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	result := FindKnowledgeDir(childDir)
+
+	if result != childKnowledge {
+		t.Errorf("expected CWD knowledge %q to take priority, got %q", childKnowledge, result)
+	}
+}
+
+func TestFindKnowledgeDir_NotFoundAnywhere(t *testing.T) {
+	root := t.TempDir()
+	workDir := filepath.Join(root, "some", "dir")
+	if err := os.MkdirAll(workDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	// Place .git at root to create a boundary
+	if err := os.MkdirAll(filepath.Join(root, ".git"), 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	result := FindKnowledgeDir(workDir)
+
+	if result != "" {
+		t.Errorf("expected empty string, got %q", result)
+	}
+}
+
+func TestFindKnowledgeDir_GitBoundaryWithKnowledge(t *testing.T) {
+	root := t.TempDir()
+	// .git and .overmind/knowledge at the same level
+	if err := os.MkdirAll(filepath.Join(root, ".git"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	knowledgeDir := filepath.Join(root, ".overmind", "knowledge")
+	if err := os.MkdirAll(knowledgeDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+	workDir := filepath.Join(root, "environments", "prod")
+	if err := os.MkdirAll(workDir, 0755); err != nil {
+		t.Fatal(err)
+	}
+
+	result := FindKnowledgeDir(workDir)
+
+	// Should find knowledge at repo root before the .git stop triggers
+	if result != knowledgeDir {
+		t.Errorf("expected %q, got %q", knowledgeDir, result)
+	}
+}
+
 // Helper functions
 
 func writeFile(t *testing.T, path, content string) {
