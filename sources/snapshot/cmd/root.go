@@ -78,7 +78,13 @@ with fixed data and deterministic re-runs of v6 investigations.`,
 			e.SetInitError(initErr)
 			sentry.CaptureException(initErr)
 		} else {
-			e.StartSendingHeartbeats(ctx)
+			e.MarkAdaptersInitialized()
+			// Start() already launched the heartbeat loop, so StartSendingHeartbeats
+			// is a no-op here. Send an immediate heartbeat so the API server learns
+			// the source is healthy without waiting for the next tick.
+			if err := e.SendHeartbeat(ctx, nil); err != nil {
+				log.WithError(err).Warn("Failed to send post-init heartbeat")
+			}
 		}
 
 		<-ctx.Done()

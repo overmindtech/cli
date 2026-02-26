@@ -14,6 +14,17 @@
 //  6. Adapter init — use InitialiseAdapters (blocks until success or ctx cancelled) for retryable init, or SetInitError for single-attempt
 //  7. Wait for SIGTERM, then Stop()
 //
+// # Readiness gating
+//
+// The engine defaults to "not ready" until adapters are initialized. Both
+// ReadinessHealthCheck (the /healthz/ready HTTP probe) and SendHeartbeat report
+// an error while adaptersInitialized is false. This prevents Kubernetes from
+// routing traffic to a pod that has no adapters registered.
+//
+// InitialiseAdapters calls MarkAdaptersInitialized automatically on success.
+// Sources that do their own initialization (without InitialiseAdapters) must
+// call MarkAdaptersInitialized explicitly after adding adapters.
+//
 // # Error handling
 //
 // Fatal errors (caller must return or exit): EngineConfigFromViper, NewEngine, Start.
@@ -29,5 +40,5 @@
 // do not retry. Transient adapter init errors (e.g. upstream API temporarily
 // unavailable) should use InitialiseAdapters, which retries with backoff.
 //
-// See SetInitError and InitialiseAdapters for details and examples.
+// See SetInitError, MarkAdaptersInitialized, and InitialiseAdapters for details and examples.
 package discovery

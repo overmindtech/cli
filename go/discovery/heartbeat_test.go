@@ -46,6 +46,7 @@ func TestHeartbeats(t *testing.T) {
 		HeartbeatOptions: &heartbeatOptions,
 	}
 	e, _ := NewEngine(&ec)
+	e.MarkAdaptersInitialized()
 
 	if err := e.AddAdapters(
 		&TestAdapter{
