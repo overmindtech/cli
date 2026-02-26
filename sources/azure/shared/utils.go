@@ -36,6 +36,7 @@ func GetResourceIDPathKeys(resourceType string) []string {
 		"azure-network-subnet":                       {"virtualNetworks", "subnets"},             // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/virtualNetworks/{vnetName}/subnets/{subnetName}",
 		"azure-network-virtual-network-peering":      {"virtualNetworks", "virtualNetworkPeerings"}, // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/virtualNetworks/{vnetName}/virtualNetworkPeerings/{peeringName}",
 		"azure-network-route":                         {"routeTables", "routes"},                     // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/routeTables/{routeTableName}/routes/{routeName}",
+		"azure-network-security-rule":                 {"networkSecurityGroups", "securityRules"},   // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/networkSecurityGroups/{nsgName}/securityRules/{ruleName}",
 	}
 
 	if keys, ok := pathKeysMap[resourceType]; ok {
