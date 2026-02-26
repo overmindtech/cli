@@ -3,52 +3,53 @@ title: GCP Run Service
 sidebar_label: gcp-run-service
 ---
 
-Cloud Run Service is a fully-managed container execution environment that lets you run stateless HTTP containers on demand within Google Cloud. A Service represents the top-level Cloud Run resource, providing a stable URL, traffic splitting, configuration, and revision management for your containerised workload. For full details see the Google Cloud documentation: https://cloud.google.com/run/docs/reference/rest/v2/projects.locations.services
+Google Cloud Run Service is a fully-managed compute platform that automatically scales stateless containers on demand. A Service represents the user-facing abstraction of your application, managing one or more immutable Revisions of a container image and routing traffic to them. It provides configuration for networking, environment variables, secrets, concurrency, autoscaling and identity.  
+Official documentation: https://cloud.google.com/run/docs
 
 **Terrafrom Mappings:**
 
-- `google_cloud_run_v2_service.id`
+  * `google_cloud_run_v2_service.id`
 
 ## Supported Methods
 
-- `GET`: Get a gcp-run-service by its "locations|services"
-- ~~`LIST`~~
-- `SEARCH`: Search for gcp-run-service by its "locations"
+* `GET`: Get a gcp-run-service by its "locations|services"
+* ~~`LIST`~~
+* `SEARCH`: Search for gcp-run-service by its "locations"
 
 ## Possible Links
 
 ### [`gcp-artifact-registry-docker-image`](/sources/gcp/Types/gcp-artifact-registry-docker-image)
 
-A Cloud Run Service pulls its container image from Artifact Registry (or Container Registry). The linked `gcp-artifact-registry-docker-image` represents the specific image digest or tag referenced in the Service spec.
+A Cloud Run Service deploys one specific container image; most commonly this image is stored in Artifact Registry. The link shows which image version the Service’s active Revision is based on.
 
 ### [`gcp-cloud-kms-crypto-key`](/sources/gcp/Types/gcp-cloud-kms-crypto-key)
 
-If the Service’s container image or any attached Secret Manager secret is encrypted with a customer-managed encryption key (CMEK), the Cloud Run Service will be linked to the corresponding `gcp-cloud-kms-crypto-key`.
+If the Service uses customer-managed encryption keys (CMEK) for at-rest encryption of logs, volumes or secrets, it will reference a Cloud KMS Crypto Key.
 
 ### [`gcp-compute-network`](/sources/gcp/Types/gcp-compute-network)
 
-When a Cloud Run Service is configured with a Serverless VPC Access connector, it attaches to a VPC network to reach private resources. That network is represented here as a `gcp-compute-network`.
+When the Service is configured with a VPC connector for egress or to reach private resources, it ultimately attaches to a specific Compute Network.
 
 ### [`gcp-compute-subnetwork`](/sources/gcp/Types/gcp-compute-subnetwork)
 
-The Serverless VPC Access connector also lives on a particular subnetwork. The Cloud Run Service therefore relates to the `gcp-compute-subnetwork` used for outbound traffic.
+The VPC connector also targets a concrete Subnetwork; this link identifies the precise subnet through which the Service’s traffic is routed.
 
 ### [`gcp-iam-service-account`](/sources/gcp/Types/gcp-iam-service-account)
 
-Every Cloud Run Service executes with an identity (the “service account” set in the Service’s `executionEnvironment` or `serviceAccount`). This runtime identity is captured as a link to `gcp-iam-service-account`.
+A Cloud Run Service runs with a dedicated runtime identity. This Service Account is used for accessing other Google Cloud resources and defines the permissions available to the container.
 
 ### [`gcp-run-revision`](/sources/gcp/Types/gcp-run-revision)
 
-Each deployment of a Cloud Run Service creates an immutable Revision. The Service maintains traffic routing rules among its Revisions, so it links to one or more `gcp-run-revision` resources.
+Each update to configuration or container image creates a new Revision. The Service points traffic to one or more of these Revisions; the link maps the parent-child relationship.
 
 ### [`gcp-secret-manager-secret`](/sources/gcp/Types/gcp-secret-manager-secret)
 
-Environment variables or mounted volumes can reference secrets stored in Secret Manager. Any such secret referenced by the Service or its Revisions appears as a `gcp-secret-manager-secret` link.
+Environment variables or mounted volumes in the Service can be sourced from Secret Manager. Linked secrets indicate which sensitive values are injected at runtime.
 
 ### [`gcp-sql-admin-instance`](/sources/gcp/Types/gcp-sql-admin-instance)
 
-If the Service includes a Cloud SQL connection string (via the `cloudsql-instances` annotation), Overmind records a relationship to the corresponding `gcp-sql-admin-instance`.
+If Cloud SQL connections are configured via the Cloud SQL Auth Proxy side-car or built-in integration, the Service will reference one or more Cloud SQL instances.
 
 ### [`gcp-storage-bucket`](/sources/gcp/Types/gcp-storage-bucket)
 
-Cloud Run Services may interact with Cloud Storage—for example, by having a URL environment variable or event trigger configuration. Where such a bucket name is detected in the Service configuration, it is linked here as `gcp-storage-bucket`.
+The Service may access files in Cloud Storage for static assets or as mounted volumes (Cloud Run volumes). Buckets listed here are those explicitly referenced by environment variables, IAM permissions or volume mounts.

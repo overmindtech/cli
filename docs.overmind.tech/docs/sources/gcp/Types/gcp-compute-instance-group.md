@@ -3,25 +3,25 @@ title: GCP Compute Instance Group
 sidebar_label: gcp-compute-instance-group
 ---
 
-A Google Cloud Compute Instance Group is a logical collection of virtual machine (VM) instances that you manage as a single entity. Instance groups can be either managed (where the group is tied to an instance template and can perform auto-healing, autoscaling and rolling updates) or unmanaged (a simple grouping of individually created VMs). They are commonly used to distribute traffic across identical instances and to simplify operational tasks such as scaling and updates.  
-For an in-depth explanation, refer to the official documentation: https://cloud.google.com/compute/docs/instance-groups
+A Google Cloud Compute Instance Group is a logical collection of Virtual Machine (VM) instances running on Google Compute Engine that are treated as a single entity for deployment, scaling and load-balancing purposes. Instance groups can be managed (all VMs created from a common template and automatically kept in the desired size/state) or unmanaged (a user-assembled set of individual VMs). They are commonly used behind load balancers to provide highly available, horizontally scalable services.  
+For full details see the official Google Cloud documentation: https://cloud.google.com/compute/docs/instance-groups
 
 **Terrafrom Mappings:**
 
-- `google_compute_instance_group.name`
+  * `google_compute_instance_group.name`
 
 ## Supported Methods
 
-- `GET`: Get GCP Compute Instance Group by "gcp-compute-instance-group-name"
-- `LIST`: List all GCP Compute Instance Group items
-- ~~`SEARCH`~~
+* `GET`: Get GCP Compute Instance Group by "gcp-compute-instance-group-name"
+* `LIST`: List all GCP Compute Instance Group items
+* ~~`SEARCH`~~
 
 ## Possible Links
 
 ### [`gcp-compute-network`](/sources/gcp/Types/gcp-compute-network)
 
-Each VM contained in the instance group is attached to a specific VPC network. Consequently, the instance group inherits a dependency on that GCP Compute Network; changes to the network (e.g., firewall rules, routing) can directly impact the availability or behaviour of all instances in the group.
+Every VM in an Instance Group must be attached to a VPC network. Overmind therefore links a Compute Instance Group to the Compute Network that provides its underlying connectivity, enabling you to trace how network-level policies or mis-configurations might affect the availability of the workload hosted by the group.
 
 ### [`gcp-compute-subnetwork`](/sources/gcp/Types/gcp-compute-subnetwork)
 
-Within its parent VPC network, every instance is placed in a particular subnetwork. Therefore, the instance group is transitively linked to the associated GCP Compute Subnetwork. Subnetwork configuration—such as IP ranges or regional placement—affects how the grouped instances communicate internally and with external resources.
+Within a given VPC network, all VMs in the Instance Group reside in a specific subnetwork. Overmind links the Instance Group to that Subnetwork so you can understand IP address allocation, regional placement and any subnet-specific firewall rules that could impact the instances.

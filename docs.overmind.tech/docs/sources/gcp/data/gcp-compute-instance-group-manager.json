@@ -3,6 +3,7 @@
   "category": 1,
   "potentialLinks": [
     "gcp-compute-autoscaler",
+    "gcp-compute-health-check",
     "gcp-compute-instance-group",
     "gcp-compute-instance-template",
     "gcp-compute-target-pool"

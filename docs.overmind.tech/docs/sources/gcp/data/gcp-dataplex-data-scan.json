@@ -1,7 +1,10 @@
 {
   "type": "gcp-dataplex-data-scan",
   "category": 5,
-  "potentialLinks": ["gcp-storage-bucket"],
+  "potentialLinks": [
+    "gcp-big-query-table",
+    "gcp-storage-bucket"
+  ],
   "descriptiveName": "GCP Dataplex Data Scan",
   "supportedQueryMethods": {
     "get": true,

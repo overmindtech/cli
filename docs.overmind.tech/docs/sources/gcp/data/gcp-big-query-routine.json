@@ -1,7 +1,10 @@
 {
   "type": "gcp-big-query-routine",
   "category": 6,
-  "potentialLinks": ["gcp-big-query-dataset"],
+  "potentialLinks": [
+    "gcp-big-query-dataset",
+    "gcp-storage-bucket"
+  ],
   "descriptiveName": "GCP Big Query Routine",
   "supportedQueryMethods": {
     "get": true,
@@ -11,7 +14,8 @@
   },
   "terraformMappings": [
     {
-      "terraformQueryMap": "google_bigquery_routine.routine_id"
+      "terraformMethod": 2,
+      "terraformQueryMap": "google_bigquery_routine.id"
     }
   ]
 }

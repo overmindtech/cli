@@ -3,25 +3,25 @@ title: GCP Big Table Admin App Profile
 sidebar_label: gcp-big-table-admin-app-profile
 ---
 
-A Bigtable **App Profile** is a logical wrapper that tells Cloud Bigtable _how_ an application’s traffic should be routed, which clusters it can use, and what fail-over behaviour to apply. By creating multiple app profiles you can isolate workloads, direct different applications to specific clusters, or enable multi-cluster routing for higher availability.  
-For an in-depth explanation see the official documentation: https://cloud.google.com/bigtable/docs/app-profiles
+A Bigtable **App Profile** is a logical configuration that tells Google Cloud Bigtable how client traffic for a particular application should be routed to one or more clusters within an instance. It lets you choose between single-cluster routing (for the lowest latency within a specific region) or multi-cluster routing (for higher availability across several regions) and also defines the consistency model that the application will see. Because app profiles govern the path that live data takes, mis-configuration can lead to increased latency, unexpected fail-over behaviour, or cross-region egress costs.  
+Official documentation: https://cloud.google.com/bigtable/docs/app-profiles
 
 **Terrafrom Mappings:**
 
-- `google_bigtable_app_profile.id`
+  * `google_bigtable_app_profile.id`
 
 ## Supported Methods
 
-- `GET`: Get a gcp-big-table-admin-app-profile by its "instances|appProfiles"
-- ~~`LIST`~~
-- `SEARCH`: Search for BigTable App Profiles in an instance. Use the format "instance" or "projects/[project_id]/instances/[instance_name]/appProfiles/[app_profile_id]" which is supported for terraform mappings.
+* `GET`: Get a gcp-big-table-admin-app-profile by its "instances|appProfiles"
+* ~~`LIST`~~
+* `SEARCH`: Search for BigTable App Profiles in an instance. Use the format "instance" or "projects/[project_id]/instances/[instance_name]/appProfiles/[app_profile_id]" which is supported for terraform mappings.
 
 ## Possible Links
 
 ### [`gcp-big-table-admin-cluster`](/sources/gcp/Types/gcp-big-table-admin-cluster)
 
-Every app profile specifies one or more clusters that client traffic may reach. Therefore an App Profile is directly linked to the Bigtable Cluster(s) it can route requests to.
+An App Profile points client traffic towards one or more specific clusters. Each routing policy within the profile references the cluster identifiers defined by `gcp-big-table-admin-cluster`. Observing this link lets you see which clusters will receive traffic from the application and assess redundancy or regional placement risks.
 
 ### [`gcp-big-table-admin-instance`](/sources/gcp/Types/gcp-big-table-admin-instance)
 
-An App Profile always belongs to exactly one Bigtable Instance; it cannot exist outside that instance’s administrative scope.
+Every App Profile exists inside a single Bigtable instance. Linking to `gcp-big-table-admin-instance` shows the broader configuration—such as replication settings and all clusters—that frames the context in which the App Profile operates.

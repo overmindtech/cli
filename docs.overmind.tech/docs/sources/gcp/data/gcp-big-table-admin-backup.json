@@ -3,7 +3,8 @@
   "potentialLinks": [
     "gcp-big-table-admin-backup",
     "gcp-big-table-admin-cluster",
-    "gcp-big-table-admin-table"
+    "gcp-big-table-admin-table",
+    "gcp-cloud-kms-crypto-key-version"
   ],
   "descriptiveName": "GCP Big Table Admin Backup",
   "supportedQueryMethods": {

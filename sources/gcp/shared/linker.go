@@ -91,16 +91,26 @@ func (l *Linker) AutoLink(ctx context.Context, projectID string, fromSDPItem *sd
 
 		switch fromSDPItemType {
 		case ComputeFirewall, ComputeRoute:
-			// Tag-based SEARCH lists all instances in scope then filters;
+			// Tag-based SEARCH lists all instances and instance templates in scope then filters;
 			// may be slow in very large projects.
-			fromSDPItem.LinkedItemQueries = append(fromSDPItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-				Query: &sdp.Query{
-					Type:   ComputeInstance.String(),
-					Method: sdp.QueryMethod_SEARCH,
-					Query:  tag,
-					Scope:  projectID,
+			fromSDPItem.LinkedItemQueries = append(fromSDPItem.LinkedItemQueries,
+				&sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   ComputeInstance.String(),
+						Method: sdp.QueryMethod_SEARCH,
+						Query:  tag,
+						Scope:  projectID,
+					},
 				},
-			})
+				&sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   ComputeInstanceTemplate.String(),
+						Method: sdp.QueryMethod_SEARCH,
+						Query:  tag,
+						Scope:  projectID,
+					},
+				},
+			)
 		case ComputeInstance, ComputeInstanceTemplate:
 			// Tag-based SEARCH lists all firewalls/routes in scope then filters;
 			// may be slow in very large projects.

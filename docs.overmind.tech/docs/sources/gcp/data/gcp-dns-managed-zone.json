@@ -1,7 +1,10 @@
 {
   "type": "gcp-dns-managed-zone",
   "category": 3,
-  "potentialLinks": ["gcp-compute-network", "gcp-container-cluster"],
+  "potentialLinks": [
+    "gcp-compute-network",
+    "gcp-container-cluster"
+  ],
   "descriptiveName": "GCP Dns Managed Zone",
   "supportedQueryMethods": {
     "get": true,

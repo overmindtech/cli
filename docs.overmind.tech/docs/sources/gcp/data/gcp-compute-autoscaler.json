@@ -1,7 +1,9 @@
 {
   "type": "gcp-compute-autoscaler",
   "category": 7,
-  "potentialLinks": ["gcp-compute-instance-group-manager"],
+  "potentialLinks": [
+    "gcp-compute-instance-group-manager"
+  ],
   "descriptiveName": "GCP Compute Autoscaler",
   "supportedQueryMethods": {
     "get": true,

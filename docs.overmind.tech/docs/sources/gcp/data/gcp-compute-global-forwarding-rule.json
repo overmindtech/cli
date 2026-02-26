@@ -4,7 +4,8 @@
   "potentialLinks": [
     "gcp-compute-backend-service",
     "gcp-compute-network",
-    "gcp-compute-subnetwork"
+    "gcp-compute-subnetwork",
+    "gcp-compute-target-http-proxy"
   ],
   "descriptiveName": "GCP Compute Global Forwarding Rule",
   "supportedQueryMethods": {

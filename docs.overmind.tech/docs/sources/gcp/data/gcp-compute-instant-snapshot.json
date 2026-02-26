@@ -1,7 +1,9 @@
 {
   "type": "gcp-compute-instant-snapshot",
   "category": 2,
-  "potentialLinks": ["gcp-compute-disk"],
+  "potentialLinks": [
+    "gcp-compute-disk"
+  ],
   "descriptiveName": "GCP Compute Instant Snapshot",
   "supportedQueryMethods": {
     "get": true,

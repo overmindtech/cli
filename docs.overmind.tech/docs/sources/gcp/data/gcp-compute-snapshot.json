@@ -1,7 +1,11 @@
 {
   "type": "gcp-compute-snapshot",
   "category": 2,
-  "potentialLinks": ["gcp-compute-disk", "gcp-compute-instant-snapshot"],
+  "potentialLinks": [
+    "gcp-cloud-kms-crypto-key-version",
+    "gcp-compute-disk",
+    "gcp-compute-instant-snapshot"
+  ],
   "descriptiveName": "GCP Compute Snapshot",
   "supportedQueryMethods": {
     "get": true,

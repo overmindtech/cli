@@ -1,7 +1,11 @@
 {
   "type": "gcp-logging-bucket",
   "category": 5,
-  "potentialLinks": ["gcp-cloud-kms-crypto-key", "gcp-iam-service-account"],
+  "potentialLinks": [
+    "gcp-cloud-kms-crypto-key",
+    "gcp-cloud-kms-crypto-key-version",
+    "gcp-iam-service-account"
+  ],
   "descriptiveName": "GCP Logging Bucket",
   "supportedQueryMethods": {
     "get": true,

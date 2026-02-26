@@ -3,26 +3,32 @@ title: GCP Spanner Database
 sidebar_label: gcp-spanner-database
 ---
 
-Google Cloud Spanner is Google Cloud’s fully-managed, horizontally-scalable, relational database service.  
-A Spanner **database** is the logical container that holds your tables, schema objects and data inside a Spanner instance. Each database inherits the instance’s compute and storage configuration and can be encrypted either with Google-managed keys or with a customer-managed key (CMEK).  
-For an overview of the service see the official documentation: https://cloud.google.com/spanner/docs/overview
+A GCP Spanner Database is a logically isolated collection of relational data that lives inside a Cloud Spanner instance. It contains the schema (tables, indexes, views) and the data itself, and it inherits the instance’s compute and storage resources. Cloud Spanner provides global consistency, horizontal scalability and automatic replication, making the database suitable for mission-critical, globally distributed workloads. Official documentation: https://cloud.google.com/spanner/docs
 
 **Terrafrom Mappings:**
 
-- `google_spanner_database.name`
+  * `google_spanner_database.name`
 
 ## Supported Methods
 
-- `GET`: Get a gcp-spanner-database by its "instances|databases"
-- ~~`LIST`~~
-- `SEARCH`: Search for gcp-spanner-database by its "instances"
+* `GET`: Get a gcp-spanner-database by its "instances|databases"
+* ~~`LIST`~~
+* `SEARCH`: Search for gcp-spanner-database by its "instances"
 
 ## Possible Links
 
 ### [`gcp-cloud-kms-crypto-key`](/sources/gcp/Types/gcp-cloud-kms-crypto-key)
 
-A Spanner database can be encrypted with a customer-managed encryption key (CMEK) stored in Cloud KMS. When CMEK is enabled, the database resource is linked to the specific `gcp-cloud-kms-crypto-key` that provides its encryption.
+A Spanner database can be encrypted with a customer-managed encryption key (CMEK) stored in Cloud KMS. Overmind links the database to the KMS Crypto Key that protects its data at rest.
+
+### [`gcp-cloud-kms-crypto-key-version`](/sources/gcp/Types/gcp-cloud-kms-crypto-key-version)
+
+When CMEK is enabled, Spanner actually uses a specific version of the KMS key. This link shows the exact key version currently in use so you can track key rotation and ensure compliance.
+
+### [`gcp-spanner-database`](/sources/gcp/Types/gcp-spanner-database)
+
+Spanner databases may reference one another through backups, clones or restores. Overmind records these relationships (e.g., a database restored from another) to expose any dependency chain between databases.
 
 ### [`gcp-spanner-instance`](/sources/gcp/Types/gcp-spanner-instance)
 
-Every Spanner database lives inside a Spanner instance. The database inherits performance characteristics and regional configuration from its parent `gcp-spanner-instance`, making this a direct parent–child relationship.
+Every Spanner database belongs to a single Spanner instance. This link lets you traverse from the database to the parent instance to understand the compute resources, regional configuration and IAM policies that ultimately govern the database.

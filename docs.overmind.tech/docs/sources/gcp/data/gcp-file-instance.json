@@ -1,7 +1,10 @@
 {
   "type": "gcp-file-instance",
   "category": 2,
-  "potentialLinks": ["gcp-cloud-kms-crypto-key", "gcp-compute-network"],
+  "potentialLinks": [
+    "gcp-cloud-kms-crypto-key",
+    "gcp-compute-network"
+  ],
   "descriptiveName": "GCP File Instance",
   "supportedQueryMethods": {
     "get": true,

@@ -1,12 +1,23 @@
 {
   "type": "gcp-compute-image",
   "category": 1,
+  "potentialLinks": [
+    "gcp-cloud-kms-crypto-key",
+    "gcp-cloud-kms-crypto-key-version",
+    "gcp-compute-disk",
+    "gcp-compute-image",
+    "gcp-compute-snapshot",
+    "gcp-iam-service-account",
+    "gcp-storage-bucket"
+  ],
   "descriptiveName": "GCP Compute Image",
   "supportedQueryMethods": {
     "get": true,
     "getDescription": "Get GCP Compute Image by \"gcp-compute-image-name\"",
     "list": true,
-    "listDescription": "List all GCP Compute Image items"
+    "listDescription": "List all GCP Compute Image items",
+    "search": true,
+    "searchDescription": "Search for GCP Compute Image by \"gcp-compute-image-family\""
   },
   "terraformMappings": [
     {

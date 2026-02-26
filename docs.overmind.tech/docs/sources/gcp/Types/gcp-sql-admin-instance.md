@@ -3,40 +3,44 @@ title: GCP Sql Admin Instance
 sidebar_label: gcp-sql-admin-instance
 ---
 
-A GCP SQL Admin Instance represents a managed Cloud SQL database instance in Google Cloud Platform. It encapsulates the configuration of the database engine (MySQL, PostgreSQL or SQL Server), machine tier, storage, high-availability settings, networking and encryption options. The resource is managed through the Cloud SQL Admin API, which is documented here: https://cloud.google.com/sql/docs/mysql/admin-api/. Creating or modifying an instance via Terraform, the Cloud Console or gcloud ultimately results in API calls against this object.
+A Google Cloud SQL Admin Instance represents a fully-managed relational database instance running on Google Cloud. It encapsulates the configuration for engines such as MySQL, PostgreSQL, or SQL Server, including CPU and memory sizing, version, storage, networking and encryption settings. For full details see the official documentation: https://cloud.google.com/sql/docs/introduction.
 
 **Terrafrom Mappings:**
 
-- `google_sql_database_instance.name`
+  * `google_sql_database_instance.name`
 
 ## Supported Methods
 
-- `GET`: Get a gcp-sql-admin-instance by its "name"
-- `LIST`: List all gcp-sql-admin-instance
-- ~~`SEARCH`~~
+* `GET`: Get a gcp-sql-admin-instance by its "name"
+* `LIST`: List all gcp-sql-admin-instance
+* ~~`SEARCH`~~
 
 ## Possible Links
 
 ### [`gcp-cloud-kms-crypto-key`](/sources/gcp/Types/gcp-cloud-kms-crypto-key)
 
-If Customer-Managed Encryption Keys (CMEK) are enabled for the instance, the instance is encrypted with a specific Cloud KMS Crypto Key. Overmind links the instance to the `gcp-cloud-kms-crypto-key` that provides its disk-level encryption key.
+Linked when the instance is encrypted with a Customer-Managed Encryption Key (CMEK); the instance stores the resource ID of the Cloud KMS crypto key it uses for data-at-rest encryption.
 
 ### [`gcp-compute-network`](/sources/gcp/Types/gcp-compute-network)
 
-When an instance is configured for private IP or has authorised networks for public IP access, it attaches to one or more VPC networks. Overmind therefore links the instance to the `gcp-compute-network` resources that define those VPCs.
+Appears when the instance is configured with a private IP address. The instance is reachable through a Private Service Connection residing inside a specific VPC network.
+
+### [`gcp-compute-subnetwork`](/sources/gcp/Types/gcp-compute-subnetwork)
+
+If private IP is enabled, the instance is bound to a particular subnetwork from which it obtains its internal IP and through which it exposes its endpoints.
 
 ### [`gcp-iam-service-account`](/sources/gcp/Types/gcp-iam-service-account)
 
-Cloud SQL automatically creates or uses service accounts to perform backups, replication and other administrative tasks. The instance is linked to the `gcp-iam-service-account` identities that act on its behalf, allowing you to trace permissions and potential privilege escalation paths.
+Cloud SQL creates or uses a service account to perform administrative actions such as backup, replication and interaction with other Google Cloud services; this link surfaces that service account.
 
 ### [`gcp-sql-admin-backup-run`](/sources/gcp/Types/gcp-sql-admin-backup-run)
 
-Each automated or on-demand backup of an instance is represented by a Backup Run resource. Overmind links every `gcp-sql-admin-backup-run` to the parent instance so you can see the full backup history and retention compliance.
+Each successful or scheduled backup run is a child of an instance. The link shows all backup-run resources that belong to the current database instance.
 
 ### [`gcp-sql-admin-instance`](/sources/gcp/Types/gcp-sql-admin-instance)
 
-Instances may reference other instances when configured for read replicas, high-availability failover or cloning. Overmind links an instance to any peer `gcp-sql-admin-instance` that serves as its primary, replica or clone source/target.
+An instance can reference another instance as its read replica or as the source for cloning. This self-link captures those primary/replica relationships.
 
 ### [`gcp-storage-bucket`](/sources/gcp/Types/gcp-storage-bucket)
 
-Cloud SQL supports import/export of SQL dump files and automatic log exports to Cloud Storage. The instance is linked to any `gcp-storage-bucket` that it reads from or writes to during these operations, revealing data-exfiltration or retention risks.
+Imports, exports and point-in-time backups can read from or write to Cloud Storage. The instance therefore maintains references to buckets used for these operations.

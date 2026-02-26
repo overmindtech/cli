@@ -4,8 +4,10 @@
   "potentialLinks": [
     "gcp-ai-platform-endpoint",
     "gcp-ai-platform-model",
+    "gcp-big-query-table",
     "gcp-cloud-kms-crypto-key",
-    "gcp-monitoring-notification-channel"
+    "gcp-monitoring-notification-channel",
+    "gcp-storage-bucket"
   ],
   "descriptiveName": "GCP Ai Platform Model Deployment Monitoring Job",
   "supportedQueryMethods": {

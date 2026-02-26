@@ -2,7 +2,7 @@
 //
 //   All:      go test ./sources/gcp/integration-tests/ -run "TestNetworkTagRelationships" -count 1 -v
 //   Setup:    go test ./sources/gcp/integration-tests/ -run "TestNetworkTagRelationships/Setup" -count 1 -v
-//   Run:      go test ./sources/gcp/integration-tests/ -run "TestNetworkTagRelationships/(Test|[A-Z])" -count 1 -v
+//   Run:      go test ./sources/gcp/integration-tests/ -run "TestNetworkTagRelationships/(Instance|Firewall|Route)" -count 1 -v
 //   Teardown: go test ./sources/gcp/integration-tests/ -run "TestNetworkTagRelationships/Teardown" -count 1 -v
 //
 // Verify created resources with gcloud:
@@ -10,6 +10,7 @@
 //   gcloud compute instances describe integration-test-nettag-instance --zone=$GCP_ZONE --project=$GCP_PROJECT_ID --format="value(tags.items)"
 //   gcloud compute firewall-rules describe integration-test-nettag-fw --project=$GCP_PROJECT_ID --format="value(targetTags)"
 //   gcloud compute routes describe integration-test-nettag-route --project=$GCP_PROJECT_ID --format="value(tags)"
+//
 
 package integrationtests
 
@@ -25,7 +26,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/googleapis/gax-go/v2/apierror"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -37,10 +37,11 @@ import (
 )
 
 const (
-	networkTagTestInstance = "integration-test-nettag-instance"
-	networkTagTestFirewall = "integration-test-nettag-fw"
-	networkTagTestRoute    = "integration-test-nettag-route"
-	networkTag             = "nettag-test"
+	networkTagTestInstance         = "integration-test-nettag-instance"
+	networkTagTestFirewall         = "integration-test-nettag-fw"
+	networkTagTestRoute            = "integration-test-nettag-route"
+	networkTagTestInstanceTemplate = "integration-test-nettag-template"
+	networkTag                     = "nettag-test"
 )
 
 func TestNetworkTagRelationships(t *testing.T) {
@@ -76,6 +77,12 @@ func TestNetworkTagRelationships(t *testing.T) {
 	}
 	defer routeClient.Close()
 
+	instanceTemplateClient, err := compute.NewInstanceTemplatesRESTClient(ctx)
+	if err != nil {
+		t.Fatalf("NewInstanceTemplatesRESTClient: %v", err)
+	}
+	defer instanceTemplateClient.Close()
+
 	// --- Setup ---
 	t.Run("Setup", func(t *testing.T) {
 		if err := createInstanceWithTags(ctx, instanceClient, projectID, zone); err != nil {
@@ -86,6 +93,9 @@ func TestNetworkTagRelationships(t *testing.T) {
 		}
 		if err := createRouteWithTags(ctx, routeClient, projectID); err != nil {
 			t.Fatalf("Failed to create tagged route: %v", err)
+		}
+		if err := createInstanceTemplateWithTags(ctx, instanceTemplateClient, projectID); err != nil {
+			t.Fatalf("Failed to create tagged instance template: %v", err)
 		}
 	})
 
@@ -172,6 +182,36 @@ func TestNetworkTagRelationships(t *testing.T) {
 		}
 	})
 
+	t.Run("InstanceSearchByTagReturnsInstance", func(t *testing.T) {
+		wrapper := manual.NewComputeInstance(
+			gcpshared.NewComputeInstanceClient(instanceClient),
+			[]gcpshared.LocationInfo{gcpshared.NewZonalLocation(projectID, zone)},
+		)
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		searchable, ok := adapter.(discovery.SearchableAdapter)
+		if !ok {
+			t.Fatalf("Instance adapter does not implement SearchableAdapter")
+		}
+
+		scopeWithZone := fmt.Sprintf("%s.%s", projectID, zone)
+		items, qErr := searchable.Search(ctx, scopeWithZone, networkTag, true)
+		if qErr != nil {
+			t.Fatalf("Search: %v", qErr)
+		}
+
+		found := false
+		for _, item := range items {
+			if v, err := item.GetAttributes().Get("name"); err == nil && v == networkTagTestInstance {
+				found = true
+				break
+			}
+		}
+		if !found {
+			t.Errorf("Expected to find instance %s in search results for tag %q, got %d items", networkTagTestInstance, networkTag, len(items))
+		}
+	})
+
 	t.Run("FirewallEmitsSearchLinksToInstance", func(t *testing.T) {
 		gcpHTTPCli, err := gcpshared.GCPHTTPClientWithOtel(ctx, "")
 		if err != nil {
@@ -191,6 +231,45 @@ func TestNetworkTagRelationships(t *testing.T) {
 		assertHasLinkedItemQuery(t, sdpItem, gcpshared.ComputeInstance.String(), sdp.QueryMethod_SEARCH, networkTag, projectID)
 	})
 
+	t.Run("RouteEmitsSearchLinksToInstance", func(t *testing.T) {
+		gcpHTTPCli, err := gcpshared.GCPHTTPClientWithOtel(ctx, "")
+		if err != nil {
+			t.Fatalf("GCPHTTPClientWithOtel: %v", err)
+		}
+
+		adapter, err := dynamic.MakeAdapter(gcpshared.ComputeRoute, gcpshared.NewLinker(), gcpHTTPCli, sdpcache.NewNoOpCache(), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		if err != nil {
+			t.Fatalf("MakeAdapter: %v", err)
+		}
+
+		sdpItem, qErr := adapter.Get(ctx, projectID, networkTagTestRoute, true)
+		if qErr != nil {
+			t.Fatalf("Get route: %v", qErr)
+		}
+
+		assertHasLinkedItemQuery(t, sdpItem, gcpshared.ComputeInstance.String(), sdp.QueryMethod_SEARCH, networkTag, projectID)
+	})
+
+	t.Run("InstanceTemplateEmitsSearchLinksToFirewallAndRoute", func(t *testing.T) {
+		gcpHTTPCli, err := gcpshared.GCPHTTPClientWithOtel(ctx, "")
+		if err != nil {
+			t.Fatalf("GCPHTTPClientWithOtel: %v", err)
+		}
+
+		adapter, err := dynamic.MakeAdapter(gcpshared.ComputeInstanceTemplate, gcpshared.NewLinker(), gcpHTTPCli, sdpcache.NewNoOpCache(), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		if err != nil {
+			t.Fatalf("MakeAdapter: %v", err)
+		}
+
+		sdpItem, qErr := adapter.Get(ctx, projectID, networkTagTestInstanceTemplate, true)
+		if qErr != nil {
+			t.Fatalf("Get instance template: %v", qErr)
+		}
+
+		assertHasLinkedItemQuery(t, sdpItem, gcpshared.ComputeFirewall.String(), sdp.QueryMethod_SEARCH, networkTag, projectID)
+		assertHasLinkedItemQuery(t, sdpItem, gcpshared.ComputeRoute.String(), sdp.QueryMethod_SEARCH, networkTag, projectID)
+	})
+
 	// --- Teardown ---
 	t.Run("Teardown", func(t *testing.T) {
 		if err := deleteComputeInstance(ctx, instanceClient, projectID, zone, networkTagTestInstance); err != nil {
@@ -201,6 +280,9 @@ func TestNetworkTagRelationships(t *testing.T) {
 		}
 		if err := deleteRoute(ctx, routeClient, projectID, networkTagTestRoute); err != nil {
 			t.Errorf("Failed to delete route: %v", err)
+		}
+		if err := deleteInstanceTemplate(ctx, instanceTemplateClient, projectID, networkTagTestInstanceTemplate); err != nil {
+			t.Errorf("Failed to delete instance template: %v", err)
 		}
 	})
 }
@@ -221,23 +303,23 @@ func assertHasLinkedItemQuery(t *testing.T, item *sdp.Item, expectedType string,
 
 func createInstanceWithTags(ctx context.Context, client *compute.InstancesClient, projectID, zone string) error {
 	instance := &computepb.Instance{
-		Name:        ptr.To(networkTagTestInstance),
-		MachineType: ptr.To(fmt.Sprintf("zones/%s/machineTypes/e2-micro", zone)),
+		Name:        new(networkTagTestInstance),
+		MachineType: new(fmt.Sprintf("zones/%s/machineTypes/e2-micro", zone)),
 		Tags: &computepb.Tags{
 			Items: []string{networkTag},
 		},
 		Disks: []*computepb.AttachedDisk{
 			{
-				Boot:       ptr.To(true),
-				AutoDelete: ptr.To(true),
+				Boot:       new(true),
+				AutoDelete: new(true),
 				InitializeParams: &computepb.AttachedDiskInitializeParams{
-					SourceImage: ptr.To("projects/debian-cloud/global/images/debian-12-bookworm-v20250415"),
-					DiskSizeGb:  ptr.To(int64(10)),
+					SourceImage: new("projects/debian-cloud/global/images/debian-12-bookworm-v20250415"),
+					DiskSizeGb:  new(int64(10)),
 				},
 			},
 		},
 		NetworkInterfaces: []*computepb.NetworkInterface{
-			{StackType: ptr.To("IPV4_ONLY")},
+			{StackType: new("IPV4_ONLY")},
 		},
 	}
 
@@ -259,12 +341,12 @@ func createInstanceWithTags(ctx context.Context, client *compute.InstancesClient
 
 func createFirewallWithTags(ctx context.Context, client *compute.FirewallsClient, projectID string) error {
 	fw := &computepb.Firewall{
-		Name:       ptr.To(networkTagTestFirewall),
-		Network:    ptr.To(fmt.Sprintf("projects/%s/global/networks/default", projectID)),
+		Name:       new(networkTagTestFirewall),
+		Network:    new(fmt.Sprintf("projects/%s/global/networks/default", projectID)),
 		TargetTags: []string{networkTag},
 		Allowed: []*computepb.Allowed{
 			{
-				IPProtocol: ptr.To("tcp"),
+				IPProtocol: new("tcp"),
 				Ports:      []string{"8080"},
 			},
 		},
@@ -288,12 +370,12 @@ func createFirewallWithTags(ctx context.Context, client *compute.FirewallsClient
 
 func createRouteWithTags(ctx context.Context, client *compute.RoutesClient, projectID string) error {
 	route := &computepb.Route{
-		Name:           ptr.To(networkTagTestRoute),
-		Network:        ptr.To(fmt.Sprintf("projects/%s/global/networks/default", projectID)),
-		DestRange:      ptr.To("10.99.0.0/24"),
-		NextHopGateway: ptr.To(fmt.Sprintf("projects/%s/global/gateways/default-internet-gateway", projectID)),
+		Name:           new(networkTagTestRoute),
+		Network:        new(fmt.Sprintf("projects/%s/global/networks/default", projectID)),
+		DestRange:      new("10.99.0.0/24"),
+		NextHopGateway: new(fmt.Sprintf("projects/%s/global/gateways/default-internet-gateway", projectID)),
 		Tags:           []string{networkTag},
-		Priority:       ptr.To(uint32(900)),
+		Priority:       new(uint32(900)),
 	}
 
 	op, err := client.Insert(ctx, &computepb.InsertRouteRequest{
@@ -337,6 +419,48 @@ func deleteRoute(ctx context.Context, client *compute.RoutesClient, projectID, n
 			return nil
 		}
 		return fmt.Errorf("delete route: %w", err)
+	}
+	return op.Wait(ctx)
+}
+
+func createInstanceTemplateWithTags(ctx context.Context, client *compute.InstanceTemplatesClient, projectID string) error {
+	template := &computepb.InstanceTemplate{
+		Name: new(networkTagTestInstanceTemplate),
+		Properties: &computepb.InstanceProperties{
+			MachineType: new("e2-micro"),
+			Tags: &computepb.Tags{
+				Items: []string{networkTag},
+			},
+			Disks: []*computepb.AttachedDisk{
+				{
+					Boot:       new(true),
+					AutoDelete: new(true),
+					InitializeParams: &computepb.AttachedDiskInitializeParams{
+						SourceImage: new("projects/debian-cloud/global/images/debian-12-bookworm-v20250415"),
+						DiskSizeGb:  new(int64(10)),
+					},
+				},
+			},
+			NetworkInterfaces: []*computepb.NetworkInterface{
+				{
+					Network:   new("global/networks/default"),
+					StackType: new("IPV4_ONLY"),
+				},
+			},
+		},
+	}
+
+	op, err := client.Insert(ctx, &computepb.InsertInstanceTemplateRequest{
+		Project:                  projectID,
+		InstanceTemplateResource: template,
+	})
+	if err != nil {
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) && apiErr.HTTPCode() == http.StatusConflict {
+			log.Printf("Instance template %s already exists, skipping", networkTagTestInstanceTemplate)
+			return nil
+		}
+		return fmt.Errorf("insert instance template: %w", err)
 	}
 	return op.Wait(ctx)
 }

@@ -1,7 +1,11 @@
 {
   "type": "gcp-pub-sub-topic",
   "category": 7,
-  "potentialLinks": ["gcp-cloud-kms-crypto-key", "gcp-storage-bucket"],
+  "potentialLinks": [
+    "gcp-cloud-kms-crypto-key",
+    "gcp-iam-service-account",
+    "gcp-storage-bucket"
+  ],
   "descriptiveName": "GCP Pub Sub Topic",
   "supportedQueryMethods": {
     "get": true,
@@ -12,6 +16,15 @@
   "terraformMappings": [
     {
       "terraformQueryMap": "google_pubsub_topic.name"
+    },
+    {
+      "terraformQueryMap": "google_pubsub_topic_iam_binding.topic"
+    },
+    {
+      "terraformQueryMap": "google_pubsub_topic_iam_member.topic"
+    },
+    {
+      "terraformQueryMap": "google_pubsub_topic_iam_policy.topic"
     }
   ]
 }

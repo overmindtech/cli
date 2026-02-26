@@ -1,6 +1,9 @@
 package adapters
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/overmindtech/cli/go/sdp-go"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/stdlib"
@@ -19,6 +22,15 @@ var _ = registerableAdapter{
 		UniqueAttributeKeys: []string{"instanceTemplates"},
 		IAMPermissions:      []string{"compute.instanceTemplates.get", "compute.instanceTemplates.list"},
 		PredefinedRole:      "roles/compute.viewer",
+		// Tag-based SEARCH: list all instance templates then filter by tag.
+		SearchEndpointFunc: func(query string, location gcpshared.LocationInfo) string {
+			if query == "" || strings.Contains(query, "/") {
+				return ""
+			}
+			return fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/global/instanceTemplates", location.ProjectID)
+		},
+		SearchDescription: "Search for instance templates by network tag. The query is a plain network tag name.",
+		SearchFilterFunc:  instanceTemplateTagFilter,
 	},
 	linkRules: map[string]*gcpshared.Impact{
 		// https://cloud.google.com/compute/docs/reference/rest/v1/instanceTemplates/get
@@ -109,7 +121,7 @@ var _ = registerableAdapter{
 			ToSDPItemType:    gcpshared.IAMServiceAccount,
 		},
 		"properties.tags.items": {
-			Description:   "Network tag on the instance template. Changing this tag affects which firewall rules and routes apply to instances created from this template.",
+			Description:   "Instance templates define network tags that will be applied to instances created from the template. Overmind discovers firewall rules and routes with matching tags, showing how firewall and route changes will affect instances created from this template.",
 			ToSDPItemType: gcpshared.ComputeFirewall,
 		},
 	},
@@ -123,3 +135,8 @@ var _ = registerableAdapter{
 		},
 	},
 }.Register()
+
+// instanceTemplateTagFilter keeps instance templates whose properties.tags.items contain the query tag.
+func instanceTemplateTagFilter(query string, item *sdp.Item) bool {
+	return itemAttributeContainsTag(item, "properties.tags.items", query)
+}

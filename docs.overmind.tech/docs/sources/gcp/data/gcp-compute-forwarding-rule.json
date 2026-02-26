@@ -3,8 +3,13 @@
   "category": 3,
   "potentialLinks": [
     "gcp-compute-backend-service",
+    "gcp-compute-forwarding-rule",
     "gcp-compute-network",
-    "gcp-compute-subnetwork"
+    "gcp-compute-public-delegated-prefix",
+    "gcp-compute-subnetwork",
+    "gcp-compute-target-http-proxy",
+    "gcp-compute-target-https-proxy",
+    "gcp-compute-target-pool"
   ],
   "descriptiveName": "GCP Compute Forwarding Rule",
   "supportedQueryMethods": {

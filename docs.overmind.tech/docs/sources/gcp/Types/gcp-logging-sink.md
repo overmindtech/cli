@@ -3,29 +3,33 @@ title: GCP Logging Sink
 sidebar_label: gcp-logging-sink
 ---
 
-A GCP Logging Sink is an export rule within Google Cloud Logging that continuously routes selected log entries to a destination such as BigQuery, Cloud Storage, Pub/Sub or another Logging bucket. Sinks allow you to retain logs for longer, perform analytics, or trigger near-real-time workflows outside Cloud Logging. Each sink is defined by three core elements: a filter that selects which log entries to export, a destination, and an IAM service account that is granted permission to write to that destination.  
-For full details see the official documentation: https://cloud.google.com/logging/docs/export/configure_export
+A Logging Sink in Google Cloud Platform (GCP) is a routing rule that selects log entries with a user-defined filter and exports them to a chosen destination such as BigQuery, Cloud Storage, Pub/Sub, or another Cloud Logging bucket. Sinks are the building blocks of GCP’s Log Router and are used to retain, analyse or stream logs outside of the originating project, folder or organisation.  
+Official documentation: https://cloud.google.com/logging/docs/export
 
 ## Supported Methods
 
-- `GET`: Get GCP Logging Sink by "gcp-logging-sink-name"
-- `LIST`: List all GCP Logging Sink items
-- ~~`SEARCH`~~
+* `GET`: Get GCP Logging Sink by "gcp-logging-sink-name"
+* `LIST`: List all GCP Logging Sink items
+* ~~`SEARCH`~~
 
 ## Possible Links
 
 ### [`gcp-big-query-dataset`](/sources/gcp/Types/gcp-big-query-dataset)
 
-If the sink’s destination is set to a BigQuery dataset, Overmind will create a link from the sink to that `gcp-big-query-dataset` resource because the sink writes log rows directly into the dataset’s `_TABLE_SUFFIX` sharded tables.
+If the sink’s destination is a BigQuery table, it must reference a BigQuery dataset where the tables will be created and written to. The dataset therefore appears as a child dependency of the logging sink.
+
+### [`gcp-iam-service-account`](/sources/gcp/Types/gcp-iam-service-account)
+
+Every sink is assigned a writer_identity, which is an IAM service account that needs permission to write into the chosen destination. The sink’s correct operation depends on this service account having the required roles on the target resource.
 
 ### [`gcp-logging-bucket`](/sources/gcp/Types/gcp-logging-bucket)
 
-A sink can either originate from a Logging bucket (when the sink is scoped to that bucket) or target a Logging bucket in another project or billing account. Overmind therefore links the sink to the relevant `gcp-logging-bucket` to show where logs are pulled from or pushed to.
+A sink can route logs to another Cloud Logging bucket (including aggregated buckets at the folder or organisation level). In this case the sink targets, and must have write access to, the specified logging bucket.
 
 ### [`gcp-pub-sub-topic`](/sources/gcp/Types/gcp-pub-sub-topic)
 
-When a sink exports logs to Pub/Sub, it references a specific topic. Overmind links the sink to the corresponding `gcp-pub-sub-topic` so that users can trace event-driven pipelines or alerting mechanisms that rely on those published log messages.
+When the destination is Pub/Sub, the sink exports each matching log entry as a message on a particular topic. The topic therefore represents an external linkage for onward streaming or event-driven processing.
 
 ### [`gcp-storage-bucket`](/sources/gcp/Types/gcp-storage-bucket)
 
-If the sink is configured to deliver logs to Cloud Storage, the destination bucket appears as a linked `gcp-storage-bucket`. This highlights where log files are archived and the IAM relationship required for the sink’s writer identity to upload objects.
+For archival purposes a sink may export logs to a Cloud Storage bucket. The bucket must exist and grant the sink’s writer service account permission to create objects, making the storage bucket a direct dependency of the sink.

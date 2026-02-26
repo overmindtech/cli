@@ -1,0 +1,19 @@
+{
+  "type": "gcp-compute-node-template",
+  "category": 7,
+  "potentialLinks": [
+    "gcp-compute-node-group"
+  ],
+  "descriptiveName": "GCP Compute Node Template",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get GCP Compute Node Template by \"gcp-compute-node-template-name\"",
+    "list": true,
+    "listDescription": "List all GCP Compute Node Template items"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_compute_node_template.name"
+    }
+  ]
+}

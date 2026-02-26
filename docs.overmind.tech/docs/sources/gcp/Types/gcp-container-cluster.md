@@ -3,45 +3,53 @@ title: GCP Container Cluster
 sidebar_label: gcp-container-cluster
 ---
 
-Google Kubernetes Engine (GKE) Container Clusters provide managed Kubernetes control-planes and node infrastructure on Google Cloud Platform. A cluster groups together one or more node pools running containerised workloads, and exposes both the Kubernetes API server and optional add-ons such as Cloud Monitoring, Cloud Logging, Workload Identity and Binary Authorisation.  
-For a full description of the service see the official Google documentation: https://cloud.google.com/kubernetes-engine/docs
+Google Kubernetes Engine (GKE) Container Clusters provide fully-managed Kubernetes control planes running on Google Cloud. A cluster groups the Kubernetes control plane and the worker nodes that run your containerised workloads, and exposes a single API endpoint for deployment and management. Clusters can be regional or zonal, support autoscaling, automatic upgrades and many advanced networking, security and observability features.  
+Official documentation: https://cloud.google.com/kubernetes-engine/docs/concepts/kubernetes-engine-overview
 
 **Terrafrom Mappings:**
 
-- `google_container_cluster.id`
+  * `google_container_cluster.id`
 
 ## Supported Methods
 
-- `GET`: Get a gcp-container-cluster by its "locations|clusters"
-- ~~`LIST`~~
-- `SEARCH`: Search for GKE clusters in a location. Use the format "location" or the full resource name supported for terraform mappings.
+* `GET`: Get a gcp-container-cluster by its "locations|clusters"
+* ~~`LIST`~~
+* `SEARCH`: Search for GKE clusters in a location. Use the format "location" or the full resource name supported for terraform mappings.
 
 ## Possible Links
 
+### [`gcp-big-query-dataset`](/sources/gcp/Types/gcp-big-query-dataset)
+
+GKE can export usage metering and cost allocation data, as well as logs via Cloud Logging sinks, to a BigQuery dataset. When a cluster is configured for resource usage metering, it is linked to the destination dataset.
+
 ### [`gcp-cloud-kms-crypto-key`](/sources/gcp/Types/gcp-cloud-kms-crypto-key)
 
-A cluster can be configured to encrypt Kubernetes secrets and etcd data at rest using a customer-managed Cloud KMS crypto key. When customer-managed encryption is enabled, the cluster stores the resource ID of the key that protects its control-plane data, creating a link between the cluster and the KMS crypto key.
+Clusters may use a customer-managed encryption key (CMEK) from Cloud KMS to encrypt Kubernetes Secrets and other etcd data at rest. The CMEK key configured for a cluster or for its persistent disks is therefore related.
+
+### [`gcp-cloud-kms-crypto-key-version`](/sources/gcp/Types/gcp-cloud-kms-crypto-key-version)
+
+A specific key version is referenced by the cluster for CMEK encryption. Rotating the key version affects the cluster’s data-at-rest encryption.
 
 ### [`gcp-compute-network`](/sources/gcp/Types/gcp-compute-network)
 
-Every GKE cluster is deployed into a VPC network. All control-plane and node traffic flows inside this network, and the cluster stores the name of the network it belongs to, creating a relationship with the corresponding gcp-compute-network resource.
+Every cluster is deployed into a VPC network; all control-plane and node traffic flows across this network. The network selected during cluster creation is linked here.
 
 ### [`gcp-compute-node-group`](/sources/gcp/Types/gcp-compute-node-group)
 
-If a node pool is configured to run on sole-tenant nodes, GKE provisions or attaches to Compute Engine node groups for placement. The cluster will therefore reference any node groups used by its node pools.
+If the cluster uses sole-tenant nodes or node auto-provisioning, the underlying Compute Engine Node Groups that host GKE nodes are related to the cluster.
 
 ### [`gcp-compute-subnetwork`](/sources/gcp/Types/gcp-compute-subnetwork)
 
-Within the chosen VPC, a cluster is attached to one or more subnetworks to allocate IP ranges for nodes, pods and services. The subnetwork resource(s) appear in the cluster’s configuration and are linked to the cluster.
+Clusters (and their node pools) are placed in one or more subnets within the VPC for pod and service IP ranges. These subnetworks are therefore linked to the cluster.
 
 ### [`gcp-container-node-pool`](/sources/gcp/Types/gcp-container-node-pool)
 
-A cluster is composed of one or more node pools that provide the actual worker nodes. Each node pool references its parent cluster, and the cluster maintains a list of all associated node pools.
+A cluster contains one or more node pools that define the configuration of its worker nodes (machine type, autoscaling settings, etc.). Each node pool resource is directly associated with its parent cluster.
 
 ### [`gcp-iam-service-account`](/sources/gcp/Types/gcp-iam-service-account)
 
-GKE uses service accounts for both the control-plane (Google-managed) and the nodes (user-specified or default). Additionally, Workload Identity maps Kubernetes service accounts to IAM service accounts. Any service account configured for node pools, Workload Identity or authorised networks will be linked to the cluster.
+GKE uses IAM service accounts for the control plane, node VMs and workload identity. Service accounts granted to the cluster (e.g., Google APIs service agent, node service account) are linked.
 
 ### [`gcp-pub-sub-topic`](/sources/gcp/Types/gcp-pub-sub-topic)
 
-Audit logs and event streams originating from a GKE cluster can be exported via Logging sinks to Pub/Sub topics for downstream processing. When such a sink targets a Pub/Sub topic, the cluster indirectly references that topic, creating a link captured by Overmind.
+Cluster audit logs, events or notifications can be exported to a Pub/Sub topic (e.g., via Log Sinks or Notification Channels). Any topic configured as a destination for the cluster is related here.

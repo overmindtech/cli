@@ -3,29 +3,32 @@ title: GCP Compute Global Forwarding Rule
 sidebar_label: gcp-compute-global-forwarding-rule
 ---
 
-A Google Compute Engine **Global Forwarding Rule** represents the externally-visible IP address and port(s) that receive traffic for a global load balancer. It defines where packets that enter on a particular protocol/port combination should be sent, pointing them at a target proxy (for HTTP(S), SSL or TCP Proxy load balancers) or target VPN gateway. In the case of Internal Global Load Balancing it may also specify the VPC network and subnetwork that own the virtual IP address. In short, the forwarding rule is the public (or internal) entry-point that maps client traffic to the load balancer’s control plane.  
-Official documentation: https://cloud.google.com/compute/docs/reference/rest/v1/globalForwardingRules
+A Google Cloud Compute Global Forwarding Rule defines a single anycast virtual IP address that routes incoming traffic at the global level to a specified target (such as an HTTP(S) proxy, SSL proxy or TCP proxy) or, for internal load balancing, directly to a backend service. It is the entry-point resource for most external HTTP(S) and proxy load balancers and for internal global load balancers. For full details see the Google Cloud documentation: https://cloud.google.com/load-balancing/docs/forwarding-rule-concepts
 
 **Terrafrom Mappings:**
 
-- `google_compute_global_forwarding_rule.name`
+  * `google_compute_global_forwarding_rule.name`
 
 ## Supported Methods
 
-- `GET`: Get a gcp-compute-global-forwarding-rule by its "name"
-- `LIST`: List all gcp-compute-global-forwarding-rule
-- ~~`SEARCH`~~
+* `GET`: Get a gcp-compute-global-forwarding-rule by its "name"
+* `LIST`: List all gcp-compute-global-forwarding-rule
+* ~~`SEARCH`~~
 
 ## Possible Links
 
 ### [`gcp-compute-backend-service`](/sources/gcp/Types/gcp-compute-backend-service)
 
-A global forwarding rule ultimately delivers traffic to one or more backend services via a chain of resources (target proxy → URL map → backend service). Overmind surfaces this indirect relationship so that you can trace the path from the exposed IP address all the way to the workloads that will handle the request.
+When the forwarding rule is created for an internal global load balancer, it references a backend service directly; the rule’s traffic is delivered to the backends listed in that service. Analysing this link lets Overmind trace traffic paths from the VIP to the actual instances or endpoints.
 
 ### [`gcp-compute-network`](/sources/gcp/Types/gcp-compute-network)
 
-When the forwarding rule is used for internal global load balancing, it contains a `network` field that points to the VPC network that owns the virtual IP address. This link allows Overmind to show which network the listener lives in and what other resources share that network.
+Internal global forwarding rules must be attached to a specific VPC network. Linking to the network resource reveals which project-wide connectivity domain the VIP belongs to and helps surface risks such as unintended exposure to peered networks.
 
 ### [`gcp-compute-subnetwork`](/sources/gcp/Types/gcp-compute-subnetwork)
 
-Similar to the network link, internal forwarding rules may reference a specific `subnetwork`. Overmind records this connection so you can identify the exact IP range and region in which the internal load balancer’s virtual IP is allocated.
+If the forwarding rule is internal, it is scoped to a particular subnetwork. Understanding this relationship identifies the IP range in which the virtual IP lives and highlights segmentation or overlapping-CIDR issues.
+
+### [`gcp-compute-target-http-proxy`](/sources/gcp/Types/gcp-compute-target-http-proxy)
+
+For external HTTP(S), SSL or TCP proxy load balancers, the forwarding rule points to a target proxy resource. The proxy terminates the client connection before forwarding to backend services. Linking these resources enables Overmind to trace configuration chains and detect misconfigurations such as SSL policy mismatches or missing backends.

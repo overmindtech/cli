@@ -17,6 +17,18 @@
     {
       "terraformMethod": 2,
       "terraformQueryMap": "google_bigtable_table.id"
+    },
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "google_bigtable_table_iam_binding.instance_name"
+    },
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "google_bigtable_table_iam_member.instance_name"
+    },
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "google_bigtable_table_iam_policy.instance_name"
     }
   ]
 }

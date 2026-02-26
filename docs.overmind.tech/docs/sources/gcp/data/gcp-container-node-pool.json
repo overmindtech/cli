@@ -3,7 +3,10 @@
   "category": 1,
   "potentialLinks": [
     "gcp-cloud-kms-crypto-key",
+    "gcp-compute-instance-group-manager",
+    "gcp-compute-network",
     "gcp-compute-node-group",
+    "gcp-compute-subnetwork",
     "gcp-container-cluster",
     "gcp-iam-service-account"
   ],

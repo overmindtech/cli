@@ -1,7 +1,11 @@
 {
   "type": "gcp-compute-global-address",
   "category": 3,
-  "potentialLinks": ["gcp-compute-network"],
+  "potentialLinks": [
+    "gcp-compute-network",
+    "gcp-compute-public-delegated-prefix",
+    "gcp-compute-subnetwork"
+  ],
   "descriptiveName": "GCP Compute Global Address",
   "supportedQueryMethods": {
     "get": true,

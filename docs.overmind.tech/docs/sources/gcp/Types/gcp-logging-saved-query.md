@@ -3,11 +3,12 @@ title: GCP Logging Saved Query
 sidebar_label: gcp-logging-saved-query
 ---
 
-A GCP Logging Saved Query is a reusable, shareable filter definition for Google Cloud Logging (Logs Explorer). It stores the log filter expression, as well as optional display preferences and metadata, so that complex queries can be rerun or shared without having to rewrite the filter each time. Saved queries can be created at the project, folder, billing-account or organisation level and are particularly useful for operational run-books, incident response and dashboards.  
-Official documentation: https://cloud.google.com/logging/docs/reference/v2/rest/v2/projects.locations.savedQueries
+A GCP Logging Saved Query is a reusable, named log query that is stored in Google Cloud Logging’s Logs Explorer. It contains the filter expression (or Log Query Language statement), any configured time-range presets and display options, allowing teams to quickly rerun common searches, share queries across projects, and use them as the basis for dashboards, log-based metrics or alerting policies. Because Saved Queries are resources in their own right, they can be created, read, updated and deleted through the Cloud Logging API, and are uniquely identified by the combination of the Google Cloud location and the query name.  
+Official documentation: https://cloud.google.com/logging/docs/view/building-queries
+
 
 ## Supported Methods
 
-- `GET`: Get a gcp-logging-saved-query by its "locations|savedQueries"
-- ~~`LIST`~~
-- `SEARCH`: Search for gcp-logging-saved-query by its "locations"
+* `GET`: Get a gcp-logging-saved-query by its "locations|savedQueries"
+* ~~`LIST`~~
+* `SEARCH`: Search for gcp-logging-saved-query by its "locations"

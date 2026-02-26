@@ -2,9 +2,11 @@
   "type": "gcp-ai-platform-batch-prediction-job",
   "category": 8,
   "potentialLinks": [
+    "gcp-ai-platform-endpoint",
     "gcp-ai-platform-model",
     "gcp-big-query-table",
     "gcp-cloud-kms-crypto-key",
+    "gcp-compute-network",
     "gcp-iam-service-account",
     "gcp-storage-bucket"
   ],
