@@ -121,6 +121,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create subnets client: %w", err)
 		}
 
+		virtualNetworkPeeringsClient, err := armnetwork.NewVirtualNetworkPeeringsClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create virtual network peerings client: %w", err)
+		}
+
 		networkInterfacesClient, err := armnetwork.NewInterfacesClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create network interfaces client: %w", err)
@@ -342,6 +347,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewSubnetsClient(subnetsClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewNetworkVirtualNetworkPeering(
+					clients.NewVirtualNetworkPeeringsClient(virtualNetworkPeeringsClient),
+					resourceGroupScopes,
+				), cache),
 				sources.WrapperToAdapter(NewNetworkNetworkInterface(
 					clients.NewNetworkInterfacesClient(networkInterfacesClient),
 					resourceGroupScopes,
@@ -518,6 +527,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewStorageEncryptionScope(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkVirtualNetwork(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkSubnet(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewNetworkVirtualNetworkPeering(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkNetworkInterface(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewSqlDatabase(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewSqlServerFirewallRule(nil, placeholderResourceGroupScopes), noOpCache),
