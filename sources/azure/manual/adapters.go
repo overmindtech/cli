@@ -225,6 +225,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create sql firewall rules client: %w", err)
 		}
 
+		sqlVirtualNetworkRulesClient, err := armsql.NewVirtualNetworkRulesClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create sql virtual network rules client: %w", err)
+		}
+
 		postgresqlFlexibleServersClient, err := armpostgresqlflexibleservers.NewServersClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create postgresql flexible servers client: %w", err)
@@ -371,6 +376,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 				), cache),
 				sources.WrapperToAdapter(NewSqlServerFirewallRule(
 					clients.NewSqlServerFirewallRuleClient(sqlFirewallRulesClient),
+					resourceGroupScopes,
+				), cache),
+				sources.WrapperToAdapter(NewSqlServerVirtualNetworkRule(
+					clients.NewSqlServerVirtualNetworkRuleClient(sqlVirtualNetworkRulesClient),
 					resourceGroupScopes,
 				), cache),
 				sources.WrapperToAdapter(NewDocumentDBDatabaseAccounts(
@@ -549,6 +558,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewNetworkNetworkInterface(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewSqlDatabase(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewSqlServerFirewallRule(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewSqlServerVirtualNetworkRule(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewDocumentDBDatabaseAccounts(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewKeyVaultVault(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewKeyVaultManagedHSM(nil, placeholderResourceGroupScopes), noOpCache),
