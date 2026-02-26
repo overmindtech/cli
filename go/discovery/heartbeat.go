@@ -62,6 +62,10 @@ func (e *Engine) SendHeartbeat(ctx context.Context, customErr error) error {
 		allErrors = append(allErrors, initErr)
 	}
 
+	if !e.AreAdaptersInitialized() {
+		allErrors = append(allErrors, errors.New("adapters not yet initialized"))
+	}
+
 	// Check adapter readiness (ReadinessCheck) - with timeout to prevent hanging
 	if e.EngineConfig.HeartbeatOptions.ReadinessCheck != nil {
 		// Add timeout for readiness checks to prevent hanging heartbeats

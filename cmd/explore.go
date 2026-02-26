@@ -104,6 +104,7 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 			snapshotSpinner.Fail(fmt.Sprintf("Failed to initialize snapshot source adapters: %v", err))
 			return func() {}, fmt.Errorf("failed to initialize snapshot source adapters: %w", err)
 		}
+		snapshotEngine.MarkAdaptersInitialized()
 		err = snapshotEngine.Start(ctx)
 		if err != nil {
 			snapshotSpinner.Fail(fmt.Sprintf("Failed to start snapshot source engine: %v", err))
@@ -182,6 +183,7 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 			return nil, fmt.Errorf("failed to initialize stdlib source adapters: %w", err)
 		}
 		// todo: pass in context with timeout to abort timely and allow Ctrl-C to work
+		stdlibEngine.MarkAdaptersInitialized()
 		err = stdlibEngine.Start(ctx)
 		if err != nil {
 			stdlibSpinner.Fail("Failed to start stdlib source engine")
@@ -280,6 +282,7 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 			return nil, fmt.Errorf("failed to initialize AWS source adapters: %w", err)
 		}
 
+		awsEngine.MarkAdaptersInitialized()
 		err = awsEngine.Start(ctx)
 		if err != nil {
 			awsSpinner.Fail("Failed to start AWS source engine")
@@ -389,6 +392,7 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 				continue // Skip this engine but continue with others
 			}
 
+			gcpEngine.MarkAdaptersInitialized()
 			err = gcpEngine.Start(ctx)
 			if err != nil {
 				if gcpConfig == nil {
@@ -535,6 +539,7 @@ func StartLocalSources(ctx context.Context, oi sdp.OvermindInstance, token *oaut
 					continue // Skip this engine but continue with others
 				}
 
+				azureEngine.MarkAdaptersInitialized()
 				err = azureEngine.Start(ctx)
 				if err != nil {
 					statusArea.Println(fmt.Sprintf("Failed to start Azure source for subscription %s: %s", azureConfig.SubscriptionID, err.Error()))

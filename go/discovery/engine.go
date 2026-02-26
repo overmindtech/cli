@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 
 	"connectrpc.com/connect"
@@ -161,6 +162,13 @@ type Engine struct {
 	// CrashLoopBackOff so customers can diagnose and fix configuration issues.
 	initError      error
 	initErrorMutex sync.RWMutex
+
+	// adaptersInitialized tracks whether adapters have been successfully registered.
+	// Defaults to false; set to true by InitialiseAdapters on success or manually
+	// via MarkAdaptersInitialized for sources that don't use InitialiseAdapters.
+	// ReadinessHealthCheck and SendHeartbeat both check this flag so that a source
+	// cannot report healthy before it can actually serve queries.
+	adaptersInitialized atomic.Bool
 }
 
 func NewEngine(engineConfig *EngineConfig) (*Engine, error) {
@@ -501,6 +509,10 @@ func (e *Engine) ReadinessHealthCheck(ctx context.Context) error {
 		attribute.String("ovm.healthcheck.type", "readiness"),
 	)
 
+	if !e.AreAdaptersInitialized() {
+		return errors.New("adapters not yet initialized")
+	}
+
 	// Check for persistent initialization errors first
 	if initErr := e.GetInitError(); initErr != nil {
 		return fmt.Errorf("source initialization failed: %w", initErr)
@@ -764,6 +776,19 @@ func (e *Engine) GetInitError() error {
 	return e.initError
 }
 
+// MarkAdaptersInitialized records that adapters have been successfully registered
+// and the source is ready to serve queries. This is called automatically by
+// InitialiseAdapters on success. Sources that do their own initialization
+// (without InitialiseAdapters) must call this explicitly after adding adapters.
+func (e *Engine) MarkAdaptersInitialized() {
+	e.adaptersInitialized.Store(true)
+}
+
+// AreAdaptersInitialized reports whether adapters have been successfully registered.
+func (e *Engine) AreAdaptersInitialized() bool {
+	return e.adaptersInitialized.Load()
+}
+
 // InitialiseAdapters retries initFn with exponential backoff (capped at
 // 5 minutes) until it succeeds or ctx is cancelled. It blocks the caller.
 //
@@ -807,6 +832,7 @@ func (e *Engine) InitialiseAdapters(ctx context.Context, initFn func(ctx context
 				// Clear any previous init error before the heartbeat so the
 				// API/UI immediately sees the healthy status.
 				e.SetInitError(nil)
+				e.MarkAdaptersInitialized()
 			}
 
 			// Send heartbeat regardless of outcome so the API/UI reflects current status

@@ -124,6 +124,9 @@ func TestReadinessHealthCheckWithInitError(t *testing.T) {
 		t.Fatalf("failed to create engine: %v", err)
 	}
 
+	// Mark adapters initialized so we're only testing initError behavior
+	e.MarkAdaptersInitialized()
+
 	ctx := context.Background()
 
 	// Readiness should pass when no init error
@@ -176,6 +179,9 @@ func TestSendHeartbeatWithInitError(t *testing.T) {
 		t.Fatalf("failed to create engine: %v", err)
 	}
 
+	// Mark adapters initialized so we're only testing initError behavior
+	e.MarkAdaptersInitialized()
+
 	ctx := context.Background()
 
 	// Send heartbeat with init error
@@ -220,6 +226,9 @@ func TestSendHeartbeatWithInitErrorAndCustomError(t *testing.T) {
 	if err != nil {
 		t.Fatalf("failed to create engine: %v", err)
 	}
+
+	// Mark adapters initialized so we're only testing initError + custom error behavior
+	e.MarkAdaptersInitialized()
 
 	ctx := context.Background()
 
@@ -283,6 +292,9 @@ func TestInitialiseAdapters_Success(t *testing.T) {
 	}
 	if err := e.GetInitError(); err != nil {
 		t.Errorf("expected init error to be cleared after success, got: %v", err)
+	}
+	if !e.AreAdaptersInitialized() {
+		t.Error("expected adaptersInitialized to be true after successful InitialiseAdapters")
 	}
 }
 
@@ -359,5 +371,202 @@ func TestInitialiseAdapters_ContextCancelled(t *testing.T) {
 	}
 	if err := e.GetInitError(); err == nil {
 		t.Error("expected init error to be set after context cancellation with failures")
+	}
+}
+
+func TestReadinessFailsBeforeInitialization(t *testing.T) {
+	ec := &EngineConfig{
+		EngineType: "test",
+		SourceName: "test-source",
+		HeartbeatOptions: &HeartbeatOptions{
+			ReadinessCheck: func(ctx context.Context) error {
+				return nil
+			},
+		},
+	}
+
+	e, err := NewEngine(ec)
+	if err != nil {
+		t.Fatalf("failed to create engine: %v", err)
+	}
+
+	ctx := context.Background()
+
+	err = e.ReadinessHealthCheck(ctx)
+	if err == nil {
+		t.Fatal("expected readiness to fail before adapters initialized, got nil")
+	}
+	if !strings.Contains(err.Error(), "adapters not yet initialized") {
+		t.Errorf("expected error to contain 'adapters not yet initialized', got: %v", err)
+	}
+}
+
+func TestReadinessPassesAfterInitialization(t *testing.T) {
+	ec := &EngineConfig{
+		EngineType: "test",
+		SourceName: "test-source",
+		HeartbeatOptions: &HeartbeatOptions{
+			ReadinessCheck: func(ctx context.Context) error {
+				return nil
+			},
+		},
+	}
+
+	e, err := NewEngine(ec)
+	if err != nil {
+		t.Fatalf("failed to create engine: %v", err)
+	}
+
+	e.MarkAdaptersInitialized()
+
+	ctx := context.Background()
+
+	if err := e.ReadinessHealthCheck(ctx); err != nil {
+		t.Errorf("expected readiness to pass after MarkAdaptersInitialized, got: %v", err)
+	}
+}
+
+func TestHeartbeatIncludesUninitializedError(t *testing.T) {
+	requests := make(chan *connect.Request[sdp.SubmitSourceHeartbeatRequest], 10)
+	responses := make(chan *connect.Response[sdp.SubmitSourceHeartbeatResponse], 10)
+
+	ec := &EngineConfig{
+		EngineType: "test",
+		SourceName: "test-source",
+		HeartbeatOptions: &HeartbeatOptions{
+			ManagementClient: testHeartbeatClient{
+				Requests:  requests,
+				Responses: responses,
+			},
+			Frequency: 0,
+		},
+	}
+
+	e, err := NewEngine(ec)
+	if err != nil {
+		t.Fatalf("failed to create engine: %v", err)
+	}
+
+	// Do NOT call MarkAdaptersInitialized -- engine is freshly created
+
+	responses <- &connect.Response[sdp.SubmitSourceHeartbeatResponse]{
+		Msg: &sdp.SubmitSourceHeartbeatResponse{},
+	}
+
+	ctx := context.Background()
+	err = e.SendHeartbeat(ctx, nil)
+	if err != nil {
+		t.Fatalf("expected SendHeartbeat to succeed, got: %v", err)
+	}
+
+	req := <-requests
+	if req.Msg.GetError() == "" {
+		t.Fatal("expected heartbeat to include error before initialization, got empty string")
+	}
+	if !strings.Contains(req.Msg.GetError(), "adapters not yet initialized") {
+		t.Errorf("expected heartbeat error to contain 'adapters not yet initialized', got: %q", req.Msg.GetError())
+	}
+}
+
+func TestHeartbeatClearsAfterInitialization(t *testing.T) {
+	requests := make(chan *connect.Request[sdp.SubmitSourceHeartbeatRequest], 10)
+	responses := make(chan *connect.Response[sdp.SubmitSourceHeartbeatResponse], 10)
+
+	ec := &EngineConfig{
+		EngineType: "test",
+		SourceName: "test-source",
+		HeartbeatOptions: &HeartbeatOptions{
+			ManagementClient: testHeartbeatClient{
+				Requests:  requests,
+				Responses: responses,
+			},
+			Frequency: 0,
+		},
+	}
+
+	e, err := NewEngine(ec)
+	if err != nil {
+		t.Fatalf("failed to create engine: %v", err)
+	}
+
+	e.MarkAdaptersInitialized()
+
+	responses <- &connect.Response[sdp.SubmitSourceHeartbeatResponse]{
+		Msg: &sdp.SubmitSourceHeartbeatResponse{},
+	}
+
+	ctx := context.Background()
+	err = e.SendHeartbeat(ctx, nil)
+	if err != nil {
+		t.Fatalf("expected SendHeartbeat to succeed, got: %v", err)
+	}
+
+	req := <-requests
+	if req.Msg.GetError() != "" {
+		t.Errorf("expected heartbeat to have no error after initialization, got: %q", req.Msg.GetError())
+	}
+}
+
+func TestInitialiseAdapters_SetsInitializedFlag(t *testing.T) {
+	ec := &EngineConfig{
+		EngineType: "test",
+		SourceName: "test-source",
+		HeartbeatOptions: &HeartbeatOptions{
+			Frequency: 0,
+		},
+	}
+	e, err := NewEngine(ec)
+	if err != nil {
+		t.Fatalf("failed to create engine: %v", err)
+	}
+
+	if e.AreAdaptersInitialized() {
+		t.Fatal("expected adaptersInitialized to be false on new engine")
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	e.InitialiseAdapters(ctx, func(ctx context.Context) error {
+		return nil
+	})
+
+	if !e.AreAdaptersInitialized() {
+		t.Error("expected adaptersInitialized to be true after InitialiseAdapters success")
+	}
+}
+
+func TestInitialiseAdapters_DoesNotSetFlagOnFailure(t *testing.T) {
+	ec := &EngineConfig{
+		EngineType: "test",
+		SourceName: "test-source",
+		HeartbeatOptions: &HeartbeatOptions{
+			Frequency: 0,
+		},
+	}
+	e, err := NewEngine(ec)
+	if err != nil {
+		t.Fatalf("failed to create engine: %v", err)
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	time.AfterFunc(500*time.Millisecond, cancel)
+
+	done := make(chan struct{})
+	go func() {
+		e.InitialiseAdapters(ctx, func(ctx context.Context) error {
+			return errors.New("always fails")
+		})
+		close(done)
+	}()
+
+	select {
+	case <-done:
+	case <-time.After(5 * time.Second):
+		t.Fatal("InitialiseAdapters did not return after context cancellation")
+	}
+
+	if e.AreAdaptersInitialized() {
+		t.Error("expected adaptersInitialized to remain false when init always fails")
 	}
 }
