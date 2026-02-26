@@ -172,6 +172,15 @@ func (s storageAccountWrapper) azureStorageAccountToSDPItem(account *armstorage.
 		},
 	})
 
+	sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+		Query: &sdp.Query{
+			Type:   azureshared.StorageEncryptionScope.String(),
+			Method: sdp.QueryMethod_SEARCH,
+			Query:  accountName,
+			Scope:  scope,
+		},
+	})
+
 	// Link to Private Endpoint Connections (child resource)
 	// Reference: https://learn.microsoft.com/en-us/rest/api/storagerp/private-endpoint-connections/list?view=rest-storagerp-2025-06-01
 	// Private endpoint connections can be listed using the storage account name
@@ -443,6 +452,7 @@ func (s storageAccountWrapper) PotentialLinks() map[shared.ItemType]bool {
 		azureshared.StorageFileShare:                 true,
 		azureshared.StorageTable:                     true,
 		azureshared.StorageQueue:                     true,
+		azureshared.StorageEncryptionScope:           true,
 		azureshared.StoragePrivateEndpointConnection: true,
 		// External resources
 		azureshared.ManagedIdentityUserAssignedIdentity: true,

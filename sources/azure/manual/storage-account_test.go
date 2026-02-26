@@ -87,6 +87,12 @@ func TestStorageAccount(t *testing.T) {
 					ExpectedQuery:  accountName,
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
 				}, {
+					// Storage encryption scope link (child resource)
+					ExpectedType:   azureshared.StorageEncryptionScope.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  accountName,
+					ExpectedScope:  subscriptionID + "." + resourceGroup,
+				}, {
 					// Storage private endpoint connection link (child resource)
 					ExpectedType:   azureshared.StoragePrivateEndpointConnection.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
