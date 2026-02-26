@@ -34,6 +34,7 @@ func GetResourceIDPathKeys(resourceType string) []string {
 		"azure-compute-gallery-application":         {"galleries", "applications"},              // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/galleries/{galleryName}/applications/{applicationName}",
 		"azure-compute-gallery-image":                {"galleries", "images"},                    // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/galleries/{galleryName}/images/{imageName}",
 		"azure-network-subnet":                       {"virtualNetworks", "subnets"},             // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/virtualNetworks/{vnetName}/subnets/{subnetName}",
+		"azure-network-virtual-network-peering":      {"virtualNetworks", "virtualNetworkPeerings"}, // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/virtualNetworks/{vnetName}/virtualNetworkPeerings/{peeringName}",
 	}
 
 	if keys, ok := pathKeysMap[resourceType]; ok {
