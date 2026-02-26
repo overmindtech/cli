@@ -132,7 +132,7 @@ func InitializeAdapters(ctx context.Context, engine *discovery.Engine, cfg *Azur
 	}
 
 	// TODO: Implement linker when Azure dynamic adapters are available
-	var linker interface{} = nil
+	var linker any = nil
 
 	discoveryAdapters, err := adapters(ctx, cfg.SubscriptionID, cfg.TenantID, cfg.ClientID, cfg.Regions, cred, linker, true, sharedCache)
 	if err != nil {
@@ -206,7 +206,7 @@ func adapters(
 	clientID string,
 	regions []string,
 	cred *azidentity.DefaultAzureCredential,
-	linker interface{}, // TODO: Use *azureshared.Linker when azureshared package is fully implemented
+	linker any, // TODO: Use *azureshared.Linker when azureshared package is fully implemented
 	initAzureClients bool,
 	cache sdpcache.Cache,
 ) ([]discovery.Adapter, error) {

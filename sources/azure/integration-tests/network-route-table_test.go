@@ -13,7 +13,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -328,13 +327,13 @@ func createRouteTable(ctx context.Context, client *armnetwork.RouteTablesClient,
 
 	// Create a basic route table
 	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroupName, routeTableName, armnetwork.RouteTable{
-		Location:   ptr.To(location),
+		Location:   new(location),
 		Properties: &armnetwork.RouteTablePropertiesFormat{
 			// Routes will be added separately as child resources
 		},
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
-			"test":    ptr.To("network-route-table"),
+			"purpose": new("overmind-integration-tests"),
+			"test":    new("network-route-table"),
 		},
 	}, nil)
 	if err != nil {
@@ -433,9 +432,9 @@ func createRoute(ctx context.Context, client *armnetwork.RoutesClient, resourceG
 	// This creates a route that will link to a NetworkIP
 	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroupName, routeTableName, routeName, armnetwork.Route{
 		Properties: &armnetwork.RoutePropertiesFormat{
-			AddressPrefix:    ptr.To("10.0.0.0/8"),
-			NextHopType:      ptr.To(armnetwork.RouteNextHopTypeVirtualAppliance),
-			NextHopIPAddress: ptr.To("10.0.0.1"), // This will create a link to stdlib.NetworkIP
+			AddressPrefix:    new("10.0.0.0/8"),
+			NextHopType:      new(armnetwork.RouteNextHopTypeVirtualAppliance),
+			NextHopIPAddress: new("10.0.0.1"), // This will create a link to stdlib.NetworkIP
 		},
 	}, nil)
 	if err != nil {

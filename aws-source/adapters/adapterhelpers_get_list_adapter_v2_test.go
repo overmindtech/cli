@@ -261,7 +261,7 @@ func TestListFuncPaginatorBuilder(t *testing.T) {
 			return output, nil
 		},
 		ItemMapper: func(query *string, scope string, awsItem string) (*sdp.Item, error) {
-			attrs, _ := sdp.ToAttributes(map[string]interface{}{
+			attrs, _ := sdp.ToAttributes(map[string]any{
 				"id": awsItem,
 			})
 			return &sdp.Item{

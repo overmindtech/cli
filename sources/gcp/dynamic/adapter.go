@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"slices"
 
 	"buf.build/go/protovalidate"
 	log "github.com/sirupsen/logrus"
@@ -11,8 +12,8 @@ import (
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
 	"github.com/overmindtech/cli/go/sdpcache"
-	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources"
+	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
 )
 
@@ -104,10 +105,8 @@ func (g Adapter) validateScope(scope string) (gcpshared.LocationInfo, error) {
 		}
 	}
 
-	for _, validLoc := range g.locations {
-		if requestedLoc.Equals(validLoc) {
-			return requestedLoc, nil
-		}
+	if slices.ContainsFunc(g.locations, requestedLoc.Equals) {
+		return requestedLoc, nil
 	}
 	return gcpshared.LocationInfo{}, &sdp.QueryError{
 		ErrorType:   sdp.QueryError_NOSCOPE,

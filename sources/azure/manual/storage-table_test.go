@@ -3,9 +3,9 @@ package manual_test
 import (
 	"context"
 	"errors"
+	"slices"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v3"
 	"go.uber.org/mock/gomock"
 
@@ -394,13 +394,7 @@ func TestStorageTables(t *testing.T) {
 		}
 
 		expectedPermission := "Microsoft.Storage/storageAccounts/tableServices/tables/read"
-		found := false
-		for _, perm := range permissions {
-			if perm == expectedPermission {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(permissions, expectedPermission)
 		if !found {
 			t.Errorf("Expected IAMPermissions to include %s", expectedPermission)
 		}
@@ -410,9 +404,9 @@ func TestStorageTables(t *testing.T) {
 // createAzureTable creates a mock Azure table for testing
 func createAzureTable(tableName string) *armstorage.Table {
 	return &armstorage.Table{
-		ID:              to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorageaccount/tableServices/default/tables/" + tableName),
-		Name:            to.Ptr(tableName),
-		Type:            to.Ptr("Microsoft.Storage/storageAccounts/tableServices/tables"),
+		ID:              new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorageaccount/tableServices/default/tables/" + tableName),
+		Name:            new(tableName),
+		Type:            new("Microsoft.Storage/storageAccounts/tableServices/tables"),
 		TableProperties: &armstorage.TableProperties{},
 	}
 }

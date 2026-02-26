@@ -12,7 +12,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdpcache"
@@ -253,22 +252,22 @@ func createVirtualNetworkForNIC(ctx context.Context, client *armnetwork.VirtualN
 
 	// Create the VNet
 	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroupName, vnetName, armnetwork.VirtualNetwork{
-		Location: ptr.To(location),
+		Location: new(location),
 		Properties: &armnetwork.VirtualNetworkPropertiesFormat{
 			AddressSpace: &armnetwork.AddressSpace{
-				AddressPrefixes: []*string{ptr.To("10.1.0.0/16")},
+				AddressPrefixes: []*string{new("10.1.0.0/16")},
 			},
 			Subnets: []*armnetwork.Subnet{
 				{
-					Name: ptr.To(integrationTestSubnetNameForNIC),
+					Name: new(integrationTestSubnetNameForNIC),
 					Properties: &armnetwork.SubnetPropertiesFormat{
-						AddressPrefix: ptr.To("10.1.0.0/24"),
+						AddressPrefix: new("10.1.0.0/24"),
 					},
 				},
 			},
 		},
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
+			"purpose": new("overmind-integration-tests"),
 		},
 	}, nil)
 	if err != nil {

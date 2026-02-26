@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"reflect"
+	"slices"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
 	"go.uber.org/mock/gomock"
 
@@ -222,16 +222,16 @@ func TestNetworkNetworkInterface(t *testing.T) {
 		nic1 := createAzureNetworkInterface("test-nic-1", "test-vm-1", "test-nsg-1")
 		nic2 := &armnetwork.Interface{
 			Name:     nil, // NIC with nil name should cause an error in azureNetworkInterfaceToSDPItem
-			Location: to.Ptr("eastus"),
+			Location: new("eastus"),
 			Tags: map[string]*string{
-				"env": to.Ptr("test"),
+				"env": new("test"),
 			},
 			Properties: &armnetwork.InterfacePropertiesFormat{
 				IPConfigurations: []*armnetwork.InterfaceIPConfiguration{
 					{
-						Name: to.Ptr("ipconfig1"),
+						Name: new("ipconfig1"),
 						Properties: &armnetwork.InterfaceIPConfigurationPropertiesFormat{
-							PrivateIPAllocationMethod: to.Ptr(armnetwork.IPAllocationMethodDynamic),
+							PrivateIPAllocationMethod: new(armnetwork.IPAllocationMethodDynamic),
 						},
 					},
 				},
@@ -332,13 +332,7 @@ func TestNetworkNetworkInterface(t *testing.T) {
 			t.Error("Expected IAMPermissions to return at least one permission")
 		}
 		expectedPermission := "Microsoft.Network/networkInterfaces/read"
-		found := false
-		for _, perm := range permissions {
-			if perm == expectedPermission {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(permissions, expectedPermission)
 		if !found {
 			t.Errorf("Expected IAMPermissions to include %s", expectedPermission)
 		}
@@ -400,7 +394,7 @@ func (m *MockNetworkInterfacesPager) More() bool {
 
 func (mr *MockNetworkInterfacesPagerMockRecorder) More() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "More", reflect.TypeOf((*MockNetworkInterfacesPager)(nil).More))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "More", reflect.TypeFor[func() bool]())
 }
 
 func (m *MockNetworkInterfacesPager) NextPage(ctx context.Context) (armnetwork.InterfacesClientListResponse, error) {
@@ -411,9 +405,9 @@ func (m *MockNetworkInterfacesPager) NextPage(ctx context.Context) (armnetwork.I
 	return ret0, ret1
 }
 
-func (mr *MockNetworkInterfacesPagerMockRecorder) NextPage(ctx interface{}) *gomock.Call {
+func (mr *MockNetworkInterfacesPagerMockRecorder) NextPage(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NextPage", reflect.TypeOf((*MockNetworkInterfacesPager)(nil).NextPage), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NextPage", reflect.TypeFor[func(ctx context.Context) (armnetwork.InterfacesClientListResponse, error)](), ctx)
 }
 
 // createAzureNetworkInterface creates a mock Azure network interface for testing
@@ -422,24 +416,24 @@ func createAzureNetworkInterface(nicName, vmName, nsgName string) *armnetwork.In
 	nsgID := "/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Network/networkSecurityGroups/" + nsgName
 
 	return &armnetwork.Interface{
-		Name:     to.Ptr(nicName),
-		Location: to.Ptr("eastus"),
+		Name:     new(nicName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env":     to.Ptr("test"),
-			"project": to.Ptr("testing"),
+			"env":     new("test"),
+			"project": new("testing"),
 		},
 		Properties: &armnetwork.InterfacePropertiesFormat{
 			VirtualMachine: &armnetwork.SubResource{
-				ID: to.Ptr(vmID),
+				ID: new(vmID),
 			},
 			NetworkSecurityGroup: &armnetwork.SecurityGroup{
-				ID: to.Ptr(nsgID),
+				ID: new(nsgID),
 			},
 			IPConfigurations: []*armnetwork.InterfaceIPConfiguration{
 				{
-					Name: to.Ptr("ipconfig1"),
+					Name: new("ipconfig1"),
 					Properties: &armnetwork.InterfaceIPConfigurationPropertiesFormat{
-						PrivateIPAllocationMethod: to.Ptr(armnetwork.IPAllocationMethodDynamic),
+						PrivateIPAllocationMethod: new(armnetwork.IPAllocationMethodDynamic),
 					},
 				},
 			},
@@ -452,7 +446,7 @@ func createAzureNetworkInterfaceWithDNSServers(nicName, vmName, nsgName string, 
 	nic := createAzureNetworkInterface(nicName, vmName, nsgName)
 	ptrs := make([]*string, len(dnsServers))
 	for i := range dnsServers {
-		ptrs[i] = to.Ptr(dnsServers[i])
+		ptrs[i] = new(dnsServers[i])
 	}
 	nic.Properties.DNSSettings = &armnetwork.InterfaceDNSSettings{
 		DNSServers: ptrs,

@@ -59,7 +59,7 @@ func TestCloudBillingBillingInfo(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://cloudbilling.googleapis.com/v1/projects/%s/billingInfo", projectID): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Billing info not found"},
+				Body:       map[string]any{"error": "Billing info not found"},
 			},
 		}
 

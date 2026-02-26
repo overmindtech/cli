@@ -186,7 +186,7 @@ func ssmParameterOutputMapper(ctx context.Context, client ssmClient, scope strin
 		if parameter.Type != types.ParameterTypeSecureString {
 			request := &ssm.GetParameterInput{
 				Name:           parameter.Name,
-				WithDecryption: PtrBool(false), // let's be double sure we don't get any secrets
+				WithDecryption: new(false), // let's be double sure we don't get any secrets
 			}
 			paramResp, err := client.GetParameter(ctx, request)
 			if err != nil {
@@ -231,8 +231,8 @@ func NewSSMParameterAdapter(client ssmClient, accountID string, region string, c
 			return &ssm.DescribeParametersInput{
 				ParameterFilters: []types.ParameterStringFilter{
 					{
-						Key:    PtrString("Name"),
-						Option: PtrString("Equals"),
+						Key:    new("Name"),
+						Option: new("Equals"),
 						Values: []string{query},
 					},
 				},

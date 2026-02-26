@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v3"
 	"go.uber.org/mock/gomock"
 
@@ -325,9 +324,9 @@ func TestStorageBlobContainer(t *testing.T) {
 								Name: nil,
 							},
 							{
-								ID:   to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorageaccount/blobServices/default/containers/valid-container"),
-								Name: to.Ptr("valid-container"),
-								Type: to.Ptr("Microsoft.Storage/storageAccounts/blobServices/containers"),
+								ID:   new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorageaccount/blobServices/default/containers/valid-container"),
+								Name: new("valid-container"),
+								Type: new("Microsoft.Storage/storageAccounts/blobServices/containers"),
 							},
 						},
 					},
@@ -411,27 +410,27 @@ func TestStorageBlobContainer(t *testing.T) {
 // createAzureBlobContainer creates a mock Azure blob container for testing
 func createAzureBlobContainer(containerName string) *armstorage.BlobContainer {
 	return &armstorage.BlobContainer{
-		ID:   to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorageaccount/blobServices/default/containers/" + containerName),
-		Name: to.Ptr(containerName),
-		Type: to.Ptr("Microsoft.Storage/storageAccounts/blobServices/containers"),
+		ID:   new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorageaccount/blobServices/default/containers/" + containerName),
+		Name: new(containerName),
+		Type: new("Microsoft.Storage/storageAccounts/blobServices/containers"),
 		ContainerProperties: &armstorage.ContainerProperties{
-			PublicAccess: to.Ptr(armstorage.PublicAccessNone),
+			PublicAccess: new(armstorage.PublicAccessNone),
 		},
-		Etag: to.Ptr("\"0x8D1234567890ABC\""),
+		Etag: new("\"0x8D1234567890ABC\""),
 	}
 }
 
 // createAzureBlobContainerWithEncryptionScope creates a mock Azure blob container with a default encryption scope
 func createAzureBlobContainerWithEncryptionScope(containerName, encryptionScopeName string) *armstorage.BlobContainer {
 	return &armstorage.BlobContainer{
-		ID:   to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorageaccount/blobServices/default/containers/" + containerName),
-		Name: to.Ptr(containerName),
-		Type: to.Ptr("Microsoft.Storage/storageAccounts/blobServices/containers"),
+		ID:   new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorageaccount/blobServices/default/containers/" + containerName),
+		Name: new(containerName),
+		Type: new("Microsoft.Storage/storageAccounts/blobServices/containers"),
 		ContainerProperties: &armstorage.ContainerProperties{
-			PublicAccess:                to.Ptr(armstorage.PublicAccessNone),
-			DefaultEncryptionScope:      to.Ptr(encryptionScopeName),
-			DenyEncryptionScopeOverride: to.Ptr(false),
+			PublicAccess:                new(armstorage.PublicAccessNone),
+			DefaultEncryptionScope:      new(encryptionScopeName),
+			DenyEncryptionScopeOverride: new(false),
 		},
-		Etag: to.Ptr("\"0x8D1234567890ABC\""),
+		Etag: new("\"0x8D1234567890ABC\""),
 	}
 }

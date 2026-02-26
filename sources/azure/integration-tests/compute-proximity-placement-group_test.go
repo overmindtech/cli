@@ -13,7 +13,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -261,13 +260,13 @@ func createProximityPlacementGroup(ctx context.Context, client *armcompute.Proxi
 	}
 
 	resp, err := client.CreateOrUpdate(ctx, resourceGroupName, ppgName, armcompute.ProximityPlacementGroup{
-		Location: ptr.To(location),
+		Location: new(location),
 		Properties: &armcompute.ProximityPlacementGroupProperties{
-			ProximityPlacementGroupType: ptr.To(armcompute.ProximityPlacementGroupTypeStandard),
+			ProximityPlacementGroupType: new(armcompute.ProximityPlacementGroupTypeStandard),
 		},
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
-			"test":    ptr.To("compute-proximity-placement-group"),
+			"purpose": new("overmind-integration-tests"),
+			"test":    new("compute-proximity-placement-group"),
 		},
 	}, nil)
 	if err != nil {

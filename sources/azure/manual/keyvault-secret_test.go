@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault/v2"
 	"go.uber.org/mock/gomock"
 
@@ -502,13 +502,7 @@ func TestKeyVaultSecret(t *testing.T) {
 		}
 
 		expectedPermission := "Microsoft.KeyVault/vaults/secrets/read"
-		found := false
-		for _, perm := range permissions {
-			if perm == expectedPermission {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(permissions, expectedPermission)
 		if !found {
 			t.Errorf("Expected IAMPermissions to include %s", expectedPermission)
 		}
@@ -578,16 +572,16 @@ func TestKeyVaultSecret(t *testing.T) {
 // createAzureSecret creates a mock Azure Key Vault secret with linked vault
 func createAzureSecret(secretName, subscriptionID, resourceGroup, vaultName string) *armkeyvault.Secret {
 	return &armkeyvault.Secret{
-		ID:   to.Ptr(fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.KeyVault/vaults/%s/secrets/%s", subscriptionID, resourceGroup, vaultName, secretName)),
-		Name: to.Ptr(secretName),
-		Type: to.Ptr("Microsoft.KeyVault/vaults/secrets"),
+		ID:   new(fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.KeyVault/vaults/%s/secrets/%s", subscriptionID, resourceGroup, vaultName, secretName)),
+		Name: new(secretName),
+		Type: new("Microsoft.KeyVault/vaults/secrets"),
 		Tags: map[string]*string{
-			"env":     to.Ptr("test"),
-			"project": to.Ptr("testing"),
+			"env":     new("test"),
+			"project": new("testing"),
 		},
 		Properties: &armkeyvault.SecretProperties{
-			Value:     to.Ptr("secret-value"),
-			SecretURI: to.Ptr(fmt.Sprintf("https://%s.vault.azure.net/secrets/%s", vaultName, secretName)),
+			Value:     new("secret-value"),
+			SecretURI: new(fmt.Sprintf("https://%s.vault.azure.net/secrets/%s", vaultName, secretName)),
 		},
 	}
 }
@@ -595,13 +589,13 @@ func createAzureSecret(secretName, subscriptionID, resourceGroup, vaultName stri
 // createAzureSecretMinimal creates a minimal mock Azure Key Vault secret without ID (no linked resources)
 func createAzureSecretMinimal(secretName string) *armkeyvault.Secret {
 	return &armkeyvault.Secret{
-		Name: to.Ptr(secretName),
-		Type: to.Ptr("Microsoft.KeyVault/vaults/secrets"),
+		Name: new(secretName),
+		Type: new("Microsoft.KeyVault/vaults/secrets"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armkeyvault.SecretProperties{
-			Value: to.Ptr("secret-value"),
+			Value: new("secret-value"),
 		},
 	}
 }
@@ -609,14 +603,14 @@ func createAzureSecretMinimal(secretName string) *armkeyvault.Secret {
 // createAzureSecretCrossRG creates a mock Azure Key Vault secret with vault in a different resource group
 func createAzureSecretCrossRG(secretName, subscriptionID, vaultResourceGroup, vaultName string) *armkeyvault.Secret {
 	return &armkeyvault.Secret{
-		ID:   to.Ptr(fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.KeyVault/vaults/%s/secrets/%s", subscriptionID, vaultResourceGroup, vaultName, secretName)),
-		Name: to.Ptr(secretName),
-		Type: to.Ptr("Microsoft.KeyVault/vaults/secrets"),
+		ID:   new(fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.KeyVault/vaults/%s/secrets/%s", subscriptionID, vaultResourceGroup, vaultName, secretName)),
+		Name: new(secretName),
+		Type: new("Microsoft.KeyVault/vaults/secrets"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armkeyvault.SecretProperties{
-			Value: to.Ptr("secret-value"),
+			Value: new("secret-value"),
 		},
 	}
 }

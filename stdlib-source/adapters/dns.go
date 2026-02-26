@@ -472,7 +472,7 @@ func (d *DNSAdapter) makeQueryImpl(ctx context.Context, query string, server str
 			name := trimDnsSuffix(cname.Hdr.Name)
 			target := trimDnsSuffix(cname.Target)
 
-			attrs, err = sdp.ToAttributes(map[string]interface{}{
+			attrs, err = sdp.ToAttributes(map[string]any{
 				"name":   name,
 				"type":   "CNAME",
 				"ttl":    cname.Hdr.Ttl,
@@ -569,7 +569,7 @@ func GroupAnswers(answers []dns.RR) *AnswerGroup {
 
 // AToItem Converts a set of A or AAAA records to an item
 func AToItem(name string, records []dns.RR) (*sdp.Item, error) {
-	recordAttrs := make([]map[string]interface{}, 0)
+	recordAttrs := make([]map[string]any, 0)
 	liq := make([]*sdp.LinkedItemQuery, 0)
 
 	for _, r := range records {
@@ -585,7 +585,7 @@ func AToItem(name string, records []dns.RR) (*sdp.Item, error) {
 				ip = aaaa.AAAA
 			}
 
-			recordAttrs = append(recordAttrs, map[string]interface{}{
+			recordAttrs = append(recordAttrs, map[string]any{
 				"ttl":  hdr.Ttl,
 				"type": typ,
 				"ip":   ip.String(),
@@ -607,7 +607,7 @@ func AToItem(name string, records []dns.RR) (*sdp.Item, error) {
 		return fmt.Sprint(i) < fmt.Sprint(j)
 	})
 
-	attrs, err := sdp.ToAttributes(map[string]interface{}{
+	attrs, err := sdp.ToAttributes(map[string]any{
 		"name":    name,
 		"type":    "address",
 		"records": recordAttrs,

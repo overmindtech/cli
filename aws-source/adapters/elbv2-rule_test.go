@@ -18,11 +18,11 @@ func TestRuleOutputMapper(t *testing.T) {
 	output := elbv2.DescribeRulesOutput{
 		Rules: []types.Rule{
 			{
-				RuleArn:  PtrString("arn:aws:elasticloadbalancing:eu-west-2:944651592624:listener-rule/app/ingress/1bf10920c5bd199d/9d28f512be129134/0f73a74d21b008f7"),
-				Priority: PtrString("1"),
+				RuleArn:  new("arn:aws:elasticloadbalancing:eu-west-2:944651592624:listener-rule/app/ingress/1bf10920c5bd199d/9d28f512be129134/0f73a74d21b008f7"),
+				Priority: new("1"),
 				Conditions: []types.RuleCondition{
 					{
-						Field: PtrString("path-pattern"),
+						Field: new("path-pattern"),
 						Values: []string{
 							"/api/gateway",
 						},
@@ -37,7 +37,7 @@ func TestRuleOutputMapper(t *testing.T) {
 							},
 						},
 						HttpHeaderConfig: &types.HttpHeaderConditionConfig{
-							HttpHeaderName: PtrString("SOMETHING"),
+							HttpHeaderName: new("SOMETHING"),
 							Values: []string{
 								"foo",
 							},
@@ -50,8 +50,8 @@ func TestRuleOutputMapper(t *testing.T) {
 						QueryStringConfig: &types.QueryStringConditionConfig{
 							Values: []types.QueryStringKeyValuePair{
 								{
-									Key:   PtrString("foo"),
-									Value: PtrString("bar"),
+									Key:   new("foo"),
+									Value: new("bar"),
 								},
 							},
 						},
@@ -65,7 +65,7 @@ func TestRuleOutputMapper(t *testing.T) {
 				Actions: []types.Action{
 					// Tested in actions.go
 				},
-				IsDefault: PtrBool(false),
+				IsDefault: new(false),
 			},
 		},
 	}

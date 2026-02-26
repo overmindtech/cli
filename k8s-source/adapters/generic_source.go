@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -312,13 +313,7 @@ var ignoredMetadataFields = []string{
 }
 
 func ignored(key string) bool {
-	for _, ignoredKey := range ignoredMetadataFields {
-		if key == ignoredKey {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(ignoredMetadataFields, key)
 }
 
 // resourcesToItems Converts a slice of resources to a slice of items
@@ -360,7 +355,7 @@ func (s *KubeTypeAdapter[Resource, ResourceList]) resourceToItem(resource Resour
 	// Promote the metadata to the top level
 	if metadata, err := attributes.Get("metadata"); err == nil {
 		// Cast to a type we can iterate over
-		if metadataMap, ok := metadata.(map[string]interface{}); ok {
+		if metadataMap, ok := metadata.(map[string]any); ok {
 			for key, value := range metadataMap {
 				// Check that the key isn't in the ignored list
 				if !ignored(key) {

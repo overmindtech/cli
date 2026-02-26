@@ -56,7 +56,7 @@ func TestCloudResourceManagerProject(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://cloudresourcemanager.googleapis.com/v3/projects/%s", projectID): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Project not found"},
+				Body:       map[string]any{"error": "Project not found"},
 			},
 		}
 

@@ -12,7 +12,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/googleapis/gax-go/v2/apierror"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdpcache"
@@ -122,7 +121,7 @@ func createComputeForwardingRule(ctx context.Context, client *compute.Forwarding
 		Project: projectID,
 		Region:  region,
 		ForwardingRuleResource: &computepb.ForwardingRule{
-			Name: ptr.To(ruleName),
+			Name: new(ruleName),
 			// IP address for which this forwarding rule accepts traffic.
 			// When a client sends traffic to this IP address, the forwarding rule directs the traffic to the referenced target or backendService.
 			// While creating a forwarding rule, specifying an IPAddress is required under the following circumstances:
@@ -143,9 +142,9 @@ func createComputeForwardingRule(ctx context.Context, client *compute.Forwarding
 			//	determine the type of IP address that you can use.
 			//	For detailed information, see [IP address specifications](https://cloud.google.com/load-balancing/docs/forwarding-rule-concepts#ip_address_specifications).
 			//	When reading an IPAddress, the API always returns the IP address number.
-			IPAddress:  ptr.To("192.168.1.1"),
-			IPProtocol: ptr.To("TCP"),
-			PortRange:  ptr.To("80-80"),
+			IPAddress:  new("192.168.1.1"),
+			IPProtocol: new("TCP"),
+			PortRange:  new("80-80"),
 			// The URL of the target resource to receive the matched traffic.
 			// For regional forwarding rules, this target must be in the same region as the forwarding rule.
 			// For global forwarding rules, this target must be a global load balancing resource.
@@ -156,7 +155,7 @@ func createComputeForwardingRule(ctx context.Context, client *compute.Forwarding
 			//- all-apis - All supported Google APIs.
 			//- For Private Service Connect forwarding rules that forward traffic to managed services, the target must be a service attachment.
 			//The target is not mutable once set as a service attachment.
-			Target: ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/targetPools/test-target-pool"),
+			Target: new("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/targetPools/test-target-pool"),
 		},
 	}
 

@@ -8,7 +8,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/api/iterator"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -373,66 +372,66 @@ func TestComputeMachineImage(t *testing.T) {
 
 func createComputeMachineImage(imageName string, status computepb.MachineImage_Status) *computepb.MachineImage {
 	return &computepb.MachineImage{
-		Name:   ptr.To(imageName),
+		Name:   new(imageName),
 		Labels: map[string]string{"env": "test"},
-		Status: ptr.To(status.String()),
+		Status: new(status.String()),
 		InstanceProperties: &computepb.InstanceProperties{
 			NetworkInterfaces: []*computepb.NetworkInterface{
 				{
-					Network:           ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/global/networks/test-network"),
-					Subnetwork:        ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/subnetworks/test-subnetwork"),
-					NetworkAttachment: ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/networkAttachments/test-network-attachment"),
-					NetworkIP:         ptr.To("10.0.0.1"),
-					Ipv6Address:       ptr.To("2001:db8::1"),
+					Network:           new("https://www.googleapis.com/compute/v1/projects/test-project-id/global/networks/test-network"),
+					Subnetwork:        new("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/subnetworks/test-subnetwork"),
+					NetworkAttachment: new("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/networkAttachments/test-network-attachment"),
+					NetworkIP:         new("10.0.0.1"),
+					Ipv6Address:       new("2001:db8::1"),
 					AccessConfigs: []*computepb.AccessConfig{
 						{
-							NatIP: ptr.To("203.0.113.1"),
+							NatIP: new("203.0.113.1"),
 						},
 					},
 					Ipv6AccessConfigs: []*computepb.AccessConfig{
 						{
-							ExternalIpv6: ptr.To("2001:db8::2"),
+							ExternalIpv6: new("2001:db8::2"),
 						},
 					},
 				},
 			},
 			Disks: []*computepb.AttachedDisk{
 				{
-					Source: ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/zones/us-central1-a/disks/test-disk"),
+					Source: new("https://www.googleapis.com/compute/v1/projects/test-project-id/zones/us-central1-a/disks/test-disk"),
 					DiskEncryptionKey: &computepb.CustomerEncryptionKey{
-						KmsKeyName: ptr.To("projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/test-version-source-disk"),
+						KmsKeyName: new("projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/test-version-source-disk"),
 					},
 					InitializeParams: &computepb.AttachedDiskInitializeParams{
-						SourceImage:    ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/global/images/test-source-image"),
-						SourceSnapshot: ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/global/snapshots/test-source-snapshot"),
+						SourceImage:    new("https://www.googleapis.com/compute/v1/projects/test-project-id/global/images/test-source-image"),
+						SourceSnapshot: new("https://www.googleapis.com/compute/v1/projects/test-project-id/global/snapshots/test-source-snapshot"),
 						SourceImageEncryptionKey: &computepb.CustomerEncryptionKey{
-							KmsKeyName: ptr.To("projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/test-version-source-image"),
+							KmsKeyName: new("projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/test-version-source-image"),
 						},
 						SourceSnapshotEncryptionKey: &computepb.CustomerEncryptionKey{
-							KmsKeyName: ptr.To("projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/test-version-source-snapshot"),
+							KmsKeyName: new("projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/test-version-source-snapshot"),
 						},
 					},
 				},
 			},
 			ServiceAccounts: []*computepb.ServiceAccount{
 				{
-					Email: ptr.To("test-sa@test-project-id.iam.gserviceaccount.com"),
+					Email: new("test-sa@test-project-id.iam.gserviceaccount.com"),
 				},
 			},
 			GuestAccelerators: []*computepb.AcceleratorConfig{
 				{
-					AcceleratorType:  ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/zones/us-central1-a/acceleratorTypes/nvidia-tesla-k80"),
-					AcceleratorCount: ptr.To[int32](1),
+					AcceleratorType:  new("https://www.googleapis.com/compute/v1/projects/test-project-id/zones/us-central1-a/acceleratorTypes/nvidia-tesla-k80"),
+					AcceleratorCount: new(int32(1)),
 				},
 			},
 		},
 		MachineImageEncryptionKey: &computepb.CustomerEncryptionKey{
-			KmsKeyName: ptr.To("projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/test-version-machine-encryption-key"),
+			KmsKeyName: new("projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/test-version-machine-encryption-key"),
 		},
-		SourceInstance: ptr.To("projects/test-project-id/zones/us-central1-a/instances/test-instance"),
+		SourceInstance: new("projects/test-project-id/zones/us-central1-a/instances/test-instance"),
 		SavedDisks: []*computepb.SavedDisk{
 			{
-				SourceDisk: ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/zones/us-central1-a/disks/test-saved-disk"),
+				SourceDisk: new("https://www.googleapis.com/compute/v1/projects/test-project-id/zones/us-central1-a/disks/test-saved-disk"),
 			},
 		},
 	}

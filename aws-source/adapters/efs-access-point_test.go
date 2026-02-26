@@ -15,32 +15,32 @@ func TestAccessPointOutputMapper(t *testing.T) {
 	output := &efs.DescribeAccessPointsOutput{
 		AccessPoints: []types.AccessPointDescription{
 			{
-				AccessPointArn: PtrString("arn:aws:elasticfilesystem:eu-west-2:944651592624:access-point/fsap-073b1534eafbc5ee2"),
-				AccessPointId:  PtrString("fsap-073b1534eafbc5ee2"),
-				ClientToken:    PtrString("pvc-66e4418c-edf5-4a0e-9834-5945598d51fe"),
-				FileSystemId:   PtrString("fs-0c6f2f41e957f42a9"),
+				AccessPointArn: new("arn:aws:elasticfilesystem:eu-west-2:944651592624:access-point/fsap-073b1534eafbc5ee2"),
+				AccessPointId:  new("fsap-073b1534eafbc5ee2"),
+				ClientToken:    new("pvc-66e4418c-edf5-4a0e-9834-5945598d51fe"),
+				FileSystemId:   new("fs-0c6f2f41e957f42a9"),
 				LifeCycleState: types.LifeCycleStateAvailable,
-				Name:           PtrString("example access point"),
-				OwnerId:        PtrString("944651592624"),
+				Name:           new("example access point"),
+				OwnerId:        new("944651592624"),
 				PosixUser: &types.PosixUser{
-					Gid: PtrInt64(1000),
-					Uid: PtrInt64(1000),
+					Gid: new(int64(1000)),
+					Uid: new(int64(1000)),
 					SecondaryGids: []int64{
 						1002,
 					},
 				},
 				RootDirectory: &types.RootDirectory{
 					CreationInfo: &types.CreationInfo{
-						OwnerGid:    PtrInt64(1000),
-						OwnerUid:    PtrInt64(1000),
-						Permissions: PtrString("700"),
+						OwnerGid:    new(int64(1000)),
+						OwnerUid:    new(int64(1000)),
+						Permissions: new("700"),
 					},
-					Path: PtrString("/etc/foo"),
+					Path: new("/etc/foo"),
 				},
 				Tags: []types.Tag{
 					{
-						Key:   PtrString("Name"),
-						Value: PtrString("example access point"),
+						Key:   new("Name"),
+						Value: new("example access point"),
 					},
 				},
 			},

@@ -59,13 +59,13 @@ func (r *ProjectPermissionCheckResult) FormatError() error {
 
 	// Build error message
 	var errMsg strings.Builder
-	errMsg.WriteString(fmt.Sprintf("%d out of %d projects (%.1f%%) failed permission checks\n\n",
-		r.FailureCount, totalProjects, failurePercentage))
+	fmt.Fprintf(&errMsg, "%d out of %d projects (%.1f%%) failed permission checks\n\n",
+		r.FailureCount, totalProjects, failurePercentage)
 
 	// List failed projects with their errors
 	errMsg.WriteString("Failed projects:\n")
 	for projectID, err := range r.ProjectErrors {
-		errMsg.WriteString(fmt.Sprintf("  - %s: %v\n", projectID, err))
+		fmt.Fprintf(&errMsg, "  - %s: %v\n", projectID, err)
 	}
 
 	return errors.New(errMsg.String())

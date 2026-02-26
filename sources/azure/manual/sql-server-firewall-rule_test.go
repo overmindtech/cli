@@ -3,9 +3,9 @@ package manual_test
 import (
 	"context"
 	"errors"
+	"slices"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql/v2"
 	"go.uber.org/mock/gomock"
 
@@ -172,7 +172,7 @@ func TestSqlServerFirewallRule(t *testing.T) {
 
 		testClient := &testSqlServerFirewallRuleClient{
 			MockSqlServerFirewallRuleClient: mockClient,
-			pager:                          pager,
+			pager:                           pager,
 		}
 		wrapper := manual.NewSqlServerFirewallRule(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
@@ -207,7 +207,7 @@ func TestSqlServerFirewallRule(t *testing.T) {
 
 		testClient := &testSqlServerFirewallRuleClient{
 			MockSqlServerFirewallRuleClient: mockClient,
-			pager:                          pager,
+			pager:                           pager,
 		}
 		wrapper := manual.NewSqlServerFirewallRule(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
@@ -261,7 +261,7 @@ func TestSqlServerFirewallRule(t *testing.T) {
 		errorPager := &errorSqlServerFirewallRulePager{}
 		testClient := &testSqlServerFirewallRuleClient{
 			MockSqlServerFirewallRuleClient: mockClient,
-			pager:                          errorPager,
+			pager:                           errorPager,
 		}
 
 		wrapper := manual.NewSqlServerFirewallRule(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
@@ -281,13 +281,7 @@ func TestSqlServerFirewallRule(t *testing.T) {
 			t.Error("Expected IAMPermissions to return at least one permission")
 		}
 		expectedPermission := "Microsoft.Sql/servers/firewallRules/read"
-		found := false
-		for _, perm := range permissions {
-			if perm == expectedPermission {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(permissions, expectedPermission)
 		if !found {
 			t.Errorf("Expected IAMPermissions to include %s", expectedPermission)
 		}
@@ -320,11 +314,11 @@ func TestSqlServerFirewallRule(t *testing.T) {
 func createAzureSqlServerFirewallRule(serverName, firewallRuleName string) *armsql.FirewallRule {
 	ruleID := "/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Sql/servers/" + serverName + "/firewallRules/" + firewallRuleName
 	return &armsql.FirewallRule{
-		Name: to.Ptr(firewallRuleName),
-		ID:   to.Ptr(ruleID),
+		Name: new(firewallRuleName),
+		ID:   new(ruleID),
 		Properties: &armsql.ServerFirewallRuleProperties{
-			StartIPAddress: to.Ptr("0.0.0.0"),
-			EndIPAddress:   to.Ptr("255.255.255.255"),
+			StartIPAddress: new("0.0.0.0"),
+			EndIPAddress:   new("255.255.255.255"),
 		},
 	}
 }

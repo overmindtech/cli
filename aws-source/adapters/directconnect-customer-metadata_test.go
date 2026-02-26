@@ -14,8 +14,8 @@ func TestCustomerMetadataOutputMapper(t *testing.T) {
 	output := &directconnect.DescribeCustomerMetadataOutput{
 		Agreements: []types.CustomerAgreement{
 			{
-				AgreementName: PtrString("example-customer-agreement"),
-				Status:        PtrString("signed"),
+				AgreementName: new("example-customer-agreement"),
+				Status:        new("signed"),
 			},
 		},
 	}

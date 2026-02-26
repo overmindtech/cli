@@ -13,7 +13,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dns/armdns"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -344,13 +343,13 @@ func createDNSZone(ctx context.Context, client *armdns.ZonesClient, resourceGrou
 
 	// Create the DNS zone
 	resp, err := client.CreateOrUpdate(ctx, resourceGroupName, zoneName, armdns.Zone{
-		Location: ptr.To(location),
+		Location: new(location),
 		Properties: &armdns.ZoneProperties{
-			ZoneType: ptr.To(armdns.ZoneTypePublic),
+			ZoneType: new(armdns.ZoneTypePublic),
 		},
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
-			"managed": ptr.To("true"),
+			"purpose": new("overmind-integration-tests"),
+			"managed": new("true"),
 		},
 	}, nil)
 	if err != nil {

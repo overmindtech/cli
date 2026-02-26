@@ -19,14 +19,14 @@ func TestLayerItemMapper(t *testing.T) {
 			CompatibleRuntimes: []types.Runtime{
 				types.RuntimeJava11,
 			},
-			CreatedDate:     PtrString("2018-11-27T15:10:45.123+0000"),
-			Description:     PtrString("description"),
-			LayerVersionArn: PtrString("arn:aws:service:region:account:type/id"),
-			LicenseInfo:     PtrString("info"),
+			CreatedDate:     new("2018-11-27T15:10:45.123+0000"),
+			Description:     new("description"),
+			LayerVersionArn: new("arn:aws:service:region:account:type/id"),
+			LicenseInfo:     new("info"),
 			Version:         10,
 		},
-		LayerArn:  PtrString("arn:aws:service:region:account:type/id"),
-		LayerName: PtrString("name"),
+		LayerArn:  new("arn:aws:service:region:account:type/id"),
+		LayerName: new("name"),
 	}
 
 	item, err := layerItemMapper("", "foo", &layer)

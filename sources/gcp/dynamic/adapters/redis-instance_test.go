@@ -223,7 +223,7 @@ func TestRedisInstance(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://redis.googleapis.com/v1/projects/%s/locations/%s/instances/%s", projectID, location, instanceName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Redis instance not found"},
+				Body:       map[string]any{"error": "Redis instance not found"},
 			},
 		}
 

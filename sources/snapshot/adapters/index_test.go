@@ -7,15 +7,15 @@ import (
 )
 
 func createTestSnapshot() *sdp.Snapshot {
-	attrs1, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+	attrs1, _ := sdp.ToAttributesViaJson(map[string]any{
 		"instanceId": "i-12345",
 		"name":       "test-instance",
 	})
-	attrs2, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+	attrs2, _ := sdp.ToAttributesViaJson(map[string]any{
 		"instanceId": "i-67890",
 		"name":       "test-instance-2",
 	})
-	attrs3, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+	attrs3, _ := sdp.ToAttributesViaJson(map[string]any{
 		"bucketName": "my-test-bucket",
 	})
 

@@ -6,7 +6,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v3"
 	"go.uber.org/mock/gomock"
 
@@ -142,7 +141,7 @@ func TestAuthorizationRoleAssignment(t *testing.T) {
 		roleAssignment := &armauthorization.RoleAssignment{
 			Name: nil, // Role assignment with nil name should cause error
 			Properties: &armauthorization.RoleAssignmentProperties{
-				Scope: to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg"),
+				Scope: new("/subscriptions/test-subscription/resourceGroups/test-rg"),
 			},
 		}
 
@@ -271,7 +270,7 @@ func TestAuthorizationRoleAssignment(t *testing.T) {
 		roleAssignment2 := &armauthorization.RoleAssignment{
 			Name: nil, // Role assignment with nil name should cause error
 			Properties: &armauthorization.RoleAssignmentProperties{
-				Scope: to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg"),
+				Scope: new("/subscriptions/test-subscription/resourceGroups/test-rg"),
 			},
 		}
 
@@ -457,7 +456,7 @@ func TestAuthorizationRoleAssignment(t *testing.T) {
 		wrapper := manual.NewAuthorizationRoleAssignment(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		// Use interface assertion to access PredefinedRole method
-		if roleInterface, ok := interface{}(wrapper).(interface{ PredefinedRole() string }); ok {
+		if roleInterface, ok := any(wrapper).(interface{ PredefinedRole() string }); ok {
 			role := roleInterface.PredefinedRole()
 			if role != "Reader" {
 				t.Errorf("Expected PredefinedRole to be 'Reader', got %s", role)
@@ -472,7 +471,7 @@ func TestAuthorizationRoleAssignment(t *testing.T) {
 		roleAssignment := createAzureRoleAssignment(roleAssignmentName, "/subscriptions/test-subscription/resourceGroups/test-rg")
 		// Add delegated managed identity resource ID
 		delegatedIdentityID := "/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/test-identity"
-		roleAssignment.Properties.DelegatedManagedIdentityResourceID = to.Ptr(delegatedIdentityID)
+		roleAssignment.Properties.DelegatedManagedIdentityResourceID = new(delegatedIdentityID)
 
 		mockClient := mocks.NewMockRoleAssignmentsClient(ctrl)
 		azureScope := "/subscriptions/test-subscription/resourceGroups/test-rg"
@@ -540,7 +539,7 @@ func (m *MockRoleAssignmentsPager) More() bool {
 
 func (mr *MockRoleAssignmentsPagerMockRecorder) More() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "More", reflect.TypeOf((*MockRoleAssignmentsPager)(nil).More))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "More", reflect.TypeFor[func() bool]())
 }
 
 func (m *MockRoleAssignmentsPager) NextPage(ctx context.Context) (armauthorization.RoleAssignmentsClientListForResourceGroupResponse, error) {
@@ -551,21 +550,21 @@ func (m *MockRoleAssignmentsPager) NextPage(ctx context.Context) (armauthorizati
 	return ret0, ret1
 }
 
-func (mr *MockRoleAssignmentsPagerMockRecorder) NextPage(ctx interface{}) *gomock.Call {
+func (mr *MockRoleAssignmentsPagerMockRecorder) NextPage(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NextPage", reflect.TypeOf((*MockRoleAssignmentsPager)(nil).NextPage), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NextPage", reflect.TypeFor[func(ctx context.Context) (armauthorization.RoleAssignmentsClientListForResourceGroupResponse, error)](), ctx)
 }
 
 // createAzureRoleAssignment creates a mock Azure role assignment for testing
 func createAzureRoleAssignment(roleAssignmentName, scope string) *armauthorization.RoleAssignment {
 	return &armauthorization.RoleAssignment{
-		Name: to.Ptr(roleAssignmentName),
-		Type: to.Ptr("Microsoft.Authorization/roleAssignments"),
-		ID:   to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Authorization/roleAssignments/" + roleAssignmentName),
+		Name: new(roleAssignmentName),
+		Type: new("Microsoft.Authorization/roleAssignments"),
+		ID:   new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Authorization/roleAssignments/" + roleAssignmentName),
 		Properties: &armauthorization.RoleAssignmentProperties{
-			Scope:            to.Ptr(scope),
-			RoleDefinitionID: to.Ptr("/subscriptions/test-subscription/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"),
-			PrincipalID:      to.Ptr("00000000-0000-0000-0000-000000000000"),
+			Scope:            new(scope),
+			RoleDefinitionID: new("/subscriptions/test-subscription/providers/Microsoft.Authorization/roleDefinitions/b24988ac-6180-42a0-ab88-20f7382dd24c"),
+			PrincipalID:      new("00000000-0000-0000-0000-000000000000"),
 		},
 	}
 }

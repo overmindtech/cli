@@ -5,7 +5,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	"go.uber.org/mock/gomock"
 
@@ -194,9 +193,9 @@ func TestComputeProximityPlacementGroup(t *testing.T) {
 		ppg1 := createAzureProximityPlacementGroup("test-ppg-1", subscriptionID, resourceGroup)
 		ppgNilName := &armcompute.ProximityPlacementGroup{
 			Name:     nil,
-			Location: to.Ptr("eastus"),
+			Location: new("eastus"),
 			Tags: map[string]*string{
-				"env": to.Ptr("test"),
+				"env": new("test"),
 			},
 		}
 
@@ -258,45 +257,45 @@ func TestComputeProximityPlacementGroup(t *testing.T) {
 func createAzureProximityPlacementGroup(ppgName, subscriptionID, resourceGroup string) *armcompute.ProximityPlacementGroup {
 	baseID := "/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute"
 	return &armcompute.ProximityPlacementGroup{
-		Name:     to.Ptr(ppgName),
-		Location: to.Ptr("eastus"),
+		Name:     new(ppgName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env":     to.Ptr("test"),
-			"project": to.Ptr("testing"),
+			"env":     new("test"),
+			"project": new("testing"),
 		},
 		Properties: &armcompute.ProximityPlacementGroupProperties{
-			ProximityPlacementGroupType: to.Ptr(armcompute.ProximityPlacementGroupTypeStandard),
+			ProximityPlacementGroupType: new(armcompute.ProximityPlacementGroupTypeStandard),
 			VirtualMachines: []*armcompute.SubResourceWithColocationStatus{
-				{ID: to.Ptr(baseID + "/virtualMachines/test-vm")},
+				{ID: new(baseID + "/virtualMachines/test-vm")},
 			},
 			AvailabilitySets: []*armcompute.SubResourceWithColocationStatus{
-				{ID: to.Ptr(baseID + "/availabilitySets/test-avset")},
+				{ID: new(baseID + "/availabilitySets/test-avset")},
 			},
 			VirtualMachineScaleSets: []*armcompute.SubResourceWithColocationStatus{
-				{ID: to.Ptr(baseID + "/virtualMachineScaleSets/test-vmss")},
+				{ID: new(baseID + "/virtualMachineScaleSets/test-vmss")},
 			},
 		},
-		Zones: []*string{to.Ptr("1")},
+		Zones: []*string{new("1")},
 	}
 }
 
 func createAzureProximityPlacementGroupWithCrossResourceGroupLinks(ppgName, subscriptionID string) *armcompute.ProximityPlacementGroup {
 	return &armcompute.ProximityPlacementGroup{
-		Name:     to.Ptr(ppgName),
-		Location: to.Ptr("eastus"),
+		Name:     new(ppgName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armcompute.ProximityPlacementGroupProperties{
-			ProximityPlacementGroupType: to.Ptr(armcompute.ProximityPlacementGroupTypeStandard),
+			ProximityPlacementGroupType: new(armcompute.ProximityPlacementGroupTypeStandard),
 			VirtualMachines: []*armcompute.SubResourceWithColocationStatus{
-				{ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/vm-rg/providers/Microsoft.Compute/virtualMachines/test-vm")},
+				{ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/vm-rg/providers/Microsoft.Compute/virtualMachines/test-vm")},
 			},
 			AvailabilitySets: []*armcompute.SubResourceWithColocationStatus{
-				{ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/avset-rg/providers/Microsoft.Compute/availabilitySets/test-avset")},
+				{ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/avset-rg/providers/Microsoft.Compute/availabilitySets/test-avset")},
 			},
 			VirtualMachineScaleSets: []*armcompute.SubResourceWithColocationStatus{
-				{ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/vmss-rg/providers/Microsoft.Compute/virtualMachineScaleSets/test-vmss")},
+				{ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/vmss-rg/providers/Microsoft.Compute/virtualMachineScaleSets/test-vmss")},
 			},
 		},
 	}
@@ -304,13 +303,13 @@ func createAzureProximityPlacementGroupWithCrossResourceGroupLinks(ppgName, subs
 
 func createAzureProximityPlacementGroupWithoutLinks(ppgName string) *armcompute.ProximityPlacementGroup {
 	return &armcompute.ProximityPlacementGroup{
-		Name:     to.Ptr(ppgName),
-		Location: to.Ptr("eastus"),
+		Name:     new(ppgName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armcompute.ProximityPlacementGroupProperties{
-			ProximityPlacementGroupType: to.Ptr(armcompute.ProximityPlacementGroupTypeStandard),
+			ProximityPlacementGroupType: new(armcompute.ProximityPlacementGroupTypeStandard),
 		},
 	}
 }

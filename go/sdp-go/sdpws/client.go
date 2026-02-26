@@ -64,9 +64,9 @@ type Client struct {
 	// receiveCtx is the context for the receive goroutine
 	// receiveCancel cancels the receive context
 	// receiveDone signals when receive has finished
-	receiveCtx        context.Context
-	receiveCancel     context.CancelFunc
-	receiveDone       sync.WaitGroup
+	receiveCtx    context.Context
+	receiveCancel context.CancelFunc
+	receiveDone   sync.WaitGroup
 }
 
 // Dial connects to the given URL and returns a new Client. Pass nil as handler
@@ -123,11 +123,9 @@ func dialImpl(ctx context.Context, u string, httpClient *http.Client, handler Ga
 
 	// Create a dedicated context for receive() that we can cancel independently
 	c.receiveCtx, c.receiveCancel = context.WithCancel(ctx)
-	c.receiveDone.Add(1)
-	go func() {
-		defer c.receiveDone.Done()
+	c.receiveDone.Go(func() {
 		c.receive(c.receiveCtx)
-	}()
+	})
 
 	return c, nil
 }

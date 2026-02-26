@@ -165,7 +165,7 @@ func taskGetInputMapper(scope, query string) *ecs.DescribeTasksInput {
 		Tasks: []string{
 			sections[1],
 		},
-		Cluster: PtrString(sections[0]),
+		Cluster: new(sections[0]),
 		Include: TaskIncludeFields,
 	}
 }
@@ -203,14 +203,14 @@ func NewECSTaskAdapter(client ECSClient, accountID string, region string, cache 
 		Region:          region,
 		GetFunc:         taskGetFunc,
 		AdapterMetadata: ecsTaskAdapterMetadata,
-		cache:        cache,
+		cache:           cache,
 		ListInput:       &ecs.ListTasksInput{},
 		GetInputMapper:  taskGetInputMapper,
 		DisableList:     true,
 		SearchInputMapper: func(scope, query string) (*ecs.ListTasksInput, error) {
 			// Search by cluster
 			return &ecs.ListTasksInput{
-				Cluster: PtrString(query),
+				Cluster: new(query),
 			}, nil
 		},
 		ListFuncPaginatorBuilder: func(client ECSClient, input *ecs.ListTasksInput) Paginator[*ecs.ListTasksOutput, *ecs.Options] {

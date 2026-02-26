@@ -192,7 +192,7 @@ func TestComputeTargetPool(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/targetPools/%s", projectID, region, poolName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Target pool not found"},
+				Body:       map[string]any{"error": "Target pool not found"},
 			},
 		}
 

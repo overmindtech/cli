@@ -257,7 +257,7 @@ func TestAIPlatformBatchPredictionJob(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to get 'inputConfig' attribute: %v", err)
 		}
-		inputConfigMap, ok := inputConfig.(map[string]interface{})
+		inputConfigMap, ok := inputConfig.(map[string]any)
 		if !ok {
 			t.Fatalf("Expected inputConfig to be a map[string]interface{}, got %T", inputConfig)
 		}
@@ -270,7 +270,7 @@ func TestAIPlatformBatchPredictionJob(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to get 'outputConfig' attribute: %v", err)
 		}
-		outputConfigMap, ok := outputConfig.(map[string]interface{})
+		outputConfigMap, ok := outputConfig.(map[string]any)
 		if !ok {
 			t.Fatalf("Expected outputConfig to be a map[string]interface{}, got %T", outputConfig)
 		}
@@ -283,7 +283,7 @@ func TestAIPlatformBatchPredictionJob(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to get 'encryptionSpec' attribute: %v", err)
 		}
-		encryptionSpecMap, ok := encryptionSpec.(map[string]interface{})
+		encryptionSpecMap, ok := encryptionSpec.(map[string]any)
 		if !ok {
 			t.Fatalf("Expected encryptionSpec to be a map[string]interface{}, got %T", encryptionSpec)
 		}

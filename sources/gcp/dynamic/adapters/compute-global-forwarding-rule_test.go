@@ -24,74 +24,74 @@ func TestComputeGlobalForwardingRule(t *testing.T) {
 
 	// Mock response for a global forwarding rule using protobuf types
 	globalForwardingRule := &computepb.ForwardingRule{
-		Id:                  uint64Ptr(1234567890123456789),
-		CreationTimestamp:   stringPtr("2023-01-01T00:00:00.000-08:00"),
-		Name:                stringPtr(forwardingRuleName),
-		Description:         stringPtr("Test global forwarding rule"),
-		Region:              stringPtr(""),
-		IPAddress:           stringPtr("203.0.113.1"),
-		IPProtocol:          stringPtr("TCP"),
-		PortRange:           stringPtr("80"),
-		Target:              stringPtr(fmt.Sprintf("projects/%s/global/targetHttpProxies/test-target-proxy", projectID)),
-		SelfLink:            stringPtr(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/forwardingRules/%s", projectID, forwardingRuleName)),
-		LoadBalancingScheme: stringPtr("EXTERNAL"),
-		Subnetwork:          stringPtr(fmt.Sprintf("projects/%s/regions/us-central1/subnetworks/test-subnet", projectID)),
-		Network:             stringPtr(fmt.Sprintf("projects/%s/global/networks/default", projectID)),
-		BackendService:      stringPtr(fmt.Sprintf("projects/%s/global/backendServices/test-backend-service", projectID)),
-		ServiceLabel:        stringPtr("test-service"),
-		ServiceName:         stringPtr(fmt.Sprintf("%s-test-service.c.%s.internal", forwardingRuleName, projectID)),
-		Kind:                stringPtr("compute#forwardingRule"),
-		LabelFingerprint:    stringPtr("42WmSpB8rSM="),
+		Id:                  new(uint64(1234567890123456789)),
+		CreationTimestamp:   new("2023-01-01T00:00:00.000-08:00"),
+		Name:                new(forwardingRuleName),
+		Description:         new("Test global forwarding rule"),
+		Region:              new(""),
+		IPAddress:           new("203.0.113.1"),
+		IPProtocol:          new("TCP"),
+		PortRange:           new("80"),
+		Target:              new(fmt.Sprintf("projects/%s/global/targetHttpProxies/test-target-proxy", projectID)),
+		SelfLink:            new(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/forwardingRules/%s", projectID, forwardingRuleName)),
+		LoadBalancingScheme: new("EXTERNAL"),
+		Subnetwork:          new(fmt.Sprintf("projects/%s/regions/us-central1/subnetworks/test-subnet", projectID)),
+		Network:             new(fmt.Sprintf("projects/%s/global/networks/default", projectID)),
+		BackendService:      new(fmt.Sprintf("projects/%s/global/backendServices/test-backend-service", projectID)),
+		ServiceLabel:        new("test-service"),
+		ServiceName:         new(fmt.Sprintf("%s-test-service.c.%s.internal", forwardingRuleName, projectID)),
+		Kind:                new("compute#forwardingRule"),
+		LabelFingerprint:    new("42WmSpB8rSM="),
 		Labels: map[string]string{
 			"env":  "test",
 			"team": "devops",
 		},
-		NetworkTier:          stringPtr("PREMIUM"),
-		AllowGlobalAccess:    boolPtr(false),
-		AllowPscGlobalAccess: boolPtr(false),
+		NetworkTier:          new("PREMIUM"),
+		AllowGlobalAccess:    new(false),
+		AllowPscGlobalAccess: new(false),
 		PscConnectionId:      nil,
-		PscConnectionStatus:  stringPtr("ACCEPTED"),
-		Fingerprint:          stringPtr("abcd1234efgh5678"),
+		PscConnectionStatus:  new("ACCEPTED"),
+		Fingerprint:          new("abcd1234efgh5678"),
 	}
 
 	// Mock response for a second global forwarding rule using protobuf types
 	globalForwardingRule2 := &computepb.ForwardingRule{
-		Id:                  uint64Ptr(9876543210987654321),
-		CreationTimestamp:   stringPtr("2023-01-02T00:00:00.000-08:00"),
-		Name:                stringPtr("test-global-forwarding-rule-2"),
-		Description:         stringPtr("Second test global forwarding rule"),
-		Region:              stringPtr(""),
-		IPAddress:           stringPtr("203.0.113.2"),
-		IPProtocol:          stringPtr("TCP"),
-		PortRange:           stringPtr("443"),
-		Target:              stringPtr(fmt.Sprintf("projects/%s/global/targetHttpsProxies/test-target-proxy-2", projectID)),
-		SelfLink:            stringPtr(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/forwardingRules/test-global-forwarding-rule-2", projectID)),
-		LoadBalancingScheme: stringPtr("EXTERNAL"),
-		Subnetwork:          stringPtr(fmt.Sprintf("projects/%s/regions/us-west1/subnetworks/test-subnet-2", projectID)),
-		Network:             stringPtr(fmt.Sprintf("projects/%s/global/networks/custom-network", projectID)),
-		BackendService:      stringPtr(fmt.Sprintf("projects/%s/global/backendServices/test-backend-service-2", projectID)),
-		ServiceLabel:        stringPtr("test-service-2"),
-		ServiceName:         stringPtr("test-global-forwarding-rule-2-test-service-2.c." + projectID + ".internal"),
-		Kind:                stringPtr("compute#forwardingRule"),
-		LabelFingerprint:    stringPtr("xyz789abc123def="),
+		Id:                  new(uint64(9876543210987654321)),
+		CreationTimestamp:   new("2023-01-02T00:00:00.000-08:00"),
+		Name:                new("test-global-forwarding-rule-2"),
+		Description:         new("Second test global forwarding rule"),
+		Region:              new(""),
+		IPAddress:           new("203.0.113.2"),
+		IPProtocol:          new("TCP"),
+		PortRange:           new("443"),
+		Target:              new(fmt.Sprintf("projects/%s/global/targetHttpsProxies/test-target-proxy-2", projectID)),
+		SelfLink:            new(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/forwardingRules/test-global-forwarding-rule-2", projectID)),
+		LoadBalancingScheme: new("EXTERNAL"),
+		Subnetwork:          new(fmt.Sprintf("projects/%s/regions/us-west1/subnetworks/test-subnet-2", projectID)),
+		Network:             new(fmt.Sprintf("projects/%s/global/networks/custom-network", projectID)),
+		BackendService:      new(fmt.Sprintf("projects/%s/global/backendServices/test-backend-service-2", projectID)),
+		ServiceLabel:        new("test-service-2"),
+		ServiceName:         new("test-global-forwarding-rule-2-test-service-2.c." + projectID + ".internal"),
+		Kind:                new("compute#forwardingRule"),
+		LabelFingerprint:    new("xyz789abc123def="),
 		Labels: map[string]string{
 			"env":     "prod",
 			"service": "web",
 		},
-		NetworkTier:          stringPtr("PREMIUM"),
-		AllowGlobalAccess:    boolPtr(true),
-		AllowPscGlobalAccess: boolPtr(true),
-		PscConnectionId:      uint64Ptr(123),
-		PscConnectionStatus:  stringPtr("ACCEPTED"),
-		Fingerprint:          stringPtr("xyz789abc123def456"),
+		NetworkTier:          new("PREMIUM"),
+		AllowGlobalAccess:    new(true),
+		AllowPscGlobalAccess: new(true),
+		PscConnectionId:      new(uint64(123)),
+		PscConnectionStatus:  new("ACCEPTED"),
+		Fingerprint:          new("xyz789abc123def456"),
 	}
 
 	// Mock response for list operation using protobuf types
 	globalForwardingRulesList := &computepb.ForwardingRuleList{
-		Kind:     stringPtr("compute#forwardingRuleList"),
-		Id:       stringPtr("projects/" + projectID + "/global/forwardingRules"),
+		Kind:     new("compute#forwardingRuleList"),
+		Id:       new("projects/" + projectID + "/global/forwardingRules"),
 		Items:    []*computepb.ForwardingRule{globalForwardingRule, globalForwardingRule2},
-		SelfLink: stringPtr(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/forwardingRules", projectID)),
+		SelfLink: new(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/forwardingRules", projectID)),
 	}
 
 	sdpItemType := gcpshared.ComputeGlobalForwardingRule
@@ -201,7 +201,7 @@ func TestComputeGlobalForwardingRule(t *testing.T) {
 		// Test labels - check if labels exist before testing
 		labels, err := sdpItem.GetAttributes().Get("labels")
 		if err == nil {
-			labelsMap, ok := labels.(map[string]interface{})
+			labelsMap, ok := labels.(map[string]any)
 			if !ok {
 				t.Fatalf("Expected labels to be a map[string]interface{}, got %T", labels)
 			}
@@ -295,7 +295,7 @@ func TestComputeGlobalForwardingRule(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/global/forwardingRules/%s", projectID, forwardingRuleName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Not found"},
+				Body:       map[string]any{"error": "Not found"},
 			},
 		}
 
@@ -314,8 +314,8 @@ func TestComputeGlobalForwardingRule(t *testing.T) {
 	t.Run("EmptyList", func(t *testing.T) {
 		// Test with empty list response using protobuf types
 		emptyListResponse := &computepb.ForwardingRuleList{
-			Kind:  stringPtr("compute#forwardingRuleList"),
-			Id:    stringPtr("projects/" + projectID + "/global/forwardingRules"),
+			Kind:  new("compute#forwardingRuleList"),
+			Id:    new("projects/" + projectID + "/global/forwardingRules"),
 			Items: []*computepb.ForwardingRule{},
 		}
 

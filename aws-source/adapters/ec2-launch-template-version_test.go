@@ -47,48 +47,48 @@ func TestLaunchTemplateVersionOutputMapper(t *testing.T) {
 	output := &ec2.DescribeLaunchTemplateVersionsOutput{
 		LaunchTemplateVersions: []types.LaunchTemplateVersion{
 			{
-				LaunchTemplateId:   PtrString("lt-015547202038ae102"),
-				LaunchTemplateName: PtrString("test"),
-				VersionNumber:      PtrInt64(1),
-				CreateTime:         PtrTime(time.Now()),
-				CreatedBy:          PtrString("arn:aws:sts::052392120703:assumed-role/AWSReservedSSO_AWSAdministratorAccess_c1c3c9c54821c68a/dylan@overmind.tech"),
-				DefaultVersion:     PtrBool(true),
+				LaunchTemplateId:   new("lt-015547202038ae102"),
+				LaunchTemplateName: new("test"),
+				VersionNumber:      new(int64(1)),
+				CreateTime:         new(time.Now()),
+				CreatedBy:          new("arn:aws:sts::052392120703:assumed-role/AWSReservedSSO_AWSAdministratorAccess_c1c3c9c54821c68a/dylan@overmind.tech"),
+				DefaultVersion:     new(true),
 				LaunchTemplateData: &types.ResponseLaunchTemplateData{
 					NetworkInterfaces: []types.LaunchTemplateInstanceNetworkInterfaceSpecification{
 						{
 							Ipv6Addresses: []types.InstanceIpv6Address{
 								{
-									Ipv6Address: PtrString("ipv6"),
+									Ipv6Address: new("ipv6"),
 								},
 							},
-							NetworkInterfaceId: PtrString("networkInterface"),
+							NetworkInterfaceId: new("networkInterface"),
 							PrivateIpAddresses: []types.PrivateIpAddressSpecification{
 								{
-									Primary:          PtrBool(true),
-									PrivateIpAddress: PtrString("ip"),
+									Primary:          new(true),
+									PrivateIpAddress: new("ip"),
 								},
 							},
-							SubnetId:    PtrString("subnet"),
-							DeviceIndex: PtrInt32(0),
+							SubnetId:    new("subnet"),
+							DeviceIndex: new(int32(0)),
 							Groups: []string{
 								"sg-094e151c9fc5da181",
 							},
 						},
 					},
-					ImageId:      PtrString("ami-084e8c05825742534"),
+					ImageId:      new("ami-084e8c05825742534"),
 					InstanceType: types.InstanceTypeT1Micro,
-					KeyName:      PtrString("dylan.ratcliffe"),
+					KeyName:      new("dylan.ratcliffe"),
 					BlockDeviceMappings: []types.LaunchTemplateBlockDeviceMapping{
 						{
 							Ebs: &types.LaunchTemplateEbsBlockDevice{
-								SnapshotId: PtrString("snap"),
+								SnapshotId: new("snap"),
 							},
 						},
 					},
 					CapacityReservationSpecification: &types.LaunchTemplateCapacityReservationSpecificationResponse{
 						CapacityReservationPreference: types.CapacityReservationPreferenceNone,
 						CapacityReservationTarget: &types.CapacityReservationTargetResponse{
-							CapacityReservationId: PtrString("cap"),
+							CapacityReservationId: new("cap"),
 						},
 					},
 					CpuOptions:                   &types.LaunchTemplateCpuOptions{},
@@ -97,9 +97,9 @@ func TestLaunchTemplateVersionOutputMapper(t *testing.T) {
 					EnclaveOptions:               &types.LaunchTemplateEnclaveOptions{},
 					ElasticInferenceAccelerators: []types.LaunchTemplateElasticInferenceAcceleratorResponse{},
 					Placement: &types.LaunchTemplatePlacement{
-						AvailabilityZone: PtrString("foo"),
-						GroupId:          PtrString("placement"),
-						HostId:           PtrString("host"),
+						AvailabilityZone: new("foo"),
+						GroupId:          new("placement"),
+						HostId:           new("host"),
 					},
 					SecurityGroupIds: []string{
 						"secGroup",

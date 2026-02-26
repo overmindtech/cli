@@ -10,7 +10,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/api/iterator"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -150,26 +149,26 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 			t.Run("VersionsWithInstanceTemplates", func(t *testing.T) {
 				// Create IGM with versions array containing multiple templates
 				igm := &computepb.InstanceGroupManager{
-					Name: ptr.To("test-instance-group-manager"),
+					Name: new("test-instance-group-manager"),
 					Status: &computepb.InstanceGroupManagerStatus{
-						IsStable: ptr.To(true),
+						IsStable: new(true),
 					},
 					Versions: []*computepb.InstanceGroupManagerVersion{
 						{
-							Name:             ptr.To("canary"),
-							InstanceTemplate: ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/global/instanceTemplates/canary-template"),
+							Name:             new("canary"),
+							InstanceTemplate: new("https://www.googleapis.com/compute/v1/projects/test-project-id/global/instanceTemplates/canary-template"),
 						},
 						{
-							Name:             ptr.To("stable"),
-							InstanceTemplate: ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/instanceTemplates/stable-template"),
+							Name:             new("stable"),
+							InstanceTemplate: new("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/instanceTemplates/stable-template"),
 						},
 					},
-					InstanceGroup: ptr.To("projects/test-project-id/zones/us-central1-a/instanceGroups/test-group"),
+					InstanceGroup: new("projects/test-project-id/zones/us-central1-a/instanceGroups/test-group"),
 					TargetPools: []string{
 						"https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/targetPools/test-pool",
 					},
 					ResourcePolicies: &computepb.InstanceGroupManagerResourcePolicies{
-						WorkloadPolicy: ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/resourcePolicies/test-policy"),
+						WorkloadPolicy: new("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/resourcePolicies/test-policy"),
 					},
 				}
 
@@ -223,24 +222,24 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 			t.Run("AutoHealingPoliciesWithHealthCheck", func(t *testing.T) {
 				// Create IGM with auto-healing policy containing health check
 				igm := &computepb.InstanceGroupManager{
-					Name: ptr.To("test-instance-group-manager"),
+					Name: new("test-instance-group-manager"),
 					Status: &computepb.InstanceGroupManagerStatus{
-						IsStable: ptr.To(true),
+						IsStable: new(true),
 					},
-					Zone:             ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/zones/us-central1-a"),
-					InstanceTemplate: ptr.To(instanceTemplateName),
-					InstanceGroup:    ptr.To("projects/test-project-id/zones/us-central1-a/instanceGroups/test-group"),
+					Zone:             new("https://www.googleapis.com/compute/v1/projects/test-project-id/zones/us-central1-a"),
+					InstanceTemplate: new(instanceTemplateName),
+					InstanceGroup:    new("projects/test-project-id/zones/us-central1-a/instanceGroups/test-group"),
 					AutoHealingPolicies: []*computepb.InstanceGroupManagerAutoHealingPolicy{
 						{
-							HealthCheck:     ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/global/healthChecks/test-health-check"),
-							InitialDelaySec: ptr.To[int32](300),
+							HealthCheck:     new("https://www.googleapis.com/compute/v1/projects/test-project-id/global/healthChecks/test-health-check"),
+							InitialDelaySec: new(int32(300)),
 						},
 					},
 					TargetPools: []string{
 						"https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/targetPools/test-pool",
 					},
 					ResourcePolicies: &computepb.InstanceGroupManagerResourcePolicies{
-						WorkloadPolicy: ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/resourcePolicies/test-policy"),
+						WorkloadPolicy: new("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/resourcePolicies/test-policy"),
 					},
 				}
 
@@ -500,18 +499,18 @@ func TestComputeInstanceGroupManager(t *testing.T) {
 
 func createInstanceGroupManager(name string, isStable bool, instanceTemplate string) *computepb.InstanceGroupManager {
 	return &computepb.InstanceGroupManager{
-		Name: ptr.To(name),
+		Name: new(name),
 		Status: &computepb.InstanceGroupManagerStatus{
-			IsStable: ptr.To(isStable),
+			IsStable: new(isStable),
 		},
-		Zone:             ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/zones/us-central1-a"),
-		InstanceTemplate: ptr.To(instanceTemplate),
-		InstanceGroup:    ptr.To("projects/test-project-id/zones/us-central1-a/instanceGroups/test-group"),
+		Zone:             new("https://www.googleapis.com/compute/v1/projects/test-project-id/zones/us-central1-a"),
+		InstanceTemplate: new(instanceTemplate),
+		InstanceGroup:    new("projects/test-project-id/zones/us-central1-a/instanceGroups/test-group"),
 		TargetPools: []string{
 			"https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/targetPools/test-pool",
 		},
 		ResourcePolicies: &computepb.InstanceGroupManagerResourcePolicies{
-			WorkloadPolicy: ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/resourcePolicies/test-policy"),
+			WorkloadPolicy: new("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/resourcePolicies/test-policy"),
 		},
 	}
 }

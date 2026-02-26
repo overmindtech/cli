@@ -13,21 +13,21 @@ import (
 
 func (t TestCloudFrontClient) GetStreamingDistribution(ctx context.Context, params *cloudfront.GetStreamingDistributionInput, optFns ...func(*cloudfront.Options)) (*cloudfront.GetStreamingDistributionOutput, error) {
 	return &cloudfront.GetStreamingDistributionOutput{
-		ETag: PtrString("E2QWRUHAPOMQZL"),
+		ETag: new("E2QWRUHAPOMQZL"),
 		StreamingDistribution: &types.StreamingDistribution{
-			ARN:              PtrString("arn:aws:cloudfront::123456789012:streaming-distribution/EDFDVBD632BHDS5"),
-			DomainName:       PtrString("d111111abcdef8.cloudfront.net"), // link
-			Id:               PtrString("EDFDVBD632BHDS5"),
-			Status:           PtrString("Deployed"), // health
-			LastModifiedTime: PtrTime(time.Now()),
+			ARN:              new("arn:aws:cloudfront::123456789012:streaming-distribution/EDFDVBD632BHDS5"),
+			DomainName:       new("d111111abcdef8.cloudfront.net"), // link
+			Id:               new("EDFDVBD632BHDS5"),
+			Status:           new("Deployed"), // health
+			LastModifiedTime: new(time.Now()),
 			ActiveTrustedSigners: &types.ActiveTrustedSigners{
-				Enabled:  PtrBool(true),
-				Quantity: PtrInt32(1),
+				Enabled:  new(true),
+				Quantity: new(int32(1)),
 				Items: []types.Signer{
 					{
-						AwsAccountNumber: PtrString("123456789012"),
+						AwsAccountNumber: new("123456789012"),
 						KeyPairIds: &types.KeyPairIds{
-							Quantity: PtrInt32(1),
+							Quantity: new(int32(1)),
 							Items: []string{
 								"APKAJDGKZRVEXAMPLE",
 							},
@@ -36,30 +36,30 @@ func (t TestCloudFrontClient) GetStreamingDistribution(ctx context.Context, para
 				},
 			},
 			StreamingDistributionConfig: &types.StreamingDistributionConfig{
-				CallerReference: PtrString("test"),
-				Comment:         PtrString("test"),
-				Enabled:         PtrBool(true),
+				CallerReference: new("test"),
+				Comment:         new("test"),
+				Enabled:         new(true),
 				S3Origin: &types.S3Origin{
-					DomainName:           PtrString("myawsbucket.s3.amazonaws.com"),                     // link
-					OriginAccessIdentity: PtrString("origin-access-identity/cloudfront/E127EXAMPLE51Z"), // link
+					DomainName:           new("myawsbucket.s3.amazonaws.com"),                     // link
+					OriginAccessIdentity: new("origin-access-identity/cloudfront/E127EXAMPLE51Z"), // link
 				},
 				TrustedSigners: &types.TrustedSigners{
-					Enabled:  PtrBool(true),
-					Quantity: PtrInt32(1),
+					Enabled:  new(true),
+					Quantity: new(int32(1)),
 					Items: []string{
 						"self",
 					},
 				},
 				Aliases: &types.Aliases{
-					Quantity: PtrInt32(1),
+					Quantity: new(int32(1)),
 					Items: []string{
 						"example.com", // link
 					},
 				},
 				Logging: &types.StreamingLoggingConfig{
-					Bucket:  PtrString("myawslogbucket.s3.amazonaws.com"), // link
-					Enabled: PtrBool(true),
-					Prefix:  PtrString("myprefix"),
+					Bucket:  new("myawslogbucket.s3.amazonaws.com"), // link
+					Enabled: new(true),
+					Prefix:  new("myprefix"),
 				},
 				PriceClass: types.PriceClassPriceClassAll,
 			},
@@ -70,10 +70,10 @@ func (t TestCloudFrontClient) GetStreamingDistribution(ctx context.Context, para
 func (t TestCloudFrontClient) ListStreamingDistributions(ctx context.Context, params *cloudfront.ListStreamingDistributionsInput, optFns ...func(*cloudfront.Options)) (*cloudfront.ListStreamingDistributionsOutput, error) {
 	return &cloudfront.ListStreamingDistributionsOutput{
 		StreamingDistributionList: &types.StreamingDistributionList{
-			IsTruncated: PtrBool(false),
+			IsTruncated: new(false),
 			Items: []types.StreamingDistributionSummary{
 				{
-					Id: PtrString("test-id"),
+					Id: new("test-id"),
 				},
 			},
 		},

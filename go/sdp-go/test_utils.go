@@ -15,7 +15,7 @@ import (
 
 type ResponseMessage struct {
 	Subject string
-	V       interface{}
+	V       any
 }
 
 // TestConnection Used to mock a NATS connection for testing
@@ -140,7 +140,7 @@ func (r *TestConnection) subjectToRegexp(subject string) *regexp.Regexp {
 func (t *TestConnection) RequestMsg(ctx context.Context, msg *nats.Msg) (*nats.Msg, error) {
 	replySubject := randSeq(10)
 	msg.Reply = replySubject
-	replies := make(chan interface{}, 128)
+	replies := make(chan any, 128)
 
 	// Subscribe to the reply subject
 	_, err := t.Subscribe(replySubject, func(msg *nats.Msg) {

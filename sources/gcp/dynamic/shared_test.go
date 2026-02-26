@@ -22,7 +22,7 @@ func Test_externalToSDP(t *testing.T) {
 	type args struct {
 		location       gcpshared.LocationInfo
 		uniqueAttrKeys []string
-		resp           map[string]interface{}
+		resp           map[string]any
 		sdpAssetType   shared.ItemType
 		nameSelector   string
 	}
@@ -38,9 +38,9 @@ func Test_externalToSDP(t *testing.T) {
 			args: args{
 				location:       testLocation,
 				uniqueAttrKeys: []string{"projects", "locations", "instances"},
-				resp: map[string]interface{}{
+				resp: map[string]any{
 					"name":   "projects/test-project/locations/us-central1/instances/instance-1",
-					"labels": map[string]interface{}{"env": "prod"},
+					"labels": map[string]any{"env": "prod"},
 					"foo":    "bar",
 				},
 				sdpAssetType: gcpshared.ComputeInstance,
@@ -67,10 +67,10 @@ func Test_externalToSDP(t *testing.T) {
 			args: args{
 				location:       testLocation,
 				uniqueAttrKeys: []string{"projects", "locations", "instances"},
-				resp: map[string]interface{}{
+				resp: map[string]any{
 					// There is name, but it does not include uniqueAttrKeys, expected to use the name as is.
 					"name":   "instance-1",
-					"labels": map[string]interface{}{"env": "prod"},
+					"labels": map[string]any{"env": "prod"},
 					"foo":    "bar",
 				},
 				sdpAssetType: gcpshared.ComputeInstance,
@@ -97,8 +97,8 @@ func Test_externalToSDP(t *testing.T) {
 			args: args{
 				location:       testLocation,
 				uniqueAttrKeys: []string{"projects", "locations", "instances"},
-				resp: map[string]interface{}{
-					"labels": map[string]interface{}{"env": "prod"},
+				resp: map[string]any{
+					"labels": map[string]any{"env": "prod"},
 					"foo":    "bar",
 				},
 				sdpAssetType: gcpshared.ComputeInstance,
@@ -111,9 +111,9 @@ func Test_externalToSDP(t *testing.T) {
 			args: args{
 				location:       testLocation,
 				uniqueAttrKeys: []string{"projects", "locations", "instances"},
-				resp: map[string]interface{}{
+				resp: map[string]any{
 					"instanceName": "instance-1",
-					"labels":       map[string]interface{}{"env": "prod"},
+					"labels":       map[string]any{"env": "prod"},
 					"foo":          "bar",
 				},
 				sdpAssetType: gcpshared.ComputeInstance,
@@ -141,7 +141,7 @@ func Test_externalToSDP(t *testing.T) {
 			args: args{
 				location:       testLocation,
 				uniqueAttrKeys: []string{"projects", "locations", "instances"},
-				resp: map[string]interface{}{
+				resp: map[string]any{
 					"name": "projects/test-project/locations/us-central1/instances/instance-2",
 					"foo":  "baz",
 				},

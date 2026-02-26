@@ -23,7 +23,7 @@ func TestCloudKMSCryptoKey(t *testing.T) {
 		defer cache.Clear()
 
 		// Pre-populate cache with a CryptoKey item
-		attrs, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+		attrs, _ := sdp.ToAttributesViaJson(map[string]any{
 			"name":       "projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key",
 			"uniqueAttr": "global|test-keyring|test-key",
 		})
@@ -104,13 +104,13 @@ func TestCloudKMSCryptoKey(t *testing.T) {
 		defer cache.Clear()
 
 		// Pre-populate cache with CryptoKey items under SEARCH cache key (by keyRing)
-		attrs1, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+		attrs1, _ := sdp.ToAttributesViaJson(map[string]any{
 			"name":       "projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key-1",
 			"uniqueAttr": "global|test-keyring|test-key-1",
 		})
 		_ = attrs1.Set("uniqueAttr", "global|test-keyring|test-key-1")
 
-		attrs2, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+		attrs2, _ := sdp.ToAttributesViaJson(map[string]any{
 			"name":       "projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key-2",
 			"uniqueAttr": "global|test-keyring|test-key-2",
 		})
@@ -238,7 +238,7 @@ func TestCloudKMSCryptoKey(t *testing.T) {
 
 		// Pre-populate cache with a specific CryptoKey item
 		// Note: Terraform queries with full path are converted to GET operations by the adapter framework
-		attrs, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+		attrs, _ := sdp.ToAttributesViaJson(map[string]any{
 			"name":       "projects/test-project-id/locations/us-central1/keyRings/my-keyring/cryptoKeys/my-key-1",
 			"uniqueAttr": "us-central1|my-keyring|my-key-1",
 		})
@@ -293,13 +293,13 @@ func TestCloudKMSCryptoKey(t *testing.T) {
 		defer cache.Clear()
 
 		// Pre-populate cache with CryptoKey items
-		attrs1, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+		attrs1, _ := sdp.ToAttributesViaJson(map[string]any{
 			"name":       "projects/test-project-id/locations/us-central1/keyRings/my-keyring/cryptoKeys/my-key-1",
 			"uniqueAttr": "us-central1|my-keyring|my-key-1",
 		})
 		_ = attrs1.Set("uniqueAttr", "us-central1|my-keyring|my-key-1")
 
-		attrs2, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+		attrs2, _ := sdp.ToAttributesViaJson(map[string]any{
 			"name":       "projects/test-project-id/locations/us-central1/keyRings/my-keyring/cryptoKeys/my-key-2",
 			"uniqueAttr": "us-central1|my-keyring|my-key-2",
 		})
@@ -375,7 +375,7 @@ func TestCloudKMSCryptoKey(t *testing.T) {
 		defer cache.Clear()
 
 		// Pre-populate cache with a CryptoKey item with linked queries
-		attrs, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+		attrs, _ := sdp.ToAttributesViaJson(map[string]any{
 			"name":       "projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key",
 			"uniqueAttr": "global|test-keyring|test-key",
 		})

@@ -12,7 +12,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -247,10 +246,10 @@ func createCapacityReservationGroup(ctx context.Context, client *armcompute.Capa
 	}
 
 	_, err = client.CreateOrUpdate(ctx, resourceGroupName, groupName, armcompute.CapacityReservationGroup{
-		Location: ptr.To(location),
+		Location: new(location),
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
-			"test":    ptr.To("compute-capacity-reservation-group"),
+			"purpose": new("overmind-integration-tests"),
+			"test":    new("compute-capacity-reservation-group"),
 		},
 	}, nil)
 	if err != nil {

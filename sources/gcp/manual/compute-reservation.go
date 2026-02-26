@@ -8,7 +8,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/sourcegraph/conc/pool"
 	"google.golang.org/api/iterator"
-	"google.golang.org/protobuf/proto"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -178,7 +177,7 @@ func (c computeReservationWrapper) listAggregatedStream(ctx context.Context, str
 		p.Go(func(ctx context.Context) error {
 			it := c.client.AggregatedList(ctx, &computepb.AggregatedListReservationsRequest{
 				Project:              projectID,
-				ReturnPartialSuccess: proto.Bool(true), // Handle partial failures gracefully
+				ReturnPartialSuccess: new(true), // Handle partial failures gracefully
 			})
 
 			for {

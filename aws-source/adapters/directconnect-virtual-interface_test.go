@@ -17,14 +17,14 @@ func TestVirtualInterfaceOutputMapper(t *testing.T) {
 	output := &directconnect.DescribeVirtualInterfacesOutput{
 		VirtualInterfaces: []types.VirtualInterface{
 			{
-				VirtualInterfaceId:     PtrString("dxvif-ffhhk74f"),
-				ConnectionId:           PtrString("dxcon-fguhmqlc"),
+				VirtualInterfaceId:     new("dxvif-ffhhk74f"),
+				ConnectionId:           new("dxcon-fguhmqlc"),
 				VirtualInterfaceState:  "verifying",
-				CustomerAddress:        PtrString("192.168.1.2/30"),
-				AmazonAddress:          PtrString("192.168.1.1/30"),
-				VirtualInterfaceType:   PtrString("private"),
-				VirtualInterfaceName:   PtrString("PrivateVirtualInterface"),
-				DirectConnectGatewayId: PtrString("cf68415c-f4ae-48f2-87a7-3b52cexample"),
+				CustomerAddress:        new("192.168.1.2/30"),
+				AmazonAddress:          new("192.168.1.1/30"),
+				VirtualInterfaceType:   new("private"),
+				VirtualInterfaceName:   new("PrivateVirtualInterface"),
+				DirectConnectGatewayId: new("cf68415c-f4ae-48f2-87a7-3b52cexample"),
 			},
 		},
 	}

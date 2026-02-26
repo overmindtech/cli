@@ -6,7 +6,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	"go.uber.org/mock/gomock"
 
@@ -251,9 +250,9 @@ func TestComputeAvailabilitySet(t *testing.T) {
 		avSet1 := createAzureAvailabilitySet("test-avset-1")
 		avSetNilName := &armcompute.AvailabilitySet{
 			Name:     nil, // nil name should be skipped
-			Location: to.Ptr("eastus"),
+			Location: new("eastus"),
 			Tags: map[string]*string{
-				"env": to.Ptr("test"),
+				"env": new("test"),
 			},
 		}
 
@@ -324,24 +323,24 @@ func TestComputeAvailabilitySet(t *testing.T) {
 // createAzureAvailabilitySet creates a mock Azure Availability Set for testing
 func createAzureAvailabilitySet(avSetName string) *armcompute.AvailabilitySet {
 	return &armcompute.AvailabilitySet{
-		Name:     to.Ptr(avSetName),
-		Location: to.Ptr("eastus"),
+		Name:     new(avSetName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env":     to.Ptr("test"),
-			"project": to.Ptr("testing"),
+			"env":     new("test"),
+			"project": new("testing"),
 		},
 		Properties: &armcompute.AvailabilitySetProperties{
-			PlatformFaultDomainCount:  to.Ptr(int32(2)),
-			PlatformUpdateDomainCount: to.Ptr(int32(5)),
+			PlatformFaultDomainCount:  new(int32(2)),
+			PlatformUpdateDomainCount: new(int32(5)),
 			ProximityPlacementGroup: &armcompute.SubResource{
-				ID: to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Compute/proximityPlacementGroups/test-ppg"),
+				ID: new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Compute/proximityPlacementGroups/test-ppg"),
 			},
 			VirtualMachines: []*armcompute.SubResource{
 				{
-					ID: to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines/test-vm-1"),
+					ID: new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines/test-vm-1"),
 				},
 				{
-					ID: to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines/test-vm-2"),
+					ID: new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Compute/virtualMachines/test-vm-2"),
 				},
 			},
 		},
@@ -352,20 +351,20 @@ func createAzureAvailabilitySet(avSetName string) *armcompute.AvailabilitySet {
 // with links to resources in different resource groups
 func createAzureAvailabilitySetWithCrossResourceGroupLinks(avSetName, subscriptionID string) *armcompute.AvailabilitySet {
 	return &armcompute.AvailabilitySet{
-		Name:     to.Ptr(avSetName),
-		Location: to.Ptr("eastus"),
+		Name:     new(avSetName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armcompute.AvailabilitySetProperties{
-			PlatformFaultDomainCount:  to.Ptr(int32(2)),
-			PlatformUpdateDomainCount: to.Ptr(int32(5)),
+			PlatformFaultDomainCount:  new(int32(2)),
+			PlatformUpdateDomainCount: new(int32(5)),
 			ProximityPlacementGroup: &armcompute.SubResource{
-				ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/other-rg/providers/Microsoft.Compute/proximityPlacementGroups/test-ppg"),
+				ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/other-rg/providers/Microsoft.Compute/proximityPlacementGroups/test-ppg"),
 			},
 			VirtualMachines: []*armcompute.SubResource{
 				{
-					ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/vm-rg/providers/Microsoft.Compute/virtualMachines/test-vm"),
+					ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/vm-rg/providers/Microsoft.Compute/virtualMachines/test-vm"),
 				},
 			},
 		},
@@ -375,14 +374,14 @@ func createAzureAvailabilitySetWithCrossResourceGroupLinks(avSetName, subscripti
 // createAzureAvailabilitySetWithoutLinks creates a mock Availability Set without any linked resources
 func createAzureAvailabilitySetWithoutLinks(avSetName string) *armcompute.AvailabilitySet {
 	return &armcompute.AvailabilitySet{
-		Name:     to.Ptr(avSetName),
-		Location: to.Ptr("eastus"),
+		Name:     new(avSetName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armcompute.AvailabilitySetProperties{
-			PlatformFaultDomainCount:  to.Ptr(int32(2)),
-			PlatformUpdateDomainCount: to.Ptr(int32(5)),
+			PlatformFaultDomainCount:  new(int32(2)),
+			PlatformUpdateDomainCount: new(int32(5)),
 			// No ProximityPlacementGroup
 			// No VirtualMachines
 		},

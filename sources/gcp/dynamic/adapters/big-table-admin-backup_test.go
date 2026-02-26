@@ -130,7 +130,7 @@ func TestBigTableAdminBackup(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/clusters/%s/backups/%s", projectID, instanceName, clusterName, backupID): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Backup not found"},
+				Body:       map[string]any{"error": "Backup not found"},
 			},
 		}
 

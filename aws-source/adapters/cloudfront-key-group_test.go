@@ -10,15 +10,15 @@ import (
 
 func TestKeyGroupItemMapper(t *testing.T) {
 	group := types.KeyGroup{
-		Id: PtrString("test-id"),
+		Id: new("test-id"),
 		KeyGroupConfig: &types.KeyGroupConfig{
 			Items: []string{
 				"some-identity",
 			},
-			Name:    PtrString("test-name"),
-			Comment: PtrString("test-comment"),
+			Name:    new("test-name"),
+			Comment: new("test-comment"),
 		},
-		LastModifiedTime: PtrTime(time.Now()),
+		LastModifiedTime: new(time.Now()),
 	}
 
 	item, err := KeyGroupItemMapper("", "test", &group)

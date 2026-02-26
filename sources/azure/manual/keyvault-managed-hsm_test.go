@@ -6,7 +6,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault/v2"
 	"go.uber.org/mock/gomock"
 
@@ -203,7 +202,7 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 		hsm := &armkeyvault.ManagedHsm{
 			Name: nil, // No name field
 			Properties: &armkeyvault.ManagedHsmProperties{
-				TenantID: to.Ptr("test-tenant-id"),
+				TenantID: new("test-tenant-id"),
 			},
 		}
 
@@ -325,7 +324,7 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 		hsm2 := &armkeyvault.ManagedHsm{
 			Name: nil, // This should be skipped
 			Properties: &armkeyvault.ManagedHsmProperties{
-				TenantID: to.Ptr("test-tenant-id"),
+				TenantID: new("test-tenant-id"),
 			},
 		}
 		hsm3 := createAzureManagedHSM("test-managed-hsm-3", subscriptionID, resourceGroup)
@@ -480,7 +479,7 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 		hsm2 := &armkeyvault.ManagedHsm{
 			Name: nil, // This should be skipped
 			Properties: &armkeyvault.ManagedHsmProperties{
-				TenantID: to.Ptr("test-tenant-id"),
+				TenantID: new("test-tenant-id"),
 			},
 		}
 		hsm3 := createAzureManagedHSM("test-managed-hsm-3", subscriptionID, resourceGroup)
@@ -604,30 +603,30 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 // createAzureManagedHSM creates a mock Azure Managed HSM with linked resources
 func createAzureManagedHSM(hsmName, subscriptionID, resourceGroup string) *armkeyvault.ManagedHsm {
 	return &armkeyvault.ManagedHsm{
-		Name:     to.Ptr(hsmName),
-		Location: to.Ptr("eastus"),
+		Name:     new(hsmName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env":     to.Ptr("test"),
-			"project": to.Ptr("testing"),
+			"env":     new("test"),
+			"project": new("testing"),
 		},
 		Properties: &armkeyvault.ManagedHsmProperties{
-			TenantID: to.Ptr("test-tenant-id"),
-			HsmURI:   to.Ptr("https://" + hsmName + ".managedhsm.azure.net"),
+			TenantID: new("test-tenant-id"),
+			HsmURI:   new("https://" + hsmName + ".managedhsm.azure.net"),
 			// Private Endpoint Connections (ID is the connection resource ID for child resource linking)
 			PrivateEndpointConnections: []*armkeyvault.MHSMPrivateEndpointConnectionItem{
 				{
-					ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.KeyVault/managedHSMs/" + hsmName + "/privateEndpointConnections/test-pec-1"),
+					ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.KeyVault/managedHSMs/" + hsmName + "/privateEndpointConnections/test-pec-1"),
 					Properties: &armkeyvault.MHSMPrivateEndpointConnectionProperties{
 						PrivateEndpoint: &armkeyvault.MHSMPrivateEndpoint{
-							ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/privateEndpoints/test-private-endpoint"),
+							ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/privateEndpoints/test-private-endpoint"),
 						},
 					},
 				},
 				{
-					ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.KeyVault/managedHSMs/" + hsmName + "/privateEndpointConnections/test-pec-2"),
+					ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.KeyVault/managedHSMs/" + hsmName + "/privateEndpointConnections/test-pec-2"),
 					Properties: &armkeyvault.MHSMPrivateEndpointConnectionProperties{
 						PrivateEndpoint: &armkeyvault.MHSMPrivateEndpoint{
-							ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/different-rg/providers/Microsoft.Network/privateEndpoints/test-private-endpoint-diff-rg"),
+							ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/different-rg/providers/Microsoft.Network/privateEndpoints/test-private-endpoint-diff-rg"),
 						},
 					},
 				},
@@ -636,25 +635,25 @@ func createAzureManagedHSM(hsmName, subscriptionID, resourceGroup string) *armke
 			NetworkACLs: &armkeyvault.MHSMNetworkRuleSet{
 				VirtualNetworkRules: []*armkeyvault.MHSMVirtualNetworkRule{
 					{
-						ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/test-subnet"),
+						ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/test-subnet"),
 					},
 					{
-						ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/different-rg/providers/Microsoft.Network/virtualNetworks/test-vnet-diff-rg/subnets/test-subnet-diff-rg"),
+						ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/different-rg/providers/Microsoft.Network/virtualNetworks/test-vnet-diff-rg/subnets/test-subnet-diff-rg"),
 					},
 				},
 				IPRules: []*armkeyvault.MHSMIPRule{
 					{
-						Value: to.Ptr("192.168.1.1"),
+						Value: new("192.168.1.1"),
 					},
 					{
-						Value: to.Ptr("10.0.0.0/24"),
+						Value: new("10.0.0.0/24"),
 					},
 				},
 			},
 		},
 		// User Assigned Identities
 		Identity: &armkeyvault.ManagedServiceIdentity{
-			Type: to.Ptr(armkeyvault.ManagedServiceIdentityTypeUserAssigned),
+			Type: new(armkeyvault.ManagedServiceIdentityTypeUserAssigned),
 			UserAssignedIdentities: map[string]*armkeyvault.UserAssignedIdentity{
 				"/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.ManagedIdentity/userAssignedIdentities/test-identity": {},
 				"/subscriptions/" + subscriptionID + "/resourceGroups/identity-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/test-identity-diff-rg":   {},
@@ -666,13 +665,13 @@ func createAzureManagedHSM(hsmName, subscriptionID, resourceGroup string) *armke
 // createAzureManagedHSMMinimal creates a minimal mock Azure Managed HSM without linked resources
 func createAzureManagedHSMMinimal(hsmName string) *armkeyvault.ManagedHsm {
 	return &armkeyvault.ManagedHsm{
-		Name:     to.Ptr(hsmName),
-		Location: to.Ptr("eastus"),
+		Name:     new(hsmName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armkeyvault.ManagedHsmProperties{
-			TenantID: to.Ptr("test-tenant-id"),
+			TenantID: new("test-tenant-id"),
 		},
 	}
 }
@@ -680,19 +679,19 @@ func createAzureManagedHSMMinimal(hsmName string) *armkeyvault.ManagedHsm {
 // createAzureManagedHSMCrossRG creates a mock Azure Managed HSM with linked resources in different resource groups
 func createAzureManagedHSMCrossRG(hsmName, subscriptionID, resourceGroup string) *armkeyvault.ManagedHsm {
 	return &armkeyvault.ManagedHsm{
-		Name:     to.Ptr(hsmName),
-		Location: to.Ptr("eastus"),
+		Name:     new(hsmName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armkeyvault.ManagedHsmProperties{
-			TenantID: to.Ptr("test-tenant-id"),
+			TenantID: new("test-tenant-id"),
 			// Private Endpoint in different resource group
 			PrivateEndpointConnections: []*armkeyvault.MHSMPrivateEndpointConnectionItem{
 				{
 					Properties: &armkeyvault.MHSMPrivateEndpointConnectionProperties{
 						PrivateEndpoint: &armkeyvault.MHSMPrivateEndpoint{
-							ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/different-rg/providers/Microsoft.Network/privateEndpoints/test-pe-diff-rg"),
+							ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/different-rg/providers/Microsoft.Network/privateEndpoints/test-pe-diff-rg"),
 						},
 					},
 				},
@@ -701,14 +700,14 @@ func createAzureManagedHSMCrossRG(hsmName, subscriptionID, resourceGroup string)
 			NetworkACLs: &armkeyvault.MHSMNetworkRuleSet{
 				VirtualNetworkRules: []*armkeyvault.MHSMVirtualNetworkRule{
 					{
-						ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/different-rg/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/test-subnet"),
+						ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/different-rg/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/test-subnet"),
 					},
 				},
 			},
 		},
 		// User Assigned Identity in different resource group
 		Identity: &armkeyvault.ManagedServiceIdentity{
-			Type: to.Ptr(armkeyvault.ManagedServiceIdentityTypeUserAssigned),
+			Type: new(armkeyvault.ManagedServiceIdentityTypeUserAssigned),
 			UserAssignedIdentities: map[string]*armkeyvault.UserAssignedIdentity{
 				"/subscriptions/" + subscriptionID + "/resourceGroups/identity-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/test-identity-diff-rg": {},
 			},

@@ -42,7 +42,7 @@ func (s *SlowAdapter) Hidden() bool {
 
 func (s *SlowAdapter) Get(ctx context.Context, scope string, query string, ignoreCache bool) (*sdp.Item, error) {
 	end := time.Now().Add(s.QueryDuration)
-	attributes, _ := sdp.ToAttributes(map[string]interface{}{
+	attributes, _ := sdp.ToAttributes(map[string]any{
 		"name": query,
 	})
 

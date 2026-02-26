@@ -55,7 +55,7 @@ func checkVersion(ctx context.Context, currentVersion string) (latestVersion str
 	req.Header.Set("User-Agent", fmt.Sprintf("overmind-cli/%s", currentVersion))
 	req.Header.Set("Accept", "application/vnd.github.v3+json")
 
-	resp, err := client.Do(req)
+	resp, err := client.Do(req) //nolint:gosec // G704: URL is the hardcoded constant githubReleasesURL; no user input reaches the request URL
 	if err != nil {
 		log.WithError(err).Debug("Failed to check for CLI updates")
 		return "", false

@@ -121,7 +121,7 @@ func TestMonitoringCustomDashboard(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://monitoring.googleapis.com/v1/projects/%s/dashboards/%s", projectID, dashboardID): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Dashboard not found"},
+				Body:       map[string]any{"error": "Dashboard not found"},
 			},
 		}
 

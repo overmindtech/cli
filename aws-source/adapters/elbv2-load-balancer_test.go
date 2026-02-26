@@ -15,38 +15,38 @@ func TestLoadBalancerOutputMapper(t *testing.T) {
 	output := elbv2.DescribeLoadBalancersOutput{
 		LoadBalancers: []types.LoadBalancer{
 			{
-				LoadBalancerArn:       PtrString("arn:aws:elasticloadbalancing:eu-west-2:944651592624:loadbalancer/app/ingress/1bf10920c5bd199d"),
-				DNSName:               PtrString("ingress-1285969159.eu-west-2.elb.amazonaws.com"), // link
-				CanonicalHostedZoneId: PtrString("ZHURV8PSTC4K8"),                                  // link
-				CreatedTime:           PtrTime(time.Now()),
-				LoadBalancerName:      PtrString("ingress"),
+				LoadBalancerArn:       new("arn:aws:elasticloadbalancing:eu-west-2:944651592624:loadbalancer/app/ingress/1bf10920c5bd199d"),
+				DNSName:               new("ingress-1285969159.eu-west-2.elb.amazonaws.com"), // link
+				CanonicalHostedZoneId: new("ZHURV8PSTC4K8"),                                  // link
+				CreatedTime:           new(time.Now()),
+				LoadBalancerName:      new("ingress"),
 				Scheme:                types.LoadBalancerSchemeEnumInternetFacing,
-				VpcId:                 PtrString("vpc-0c72199250cd479ea"), // link
+				VpcId:                 new("vpc-0c72199250cd479ea"), // link
 				State: &types.LoadBalancerState{
 					Code:   types.LoadBalancerStateEnumActive,
-					Reason: PtrString("reason"),
+					Reason: new("reason"),
 				},
 				Type: types.LoadBalancerTypeEnumApplication,
 				AvailabilityZones: []types.AvailabilityZone{
 					{
-						ZoneName: PtrString("eu-west-2b"),               // link
-						SubnetId: PtrString("subnet-0960234bbc4edca03"), // link
+						ZoneName: new("eu-west-2b"),               // link
+						SubnetId: new("subnet-0960234bbc4edca03"), // link
 						LoadBalancerAddresses: []types.LoadBalancerAddress{
 							{
-								AllocationId:       PtrString("allocation-id"), // link?
-								IPv6Address:        PtrString(":::1"),          // link
-								IpAddress:          PtrString("1.1.1.1"),       // link
-								PrivateIPv4Address: PtrString("10.0.0.1"),      // link
+								AllocationId:       new("allocation-id"), // link?
+								IPv6Address:        new(":::1"),          // link
+								IpAddress:          new("1.1.1.1"),       // link
+								PrivateIPv4Address: new("10.0.0.1"),      // link
 							},
 						},
-						OutpostId: PtrString("outpost-id"),
+						OutpostId: new("outpost-id"),
 					},
 				},
 				SecurityGroups: []string{
 					"sg-0b21edc8578ea3f93", // link
 				},
 				IpAddressType:         types.IpAddressTypeIpv4,
-				CustomerOwnedIpv4Pool: PtrString("ipv4-pool"), // link
+				CustomerOwnedIpv4Pool: new("ipv4-pool"), // link
 			},
 		},
 	}

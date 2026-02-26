@@ -11,29 +11,29 @@ import (
 )
 
 var testCachePolicy = &types.CachePolicy{
-	Id:               PtrString("test-id"),
-	LastModifiedTime: PtrTime(time.Now()),
+	Id:               new("test-id"),
+	LastModifiedTime: new(time.Now()),
 	CachePolicyConfig: &types.CachePolicyConfig{
-		MinTTL:     PtrInt64(1),
-		Name:       PtrString("test-name"),
-		Comment:    PtrString("test-comment"),
-		DefaultTTL: PtrInt64(1),
-		MaxTTL:     PtrInt64(1),
+		MinTTL:     new(int64(1)),
+		Name:       new("test-name"),
+		Comment:    new("test-comment"),
+		DefaultTTL: new(int64(1)),
+		MaxTTL:     new(int64(1)),
 		ParametersInCacheKeyAndForwardedToOrigin: &types.ParametersInCacheKeyAndForwardedToOrigin{
 			CookiesConfig: &types.CachePolicyCookiesConfig{
 				CookieBehavior: types.CachePolicyCookieBehaviorAll,
 				Cookies: &types.CookieNames{
-					Quantity: PtrInt32(1),
+					Quantity: new(int32(1)),
 					Items: []string{
 						"test-cookie",
 					},
 				},
 			},
-			EnableAcceptEncodingGzip: PtrBool(true),
+			EnableAcceptEncodingGzip: new(true),
 			HeadersConfig: &types.CachePolicyHeadersConfig{
 				HeaderBehavior: types.CachePolicyHeaderBehaviorWhitelist,
 				Headers: &types.Headers{
-					Quantity: PtrInt32(1),
+					Quantity: new(int32(1)),
 					Items: []string{
 						"test-header",
 					},
@@ -42,13 +42,13 @@ var testCachePolicy = &types.CachePolicy{
 			QueryStringsConfig: &types.CachePolicyQueryStringsConfig{
 				QueryStringBehavior: types.CachePolicyQueryStringBehaviorWhitelist,
 				QueryStrings: &types.QueryStringNames{
-					Quantity: PtrInt32(1),
+					Quantity: new(int32(1)),
 					Items: []string{
 						"test-query-string",
 					},
 				},
 			},
-			EnableAcceptEncodingBrotli: PtrBool(true),
+			EnableAcceptEncodingBrotli: new(true),
 		},
 	},
 }

@@ -187,7 +187,7 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 	// we are only running a HEAD request this is unlikely to be a problem
 	tr := &http.Transport{
 		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true, //nolint:gosec // This is fine for a HEAD request
+			InsecureSkipVerify: true, //nolint:gosec // G402 (TLS skip verify): intentional—adapter inspects TLS certificate details via HEAD request, not trusting the content
 		},
 	}
 	client := &http.Client{
@@ -214,7 +214,7 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 
 	var res *http.Response
 
-	res, err = client.Do(req)
+	res, err = client.Do(req) //nolint:gosec // G107 (SSRF): URL is the SDP query target; hostname validated by validateHostname() which blocks link-local/metadata IPs
 
 	if err != nil {
 		err = &sdp.QueryError{
@@ -254,7 +254,7 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 
 	// Convert the attributes from a golang map, to the structure required for
 	// the SDP protocol
-	attributes, err := sdp.ToAttributes(map[string]interface{}{
+	attributes, err := sdp.ToAttributes(map[string]any{
 		"name":             query,
 		"status":           res.StatusCode,
 		"statusString":     res.Status,
@@ -319,7 +319,7 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 			version = "unknown"
 		}
 
-		attributes.Set("tls", map[string]interface{}{
+		attributes.Set("tls", map[string]any{
 			"version":     version,
 			"certificate": CertToName(tlsState.PeerCertificates[0]),
 			"serverName":  tlsState.ServerName,

@@ -115,7 +115,7 @@ func TestPubSubTopic(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://pubsub.googleapis.com/v1/projects/%s/topics/%s", projectID, topicName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Topic not found"},
+				Body:       map[string]any{"error": "Topic not found"},
 			},
 		}
 

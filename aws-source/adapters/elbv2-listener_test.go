@@ -14,17 +14,17 @@ func TestListenerOutputMapper(t *testing.T) {
 	output := elbv2.DescribeListenersOutput{
 		Listeners: []types.Listener{
 			{
-				ListenerArn:     PtrString("arn:aws:elasticloadbalancing:eu-west-2:944651592624:listener/app/ingress/1bf10920c5bd199d/9d28f512be129134"),
-				LoadBalancerArn: PtrString("arn:aws:elasticloadbalancing:eu-west-2:944651592624:loadbalancer/app/ingress/1bf10920c5bd199d"), // link
-				Port:            PtrInt32(443),
+				ListenerArn:     new("arn:aws:elasticloadbalancing:eu-west-2:944651592624:listener/app/ingress/1bf10920c5bd199d/9d28f512be129134"),
+				LoadBalancerArn: new("arn:aws:elasticloadbalancing:eu-west-2:944651592624:loadbalancer/app/ingress/1bf10920c5bd199d"), // link
+				Port:            new(int32(443)),
 				Protocol:        types.ProtocolEnumHttps,
 				Certificates: []types.Certificate{
 					{
-						CertificateArn: PtrString("arn:aws:acm:eu-west-2:944651592624:certificate/acd84d34-fb78-4411-bd8a-43684a3477c5"), // link
-						IsDefault:      PtrBool(true),
+						CertificateArn: new("arn:aws:acm:eu-west-2:944651592624:certificate/acd84d34-fb78-4411-bd8a-43684a3477c5"), // link
+						IsDefault:      new(true),
 					},
 				},
-				SslPolicy: PtrString("ELBSecurityPolicy-2016-08"),
+				SslPolicy: new("ELBSecurityPolicy-2016-08"),
 				AlpnPolicy: []string{
 					"policy1",
 				},

@@ -29,11 +29,11 @@ func (t snsTestClient) ListSubscriptions(context.Context, *sns.ListSubscriptions
 	return &sns.ListSubscriptionsOutput{
 		Subscriptions: []types.Subscription{
 			{
-				Owner:           PtrString("123456789012"),
-				Endpoint:        PtrString("my-email@example.com"),
-				Protocol:        PtrString("email"),
-				TopicArn:        PtrString("arn:aws:sns:us-west-2:123456789012:my-topic"),
-				SubscriptionArn: PtrString("arn:aws:sns:us-west-2:123456789012:my-topic:8a21d249-4329-4871-acc6-7be709c6ea7f"),
+				Owner:           new("123456789012"),
+				Endpoint:        new("my-email@example.com"),
+				Protocol:        new("email"),
+				TopicArn:        new("arn:aws:sns:us-west-2:123456789012:my-topic"),
+				SubscriptionArn: new("arn:aws:sns:us-west-2:123456789012:my-topic:8a21d249-4329-4871-acc6-7be709c6ea7f"),
 			},
 		},
 	}, nil
@@ -42,8 +42,8 @@ func (t snsTestClient) ListSubscriptions(context.Context, *sns.ListSubscriptions
 func (t snsTestClient) ListTagsForResource(context.Context, *sns.ListTagsForResourceInput, ...func(*sns.Options)) (*sns.ListTagsForResourceOutput, error) {
 	return &sns.ListTagsForResourceOutput{
 		Tags: []types.Tag{
-			{Key: PtrString("tag1"), Value: PtrString("value1")},
-			{Key: PtrString("tag2"), Value: PtrString("value2")},
+			{Key: new("tag1"), Value: new("value1")},
+			{Key: new("tag2"), Value: new("value2")},
 		},
 	}, nil
 }
@@ -53,7 +53,7 @@ func TestSNSGetFunc(t *testing.T) {
 	cli := snsTestClient{}
 
 	item, err := getSubsFunc(ctx, cli, "scope", &sns.GetSubscriptionAttributesInput{
-		SubscriptionArn: PtrString("arn:aws:sns:us-west-2:123456789012:my-topic:8a21d249-4329-4871-acc6-7be709c6ea7f"),
+		SubscriptionArn: new("arn:aws:sns:us-west-2:123456789012:my-topic:8a21d249-4329-4871-acc6-7be709c6ea7f"),
 	})
 	if err != nil {
 		t.Fatal(err)

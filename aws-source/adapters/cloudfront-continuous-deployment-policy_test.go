@@ -11,12 +11,12 @@ import (
 
 func TestContinuousDeploymentPolicyItemMapper(t *testing.T) {
 	item, err := continuousDeploymentPolicyItemMapper("", "test", &types.ContinuousDeploymentPolicy{
-		Id:               PtrString("test-id"),
-		LastModifiedTime: PtrTime(time.Now()),
+		Id:               new("test-id"),
+		LastModifiedTime: new(time.Now()),
 		ContinuousDeploymentPolicyConfig: &types.ContinuousDeploymentPolicyConfig{
-			Enabled: PtrBool(true),
+			Enabled: new(true),
 			StagingDistributionDnsNames: &types.StagingDistributionDnsNames{
-				Quantity: PtrInt32(1),
+				Quantity: new(int32(1)),
 				Items: []string{
 					"staging.test.com", // link
 				},
@@ -24,14 +24,14 @@ func TestContinuousDeploymentPolicyItemMapper(t *testing.T) {
 			TrafficConfig: &types.TrafficConfig{
 				Type: types.ContinuousDeploymentPolicyTypeSingleWeight,
 				SingleHeaderConfig: &types.ContinuousDeploymentSingleHeaderConfig{
-					Header: PtrString("test-header"),
-					Value:  PtrString("test-value"),
+					Header: new("test-header"),
+					Value:  new("test-value"),
 				},
 				SingleWeightConfig: &types.ContinuousDeploymentSingleWeightConfig{
-					Weight: PtrFloat32(1),
+					Weight: new(float32(1)),
 					SessionStickinessConfig: &types.SessionStickinessConfig{
-						IdleTTL:    PtrInt32(1),
-						MaximumTTL: PtrInt32(2),
+						IdleTTL:    new(int32(1)),
+						MaximumTTL: new(int32(2)),
 					},
 				},
 			},

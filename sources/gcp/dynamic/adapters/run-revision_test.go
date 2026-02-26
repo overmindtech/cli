@@ -113,7 +113,7 @@ func TestRunRevision(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://run.googleapis.com/v2/projects/%s/locations/%s/services/%s/revisions/%s", projectID, location, serviceName, revisionName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Revision not found"},
+				Body:       map[string]any{"error": "Revision not found"},
 			},
 		}
 

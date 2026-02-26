@@ -146,7 +146,7 @@ func TestDataformRepository(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://dataform.googleapis.com/v1/projects/%s/locations/%s/repositories/%s", projectID, location, repositoryName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Repository not found"},
+				Body:       map[string]any{"error": "Repository not found"},
 			},
 		}
 

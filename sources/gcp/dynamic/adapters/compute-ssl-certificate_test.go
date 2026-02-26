@@ -23,20 +23,20 @@ func TestComputeSSLCertificate(t *testing.T) {
 
 	// Create mock protobuf object
 	certificate := &computepb.SslCertificate{
-		Name:        stringPtr(certificateName),
-		Description: stringPtr("Test SSL Certificate"),
-		Certificate: stringPtr("-----BEGIN CERTIFICATE-----\nMIIC...test certificate data...\n-----END CERTIFICATE-----"),
-		PrivateKey:  stringPtr("-----BEGIN PRIVATE KEY-----\nMIIE...test private key data...\n-----END PRIVATE KEY-----"),
-		SelfLink:    stringPtr(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/sslCertificates/%s", projectID, certificateName)),
+		Name:        new(certificateName),
+		Description: new("Test SSL Certificate"),
+		Certificate: new("-----BEGIN CERTIFICATE-----\nMIIC...test certificate data...\n-----END CERTIFICATE-----"),
+		PrivateKey:  new("-----BEGIN PRIVATE KEY-----\nMIIE...test private key data...\n-----END PRIVATE KEY-----"),
+		SelfLink:    new(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/sslCertificates/%s", projectID, certificateName)),
 	}
 
 	// Create second certificate for list testing
 	certificateName2 := "test-ssl-certificate-2"
 	certificate2 := &computepb.SslCertificate{
-		Name:        stringPtr(certificateName2),
-		Description: stringPtr("Test SSL Certificate 2"),
-		Certificate: stringPtr("-----BEGIN CERTIFICATE-----\nMIIC...test certificate data 2...\n-----END CERTIFICATE-----"),
-		SelfLink:    stringPtr(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/sslCertificates/%s", projectID, certificateName2)),
+		Name:        new(certificateName2),
+		Description: new("Test SSL Certificate 2"),
+		Certificate: new("-----BEGIN CERTIFICATE-----\nMIIC...test certificate data 2...\n-----END CERTIFICATE-----"),
+		SelfLink:    new(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/sslCertificates/%s", projectID, certificateName2)),
 	}
 
 	// Create list response with multiple items
@@ -133,7 +133,7 @@ func TestComputeSSLCertificate(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/global/sslCertificates/%s", projectID, certificateName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "SSL Certificate not found"},
+				Body:       map[string]any{"error": "SSL Certificate not found"},
 			},
 		}
 

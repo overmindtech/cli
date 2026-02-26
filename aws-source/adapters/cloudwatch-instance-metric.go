@@ -121,7 +121,7 @@ func formatMetricValue(metricName string, value float64) string {
 // metricOutputMapper converts CloudWatch GetMetricData output to an SDP item
 func metricOutputMapper(ctx context.Context, client CloudwatchMetricClient, scope string, instanceID string, output *cloudwatch.GetMetricDataOutput) (*sdp.Item, error) {
 	// Build attributes map with instance ID
-	attrsMap := map[string]interface{}{
+	attrsMap := map[string]any{
 		"InstanceId":    instanceID,
 		"PeriodMinutes": 15,
 		"Statistic":     "Average",

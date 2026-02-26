@@ -14,31 +14,31 @@ func TestCapacityReservationFleetOutputMapper(t *testing.T) {
 	output := &ec2.DescribeCapacityReservationFleetsOutput{
 		CapacityReservationFleets: []types.CapacityReservationFleet{
 			{
-				AllocationStrategy:          PtrString("prioritized"),
-				CapacityReservationFleetArn: PtrString("arn:aws:ec2:us-east-1:123456789012:capacity-reservation/fleet/crf-1234567890abcdef0"),
-				CapacityReservationFleetId:  PtrString("crf-1234567890abcdef0"),
-				CreateTime:                  PtrTime(time.Now()),
+				AllocationStrategy:          new("prioritized"),
+				CapacityReservationFleetArn: new("arn:aws:ec2:us-east-1:123456789012:capacity-reservation/fleet/crf-1234567890abcdef0"),
+				CapacityReservationFleetId:  new("crf-1234567890abcdef0"),
+				CreateTime:                  new(time.Now()),
 				EndDate:                     nil,
 				InstanceMatchCriteria:       types.FleetInstanceMatchCriteriaOpen,
 				InstanceTypeSpecifications: []types.FleetCapacityReservation{
 					{
-						AvailabilityZone:      PtrString("us-east-1a"), // link
-						AvailabilityZoneId:    PtrString("use1-az1"),
-						CapacityReservationId: PtrString("cr-1234567890abcdef0"), // link
-						CreateDate:            PtrTime(time.Now()),
-						EbsOptimized:          PtrBool(true),
-						FulfilledCapacity:     PtrFloat64(1),
+						AvailabilityZone:      new("us-east-1a"), // link
+						AvailabilityZoneId:    new("use1-az1"),
+						CapacityReservationId: new("cr-1234567890abcdef0"), // link
+						CreateDate:            new(time.Now()),
+						EbsOptimized:          new(true),
+						FulfilledCapacity:     new(float64(1)),
 						InstancePlatform:      types.CapacityReservationInstancePlatformLinuxUnix,
 						InstanceType:          types.InstanceTypeA12xlarge,
-						Priority:              PtrInt32(1),
-						TotalInstanceCount:    PtrInt32(1),
-						Weight:                PtrFloat64(1),
+						Priority:              new(int32(1)),
+						TotalInstanceCount:    new(int32(1)),
+						Weight:                new(float64(1)),
 					},
 				},
 				State:                  types.CapacityReservationFleetStateActive, // health
 				Tenancy:                types.FleetCapacityReservationTenancyDefault,
-				TotalFulfilledCapacity: PtrFloat64(1),
-				TotalTargetCapacity:    PtrInt32(1),
+				TotalFulfilledCapacity: new(float64(1)),
+				TotalTargetCapacity:    new(int32(1)),
 			},
 		},
 	}

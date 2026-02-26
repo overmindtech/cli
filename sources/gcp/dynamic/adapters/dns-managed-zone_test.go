@@ -156,7 +156,7 @@ func TestDNSManagedZone(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://dns.googleapis.com/dns/v1/projects/%s/managedZones/%s", projectID, zoneName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Managed zone not found"},
+				Body:       map[string]any{"error": "Managed zone not found"},
 			},
 		}
 

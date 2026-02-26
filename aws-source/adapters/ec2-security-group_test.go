@@ -43,30 +43,30 @@ func TestSecurityGroupOutputMapper(t *testing.T) {
 	output := &ec2.DescribeSecurityGroupsOutput{
 		SecurityGroups: []types.SecurityGroup{
 			{
-				Description: PtrString("default VPC security group"),
-				GroupName:   PtrString("default"),
+				Description: new("default VPC security group"),
+				GroupName:   new("default"),
 				IpPermissions: []types.IpPermission{
 					{
-						IpProtocol:    PtrString("-1"),
+						IpProtocol:    new("-1"),
 						IpRanges:      []types.IpRange{},
 						Ipv6Ranges:    []types.Ipv6Range{},
 						PrefixListIds: []types.PrefixListId{},
 						UserIdGroupPairs: []types.UserIdGroupPair{
 							{
-								GroupId: PtrString("sg-094e151c9fc5da181"),
-								UserId:  PtrString("052392120704"),
+								GroupId: new("sg-094e151c9fc5da181"),
+								UserId:  new("052392120704"),
 							},
 						},
 					},
 				},
-				OwnerId: PtrString("052392120703"),
-				GroupId: PtrString("sg-094e151c9fc5da181"),
+				OwnerId: new("052392120703"),
+				GroupId: new("sg-094e151c9fc5da181"),
 				IpPermissionsEgress: []types.IpPermission{
 					{
-						IpProtocol: PtrString("-1"),
+						IpProtocol: new("-1"),
 						IpRanges: []types.IpRange{
 							{
-								CidrIp: PtrString("0.0.0.0/0"),
+								CidrIp: new("0.0.0.0/0"),
 							},
 						},
 						Ipv6Ranges:       []types.Ipv6Range{},
@@ -74,7 +74,7 @@ func TestSecurityGroupOutputMapper(t *testing.T) {
 						UserIdGroupPairs: []types.UserIdGroupPair{},
 					},
 				},
-				VpcId: PtrString("vpc-0d7892e00e573e701"),
+				VpcId: new("vpc-0d7892e00e573e701"),
 			},
 		},
 	}

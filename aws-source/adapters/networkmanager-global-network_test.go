@@ -14,8 +14,8 @@ func TestGlobalNetworkOutputMapper(t *testing.T) {
 	output := networkmanager.DescribeGlobalNetworksOutput{
 		GlobalNetworks: []types.GlobalNetwork{
 			{
-				GlobalNetworkArn: PtrString("arn:aws:networkmanager:eu-west-2:052392120703:networkmanager/global-network/default"),
-				GlobalNetworkId:  PtrString("default"),
+				GlobalNetworkArn: new("arn:aws:networkmanager:eu-west-2:052392120703:networkmanager/global-network/default"),
+				GlobalNetworkId:  new("default"),
 			},
 		},
 	}

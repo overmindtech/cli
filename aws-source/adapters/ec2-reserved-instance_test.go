@@ -42,12 +42,12 @@ func TestReservedInstanceOutputMapper(t *testing.T) {
 	output := &ec2.DescribeReservedInstancesOutput{
 		ReservedInstances: []types.ReservedInstances{
 			{
-				AvailabilityZone:   PtrString("az"),
+				AvailabilityZone:   new("az"),
 				CurrencyCode:       types.CurrencyCodeValuesUsd,
-				Duration:           PtrInt64(100),
-				End:                PtrTime(time.Now()),
-				FixedPrice:         PtrFloat32(1.23),
-				InstanceCount:      PtrInt32(1),
+				Duration:           new(int64(100)),
+				End:                new(time.Now()),
+				FixedPrice:         new(float32(1.23)),
+				InstanceCount:      new(int32(1)),
 				InstanceTenancy:    types.TenancyDedicated,
 				InstanceType:       types.InstanceTypeA14xlarge,
 				OfferingClass:      types.OfferingClassTypeConvertible,
@@ -55,15 +55,15 @@ func TestReservedInstanceOutputMapper(t *testing.T) {
 				ProductDescription: types.RIProductDescription("foo"),
 				RecurringCharges: []types.RecurringCharge{
 					{
-						Amount:    PtrFloat64(1.111),
+						Amount:    new(1.111),
 						Frequency: types.RecurringChargeFrequencyHourly,
 					},
 				},
-				ReservedInstancesId: PtrString("id"),
+				ReservedInstancesId: new("id"),
 				Scope:               types.ScopeAvailabilityZone,
-				Start:               PtrTime(time.Now()),
+				Start:               new(time.Now()),
 				State:               types.ReservedInstanceStateActive,
-				UsagePrice:          PtrFloat32(99.00000001),
+				UsagePrice:          new(float32(99.00000001)),
 			},
 		},
 	}

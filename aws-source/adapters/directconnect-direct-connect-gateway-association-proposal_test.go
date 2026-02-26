@@ -17,27 +17,27 @@ func TestDirectConnectGatewayAssociationProposalOutputMapper(t *testing.T) {
 	output := &directconnect.DescribeDirectConnectGatewayAssociationProposalsOutput{
 		DirectConnectGatewayAssociationProposals: []types.DirectConnectGatewayAssociationProposal{
 			{
-				ProposalId:                       PtrString("c2ede9b4-bbc6-4d33-923c-bc4feEXAMPLE"),
-				DirectConnectGatewayId:           PtrString("5f294f92-bafb-4011-916d-9b0bexample"),
-				DirectConnectGatewayOwnerAccount: PtrString("123456789012"),
+				ProposalId:                       new("c2ede9b4-bbc6-4d33-923c-bc4feEXAMPLE"),
+				DirectConnectGatewayId:           new("5f294f92-bafb-4011-916d-9b0bexample"),
+				DirectConnectGatewayOwnerAccount: new("123456789012"),
 				ProposalState:                    types.DirectConnectGatewayAssociationProposalStateRequested,
 				AssociatedGateway: &types.AssociatedGateway{
-					Id:           PtrString("tgw-02f776b1a7EXAMPLE"),
+					Id:           new("tgw-02f776b1a7EXAMPLE"),
 					Type:         types.GatewayTypeTransitGateway,
-					OwnerAccount: PtrString("111122223333"),
-					Region:       PtrString("us-east-1"),
+					OwnerAccount: new("111122223333"),
+					Region:       new("us-east-1"),
 				},
 				ExistingAllowedPrefixesToDirectConnectGateway: []types.RouteFilterPrefix{
 					{
-						Cidr: PtrString("192.168.2.0/30"),
+						Cidr: new("192.168.2.0/30"),
 					},
 					{
-						Cidr: PtrString("192.168.1.0/30"),
+						Cidr: new("192.168.1.0/30"),
 					},
 				},
 				RequestedAllowedPrefixesToDirectConnectGateway: []types.RouteFilterPrefix{
 					{
-						Cidr: PtrString("192.168.1.0/30"),
+						Cidr: new("192.168.1.0/30"),
 					},
 				},
 			},

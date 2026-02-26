@@ -13,23 +13,23 @@ func (c testNetworkFirewallClient) DescribeFirewallPolicy(ctx context.Context, p
 	now := time.Now()
 	return &networkfirewall.DescribeFirewallPolicyOutput{
 		FirewallPolicyResponse: &types.FirewallPolicyResponse{
-			FirewallPolicyArn:             PtrString("arn:aws:network-firewall:us-east-1:123456789012:stateless-rulegroup/aws-network-firewall-DefaultStatelessRuleGroup-1J3Z3W2ZQXV3"),
-			FirewallPolicyId:              PtrString("test"),
-			FirewallPolicyName:            PtrString("test"),
-			ConsumedStatefulRuleCapacity:  PtrInt32(1),
-			ConsumedStatelessRuleCapacity: PtrInt32(1),
-			Description:                   PtrString("test"),
+			FirewallPolicyArn:             new("arn:aws:network-firewall:us-east-1:123456789012:stateless-rulegroup/aws-network-firewall-DefaultStatelessRuleGroup-1J3Z3W2ZQXV3"),
+			FirewallPolicyId:              new("test"),
+			FirewallPolicyName:            new("test"),
+			ConsumedStatefulRuleCapacity:  new(int32(1)),
+			ConsumedStatelessRuleCapacity: new(int32(1)),
+			Description:                   new("test"),
 			EncryptionConfiguration: &types.EncryptionConfiguration{
 				Type:  types.EncryptionTypeAwsOwnedKmsKey,
-				KeyId: PtrString("arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"), // link (this can be an ARN or ID)
+				KeyId: new("arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"), // link (this can be an ARN or ID)
 			},
 			FirewallPolicyStatus: types.ResourceStatusActive, // health
 			LastModifiedTime:     &now,
-			NumberOfAssociations: PtrInt32(1),
+			NumberOfAssociations: new(int32(1)),
 			Tags: []types.Tag{
 				{
-					Key:   PtrString("test"),
-					Value: PtrString("test"),
+					Key:   new("test"),
+					Value: new("test"),
 				},
 			},
 		},
@@ -50,11 +50,11 @@ func (c testNetworkFirewallClient) DescribeFirewallPolicy(ctx context.Context, p
 			},
 			StatefulRuleGroupReferences: []types.StatefulRuleGroupReference{
 				{
-					ResourceArn: PtrString("arn:aws:network-firewall:us-east-1:123456789012:stateful-rulegroup/aws-network-firewall-DefaultStatefulRuleGroup-1J3Z3W2ZQXV3"), // link
+					ResourceArn: new("arn:aws:network-firewall:us-east-1:123456789012:stateful-rulegroup/aws-network-firewall-DefaultStatefulRuleGroup-1J3Z3W2ZQXV3"), // link
 					Override: &types.StatefulRuleGroupOverride{
 						Action: types.OverrideActionDropToAlert,
 					},
-					Priority: PtrInt32(1),
+					Priority: new(int32(1)),
 				},
 			},
 			StatelessCustomActions: []types.CustomAction{
@@ -64,16 +64,16 @@ func (c testNetworkFirewallClient) DescribeFirewallPolicy(ctx context.Context, p
 							Dimensions: []types.Dimension{},
 						},
 					},
-					ActionName: PtrString("test"),
+					ActionName: new("test"),
 				},
 			},
 			StatelessRuleGroupReferences: []types.StatelessRuleGroupReference{
 				{
-					Priority:    PtrInt32(1),
-					ResourceArn: PtrString("arn:aws:network-firewall:us-east-1:123456789012:stateless-rulegroup/aws-network-firewall-DefaultStatelessRuleGroup-1J3Z3W2ZQXV3"), // link
+					Priority:    new(int32(1)),
+					ResourceArn: new("arn:aws:network-firewall:us-east-1:123456789012:stateless-rulegroup/aws-network-firewall-DefaultStatelessRuleGroup-1J3Z3W2ZQXV3"), // link
 				},
 			},
-			TLSInspectionConfigurationArn: PtrString("arn:aws:network-firewall:us-east-1:123456789012:tls-inspection-configuration/aws-network-firewall-DefaultTlsInspectionConfiguration-1J3Z3W2ZQXV3"), // link
+			TLSInspectionConfigurationArn: new("arn:aws:network-firewall:us-east-1:123456789012:tls-inspection-configuration/aws-network-firewall-DefaultTlsInspectionConfiguration-1J3Z3W2ZQXV3"), // link
 		},
 	}, nil
 }
@@ -82,7 +82,7 @@ func (c testNetworkFirewallClient) ListFirewallPolicies(context.Context, *networ
 	return &networkfirewall.ListFirewallPoliciesOutput{
 		FirewallPolicies: []types.FirewallPolicyMetadata{
 			{
-				Arn: PtrString("arn:aws:network-firewall:us-east-1:123456789012:stateless-rulegroup/aws-network-firewall-DefaultStatelessRuleGroup-1J3Z3W2ZQXV3"),
+				Arn: new("arn:aws:network-firewall:us-east-1:123456789012:stateless-rulegroup/aws-network-firewall-DefaultStatelessRuleGroup-1J3Z3W2ZQXV3"),
 			},
 		},
 	}, nil

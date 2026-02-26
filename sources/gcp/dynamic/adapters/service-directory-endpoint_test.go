@@ -157,7 +157,7 @@ func TestServiceDirectoryEndpoint(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://servicedirectory.googleapis.com/v1/projects/%s/locations/%s/namespaces/%s/services/%s/endpoints/%s", projectID, location, namespace, serviceName, endpointName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Endpoint not found"},
+				Body:       map[string]any{"error": "Endpoint not found"},
 			},
 		}
 

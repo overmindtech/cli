@@ -5,7 +5,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	"go.uber.org/mock/gomock"
 
@@ -102,7 +101,7 @@ func TestComputeSharedGalleryImage(t *testing.T) {
 
 	t.Run("Get_PlainTextEula_NoLinks", func(t *testing.T) {
 		image := createSharedGalleryImage(imageName)
-		image.Properties.Eula = to.Ptr("This software is provided as-is. No warranty.")
+		image.Properties.Eula = new("This software is provided as-is. No warranty.")
 
 		mockClient := mocks.NewMockSharedGalleryImagesClient(ctrl)
 		mockClient.EXPECT().Get(ctx, location, galleryUniqueName, imageName, nil).Return(
@@ -133,8 +132,8 @@ func TestComputeSharedGalleryImage(t *testing.T) {
 
 	t.Run("Get_SameHostDeduplication", func(t *testing.T) {
 		image := createSharedGalleryImage(imageName)
-		image.Properties.Eula = to.Ptr("https://example.com/eula")
-		image.Properties.PrivacyStatementURI = to.Ptr("https://example.com/privacy")
+		image.Properties.Eula = new("https://example.com/eula")
+		image.Properties.PrivacyStatementURI = new("https://example.com/privacy")
 
 		mockClient := mocks.NewMockSharedGalleryImagesClient(ctrl)
 		mockClient.EXPECT().Get(ctx, location, galleryUniqueName, imageName, nil).Return(
@@ -174,7 +173,7 @@ func TestComputeSharedGalleryImage(t *testing.T) {
 
 	t.Run("Get_IPHost_EmitsIPLink", func(t *testing.T) {
 		image := createSharedGalleryImage(imageName)
-		image.Properties.PrivacyStatementURI = to.Ptr("https://192.168.1.10:8443/privacy")
+		image.Properties.PrivacyStatementURI = new("https://192.168.1.10:8443/privacy")
 
 		mockClient := mocks.NewMockSharedGalleryImagesClient(ctrl)
 		mockClient.EXPECT().Get(ctx, location, galleryUniqueName, imageName, nil).Return(
@@ -398,27 +397,27 @@ func TestComputeSharedGalleryImage(t *testing.T) {
 
 func createSharedGalleryImage(name string) *armcompute.SharedGalleryImage {
 	return &armcompute.SharedGalleryImage{
-		Name:     to.Ptr(name),
-		Location: to.Ptr("eastus"),
+		Name:     new(name),
+		Location: new("eastus"),
 		Identifier: &armcompute.SharedGalleryIdentifier{
-			UniqueID: to.Ptr("/SharedGalleries/test-gallery-unique-name"),
+			UniqueID: new("/SharedGalleries/test-gallery-unique-name"),
 		},
 		Properties: &armcompute.SharedGalleryImageProperties{
 			Identifier: &armcompute.GalleryImageIdentifier{
-				Publisher: to.Ptr("test-publisher"),
-				Offer:     to.Ptr("test-offer"),
-				SKU:       to.Ptr("test-sku"),
+				Publisher: new("test-publisher"),
+				Offer:     new("test-offer"),
+				SKU:       new("test-sku"),
 			},
-			OSType:  to.Ptr(armcompute.OperatingSystemTypesLinux),
-			OSState: to.Ptr(armcompute.OperatingSystemStateTypesGeneralized),
+			OSType:  new(armcompute.OperatingSystemTypesLinux),
+			OSState: new(armcompute.OperatingSystemStateTypesGeneralized),
 		},
 	}
 }
 
 func createSharedGalleryImageWithURIs(name string) *armcompute.SharedGalleryImage {
 	img := createSharedGalleryImage(name)
-	img.Properties.Eula = to.Ptr("https://eula.example.com/terms")
-	img.Properties.PrivacyStatementURI = to.Ptr("https://example.com/privacy")
+	img.Properties.Eula = new("https://eula.example.com/terms")
+	img.Properties.PrivacyStatementURI = new("https://example.com/privacy")
 	return img
 }
 

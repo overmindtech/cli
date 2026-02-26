@@ -12,7 +12,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/googleapis/gax-go/v2/apierror"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdpcache"
@@ -129,9 +128,9 @@ func TestComputeDiskIntegration(t *testing.T) {
 
 func createDisk(ctx context.Context, client *compute.DisksClient, projectID, zone, diskName string) error {
 	disk := &computepb.Disk{
-		Name:   ptr.To(diskName),
-		SizeGb: ptr.To(int64(10)),
-		Type: ptr.To(fmt.Sprintf(
+		Name:   new(diskName),
+		SizeGb: new(int64(10)),
+		Type: new(fmt.Sprintf(
 			"projects/%s/zones/%s/diskTypes/pd-standard",
 			projectID, zone,
 		)),

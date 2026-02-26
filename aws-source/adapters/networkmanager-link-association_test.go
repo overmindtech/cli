@@ -14,9 +14,9 @@ func TestLinkAssociationOutputMapper(t *testing.T) {
 	output := networkmanager.GetLinkAssociationsOutput{
 		LinkAssociations: []types.LinkAssociation{
 			{
-				LinkId:          PtrString("link-1"),
-				GlobalNetworkId: PtrString("default"),
-				DeviceId:        PtrString("dvc-1"),
+				LinkId:          new("link-1"),
+				GlobalNetworkId: new("default"),
+				DeviceId:        new("dvc-1"),
 			},
 		},
 	}

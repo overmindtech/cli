@@ -15,11 +15,11 @@ func TestAliasOutputMapper(t *testing.T) {
 	output := &kms.ListAliasesOutput{
 		Aliases: []types.AliasListEntry{
 			{
-				AliasName:       PtrString("alias/test-key"),
-				TargetKeyId:     PtrString("cf68415c-f4ae-48f2-87a7-3b52ce"),
-				AliasArn:        PtrString("arn:aws:kms:us-west-2:123456789012:alias/test-key"),
-				CreationDate:    PtrTime(time.Now()),
-				LastUpdatedDate: PtrTime(time.Now()),
+				AliasName:       new("alias/test-key"),
+				TargetKeyId:     new("cf68415c-f4ae-48f2-87a7-3b52ce"),
+				AliasArn:        new("arn:aws:kms:us-west-2:123456789012:alias/test-key"),
+				CreationDate:    new(time.Now()),
+				LastUpdatedDate: new(time.Now()),
 			},
 		},
 	}

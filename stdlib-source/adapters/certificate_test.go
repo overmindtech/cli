@@ -98,7 +98,7 @@ func TestCertificateList(t *testing.T) {
 
 type CertTest struct {
 	Attribute string
-	Expected  interface{}
+	Expected  any
 }
 
 func (c *CertTest) Run(t *testing.T, cert *sdp.Item) {
@@ -185,7 +185,7 @@ func TestCertificateSearch(t *testing.T) {
 		},
 		{
 			Attribute: "basicConstraints",
-			Expected: map[string]interface{}{
+			Expected: map[string]any{
 				"pathLen": float64(0),
 				"CA":      true,
 			},

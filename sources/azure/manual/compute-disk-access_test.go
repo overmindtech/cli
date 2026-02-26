@@ -6,7 +6,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	"go.uber.org/mock/gomock"
 
@@ -239,9 +238,9 @@ func TestComputeDiskAccess(t *testing.T) {
 		diskAccess1 := createAzureDiskAccess("test-disk-access-1")
 		diskAccessNilName := &armcompute.DiskAccess{
 			Name:     nil,
-			Location: to.Ptr("eastus"),
+			Location: new("eastus"),
 			Tags: map[string]*string{
-				"env": to.Ptr("test"),
+				"env": new("test"),
 			},
 		}
 
@@ -317,14 +316,14 @@ func TestComputeDiskAccess(t *testing.T) {
 // createAzureDiskAccess creates a mock Azure Disk Access for testing.
 func createAzureDiskAccess(diskAccessName string) *armcompute.DiskAccess {
 	return &armcompute.DiskAccess{
-		Name:     to.Ptr(diskAccessName),
-		Location: to.Ptr("eastus"),
+		Name:     new(diskAccessName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env":     to.Ptr("test"),
-			"project": to.Ptr("testing"),
+			"env":     new("test"),
+			"project": new("testing"),
 		},
 		Properties: &armcompute.DiskAccessProperties{
-			ProvisioningState: to.Ptr("Succeeded"),
+			ProvisioningState: new("Succeeded"),
 		},
 	}
 }
@@ -332,27 +331,27 @@ func createAzureDiskAccess(diskAccessName string) *armcompute.DiskAccess {
 // createAzureDiskAccessWithPrivateEndpointConnections creates a mock Azure Disk Access with private endpoint connections.
 func createAzureDiskAccessWithPrivateEndpointConnections(diskAccessName, subscriptionID, resourceGroup string) *armcompute.DiskAccess {
 	return &armcompute.DiskAccess{
-		Name:     to.Ptr(diskAccessName),
-		Location: to.Ptr("eastus"),
+		Name:     new(diskAccessName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armcompute.DiskAccessProperties{
-			ProvisioningState: to.Ptr("Succeeded"),
+			ProvisioningState: new("Succeeded"),
 			PrivateEndpointConnections: []*armcompute.PrivateEndpointConnection{
 				{
-					Name: to.Ptr("pe-connection-1"),
+					Name: new("pe-connection-1"),
 					Properties: &armcompute.PrivateEndpointConnectionProperties{
 						PrivateEndpoint: &armcompute.PrivateEndpoint{
-							ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/privateEndpoints/test-private-endpoint"),
+							ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/privateEndpoints/test-private-endpoint"),
 						},
 					},
 				},
 				{
-					Name: to.Ptr("pe-connection-2"),
+					Name: new("pe-connection-2"),
 					Properties: &armcompute.PrivateEndpointConnectionProperties{
 						PrivateEndpoint: &armcompute.PrivateEndpoint{
-							ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/other-rg/providers/Microsoft.Network/privateEndpoints/test-private-endpoint-other-rg"),
+							ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/other-rg/providers/Microsoft.Network/privateEndpoints/test-private-endpoint-other-rg"),
 						},
 					},
 				},

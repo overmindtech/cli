@@ -15,43 +15,43 @@ func (t *DynamoDBTestClient) DescribeBackup(ctx context.Context, params *dynamod
 	return &dynamodb.DescribeBackupOutput{
 		BackupDescription: &types.BackupDescription{
 			BackupDetails: &types.BackupDetails{
-				BackupArn:              PtrString("arn:aws:dynamodb:eu-west-1:052392120703:table/test2/backup/01673461724486-a6007753"),
-				BackupName:             PtrString("test2-backup"),
-				BackupSizeBytes:        PtrInt64(0),
+				BackupArn:              new("arn:aws:dynamodb:eu-west-1:052392120703:table/test2/backup/01673461724486-a6007753"),
+				BackupName:             new("test2-backup"),
+				BackupSizeBytes:        new(int64(0)),
 				BackupStatus:           types.BackupStatusAvailable,
 				BackupType:             types.BackupTypeUser,
-				BackupCreationDateTime: PtrTime(time.Now()),
+				BackupCreationDateTime: new(time.Now()),
 			},
 			SourceTableDetails: &types.SourceTableDetails{
-				TableName:      PtrString("test2"), // link
-				TableId:        PtrString("12670f3b-8ca1-463b-b15e-f2e27eaf70b0"),
-				TableArn:       PtrString("arn:aws:dynamodb:eu-west-1:052392120703:table/test2"),
-				TableSizeBytes: PtrInt64(0),
+				TableName:      new("test2"), // link
+				TableId:        new("12670f3b-8ca1-463b-b15e-f2e27eaf70b0"),
+				TableArn:       new("arn:aws:dynamodb:eu-west-1:052392120703:table/test2"),
+				TableSizeBytes: new(int64(0)),
 				KeySchema: []types.KeySchemaElement{
 					{
-						AttributeName: PtrString("ArtistId"),
+						AttributeName: new("ArtistId"),
 						KeyType:       types.KeyTypeHash,
 					},
 					{
-						AttributeName: PtrString("Concert"),
+						AttributeName: new("Concert"),
 						KeyType:       types.KeyTypeRange,
 					},
 				},
-				TableCreationDateTime: PtrTime(time.Now()),
+				TableCreationDateTime: new(time.Now()),
 				ProvisionedThroughput: &types.ProvisionedThroughput{
-					ReadCapacityUnits:  PtrInt64(5),
-					WriteCapacityUnits: PtrInt64(5),
+					ReadCapacityUnits:  new(int64(5)),
+					WriteCapacityUnits: new(int64(5)),
 				},
-				ItemCount:   PtrInt64(0),
+				ItemCount:   new(int64(0)),
 				BillingMode: types.BillingModeProvisioned,
 			},
 			SourceTableFeatureDetails: &types.SourceTableFeatureDetails{
 				GlobalSecondaryIndexes: []types.GlobalSecondaryIndexInfo{
 					{
-						IndexName: PtrString("GSI"),
+						IndexName: new("GSI"),
 						KeySchema: []types.KeySchemaElement{
 							{
-								AttributeName: PtrString("TicketSales"),
+								AttributeName: new("TicketSales"),
 								KeyType:       types.KeyTypeHash,
 							},
 						},
@@ -59,8 +59,8 @@ func (t *DynamoDBTestClient) DescribeBackup(ctx context.Context, params *dynamod
 							ProjectionType: types.ProjectionTypeKeysOnly,
 						},
 						ProvisionedThroughput: &types.ProvisionedThroughput{
-							ReadCapacityUnits:  PtrInt64(5),
-							WriteCapacityUnits: PtrInt64(5),
+							ReadCapacityUnits:  new(int64(5)),
+							WriteCapacityUnits: new(int64(5)),
 						},
 					},
 				},
@@ -73,15 +73,15 @@ func (t *DynamoDBTestClient) ListBackups(ctx context.Context, params *dynamodb.L
 	return &dynamodb.ListBackupsOutput{
 		BackupSummaries: []types.BackupSummary{
 			{
-				TableName:              PtrString("test2"),
-				TableId:                PtrString("12670f3b-8ca1-463b-b15e-f2e27eaf70b0"),
-				TableArn:               PtrString("arn:aws:dynamodb:eu-west-1:052392120703:table/test2"),
-				BackupArn:              PtrString("arn:aws:dynamodb:eu-west-1:052392120703:table/test2/backup/01673461724486-a6007753"),
-				BackupName:             PtrString("test2-backup"),
-				BackupCreationDateTime: PtrTime(time.Now()),
+				TableName:              new("test2"),
+				TableId:                new("12670f3b-8ca1-463b-b15e-f2e27eaf70b0"),
+				TableArn:               new("arn:aws:dynamodb:eu-west-1:052392120703:table/test2"),
+				BackupArn:              new("arn:aws:dynamodb:eu-west-1:052392120703:table/test2/backup/01673461724486-a6007753"),
+				BackupName:             new("test2-backup"),
+				BackupCreationDateTime: new(time.Now()),
 				BackupStatus:           types.BackupStatusAvailable,
 				BackupType:             types.BackupTypeUser,
-				BackupSizeBytes:        PtrInt64(10),
+				BackupSizeBytes:        new(int64(10)),
 			},
 		},
 	}, nil

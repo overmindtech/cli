@@ -42,13 +42,13 @@ func TestKeyPairOutputMapper(t *testing.T) {
 	output := &ec2.DescribeKeyPairsOutput{
 		KeyPairs: []types.KeyPairInfo{
 			{
-				KeyPairId:      PtrString("key-04d7068d3a33bf9b2"),
-				KeyFingerprint: PtrString("df:73:bb:86:a7:cd:9e:18:16:10:50:79:fa:3b:4f:c7:1d:32:cf:58"),
-				KeyName:        PtrString("dylan.ratcliffe"),
+				KeyPairId:      new("key-04d7068d3a33bf9b2"),
+				KeyFingerprint: new("df:73:bb:86:a7:cd:9e:18:16:10:50:79:fa:3b:4f:c7:1d:32:cf:58"),
+				KeyName:        new("dylan.ratcliffe"),
 				KeyType:        types.KeyTypeRsa,
 				Tags:           []types.Tag{},
-				CreateTime:     PtrTime(time.Now()),
-				PublicKey:      PtrString("PUB"),
+				CreateTime:     new(time.Now()),
+				PublicKey:      new("PUB"),
 			},
 		},
 	}

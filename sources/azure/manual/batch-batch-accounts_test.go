@@ -6,7 +6,6 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/batch/armbatch/v3"
 	"go.uber.org/mock/gomock"
 
@@ -446,37 +445,37 @@ func createAzureBatchAccount(accountName, provisioningState, subscriptionID, res
 	nodeIdentityID := "/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.ManagedIdentity/userAssignedIdentities/test-node-identity"
 
 	return &armbatch.Account{
-		Name:     to.Ptr(accountName),
-		Location: to.Ptr("eastus"),
+		Name:     new(accountName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env":     to.Ptr("test"),
-			"project": to.Ptr("testing"),
+			"env":     new("test"),
+			"project": new("testing"),
 		},
 		Properties: &armbatch.AccountProperties{
-			ProvisioningState: (*armbatch.ProvisioningState)(to.Ptr(provisioningState)),
+			ProvisioningState: (*armbatch.ProvisioningState)(new(provisioningState)),
 			AutoStorage: &armbatch.AutoStorageProperties{
-				StorageAccountID: to.Ptr(storageAccountID),
-				LastKeySync:      to.Ptr(time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)),
+				StorageAccountID: new(storageAccountID),
+				LastKeySync:      new(time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)),
 				NodeIdentityReference: &armbatch.ComputeNodeIdentityReference{
-					ResourceID: to.Ptr(nodeIdentityID),
+					ResourceID: new(nodeIdentityID),
 				},
 			},
 			KeyVaultReference: &armbatch.KeyVaultReference{
-				ID:  to.Ptr(keyVaultID),
-				URL: to.Ptr("https://test-keyvault.vault.azure.net/"),
+				ID:  new(keyVaultID),
+				URL: new("https://test-keyvault.vault.azure.net/"),
 			},
 			PrivateEndpointConnections: []*armbatch.PrivateEndpointConnection{
 				{
 					Properties: &armbatch.PrivateEndpointConnectionProperties{
 						PrivateEndpoint: &armbatch.PrivateEndpoint{
-							ID: to.Ptr(privateEndpointID),
+							ID: new(privateEndpointID),
 						},
 					},
 				},
 			},
 		},
 		Identity: &armbatch.AccountIdentity{
-			Type: (*armbatch.ResourceIdentityType)(to.Ptr(armbatch.ResourceIdentityTypeUserAssigned)),
+			Type: (*armbatch.ResourceIdentityType)(new(armbatch.ResourceIdentityTypeUserAssigned)),
 			UserAssignedIdentities: map[string]*armbatch.UserAssignedIdentities{
 				identityID: {},
 			},
@@ -494,16 +493,16 @@ func createAzureBatchAccountWithCrossRGResources(
 	storageAccountID := "/subscriptions/" + otherSubscriptionID + "/resourceGroups/" + otherResourceGroup + "/providers/Microsoft.Storage/storageAccounts/test-storage-account"
 
 	return &armbatch.Account{
-		Name:     to.Ptr(accountName),
-		Location: to.Ptr("eastus"),
+		Name:     new(accountName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armbatch.AccountProperties{
-			ProvisioningState: (*armbatch.ProvisioningState)(to.Ptr(provisioningState)),
+			ProvisioningState: (*armbatch.ProvisioningState)(new(provisioningState)),
 			AutoStorage: &armbatch.AutoStorageProperties{
-				StorageAccountID: to.Ptr(storageAccountID),
-				LastKeySync:      to.Ptr(time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)),
+				StorageAccountID: new(storageAccountID),
+				LastKeySync:      new(time.Date(2024, 1, 1, 0, 0, 0, 0, time.UTC)),
 			},
 		},
 	}

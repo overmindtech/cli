@@ -12,7 +12,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/googleapis/gax-go/v2/apierror"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdpcache"
@@ -187,20 +186,20 @@ func TestComputeAutoscalerIntegration(t *testing.T) {
 func createComputeInstanceTemplate(ctx context.Context, client *compute.InstanceTemplatesClient, projectID, name string) error {
 	// Create a new instance template
 	instanceTemplate := &computepb.InstanceTemplate{
-		Name: ptr.To(name),
+		Name: new(name),
 		Properties: &computepb.InstanceProperties{
 			Disks: []*computepb.AttachedDisk{
 				{
-					AutoDelete: ptr.To(true),
-					Boot:       ptr.To(true),
-					DeviceName: ptr.To(name),
+					AutoDelete: new(true),
+					Boot:       new(true),
+					DeviceName: new(name),
 					InitializeParams: &computepb.AttachedDiskInitializeParams{
-						DiskSizeGb:  ptr.To(int64(10)),
-						DiskType:    ptr.To("pd-balanced"),
-						SourceImage: ptr.To("projects/debian-cloud/global/images/debian-12-bookworm-v20250415"),
+						DiskSizeGb:  new(int64(10)),
+						DiskType:    new("pd-balanced"),
+						SourceImage: new("projects/debian-cloud/global/images/debian-12-bookworm-v20250415"),
 					},
-					Mode: ptr.To("READ_WRITE"),
-					Type: ptr.To("PERSISTENT"),
+					Mode: new("READ_WRITE"),
+					Type: new("PERSISTENT"),
 
 					// Labels? Tags?
 				},
@@ -209,17 +208,17 @@ func createComputeInstanceTemplate(ctx context.Context, client *compute.Instance
 				{
 					AccessConfigs: []*computepb.AccessConfig{
 						{
-							Kind:        ptr.To("compute#accessConfig"),
-							Name:        ptr.To("External NAT"),
-							NetworkTier: ptr.To("PREMIUM"),
-							Type:        ptr.To("ONE_TO_ONE_NAT"),
+							Kind:        new("compute#accessConfig"),
+							Name:        new("External NAT"),
+							NetworkTier: new("PREMIUM"),
+							Type:        new("ONE_TO_ONE_NAT"),
 						},
 					},
-					Network:   ptr.To("projects/" + projectID + "/global/networks/default"),
-					StackType: ptr.To("IPV4_ONLY"),
+					Network:   new("projects/" + projectID + "/global/networks/default"),
+					StackType: new("IPV4_ONLY"),
 				},
 			},
-			MachineType: ptr.To("e2-micro"),
+			MachineType: new("e2-micro"),
 			Tags: &computepb.Tags{
 				Items: []string{"overmind-test"},
 			},
@@ -282,13 +281,13 @@ func deleteComputeInstanceTemplate(ctx context.Context, client *compute.Instance
 func createComputeAutoscaler(ctx context.Context, client *compute.AutoscalersClient, targetedInstanceGroupManager, projectID, zone, name string) error {
 	// Create a new autoscaler
 	autoscaler := &computepb.Autoscaler{
-		Name:   ptr.To(name),
+		Name:   new(name),
 		Target: &targetedInstanceGroupManager,
 		AutoscalingPolicy: &computepb.AutoscalingPolicy{
-			MinNumReplicas: ptr.To(int32(0)),
-			MaxNumReplicas: ptr.To(int32(1)),
+			MinNumReplicas: new(int32(0)),
+			MaxNumReplicas: new(int32(1)),
 			CpuUtilization: &computepb.AutoscalingPolicyCpuUtilization{
-				UtilizationTarget: ptr.To(float64(0.6)),
+				UtilizationTarget: new(float64(0.6)),
 			},
 		},
 	}

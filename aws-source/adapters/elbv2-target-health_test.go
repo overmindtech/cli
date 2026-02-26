@@ -15,61 +15,61 @@ func TestTargetHealthOutputMapper(t *testing.T) {
 		TargetHealthDescriptions: []types.TargetHealthDescription{
 			{
 				Target: &types.TargetDescription{
-					Id:               PtrString("10.0.6.64"), // link
-					Port:             PtrInt32(8080),
-					AvailabilityZone: PtrString("eu-west-2c"),
+					Id:               new("10.0.6.64"), // link
+					Port:             new(int32(8080)),
+					AvailabilityZone: new("eu-west-2c"),
 				},
-				HealthCheckPort: PtrString("8080"),
+				HealthCheckPort: new("8080"),
 				TargetHealth: &types.TargetHealth{
 					State:       types.TargetHealthStateEnumHealthy,
 					Reason:      types.TargetHealthReasonEnumDeregistrationInProgress,
-					Description: PtrString("Health checks failed with these codes: [404]"),
+					Description: new("Health checks failed with these codes: [404]"),
 				},
 			},
 			{
 				Target: &types.TargetDescription{
-					Id:               PtrString("arn:aws:elasticloadbalancing:eu-west-2:944651592624:loadbalancer/app/ingress/1bf10920c5bd199d"), // link
-					Port:             PtrInt32(8080),
-					AvailabilityZone: PtrString("eu-west-2c"),
+					Id:               new("arn:aws:elasticloadbalancing:eu-west-2:944651592624:loadbalancer/app/ingress/1bf10920c5bd199d"), // link
+					Port:             new(int32(8080)),
+					AvailabilityZone: new("eu-west-2c"),
 				},
-				HealthCheckPort: PtrString("8080"),
+				HealthCheckPort: new("8080"),
 				TargetHealth: &types.TargetHealth{
 					State:       types.TargetHealthStateEnumHealthy,
 					Reason:      types.TargetHealthReasonEnumDeregistrationInProgress,
-					Description: PtrString("Health checks failed with these codes: [404]"),
+					Description: new("Health checks failed with these codes: [404]"),
 				},
 			},
 			{
 				Target: &types.TargetDescription{
-					Id:               PtrString("i-foo"), // link
-					Port:             PtrInt32(8080),
-					AvailabilityZone: PtrString("eu-west-2c"),
+					Id:               new("i-foo"), // link
+					Port:             new(int32(8080)),
+					AvailabilityZone: new("eu-west-2c"),
 				},
-				HealthCheckPort: PtrString("8080"),
+				HealthCheckPort: new("8080"),
 				TargetHealth: &types.TargetHealth{
 					State:       types.TargetHealthStateEnumHealthy,
 					Reason:      types.TargetHealthReasonEnumDeregistrationInProgress,
-					Description: PtrString("Health checks failed with these codes: [404]"),
+					Description: new("Health checks failed with these codes: [404]"),
 				},
 			},
 			{
 				Target: &types.TargetDescription{
-					Id:               PtrString("arn:aws:lambda:eu-west-2:944651592624:function/foobar"), // link
-					Port:             PtrInt32(8080),
-					AvailabilityZone: PtrString("eu-west-2c"),
+					Id:               new("arn:aws:lambda:eu-west-2:944651592624:function/foobar"), // link
+					Port:             new(int32(8080)),
+					AvailabilityZone: new("eu-west-2c"),
 				},
-				HealthCheckPort: PtrString("8080"),
+				HealthCheckPort: new("8080"),
 				TargetHealth: &types.TargetHealth{
 					State:       types.TargetHealthStateEnumHealthy,
 					Reason:      types.TargetHealthReasonEnumDeregistrationInProgress,
-					Description: PtrString("Health checks failed with these codes: [404]"),
+					Description: new("Health checks failed with these codes: [404]"),
 				},
 			},
 		},
 	}
 
 	items, err := targetHealthOutputMapper(context.Background(), nil, "foo", &elbv2.DescribeTargetHealthInput{
-		TargetGroupArn: PtrString("arn:aws:elasticloadbalancing:eu-west-2:944651592624:targetgroup/k8s-default-apiserve-d87e8f7010/559d207158e41222"),
+		TargetGroupArn: new("arn:aws:elasticloadbalancing:eu-west-2:944651592624:targetgroup/k8s-default-apiserve-d87e8f7010/559d207158e41222"),
 	}, &output)
 
 	if err != nil {
@@ -167,8 +167,8 @@ func TestTargetHealthUniqueID(t *testing.T) {
 		id := TargetHealthUniqueID{
 			TargetGroupArn:   "arn:aws:elasticloadbalancing:eu-west-2:944651592624:targetgroup/k8s-default-apiserve-d87e8f7010/559d207158e41222",
 			Id:               "10.0.0.1",
-			AvailabilityZone: PtrString("eu-west-2"),
-			Port:             PtrInt32(8080),
+			AvailabilityZone: new("eu-west-2"),
+			Port:             new(int32(8080)),
 		}
 
 		expected := "arn:aws:elasticloadbalancing:eu-west-2:944651592624:targetgroup/k8s-default-apiserve-d87e8f7010/559d207158e41222|10.0.0.1|eu-west-2|8080"
@@ -192,7 +192,7 @@ func TestTargetHealthUniqueID(t *testing.T) {
 		id := TargetHealthUniqueID{
 			TargetGroupArn: "arn:aws:elasticloadbalancing:eu-west-2:944651592624:targetgroup/k8s-default-apiserve-d87e8f7010/559d207158e41222",
 			Id:             "arn:partition:service:region:account-id:resource-type:resource-id",
-			Port:           PtrInt32(8080),
+			Port:           new(int32(8080)),
 		}
 
 		expected := "arn:aws:elasticloadbalancing:eu-west-2:944651592624:targetgroup/k8s-default-apiserve-d87e8f7010/559d207158e41222|arn:partition:service:region:account-id:resource-type:resource-id||8080"

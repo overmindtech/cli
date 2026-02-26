@@ -112,7 +112,7 @@ func TestComputeTargetHttpProxy(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/global/targetHttpProxies/%s", projectID, proxyName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Proxy not found"},
+				Body:       map[string]any{"error": "Proxy not found"},
 			},
 		}
 

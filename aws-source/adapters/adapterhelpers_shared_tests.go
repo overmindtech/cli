@@ -12,34 +12,6 @@ import (
 	"github.com/overmindtech/cli/go/sdp-go"
 )
 
-func PtrString(v string) *string {
-	return &v
-}
-
-func PtrInt32(v int32) *int32 {
-	return &v
-}
-
-func PtrInt64(v int64) *int64 {
-	return &v
-}
-
-func PtrFloat32(v float32) *float32 {
-	return &v
-}
-
-func PtrFloat64(v float64) *float64 {
-	return &v
-}
-
-func PtrTime(v time.Time) *time.Time {
-	return &v
-}
-
-func PtrBool(v bool) *bool {
-	return &v
-}
-
 type Subnet struct {
 	ID               *string
 	CIDR             string

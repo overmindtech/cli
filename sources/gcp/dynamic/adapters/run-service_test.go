@@ -313,7 +313,7 @@ func TestRunService(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://run.googleapis.com/v2/projects/%s/locations/%s/services/%s", projectID, location, serviceName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Service not found"},
+				Body:       map[string]any{"error": "Service not found"},
 			},
 		}
 

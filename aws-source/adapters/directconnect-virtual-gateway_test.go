@@ -14,8 +14,8 @@ func TestVirtualGatewayOutputMapper(t *testing.T) {
 	output := &directconnect.DescribeVirtualGatewaysOutput{
 		VirtualGateways: []types.VirtualGateway{
 			{
-				VirtualGatewayId:    PtrString("cf68415c-f4ae-48f2-87a7-3b52cexample"),
-				VirtualGatewayState: PtrString("available"),
+				VirtualGatewayId:    new("cf68415c-f4ae-48f2-87a7-3b52cexample"),
+				VirtualGatewayState: new("available"),
 			},
 		},
 	}

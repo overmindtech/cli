@@ -206,7 +206,7 @@ func MapFromEngineConfig(ec *EngineConfig) map[string]any {
 		sourceAccessToken = "[REDACTED]"
 	}
 
-	return map[string]interface{}{
+	return map[string]any{
 		"engine-type":              ec.EngineType,
 		"version":                  ec.Version,
 		"source-name":              ec.SourceName,

@@ -15,10 +15,10 @@ func TestInstanceHealthOutputMapper(t *testing.T) {
 	output := elb.DescribeInstanceHealthOutput{
 		InstanceStates: []types.InstanceState{
 			{
-				InstanceId:  PtrString("i-0337802d908b4a81e"), // link
-				State:       PtrString("InService"),
-				ReasonCode:  PtrString("N/A"),
-				Description: PtrString("N/A"),
+				InstanceId:  new("i-0337802d908b4a81e"), // link
+				State:       new("InService"),
+				ReasonCode:  new("N/A"),
+				Description: new("N/A"),
 			},
 		},
 	}

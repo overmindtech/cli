@@ -6,7 +6,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	"go.uber.org/mock/gomock"
 
@@ -239,9 +238,9 @@ func TestComputeCapacityReservationGroup(t *testing.T) {
 		crg1 := createAzureCapacityReservationGroup("test-crg-1")
 		crgNilName := &armcompute.CapacityReservationGroup{
 			Name:     nil,
-			Location: to.Ptr("eastus"),
+			Location: new("eastus"),
 			Tags: map[string]*string{
-				"env": to.Ptr("test"),
+				"env": new("test"),
 			},
 			Properties: &armcompute.CapacityReservationGroupProperties{},
 		}
@@ -332,11 +331,11 @@ func capacityReservationGroupListOptions() *armcompute.CapacityReservationGroups
 // createAzureCapacityReservationGroup creates a mock Azure Capacity Reservation Group for testing.
 func createAzureCapacityReservationGroup(groupName string) *armcompute.CapacityReservationGroup {
 	return &armcompute.CapacityReservationGroup{
-		Name:     to.Ptr(groupName),
-		Location: to.Ptr("eastus"),
+		Name:     new(groupName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env":     to.Ptr("test"),
-			"project": to.Ptr("testing"),
+			"env":     new("test"),
+			"project": new("testing"),
 		},
 		Properties: &armcompute.CapacityReservationGroupProperties{},
 	}
@@ -347,20 +346,20 @@ func createAzureCapacityReservationGroupWithLinks(groupName, subscriptionID, res
 	reservations := make([]*armcompute.SubResourceReadOnly, 0, len(reservationNames))
 	for _, name := range reservationNames {
 		reservations = append(reservations, &armcompute.SubResourceReadOnly{
-			ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/capacityReservationGroups/" + groupName + "/capacityReservations/" + name),
+			ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/capacityReservationGroups/" + groupName + "/capacityReservations/" + name),
 		})
 	}
 	vms := make([]*armcompute.SubResourceReadOnly, 0, len(vmNames))
 	for _, name := range vmNames {
 		vms = append(vms, &armcompute.SubResourceReadOnly{
-			ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/virtualMachines/" + name),
+			ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/virtualMachines/" + name),
 		})
 	}
 	return &armcompute.CapacityReservationGroup{
-		Name:     to.Ptr(groupName),
-		Location: to.Ptr("eastus"),
+		Name:     new(groupName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armcompute.CapacityReservationGroupProperties{
 			CapacityReservations:      reservations,

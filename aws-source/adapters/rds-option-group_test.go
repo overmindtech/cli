@@ -12,13 +12,13 @@ func TestOptionGroupOutputMapper(t *testing.T) {
 	output := rds.DescribeOptionGroupsOutput{
 		OptionGroupsList: []types.OptionGroup{
 			{
-				OptionGroupName:                       PtrString("default:aurora-mysql-8-0"),
-				OptionGroupDescription:                PtrString("Default option group for aurora-mysql 8.0"),
-				EngineName:                            PtrString("aurora-mysql"),
-				MajorEngineVersion:                    PtrString("8.0"),
+				OptionGroupName:                       new("default:aurora-mysql-8-0"),
+				OptionGroupDescription:                new("Default option group for aurora-mysql 8.0"),
+				EngineName:                            new("aurora-mysql"),
+				MajorEngineVersion:                    new("8.0"),
 				Options:                               []types.Option{},
-				AllowsVpcAndNonVpcInstanceMemberships: PtrBool(true),
-				OptionGroupArn:                        PtrString("arn:aws:rds:eu-west-2:052392120703:og:default:aurora-mysql-8-0"),
+				AllowsVpcAndNonVpcInstanceMemberships: new(true),
+				OptionGroupArn:                        new("arn:aws:rds:eu-west-2:052392120703:og:default:aurora-mysql-8-0"),
 			},
 		},
 	}

@@ -66,7 +66,7 @@ func (l *CloudKMSAssetLoader) EnsureLoaded(ctx context.Context) error {
 
 	// Use singleflight to ensure only one load runs at a time
 	// Concurrent callers wait for the same result
-	_, err, _ := l.group.Do("load", func() (interface{}, error) {
+	_, err, _ := l.group.Do("load", func() (any, error) {
 		// Double-check TTL after acquiring the flight
 		l.mu.Lock()
 		if time.Since(l.lastLoadTime) < shared.DefaultCacheDuration {
@@ -231,7 +231,7 @@ func (l *CloudKMSAssetLoader) fetchAssetsPage(ctx context.Context, pageToken str
 	// Cloud Asset API requires quota project header
 	req.Header.Set("X-Goog-User-Project", l.projectID)
 
-	resp, err := l.httpClient.Do(req)
+	resp, err := l.httpClient.Do(req) //nolint:gosec // G107 (SSRF): URL built from hardcoded https://cloudasset.googleapis.com/v1 base with project ID
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to execute request: %w", err)
 	}

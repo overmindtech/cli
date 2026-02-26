@@ -150,24 +150,20 @@ func TestListErrorCausesCacheHang(t *testing.T) {
 	var secondDuration time.Duration
 
 	// First goroutine: calls List(), gets cache miss, underlying returns error
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		start := time.Now()
 		_, firstErr = adapter.(interface {
 			List(context.Context, string, bool) ([]*sdp.Item, error)
 		}).List(ctx, scope, false)
 		firstDuration = time.Since(start)
-	}()
+	})
 
 	// Give first goroutine time to start and hit the error
 	time.Sleep(50 * time.Millisecond)
 
 	// Second goroutine: calls List() after first has hit error
 	// Should be woken immediately by done() and retry quickly
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		// Use a timeout to prevent infinite hang if bug exists
 		ctx2, cancel := context.WithTimeout(ctx, 500*time.Millisecond)
 		defer cancel()
@@ -177,7 +173,7 @@ func TestListErrorCausesCacheHang(t *testing.T) {
 			List(context.Context, string, bool) ([]*sdp.Item, error)
 		}).List(ctx2, scope, false)
 		secondDuration = time.Since(start)
-	}()
+	})
 
 	wg.Wait()
 

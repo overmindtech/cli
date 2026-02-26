@@ -14,15 +14,15 @@ import (
 var FargateTestClient = EKSTestClient{
 	DescribeFargateProfileOutput: &eks.DescribeFargateProfileOutput{
 		FargateProfile: &types.FargateProfile{
-			ClusterName:         PtrString("cluster"),
-			CreatedAt:           PtrTime(time.Now()),
-			FargateProfileArn:   PtrString("arn:partition:service:region:account-id:resource-type/resource-id"),
-			FargateProfileName:  PtrString("name"),
-			PodExecutionRoleArn: PtrString("arn:partition:service::account-id:resource-type/resource-id"),
+			ClusterName:         new("cluster"),
+			CreatedAt:           new(time.Now()),
+			FargateProfileArn:   new("arn:partition:service:region:account-id:resource-type/resource-id"),
+			FargateProfileName:  new("name"),
+			PodExecutionRoleArn: new("arn:partition:service::account-id:resource-type/resource-id"),
 			Selectors: []types.FargateProfileSelector{
 				{
 					Labels:    map[string]string{},
-					Namespace: PtrString("namespace"),
+					Namespace: new("namespace"),
 				},
 			},
 			Status: types.FargateProfileStatusActive,

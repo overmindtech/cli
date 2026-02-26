@@ -202,7 +202,7 @@ func TestDataprocCluster(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://dataproc.googleapis.com/v1/projects/%s/regions/%s/clusters/%s", projectID, region, clusterName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Cluster not found"},
+				Body:       map[string]any{"error": "Cluster not found"},
 			},
 		}
 

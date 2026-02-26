@@ -10,13 +10,13 @@ import (
 
 func TestOriginAccessControlItemMapper(t *testing.T) {
 	x := types.OriginAccessControl{
-		Id: PtrString("test"),
+		Id: new("test"),
 		OriginAccessControlConfig: &types.OriginAccessControlConfig{
-			Name:                          PtrString("example-name"),
+			Name:                          new("example-name"),
 			OriginAccessControlOriginType: types.OriginAccessControlOriginTypesS3,
 			SigningBehavior:               types.OriginAccessControlSigningBehaviorsAlways,
 			SigningProtocol:               types.OriginAccessControlSigningProtocolsSigv4,
-			Description:                   PtrString("example-description"),
+			Description:                   new("example-description"),
 		},
 	}
 

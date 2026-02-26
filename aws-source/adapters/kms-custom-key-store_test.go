@@ -17,12 +17,12 @@ func TestCustomKeyStoreOutputMapper(t *testing.T) {
 	output := &kms.DescribeCustomKeyStoresOutput{
 		CustomKeyStores: []types.CustomKeyStoresListEntry{
 			{
-				CustomKeyStoreId:       PtrString("custom-key-store-1"),
-				CreationDate:           PtrTime(time.Now()),
-				CloudHsmClusterId:      PtrString("cloud-hsm-cluster-1"),
+				CustomKeyStoreId:       new("custom-key-store-1"),
+				CreationDate:           new(time.Now()),
+				CloudHsmClusterId:      new("cloud-hsm-cluster-1"),
 				ConnectionState:        types.ConnectionStateTypeConnected,
-				TrustAnchorCertificate: PtrString("-----BEGIN CERTIFICATE-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwJ1z\n-----END CERTIFICATE-----"),
-				CustomKeyStoreName:     PtrString("key-store-1"),
+				TrustAnchorCertificate: new("-----BEGIN CERTIFICATE-----\nMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwJ1z\n-----END CERTIFICATE-----"),
+				CustomKeyStoreName:     new("key-store-1"),
 			},
 		},
 	}
@@ -82,7 +82,7 @@ func TestHealthState(t *testing.T) {
 			output: &kms.DescribeCustomKeyStoresOutput{
 				CustomKeyStores: []types.CustomKeyStoresListEntry{
 					{
-						CustomKeyStoreId: PtrString("custom-key-store-1"),
+						CustomKeyStoreId: new("custom-key-store-1"),
 						ConnectionState:  types.ConnectionStateTypeConnected,
 					},
 				},
@@ -94,7 +94,7 @@ func TestHealthState(t *testing.T) {
 			output: &kms.DescribeCustomKeyStoresOutput{
 				CustomKeyStores: []types.CustomKeyStoresListEntry{
 					{
-						CustomKeyStoreId: PtrString("custom-key-store-1"),
+						CustomKeyStoreId: new("custom-key-store-1"),
 						ConnectionState:  types.ConnectionStateTypeConnecting,
 					},
 				},
@@ -106,7 +106,7 @@ func TestHealthState(t *testing.T) {
 			output: &kms.DescribeCustomKeyStoresOutput{
 				CustomKeyStores: []types.CustomKeyStoresListEntry{
 					{
-						CustomKeyStoreId: PtrString("custom-key-store-1"),
+						CustomKeyStoreId: new("custom-key-store-1"),
 						ConnectionState:  types.ConnectionStateTypeDisconnected,
 					},
 				},
@@ -118,7 +118,7 @@ func TestHealthState(t *testing.T) {
 			output: &kms.DescribeCustomKeyStoresOutput{
 				CustomKeyStores: []types.CustomKeyStoresListEntry{
 					{
-						CustomKeyStoreId: PtrString("custom-key-store-1"),
+						CustomKeyStoreId: new("custom-key-store-1"),
 						ConnectionState:  types.ConnectionStateTypeFailed,
 					},
 				},
@@ -130,7 +130,7 @@ func TestHealthState(t *testing.T) {
 			output: &kms.DescribeCustomKeyStoresOutput{
 				CustomKeyStores: []types.CustomKeyStoresListEntry{
 					{
-						CustomKeyStoreId: PtrString("custom-key-store-1"),
+						CustomKeyStoreId: new("custom-key-store-1"),
 						ConnectionState:  "unknown-state",
 					},
 				},

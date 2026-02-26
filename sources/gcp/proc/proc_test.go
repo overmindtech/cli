@@ -3,6 +3,7 @@ package proc
 import (
 	"context"
 	"fmt"
+	"slices"
 	"sort"
 	"strings"
 	"sync"
@@ -113,11 +114,8 @@ func Test_ensureMandatoryFieldsInDynamicAdapters(t *testing.T) {
 
 			foundPerm := false
 			for _, perm := range role.IAMPermissions {
-				for _, iamPerm := range meta.IAMPermissions {
-					if perm == iamPerm {
-						foundPerm = true
-						break
-					}
+				if slices.Contains(meta.IAMPermissions, perm) {
+					foundPerm = true
 				}
 			}
 
@@ -580,14 +578,12 @@ func TestProjectHealthChecker_Check_ConcurrentAccess(t *testing.T) {
 	errors := make(chan error, concurrency)
 
 	for range concurrency {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			_, err := checker.Check(ctx)
 			if err != nil {
 				errors <- err
 			}
-		}()
+		})
 	}
 
 	wg.Wait()
@@ -717,11 +713,11 @@ func TestCriticalTerraformMappingsRegistered(t *testing.T) {
 	// Overmind type it should resolve to, and which attribute is extracted from
 	// the Terraform plan to perform the lookup.
 	criticalMappings := []struct {
-		terraformType    string
-		expectedType     string
-		expectedField    string
-		expectedMethod   sdp.QueryMethod
-		reason           string // documents why this mapping is critical
+		terraformType  string
+		expectedType   string
+		expectedField  string
+		expectedMethod sdp.QueryMethod
+		reason         string // documents why this mapping is critical
 	}{
 		// Core resource mappings
 		{

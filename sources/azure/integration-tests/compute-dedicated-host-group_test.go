@@ -12,7 +12,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -247,13 +246,13 @@ func createDedicatedHostGroup(ctx context.Context, client *armcompute.DedicatedH
 	}
 
 	_, err = client.CreateOrUpdate(ctx, resourceGroupName, hostGroupName, armcompute.DedicatedHostGroup{
-		Location: ptr.To(location),
+		Location: new(location),
 		Properties: &armcompute.DedicatedHostGroupProperties{
-			PlatformFaultDomainCount: ptr.To[int32](1),
+			PlatformFaultDomainCount: new(int32(1)),
 		},
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
-			"test":    ptr.To("compute-dedicated-host-group"),
+			"purpose": new("overmind-integration-tests"),
+			"test":    new("compute-dedicated-host-group"),
 		},
 	}, nil)
 	if err != nil {

@@ -210,7 +210,7 @@ func TestContainerNodePool(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://container.googleapis.com/v1/projects/%s/locations/%s/clusters/%s/nodePools/%s", projectID, location, clusterName, nodePoolName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Node pool not found"},
+				Body:       map[string]any{"error": "Node pool not found"},
 			},
 		}
 

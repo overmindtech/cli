@@ -146,7 +146,7 @@ func (s *RdapEntityAdapter) runEntityRequest(ctx context.Context, query string, 
 		return nil, fmt.Errorf("Expected Entity, got %T", response.Object)
 	}
 
-	attributes, err := sdp.ToAttributesCustom(map[string]interface{}{
+	attributes, err := sdp.ToAttributesCustom(map[string]any{
 		"asEventActor":    entity.AsEventActor,
 		"conformance":     entity.Conformance,
 		"events":          entity.Events,

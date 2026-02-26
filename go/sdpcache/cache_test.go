@@ -37,16 +37,16 @@ func cacheImplementations(tb testing.TB) []struct {
 		factory func() Cache
 	}{
 		{"MemoryCache", func() Cache { return NewMemoryCache() }},
-	{"BoltCache", func() Cache {
-		c, err := NewBoltCache(filepath.Join(tb.TempDir(), "cache.db"))
-		if err != nil {
-			tb.Fatalf("failed to create BoltCache: %v", err)
-		}
-		tb.Cleanup(func() {
-			_ = c.CloseAndDestroy()
-		})
-		return c
-	}},
+		{"BoltCache", func() Cache {
+			c, err := NewBoltCache(filepath.Join(tb.TempDir(), "cache.db"))
+			if err != nil {
+				tb.Fatalf("failed to create BoltCache: %v", err)
+			}
+			tb.Cleanup(func() {
+				_ = c.CloseAndDestroy()
+			})
+			return c
+		}},
 	}
 }
 
@@ -862,7 +862,7 @@ func TestMultipleItemsSameSST(t *testing.T) {
 				uav := fmt.Sprintf("item%d", i)
 
 				// Set the item's unique attribute value to match the CacheKey
-				attrs := make(map[string]interface{})
+				attrs := make(map[string]any)
 				if item.GetAttributes() != nil && item.GetAttributes().GetAttrStruct() != nil {
 					for k, v := range item.GetAttributes().GetAttrStruct().GetFields() {
 						attrs[k] = v
@@ -1030,22 +1030,18 @@ func TestMemoryCacheConcurrent(t *testing.T) {
 	numParallel := 1_000
 
 	for range numParallel {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			// Store the item
 			item := GenerateRandomItem()
 			ck := CacheKeyFromQuery(item.GetMetadata().GetSourceQuery(), item.GetMetadata().GetSourceName())
 
 			cache.StoreItem(ctx, item, 100*time.Millisecond, ck)
 
-			wg.Add(1)
 			// Create a goroutine to also delete in parallel
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				cache.Delete(ck)
-			}()
-		}()
+			})
+		})
 	}
 
 	wg.Wait()
@@ -1145,9 +1141,7 @@ func TestMemoryCacheLookupDeduplicationCompleteWithoutStore(t *testing.T) {
 	numWaiters := 3
 
 	// First goroutine: starts work and completes without storing anything
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		<-startBarrier
 
 		hit, ck, _, _, done := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
@@ -1162,13 +1156,11 @@ func TestMemoryCacheLookupDeduplicationCompleteWithoutStore(t *testing.T) {
 
 		// Complete without storing anything - triggers ErrCacheNotFound on re-check
 		cache.pending.Complete(ck.String())
-	}()
+	})
 
 	// Waiter goroutines
 	for range numWaiters {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			<-startBarrier
 
 			time.Sleep(10 * time.Millisecond)
@@ -1179,7 +1171,7 @@ func TestMemoryCacheLookupDeduplicationCompleteWithoutStore(t *testing.T) {
 			waiterMu.Lock()
 			waiterHits = append(waiterHits, hit)
 			waiterMu.Unlock()
-		}()
+		})
 	}
 
 	close(startBarrier)
@@ -1484,13 +1476,11 @@ func TestBoltCacheConcurrentCloseAndDestroy(t *testing.T) {
 
 	// Launch concurrent read/write operations
 	for range numOperations {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			item := GenerateRandomItem()
 			ck := CacheKeyFromQuery(item.GetMetadata().GetSourceQuery(), item.GetMetadata().GetSourceName())
 			cache.StoreItem(ctx, item, 10*time.Second, ck)
-		}()
+		})
 	}
 
 	// Wait a bit to let operations start
@@ -1498,14 +1488,12 @@ func TestBoltCacheConcurrentCloseAndDestroy(t *testing.T) {
 
 	// Close and destroy while operations are in flight
 	// The compaction lock should serialize this properly
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		err := cache.CloseAndDestroy()
 		if err != nil {
 			t.Logf("CloseAndDestroy returned error: %v", err)
 		}
-	}()
+	})
 
 	// Wait for all operations to complete
 	wg.Wait()
@@ -1753,9 +1741,7 @@ func TestBoltCacheLookupDeduplicationTimeout(t *testing.T) {
 	startBarrier := make(chan struct{})
 
 	// First goroutine: does the work but takes a long time
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		<-startBarrier
 
 		hit, ck, _, _, done := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
@@ -1773,13 +1759,11 @@ func TestBoltCacheLookupDeduplicationTimeout(t *testing.T) {
 		item.Scope = sst.Scope
 		item.Type = sst.Type
 		cache.StoreItem(ctx, item, 10*time.Second, ck)
-	}()
+	})
 
 	// Second goroutine: should timeout waiting
 	var secondHit bool
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		<-startBarrier
 
 		// Small delay to ensure first goroutine starts first
@@ -1792,7 +1776,7 @@ func TestBoltCacheLookupDeduplicationTimeout(t *testing.T) {
 		hit, _, _, _, done := cache.Lookup(shortCtx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
 		defer done()
 		secondHit = hit
-	}()
+	})
 
 	// Release all goroutines
 	close(startBarrier)
@@ -1840,9 +1824,7 @@ func TestBoltCacheLookupDeduplicationError(t *testing.T) {
 	numWaiters := 5
 
 	// First goroutine: does the work and stores an error
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		<-startBarrier
 
 		hit, ck, _, _, done := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
@@ -1857,13 +1839,11 @@ func TestBoltCacheLookupDeduplicationError(t *testing.T) {
 
 		// Store the error
 		cache.StoreError(ctx, expectedError, 10*time.Second, ck)
-	}()
+	})
 
 	// Waiter goroutines: should receive the error
 	for range numWaiters {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			<-startBarrier
 
 			// Small delay to ensure first goroutine starts first
@@ -1877,7 +1857,7 @@ func TestBoltCacheLookupDeduplicationError(t *testing.T) {
 				waiterErrors = append(waiterErrors, qErr)
 			}
 			waiterMu.Unlock()
-		}()
+		})
 	}
 
 	// Release all goroutines
@@ -1924,9 +1904,7 @@ func TestBoltCacheLookupDeduplicationCancel(t *testing.T) {
 	numWaiters := 3
 
 	// First goroutine: starts work but then calls done() without storing anything
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		<-startBarrier
 
 		hit, _, _, _, done := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
@@ -1939,13 +1917,11 @@ func TestBoltCacheLookupDeduplicationCancel(t *testing.T) {
 		// Simulate work that fails - done the pending work
 		time.Sleep(50 * time.Millisecond)
 		done()
-	}()
+	})
 
 	// Waiter goroutines
 	for range numWaiters {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			<-startBarrier
 
 			// Small delay to ensure first goroutine starts first
@@ -1957,7 +1933,7 @@ func TestBoltCacheLookupDeduplicationCancel(t *testing.T) {
 			waiterMu.Lock()
 			waiterHits = append(waiterHits, hit)
 			waiterMu.Unlock()
-		}()
+		})
 	}
 
 	// Release all goroutines
@@ -2002,9 +1978,7 @@ func TestBoltCacheLookupDeduplicationCompleteWithoutStore(t *testing.T) {
 
 	// First goroutine: starts work and completes without storing anything
 	// This simulates a LIST query that returns 0 items
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
+	wg.Go(func() {
 		<-startBarrier
 
 		hit, ck, _, _, done := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
@@ -2020,13 +1994,11 @@ func TestBoltCacheLookupDeduplicationCompleteWithoutStore(t *testing.T) {
 		// Complete without storing anything - no items, no error
 		// This triggers the ErrCacheNotFound path in waiters' re-check
 		cache.pending.Complete(ck.String())
-	}()
+	})
 
 	// Waiter goroutines
 	for range numWaiters {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			<-startBarrier
 
 			// Small delay to ensure first goroutine starts first
@@ -2038,7 +2010,7 @@ func TestBoltCacheLookupDeduplicationCompleteWithoutStore(t *testing.T) {
 			waiterMu.Lock()
 			waiterHits = append(waiterHits, hit)
 			waiterMu.Unlock()
-		}()
+		})
 	}
 
 	// Release all goroutines
@@ -2105,11 +2077,9 @@ func TestPendingWorkUnit(t *testing.T) {
 		var wg sync.WaitGroup
 		var waitOk bool
 
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			waitOk = pw.Wait(ctx, entry)
-		}()
+		})
 
 		// Give waiter time to start waiting
 		time.Sleep(10 * time.Millisecond)
@@ -2135,11 +2105,9 @@ func TestPendingWorkUnit(t *testing.T) {
 		var wg sync.WaitGroup
 		var waitOk bool
 
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			waitOk = pw.Wait(ctx, entry)
-		}()
+		})
 
 		// Give waiter time to start waiting
 		time.Sleep(10 * time.Millisecond)

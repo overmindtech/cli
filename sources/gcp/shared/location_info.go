@@ -2,6 +2,7 @@ package shared
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 )
 
@@ -226,10 +227,8 @@ func GetProjectIDsFromLocations(locationSlices ...[]LocationInfo) []string {
 // (e.g., filtering aggregatedList results to only configured locations).
 func HasLocationInSlices(loc LocationInfo, locationSlices ...[]LocationInfo) bool {
 	for _, locations := range locationSlices {
-		for _, configuredLoc := range locations {
-			if loc.Equals(configuredLoc) {
-				return true
-			}
+		if slices.ContainsFunc(locations, loc.Equals) {
+			return true
 		}
 	}
 	return false

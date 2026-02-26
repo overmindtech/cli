@@ -256,9 +256,9 @@ func TestConvertAzureTags(t *testing.T) {
 		{
 			name: "valid tags with values",
 			azureTags: map[string]*string{
-				"env":     stringPtr("production"),
-				"project": stringPtr("overmind"),
-				"team":    stringPtr("platform"),
+				"env":     new("production"),
+				"project": new("overmind"),
+				"team":    new("platform"),
 			},
 			expected: map[string]string{
 				"env":     "production",
@@ -279,9 +279,9 @@ func TestConvertAzureTags(t *testing.T) {
 		{
 			name: "tags with nil values - should be skipped",
 			azureTags: map[string]*string{
-				"env":     stringPtr("production"),
+				"env":     new("production"),
 				"project": nil,
-				"team":    stringPtr("platform"),
+				"team":    new("platform"),
 			},
 			expected: map[string]string{
 				"env":  "production",
@@ -300,7 +300,7 @@ func TestConvertAzureTags(t *testing.T) {
 		{
 			name: "single tag",
 			azureTags: map[string]*string{
-				"env": stringPtr("test"),
+				"env": new("test"),
 			},
 			expected: map[string]string{
 				"env": "test",
@@ -309,8 +309,8 @@ func TestConvertAzureTags(t *testing.T) {
 		{
 			name: "tags with empty string values",
 			azureTags: map[string]*string{
-				"env":     stringPtr(""),
-				"project": stringPtr("overmind"),
+				"env":     new(""),
+				"project": new("overmind"),
 			},
 			expected: map[string]string{
 				"env":     "",
@@ -320,8 +320,8 @@ func TestConvertAzureTags(t *testing.T) {
 		{
 			name: "tags with special characters",
 			azureTags: map[string]*string{
-				"tag-with-dashes": stringPtr("value_with_underscores"),
-				"tag.with.dots":   stringPtr("value with spaces"),
+				"tag-with-dashes": new("value_with_underscores"),
+				"tag.with.dots":   new("value with spaces"),
 			},
 			expected: map[string]string{
 				"tag-with-dashes": "value_with_underscores",
@@ -338,11 +338,6 @@ func TestConvertAzureTags(t *testing.T) {
 			}
 		})
 	}
-}
-
-// stringPtr is a helper function to create a pointer to a string
-func stringPtr(s string) *string {
-	return &s
 }
 
 func TestExtractSQLServerNameFromDatabaseID(t *testing.T) {

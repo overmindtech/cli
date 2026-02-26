@@ -14,60 +14,60 @@ import (
 func (t *ecsTestClient) DescribeTaskDefinition(ctx context.Context, params *ecs.DescribeTaskDefinitionInput, optFns ...func(*ecs.Options)) (*ecs.DescribeTaskDefinitionOutput, error) {
 	return &ecs.DescribeTaskDefinitionOutput{
 		TaskDefinition: &types.TaskDefinition{
-			TaskDefinitionArn: PtrString("arn:aws:ecs:eu-west-1:052392120703:task-definition/ecs-template-ecs-demo-app:1"),
+			TaskDefinitionArn: new("arn:aws:ecs:eu-west-1:052392120703:task-definition/ecs-template-ecs-demo-app:1"),
 			ContainerDefinitions: []types.ContainerDefinition{
 				{
-					Name:   PtrString("simple-app"),
-					Image:  PtrString("httpd:2.4"),
+					Name:   new("simple-app"),
+					Image:  new("httpd:2.4"),
 					Cpu:    10,
-					Memory: PtrInt32(300),
+					Memory: new(int32(300)),
 					Links:  []string{},
 					PortMappings: []types.PortMapping{
 						{
-							ContainerPort: PtrInt32(80),
-							HostPort:      PtrInt32(0),
+							ContainerPort: new(int32(80)),
+							HostPort:      new(int32(0)),
 							Protocol:      types.TransportProtocolTcp,
 							AppProtocol:   types.ApplicationProtocolHttp,
 						},
 					},
-					Essential:  PtrBool(true),
+					Essential:  new(true),
 					EntryPoint: []string{},
 					Command:    []string{},
 					Environment: []types.KeyValuePair{
 						{
-							Name:  PtrString("DATABASE_SERVER"),
-							Value: PtrString("database01.my-company.com"),
+							Name:  new("DATABASE_SERVER"),
+							Value: new("database01.my-company.com"),
 						},
 					},
 					EnvironmentFiles: []types.EnvironmentFile{},
 					MountPoints: []types.MountPoint{
 						{
-							SourceVolume:  PtrString("my-vol"),
-							ContainerPath: PtrString("/usr/local/apache2/htdocs"),
-							ReadOnly:      PtrBool(false),
+							SourceVolume:  new("my-vol"),
+							ContainerPath: new("/usr/local/apache2/htdocs"),
+							ReadOnly:      new(false),
 						},
 					},
 					VolumesFrom: []types.VolumeFrom{
 						{
-							SourceContainer: PtrString("container"),
+							SourceContainer: new("container"),
 						},
 					},
 					Secrets: []types.Secret{
 						{
-							Name:      PtrString("secrets-manager"),
-							ValueFrom: PtrString("arn:aws:secretsmanager:us-west-2:123456789012:secret:my-path/my-secret-name-1a2b3c"), // link
+							Name:      new("secrets-manager"),
+							ValueFrom: new("arn:aws:secretsmanager:us-west-2:123456789012:secret:my-path/my-secret-name-1a2b3c"), // link
 						},
 						{
-							Name:      PtrString("ssm"),
-							ValueFrom: PtrString("arn:aws:ssm:us-east-2:123456789012:parameter/prod-123"), // link
+							Name:      new("ssm"),
+							ValueFrom: new("arn:aws:ssm:us-east-2:123456789012:parameter/prod-123"), // link
 						},
 					},
 					DnsServers:       []string{},
 					DnsSearchDomains: []string{},
 					ExtraHosts: []types.HostEntry{
 						{
-							Hostname:  PtrString("host"),
-							IpAddress: PtrString("127.0.0.1"),
+							Hostname:  new("host"),
+							IpAddress: new("127.0.0.1"),
 						},
 					},
 					DockerSecurityOptions: []string{},
@@ -82,43 +82,43 @@ func (t *ecsTestClient) DescribeTaskDefinition(ctx context.Context, params *ecs.
 						},
 						SecretOptions: []types.Secret{
 							{
-								Name:      PtrString("secrets-manager"),
-								ValueFrom: PtrString("arn:aws:secretsmanager:us-west-2:123456789012:secret:my-path/my-secret-name-1a2b3c"), // link
+								Name:      new("secrets-manager"),
+								ValueFrom: new("arn:aws:secretsmanager:us-west-2:123456789012:secret:my-path/my-secret-name-1a2b3c"), // link
 							},
 							{
-								Name:      PtrString("ssm"),
-								ValueFrom: PtrString("arn:aws:ssm:us-east-2:123456789012:parameter/prod-123"), // link
+								Name:      new("ssm"),
+								ValueFrom: new("arn:aws:ssm:us-east-2:123456789012:parameter/prod-123"), // link
 							},
 						},
 					},
 					SystemControls:    []types.SystemControl{},
 					DependsOn:         []types.ContainerDependency{},
-					DisableNetworking: PtrBool(false),
+					DisableNetworking: new(false),
 					FirelensConfiguration: &types.FirelensConfiguration{
 						Type:    types.FirelensConfigurationTypeFluentd,
 						Options: map[string]string{},
 					},
 					HealthCheck:            &types.HealthCheck{},
-					Hostname:               PtrString("hostname"),
-					Interactive:            PtrBool(false),
+					Hostname:               new("hostname"),
+					Interactive:            new(false),
 					LinuxParameters:        &types.LinuxParameters{},
-					MemoryReservation:      PtrInt32(100),
-					Privileged:             PtrBool(false),
-					PseudoTerminal:         PtrBool(false),
-					ReadonlyRootFilesystem: PtrBool(false),
+					MemoryReservation:      new(int32(100)),
+					Privileged:             new(false),
+					PseudoTerminal:         new(false),
+					ReadonlyRootFilesystem: new(false),
 					RepositoryCredentials:  &types.RepositoryCredentials{}, // Skipping the link here for now, if you need it, add it in a PR
 					ResourceRequirements:   []types.ResourceRequirement{},
-					StartTimeout:           PtrInt32(1),
-					StopTimeout:            PtrInt32(1),
-					User:                   PtrString("foo"),
-					WorkingDirectory:       PtrString("/"),
+					StartTimeout:           new(int32(1)),
+					StopTimeout:            new(int32(1)),
+					User:                   new("foo"),
+					WorkingDirectory:       new("/"),
 				},
 				{
-					Name:      PtrString("busybox"),
-					Image:     PtrString("busybox"),
+					Name:      new("busybox"),
+					Image:     new("busybox"),
 					Cpu:       10,
-					Memory:    PtrInt32(200),
-					Essential: PtrBool(false),
+					Memory:    new(int32(200)),
+					Essential: new(false),
 					EntryPoint: []string{
 						"sh",
 						"-c",
@@ -128,7 +128,7 @@ func (t *ecsTestClient) DescribeTaskDefinition(ctx context.Context, params *ecs.
 					},
 					VolumesFrom: []types.VolumeFrom{
 						{
-							SourceContainer: PtrString("simple-app"),
+							SourceContainer: new("simple-app"),
 						},
 					},
 					DockerLabels: map[string]string{},
@@ -142,29 +142,29 @@ func (t *ecsTestClient) DescribeTaskDefinition(ctx context.Context, params *ecs.
 					},
 				},
 			},
-			Family:   PtrString("ecs-template-ecs-demo-app"),
+			Family:   new("ecs-template-ecs-demo-app"),
 			Revision: 1,
 			Volumes: []types.Volume{
 				{
-					Name: PtrString("my-vol"),
+					Name: new("my-vol"),
 					Host: &types.HostVolumeProperties{
-						SourcePath: PtrString("/"),
+						SourcePath: new("/"),
 					},
 				},
 			},
 			Status: types.TaskDefinitionStatusActive,
 			RequiresAttributes: []types.Attribute{
 				{
-					Name: PtrString("com.amazonaws.ecs.capability.logging-driver.awslogs"),
+					Name: new("com.amazonaws.ecs.capability.logging-driver.awslogs"),
 				},
 				{
-					Name: PtrString("com.amazonaws.ecs.capability.docker-remote-api.1.19"),
+					Name: new("com.amazonaws.ecs.capability.docker-remote-api.1.19"),
 				},
 				{
-					Name: PtrString("com.amazonaws.ecs.capability.docker-remote-api.1.17"),
+					Name: new("com.amazonaws.ecs.capability.docker-remote-api.1.17"),
 				},
 				{
-					Name: PtrString("com.amazonaws.ecs.capability.docker-remote-api.1.18"),
+					Name: new("com.amazonaws.ecs.capability.docker-remote-api.1.18"),
 				},
 			},
 			PlacementConstraints: []types.TaskDefinitionPlacementConstraint{},
@@ -172,17 +172,17 @@ func (t *ecsTestClient) DescribeTaskDefinition(ctx context.Context, params *ecs.
 				"EXTERNAL",
 				"EC2",
 			},
-			RegisteredAt:   PtrTime(time.Now()),
-			RegisteredBy:   PtrString("arn:aws:sts::052392120703:assumed-role/AWSReservedSSO_AWSAdministratorAccess_c1c3c9c54821c68a/dylan@overmind.tech"),
-			Cpu:            PtrString("cpu"),
-			DeregisteredAt: PtrTime(time.Now()),
+			RegisteredAt:   new(time.Now()),
+			RegisteredBy:   new("arn:aws:sts::052392120703:assumed-role/AWSReservedSSO_AWSAdministratorAccess_c1c3c9c54821c68a/dylan@overmind.tech"),
+			Cpu:            new("cpu"),
+			DeregisteredAt: new(time.Now()),
 			EphemeralStorage: &types.EphemeralStorage{
 				SizeInGiB: 1,
 			},
-			ExecutionRoleArn:        PtrString("arn:aws:iam:us-east-2:123456789012:role/foo"), // link
+			ExecutionRoleArn:        new("arn:aws:iam:us-east-2:123456789012:role/foo"), // link
 			InferenceAccelerators:   []types.InferenceAccelerator{},
 			IpcMode:                 types.IpcModeHost,
-			Memory:                  PtrString("memory"),
+			Memory:                  new("memory"),
 			NetworkMode:             types.NetworkModeAwsvpc,
 			PidMode:                 types.PidModeHost,
 			ProxyConfiguration:      nil,
@@ -191,7 +191,7 @@ func (t *ecsTestClient) DescribeTaskDefinition(ctx context.Context, params *ecs.
 				CpuArchitecture:       types.CPUArchitectureX8664,
 				OperatingSystemFamily: types.OSFamilyLinux,
 			},
-			TaskRoleArn: PtrString("arn:aws:iam:us-east-2:123456789012:role/bar"), // link
+			TaskRoleArn: new("arn:aws:iam:us-east-2:123456789012:role/bar"), // link
 		},
 	}, nil
 }
@@ -206,7 +206,7 @@ func (t *ecsTestClient) ListTaskDefinitions(context.Context, *ecs.ListTaskDefini
 
 func TestTaskDefinitionGetFunc(t *testing.T) {
 	item, err := taskDefinitionGetFunc(context.Background(), &ecsTestClient{}, "foo", &ecs.DescribeTaskDefinitionInput{
-		TaskDefinition: PtrString("ecs-template-ecs-demo-app:1"),
+		TaskDefinition: new("ecs-template-ecs-demo-app:1"),
 	})
 
 	if err != nil {

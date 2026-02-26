@@ -121,7 +121,7 @@ func TestAIPlatformCustomJob(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://aiplatform.googleapis.com/v1/projects/%s/locations/global/customJobs/%s", projectID, jobID): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Custom job not found"},
+				Body:       map[string]any{"error": "Custom job not found"},
 			},
 		}
 

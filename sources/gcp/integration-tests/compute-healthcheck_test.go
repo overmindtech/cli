@@ -12,7 +12,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/googleapis/gax-go/v2/apierror"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdpcache"
@@ -135,12 +134,12 @@ func TestComputeHealthCheckIntegration(t *testing.T) {
 // createComputeHealthCheck creates a GCP Compute HealthCheck with the given parameters.
 func createComputeHealthCheck(ctx context.Context, client *compute.HealthChecksClient, projectID, healthCheckName string) error {
 	healthCheck := &computepb.HealthCheck{
-		Name:             ptr.To(healthCheckName),
-		CheckIntervalSec: ptr.To(int32(5)),
-		TimeoutSec:       ptr.To(int32(5)),
-		Type:             ptr.To("TCP"),
+		Name:             new(healthCheckName),
+		CheckIntervalSec: new(int32(5)),
+		TimeoutSec:       new(int32(5)),
+		Type:             new("TCP"),
 		TcpHealthCheck: &computepb.TCPHealthCheck{
-			Port: ptr.To(int32(80)),
+			Port: new(int32(80)),
 		},
 	}
 

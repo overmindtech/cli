@@ -33,8 +33,8 @@ func (m mockRdsClient) ListTagsForResource(ctx context.Context, params *rds.List
 	return &rds.ListTagsForResourceOutput{
 		TagList: []types.Tag{
 			{
-				Key:   PtrString("key"),
-				Value: PtrString("value"),
+				Key:   new("key"),
+				Value: new("value"),
 			},
 		},
 	}, nil

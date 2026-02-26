@@ -43,13 +43,13 @@ func TestTransitGatewayRouteTableOutputMapper(t *testing.T) {
 	output := &ec2.DescribeTransitGatewayRouteTablesOutput{
 		TransitGatewayRouteTables: []types.TransitGatewayRouteTable{
 			{
-				TransitGatewayRouteTableId:   PtrString("tgw-rtb-0123456789abcdef0"),
-				TransitGatewayId:             PtrString("tgw-0abc123"),
+				TransitGatewayRouteTableId:   new("tgw-rtb-0123456789abcdef0"),
+				TransitGatewayId:             new("tgw-0abc123"),
 				State:                        types.TransitGatewayRouteTableStateAvailable,
-				DefaultAssociationRouteTable: PtrBool(false),
-				DefaultPropagationRouteTable: PtrBool(false),
+				DefaultAssociationRouteTable: new(false),
+				DefaultPropagationRouteTable: new(false),
 				Tags: []types.Tag{
-					{Key: PtrString("Name"), Value: PtrString("my-route-table")},
+					{Key: new("Name"), Value: new("my-route-table")},
 				},
 			},
 		},

@@ -171,7 +171,7 @@ func TestPubSubSubscription(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://pubsub.googleapis.com/v1/projects/%s/subscriptions/%s", projectID, subscriptionName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Subscription not found"},
+				Body:       map[string]any{"error": "Subscription not found"},
 			},
 		}
 

@@ -12,7 +12,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdpcache"
@@ -369,22 +368,22 @@ func createVirtualNetworkForLB(ctx context.Context, client *armnetwork.VirtualNe
 
 	// Create the VNet
 	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroupName, vnetName, armnetwork.VirtualNetwork{
-		Location: ptr.To(location),
+		Location: new(location),
 		Properties: &armnetwork.VirtualNetworkPropertiesFormat{
 			AddressSpace: &armnetwork.AddressSpace{
-				AddressPrefixes: []*string{ptr.To("10.2.0.0/16")},
+				AddressPrefixes: []*string{new("10.2.0.0/16")},
 			},
 			Subnets: []*armnetwork.Subnet{
 				{
-					Name: ptr.To(integrationTestSubnetNameForLB),
+					Name: new(integrationTestSubnetNameForLB),
 					Properties: &armnetwork.SubnetPropertiesFormat{
-						AddressPrefix: ptr.To("10.2.0.0/24"),
+						AddressPrefix: new("10.2.0.0/24"),
 					},
 				},
 			},
 		},
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
+			"purpose": new("overmind-integration-tests"),
 		},
 	}, nil)
 	if err != nil {
@@ -432,16 +431,16 @@ func createPublicIPForLB(ctx context.Context, client *armnetwork.PublicIPAddress
 
 	// Create the public IP address
 	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroupName, publicIPName, armnetwork.PublicIPAddress{
-		Location: ptr.To(location),
+		Location: new(location),
 		Properties: &armnetwork.PublicIPAddressPropertiesFormat{
-			PublicIPAllocationMethod: ptr.To(armnetwork.IPAllocationMethodStatic),
-			PublicIPAddressVersion:   ptr.To(armnetwork.IPVersionIPv4),
+			PublicIPAllocationMethod: new(armnetwork.IPAllocationMethodStatic),
+			PublicIPAddressVersion:   new(armnetwork.IPVersionIPv4),
 		},
 		SKU: &armnetwork.PublicIPAddressSKU{
-			Name: ptr.To(armnetwork.PublicIPAddressSKUNameStandard),
+			Name: new(armnetwork.PublicIPAddressSKUNameStandard),
 		},
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
+			"purpose": new("overmind-integration-tests"),
 		},
 	}, nil)
 	if err != nil {
@@ -489,47 +488,47 @@ func createPublicLoadBalancer(ctx context.Context, client *armnetwork.LoadBalanc
 
 	// Create the public load balancer
 	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroupName, lbName, armnetwork.LoadBalancer{
-		Location: ptr.To(location),
+		Location: new(location),
 		Properties: &armnetwork.LoadBalancerPropertiesFormat{
 			FrontendIPConfigurations: []*armnetwork.FrontendIPConfiguration{
 				{
-					Name: ptr.To("frontend-ip-config-public"),
+					Name: new("frontend-ip-config-public"),
 					Properties: &armnetwork.FrontendIPConfigurationPropertiesFormat{
 						PublicIPAddress: &armnetwork.PublicIPAddress{
-							ID: ptr.To(publicIPID),
+							ID: new(publicIPID),
 						},
 					},
 				},
 			},
 			BackendAddressPools: []*armnetwork.BackendAddressPool{
 				{
-					Name: ptr.To("backend-pool"),
+					Name: new("backend-pool"),
 				},
 			},
 			LoadBalancingRules: []*armnetwork.LoadBalancingRule{
 				{
-					Name: ptr.To("lb-rule"),
+					Name: new("lb-rule"),
 					Properties: &armnetwork.LoadBalancingRulePropertiesFormat{
 						FrontendIPConfiguration: &armnetwork.SubResource{
-							ID: ptr.To(fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/loadBalancers/%s/frontendIPConfigurations/frontend-ip-config-public", os.Getenv("AZURE_SUBSCRIPTION_ID"), resourceGroupName, lbName)),
+							ID: new(fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/loadBalancers/%s/frontendIPConfigurations/frontend-ip-config-public", os.Getenv("AZURE_SUBSCRIPTION_ID"), resourceGroupName, lbName)),
 						},
 						BackendAddressPool: &armnetwork.SubResource{
-							ID: ptr.To(fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/loadBalancers/%s/backendAddressPools/backend-pool", os.Getenv("AZURE_SUBSCRIPTION_ID"), resourceGroupName, lbName)),
+							ID: new(fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/loadBalancers/%s/backendAddressPools/backend-pool", os.Getenv("AZURE_SUBSCRIPTION_ID"), resourceGroupName, lbName)),
 						},
-						Protocol:             ptr.To(armnetwork.TransportProtocolTCP),
-						FrontendPort:         ptr.To[int32](80),
-						BackendPort:          ptr.To[int32](80),
-						EnableFloatingIP:     ptr.To(false),
-						IdleTimeoutInMinutes: ptr.To[int32](4),
+						Protocol:             new(armnetwork.TransportProtocolTCP),
+						FrontendPort:         new(int32(80)),
+						BackendPort:          new(int32(80)),
+						EnableFloatingIP:     new(false),
+						IdleTimeoutInMinutes: new(int32(4)),
 					},
 				},
 			},
 		},
 		SKU: &armnetwork.LoadBalancerSKU{
-			Name: ptr.To(armnetwork.LoadBalancerSKUNameStandard),
+			Name: new(armnetwork.LoadBalancerSKUNameStandard),
 		},
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
+			"purpose": new("overmind-integration-tests"),
 		},
 	}, nil)
 	if err != nil {
@@ -556,49 +555,49 @@ func createInternalLoadBalancer(ctx context.Context, client *armnetwork.LoadBala
 
 	// Create the internal load balancer
 	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroupName, lbName, armnetwork.LoadBalancer{
-		Location: ptr.To(location),
+		Location: new(location),
 		Properties: &armnetwork.LoadBalancerPropertiesFormat{
 			FrontendIPConfigurations: []*armnetwork.FrontendIPConfiguration{
 				{
-					Name: ptr.To("frontend-ip-config-internal"),
+					Name: new("frontend-ip-config-internal"),
 					Properties: &armnetwork.FrontendIPConfigurationPropertiesFormat{
 						Subnet: &armnetwork.Subnet{
-							ID: ptr.To(subnetID),
+							ID: new(subnetID),
 						},
-						PrivateIPAddress:          ptr.To("10.2.0.5"),
-						PrivateIPAllocationMethod: ptr.To(armnetwork.IPAllocationMethodStatic),
+						PrivateIPAddress:          new("10.2.0.5"),
+						PrivateIPAllocationMethod: new(armnetwork.IPAllocationMethodStatic),
 					},
 				},
 			},
 			BackendAddressPools: []*armnetwork.BackendAddressPool{
 				{
-					Name: ptr.To("backend-pool"),
+					Name: new("backend-pool"),
 				},
 			},
 			LoadBalancingRules: []*armnetwork.LoadBalancingRule{
 				{
-					Name: ptr.To("lb-rule"),
+					Name: new("lb-rule"),
 					Properties: &armnetwork.LoadBalancingRulePropertiesFormat{
 						FrontendIPConfiguration: &armnetwork.SubResource{
-							ID: ptr.To(fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/loadBalancers/%s/frontendIPConfigurations/frontend-ip-config-internal", os.Getenv("AZURE_SUBSCRIPTION_ID"), resourceGroupName, lbName)),
+							ID: new(fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/loadBalancers/%s/frontendIPConfigurations/frontend-ip-config-internal", os.Getenv("AZURE_SUBSCRIPTION_ID"), resourceGroupName, lbName)),
 						},
 						BackendAddressPool: &armnetwork.SubResource{
-							ID: ptr.To(fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/loadBalancers/%s/backendAddressPools/backend-pool", os.Getenv("AZURE_SUBSCRIPTION_ID"), resourceGroupName, lbName)),
+							ID: new(fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/loadBalancers/%s/backendAddressPools/backend-pool", os.Getenv("AZURE_SUBSCRIPTION_ID"), resourceGroupName, lbName)),
 						},
-						Protocol:             ptr.To(armnetwork.TransportProtocolTCP),
-						FrontendPort:         ptr.To[int32](80),
-						BackendPort:          ptr.To[int32](80),
-						EnableFloatingIP:     ptr.To(false),
-						IdleTimeoutInMinutes: ptr.To[int32](4),
+						Protocol:             new(armnetwork.TransportProtocolTCP),
+						FrontendPort:         new(int32(80)),
+						BackendPort:          new(int32(80)),
+						EnableFloatingIP:     new(false),
+						IdleTimeoutInMinutes: new(int32(4)),
 					},
 				},
 			},
 		},
 		SKU: &armnetwork.LoadBalancerSKU{
-			Name: ptr.To(armnetwork.LoadBalancerSKUNameStandard),
+			Name: new(armnetwork.LoadBalancerSKUNameStandard),
 		},
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
+			"purpose": new("overmind-integration-tests"),
 		},
 	}, nil)
 	if err != nil {

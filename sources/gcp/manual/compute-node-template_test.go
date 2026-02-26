@@ -9,7 +9,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/api/iterator"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -266,12 +265,12 @@ func TestComputeNodeTemplate(t *testing.T) {
 // Create an node template fixture (as returned from GCP API).
 func createNodeTemplateApiFixture(nodeTemplateName string) *computepb.NodeTemplate {
 	return &computepb.NodeTemplate{
-		Name:     ptr.To(nodeTemplateName),
-		NodeType: ptr.To("c2-node-60-240"),
+		Name:     new(nodeTemplateName),
+		NodeType: new("c2-node-60-240"),
 		ServerBinding: &computepb.ServerBinding{
-			Type: ptr.To("RESTART_NODE_ON_ANY_SERVER"),
+			Type: new("RESTART_NODE_ON_ANY_SERVER"),
 		},
-		SelfLink: ptr.To("test-self-link"),
-		Region:   ptr.To("us-central1"),
+		SelfLink: new("test-self-link"),
+		Region:   new("us-central1"),
 	}
 }

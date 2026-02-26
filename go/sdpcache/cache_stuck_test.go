@@ -37,9 +37,7 @@ func TestListErrorWithProperCleanup(t *testing.T) {
 
 			// First goroutine: Gets cache miss, simulates work that errors,
 			// and properly calls StoreError to cache the error
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				<-startBarrier
 
 				hit, ck, _, _, done := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
@@ -60,12 +58,10 @@ func TestListErrorWithProperCleanup(t *testing.T) {
 				}
 				cache.StoreError(ctx, err, 1*time.Hour, ck)
 				t.Log("First goroutine: properly called StoreError")
-			}()
+			})
 
 			// Second goroutine: Should get cached error immediately
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				<-startBarrier
 
 				// Small delay to ensure first goroutine starts first
@@ -87,7 +83,7 @@ func TestListErrorWithProperCleanup(t *testing.T) {
 					t.Error("second goroutine: expected cached error")
 				}
 				t.Logf("Second goroutine: got cached error after %v", secondCallDuration)
-			}()
+			})
 
 			// Release all goroutines
 			close(startBarrier)
@@ -128,9 +124,7 @@ func TestListErrorWithProperDone(t *testing.T) {
 
 			// First goroutine: Gets cache miss, simulates work that errors,
 			// and PROPERLY calls the done function
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				<-startBarrier
 
 				hit, _, _, _, done := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
@@ -147,12 +141,10 @@ func TestListErrorWithProperDone(t *testing.T) {
 				// CORRECT BEHAVIOR: Call done to release resources
 				done()
 				t.Log("First goroutine: properly called done()")
-			}()
+			})
 
 			// Second goroutine: Should receive cache miss quickly (not block)
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				<-startBarrier
 
 				// Small delay to ensure first goroutine starts first
@@ -168,7 +160,7 @@ func TestListErrorWithProperDone(t *testing.T) {
 				}
 
 				t.Logf("Second goroutine: got cache miss after %v", secondCallDuration)
-			}()
+			})
 
 			// Release all goroutines
 			close(startBarrier)
@@ -220,9 +212,7 @@ func TestListErrorWithStoreError(t *testing.T) {
 
 			// First goroutine: Gets cache miss, simulates work that errors,
 			// and PROPERLY calls StoreError
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				<-startBarrier
 
 				hit, ck, _, _, done := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
@@ -239,12 +229,10 @@ func TestListErrorWithStoreError(t *testing.T) {
 				// CORRECT BEHAVIOR: Store the error so other callers can get it
 				cache.StoreError(ctx, expectedError, 10*time.Second, ck)
 				t.Log("First goroutine: properly called StoreError")
-			}()
+			})
 
 			// Second goroutine: Should receive the cached error
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				<-startBarrier
 
 				// Small delay to ensure first goroutine starts first
@@ -262,7 +250,7 @@ func TestListErrorWithStoreError(t *testing.T) {
 				}
 
 				t.Logf("Second goroutine: got result after %v", secondCallDuration)
-			}()
+			})
 
 			// Release all goroutines
 			close(startBarrier)
@@ -314,9 +302,7 @@ func TestListReturnsEmptyButNoStore(t *testing.T) {
 			var secondCallDuration time.Duration
 
 			// First goroutine: LIST returns 0 items, completes without storing
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				<-startBarrier
 
 				hit, ck, _, _, done := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
@@ -340,12 +326,10 @@ func TestListReturnsEmptyButNoStore(t *testing.T) {
 				}
 
 				t.Log("First goroutine: completed work but stored nothing")
-			}()
+			})
 
 			// Second goroutine: Should get cache miss
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				<-startBarrier
 
 				// Small delay to ensure first goroutine starts first
@@ -357,7 +341,7 @@ func TestListReturnsEmptyButNoStore(t *testing.T) {
 				secondCallDuration = time.Since(start)
 
 				t.Logf("Second goroutine: hit=%v, duration=%v", secondCallHit, secondCallDuration)
-			}()
+			})
 
 			// Release all goroutines
 			close(startBarrier)

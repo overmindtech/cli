@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"strings"
 
 	"buf.build/go/protovalidate"
@@ -241,10 +242,8 @@ func (s *standardAdapterCore) validateScopes(scope string) error {
 		}
 	}
 
-	for _, expectedScope := range s.Scopes() {
-		if scope == expectedScope {
-			return nil
-		}
+	if slices.Contains(s.Scopes(), scope) {
+		return nil
 	}
 
 	return &sdp.QueryError{
@@ -1088,13 +1087,7 @@ func validatePredefinedRole(wrapper Wrapper) error {
 
 	// Check if all IAM permissions from the wrapper exist in the predefined role's IAMPermissions
 	for _, perm := range iamPermissions {
-		found := false
-		for _, rolePerm := range role.IAMPermissions {
-			if perm == rolePerm {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(role.IAMPermissions, perm)
 		if !found {
 			return fmt.Errorf("IAM permission %s from wrapper is not included in predefined role %s IAMPermissions", perm, pRole)
 		}

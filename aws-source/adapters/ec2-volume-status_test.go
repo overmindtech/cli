@@ -45,33 +45,33 @@ func TestVolumeStatusOutputMapper(t *testing.T) {
 			{
 				Actions: []types.VolumeStatusAction{
 					{
-						Code:        PtrString("enable-volume-io"),
-						Description: PtrString("Enable volume I/O"),
-						EventId:     PtrString("12"),
-						EventType:   PtrString("io-enabled"),
+						Code:        new("enable-volume-io"),
+						Description: new("Enable volume I/O"),
+						EventId:     new("12"),
+						EventType:   new("io-enabled"),
 					},
 				},
-				AvailabilityZone: PtrString("eu-west-2c"),
+				AvailabilityZone: new("eu-west-2c"),
 				Events: []types.VolumeStatusEvent{
 					{
-						Description: PtrString("The volume is operating normally"),
-						EventId:     PtrString("12"),
-						EventType:   PtrString("io-enabled"),
-						InstanceId:  PtrString("i-0667d3ca802741e30"), // link
-						NotAfter:    PtrTime(time.Now()),
-						NotBefore:   PtrTime(time.Now()),
+						Description: new("The volume is operating normally"),
+						EventId:     new("12"),
+						EventType:   new("io-enabled"),
+						InstanceId:  new("i-0667d3ca802741e30"), // link
+						NotAfter:    new(time.Now()),
+						NotBefore:   new(time.Now()),
 					},
 				},
-				VolumeId: PtrString("vol-0a38796ac85e21c11"), // link
+				VolumeId: new("vol-0a38796ac85e21c11"), // link
 				VolumeStatus: &types.VolumeStatusInfo{
 					Details: []types.VolumeStatusDetails{
 						{
 							Name:   types.VolumeStatusNameIoEnabled,
-							Status: PtrString("passed"),
+							Status: new("passed"),
 						},
 						{
 							Name:   types.VolumeStatusNameIoPerformance,
-							Status: PtrString("not-applicable"),
+							Status: new("not-applicable"),
 						},
 					},
 					Status: types.VolumeStatusInfoStatusOk,

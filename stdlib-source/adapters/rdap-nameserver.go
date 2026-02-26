@@ -141,7 +141,7 @@ func (s *RdapNameserverAdapter) Search(ctx context.Context, scope string, query 
 		return nil, fmt.Errorf("Expected Nameserver, got %T", response.Object)
 	}
 
-	attributes, err := sdp.ToAttributesCustom(map[string]interface{}{
+	attributes, err := sdp.ToAttributesCustom(map[string]any{
 		"conformance":     nameserver.Conformance,
 		"objectClassName": nameserver.ObjectClassName,
 		"notices":         nameserver.Notices,

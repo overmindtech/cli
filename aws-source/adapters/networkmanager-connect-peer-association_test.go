@@ -14,10 +14,10 @@ func TestConnectPeerAssociationsOutputMapper(t *testing.T) {
 	output := networkmanager.GetConnectPeerAssociationsOutput{
 		ConnectPeerAssociations: []types.ConnectPeerAssociation{
 			{
-				ConnectPeerId:   PtrString("cp-1"),
-				DeviceId:        PtrString("dvc-1"),
-				GlobalNetworkId: PtrString("default"),
-				LinkId:          PtrString("link-1"),
+				ConnectPeerId:   new("cp-1"),
+				DeviceId:        new("dvc-1"),
+				GlobalNetworkId: new("default"),
+				LinkId:          new("link-1"),
 			},
 		},
 	}

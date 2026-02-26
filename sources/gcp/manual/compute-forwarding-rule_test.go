@@ -10,7 +10,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/api/iterator"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -249,7 +248,7 @@ func TestComputeForwardingRule(t *testing.T) {
 		// Test with TargetHttpProxy
 		targetURL := fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/global/targetHttpProxies/test-target-proxy", projectID)
 		forwardingRule := createForwardingRule("test-rule", projectID, region, "192.168.1.1")
-		forwardingRule.Target = ptr.To(targetURL)
+		forwardingRule.Target = new(targetURL)
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(forwardingRule, nil)
 
@@ -306,7 +305,7 @@ func TestComputeForwardingRule(t *testing.T) {
 
 		baseForwardingRuleURL := fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/forwardingRules/base-forwarding-rule", projectID, region)
 		forwardingRule := createForwardingRule("test-rule", projectID, region, "192.168.1.1")
-		forwardingRule.BaseForwardingRule = ptr.To(baseForwardingRuleURL)
+		forwardingRule.BaseForwardingRule = new(baseForwardingRuleURL)
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(forwardingRule, nil)
 
@@ -363,7 +362,7 @@ func TestComputeForwardingRule(t *testing.T) {
 
 		ipCollectionURL := fmt.Sprintf("projects/%s/regions/%s/publicDelegatedPrefixes/test-prefix", projectID, region)
 		forwardingRule := createForwardingRule("test-rule", projectID, region, "192.168.1.1")
-		forwardingRule.IpCollection = ptr.To(ipCollectionURL)
+		forwardingRule.IpCollection = new(ipCollectionURL)
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(forwardingRule, nil)
 
@@ -423,8 +422,8 @@ func TestComputeForwardingRule(t *testing.T) {
 		forwardingRule := createForwardingRule("test-rule", projectID, region, "192.168.1.1")
 		forwardingRule.ServiceDirectoryRegistrations = []*computepb.ForwardingRuleServiceDirectoryRegistration{
 			{
-				Namespace: ptr.To(namespaceURL),
-				Service:   ptr.To(serviceName),
+				Namespace: new(namespaceURL),
+				Service:   new(serviceName),
 			},
 		}
 
@@ -489,11 +488,11 @@ func TestComputeForwardingRule(t *testing.T) {
 
 func createForwardingRule(name, projectID, region, ipAddress string) *computepb.ForwardingRule {
 	return &computepb.ForwardingRule{
-		Name:           ptr.To(name),
-		IPAddress:      ptr.To(ipAddress),
+		Name:           new(name),
+		IPAddress:      new(ipAddress),
 		Labels:         map[string]string{"env": "test"},
-		Network:        ptr.To(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/networks/test-network", projectID)),
-		Subnetwork:     ptr.To(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/regions/%s/subnetworks/test-subnetwork", projectID, region)),
-		BackendService: ptr.To(fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/backendServices/backend-service", projectID, region)),
+		Network:        new(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/networks/test-network", projectID)),
+		Subnetwork:     new(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/regions/%s/subnetworks/test-subnetwork", projectID, region)),
+		BackendService: new(fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/backendServices/backend-service", projectID, region)),
 	}
 }

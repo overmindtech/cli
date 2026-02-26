@@ -14,26 +14,26 @@ import (
 var NodeGroupClient = EKSTestClient{
 	DescribeNodegroupOutput: &eks.DescribeNodegroupOutput{
 		Nodegroup: &types.Nodegroup{
-			NodegroupName:  PtrString("default-2022122213523169820000001f"),
-			NodegroupArn:   PtrString("arn:aws:eks:eu-west-2:801795385023:nodegroup/dylan/default-2022122213523169820000001f/98c29d0d-b22a-aaa3-445e-ebf71d43f67c"),
-			ClusterName:    PtrString("dylan"),
-			Version:        PtrString("1.24"),
-			ReleaseVersion: PtrString("1.24.7-20221112"),
-			CreatedAt:      PtrTime(time.Now()),
-			ModifiedAt:     PtrTime(time.Now()),
+			NodegroupName:  new("default-2022122213523169820000001f"),
+			NodegroupArn:   new("arn:aws:eks:eu-west-2:801795385023:nodegroup/dylan/default-2022122213523169820000001f/98c29d0d-b22a-aaa3-445e-ebf71d43f67c"),
+			ClusterName:    new("dylan"),
+			Version:        new("1.24"),
+			ReleaseVersion: new("1.24.7-20221112"),
+			CreatedAt:      new(time.Now()),
+			ModifiedAt:     new(time.Now()),
 			Status:         types.NodegroupStatusActive,
 			CapacityType:   types.CapacityTypesOnDemand,
-			DiskSize:       PtrInt32(100),
+			DiskSize:       new(int32(100)),
 			RemoteAccess: &types.RemoteAccessConfig{
-				Ec2SshKey: PtrString("key"), // link
+				Ec2SshKey: new("key"), // link
 				SourceSecurityGroups: []string{
 					"sg1", // link
 				},
 			},
 			ScalingConfig: &types.NodegroupScalingConfig{
-				MinSize:     PtrInt32(1),
-				MaxSize:     PtrInt32(3),
-				DesiredSize: PtrInt32(1),
+				MinSize:     new(int32(1)),
+				MaxSize:     new(int32(3)),
+				DesiredSize: new(int32(1)),
 			},
 			InstanceTypes: []string{
 				"T3large",
@@ -42,33 +42,33 @@ var NodeGroupClient = EKSTestClient{
 				"subnet0d1fabfe6794b5543", // link
 			},
 			AmiType:  types.AMITypesAl2Arm64,
-			NodeRole: PtrString("arn:aws:iam::801795385023:role/default-eks-node-group-20221222134106992000000003"),
+			NodeRole: new("arn:aws:iam::801795385023:role/default-eks-node-group-20221222134106992000000003"),
 			Labels:   map[string]string{},
 			Taints: []types.Taint{
 				{
 					Effect: types.TaintEffectNoSchedule,
-					Key:    PtrString("key"),
-					Value:  PtrString("value"),
+					Key:    new("key"),
+					Value:  new("value"),
 				},
 			},
 			Resources: &types.NodegroupResources{
 				AutoScalingGroups: []types.AutoScalingGroup{
 					{
-						Name: PtrString("eks-default-2022122213523169820000001f-98c29d0d-b22a-aaa3-445e-ebf71d43f67c"), // link
+						Name: new("eks-default-2022122213523169820000001f-98c29d0d-b22a-aaa3-445e-ebf71d43f67c"), // link
 					},
 				},
-				RemoteAccessSecurityGroup: PtrString("sg2"), // link
+				RemoteAccessSecurityGroup: new("sg2"), // link
 			},
 			Health: &types.NodegroupHealth{
 				Issues: []types.Issue{},
 			},
 			UpdateConfig: &types.NodegroupUpdateConfig{
-				MaxUnavailablePercentage: PtrInt32(33),
+				MaxUnavailablePercentage: new(int32(33)),
 			},
 			LaunchTemplate: &types.LaunchTemplateSpecification{
-				Name:    PtrString("default-2022122213523100410000001d"), // link
-				Version: PtrString("1"),
-				Id:      PtrString("lt-097e994ce7e14fcdc"),
+				Name:    new("default-2022122213523100410000001d"), // link
+				Version: new("1"),
+				Id:      new("lt-097e994ce7e14fcdc"),
 			},
 			Tags: map[string]string{},
 		},

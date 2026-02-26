@@ -17,42 +17,42 @@ func (t *ecsTestClient) DescribeCapacityProviders(ctx context.Context, params *e
 		"": {
 			CapacityProviders: []types.CapacityProvider{
 				{
-					CapacityProviderArn: PtrString("arn:aws:ecs:eu-west-2:052392120703:capacity-provider/FARGATE"),
-					Name:                PtrString("FARGATE"),
+					CapacityProviderArn: new("arn:aws:ecs:eu-west-2:052392120703:capacity-provider/FARGATE"),
+					Name:                new("FARGATE"),
 					Status:              types.CapacityProviderStatusActive,
 				},
 			},
-			NextToken: PtrString("one"),
+			NextToken: new("one"),
 		},
 		"one": {
 			CapacityProviders: []types.CapacityProvider{
 				{
-					CapacityProviderArn: PtrString("arn:aws:ecs:eu-west-2:052392120703:capacity-provider/FARGATE_SPOT"),
-					Name:                PtrString("FARGATE_SPOT"),
+					CapacityProviderArn: new("arn:aws:ecs:eu-west-2:052392120703:capacity-provider/FARGATE_SPOT"),
+					Name:                new("FARGATE_SPOT"),
 					Status:              types.CapacityProviderStatusActive,
 				},
 			},
-			NextToken: PtrString("two"),
+			NextToken: new("two"),
 		},
 		"two": {
 			CapacityProviders: []types.CapacityProvider{
 				{
-					CapacityProviderArn: PtrString("arn:aws:ecs:eu-west-2:052392120703:capacity-provider/test"),
-					Name:                PtrString("test"),
+					CapacityProviderArn: new("arn:aws:ecs:eu-west-2:052392120703:capacity-provider/test"),
+					Name:                new("test"),
 					Status:              types.CapacityProviderStatusActive,
 					AutoScalingGroupProvider: &types.AutoScalingGroupProvider{
-						AutoScalingGroupArn: PtrString("arn:aws:autoscaling:eu-west-2:052392120703:autoScalingGroup:9df90815-98c1-4136-a12a-90abef1c4e4e:autoScalingGroupName/ecs-test"),
+						AutoScalingGroupArn: new("arn:aws:autoscaling:eu-west-2:052392120703:autoScalingGroup:9df90815-98c1-4136-a12a-90abef1c4e4e:autoScalingGroupName/ecs-test"),
 						ManagedScaling: &types.ManagedScaling{
 							Status:                 types.ManagedScalingStatusEnabled,
-							TargetCapacity:         PtrInt32(80),
-							MinimumScalingStepSize: PtrInt32(1),
-							MaximumScalingStepSize: PtrInt32(10000),
-							InstanceWarmupPeriod:   PtrInt32(300),
+							TargetCapacity:         new(int32(80)),
+							MinimumScalingStepSize: new(int32(1)),
+							MaximumScalingStepSize: new(int32(10000)),
+							InstanceWarmupPeriod:   new(int32(300)),
 						},
 						ManagedTerminationProtection: types.ManagedTerminationProtectionDisabled,
 					},
 					UpdateStatus:       types.CapacityProviderUpdateStatusDeleteComplete,
-					UpdateStatusReason: PtrString("reason"),
+					UpdateStatusReason: new("reason"),
 				},
 			},
 		},
@@ -76,22 +76,22 @@ func TestCapacityProviderOutputMapper(t *testing.T) {
 		&ecs.DescribeCapacityProvidersOutput{
 			CapacityProviders: []types.CapacityProvider{
 				{
-					CapacityProviderArn: PtrString("arn:aws:ecs:eu-west-2:052392120703:capacity-provider/test"),
-					Name:                PtrString("test"),
+					CapacityProviderArn: new("arn:aws:ecs:eu-west-2:052392120703:capacity-provider/test"),
+					Name:                new("test"),
 					Status:              types.CapacityProviderStatusActive,
 					AutoScalingGroupProvider: &types.AutoScalingGroupProvider{
-						AutoScalingGroupArn: PtrString("arn:aws:autoscaling:eu-west-2:052392120703:autoScalingGroup:9df90815-98c1-4136-a12a-90abef1c4e4e:autoScalingGroupName/ecs-test"),
+						AutoScalingGroupArn: new("arn:aws:autoscaling:eu-west-2:052392120703:autoScalingGroup:9df90815-98c1-4136-a12a-90abef1c4e4e:autoScalingGroupName/ecs-test"),
 						ManagedScaling: &types.ManagedScaling{
 							Status:                 types.ManagedScalingStatusEnabled,
-							TargetCapacity:         PtrInt32(80),
-							MinimumScalingStepSize: PtrInt32(1),
-							MaximumScalingStepSize: PtrInt32(10000),
-							InstanceWarmupPeriod:   PtrInt32(300),
+							TargetCapacity:         new(int32(80)),
+							MinimumScalingStepSize: new(int32(1)),
+							MaximumScalingStepSize: new(int32(10000)),
+							InstanceWarmupPeriod:   new(int32(300)),
 						},
 						ManagedTerminationProtection: types.ManagedTerminationProtectionDisabled,
 					},
 					UpdateStatus:       types.CapacityProviderUpdateStatusDeleteComplete,
-					UpdateStatusReason: PtrString("reason"),
+					UpdateStatusReason: new("reason"),
 				},
 			},
 		},

@@ -11,7 +11,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/api/iterator"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -455,52 +454,52 @@ func TestComputeHealthCheck(t *testing.T) {
 
 func createHealthCheck(healthCheckName string) *computepb.HealthCheck {
 	return &computepb.HealthCheck{
-		Name:             ptr.To(healthCheckName),
-		CheckIntervalSec: ptr.To(int32(5)),
-		TimeoutSec:       ptr.To(int32(5)),
-		Type:             ptr.To("TCP"),
+		Name:             new(healthCheckName),
+		CheckIntervalSec: new(int32(5)),
+		TimeoutSec:       new(int32(5)),
+		Type:             new("TCP"),
 		TcpHealthCheck: &computepb.TCPHealthCheck{
-			Port: ptr.To(int32(80)),
+			Port: new(int32(80)),
 		},
 	}
 }
 
 func createHTTPHealthCheck(healthCheckName, host string) *computepb.HealthCheck {
 	return &computepb.HealthCheck{
-		Name:             ptr.To(healthCheckName),
-		CheckIntervalSec: ptr.To(int32(5)),
-		TimeoutSec:       ptr.To(int32(5)),
-		Type:             ptr.To("HTTP"),
+		Name:             new(healthCheckName),
+		CheckIntervalSec: new(int32(5)),
+		TimeoutSec:       new(int32(5)),
+		Type:             new("HTTP"),
 		HttpHealthCheck: &computepb.HTTPHealthCheck{
-			Port:        ptr.To(int32(80)),
-			Host:        ptr.To(host),
-			RequestPath: ptr.To("/"),
+			Port:        new(int32(80)),
+			Host:        new(host),
+			RequestPath: new("/"),
 		},
 	}
 }
 
 func createHTTPSHealthCheck(healthCheckName, host string) *computepb.HealthCheck {
 	return &computepb.HealthCheck{
-		Name:             ptr.To(healthCheckName),
-		CheckIntervalSec: ptr.To(int32(5)),
-		TimeoutSec:       ptr.To(int32(5)),
-		Type:             ptr.To("HTTPS"),
+		Name:             new(healthCheckName),
+		CheckIntervalSec: new(int32(5)),
+		TimeoutSec:       new(int32(5)),
+		Type:             new("HTTPS"),
 		HttpsHealthCheck: &computepb.HTTPSHealthCheck{
-			Port:        ptr.To(int32(443)),
-			Host:        ptr.To(host),
-			RequestPath: ptr.To("/"),
+			Port:        new(int32(443)),
+			Host:        new(host),
+			RequestPath: new("/"),
 		},
 	}
 }
 
 func createHealthCheckWithSourceRegions(healthCheckName string, regions []string) *computepb.HealthCheck {
 	return &computepb.HealthCheck{
-		Name:             ptr.To(healthCheckName),
-		CheckIntervalSec: ptr.To(int32(30)),
-		TimeoutSec:       ptr.To(int32(5)),
-		Type:             ptr.To("TCP"),
+		Name:             new(healthCheckName),
+		CheckIntervalSec: new(int32(30)),
+		TimeoutSec:       new(int32(5)),
+		Type:             new("TCP"),
 		TcpHealthCheck: &computepb.TCPHealthCheck{
-			Port: ptr.To(int32(80)),
+			Port: new(int32(80)),
 		},
 		SourceRegions: regions,
 	}
@@ -508,13 +507,13 @@ func createHealthCheckWithSourceRegions(healthCheckName string, regions []string
 
 func createRegionalHealthCheck(healthCheckName, region string) *computepb.HealthCheck {
 	return &computepb.HealthCheck{
-		Name:             ptr.To(healthCheckName),
-		CheckIntervalSec: ptr.To(int32(5)),
-		TimeoutSec:       ptr.To(int32(5)),
-		Type:             ptr.To("TCP"),
+		Name:             new(healthCheckName),
+		CheckIntervalSec: new(int32(5)),
+		TimeoutSec:       new(int32(5)),
+		Type:             new("TCP"),
 		TcpHealthCheck: &computepb.TCPHealthCheck{
-			Port: ptr.To(int32(80)),
+			Port: new(int32(80)),
 		},
-		Region: ptr.To(region),
+		Region: new(region),
 	}
 }

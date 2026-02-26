@@ -23,7 +23,7 @@ func TestCloudKMSKeyRing(t *testing.T) {
 		defer cache.Clear()
 
 		// Pre-populate cache with a KeyRing item (simulating what the loader would do)
-		attrs, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+		attrs, _ := sdp.ToAttributesViaJson(map[string]any{
 			"name":       "projects/test-project-id/locations/us/keyRings/test-keyring",
 			"uniqueAttr": "us|test-keyring",
 		})
@@ -99,13 +99,13 @@ func TestCloudKMSKeyRing(t *testing.T) {
 		defer cache.Clear()
 
 		// Pre-populate cache with KeyRing items under LIST cache key
-		attrs1, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+		attrs1, _ := sdp.ToAttributesViaJson(map[string]any{
 			"name":       "projects/test-project-id/locations/us/keyRings/test-keyring-1",
 			"uniqueAttr": "us|test-keyring-1",
 		})
 		_ = attrs1.Set("uniqueAttr", "us|test-keyring-1")
 
-		attrs2, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+		attrs2, _ := sdp.ToAttributesViaJson(map[string]any{
 			"name":       "projects/test-project-id/locations/us/keyRings/test-keyring-2",
 			"uniqueAttr": "us|test-keyring-2",
 		})
@@ -230,7 +230,7 @@ func TestCloudKMSKeyRing(t *testing.T) {
 		defer cache.Clear()
 
 		// Pre-populate cache with KeyRing items under SEARCH cache key (by location)
-		attrs, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+		attrs, _ := sdp.ToAttributesViaJson(map[string]any{
 			"name":       "projects/test-project-id/locations/us/keyRings/test-keyring",
 			"uniqueAttr": "us|test-keyring",
 		})
@@ -316,7 +316,7 @@ func TestCloudKMSKeyRing(t *testing.T) {
 		defer cache.Clear()
 
 		// Pre-populate cache with KeyRing item
-		attrs, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+		attrs, _ := sdp.ToAttributesViaJson(map[string]any{
 			"name":       "projects/test-project-id/locations/us-central1/keyRings/my-keyring",
 			"uniqueAttr": "us-central1|my-keyring",
 		})
@@ -370,7 +370,7 @@ func TestCloudKMSKeyRing(t *testing.T) {
 		defer cache.Clear()
 
 		// Pre-populate cache with KeyRing item
-		attrs, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+		attrs, _ := sdp.ToAttributesViaJson(map[string]any{
 			"name":       "projects/test-project-id/locations/us-central1/keyRings/my-keyring",
 			"uniqueAttr": "us-central1|my-keyring",
 		})
@@ -423,7 +423,7 @@ func TestCloudKMSKeyRing(t *testing.T) {
 		defer cache.Clear()
 
 		// Pre-populate cache with a KeyRing item
-		attrs, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+		attrs, _ := sdp.ToAttributesViaJson(map[string]any{
 			"name":       "projects/test-project-id/locations/us/keyRings/test-keyring",
 			"uniqueAttr": "us|test-keyring",
 		})

@@ -17,9 +17,9 @@ func TestLocationOutputMapper(t *testing.T) {
 				AvailableMacSecPortSpeeds: []string{"1 Gbps", "10 Gbps"},
 				AvailablePortSpeeds:       []string{"50 Mbps", "100 Mbps", "1 Gbps", "10 Gbps"},
 				AvailableProviders:        []string{"ProviderA", "ProviderB", "ProviderC"},
-				LocationName:              PtrString("NAP do Brasil, Barueri, Sao Paulo"),
-				LocationCode:              PtrString("TNDB"),
-				Region:                    PtrString("us-east-1"),
+				LocationName:              new("NAP do Brasil, Barueri, Sao Paulo"),
+				LocationCode:              new("TNDB"),
+				Region:                    new("us-east-1"),
 			},
 		},
 	}

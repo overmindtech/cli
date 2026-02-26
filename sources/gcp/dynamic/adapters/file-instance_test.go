@@ -206,7 +206,7 @@ func TestFileInstance(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://file.googleapis.com/v1/projects/%s/locations/%s/instances/%s", projectID, location, instanceName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Instance not found"},
+				Body:       map[string]any{"error": "Instance not found"},
 			},
 		}
 

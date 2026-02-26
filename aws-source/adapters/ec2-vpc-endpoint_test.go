@@ -31,13 +31,13 @@ func TestVpcEndpointOutputMapper(t *testing.T) {
 	output := &ec2.DescribeVpcEndpointsOutput{
 		VpcEndpoints: []types.VpcEndpoint{
 			{
-				VpcEndpointId:     PtrString("vpce-0d7892e00e573e701"),
+				VpcEndpointId:     new("vpce-0d7892e00e573e701"),
 				VpcEndpointType:   types.VpcEndpointTypeInterface,
-				CreationTimestamp: PtrTime(time.Now()),
-				VpcId:             PtrString("vpc-0d7892e00e573e701"), // link
-				ServiceName:       PtrString("com.amazonaws.us-east-1.s3"),
+				CreationTimestamp: new(time.Now()),
+				VpcId:             new("vpc-0d7892e00e573e701"), // link
+				ServiceName:       new("com.amazonaws.us-east-1.s3"),
 				State:             types.StateAvailable,
-				PolicyDocument:    PtrString("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":\"*\",\"Resource\":\"*\",\"Effect\":\"Allow\",\"Principal\":\"*\"},{\"Condition\":{\"StringNotEquals\":{\"aws:PrincipalAccount\":\"944651592624\"}},\"Action\":\"*\",\"Resource\":\"*\",\"Effect\":\"Deny\",\"Principal\":\"*\"}]}"), // parse this
+				PolicyDocument:    new("{\"Version\":\"2012-10-17\",\"Statement\":[{\"Action\":\"*\",\"Resource\":\"*\",\"Effect\":\"Allow\",\"Principal\":\"*\"},{\"Condition\":{\"StringNotEquals\":{\"aws:PrincipalAccount\":\"944651592624\"}},\"Action\":\"*\",\"Resource\":\"*\",\"Effect\":\"Deny\",\"Principal\":\"*\"}]}"), // parse this
 				RouteTableIds: []string{
 					"rtb-0d7892e00e573e701", // link
 				},
@@ -46,35 +46,35 @@ func TestVpcEndpointOutputMapper(t *testing.T) {
 				},
 				Groups: []types.SecurityGroupIdentifier{
 					{
-						GroupId:   PtrString("sg-0d7892e00e573e701"), // link
-						GroupName: PtrString("default"),
+						GroupId:   new("sg-0d7892e00e573e701"), // link
+						GroupName: new("default"),
 					},
 				},
 				IpAddressType:     types.IpAddressTypeIpv4,
-				PrivateDnsEnabled: PtrBool(true),
-				RequesterManaged:  PtrBool(false),
+				PrivateDnsEnabled: new(true),
+				RequesterManaged:  new(false),
 				DnsEntries: []types.DnsEntry{
 					{
-						DnsName:      PtrString("vpce-0d7892e00e573e701-123456789012.us-east-1.vpce.amazonaws.com"), // link
-						HostedZoneId: PtrString("Z2F56UZL2M1ACD"),                                                   // link
+						DnsName:      new("vpce-0d7892e00e573e701-123456789012.us-east-1.vpce.amazonaws.com"), // link
+						HostedZoneId: new("Z2F56UZL2M1ACD"),                                                   // link
 					},
 				},
 				DnsOptions: &types.DnsOptions{
 					DnsRecordIpType:                          types.DnsRecordIpTypeDualstack,
-					PrivateDnsOnlyForInboundResolverEndpoint: PtrBool(false),
+					PrivateDnsOnlyForInboundResolverEndpoint: new(false),
 				},
 				LastError: &types.LastError{
-					Code:    PtrString("Client::ValidationException"),
-					Message: PtrString("The security group 'sg-0d7892e00e573e701' does not exist"),
+					Code:    new("Client::ValidationException"),
+					Message: new("The security group 'sg-0d7892e00e573e701' does not exist"),
 				},
 				NetworkInterfaceIds: []string{
 					"eni-0d7892e00e573e701", // link
 				},
-				OwnerId: PtrString("052392120703"),
+				OwnerId: new("052392120703"),
 				Tags: []types.Tag{
 					{
-						Key:   PtrString("Name"),
-						Value: PtrString("my-vpce"),
+						Key:   new("Name"),
+						Value: new("my-vpce"),
 					},
 				},
 			},

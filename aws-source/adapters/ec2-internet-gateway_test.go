@@ -46,15 +46,15 @@ func TestInternetGatewayOutputMapper(t *testing.T) {
 				Attachments: []types.InternetGatewayAttachment{
 					{
 						State: types.AttachmentStatusAttached,
-						VpcId: PtrString("vpc-0d7892e00e573e701"),
+						VpcId: new("vpc-0d7892e00e573e701"),
 					},
 				},
-				InternetGatewayId: PtrString("igw-03809416c9e2fcb66"),
-				OwnerId:           PtrString("052392120703"),
+				InternetGatewayId: new("igw-03809416c9e2fcb66"),
+				OwnerId:           new("052392120703"),
 				Tags: []types.Tag{
 					{
-						Key:   PtrString("Name"),
-						Value: PtrString("test"),
+						Key:   new("Name"),
+						Value: new("test"),
 					},
 				},
 			},

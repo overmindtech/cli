@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"reflect"
+	"slices"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
 	"go.uber.org/mock/gomock"
 
@@ -109,9 +109,9 @@ func TestNetworkRouteTable(t *testing.T) {
 	t.Run("Get_WithNilName", func(t *testing.T) {
 		routeTable := &armnetwork.RouteTable{
 			Name:     nil, // Route table with nil name should cause an error
-			Location: to.Ptr("eastus"),
+			Location: new("eastus"),
 			Tags: map[string]*string{
-				"env": to.Ptr("test"),
+				"env": new("test"),
 			},
 		}
 
@@ -188,9 +188,9 @@ func TestNetworkRouteTable(t *testing.T) {
 		routeTable1 := createAzureRouteTable("test-route-table-1")
 		routeTable2 := &armnetwork.RouteTable{
 			Name:     nil, // Route table with nil name should be skipped
-			Location: to.Ptr("eastus"),
+			Location: new("eastus"),
 			Tags: map[string]*string{
-				"env": to.Ptr("test"),
+				"env": new("test"),
 			},
 		}
 
@@ -282,15 +282,15 @@ func TestNetworkRouteTable(t *testing.T) {
 		otherSubscriptionID := "other-subscription"
 
 		routeTable := &armnetwork.RouteTable{
-			Name:     to.Ptr(routeTableName),
-			Location: to.Ptr("eastus"),
+			Name:     new(routeTableName),
+			Location: new("eastus"),
 			Tags: map[string]*string{
-				"env": to.Ptr("test"),
+				"env": new("test"),
 			},
 			Properties: &armnetwork.RouteTablePropertiesFormat{
 				Subnets: []*armnetwork.Subnet{
 					{
-						ID: to.Ptr("/subscriptions/" + otherSubscriptionID + "/resourceGroups/" + otherResourceGroup + "/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/test-subnet"),
+						ID: new("/subscriptions/" + otherSubscriptionID + "/resourceGroups/" + otherResourceGroup + "/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/test-subnet"),
 					},
 				},
 			},
@@ -330,19 +330,19 @@ func TestNetworkRouteTable(t *testing.T) {
 		// Test route table with route that has NextHopIPAddress
 		routeTableName := "test-route-table"
 		routeTable := &armnetwork.RouteTable{
-			Name:     to.Ptr(routeTableName),
-			Location: to.Ptr("eastus"),
+			Name:     new(routeTableName),
+			Location: new("eastus"),
 			Tags: map[string]*string{
-				"env": to.Ptr("test"),
+				"env": new("test"),
 			},
 			Properties: &armnetwork.RouteTablePropertiesFormat{
 				Routes: []*armnetwork.Route{
 					{
-						Name: to.Ptr("test-route"),
+						Name: new("test-route"),
 						Properties: &armnetwork.RoutePropertiesFormat{
-							AddressPrefix:    to.Ptr("10.0.0.0/16"),
-							NextHopType:      to.Ptr(armnetwork.RouteNextHopTypeVirtualAppliance),
-							NextHopIPAddress: to.Ptr("10.0.0.1"),
+							AddressPrefix:    new("10.0.0.0/16"),
+							NextHopType:      new(armnetwork.RouteNextHopTypeVirtualAppliance),
+							NextHopIPAddress: new("10.0.0.1"),
 						},
 					},
 				},
@@ -385,18 +385,18 @@ func TestNetworkRouteTable(t *testing.T) {
 		// Test route table with route that doesn't have NextHopIPAddress
 		routeTableName := "test-route-table"
 		routeTable := &armnetwork.RouteTable{
-			Name:     to.Ptr(routeTableName),
-			Location: to.Ptr("eastus"),
+			Name:     new(routeTableName),
+			Location: new("eastus"),
 			Tags: map[string]*string{
-				"env": to.Ptr("test"),
+				"env": new("test"),
 			},
 			Properties: &armnetwork.RouteTablePropertiesFormat{
 				Routes: []*armnetwork.Route{
 					{
-						Name: to.Ptr("test-route"),
+						Name: new("test-route"),
 						Properties: &armnetwork.RoutePropertiesFormat{
-							AddressPrefix: to.Ptr("10.0.0.0/16"),
-							NextHopType:   to.Ptr(armnetwork.RouteNextHopTypeInternet),
+							AddressPrefix: new("10.0.0.0/16"),
+							NextHopType:   new(armnetwork.RouteNextHopTypeInternet),
 							// No NextHopIPAddress
 						},
 					},
@@ -439,13 +439,7 @@ func TestNetworkRouteTable(t *testing.T) {
 			t.Error("Expected IAMPermissions to return at least one permission")
 		}
 		expectedPermission := "Microsoft.Network/routeTables/read"
-		found := false
-		for _, perm := range permissions {
-			if perm == expectedPermission {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(permissions, expectedPermission)
 		if !found {
 			t.Errorf("Expected IAMPermissions to include %s", expectedPermission)
 		}
@@ -485,7 +479,7 @@ func TestNetworkRouteTable(t *testing.T) {
 		// Verify PredefinedRole
 		// PredefinedRole is available on the wrapper, not the adapter
 		// Use type assertion with interface{} to access the method
-		if roleInterface, ok := interface{}(wrapper).(interface{ PredefinedRole() string }); ok {
+		if roleInterface, ok := any(wrapper).(interface{ PredefinedRole() string }); ok {
 			role := roleInterface.PredefinedRole()
 			if role != "Reader" {
 				t.Errorf("Expected PredefinedRole to be 'Reader', got %s", role)
@@ -525,7 +519,7 @@ func (m *MockRouteTablesPager) More() bool {
 
 func (mr *MockRouteTablesPagerMockRecorder) More() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "More", reflect.TypeOf((*MockRouteTablesPager)(nil).More))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "More", reflect.TypeFor[func() bool]())
 }
 
 func (m *MockRouteTablesPager) NextPage(ctx context.Context) (armnetwork.RouteTablesClientListResponse, error) {
@@ -536,9 +530,9 @@ func (m *MockRouteTablesPager) NextPage(ctx context.Context) (armnetwork.RouteTa
 	return ret0, ret1
 }
 
-func (mr *MockRouteTablesPagerMockRecorder) NextPage(ctx interface{}) *gomock.Call {
+func (mr *MockRouteTablesPagerMockRecorder) NextPage(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NextPage", reflect.TypeOf((*MockRouteTablesPager)(nil).NextPage), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NextPage", reflect.TypeFor[func(ctx context.Context) (armnetwork.RouteTablesClientListResponse, error)](), ctx)
 }
 
 // createAzureRouteTable creates a mock Azure route table for testing
@@ -547,28 +541,28 @@ func createAzureRouteTable(routeTableName string) *armnetwork.RouteTable {
 	resourceGroup := "test-rg"
 
 	return &armnetwork.RouteTable{
-		Name:     to.Ptr(routeTableName),
-		Location: to.Ptr("eastus"),
+		Name:     new(routeTableName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env":     to.Ptr("test"),
-			"project": to.Ptr("testing"),
+			"env":     new("test"),
+			"project": new("testing"),
 		},
 		Properties: &armnetwork.RouteTablePropertiesFormat{
 			// Routes (child resources)
 			Routes: []*armnetwork.Route{
 				{
-					Name: to.Ptr("test-route"),
+					Name: new("test-route"),
 					Properties: &armnetwork.RoutePropertiesFormat{
-						AddressPrefix:    to.Ptr("10.0.0.0/16"),
-						NextHopType:      to.Ptr(armnetwork.RouteNextHopTypeVirtualAppliance),
-						NextHopIPAddress: to.Ptr("10.0.0.1"),
+						AddressPrefix:    new("10.0.0.0/16"),
+						NextHopType:      new(armnetwork.RouteNextHopTypeVirtualAppliance),
+						NextHopIPAddress: new("10.0.0.1"),
 					},
 				},
 			},
 			// Subnets (external resources)
 			Subnets: []*armnetwork.Subnet{
 				{
-					ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/test-subnet"),
+					ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/test-subnet"),
 				},
 			},
 		},

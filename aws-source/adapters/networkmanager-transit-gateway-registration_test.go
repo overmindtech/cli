@@ -23,8 +23,8 @@ func TestTransitGatewayRegistrationOutputMapper(t *testing.T) {
 			out: networkmanager.GetTransitGatewayRegistrationsOutput{
 				TransitGatewayRegistrations: []types.TransitGatewayRegistration{
 					{
-						GlobalNetworkId:   PtrString("default"),
-						TransitGatewayArn: PtrString("arn:aws:ec2:us-west-2:123456789012:transit-gateway/tgw-1234"),
+						GlobalNetworkId:   new("default"),
+						TransitGatewayArn: new("arn:aws:ec2:us-west-2:123456789012:transit-gateway/tgw-1234"),
 						State: &types.TransitGatewayRegistrationStateReason{
 							Code: types.TransitGatewayRegistrationStateAvailable,
 						},
@@ -52,8 +52,8 @@ func TestTransitGatewayRegistrationOutputMapper(t *testing.T) {
 			out: networkmanager.GetTransitGatewayRegistrationsOutput{
 				TransitGatewayRegistrations: []types.TransitGatewayRegistration{
 					{
-						GlobalNetworkId:   PtrString("default"),
-						TransitGatewayArn: PtrString("arn:aws:ec2:us-west-2:123456789012:transit-gateway/tgw-1234"),
+						GlobalNetworkId:   new("default"),
+						TransitGatewayArn: new("arn:aws:ec2:us-west-2:123456789012:transit-gateway/tgw-1234"),
 						State: &types.TransitGatewayRegistrationStateReason{
 							Code: types.TransitGatewayRegistrationStateDeleting,
 						},

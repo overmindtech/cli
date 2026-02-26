@@ -176,7 +176,7 @@ func TestCloudFunctionsFunction(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to get 'buildConfig' attribute: %v", err)
 		}
-		buildConfigMap, ok := buildConfig.(map[string]interface{})
+		buildConfigMap, ok := buildConfig.(map[string]any)
 		if !ok {
 			t.Fatalf("Expected buildConfig to be a map, got %T", buildConfig)
 		}
@@ -316,7 +316,7 @@ func TestCloudFunctionsFunction(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://cloudfunctions.googleapis.com/v2/projects/%s/locations/%s/functions/%s", projectID, location, functionName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Function not found"},
+				Body:       map[string]any{"error": "Function not found"},
 			},
 		}
 

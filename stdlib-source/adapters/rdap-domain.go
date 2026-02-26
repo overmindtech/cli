@@ -145,7 +145,7 @@ func (s *RdapDomainAdapter) Search(ctx context.Context, scope string, query stri
 			}
 		}
 
-		attributes, err := sdp.ToAttributesCustom(map[string]interface{}{
+		attributes, err := sdp.ToAttributesCustom(map[string]any{
 			"conformance":     domain.Conformance,
 			"events":          domain.Events,
 			"handle":          domain.Handle,

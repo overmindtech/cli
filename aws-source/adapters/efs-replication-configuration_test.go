@@ -13,25 +13,25 @@ func TestReplicationConfigurationOutputMapper(t *testing.T) {
 	output := &efs.DescribeReplicationConfigurationsOutput{
 		Replications: []types.ReplicationConfigurationDescription{
 			{
-				CreationTime: PtrTime(time.Now()),
+				CreationTime: new(time.Now()),
 				Destinations: []types.Destination{
 					{
-						FileSystemId:            PtrString("fs-12345678"),
-						Region:                  PtrString("eu-west-1"),
+						FileSystemId:            new("fs-12345678"),
+						Region:                  new("eu-west-1"),
 						Status:                  types.ReplicationStatusEnabled,
-						LastReplicatedTimestamp: PtrTime(time.Now()),
+						LastReplicatedTimestamp: new(time.Now()),
 					},
 					{
-						FileSystemId:            PtrString("fs-98765432"),
-						Region:                  PtrString("us-west-2"),
+						FileSystemId:            new("fs-98765432"),
+						Region:                  new("us-west-2"),
 						Status:                  types.ReplicationStatusError,
-						LastReplicatedTimestamp: PtrTime(time.Now()),
+						LastReplicatedTimestamp: new(time.Now()),
 					},
 				},
-				OriginalSourceFileSystemArn: PtrString("arn:aws:elasticfilesystem:eu-west-2:944651592624:file-system/fs-0c6f2f41e957f42a9"),
-				SourceFileSystemArn:         PtrString("arn:aws:elasticfilesystem:eu-west-2:944651592624:file-system/fs-0c6f2f41e957f42a9"),
-				SourceFileSystemId:          PtrString("fs-748927493"),
-				SourceFileSystemRegion:      PtrString("us-east-1"),
+				OriginalSourceFileSystemArn: new("arn:aws:elasticfilesystem:eu-west-2:944651592624:file-system/fs-0c6f2f41e957f42a9"),
+				SourceFileSystemArn:         new("arn:aws:elasticfilesystem:eu-west-2:944651592624:file-system/fs-0c6f2f41e957f42a9"),
+				SourceFileSystemId:          new("fs-748927493"),
+				SourceFileSystemRegion:      new("us-east-1"),
 			},
 		},
 	}

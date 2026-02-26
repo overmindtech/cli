@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"reflect"
+	"slices"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
 	"go.uber.org/mock/gomock"
 
@@ -276,9 +276,9 @@ func TestNetworkPublicIPAddress(t *testing.T) {
 		publicIP1 := createAzurePublicIPAddress("test-public-ip-1", "", "", "", "", "")
 		publicIP2 := &armnetwork.PublicIPAddress{
 			Name:     nil, // Public IP with nil name will be skipped
-			Location: to.Ptr("eastus"),
+			Location: new("eastus"),
 			Tags: map[string]*string{
-				"env": to.Ptr("test"),
+				"env": new("test"),
 			},
 			Properties: &armnetwork.PublicIPAddressPropertiesFormat{},
 		}
@@ -384,13 +384,7 @@ func TestNetworkPublicIPAddress(t *testing.T) {
 			t.Error("Expected IAMPermissions to return at least one permission")
 		}
 		expectedPermission := "Microsoft.Network/publicIPAddresses/read"
-		found := false
-		for _, perm := range permissions {
-			if perm == expectedPermission {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(permissions, expectedPermission)
 		if !found {
 			t.Errorf("Expected IAMPermissions to include %s", expectedPermission)
 		}
@@ -454,7 +448,7 @@ func (m *MockPublicIPAddressesPager) More() bool {
 
 func (mr *MockPublicIPAddressesPagerMockRecorder) More() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "More", reflect.TypeOf((*MockPublicIPAddressesPager)(nil).More))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "More", reflect.TypeFor[func() bool]())
 }
 
 func (m *MockPublicIPAddressesPager) NextPage(ctx context.Context) (armnetwork.PublicIPAddressesClientListResponse, error) {
@@ -465,24 +459,24 @@ func (m *MockPublicIPAddressesPager) NextPage(ctx context.Context) (armnetwork.P
 	return ret0, ret1
 }
 
-func (mr *MockPublicIPAddressesPagerMockRecorder) NextPage(ctx interface{}) *gomock.Call {
+func (mr *MockPublicIPAddressesPagerMockRecorder) NextPage(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NextPage", reflect.TypeOf((*MockPublicIPAddressesPager)(nil).NextPage), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NextPage", reflect.TypeFor[func(ctx context.Context) (armnetwork.PublicIPAddressesClientListResponse, error)](), ctx)
 }
 
 // createAzurePublicIPAddress creates a mock Azure public IP address for testing
 func createAzurePublicIPAddress(name, nicName, prefixName, natGatewayName, ddosPlanName, loadBalancerName string) *armnetwork.PublicIPAddress {
 	publicIP := &armnetwork.PublicIPAddress{
-		Name:     to.Ptr(name),
-		Location: to.Ptr("eastus"),
+		Name:     new(name),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env":     to.Ptr("test"),
-			"project": to.Ptr("testing"),
+			"env":     new("test"),
+			"project": new("testing"),
 		},
 		Properties: &armnetwork.PublicIPAddressPropertiesFormat{
-			PublicIPAddressVersion:   to.Ptr(armnetwork.IPVersionIPv4),
-			PublicIPAllocationMethod: to.Ptr(armnetwork.IPAllocationMethodStatic),
-			IPAddress:                to.Ptr("203.0.113.1"), // Add IP address for testing
+			PublicIPAddressVersion:   new(armnetwork.IPVersionIPv4),
+			PublicIPAllocationMethod: new(armnetwork.IPAllocationMethodStatic),
+			IPAddress:                new("203.0.113.1"), // Add IP address for testing
 		},
 	}
 
@@ -490,7 +484,7 @@ func createAzurePublicIPAddress(name, nicName, prefixName, natGatewayName, ddosP
 	if nicName != "" {
 		ipConfigID := "/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Network/networkInterfaces/" + nicName + "/ipConfigurations/ipconfig1"
 		publicIP.Properties.IPConfiguration = &armnetwork.IPConfiguration{
-			ID: to.Ptr(ipConfigID),
+			ID: new(ipConfigID),
 		}
 	}
 
@@ -498,7 +492,7 @@ func createAzurePublicIPAddress(name, nicName, prefixName, natGatewayName, ddosP
 	if prefixName != "" {
 		prefixID := "/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Network/publicIPPrefixes/" + prefixName
 		publicIP.Properties.PublicIPPrefix = &armnetwork.SubResource{
-			ID: to.Ptr(prefixID),
+			ID: new(prefixID),
 		}
 	}
 
@@ -506,7 +500,7 @@ func createAzurePublicIPAddress(name, nicName, prefixName, natGatewayName, ddosP
 	if natGatewayName != "" {
 		natGatewayID := "/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Network/natGateways/" + natGatewayName
 		publicIP.Properties.NatGateway = &armnetwork.NatGateway{
-			ID: to.Ptr(natGatewayID),
+			ID: new(natGatewayID),
 		}
 	}
 
@@ -515,7 +509,7 @@ func createAzurePublicIPAddress(name, nicName, prefixName, natGatewayName, ddosP
 		ddosPlanID := "/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Network/ddosProtectionPlans/" + ddosPlanName
 		publicIP.Properties.DdosSettings = &armnetwork.DdosSettings{
 			DdosProtectionPlan: &armnetwork.SubResource{
-				ID: to.Ptr(ddosPlanID),
+				ID: new(ddosPlanID),
 			},
 		}
 	}
@@ -524,7 +518,7 @@ func createAzurePublicIPAddress(name, nicName, prefixName, natGatewayName, ddosP
 	if loadBalancerName != "" {
 		lbIPConfigID := "/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Network/loadBalancers/" + loadBalancerName + "/frontendIPConfigurations/frontendIPConfig1"
 		publicIP.Properties.IPConfiguration = &armnetwork.IPConfiguration{
-			ID: to.Ptr(lbIPConfigID),
+			ID: new(lbIPConfigID),
 		}
 	}
 
@@ -536,16 +530,16 @@ func createAzurePublicIPAddressWithLinkedIP(name, linkedIPName, subscriptionID, 
 	linkedIPID := "/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/publicIPAddresses/" + linkedIPName
 
 	return &armnetwork.PublicIPAddress{
-		Name:     to.Ptr(name),
-		Location: to.Ptr("eastus"),
+		Name:     new(name),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armnetwork.PublicIPAddressPropertiesFormat{
-			PublicIPAddressVersion:   to.Ptr(armnetwork.IPVersionIPv4),
-			PublicIPAllocationMethod: to.Ptr(armnetwork.IPAllocationMethodStatic),
+			PublicIPAddressVersion:   new(armnetwork.IPVersionIPv4),
+			PublicIPAllocationMethod: new(armnetwork.IPAllocationMethodStatic),
 			LinkedPublicIPAddress: &armnetwork.PublicIPAddress{
-				ID: to.Ptr(linkedIPID),
+				ID: new(linkedIPID),
 			},
 		},
 	}
@@ -556,16 +550,16 @@ func createAzurePublicIPAddressWithServiceIP(name, serviceIPName, subscriptionID
 	serviceIPID := "/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/publicIPAddresses/" + serviceIPName
 
 	return &armnetwork.PublicIPAddress{
-		Name:     to.Ptr(name),
-		Location: to.Ptr("eastus"),
+		Name:     new(name),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armnetwork.PublicIPAddressPropertiesFormat{
-			PublicIPAddressVersion:   to.Ptr(armnetwork.IPVersionIPv4),
-			PublicIPAllocationMethod: to.Ptr(armnetwork.IPAllocationMethodStatic),
+			PublicIPAddressVersion:   new(armnetwork.IPVersionIPv4),
+			PublicIPAllocationMethod: new(armnetwork.IPAllocationMethodStatic),
 			ServicePublicIPAddress: &armnetwork.PublicIPAddress{
-				ID: to.Ptr(serviceIPID),
+				ID: new(serviceIPID),
 			},
 		},
 	}

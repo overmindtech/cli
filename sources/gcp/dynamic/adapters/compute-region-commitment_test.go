@@ -128,7 +128,7 @@ func TestComputeRegionCommitment(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/commitments/%s", projectID, region, commitmentName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Commitment not found"},
+				Body:       map[string]any{"error": "Commitment not found"},
 			},
 		}
 

@@ -12,9 +12,9 @@ func TestConnectAttachmentItemMapper(t *testing.T) {
 	scope := "123456789012.eu-west-2"
 	item, err := connectAttachmentItemMapper("", scope, &types.ConnectAttachment{
 		Attachment: &types.Attachment{
-			AttachmentId:   PtrString("att-1"),
-			CoreNetworkId:  PtrString("cn-1"),
-			CoreNetworkArn: PtrString("arn:aws:networkmanager:eu-west-2:123456789012:core-network/cn-1"),
+			AttachmentId:   new("att-1"),
+			CoreNetworkId:  new("cn-1"),
+			CoreNetworkArn: new("arn:aws:networkmanager:eu-west-2:123456789012:core-network/cn-1"),
 		},
 	})
 	if err != nil {

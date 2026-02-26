@@ -42,13 +42,13 @@ func TestPlacementGroupOutputMapper(t *testing.T) {
 	output := &ec2.DescribePlacementGroupsOutput{
 		PlacementGroups: []types.PlacementGroup{
 			{
-				GroupArn:       PtrString("arn"),
-				GroupId:        PtrString("id"),
-				GroupName:      PtrString("name"),
+				GroupArn:       new("arn"),
+				GroupId:        new("id"),
+				GroupName:      new("name"),
 				SpreadLevel:    types.SpreadLevelHost,
 				State:          types.PlacementGroupStateAvailable,
 				Strategy:       types.PlacementStrategyCluster,
-				PartitionCount: PtrInt32(1),
+				PartitionCount: new(int32(1)),
 				Tags:           []types.Tag{},
 			},
 		},

@@ -12,7 +12,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v3"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdpcache"
@@ -249,7 +248,7 @@ func createFileShare(ctx context.Context, client *armstorage.FileSharesClient, r
 	// File shares require a quota (size in GB)
 	resp, err := client.Create(ctx, resourceGroupName, accountName, shareName, armstorage.FileShare{
 		FileShareProperties: &armstorage.FileShareProperties{
-			ShareQuota: ptr.To(int32(1)), // 1GB minimum quota
+			ShareQuota: new(int32(1)), // 1GB minimum quota
 		},
 	}, nil)
 	if err != nil {

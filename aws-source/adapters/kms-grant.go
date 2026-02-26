@@ -173,7 +173,7 @@ func NewKMSGrantAdapter(client *kms.Client, accountID string, region string, cac
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: grantAdapterMetadata,
-		cache:        cache,
+		cache:           cache,
 		DescribeFunc: func(ctx context.Context, client *kms.Client, input *kms.ListGrantsInput) (*kms.ListGrantsOutput, error) {
 			return client.ListGrants(ctx, input)
 		},
@@ -189,8 +189,8 @@ func NewKMSGrantAdapter(client *kms.Client, accountID string, region string, cac
 			}
 
 			return &kms.ListGrantsInput{
-				KeyId:   &tmp[0],                                              // keyID
-				GrantId: PtrString(strings.Join(tmp[1:], "/")), // grantId
+				KeyId:   &tmp[0],                         // keyID
+				GrantId: new(strings.Join(tmp[1:], "/")), // grantId
 			}, nil
 		},
 		UseListForGet: true,

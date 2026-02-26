@@ -64,14 +64,14 @@ func (t *testGalleryApplicationsClient) NewListByGalleryPager(resourceGroupName,
 
 func createAzureGalleryApplication(applicationName string) *armcompute.GalleryApplication {
 	return &armcompute.GalleryApplication{
-		Name:     to.Ptr(applicationName),
-		Location: to.Ptr("eastus"),
+		Name:     new(applicationName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armcompute.GalleryApplicationProperties{
 			SupportedOSType: to.Ptr(armcompute.OperatingSystemTypesWindows),
-			Description:     to.Ptr("Test gallery application"),
+			Description:     new("Test gallery application"),
 		},
 	}
 }

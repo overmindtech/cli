@@ -17,7 +17,7 @@ type AzureProvider struct {
 	SubscriptionID string `hcl:"subscription_id,optional" yaml:"subscription_id,omitempty"`
 	TenantID       string `hcl:"tenant_id,optional" yaml:"tenant_id,omitempty"`
 	ClientID       string `hcl:"client_id,optional" yaml:"client_id,omitempty"`
-	ClientSecret   string `hcl:"client_secret,optional" yaml:"client_secret,omitempty"`
+	ClientSecret   string `hcl:"client_secret,optional" yaml:"client_secret,omitempty"` //nolint:gosec // G101: field name, not a hardcoded credential; deserialized from local Terraform HCL config, never marshaled into logs or HTTP responses
 	Environment    string `hcl:"environment,optional" yaml:"environment,omitempty"`
 
 	// Throw any additional stuff into here so it doesn't fail

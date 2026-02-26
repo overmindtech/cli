@@ -175,7 +175,7 @@ func TestCloudResourceManagerTagKey(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to get 'purposeData' attribute: %v", err)
 		}
-		purposeData, ok := val.(map[string]interface{})
+		purposeData, ok := val.(map[string]any)
 		if !ok {
 			t.Fatalf("Expected purposeData to be a map, got %T", val)
 		}
@@ -235,7 +235,7 @@ func TestCloudResourceManagerTagKey(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://cloudresourcemanager.googleapis.com/v3/tagKeys/%s", tagKeyID): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": map[string]interface{}{"code": 404, "message": "TagKey not found"}},
+				Body:       map[string]any{"error": map[string]any{"code": 404, "message": "TagKey not found"}},
 			},
 		}
 

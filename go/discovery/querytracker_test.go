@@ -272,11 +272,9 @@ func TestCancel(t *testing.T) {
 	var wg sync.WaitGroup
 
 	var err error
-	wg.Add(1)
-	go func() {
+	wg.Go(func() {
 		items, edges, _, err = qt.Execute(context.Background())
-		wg.Done()
-	}()
+	})
 
 	// Give it some time to populate the cancelFunc
 	time.Sleep(100 * time.Millisecond)

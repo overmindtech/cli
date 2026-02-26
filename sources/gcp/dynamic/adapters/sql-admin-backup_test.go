@@ -160,7 +160,7 @@ func TestSQLAdminBackup(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://sqladmin.googleapis.com/v1/projects/%s/backups/%s", projectID, backupName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Backup not found"},
+				Body:       map[string]any{"error": "Backup not found"},
 			},
 		}
 

@@ -6,7 +6,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	"go.uber.org/mock/gomock"
 
@@ -225,12 +224,12 @@ func TestComputeDedicatedHostGroup(t *testing.T) {
 		hostGroup1 := createAzureDedicatedHostGroup("test-host-group-1")
 		hostGroupNilName := &armcompute.DedicatedHostGroup{
 			Name:     nil,
-			Location: to.Ptr("eastus"),
+			Location: new("eastus"),
 			Tags: map[string]*string{
-				"env": to.Ptr("test"),
+				"env": new("test"),
 			},
 			Properties: &armcompute.DedicatedHostGroupProperties{
-				PlatformFaultDomainCount: to.Ptr(int32(2)),
+				PlatformFaultDomainCount: new(int32(2)),
 			},
 		}
 
@@ -306,15 +305,15 @@ func TestComputeDedicatedHostGroup(t *testing.T) {
 // createAzureDedicatedHostGroup creates a mock Azure Dedicated Host Group for testing.
 func createAzureDedicatedHostGroup(hostGroupName string) *armcompute.DedicatedHostGroup {
 	return &armcompute.DedicatedHostGroup{
-		Name:     to.Ptr(hostGroupName),
-		Location: to.Ptr("eastus"),
+		Name:     new(hostGroupName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env":     to.Ptr("test"),
-			"project": to.Ptr("testing"),
+			"env":     new("test"),
+			"project": new("testing"),
 		},
 		Properties: &armcompute.DedicatedHostGroupProperties{
-			PlatformFaultDomainCount:  to.Ptr(int32(2)),
-			SupportAutomaticPlacement: to.Ptr(false),
+			PlatformFaultDomainCount:  new(int32(2)),
+			SupportAutomaticPlacement: new(false),
 			AdditionalCapabilities:    nil,
 			Hosts:                     nil,
 			InstanceView:              nil,
@@ -327,17 +326,17 @@ func createAzureDedicatedHostGroupWithHosts(hostGroupName, subscriptionID, resou
 	hosts := make([]*armcompute.SubResourceReadOnly, 0, len(hostNames))
 	for _, name := range hostNames {
 		hosts = append(hosts, &armcompute.SubResourceReadOnly{
-			ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/hostGroups/" + hostGroupName + "/hosts/" + name),
+			ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/hostGroups/" + hostGroupName + "/hosts/" + name),
 		})
 	}
 	return &armcompute.DedicatedHostGroup{
-		Name:     to.Ptr(hostGroupName),
-		Location: to.Ptr("eastus"),
+		Name:     new(hostGroupName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armcompute.DedicatedHostGroupProperties{
-			PlatformFaultDomainCount: to.Ptr(int32(2)),
+			PlatformFaultDomainCount: new(int32(2)),
 			Hosts:                    hosts,
 		},
 	}

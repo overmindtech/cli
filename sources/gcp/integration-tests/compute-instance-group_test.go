@@ -12,7 +12,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/googleapis/gax-go/v2/apierror"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdpcache"
@@ -131,7 +130,7 @@ func TestComputeInstanceGroupIntegration(t *testing.T) {
 
 func createInstanceGroup(ctx context.Context, client *compute.InstanceGroupsClient, projectID, zone, instanceGroupName string) error {
 	instanceGroup := &computepb.InstanceGroup{
-		Name: ptr.To(instanceGroupName),
+		Name: new(instanceGroupName),
 	}
 
 	req := &computepb.InsertInstanceGroupRequest{

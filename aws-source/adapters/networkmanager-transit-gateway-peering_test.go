@@ -20,12 +20,12 @@ func TestTransitGatewayPeeringOutputMapper(t *testing.T) {
 			name: "ok",
 			item: &types.TransitGatewayPeering{
 				Peering: &types.Peering{
-					PeeringId:     PtrString("tgp-1"),
-					CoreNetworkId: PtrString("cn-1"),
+					PeeringId:     new("tgp-1"),
+					CoreNetworkId: new("cn-1"),
 					State:         types.PeeringStateAvailable,
 				},
-				TransitGatewayArn:                 PtrString("arn:aws:ec2:us-west-2:123456789012:transit-gateway/tgw-1234"),
-				TransitGatewayPeeringAttachmentId: PtrString("gpa-1"),
+				TransitGatewayArn:                 new("arn:aws:ec2:us-west-2:123456789012:transit-gateway/tgw-1234"),
+				TransitGatewayPeeringAttachmentId: new("gpa-1"),
 			},
 			expectedHealth: sdp.Health_HEALTH_OK,
 			expectedAttr:   "tgp-1",

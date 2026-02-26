@@ -161,7 +161,7 @@ func TestComputeVpnTunnel(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/vpnTunnels/%s", projectID, region, tunnelName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "VPN tunnel not found"},
+				Body:       map[string]any{"error": "VPN tunnel not found"},
 			},
 		}
 

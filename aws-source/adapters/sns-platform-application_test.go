@@ -15,8 +15,8 @@ type mockPlatformApplicationClient struct{}
 func (m mockPlatformApplicationClient) ListTagsForResource(ctx context.Context, input *sns.ListTagsForResourceInput, f ...func(*sns.Options)) (*sns.ListTagsForResourceOutput, error) {
 	return &sns.ListTagsForResourceOutput{
 		Tags: []types.Tag{
-			{Key: PtrString("tag1"), Value: PtrString("value1")},
-			{Key: PtrString("tag2"), Value: PtrString("value2")},
+			{Key: new("tag1"), Value: new("value1")},
+			{Key: new("tag2"), Value: new("value2")},
 		},
 	}, nil
 }
@@ -34,14 +34,14 @@ func (m mockPlatformApplicationClient) ListPlatformApplications(ctx context.Cont
 	return &sns.ListPlatformApplicationsOutput{
 		PlatformApplications: []types.PlatformApplication{
 			{
-				PlatformApplicationArn: PtrString("arn:aws:sns:us-west-2:123456789012:app/ADM/MyApplication"),
+				PlatformApplicationArn: new("arn:aws:sns:us-west-2:123456789012:app/ADM/MyApplication"),
 				Attributes: map[string]string{
 					"SuccessFeedbackSampleRate": "100",
 					"Enabled":                   "true",
 				},
 			},
 			{
-				PlatformApplicationArn: PtrString("arn:aws:sns:us-west-2:123456789012:app/MPNS/MyOtherApplication"),
+				PlatformApplicationArn: new("arn:aws:sns:us-west-2:123456789012:app/MPNS/MyOtherApplication"),
 				Attributes: map[string]string{
 					"SuccessFeedbackSampleRate": "100",
 					"Enabled":                   "true",
@@ -56,7 +56,7 @@ func TestGetPlatformApplicationFunc(t *testing.T) {
 	cli := mockPlatformApplicationClient{}
 
 	item, err := getPlatformApplicationFunc(ctx, cli, "scope", &sns.GetPlatformApplicationAttributesInput{
-		PlatformApplicationArn: PtrString("arn:aws:sns:us-west-2:123456789012:my-topic"),
+		PlatformApplicationArn: new("arn:aws:sns:us-west-2:123456789012:my-topic"),
 	})
 	if err != nil {
 		t.Fatal(err)

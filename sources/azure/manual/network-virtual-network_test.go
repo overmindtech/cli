@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"reflect"
+	"slices"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
 	"go.uber.org/mock/gomock"
 
@@ -208,13 +208,13 @@ func TestNetworkVirtualNetwork(t *testing.T) {
 		vnet1 := createAzureVirtualNetwork("test-vnet-1")
 		vnet2 := &armnetwork.VirtualNetwork{
 			Name:     nil, // VNet with nil name should cause an error in azureVirtualNetworkToSDPItem
-			Location: to.Ptr("eastus"),
+			Location: new("eastus"),
 			Tags: map[string]*string{
-				"env": to.Ptr("test"),
+				"env": new("test"),
 			},
 			Properties: &armnetwork.VirtualNetworkPropertiesFormat{
 				AddressSpace: &armnetwork.AddressSpace{
-					AddressPrefixes: []*string{to.Ptr("10.0.0.0/16")},
+					AddressPrefixes: []*string{new("10.0.0.0/16")},
 				},
 			},
 		}
@@ -313,13 +313,7 @@ func TestNetworkVirtualNetwork(t *testing.T) {
 			t.Error("Expected IAMPermissions to return at least one permission")
 		}
 		expectedPermission := "Microsoft.Network/virtualNetworks/read"
-		found := false
-		for _, perm := range permissions {
-			if perm == expectedPermission {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(permissions, expectedPermission)
 		if !found {
 			t.Errorf("Expected IAMPermissions to include %s", expectedPermission)
 		}
@@ -391,7 +385,7 @@ func (m *MockVirtualNetworksPager) More() bool {
 
 func (mr *MockVirtualNetworksPagerMockRecorder) More() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "More", reflect.TypeOf((*MockVirtualNetworksPager)(nil).More))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "More", reflect.TypeFor[func() bool]())
 }
 
 func (m *MockVirtualNetworksPager) NextPage(ctx context.Context) (armnetwork.VirtualNetworksClientListResponse, error) {
@@ -402,29 +396,29 @@ func (m *MockVirtualNetworksPager) NextPage(ctx context.Context) (armnetwork.Vir
 	return ret0, ret1
 }
 
-func (mr *MockVirtualNetworksPagerMockRecorder) NextPage(ctx interface{}) *gomock.Call {
+func (mr *MockVirtualNetworksPagerMockRecorder) NextPage(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NextPage", reflect.TypeOf((*MockVirtualNetworksPager)(nil).NextPage), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NextPage", reflect.TypeFor[func(ctx context.Context) (armnetwork.VirtualNetworksClientListResponse, error)](), ctx)
 }
 
 // createAzureVirtualNetwork creates a mock Azure virtual network for testing
 func createAzureVirtualNetwork(vnetName string) *armnetwork.VirtualNetwork {
 	return &armnetwork.VirtualNetwork{
-		Name:     to.Ptr(vnetName),
-		Location: to.Ptr("eastus"),
+		Name:     new(vnetName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env":     to.Ptr("test"),
-			"project": to.Ptr("testing"),
+			"env":     new("test"),
+			"project": new("testing"),
 		},
 		Properties: &armnetwork.VirtualNetworkPropertiesFormat{
 			AddressSpace: &armnetwork.AddressSpace{
-				AddressPrefixes: []*string{to.Ptr("10.0.0.0/16")},
+				AddressPrefixes: []*string{new("10.0.0.0/16")},
 			},
 			Subnets: []*armnetwork.Subnet{
 				{
-					Name: to.Ptr("default"),
+					Name: new("default"),
 					Properties: &armnetwork.SubnetPropertiesFormat{
-						AddressPrefix: to.Ptr("10.0.0.0/24"),
+						AddressPrefix: new("10.0.0.0/24"),
 					},
 				},
 			},
@@ -437,29 +431,29 @@ func createAzureVirtualNetwork(vnetName string) *armnetwork.VirtualNetwork {
 func createAzureVirtualNetworkWithDefaultNatGatewayAndDhcpOptions(vnetName, subscriptionID, resourceGroup string) *armnetwork.VirtualNetwork {
 	natGatewayID := "/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/natGateways/test-nat-gateway"
 	return &armnetwork.VirtualNetwork{
-		Name:     to.Ptr(vnetName),
-		Location: to.Ptr("eastus"),
+		Name:     new(vnetName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armnetwork.VirtualNetworkPropertiesFormat{
 			AddressSpace: &armnetwork.AddressSpace{
-				AddressPrefixes: []*string{to.Ptr("10.0.0.0/16")},
+				AddressPrefixes: []*string{new("10.0.0.0/16")},
 			},
 			DefaultPublicNatGateway: &armnetwork.SubResource{
-				ID: to.Ptr(natGatewayID),
+				ID: new(natGatewayID),
 			},
 			DhcpOptions: &armnetwork.DhcpOptions{
 				DNSServers: []*string{
-					to.Ptr("10.0.0.1"),     // IP address → stdlib.NetworkIP
-					to.Ptr("dns.internal"), // hostname → stdlib.NetworkDNS
+					new("10.0.0.1"),     // IP address → stdlib.NetworkIP
+					new("dns.internal"), // hostname → stdlib.NetworkDNS
 				},
 			},
 			Subnets: []*armnetwork.Subnet{
 				{
-					Name: to.Ptr("default"),
+					Name: new("default"),
 					Properties: &armnetwork.SubnetPropertiesFormat{
-						AddressPrefix: to.Ptr("10.0.0.0/24"),
+						AddressPrefix: new("10.0.0.0/24"),
 					},
 				},
 			},

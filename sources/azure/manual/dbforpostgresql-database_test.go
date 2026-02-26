@@ -5,7 +5,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers/v5"
 	"go.uber.org/mock/gomock"
 
@@ -193,8 +192,8 @@ func TestDBforPostgreSQLDatabase(t *testing.T) {
 		database2 := &armpostgresqlflexibleservers.Database{
 			Name: nil, // Database with nil name should be skipped
 			Properties: &armpostgresqlflexibleservers.DatabaseProperties{
-				Charset:   to.Ptr("UTF8"),
-				Collation: to.Ptr("en_US.utf8"),
+				Charset:   new("UTF8"),
+				Collation: new("en_US.utf8"),
 			},
 		}
 
@@ -299,11 +298,11 @@ func createAzurePostgreSQLDatabase(serverName, databaseName string) *armpostgres
 	databaseID := "/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.DBforPostgreSQL/flexibleServers/" + serverName + "/databases/" + databaseName
 
 	return &armpostgresqlflexibleservers.Database{
-		Name: to.Ptr(databaseName),
-		ID:   to.Ptr(databaseID),
+		Name: new(databaseName),
+		ID:   new(databaseID),
 		Properties: &armpostgresqlflexibleservers.DatabaseProperties{
-			Charset:   to.Ptr("UTF8"),
-			Collation: to.Ptr("en_US.utf8"),
+			Charset:   new("UTF8"),
+			Collation: new("en_US.utf8"),
 		},
 	}
 }

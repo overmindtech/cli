@@ -156,7 +156,7 @@ func TestBigTableAdminCluster(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to get 'encryptionConfig' attribute: %v", err)
 		}
-		encryptionConfig, ok := val.(map[string]interface{})
+		encryptionConfig, ok := val.(map[string]any)
 		if !ok {
 			t.Fatalf("Expected encryptionConfig to be a map[string]interface{}, got %T", val)
 		}
@@ -259,7 +259,7 @@ func TestBigTableAdminCluster(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/clusters/%s", projectID, instanceName, clusterName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Cluster not found"},
+				Body:       map[string]any{"error": "Cluster not found"},
 			},
 		}
 

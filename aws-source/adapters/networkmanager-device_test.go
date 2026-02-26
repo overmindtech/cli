@@ -15,10 +15,10 @@ func TestDeviceOutputMapper(t *testing.T) {
 	output := networkmanager.GetDevicesOutput{
 		Devices: []types.Device{
 			{
-				DeviceId:        PtrString("dvc-1"),
-				GlobalNetworkId: PtrString("default"),
-				SiteId:          PtrString("site-1"),
-				DeviceArn:       PtrString("arn:aws:networkmanager:us-west-2:123456789012:device/dvc-1"),
+				DeviceId:        new("dvc-1"),
+				GlobalNetworkId: new("default"),
+				SiteId:          new("site-1"),
+				DeviceArn:       new("arn:aws:networkmanager:us-west-2:123456789012:device/dvc-1"),
 			},
 		},
 	}
@@ -101,7 +101,7 @@ func TestDeviceInputMapperSearch(t *testing.T) {
 			name:  "Valid networkmanager-device ARN",
 			query: "arn:aws:networkmanager::123456789012:device/global-network-01231231231231231/device-07f6fd08867abc123",
 			expectedInput: &networkmanager.GetDevicesInput{
-				GlobalNetworkId: PtrString("global-network-01231231231231231"),
+				GlobalNetworkId: new("global-network-01231231231231231"),
 				DeviceIds:       []string{"device-07f6fd08867abc123"},
 			},
 			expectError: false,
@@ -110,7 +110,7 @@ func TestDeviceInputMapperSearch(t *testing.T) {
 			name:  "Global Network ID only",
 			query: "global-network-123456789",
 			expectedInput: &networkmanager.GetDevicesInput{
-				GlobalNetworkId: PtrString("global-network-123456789"),
+				GlobalNetworkId: new("global-network-123456789"),
 			},
 			expectError: false,
 		},
@@ -118,8 +118,8 @@ func TestDeviceInputMapperSearch(t *testing.T) {
 			name:  "Global Network ID and Site ID",
 			query: "global-network-123456789|site-987654321",
 			expectedInput: &networkmanager.GetDevicesInput{
-				GlobalNetworkId: PtrString("global-network-123456789"),
-				SiteId:          PtrString("site-987654321"),
+				GlobalNetworkId: new("global-network-123456789"),
+				SiteId:          new("site-987654321"),
 			},
 			expectError: false,
 		},

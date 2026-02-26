@@ -6,7 +6,6 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 )
 
 // Shared constants for integration tests
@@ -26,10 +25,10 @@ func createResourceGroup(ctx context.Context, client *armresources.ResourceGroup
 
 	// Create the resource group
 	_, err = client.CreateOrUpdate(ctx, resourceGroupName, armresources.ResourceGroup{
-		Location: ptr.To(location),
+		Location: new(location),
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
-			"managed": ptr.To("true"),
+			"purpose": new("overmind-integration-tests"),
+			"managed": new("true"),
 		},
 	}, nil)
 	if err != nil {

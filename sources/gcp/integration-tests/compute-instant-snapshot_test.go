@@ -12,7 +12,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/googleapis/gax-go/v2/apierror"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdpcache"
@@ -168,8 +167,8 @@ func TestComputeInstantSnapshotIntegration(t *testing.T) {
 // createInstantSnapshot creates a GCP Compute Instant Snapshot with the given parameters.
 func createInstantSnapshot(ctx context.Context, client *compute.InstantSnapshotsClient, projectID, zone, snapshotName, diskName string) error {
 	snapshot := &computepb.InstantSnapshot{
-		Name:       ptr.To(snapshotName),
-		SourceDisk: ptr.To(diskName),
+		Name:       new(snapshotName),
+		SourceDisk: new(diskName),
 		Labels: map[string]string{
 			"test": "integration",
 		},

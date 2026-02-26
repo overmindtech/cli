@@ -15,14 +15,14 @@ func TestIamInstanceProfileAssociationOutputMapper(t *testing.T) {
 	output := ec2.DescribeIamInstanceProfileAssociationsOutput{
 		IamInstanceProfileAssociations: []types.IamInstanceProfileAssociation{
 			{
-				AssociationId: PtrString("eipassoc-1234567890abcdef0"),
+				AssociationId: new("eipassoc-1234567890abcdef0"),
 				IamInstanceProfile: &types.IamInstanceProfile{
-					Arn: PtrString("arn:aws:iam::123456789012:instance-profile/webserver"), // link
-					Id:  PtrString("AIDACKCEVSQ6C2EXAMPLE"),
+					Arn: new("arn:aws:iam::123456789012:instance-profile/webserver"), // link
+					Id:  new("AIDACKCEVSQ6C2EXAMPLE"),
 				},
-				InstanceId: PtrString("i-1234567890abcdef0"), // link
+				InstanceId: new("i-1234567890abcdef0"), // link
 				State:      types.IamInstanceProfileAssociationStateAssociated,
-				Timestamp:  PtrTime(time.Now()),
+				Timestamp:  new(time.Now()),
 			},
 		},
 	}

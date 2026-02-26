@@ -118,7 +118,7 @@ func NewECSContainerInstanceAdapter(client ECSClient, accountID string, region s
 		Region:          region,
 		GetFunc:         containerInstanceGetFunc,
 		AdapterMetadata: containerInstanceAdapterMetadata,
-		cache:        cache,
+		cache:           cache,
 		GetInputMapper: func(scope, query string) *ecs.DescribeContainerInstancesInput {
 			// We are using a custom id of {clusterName}/{id} e.g.
 			// ecs-template-ECSCluster-8nS0WOLbs3nZ/50e9bf71ed57450ca56293cc5a042886
@@ -144,7 +144,7 @@ func NewECSContainerInstanceAdapter(client ECSClient, accountID string, region s
 		SearchInputMapper: func(scope, query string) (*ecs.ListContainerInstancesInput, error) {
 			// Custom search by cluster
 			return &ecs.ListContainerInstancesInput{
-				Cluster: PtrString(query),
+				Cluster: new(query),
 			}, nil
 		},
 		ListFuncOutputMapper: containerInstanceListFuncOutputMapper,

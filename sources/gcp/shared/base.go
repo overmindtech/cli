@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -80,10 +81,8 @@ func (z *ZoneBase) LocationFromScope(scope string) (LocationInfo, error) {
 	if !location.Zonal() {
 		return LocationInfo{}, fmt.Errorf("scope %s is not zonal", scope)
 	}
-	for _, loc := range z.locations {
-		if location.Equals(loc) {
-			return location, nil
-		}
+	if slices.ContainsFunc(z.locations, location.Equals) {
+		return location, nil
 	}
 	return LocationInfo{}, fmt.Errorf("scope %s not found in adapter locations", scope)
 }
@@ -142,10 +141,8 @@ func (r *RegionBase) LocationFromScope(scope string) (LocationInfo, error) {
 	if !location.Regional() {
 		return LocationInfo{}, fmt.Errorf("scope %s is not regional", scope)
 	}
-	for _, loc := range r.locations {
-		if location.Equals(loc) {
-			return location, nil
-		}
+	if slices.ContainsFunc(r.locations, location.Equals) {
+		return location, nil
 	}
 	return LocationInfo{}, fmt.Errorf("scope %s not found in adapter locations", scope)
 }
@@ -203,10 +200,8 @@ func (p *ProjectBase) LocationFromScope(scope string) (LocationInfo, error) {
 	if !location.ProjectLevel() {
 		return LocationInfo{}, fmt.Errorf("scope %s is not project-level", scope)
 	}
-	for _, loc := range p.locations {
-		if location.Equals(loc) {
-			return location, nil
-		}
+	if slices.ContainsFunc(p.locations, location.Equals) {
+		return location, nil
 	}
 	return LocationInfo{}, fmt.Errorf("scope %s not found in adapter locations", scope)
 }

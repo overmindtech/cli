@@ -56,7 +56,7 @@ func LogRecoverToExit(ctx context.Context, loc string) {
 	os.Exit(1)
 }
 
-func HandleError(ctx context.Context, loc string, err interface{}, stack string) {
+func HandleError(ctx context.Context, loc string, err any, stack string) {
 	msg := fmt.Sprintf("unhandled panic in %v, exiting: %v", loc, err)
 
 	hub := sentry.CurrentHub()

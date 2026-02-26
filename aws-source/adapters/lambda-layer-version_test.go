@@ -62,17 +62,17 @@ func (t *TestLambdaClient) GetLayerVersion(ctx context.Context, params *lambda.G
 			types.RuntimeDotnet6,
 		},
 		Content: &types.LayerVersionContentOutput{
-			CodeSha256:               PtrString("sha"),
+			CodeSha256:               new("sha"),
 			CodeSize:                 100,
-			Location:                 PtrString("somewhere"),
-			SigningJobArn:            PtrString("arn:aws:service:region:account:type/id"),
-			SigningProfileVersionArn: PtrString("arn:aws:service:region:account:type/id"),
+			Location:                 new("somewhere"),
+			SigningJobArn:            new("arn:aws:service:region:account:type/id"),
+			SigningProfileVersionArn: new("arn:aws:service:region:account:type/id"),
 		},
-		CreatedDate:     PtrString("YYYY-MM-DDThh:mm:ss.sTZD"),
-		Description:     PtrString("description"),
-		LayerArn:        PtrString("arn:aws:service:region:account:type/id"),
-		LayerVersionArn: PtrString("arn:aws:service:region:account:type/id"),
-		LicenseInfo:     PtrString("info"),
+		CreatedDate:     new("YYYY-MM-DDThh:mm:ss.sTZD"),
+		Description:     new("description"),
+		LayerArn:        new("arn:aws:service:region:account:type/id"),
+		LayerVersionArn: new("arn:aws:service:region:account:type/id"),
+		LicenseInfo:     new("info"),
 		Version:         *params.VersionNumber,
 	}, nil
 }
@@ -83,8 +83,8 @@ func (t *TestLambdaClient) ListLayerVersions(context.Context, *lambda.ListLayerV
 
 func TestLayerVersionGetFunc(t *testing.T) {
 	item, err := layerVersionGetFunc(context.Background(), &TestLambdaClient{}, "foo", &lambda.GetLayerVersionInput{
-		LayerName:     PtrString("layer"),
-		VersionNumber: PtrInt64(999),
+		LayerName:     new("layer"),
+		VersionNumber: new(int64(999)),
 	})
 
 	if err != nil {

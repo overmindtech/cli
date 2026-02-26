@@ -15,7 +15,7 @@ type GCPProvider struct {
 	Name                         string            `hcl:"name,label" yaml:"name,omitempty"`
 	Alias                        string            `hcl:"alias,optional" yaml:"alias,omitempty"`
 	Credentials                  string            `hcl:"credentials,optional" yaml:"credentials,omitempty"`
-	AccessToken                  string            `hcl:"access_token,optional" yaml:"access_token,omitempty"`
+	AccessToken                  string            `hcl:"access_token,optional" yaml:"access_token,omitempty"` //nolint:gosec // G101: field name, not a hardcoded credential; deserialized from local Terraform HCL config, never marshaled into logs or HTTP responses
 	ImpersonateServiceAccount    string            `hcl:"impersonate_service_account,optional" yaml:"impersonate_service_account,omitempty"`
 	Project                      string            `hcl:"project,optional" yaml:"project,omitempty"`
 	Region                       string            `hcl:"region,optional" yaml:"region,omitempty"`

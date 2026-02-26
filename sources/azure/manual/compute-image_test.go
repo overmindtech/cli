@@ -6,7 +6,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	"go.uber.org/mock/gomock"
 
@@ -298,9 +297,9 @@ func TestComputeImage(t *testing.T) {
 		image1 := createAzureImage("test-image-1")
 		imageNilName := &armcompute.Image{
 			Name:     nil, // nil name should be skipped
-			Location: to.Ptr("eastus"),
+			Location: new("eastus"),
 			Tags: map[string]*string{
-				"env": to.Ptr("test"),
+				"env": new("test"),
 			},
 		}
 
@@ -483,7 +482,7 @@ func TestComputeImage(t *testing.T) {
 		wrapper := manual.NewComputeImage(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		// PredefinedRole is available on the wrapper, not the adapter
-		if roleInterface, ok := interface{}(wrapper).(interface{ PredefinedRole() string }); ok {
+		if roleInterface, ok := any(wrapper).(interface{ PredefinedRole() string }); ok {
 			role := roleInterface.PredefinedRole()
 			if role != "Reader" {
 				t.Errorf("Expected predefined role 'Reader', got %s", role)
@@ -497,14 +496,14 @@ func TestComputeImage(t *testing.T) {
 // createAzureImage creates a mock Azure Image for testing
 func createAzureImage(imageName string) *armcompute.Image {
 	return &armcompute.Image{
-		Name:     to.Ptr(imageName),
-		Location: to.Ptr("eastus"),
+		Name:     new(imageName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env":     to.Ptr("test"),
-			"project": to.Ptr("testing"),
+			"env":     new("test"),
+			"project": new("testing"),
 		},
 		Properties: &armcompute.ImageProperties{
-			ProvisioningState: to.Ptr("Succeeded"),
+			ProvisioningState: new("Succeeded"),
 		},
 	}
 }
@@ -515,46 +514,46 @@ func createAzureImageWithAllLinks(imageName, subscriptionID, resourceGroup strin
 	dataDiskBlobURI := "https://teststorageaccount2.blob.core.windows.net/vhds/datadisk1.vhd"
 
 	return &armcompute.Image{
-		Name:     to.Ptr(imageName),
-		Location: to.Ptr("eastus"),
+		Name:     new(imageName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armcompute.ImageProperties{
-			ProvisioningState: to.Ptr("Succeeded"),
+			ProvisioningState: new("Succeeded"),
 			StorageProfile: &armcompute.ImageStorageProfile{
 				OSDisk: &armcompute.ImageOSDisk{
-					OSType:  to.Ptr(armcompute.OperatingSystemTypesLinux),
-					OSState: to.Ptr(armcompute.OperatingSystemStateTypesGeneralized),
+					OSType:  new(armcompute.OperatingSystemTypesLinux),
+					OSState: new(armcompute.OperatingSystemStateTypesGeneralized),
 					ManagedDisk: &armcompute.SubResource{
-						ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/disks/test-os-disk"),
+						ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/disks/test-os-disk"),
 					},
 					Snapshot: &armcompute.SubResource{
-						ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/snapshots/test-os-snapshot"),
+						ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/snapshots/test-os-snapshot"),
 					},
-					BlobURI: to.Ptr(osDiskBlobURI),
+					BlobURI: new(osDiskBlobURI),
 					DiskEncryptionSet: &armcompute.DiskEncryptionSetParameters{
-						ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/diskEncryptionSets/test-os-disk-encryption-set"),
+						ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/diskEncryptionSets/test-os-disk-encryption-set"),
 					},
 				},
 				DataDisks: []*armcompute.ImageDataDisk{
 					{
-						Lun: to.Ptr(int32(0)),
+						Lun: new(int32(0)),
 						ManagedDisk: &armcompute.SubResource{
-							ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/disks/test-data-disk-1"),
+							ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/disks/test-data-disk-1"),
 						},
 						Snapshot: &armcompute.SubResource{
-							ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/snapshots/test-data-snapshot-1"),
+							ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/snapshots/test-data-snapshot-1"),
 						},
-						BlobURI: to.Ptr(dataDiskBlobURI),
+						BlobURI: new(dataDiskBlobURI),
 						DiskEncryptionSet: &armcompute.DiskEncryptionSetParameters{
-							ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/diskEncryptionSets/test-data-disk-encryption-set"),
+							ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/diskEncryptionSets/test-data-disk-encryption-set"),
 						},
 					},
 				},
 			},
 			SourceVirtualMachine: &armcompute.SubResource{
-				ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/virtualMachines/test-source-vm"),
+				ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/virtualMachines/test-source-vm"),
 			},
 		},
 	}
@@ -563,19 +562,19 @@ func createAzureImageWithAllLinks(imageName, subscriptionID, resourceGroup strin
 // createAzureImageWithCrossResourceGroupLinks creates a mock Azure Image with links to resources in different resource groups
 func createAzureImageWithCrossResourceGroupLinks(imageName, subscriptionID, resourceGroup string) *armcompute.Image {
 	return &armcompute.Image{
-		Name:     to.Ptr(imageName),
-		Location: to.Ptr("eastus"),
+		Name:     new(imageName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armcompute.ImageProperties{
-			ProvisioningState: to.Ptr("Succeeded"),
+			ProvisioningState: new("Succeeded"),
 			StorageProfile: &armcompute.ImageStorageProfile{
 				OSDisk: &armcompute.ImageOSDisk{
-					OSType:  to.Ptr(armcompute.OperatingSystemTypesLinux),
-					OSState: to.Ptr(armcompute.OperatingSystemStateTypesGeneralized),
+					OSType:  new(armcompute.OperatingSystemTypesLinux),
+					OSState: new(armcompute.OperatingSystemStateTypesGeneralized),
 					ManagedDisk: &armcompute.SubResource{
-						ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/other-rg/providers/Microsoft.Compute/disks/test-disk-other-rg"),
+						ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/other-rg/providers/Microsoft.Compute/disks/test-disk-other-rg"),
 					},
 				},
 			},

@@ -12,7 +12,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/googleapis/gax-go/v2/apierror"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdpcache"
@@ -132,12 +131,12 @@ func TestComputeReservationIntegration(t *testing.T) {
 // createComputeReservation creates a GCP Compute Reservation with the given parameters.
 func createComputeReservation(ctx context.Context, client *compute.ReservationsClient, projectID, zone, reservationName, machineType string) error {
 	reservation := &computepb.Reservation{
-		Name: ptr.To(reservationName),
+		Name: new(reservationName),
 		SpecificReservation: &computepb.AllocationSpecificSKUReservation{
 			InstanceProperties: &computepb.AllocationSpecificSKUAllocationReservedInstanceProperties{
-				MachineType: ptr.To(machineType),
+				MachineType: new(machineType),
 			},
-			Count: ptr.To(int64(1)),
+			Count: new(int64(1)),
 		},
 	}
 

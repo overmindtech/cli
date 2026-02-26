@@ -10,7 +10,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/api/iterator"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -63,10 +62,10 @@ func TestComputeDisk(t *testing.T) {
 					sourceValue: "projects/test-project-id/global/images/test-image",
 					expectedLinked: shared.QueryTests{
 						{
-							ExpectedType:             gcpshared.ComputeImage.String(),
-							ExpectedMethod:           sdp.QueryMethod_SEARCH,
-							ExpectedQuery:            "projects/test-project-id/global/images/test-image",
-							ExpectedScope:            "test-project-id",
+							ExpectedType:   gcpshared.ComputeImage.String(),
+							ExpectedMethod: sdp.QueryMethod_SEARCH,
+							ExpectedQuery:  "projects/test-project-id/global/images/test-image",
+							ExpectedScope:  "test-project-id",
 						},
 					},
 				},
@@ -76,10 +75,10 @@ func TestComputeDisk(t *testing.T) {
 					sourceValue: "projects/test-project-id/global/snapshots/test-snapshot",
 					expectedLinked: shared.QueryTests{
 						{
-							ExpectedType:             gcpshared.ComputeSnapshot.String(),
-							ExpectedMethod:           sdp.QueryMethod_GET,
-							ExpectedQuery:            "test-snapshot",
-							ExpectedScope:            "test-project-id",
+							ExpectedType:   gcpshared.ComputeSnapshot.String(),
+							ExpectedMethod: sdp.QueryMethod_GET,
+							ExpectedQuery:  "test-snapshot",
+							ExpectedScope:  "test-project-id",
 						},
 					},
 				},
@@ -89,10 +88,10 @@ func TestComputeDisk(t *testing.T) {
 					sourceValue: "projects/test-project-id/zones/us-central1-a/instantSnapshots/test-instant-snapshot",
 					expectedLinked: shared.QueryTests{
 						{
-							ExpectedType:             gcpshared.ComputeInstantSnapshot.String(),
-							ExpectedMethod:           sdp.QueryMethod_GET,
-							ExpectedQuery:            "test-instant-snapshot",
-							ExpectedScope:            "test-project-id.us-central1-a",
+							ExpectedType:   gcpshared.ComputeInstantSnapshot.String(),
+							ExpectedMethod: sdp.QueryMethod_GET,
+							ExpectedQuery:  "test-instant-snapshot",
+							ExpectedScope:  "test-project-id.us-central1-a",
 						},
 					},
 				},
@@ -102,10 +101,10 @@ func TestComputeDisk(t *testing.T) {
 					sourceValue: "projects/test-project-id/zones/us-central1-a/disks/source-disk",
 					expectedLinked: shared.QueryTests{
 						{
-							ExpectedType:             gcpshared.ComputeDisk.String(),
-							ExpectedMethod:           sdp.QueryMethod_GET,
-							ExpectedQuery:            "source-disk",
-							ExpectedScope:            "test-project-id.us-central1-a",
+							ExpectedType:   gcpshared.ComputeDisk.String(),
+							ExpectedMethod: sdp.QueryMethod_GET,
+							ExpectedQuery:  "source-disk",
+							ExpectedScope:  "test-project-id.us-central1-a",
 						},
 					},
 				},
@@ -113,46 +112,46 @@ func TestComputeDisk(t *testing.T) {
 
 			// These are always present
 			resourcePolicyTest := shared.QueryTest{
-				ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
-				ExpectedMethod:           sdp.QueryMethod_GET,
-				ExpectedQuery:            "test-policy",
-				ExpectedScope:            "test-project-id.us-central1",
+				ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
+				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedQuery:  "test-policy",
+				ExpectedScope:  "test-project-id.us-central1",
 			}
 			userTest := shared.QueryTest{
-				ExpectedType:             gcpshared.ComputeInstance.String(),
-				ExpectedMethod:           sdp.QueryMethod_GET,
-				ExpectedQuery:            "test-instance",
-				ExpectedScope:            "test-project-id.us-central1-a",
+				ExpectedType:   gcpshared.ComputeInstance.String(),
+				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedQuery:  "test-instance",
+				ExpectedScope:  "test-project-id.us-central1-a",
 			}
 			diskTypeTest := shared.QueryTest{
-				ExpectedType:             gcpshared.ComputeDiskType.String(),
-				ExpectedMethod:           sdp.QueryMethod_GET,
-				ExpectedQuery:            "pd-standard",
-				ExpectedScope:            "test-project-id.us-central1-a",
+				ExpectedType:   gcpshared.ComputeDiskType.String(),
+				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedQuery:  "pd-standard",
+				ExpectedScope:  "test-project-id.us-central1-a",
 			}
 			diskEncryptionKeyTest := shared.QueryTest{
-				ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
-				ExpectedMethod:           sdp.QueryMethod_GET,
-				ExpectedQuery:            "global|test-keyring|test-key|test-version-source-disk",
-				ExpectedScope:            "test-project-id",
+				ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedQuery:  "global|test-keyring|test-key|test-version-source-disk",
+				ExpectedScope:  "test-project-id",
 			}
 			sourceImageEncryptionKeyTest := shared.QueryTest{
-				ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
-				ExpectedMethod:           sdp.QueryMethod_GET,
-				ExpectedQuery:            "global|test-keyring|test-key|test-version-source-image",
-				ExpectedScope:            "test-project-id",
+				ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedQuery:  "global|test-keyring|test-key|test-version-source-image",
+				ExpectedScope:  "test-project-id",
 			}
 			sourceSnapshotEncryptionKeyTest := shared.QueryTest{
-				ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
-				ExpectedMethod:           sdp.QueryMethod_GET,
-				ExpectedQuery:            "global|test-keyring|test-key|test-version-source-snapshot",
-				ExpectedScope:            "test-project-id",
+				ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedQuery:  "global|test-keyring|test-key|test-version-source-snapshot",
+				ExpectedScope:  "test-project-id",
 			}
 			sourceConsistencyGroupPolicy := shared.QueryTest{
-				ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
-				ExpectedMethod:           sdp.QueryMethod_GET,
-				ExpectedQuery:            "test-consistency-group-policy",
-				ExpectedScope:            "test-project-id.us-central1",
+				ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
+				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedQuery:  "test-consistency-group-policy",
+				ExpectedScope:  "test-project-id.us-central1",
 			}
 
 			for _, tc := range cases {
@@ -405,7 +404,7 @@ func TestComputeDisk(t *testing.T) {
 		// Test with gs:// URI format
 		sourceStorageObject := "gs://test-bucket/path/to/image.tar.gz"
 		disk := createComputeDisk("test-disk", computepb.Disk_READY)
-		disk.SourceStorageObject = ptr.To(sourceStorageObject)
+		disk.SourceStorageObject = new(sourceStorageObject)
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(disk, nil)
 
@@ -420,61 +419,61 @@ func TestComputeDisk(t *testing.T) {
 			// Base queries that are always present
 			baseQueries := shared.QueryTests{
 				{
-					ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "test-policy",
-					ExpectedScope:            fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-policy",
+					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
 				},
 				{
-					ExpectedType:             gcpshared.ComputeInstance.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "test-instance",
-					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
+					ExpectedType:   gcpshared.ComputeInstance.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-instance",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, zone),
 				},
 				{
-					ExpectedType:             gcpshared.ComputeDiskType.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "pd-standard",
-					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
+					ExpectedType:   gcpshared.ComputeDiskType.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "pd-standard",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, zone),
 				},
 				{
-					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-disk",
-					ExpectedScope:            projectID,
+					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "global|test-keyring|test-key|test-version-source-disk",
+					ExpectedScope:  projectID,
 				},
 				{
-					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-image",
-					ExpectedScope:            projectID,
+					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "global|test-keyring|test-key|test-version-source-image",
+					ExpectedScope:  projectID,
 				},
 				{
-					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-snapshot",
-					ExpectedScope:            projectID,
+					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "global|test-keyring|test-key|test-version-source-snapshot",
+					ExpectedScope:  projectID,
 				},
 				{
-					ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "test-consistency-group-policy",
-					ExpectedScope:            fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-consistency-group-policy",
+					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
 				},
 				{
-					ExpectedType:             gcpshared.ComputeImage.String(),
-					ExpectedMethod:           sdp.QueryMethod_SEARCH,
-					ExpectedQuery:            "projects/test-project-id/global/images/test-image",
-					ExpectedScope:            projectID,
+					ExpectedType:   gcpshared.ComputeImage.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  "projects/test-project-id/global/images/test-image",
+					ExpectedScope:  projectID,
 				},
 			}
 
 			// Add the new query we're testing
 			queryTests := append(baseQueries, shared.QueryTest{
-				ExpectedType:             gcpshared.StorageBucket.String(),
-				ExpectedMethod:           sdp.QueryMethod_GET,
-				ExpectedQuery:            "test-bucket",
-				ExpectedScope:            projectID,
+				ExpectedType:   gcpshared.StorageBucket.String(),
+				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedQuery:  "test-bucket",
+				ExpectedScope:  projectID,
 			})
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
@@ -486,7 +485,7 @@ func TestComputeDisk(t *testing.T) {
 
 		storagePoolURL := fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/storagePools/test-storage-pool", projectID, zone)
 		disk := createComputeDisk("test-disk", computepb.Disk_READY)
-		disk.StoragePool = ptr.To(storagePoolURL)
+		disk.StoragePool = new(storagePoolURL)
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(disk, nil)
 
@@ -501,61 +500,61 @@ func TestComputeDisk(t *testing.T) {
 			// Base queries that are always present (same as above)
 			baseQueries := shared.QueryTests{
 				{
-					ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "test-policy",
-					ExpectedScope:            fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-policy",
+					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
 				},
 				{
-					ExpectedType:             gcpshared.ComputeInstance.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "test-instance",
-					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
+					ExpectedType:   gcpshared.ComputeInstance.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-instance",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, zone),
 				},
 				{
-					ExpectedType:             gcpshared.ComputeDiskType.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "pd-standard",
-					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
+					ExpectedType:   gcpshared.ComputeDiskType.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "pd-standard",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, zone),
 				},
 				{
-					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-disk",
-					ExpectedScope:            projectID,
+					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "global|test-keyring|test-key|test-version-source-disk",
+					ExpectedScope:  projectID,
 				},
 				{
-					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-image",
-					ExpectedScope:            projectID,
+					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "global|test-keyring|test-key|test-version-source-image",
+					ExpectedScope:  projectID,
 				},
 				{
-					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-snapshot",
-					ExpectedScope:            projectID,
+					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "global|test-keyring|test-key|test-version-source-snapshot",
+					ExpectedScope:  projectID,
 				},
 				{
-					ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "test-consistency-group-policy",
-					ExpectedScope:            fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-consistency-group-policy",
+					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
 				},
 				{
-					ExpectedType:             gcpshared.ComputeImage.String(),
-					ExpectedMethod:           sdp.QueryMethod_SEARCH,
-					ExpectedQuery:            "projects/test-project-id/global/images/test-image",
-					ExpectedScope:            projectID,
+					ExpectedType:   gcpshared.ComputeImage.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  "projects/test-project-id/global/images/test-image",
+					ExpectedScope:  projectID,
 				},
 			}
 
 			// Add the new query we're testing
 			queryTests := append(baseQueries, shared.QueryTest{
-				ExpectedType:             gcpshared.ComputeStoragePool.String(),
-				ExpectedMethod:           sdp.QueryMethod_GET,
-				ExpectedQuery:            "test-storage-pool",
-				ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
+				ExpectedType:   gcpshared.ComputeStoragePool.String(),
+				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedQuery:  "test-storage-pool",
+				ExpectedScope:  fmt.Sprintf("%s.%s", projectID, zone),
 			})
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
@@ -569,8 +568,8 @@ func TestComputeDisk(t *testing.T) {
 		consistencyGroupPolicyURL := fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/regions/us-central1/resourcePolicies/test-consistency-policy", projectID)
 		disk := createComputeDisk("test-disk", computepb.Disk_READY)
 		disk.AsyncPrimaryDisk = &computepb.DiskAsyncReplication{
-			Disk:                   ptr.To(primaryDiskURL),
-			ConsistencyGroupPolicy: ptr.To(consistencyGroupPolicyURL),
+			Disk:                   new(primaryDiskURL),
+			ConsistencyGroupPolicy: new(consistencyGroupPolicyURL),
 		}
 
 		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(disk, nil)
@@ -586,68 +585,68 @@ func TestComputeDisk(t *testing.T) {
 			// Base queries that are always present
 			baseQueries := shared.QueryTests{
 				{
-					ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "test-policy",
-					ExpectedScope:            fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-policy",
+					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
 				},
 				{
-					ExpectedType:             gcpshared.ComputeInstance.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "test-instance",
-					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
+					ExpectedType:   gcpshared.ComputeInstance.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-instance",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, zone),
 				},
 				{
-					ExpectedType:             gcpshared.ComputeDiskType.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "pd-standard",
-					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
+					ExpectedType:   gcpshared.ComputeDiskType.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "pd-standard",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, zone),
 				},
 				{
-					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-disk",
-					ExpectedScope:            projectID,
+					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "global|test-keyring|test-key|test-version-source-disk",
+					ExpectedScope:  projectID,
 				},
 				{
-					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-image",
-					ExpectedScope:            projectID,
+					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "global|test-keyring|test-key|test-version-source-image",
+					ExpectedScope:  projectID,
 				},
 				{
-					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-snapshot",
-					ExpectedScope:            projectID,
+					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "global|test-keyring|test-key|test-version-source-snapshot",
+					ExpectedScope:  projectID,
 				},
 				{
-					ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "test-consistency-group-policy",
-					ExpectedScope:            fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-consistency-group-policy",
+					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
 				},
 				{
-					ExpectedType:             gcpshared.ComputeImage.String(),
-					ExpectedMethod:           sdp.QueryMethod_SEARCH,
-					ExpectedQuery:            "projects/test-project-id/global/images/test-image",
-					ExpectedScope:            projectID,
+					ExpectedType:   gcpshared.ComputeImage.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  "projects/test-project-id/global/images/test-image",
+					ExpectedScope:  projectID,
 				},
 			}
 
 			// Add the new queries we're testing
 			queryTests := append(baseQueries,
 				shared.QueryTest{
-					ExpectedType:             gcpshared.ComputeDisk.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "primary-disk",
-					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
+					ExpectedType:   gcpshared.ComputeDisk.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "primary-disk",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, zone),
 				},
 				shared.QueryTest{
-					ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "test-consistency-policy",
-					ExpectedScope:            fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-consistency-policy",
+					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
 				},
 			)
 
@@ -665,13 +664,13 @@ func TestComputeDisk(t *testing.T) {
 		disk.AsyncSecondaryDisks = map[string]*computepb.DiskAsyncReplicationList{
 			"secondary-disk-1": {
 				AsyncReplicationDisk: &computepb.DiskAsyncReplication{
-					Disk:                   ptr.To(secondaryDisk1URL),
-					ConsistencyGroupPolicy: ptr.To(consistencyGroupPolicyURL),
+					Disk:                   new(secondaryDisk1URL),
+					ConsistencyGroupPolicy: new(consistencyGroupPolicyURL),
 				},
 			},
 			"secondary-disk-2": {
 				AsyncReplicationDisk: &computepb.DiskAsyncReplication{
-					Disk: ptr.To(secondaryDisk2URL),
+					Disk: new(secondaryDisk2URL),
 				},
 			},
 		}
@@ -689,74 +688,74 @@ func TestComputeDisk(t *testing.T) {
 			// Base queries that are always present
 			baseQueries := shared.QueryTests{
 				{
-					ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "test-policy",
-					ExpectedScope:            fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-policy",
+					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
 				},
 				{
-					ExpectedType:             gcpshared.ComputeInstance.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "test-instance",
-					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
+					ExpectedType:   gcpshared.ComputeInstance.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-instance",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, zone),
 				},
 				{
-					ExpectedType:             gcpshared.ComputeDiskType.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "pd-standard",
-					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
+					ExpectedType:   gcpshared.ComputeDiskType.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "pd-standard",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, zone),
 				},
 				{
-					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-disk",
-					ExpectedScope:            projectID,
+					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "global|test-keyring|test-key|test-version-source-disk",
+					ExpectedScope:  projectID,
 				},
 				{
-					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-image",
-					ExpectedScope:            projectID,
+					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "global|test-keyring|test-key|test-version-source-image",
+					ExpectedScope:  projectID,
 				},
 				{
-					ExpectedType:             gcpshared.CloudKMSCryptoKeyVersion.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "global|test-keyring|test-key|test-version-source-snapshot",
-					ExpectedScope:            projectID,
+					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "global|test-keyring|test-key|test-version-source-snapshot",
+					ExpectedScope:  projectID,
 				},
 				{
-					ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "test-consistency-group-policy",
-					ExpectedScope:            fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-consistency-group-policy",
+					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
 				},
 				{
-					ExpectedType:             gcpshared.ComputeImage.String(),
-					ExpectedMethod:           sdp.QueryMethod_SEARCH,
-					ExpectedQuery:            "projects/test-project-id/global/images/test-image",
-					ExpectedScope:            projectID,
+					ExpectedType:   gcpshared.ComputeImage.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  "projects/test-project-id/global/images/test-image",
+					ExpectedScope:  projectID,
 				},
 			}
 
 			// Add the new queries we're testing
 			queryTests := append(baseQueries,
 				shared.QueryTest{
-					ExpectedType:             gcpshared.ComputeDisk.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "secondary-disk-1",
-					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
+					ExpectedType:   gcpshared.ComputeDisk.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "secondary-disk-1",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, zone),
 				},
 				shared.QueryTest{
-					ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "test-consistency-policy",
-					ExpectedScope:            fmt.Sprintf("%s.us-central1", projectID),
+					ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-consistency-policy",
+					ExpectedScope:  fmt.Sprintf("%s.us-central1", projectID),
 				},
 				shared.QueryTest{
-					ExpectedType:             gcpshared.ComputeDisk.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "secondary-disk-2",
-					ExpectedScope:            fmt.Sprintf("%s.%s", projectID, zone),
+					ExpectedType:   gcpshared.ComputeDisk.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "secondary-disk-2",
+					ExpectedScope:  fmt.Sprintf("%s.%s", projectID, zone),
 				},
 			)
 
@@ -912,39 +911,39 @@ func createComputeDisk(diskName string, status computepb.Disk_Status) *computepb
 // sourceValue is the value to set for the source field.
 func createComputeDiskWithSource(diskName string, status computepb.Disk_Status, sourceType, sourceValue string) *computepb.Disk {
 	disk := &computepb.Disk{
-		Name:             ptr.To(diskName),
+		Name:             new(diskName),
 		Labels:           map[string]string{"env": "test"},
-		Type:             ptr.To("projects/test-project-id/zones/us-central1-a/diskTypes/pd-standard"),
-		Status:           ptr.To(status.String()),
+		Type:             new("projects/test-project-id/zones/us-central1-a/diskTypes/pd-standard"),
+		Status:           new(status.String()),
 		ResourcePolicies: []string{"projects/test-project-id/regions/us-central1/resourcePolicies/test-policy"},
 		Users:            []string{"projects/test-project-id/zones/us-central1-a/instances/test-instance"},
 		DiskEncryptionKey: &computepb.CustomerEncryptionKey{
-			KmsKeyName: ptr.To("projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/test-version-source-disk"),
-			RawKey:     ptr.To("test-key"),
+			KmsKeyName: new("projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/test-version-source-disk"),
+			RawKey:     new("test-key"),
 		},
 		SourceImageEncryptionKey: &computepb.CustomerEncryptionKey{
-			KmsKeyName: ptr.To("projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/test-version-source-image"),
-			RawKey:     ptr.To("test-key"),
+			KmsKeyName: new("projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/test-version-source-image"),
+			RawKey:     new("test-key"),
 		},
 		SourceSnapshotEncryptionKey: &computepb.CustomerEncryptionKey{
-			KmsKeyName: ptr.To("projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/test-version-source-snapshot"),
-			RawKey:     ptr.To("test-key"),
+			KmsKeyName: new("projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/test-version-source-snapshot"),
+			RawKey:     new("test-key"),
 		},
-		SourceConsistencyGroupPolicy: ptr.To("projects/test-project-id/regions/us-central1/resourcePolicies/test-consistency-group-policy"),
+		SourceConsistencyGroupPolicy: new("projects/test-project-id/regions/us-central1/resourcePolicies/test-consistency-group-policy"),
 	}
 
 	switch sourceType {
 	case "image":
-		disk.SourceImage = ptr.To(sourceValue)
+		disk.SourceImage = new(sourceValue)
 	case "snapshot":
-		disk.SourceSnapshot = ptr.To(sourceValue)
+		disk.SourceSnapshot = new(sourceValue)
 	case "instantSnapshot":
-		disk.SourceInstantSnapshot = ptr.To(sourceValue)
+		disk.SourceInstantSnapshot = new(sourceValue)
 	case "disk":
-		disk.SourceDisk = ptr.To(sourceValue)
+		disk.SourceDisk = new(sourceValue)
 	default:
 		// Default to image if unknown type
-		disk.SourceImage = ptr.To("projects/test-project-id/global/images/test-image")
+		disk.SourceImage = new("projects/test-project-id/global/images/test-image")
 	}
 
 	return disk

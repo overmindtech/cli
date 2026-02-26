@@ -9,7 +9,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/api/iterator"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -314,13 +313,13 @@ func TestComputeInstantSnapshot(t *testing.T) {
 
 func createComputeInstantSnapshot(snapshotName, zone string, status computepb.InstantSnapshot_Status) *computepb.InstantSnapshot {
 	return &computepb.InstantSnapshot{
-		Name:   ptr.To(snapshotName),
+		Name:   new(snapshotName),
 		Labels: map[string]string{"env": "test"},
-		Status: ptr.To(status.String()),
-		Zone:   ptr.To(zone),
-		SourceDisk: ptr.To(
+		Status: new(status.String()),
+		Zone:   new(zone),
+		SourceDisk: new(
 			"projects/test-project-id/zones/" + zone + "/disks/test-disk",
 		),
-		Architecture: ptr.To(computepb.InstantSnapshot_X86_64.String()),
+		Architecture: new(computepb.InstantSnapshot_X86_64.String()),
 	}
 }

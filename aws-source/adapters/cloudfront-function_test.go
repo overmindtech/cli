@@ -11,17 +11,17 @@ import (
 func TestFunctionItemMapper(t *testing.T) {
 	summary := types.FunctionSummary{
 		FunctionConfig: &types.FunctionConfig{
-			Comment: PtrString("test-comment"),
+			Comment: new("test-comment"),
 			Runtime: types.FunctionRuntimeCloudfrontJs20,
 		},
 		FunctionMetadata: &types.FunctionMetadata{
-			FunctionARN:      PtrString("arn:aws:cloudfront::123456789012:function/test-function"),
-			LastModifiedTime: PtrTime(time.Now()),
-			CreatedTime:      PtrTime(time.Now()),
+			FunctionARN:      new("arn:aws:cloudfront::123456789012:function/test-function"),
+			LastModifiedTime: new(time.Now()),
+			CreatedTime:      new(time.Now()),
 			Stage:            types.FunctionStageLive,
 		},
-		Name:   PtrString("test-function"),
-		Status: PtrString("test-status"),
+		Name:   new("test-function"),
+		Status: new("test-status"),
 	}
 
 	item, err := functionItemMapper("", "test", &summary)

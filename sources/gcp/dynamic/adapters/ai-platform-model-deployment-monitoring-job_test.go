@@ -252,7 +252,7 @@ func TestAIPlatformModelDeploymentMonitoringJob(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://aiplatform.googleapis.com/v1/projects/%s/locations/%s/modelDeploymentMonitoringJobs/%s", projectID, location, jobName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Monitoring job not found"},
+				Body:       map[string]any{"error": "Monitoring job not found"},
 			},
 		}
 

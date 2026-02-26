@@ -23,7 +23,7 @@ const WILDCARD = "*"
 // UniqueAttributeValue returns the value of whatever the Unique Attribute is
 // for this item. This will then be converted to a string and returned
 func (i *Item) UniqueAttributeValue() string {
-	var value interface{}
+	var value any
 	var err error
 
 	value, err = i.GetAttributes().Get(i.GetUniqueAttribute())
@@ -65,7 +65,7 @@ func (i *Item) GloballyUniqueName() string {
 // Hash Returns a 12 character hash for the item. This is likely but not
 // guaranteed to be unique. The hash is calculated using the GloballyUniqueName
 func (i *Item) Hash() string {
-	return HashSum(([]byte(fmt.Sprint(i.GloballyUniqueName()))))
+	return HashSum((fmt.Append(nil, i.GloballyUniqueName())))
 }
 
 // IsEqual compares two Edges for equality by checking the From reference
@@ -78,7 +78,7 @@ func (e *Edge) IsEqual(other *Edge) bool {
 // Hash Returns a 12 character hash for the item. This is likely but not
 // guaranteed to be unique. The hash is calculated using the GloballyUniqueName
 func (r *Reference) Hash() string {
-	return HashSum(([]byte(fmt.Sprint(r.GloballyUniqueName()))))
+	return HashSum((fmt.Append(nil, r.GloballyUniqueName())))
 }
 
 // GloballyUniqueName Returns a string that defines the Item globally. This a
@@ -172,17 +172,17 @@ func (r *Reference) ToQuery() *Query {
 // Get Returns the value of a given attribute by name. If the attribute is
 // a nested hash, nested values can be referenced using dot notation e.g.
 // location.country
-func (a *ItemAttributes) Get(name string) (interface{}, error) {
-	var result interface{}
+func (a *ItemAttributes) Get(name string) (any, error) {
+	var result any
 
 	// Start at the beginning of the map, we will then traverse down as required
 	result = a.GetAttrStruct().AsMap()
 
-	for _, section := range strings.Split(name, ".") {
+	for section := range strings.SplitSeq(name, ".") {
 		// Check that the data we're using is in the supported format
-		var m map[string]interface{}
+		var m map[string]any
 
-		m, isMap := result.(map[string]interface{})
+		m, isMap := result.(map[string]any)
 
 		if !isMap {
 			return nil, fmt.Errorf("attribute %v not found", name)
@@ -203,7 +203,7 @@ func (a *ItemAttributes) Get(name string) (interface{}, error) {
 // Set sets an attribute. Values are converted to structpb versions and an error
 // will be returned if this fails. Note that this does *not* yet support
 // dot notation e.g. location.country
-func (a *ItemAttributes) Set(name string, value interface{}) error {
+func (a *ItemAttributes) Set(name string, value any) error {
 	// Check to make sure that the pointer is not nil
 	if a == nil {
 		return errors.New("Set called on nil pointer")
@@ -409,7 +409,7 @@ func AddDefaultTransforms(customTransforms TransformMap) TransformMap {
 //
 // Note that you need to use `AddDefaultTransforms(TransformMap) TransformMap`
 // to get sensible default transformations.
-func ToAttributesCustom(m map[string]interface{}, sort bool, customTransforms TransformMap) (*ItemAttributes, error) {
+func ToAttributesCustom(m map[string]any, sort bool, customTransforms TransformMap) (*ItemAttributes, error) {
 	return toAttributes(m, sort, customTransforms)
 }
 
@@ -417,16 +417,16 @@ func ToAttributesCustom(m map[string]interface{}, sort bool, customTransforms Tr
 // slices alphabetically.This should be used when the item doesn't contain array
 // attributes that are explicitly sorted, especially if these are sometimes
 // returned in a different order
-func ToAttributesSorted(m map[string]interface{}) (*ItemAttributes, error) {
+func ToAttributesSorted(m map[string]any) (*ItemAttributes, error) {
 	return toAttributes(m, true, DefaultTransforms)
 }
 
 // ToAttributes Converts a map[string]interface{} to an ItemAttributes object
-func ToAttributes(m map[string]interface{}) (*ItemAttributes, error) {
+func ToAttributes(m map[string]any) (*ItemAttributes, error) {
 	return toAttributes(m, false, DefaultTransforms)
 }
 
-func toAttributes(m map[string]interface{}, sort bool, customTransforms TransformMap) (*ItemAttributes, error) {
+func toAttributes(m map[string]any, sort bool, customTransforms TransformMap) (*ItemAttributes, error) {
 	if m == nil {
 		return nil, nil
 	}
@@ -457,13 +457,13 @@ func toAttributes(m map[string]interface{}, sort bool, customTransforms Transfor
 // ToAttributesViaJson Converts any struct to a set of attributes by marshalling
 // to JSON and then back again. This is less performant than ToAttributes() but
 // does save work when copying large structs to attributes in their entirety
-func ToAttributesViaJson(v interface{}) (*ItemAttributes, error) {
+func ToAttributesViaJson(v any) (*ItemAttributes, error) {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return nil, err
 	}
 
-	var m map[string]interface{}
+	var m map[string]any
 
 	err = json.Unmarshal(b, &m)
 	if err != nil {
@@ -475,7 +475,7 @@ func ToAttributesViaJson(v interface{}) (*ItemAttributes, error) {
 
 // A function that transforms one data type into another that is compatible with
 // protobuf. This is used to convert things like time.Time into a string
-type TransformFunc func(interface{}) interface{}
+type TransformFunc func(any) any
 
 // A map of types to transform functions
 type TransformMap map[reflect.Type]TransformFunc
@@ -483,11 +483,11 @@ type TransformMap map[reflect.Type]TransformFunc
 // The default transforms that are used when converting to attributes
 var DefaultTransforms = TransformMap{
 	// Time should be in RFC3339Nano format i.e. 2006-01-02T15:04:05.999999999Z07:00
-	reflect.TypeOf(time.Time{}): func(i interface{}) interface{} {
+	reflect.TypeFor[time.Time](): func(i any) any {
 		return i.(time.Time).Format(time.RFC3339Nano)
 	},
 	// Duration should be in string format
-	reflect.TypeOf(time.Duration(0)): func(i interface{}) interface{} {
+	reflect.TypeFor[time.Duration](): func(i any) any {
 		return i.(time.Duration).String()
 	},
 }
@@ -515,7 +515,7 @@ var DefaultTransforms = TransformMap{
 // function does its best to example the available data type to ensure that as
 // long as the data can in theory be represented by a protobuf struct, the
 // conversion will work.
-func sanitizeInterface(i interface{}, sortArrays bool, customTransforms TransformMap) interface{} {
+func sanitizeInterface(i any, sortArrays bool, customTransforms TransformMap) any {
 	if i == nil {
 		return nil
 	}
@@ -571,9 +571,9 @@ func sanitizeInterface(i interface{}, sortArrays bool, customTransforms Transfor
 		// conversion on that
 
 		// returnSlice Returns the array in the format that protobuf can deal with
-		var returnSlice []interface{}
+		var returnSlice []any
 
-		returnSlice = make([]interface{}, v.Len())
+		returnSlice = make([]any, v.Len())
 
 		for i := range v.Len() {
 			returnSlice[i] = sanitizeInterface(v.Index(i).Interface(), sortArrays, customTransforms)
@@ -585,9 +585,9 @@ func sanitizeInterface(i interface{}, sortArrays bool, customTransforms Transfor
 
 		return returnSlice
 	case reflect.Map:
-		var returnMap map[string]interface{}
+		var returnMap map[string]any
 
-		returnMap = make(map[string]interface{})
+		returnMap = make(map[string]any)
 
 		for _, mapKey := range v.MapKeys() {
 			// Convert the key to a string
@@ -602,9 +602,9 @@ func sanitizeInterface(i interface{}, sortArrays bool, customTransforms Transfor
 	case reflect.Struct:
 		// In the case of a struct we basically want to turn it into a
 		// map[string]interface{}
-		var returnMap map[string]interface{}
+		var returnMap map[string]any
 
-		returnMap = make(map[string]interface{})
+		returnMap = make(map[string]any)
 
 		// Range over fields
 		n := t.NumField()
@@ -629,7 +629,7 @@ func sanitizeInterface(i interface{}, sortArrays bool, customTransforms Transfor
 		}
 
 		return sanitizeInterface(returnMap, sortArrays, customTransforms)
-	case reflect.Ptr:
+	case reflect.Pointer:
 		// Get the zero value for this field
 		zero := reflect.Zero(t)
 
@@ -648,7 +648,7 @@ func sanitizeInterface(i interface{}, sortArrays bool, customTransforms Transfor
 
 // Sorts an interface slice by converting each item to a string and sorting
 // these strings
-func sortInterfaceArray(input []interface{}) {
+func sortInterfaceArray(input []any) {
 	sort.Slice(input, func(i, j int) bool {
 		return fmt.Sprint(input[i]) < fmt.Sprint(input[j])
 	})

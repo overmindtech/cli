@@ -5,7 +5,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v3"
 	"go.uber.org/mock/gomock"
 
@@ -194,12 +193,12 @@ func TestStorageAccount(t *testing.T) {
 		account1 := createAzureStorageAccount("teststorageaccount1", "Succeeded")
 		account2 := &armstorage.Account{
 			Name:     nil, // Account with nil name should be skipped
-			Location: to.Ptr("eastus"),
+			Location: new("eastus"),
 			Tags: map[string]*string{
-				"env": to.Ptr("test"),
+				"env": new("test"),
 			},
 			Properties: &armstorage.AccountProperties{
-				ProvisioningState: to.Ptr(armstorage.ProvisioningStateSucceeded),
+				ProvisioningState: new(armstorage.ProvisioningStateSucceeded),
 			},
 		}
 
@@ -297,20 +296,20 @@ func TestStorageAccount(t *testing.T) {
 func createAzureStorageAccount(accountName, provisioningState string) *armstorage.Account {
 	state := armstorage.ProvisioningState(provisioningState)
 	return &armstorage.Account{
-		Name:     to.Ptr(accountName),
-		Location: to.Ptr("eastus"),
-		Kind:     to.Ptr(armstorage.KindStorageV2),
+		Name:     new(accountName),
+		Location: new("eastus"),
+		Kind:     new(armstorage.KindStorageV2),
 		Tags: map[string]*string{
-			"env":     to.Ptr("test"),
-			"project": to.Ptr("testing"),
+			"env":     new("test"),
+			"project": new("testing"),
 		},
 		Properties: &armstorage.AccountProperties{
 			ProvisioningState: &state,
 			PrimaryEndpoints: &armstorage.Endpoints{
-				Blob:  to.Ptr("https://" + accountName + ".blob.core.windows.net/"),
-				Queue: to.Ptr("https://" + accountName + ".queue.core.windows.net/"),
-				Table: to.Ptr("https://" + accountName + ".table.core.windows.net/"),
-				File:  to.Ptr("https://" + accountName + ".file.core.windows.net/"),
+				Blob:  new("https://" + accountName + ".blob.core.windows.net/"),
+				Queue: new("https://" + accountName + ".queue.core.windows.net/"),
+				Table: new("https://" + accountName + ".table.core.windows.net/"),
+				File:  new("https://" + accountName + ".file.core.windows.net/"),
 			},
 		},
 	}

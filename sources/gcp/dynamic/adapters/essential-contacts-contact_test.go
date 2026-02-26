@@ -121,7 +121,7 @@ func TestEssentialContactsContact(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://essentialcontacts.googleapis.com/v1/projects/%s/contacts/%s", projectID, contactID): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Contact not found"},
+				Body:       map[string]any{"error": "Contact not found"},
 			},
 		}
 

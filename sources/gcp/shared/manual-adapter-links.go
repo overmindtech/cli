@@ -571,7 +571,7 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 						Query:  projectIDFromName,
 						Scope:  projectIDFromName, // Project scope uses project ID as scope
 					},
-	}
+				}
 			}
 		} else if strings.HasPrefix(name, "folders/") {
 			folderID := ExtractPathParam("folders", name)
@@ -583,7 +583,7 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 						Query:  folderID,
 						Scope:  projectID, // Folder scope uses project ID (may need adjustment when folder adapter is created)
 					},
-	}
+				}
 			}
 		} else if strings.HasPrefix(name, "organizations/") {
 			orgID := ExtractPathParam("organizations", name)
@@ -595,7 +595,7 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 						Query:  orgID,
 						Scope:  projectID, // Organization scope uses project ID (may need adjustment when org adapter is created)
 					},
-	}
+				}
 			}
 		}
 		return nil
@@ -615,7 +615,7 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 						Query:  folderID,
 						Scope:  projectID, // Folder scope uses project ID (may need adjustment when folder adapter is created)
 					},
-	}
+				}
 			}
 		}
 		return nil
@@ -635,7 +635,7 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 						Query:  orgID,
 						Scope:  projectID, // Organization scope uses project ID (may need adjustment when org adapter is created)
 					},
-	}
+				}
 			}
 		}
 		return nil
@@ -685,7 +685,7 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 						Query:  httpURL,
 						Scope:  "global",
 					},
-	}
+				}
 			}
 		}
 		return nil
@@ -737,7 +737,7 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 						Query:  shared.CompositeLookupKey(values[1], values[2]),
 						Scope:  values[0],
 					},
-	}
+				}
 			}
 		}
 
@@ -752,7 +752,7 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 						Query:  shared.CompositeLookupKey(values[1], values[2]),
 						Scope:  values[0],
 					},
-	}
+				}
 			}
 		}
 
@@ -807,7 +807,7 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 						Query:  values[1],
 						Scope:  values[0],
 					},
-	}
+				}
 			}
 		}
 
@@ -883,7 +883,7 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 						Query:  dataset,
 						Scope:  scope,
 					},
-	}
+				}
 			}
 		}
 
@@ -898,7 +898,7 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 						Query:  parts[1], // dataset ID
 						Scope:  parts[0], // project ID
 					},
-	}
+				}
 			}
 		}
 
@@ -942,7 +942,7 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 						Query:  shared.CompositeLookupKey(dataset, model),
 						Scope:  scope,
 					},
-	}
+				}
 			}
 		}
 
@@ -959,7 +959,7 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 						Query:  shared.CompositeLookupKey(dataset, model),
 						Scope:  scope,
 					},
-	}
+				}
 			}
 		}
 
@@ -987,7 +987,7 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 						Query:  values[1],
 						Scope:  values[0],
 					},
-	}
+				}
 			}
 		}
 
@@ -1002,7 +1002,7 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 						Query:  values[1],
 						Scope:  values[0],
 					},
-	}
+				}
 			}
 		}
 
@@ -1011,8 +1011,8 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 
 		// Extract bucket name (everything before the first slash)
 		bucketName := query
-		if idx := strings.Index(query, "/"); idx != -1 {
-			bucketName = query[:idx]
+		if before, _, ok := strings.Cut(query, "/"); ok {
+			bucketName = before
 		}
 
 		// Validate bucket name is not empty
@@ -1037,8 +1037,8 @@ var ManualAdapterLinksByAssetType = map[shared.ItemType]func(projectID, fromItem
 	// StorageBucketIAMPolicy: link by bucket name using GET (one policy item per bucket).
 	StorageBucketIAMPolicy: func(projectID, _, query string) *sdp.LinkedItemQuery {
 		bucketName := query
-		if idx := strings.Index(query, "/"); idx != -1 {
-			bucketName = query[:idx]
+		if before, _, ok := strings.Cut(query, "/"); ok {
+			bucketName = before
 		}
 		if projectID == "" || bucketName == "" {
 			return nil

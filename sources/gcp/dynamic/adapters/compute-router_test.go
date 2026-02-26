@@ -27,41 +27,41 @@ func TestComputeRouter(t *testing.T) {
 
 	// Create mock protobuf object
 	router := &computepb.Router{
-		Name:        stringPtr(routerName),
-		Description: stringPtr("Test Router"),
-		Network:     stringPtr(fmt.Sprintf("projects/%s/global/networks/default", projectID)),
-		Region:      stringPtr(fmt.Sprintf("projects/%s/regions/%s", projectID, region)),
+		Name:        new(routerName),
+		Description: new("Test Router"),
+		Network:     new(fmt.Sprintf("projects/%s/global/networks/default", projectID)),
+		Region:      new(fmt.Sprintf("projects/%s/regions/%s", projectID, region)),
 		Interfaces: []*computepb.RouterInterface{
 			{
-				Name:                         stringPtr("interface-1"),
-				LinkedInterconnectAttachment: stringPtr(fmt.Sprintf("projects/%s/regions/%s/interconnectAttachments/test-attachment", projectID, region)),
-				PrivateIpAddress:             stringPtr("10.0.0.1"),
-				Subnetwork:                   stringPtr(fmt.Sprintf("projects/%s/regions/%s/subnetworks/test-subnet", projectID, region)),
-				LinkedVpnTunnel:              stringPtr(fmt.Sprintf("projects/%s/regions/%s/vpnTunnels/test-tunnel", projectID, region)),
+				Name:                         new("interface-1"),
+				LinkedInterconnectAttachment: new(fmt.Sprintf("projects/%s/regions/%s/interconnectAttachments/test-attachment", projectID, region)),
+				PrivateIpAddress:             new("10.0.0.1"),
+				Subnetwork:                   new(fmt.Sprintf("projects/%s/regions/%s/subnetworks/test-subnet", projectID, region)),
+				LinkedVpnTunnel:              new(fmt.Sprintf("projects/%s/regions/%s/vpnTunnels/test-tunnel", projectID, region)),
 			},
 		},
 		BgpPeers: []*computepb.RouterBgpPeer{
 			{
-				Name:                   stringPtr("bgp-peer-1"),
-				PeerIpAddress:          stringPtr("192.168.1.1"),
-				IpAddress:              stringPtr("192.168.1.2"),
-				Ipv4NexthopAddress:     stringPtr("192.168.1.3"),
-				PeerIpv4NexthopAddress: stringPtr("192.168.1.4"),
+				Name:                   new("bgp-peer-1"),
+				PeerIpAddress:          new("192.168.1.1"),
+				IpAddress:              new("192.168.1.2"),
+				Ipv4NexthopAddress:     new("192.168.1.3"),
+				PeerIpv4NexthopAddress: new("192.168.1.4"),
 			},
 		},
 		Nats: []*computepb.RouterNat{
 			{
-				Name:        stringPtr("nat-1"),
+				Name:        new("nat-1"),
 				NatIps:      []string{"203.0.113.1", "203.0.113.2"},
 				DrainNatIps: []string{"203.0.113.3"},
 				Subnetworks: []*computepb.RouterNatSubnetworkToNat{
 					{
-						Name: stringPtr(fmt.Sprintf("projects/%s/regions/%s/subnetworks/nat-subnet", projectID, region)),
+						Name: new(fmt.Sprintf("projects/%s/regions/%s/subnetworks/nat-subnet", projectID, region)),
 					},
 				},
 				Nat64Subnetworks: []*computepb.RouterNatSubnetworkToNat64{
 					{
-						Name: stringPtr(fmt.Sprintf("projects/%s/regions/%s/subnetworks/nat64-subnet", projectID, region)),
+						Name: new(fmt.Sprintf("projects/%s/regions/%s/subnetworks/nat64-subnet", projectID, region)),
 					},
 				},
 			},
@@ -71,10 +71,10 @@ func TestComputeRouter(t *testing.T) {
 	// Create second router for list testing
 	routerName2 := "test-router-2"
 	router2 := &computepb.Router{
-		Name:        stringPtr(routerName2),
-		Description: stringPtr("Test Router 2"),
-		Network:     stringPtr(fmt.Sprintf("projects/%s/global/networks/default", projectID)),
-		Region:      stringPtr(fmt.Sprintf("projects/%s/regions/%s", projectID, region)),
+		Name:        new(routerName2),
+		Description: new("Test Router 2"),
+		Network:     new(fmt.Sprintf("projects/%s/global/networks/default", projectID)),
+		Region:      new(fmt.Sprintf("projects/%s/regions/%s", projectID, region)),
 	}
 
 	// Create list response with multiple items
@@ -305,7 +305,7 @@ func TestComputeRouter(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/routers/%s", projectID, region, routerName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Router not found"},
+				Body:       map[string]any{"error": "Router not found"},
 			},
 		}
 

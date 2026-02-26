@@ -5,7 +5,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	"go.uber.org/mock/gomock"
 
@@ -65,28 +64,28 @@ func (t *testGalleryImagesClient) NewListByGalleryPager(resourceGroupName, galle
 
 func createAzureGalleryImage(imageName string) *armcompute.GalleryImage {
 	return &armcompute.GalleryImage{
-		Name:     to.Ptr(imageName),
-		Location: to.Ptr("eastus"),
+		Name:     new(imageName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armcompute.GalleryImageProperties{
 			Identifier: &armcompute.GalleryImageIdentifier{
-				Publisher: to.Ptr("test-publisher"),
-				Offer:     to.Ptr("test-offer"),
-				SKU:       to.Ptr("test-sku"),
+				Publisher: new("test-publisher"),
+				Offer:     new("test-offer"),
+				SKU:       new("test-sku"),
 			},
-			OSType:  to.Ptr(armcompute.OperatingSystemTypesLinux),
-			OSState: to.Ptr(armcompute.OperatingSystemStateTypesGeneralized),
+			OSType:  new(armcompute.OperatingSystemTypesLinux),
+			OSState: new(armcompute.OperatingSystemStateTypesGeneralized),
 		},
 	}
 }
 
 func createAzureGalleryImageWithURIs(imageName string) *armcompute.GalleryImage {
 	img := createAzureGalleryImage(imageName)
-	img.Properties.Eula = to.Ptr("https://eula.example.com/terms")
-	img.Properties.PrivacyStatementURI = to.Ptr("https://example.com/privacy")
-	img.Properties.ReleaseNoteURI = to.Ptr("https://releases.example.com/notes")
+	img.Properties.Eula = new("https://eula.example.com/terms")
+	img.Properties.PrivacyStatementURI = new("https://example.com/privacy")
+	img.Properties.ReleaseNoteURI = new("https://releases.example.com/notes")
 	return img
 }
 
@@ -178,7 +177,7 @@ func TestComputeGalleryImage(t *testing.T) {
 
 	t.Run("Get_PlainTextEula_NoLinks", func(t *testing.T) {
 		image := createAzureGalleryImage(galleryImageName)
-		image.Properties.Eula = to.Ptr("This software is provided as-is. No warranty.")
+		image.Properties.Eula = new("This software is provided as-is. No warranty.")
 
 		mockClient := NewMockGalleryImagesClient(ctrl)
 		mockClient.EXPECT().Get(ctx, resourceGroup, galleryName, galleryImageName, nil).Return(
@@ -210,8 +209,8 @@ func TestComputeGalleryImage(t *testing.T) {
 
 	t.Run("Get_SameHostDeduplication", func(t *testing.T) {
 		image := createAzureGalleryImage(galleryImageName)
-		image.Properties.PrivacyStatementURI = to.Ptr("https://example.com/privacy")
-		image.Properties.ReleaseNoteURI = to.Ptr("https://example.com/release-notes")
+		image.Properties.PrivacyStatementURI = new("https://example.com/privacy")
+		image.Properties.ReleaseNoteURI = new("https://example.com/release-notes")
 
 		mockClient := NewMockGalleryImagesClient(ctrl)
 		mockClient.EXPECT().Get(ctx, resourceGroup, galleryName, galleryImageName, nil).Return(
@@ -252,7 +251,7 @@ func TestComputeGalleryImage(t *testing.T) {
 
 	t.Run("Get_IPHost_EmitsIPLink", func(t *testing.T) {
 		image := createAzureGalleryImage(galleryImageName)
-		image.Properties.PrivacyStatementURI = to.Ptr("https://192.168.1.10:8443/privacy")
+		image.Properties.PrivacyStatementURI = new("https://192.168.1.10:8443/privacy")
 
 		mockClient := NewMockGalleryImagesClient(ctrl)
 		mockClient.EXPECT().Get(ctx, resourceGroup, galleryName, galleryImageName, nil).Return(

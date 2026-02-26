@@ -241,7 +241,7 @@ func TestSQLAdminInstance(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://sqladmin.googleapis.com/sql/v1/projects/%s/instances/%s", projectID, instanceName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Instance not found"},
+				Body:       map[string]any{"error": "Instance not found"},
 			},
 		}
 

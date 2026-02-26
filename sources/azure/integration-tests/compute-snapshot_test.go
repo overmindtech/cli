@@ -13,7 +13,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -328,16 +327,16 @@ func createSnapshot(ctx context.Context, client *armcompute.SnapshotsClient, res
 	}
 
 	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroupName, snapshotName, armcompute.Snapshot{
-		Location: ptr.To(location),
+		Location: new(location),
 		Properties: &armcompute.SnapshotProperties{
 			CreationData: &armcompute.CreationData{
-				CreateOption:     ptr.To(armcompute.DiskCreateOptionCopy),
-				SourceResourceID: ptr.To(sourceDiskID),
+				CreateOption:     new(armcompute.DiskCreateOptionCopy),
+				SourceResourceID: new(sourceDiskID),
 			},
 		},
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
-			"test":    ptr.To("compute-snapshot"),
+			"purpose": new("overmind-integration-tests"),
+			"test":    new("compute-snapshot"),
 		},
 	}, nil)
 	if err != nil {

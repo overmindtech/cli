@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"slices"
 
 	"github.com/aws/aws-sdk-go-v2/service/kms"
 	"github.com/aws/aws-sdk-go-v2/service/kms/types"
@@ -48,11 +49,9 @@ func createAlias(ctx context.Context, logger *slog.Logger, client *kms.Client, k
 		}
 	}
 
-	for _, aName := range aliasNames {
-		if aName == aliasName {
-			logger.InfoContext(ctx, "KMS alias already exists", "alias", aliasName, "keyID", keyID)
-			return nil
-		}
+	if slices.Contains(aliasNames, aliasName) {
+		logger.InfoContext(ctx, "KMS alias already exists", "alias", aliasName, "keyID", keyID)
+		return nil
 	}
 
 	_, err = client.CreateAlias(ctx, &kms.CreateAliasInput{

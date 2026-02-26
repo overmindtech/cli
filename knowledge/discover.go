@@ -173,14 +173,14 @@ func processFile(path, relPath string) (*KnowledgeFile, *Warning) {
 			Reason: fmt.Sprintf("cannot stat file: %v", err),
 		}
 	}
-	
+
 	if fileInfo.Size() > maxFileSize {
 		return nil, &Warning{
 			Path:   relPath,
 			Reason: fmt.Sprintf("file size %d bytes exceeds maximum allowed size of %d bytes", fileInfo.Size(), maxFileSize),
 		}
 	}
-	
+
 	// Read file content
 	content, err := os.ReadFile(path)
 	if err != nil {
@@ -239,7 +239,7 @@ func parseFrontmatter(content string) (string, string, string, error) {
 
 	// Find the closing delimiter
 	remaining := content[startIdx:]
-	
+
 	// Handle edge case: empty frontmatter where second --- is immediately after first
 	if strings.HasPrefix(remaining, "---\n") || strings.HasPrefix(remaining, "---\r\n") {
 		bodyStartIdx := startIdx + 4 // "---\n"
@@ -247,16 +247,16 @@ func parseFrontmatter(content string) (string, string, string, error) {
 			bodyStartIdx = startIdx + 5 // "---\r\n"
 		}
 		body := strings.TrimLeft(content[bodyStartIdx:], "\n\r")
-		
+
 		// Empty frontmatter will result in empty name/description which will fail validation
 		var fm frontmatter
 		return fm.Name, fm.Description, body, nil
 	}
-	
+
 	// Find closing delimiter and track which type we found
 	var endIdx int
 	var closingDelimLen int
-	
+
 	// Try CRLF first (more specific), then LF
 	endIdx = strings.Index(remaining, "\n---\r\n")
 	if endIdx != -1 {
@@ -294,10 +294,7 @@ func parseFrontmatter(content string) (string, string, string, error) {
 	}
 
 	// Extract body using the correct offset for the delimiter type found
-	bodyStartIdx := startIdx + endIdx + closingDelimLen
-	if bodyStartIdx > len(content) {
-		bodyStartIdx = len(content)
-	}
+	bodyStartIdx := min(startIdx+endIdx+closingDelimLen, len(content))
 	body := strings.TrimLeft(content[bodyStartIdx:], "\n\r")
 
 	// Trim whitespace from name and description as per validation
@@ -347,12 +344,12 @@ func DiscoverAndConvert(ctx context.Context, knowledgeDir string) []*sdp.Knowled
 	}
 
 	knowledgeFiles, warnings := Discover(knowledgeDir)
-	
+
 	// Log warnings
 	for _, w := range warnings {
 		log.WithContext(ctx).Warnf("Warning: skipping knowledge file %q: %s", w.Path, w.Reason)
 	}
-	
+
 	// Convert to SDP Knowledge messages
 	sdpKnowledge := make([]*sdp.Knowledge, len(knowledgeFiles))
 	for i, kf := range knowledgeFiles {
@@ -363,11 +360,11 @@ func DiscoverAndConvert(ctx context.Context, knowledgeDir string) []*sdp.Knowled
 			FileName:    kf.FileName,
 		}
 	}
-	
+
 	// Log when knowledge files are loaded
 	if len(knowledgeFiles) > 0 {
 		log.WithContext(ctx).WithField("knowledgeCount", len(knowledgeFiles)).Info("Loaded knowledge files")
 	}
-	
+
 	return sdpKnowledge
 }

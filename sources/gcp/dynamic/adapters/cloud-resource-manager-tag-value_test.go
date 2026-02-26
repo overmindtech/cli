@@ -113,7 +113,7 @@ func TestCloudResourceManagerTagValue(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://cloudresourcemanager.googleapis.com/v3/tagValues/%s", tagValueID): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Tag value not found"},
+				Body:       map[string]any{"error": "Tag value not found"},
 			},
 		}
 

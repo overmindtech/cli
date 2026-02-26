@@ -42,12 +42,12 @@ func TestLaunchTemplateOutputMapper(t *testing.T) {
 	output := &ec2.DescribeLaunchTemplatesOutput{
 		LaunchTemplates: []types.LaunchTemplate{
 			{
-				CreateTime:           PtrTime(time.Now()),
-				CreatedBy:            PtrString("me"),
-				DefaultVersionNumber: PtrInt64(1),
-				LatestVersionNumber:  PtrInt64(10),
-				LaunchTemplateId:     PtrString("id"),
-				LaunchTemplateName:   PtrString("hello"),
+				CreateTime:           new(time.Now()),
+				CreatedBy:            new("me"),
+				DefaultVersionNumber: new(int64(1)),
+				LatestVersionNumber:  new(int64(10)),
+				LaunchTemplateId:     new("id"),
+				LaunchTemplateName:   new("hello"),
 				Tags:                 []types.Tag{},
 			},
 		},

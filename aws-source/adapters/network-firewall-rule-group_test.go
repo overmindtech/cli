@@ -14,37 +14,37 @@ func (c testNetworkFirewallClient) DescribeRuleGroup(ctx context.Context, params
 
 	return &networkfirewall.DescribeRuleGroupOutput{
 		RuleGroupResponse: &types.RuleGroupResponse{
-			RuleGroupArn:  PtrString("arn:aws:network-firewall:us-east-1:123456789012:stateless-rulegroup/aws-network-firewall-DefaultStatelessRuleGroup-1J3Z3W2ZQXV3"),
-			RuleGroupId:   PtrString("test"),
-			RuleGroupName: PtrString("test"),
+			RuleGroupArn:  new("arn:aws:network-firewall:us-east-1:123456789012:stateless-rulegroup/aws-network-firewall-DefaultStatelessRuleGroup-1J3Z3W2ZQXV3"),
+			RuleGroupId:   new("test"),
+			RuleGroupName: new("test"),
 			AnalysisResults: []types.AnalysisResult{
 				{
-					AnalysisDetail: PtrString("test"),
+					AnalysisDetail: new("test"),
 					IdentifiedRuleIds: []string{
 						"test",
 					},
 					IdentifiedType: types.IdentifiedTypeStatelessRuleContainsTcpFlags,
 				},
 			},
-			Capacity:         PtrInt32(1),
-			ConsumedCapacity: PtrInt32(1),
-			Description:      PtrString("test"),
+			Capacity:         new(int32(1)),
+			ConsumedCapacity: new(int32(1)),
+			Description:      new("test"),
 			EncryptionConfiguration: &types.EncryptionConfiguration{
 				Type:  types.EncryptionTypeAwsOwnedKmsKey,
-				KeyId: PtrString("arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"), // link (this can be an ARN or ID)
+				KeyId: new("arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"), // link (this can be an ARN or ID)
 			},
 			LastModifiedTime:     &now,
-			NumberOfAssociations: PtrInt32(1),
-			RuleGroupStatus:      types.ResourceStatusActive,                                                                                                 // health
-			SnsTopic:             PtrString("arn:aws:sns:us-east-1:123456789012:aws-network-firewall-DefaultStatelessRuleGroup-1J3Z3W2ZQXV3"), // link
+			NumberOfAssociations: new(int32(1)),
+			RuleGroupStatus:      types.ResourceStatusActive,                                                                            // health
+			SnsTopic:             new("arn:aws:sns:us-east-1:123456789012:aws-network-firewall-DefaultStatelessRuleGroup-1J3Z3W2ZQXV3"), // link
 			SourceMetadata: &types.SourceMetadata{
-				SourceArn:         PtrString("arn:aws:network-firewall:us-east-1:123456789012:firewall/aws-network-firewall-DefaultFirewall-1J3Z3W2ZQXV3"), // link
-				SourceUpdateToken: PtrString("test"),
+				SourceArn:         new("arn:aws:network-firewall:us-east-1:123456789012:firewall/aws-network-firewall-DefaultFirewall-1J3Z3W2ZQXV3"), // link
+				SourceUpdateToken: new("test"),
 			},
 			Tags: []types.Tag{
 				{
-					Key:   PtrString("test"),
-					Value: PtrString("test"),
+					Key:   new("test"),
+					Value: new("test"),
 				},
 			},
 			Type: types.RuleGroupTypeStateless,
@@ -60,24 +60,24 @@ func (c testNetworkFirewallClient) DescribeRuleGroup(ctx context.Context, params
 						"foo.bar.com", // link
 					},
 				},
-				RulesString: PtrString("test"),
+				RulesString: new("test"),
 				StatefulRules: []types.StatefulRule{
 					{
 						Action: types.StatefulActionAlert,
 						Header: &types.Header{
-							Destination:     PtrString("1.1.1.1"),
-							DestinationPort: PtrString("8080"),
+							Destination:     new("1.1.1.1"),
+							DestinationPort: new("8080"),
 							Direction:       types.StatefulRuleDirectionForward,
 							Protocol:        types.StatefulRuleProtocolDcerpc,
-							Source:          PtrString("test"),
-							SourcePort:      PtrString("8080"),
+							Source:          new("test"),
+							SourcePort:      new("8080"),
 						},
 					},
 				},
 				StatelessRulesAndCustomActions: &types.StatelessRulesAndCustomActions{
 					StatelessRules: []types.StatelessRule{
 						{
-							Priority: PtrInt32(1),
+							Priority: new(int32(1)),
 							RuleDefinition: &types.RuleDefinition{
 								Actions: []string{},
 								MatchAttributes: &types.MatchAttributes{
@@ -89,7 +89,7 @@ func (c testNetworkFirewallClient) DescribeRuleGroup(ctx context.Context, params
 									},
 									Destinations: []types.Address{
 										{
-											AddressDefinition: PtrString("1.1.1.1/1"),
+											AddressDefinition: new("1.1.1.1/1"),
 										},
 									},
 									Protocols: []int32{1},
@@ -120,12 +120,12 @@ func (c testNetworkFirewallClient) DescribeRuleGroup(ctx context.Context, params
 								PublishMetricAction: &types.PublishMetricAction{
 									Dimensions: []types.Dimension{
 										{
-											Value: PtrString("test"),
+											Value: new("test"),
 										},
 									},
 								},
 							},
-							ActionName: PtrString("test"),
+							ActionName: new("test"),
 						},
 					},
 				},
@@ -138,7 +138,7 @@ func (c testNetworkFirewallClient) ListRuleGroups(ctx context.Context, params *n
 	return &networkfirewall.ListRuleGroupsOutput{
 		RuleGroups: []types.RuleGroupMetadata{
 			{
-				Arn: PtrString("arn:aws:network-firewall:us-east-1:123456789012:stateless-rulegroup/aws-network-firewall-DefaultStatelessRuleGroup-1J3Z3W2ZQXV3"),
+				Arn: new("arn:aws:network-firewall:us-east-1:123456789012:stateless-rulegroup/aws-network-firewall-DefaultStatelessRuleGroup-1J3Z3W2ZQXV3"),
 			},
 		},
 	}, nil

@@ -12,7 +12,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/googleapis/gax-go/v2/apierror"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdpcache"
@@ -143,8 +142,8 @@ func TestComputeImageIntegration(t *testing.T) {
 // createComputeImage creates a GCP Compute Image with the given parameters.
 func createComputeImage(ctx context.Context, client *compute.ImagesClient, projectID, zone, imageName, diskName string) error {
 	image := &computepb.Image{
-		Name: ptr.To(imageName),
-		SourceDisk: ptr.To(fmt.Sprintf(
+		Name: new(imageName),
+		SourceDisk: new(fmt.Sprintf(
 			"projects/%s/zones/%s/disks/%s",
 			projectID, zone, diskName,
 		)),

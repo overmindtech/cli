@@ -16,21 +16,21 @@ func (n NetworkManagerTestClient) GetConnectPeer(ctx context.Context, params *ne
 			Configuration: &types.ConnectPeerConfiguration{
 				BgpConfigurations: []types.ConnectPeerBgpConfiguration{
 					{
-						CoreNetworkAddress: PtrString("1.4.2.4"),         // link
-						CoreNetworkAsn:     PtrInt64(64512),              // link
-						PeerAddress:        PtrString("123.123.123.123"), // link
-						PeerAsn:            PtrInt64(64513),              // link
+						CoreNetworkAddress: new("1.4.2.4"),         // link
+						CoreNetworkAsn:     new(int64(64512)),      // link
+						PeerAddress:        new("123.123.123.123"), // link
+						PeerAsn:            new(int64(64513)),      // link
 					},
 				},
-				CoreNetworkAddress: PtrString("1.1.1.3"),  // link
-				PeerAddress:        PtrString("1.1.1.45"), // link
+				CoreNetworkAddress: new("1.1.1.3"),  // link
+				PeerAddress:        new("1.1.1.45"), // link
 			},
-			ConnectAttachmentId: PtrString("ca-1"), // link
-			ConnectPeerId:       PtrString("cp-1"),
-			CoreNetworkId:       PtrString("cn-1"), // link
-			EdgeLocation:        PtrString("us-west-2"),
+			ConnectAttachmentId: new("ca-1"), // link
+			ConnectPeerId:       new("cp-1"),
+			CoreNetworkId:       new("cn-1"), // link
+			EdgeLocation:        new("us-west-2"),
 			State:               types.ConnectPeerStateAvailable,
-			SubnetArn:           PtrString("arn:aws:ec2:us-west-2:123456789012:subnet/subnet-1"), // link
+			SubnetArn:           new("arn:aws:ec2:us-west-2:123456789012:subnet/subnet-1"), // link
 		},
 	}, nil
 }

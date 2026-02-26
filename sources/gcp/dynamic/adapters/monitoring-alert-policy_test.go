@@ -198,7 +198,7 @@ func TestMonitoringAlertPolicy(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://monitoring.googleapis.com/v3/projects/%s/alertPolicies/%s", projectID, policyID): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Alert policy not found"},
+				Body:       map[string]any{"error": "Alert policy not found"},
 			},
 		}
 

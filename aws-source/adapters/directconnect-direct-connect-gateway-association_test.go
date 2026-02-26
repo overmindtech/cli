@@ -16,10 +16,10 @@ func TestDirectConnectGatewayAssociationOutputMapper_Health_OK(t *testing.T) {
 		DirectConnectGatewayAssociations: []types.DirectConnectGatewayAssociation{
 			{
 				AssociationState:           types.DirectConnectGatewayAssociationStateAssociating,
-				AssociationId:              PtrString("cf68415c-f4ae-48f2-87a7-3b52cexample"),
-				VirtualGatewayOwnerAccount: PtrString("123456789012"),
-				DirectConnectGatewayId:     PtrString("5f294f92-bafb-4011-916d-9b0bexample"),
-				VirtualGatewayId:           PtrString("vgw-6efe725e"),
+				AssociationId:              new("cf68415c-f4ae-48f2-87a7-3b52cexample"),
+				VirtualGatewayOwnerAccount: new("123456789012"),
+				DirectConnectGatewayId:     new("5f294f92-bafb-4011-916d-9b0bexample"),
+				VirtualGatewayId:           new("vgw-6efe725e"),
 			},
 		},
 	}
@@ -68,11 +68,11 @@ func TestDirectConnectGatewayAssociationOutputMapper_Health_Error(t *testing.T) 
 		DirectConnectGatewayAssociations: []types.DirectConnectGatewayAssociation{
 			{
 				AssociationState:           types.DirectConnectGatewayAssociationStateAssociating,
-				AssociationId:              PtrString("cf68415c-f4ae-48f2-87a7-3b52cexample"),
-				VirtualGatewayOwnerAccount: PtrString("123456789012"),
-				DirectConnectGatewayId:     PtrString("5f294f92-bafb-4011-916d-9b0bexample"),
-				VirtualGatewayId:           PtrString("vgw-6efe725e"),
-				StateChangeError:           PtrString("something went wrong"),
+				AssociationId:              new("cf68415c-f4ae-48f2-87a7-3b52cexample"),
+				VirtualGatewayOwnerAccount: new("123456789012"),
+				DirectConnectGatewayId:     new("5f294f92-bafb-4011-916d-9b0bexample"),
+				VirtualGatewayId:           new("vgw-6efe725e"),
+				StateChangeError:           new("something went wrong"),
 			},
 		},
 	}

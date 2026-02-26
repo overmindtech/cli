@@ -15,8 +15,8 @@ import (
 // integrationTestTagFilters returns filters to discover resources created by this suite.
 func integrationTestTagFilters() []types.Filter {
 	return []types.Filter{
-		{Name: ptr("tag:" + integration.TagTestKey), Values: []string{integration.TagTestValue}},
-		{Name: ptr("tag:" + integration.TagTestIDKey), Values: []string{integrationTestName}},
+		{Name: new("tag:" + integration.TagTestKey), Values: []string{integration.TagTestValue}},
+		{Name: new("tag:" + integration.TagTestIDKey), Values: []string{integrationTestName}},
 	}
 }
 
@@ -81,7 +81,7 @@ func teardown(ctx context.Context, logger *slog.Logger, client *ec2.Client) erro
 
 		// Resolve default route table and delete our static route.
 		rtOut, err := client.DescribeTransitGatewayRouteTables(ctx, &ec2.DescribeTransitGatewayRouteTablesInput{
-			Filters: []types.Filter{{Name: ptr("transit-gateway-id"), Values: []string{tgwID}}},
+			Filters: []types.Filter{{Name: new("transit-gateway-id"), Values: []string{tgwID}}},
 		})
 		if err != nil {
 			return err
@@ -103,7 +103,7 @@ func teardown(ctx context.Context, logger *slog.Logger, client *ec2.Client) erro
 
 		// List VPC attachments for this TGW and delete each.
 		attachOut, err := client.DescribeTransitGatewayVpcAttachments(ctx, &ec2.DescribeTransitGatewayVpcAttachmentsInput{
-			Filters: []types.Filter{{Name: ptr("transit-gateway-id"), Values: []string{tgwID}}},
+			Filters: []types.Filter{{Name: new("transit-gateway-id"), Values: []string{tgwID}}},
 		})
 		if err != nil {
 			return err

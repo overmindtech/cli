@@ -14,31 +14,31 @@ import (
 var ClusterClient = EKSTestClient{
 	DescribeClusterOutput: &eks.DescribeClusterOutput{
 		Cluster: &types.Cluster{
-			Name:               PtrString("dylan"),
-			Arn:                PtrString("arn:aws:eks:eu-west-2:801795385023:cluster/dylan"),
-			CreatedAt:          PtrTime(time.Now()),
-			Version:            PtrString("1.24"),
-			Endpoint:           PtrString("https://00D3FF4CC48CBAA9BBC070DAA80BD251.gr7.eu-west-2.eks.amazonaws.com"),
-			RoleArn:            PtrString("arn:aws:iam::801795385023:role/dylan-cluster-20221222134106992100000001"),
-			ClientRequestToken: PtrString("token"),
+			Name:               new("dylan"),
+			Arn:                new("arn:aws:eks:eu-west-2:801795385023:cluster/dylan"),
+			CreatedAt:          new(time.Now()),
+			Version:            new("1.24"),
+			Endpoint:           new("https://00D3FF4CC48CBAA9BBC070DAA80BD251.gr7.eu-west-2.eks.amazonaws.com"),
+			RoleArn:            new("arn:aws:iam::801795385023:role/dylan-cluster-20221222134106992100000001"),
+			ClientRequestToken: new("token"),
 			ConnectorConfig: &types.ConnectorConfigResponse{
-				ActivationCode:   PtrString("code"),
-				ActivationExpiry: PtrTime(time.Now()),
-				ActivationId:     PtrString("id"),
-				Provider:         PtrString("provider"),
-				RoleArn:          PtrString("arn:aws:iam::801795385023:role/dylan-cluster-20221222134106992100000002"),
+				ActivationCode:   new("code"),
+				ActivationExpiry: new(time.Now()),
+				ActivationId:     new("id"),
+				Provider:         new("provider"),
+				RoleArn:          new("arn:aws:iam::801795385023:role/dylan-cluster-20221222134106992100000002"),
 			},
 			Health: &types.ClusterHealth{
 				Issues: []types.ClusterIssue{},
 			},
-			Id: PtrString("id"),
+			Id: new("id"),
 			OutpostConfig: &types.OutpostConfigResponse{
-				ControlPlaneInstanceType: PtrString("type"),
+				ControlPlaneInstanceType: new("type"),
 				OutpostArns: []string{
 					"arn1",
 				},
 				ControlPlanePlacement: &types.ControlPlanePlacementResponse{
-					GroupName: PtrString("groupName"),
+					GroupName: new("groupName"),
 				},
 			},
 			ResourcesVpcConfig: &types.VpcConfigResponse{
@@ -50,8 +50,8 @@ var ClusterClient = EKSTestClient{
 				SecurityGroupIds: []string{
 					"sg-0bf38eb7e14777399",
 				},
-				ClusterSecurityGroupId: PtrString("sg-08df96f08566d4dda"),
-				VpcId:                  PtrString("vpc-0c9152ce7ed2b7305"),
+				ClusterSecurityGroupId: new("sg-08df96f08566d4dda"),
+				VpcId:                  new("vpc-0c9152ce7ed2b7305"),
 				EndpointPublicAccess:   true,
 				EndpointPrivateAccess:  true,
 				PublicAccessCidrs: []string{
@@ -59,9 +59,9 @@ var ClusterClient = EKSTestClient{
 				},
 			},
 			KubernetesNetworkConfig: &types.KubernetesNetworkConfigResponse{
-				ServiceIpv4Cidr: PtrString("172.20.0.0/16"),
+				ServiceIpv4Cidr: new("172.20.0.0/16"),
 				IpFamily:        types.IpFamilyIpv4,
-				ServiceIpv6Cidr: PtrString("ipv6cidr"),
+				ServiceIpv6Cidr: new("ipv6cidr"),
 			},
 			Logging: &types.Logging{
 				ClusterLogging: []types.LogSetup{
@@ -72,26 +72,26 @@ var ClusterClient = EKSTestClient{
 							"controllerManager",
 							"scheduler",
 						},
-						Enabled: PtrBool(true),
+						Enabled: new(true),
 					},
 					{
 						Types: []types.LogType{
 							"audit",
 						},
-						Enabled: PtrBool(false),
+						Enabled: new(false),
 					},
 				},
 			},
 			Identity: &types.Identity{
 				Oidc: &types.OIDC{
-					Issuer: PtrString("https://oidc.eks.eu-west-2.amazonaws.com/id/00D3FF4CC48CBAA9BBC070DAA80BD251"),
+					Issuer: new("https://oidc.eks.eu-west-2.amazonaws.com/id/00D3FF4CC48CBAA9BBC070DAA80BD251"),
 				},
 			},
 			Status: types.ClusterStatusActive,
 			CertificateAuthority: &types.Certificate{
-				Data: PtrString("LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUMvakNDQWVhZ0F3SUJBZ0lCQURBTkJna3Foa2lHOXcwQkFRc0ZBREFWTVJNd0VRWURWUVFERXdwcmRXSmwKY201bGRHVnpNQjRYRFRJeU1USXlNakV6TkRZME5Gb1hEVE15TVRJeE9URXpORFkwTkZvd0ZURVRNQkVHQTFVRQpBeE1LYTNWaVpYSnVaWFJsY3pDQ0FTSXdEUVlKS29aSWh2Y05BUUVCQlFBRGdnRVBBRENDQVFvQ2dnRUJBTC9tCkN6b25QdUZIUXM1a0xudzdCeXMrak9pNWJscEVCN2RhZUYvQzZqaEVTbkcwdVBVRjVWSFUzbmRyZHRKelBaemQKenM4U1pEMzRsKytGWmw0NFQrYWRqMGFYanpmZ0NTeFo4K0MvaWJUOWIzck5jWU9ZZ3FYT1lXc2JVYmpBSjRadgpnakFqdEl3dTBvUHNYT0JSZU5KTDlhRkl6VFFIcy9QL1hONWI5eGRlSHhwOXN4cnlEREYxQVNuQkxwajduUHMrCmgyNUtvd0hQV1luekV6WVd1T3NZbDQ2RjZacHh4aVhya2hnOGozckR4dXRWZGMvQVBFaVhUdHh3OU9CMjFDMkwKK1VpanpxS2RrZm5idVEvOHF0TTRqbFVGTkgzUG03STlkTEdIMTBTOFdhQkhpODNRMklCd3c0eE5RZ04xNC91dgpXWFZOWkxmM1EwbElkdmtxaCtrQ0F3RUFBYU5aTUZjd0RnWURWUjBQQVFIL0JBUURBZ0trTUE4R0ExVWRFd0VCCi93UUZNQU1CQWY4d0hRWURWUjBPQkJZRUZCa2wvVEJwNVNyMFJrVEk2V1dMVkR4MVdZYUxNQlVHQTFVZEVRUU8KTUF5Q0NtdDFZbVZ5Ym1WMFpYTXdEUVlKS29aSWh2Y05BUUVMQlFBRGdnRUJBQ0FCVWtZUWZSQXlRRFVsc2todgp2NTRZN3lFQ1lUSG00OWVtMWoyV2hyN0JPdXdlUkU4M3g1b0NhWEtjK2tMemlvOEVvY2hxOWN1a1FEYm1KNkpoCmRhUUlyaFFwaG5PMHZSd290YXlhWjdlV2IwTm50WmNxN1ZmNkp5ZU5CR3Y1NTJGdlNNcGprWnh0UXVpTTJ5TXoKbjJWWmtxMzJPb0RjTmxCMERhRVBCSjlIM2ZnbG1qcGdWL0NHZFdMNG1wNEpkb3VPNTFtNkJBMm1ET2JWYzh4VgppNFJIWE9KNG9hSGFTd1B6MHBuQUxabkJoUnpxV0Q1cGlycVlucjBxSlFDamJDWXF1TmJTU3d4c2JMYVFjanNFCjhiUXk0aGxXaEJNWno3UldOeDg1UTBZSjhWNEhKdXVCZ09MaVg1REFtNDZIbndWUy95MHJyN2JTWThoTXErM2QKTmtrPQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg=="),
+				Data: new("LS0tLS1CRUdJTiBDRVJUSUZJQ0FURS0tLS0tCk1JSUMvakNDQWVhZ0F3SUJBZ0lCQURBTkJna3Foa2lHOXcwQkFRc0ZBREFWTVJNd0VRWURWUVFERXdwcmRXSmwKY201bGRHVnpNQjRYRFRJeU1USXlNakV6TkRZME5Gb1hEVE15TVRJeE9URXpORFkwTkZvd0ZURVRNQkVHQTFVRQpBeE1LYTNWaVpYSnVaWFJsY3pDQ0FTSXdEUVlKS29aSWh2Y05BUUVCQlFBRGdnRVBBRENDQVFvQ2dnRUJBTC9tCkN6b25QdUZIUXM1a0xudzdCeXMrak9pNWJscEVCN2RhZUYvQzZqaEVTbkcwdVBVRjVWSFUzbmRyZHRKelBaemQKenM4U1pEMzRsKytGWmw0NFQrYWRqMGFYanpmZ0NTeFo4K0MvaWJUOWIzck5jWU9ZZ3FYT1lXc2JVYmpBSjRadgpnakFqdEl3dTBvUHNYT0JSZU5KTDlhRkl6VFFIcy9QL1hONWI5eGRlSHhwOXN4cnlEREYxQVNuQkxwajduUHMrCmgyNUtvd0hQV1luekV6WVd1T3NZbDQ2RjZacHh4aVhya2hnOGozckR4dXRWZGMvQVBFaVhUdHh3OU9CMjFDMkwKK1VpanpxS2RrZm5idVEvOHF0TTRqbFVGTkgzUG03STlkTEdIMTBTOFdhQkhpODNRMklCd3c0eE5RZ04xNC91dgpXWFZOWkxmM1EwbElkdmtxaCtrQ0F3RUFBYU5aTUZjd0RnWURWUjBQQVFIL0JBUURBZ0trTUE4R0ExVWRFd0VCCi93UUZNQU1CQWY4d0hRWURWUjBPQkJZRUZCa2wvVEJwNVNyMFJrVEk2V1dMVkR4MVdZYUxNQlVHQTFVZEVRUU8KTUF5Q0NtdDFZbVZ5Ym1WMFpYTXdEUVlKS29aSWh2Y05BUUVMQlFBRGdnRUJBQ0FCVWtZUWZSQXlRRFVsc2todgp2NTRZN3lFQ1lUSG00OWVtMWoyV2hyN0JPdXdlUkU4M3g1b0NhWEtjK2tMemlvOEVvY2hxOWN1a1FEYm1KNkpoCmRhUUlyaFFwaG5PMHZSd290YXlhWjdlV2IwTm50WmNxN1ZmNkp5ZU5CR3Y1NTJGdlNNcGprWnh0UXVpTTJ5TXoKbjJWWmtxMzJPb0RjTmxCMERhRVBCSjlIM2ZnbG1qcGdWL0NHZFdMNG1wNEpkb3VPNTFtNkJBMm1ET2JWYzh4VgppNFJIWE9KNG9hSGFTd1B6MHBuQUxabkJoUnpxV0Q1cGlycVlucjBxSlFDamJDWXF1TmJTU3d4c2JMYVFjanNFCjhiUXk0aGxXaEJNWno3UldOeDg1UTBZSjhWNEhKdXVCZ09MaVg1REFtNDZIbndWUy95MHJyN2JTWThoTXErM2QKTmtrPQotLS0tLUVORCBDRVJUSUZJQ0FURS0tLS0tCg=="),
 			},
-			PlatformVersion: PtrString("eks.3"),
+			PlatformVersion: new("eks.3"),
 			Tags:            map[string]string{},
 			EncryptionConfig: []types.EncryptionConfig{
 				{
@@ -99,7 +99,7 @@ var ClusterClient = EKSTestClient{
 						"secrets",
 					},
 					Provider: &types.Provider{
-						KeyArn: PtrString("arn:aws:kms:eu-west-2:801795385023:key/3a478539-9717-4c20-83a5-19989154dc32"),
+						KeyArn: new("arn:aws:kms:eu-west-2:801795385023:key/3a478539-9717-4c20-83a5-19989154dc32"),
 					},
 				},
 			},

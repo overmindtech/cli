@@ -86,7 +86,7 @@ func TestIAMRole(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://iam.googleapis.com/v1/projects/%s/roles/%s", projectID, roleName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Role not found"},
+				Body:       map[string]any{"error": "Role not found"},
 			},
 		}
 

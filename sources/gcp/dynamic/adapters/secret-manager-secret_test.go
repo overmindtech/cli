@@ -220,7 +220,7 @@ func TestSecretManagerSecret(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://secretmanager.googleapis.com/v1/projects/%s/secrets/%s", projectID, secretID): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Secret not found"},
+				Body:       map[string]any{"error": "Secret not found"},
 			},
 		}
 
