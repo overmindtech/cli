@@ -5,7 +5,8 @@
     "gcp-ai-platform-endpoint",
     "gcp-ai-platform-pipeline-job",
     "gcp-artifact-registry-docker-image",
-    "gcp-cloud-kms-crypto-key"
+    "gcp-cloud-kms-crypto-key",
+    "gcp-storage-bucket"
   ],
   "descriptiveName": "GCP Ai Platform Model",
   "supportedQueryMethods": {

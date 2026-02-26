@@ -3,16 +3,15 @@ title: GCP Compute Security Policy
 sidebar_label: gcp-compute-security-policy
 ---
 
-A GCP Compute Security Policy represents a Cloud Armor security policy. It contains an ordered set of layer-7 filtering rules that allow, deny, or rate-limit traffic directed at a load balancer or backend service. By attaching a security policy you can enforce web-application-firewall (WAF) protections, mitigate DDoS attacks, and define custom match conditions—all without changing your application code. Overmind ingests these resources so you can understand how proposed changes will affect the exposure and resilience of your workloads before you deploy them.
-
-For full details see the official Google Cloud documentation: https://cloud.google.com/armor/docs/security-policy-concepts
+A GCP Compute Security Policy represents a Google Cloud Armor security policy that you configure to protect your applications and services from malicious or unwanted traffic. Each policy is made up of an ordered list of rules that allow, deny, or rate-limit requests based on layer-3/4 characteristics or custom layer-7 expressions. Security policies can be associated with external Application Load Balancers, Cloud CDN, and other HTTP(S)-based backend services, enabling centralised, declarative control over inbound traffic behaviour.  
+For full details, see the official Google documentation: https://cloud.google.com/compute/docs/reference/rest/v1/securityPolicies
 
 **Terrafrom Mappings:**
 
-- `google_compute_security_policy.name`
+  * `google_compute_security_policy.name`
 
 ## Supported Methods
 
-- `GET`: Get GCP Compute Security Policy by "gcp-compute-security-policy-name"
-- `LIST`: List all GCP Compute Security Policy items
-- ~~`SEARCH`~~
+* `GET`: Get GCP Compute Security Policy by "gcp-compute-security-policy-name"
+* `LIST`: List all GCP Compute Security Policy items
+* ~~`SEARCH`~~

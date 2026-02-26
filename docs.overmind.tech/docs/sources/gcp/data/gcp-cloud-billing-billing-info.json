@@ -1,7 +1,9 @@
 {
   "type": "gcp-cloud-billing-billing-info",
   "category": 7,
-  "potentialLinks": ["gcp-cloud-resource-manager-project"],
+  "potentialLinks": [
+    "gcp-cloud-resource-manager-project"
+  ],
   "descriptiveName": "GCP Cloud Billing Billing Info",
   "supportedQueryMethods": {
     "get": true,

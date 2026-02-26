@@ -1,6 +1,9 @@
 {
   "type": "gcp-compute-node-group",
   "category": 1,
+  "potentialLinks": [
+    "gcp-compute-node-template"
+  ],
   "descriptiveName": "GCP Compute Node Group",
   "supportedQueryMethods": {
     "get": true,

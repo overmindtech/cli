@@ -78,7 +78,7 @@ var _ = registerableAdapter{
 			ToSDPItemType: gcpshared.ComputeInterconnectAttachment,
 		},
 		"tags": {
-			Description:   "Route applies to instances with this network tag. Changing the tag on either side affects which VMs the route targets.",
+			Description:   "Route specifies network tags to apply routing rules only to instances and instance templates with matching tags. Overmind automatically discovers instances and templates with these tags, enabling blast radius analysis to show which resources will be affected when you modify a route's tags.",
 			ToSDPItemType: gcpshared.ComputeInstance,
 		},
 	},

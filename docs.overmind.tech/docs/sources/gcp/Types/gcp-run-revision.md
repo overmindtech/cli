@@ -3,44 +3,50 @@ title: GCP Run Revision
 sidebar_label: gcp-run-revision
 ---
 
-A Cloud Run Revision represents an immutable snapshot of the code and configuration that Cloud Run executes. Every time you deploy a new container image or change the runtime configuration of a Cloud Run Service, a new Revision is created and given a unique name. The Revision stores details such as the container image reference, environment variables, scaling limits, traffic settings, networking options and the service account under which the workload runs. Official documentation: https://docs.cloud.google.com/run/docs/managing/revisions
+A Cloud Run **Revision** is an immutable snapshot of a Cloud Run Service configuration at a particular point in time. Each time you deploy new code or change configuration, Cloud Run automatically creates a new revision and routes traffic according to your settings. A revision defines the container image to run, environment variables, resource limits, networking options, service account, secret mounts and more. Once created, a revision can never be modified – you can only create a new one.  
+Official documentation: https://cloud.google.com/run/docs/reference/rest/v1/namespaces.revisions
+
 
 ## Supported Methods
 
-- `GET`: Get a gcp-run-revision by its "locations|services|revisions"
-- ~~`LIST`~~
-- `SEARCH`: Search for gcp-run-revision by its "locations|services"
+* `GET`: Get a gcp-run-revision by its "locations|services|revisions"
+* ~~`LIST`~~
+* `SEARCH`: Search for gcp-run-revision by its "locations|services"
 
 ## Possible Links
 
 ### [`gcp-artifact-registry-docker-image`](/sources/gcp/Types/gcp-artifact-registry-docker-image)
 
-The Revision’s `container.image` field points to a Docker image that is normally stored in Artifact Registry (or the older Container Registry). Overmind therefore links the Revision to the exact image digest it deploys, so you can see what code is really running.
+The container image specified in the revision is often stored in Artifact Registry. The revision therefore has a **uses-image** relationship with the referenced Docker image.
 
 ### [`gcp-cloud-kms-crypto-key`](/sources/gcp/Types/gcp-cloud-kms-crypto-key)
 
-If the Revision mounts secrets or other resources that are encrypted with Cloud KMS, those crypto-keys are surfaced as links. This helps you understand which keys would be required to decrypt data at runtime.
+If the revision is configured with a customer-managed encryption key (CMEK) for encrypted secrets or volumes, it will reference the corresponding Cloud KMS Crypto Key.
 
 ### [`gcp-compute-network`](/sources/gcp/Types/gcp-compute-network)
 
-When a Revision is configured with a Serverless VPC Connector or egress settings that reference a particular VPC network, the corresponding `compute.network` is linked. This reveals the network perimeter through which outbound traffic may flow.
+When a revision is set up to use Serverless VPC Access, it connects to a specific VPC network, creating a **connects-to-network** relationship.
 
 ### [`gcp-compute-subnetwork`](/sources/gcp/Types/gcp-compute-subnetwork)
 
-Similarly, a Revision may target a specific sub-network (for example `vpcAccess.connectorSubnetwork`). Overmind links the Revision to that `compute.subnetwork` so you can trace which CIDR ranges and routes apply.
+The Serverless VPC Access connector used by the revision is attached to a particular subnetwork, so the revision is indirectly linked to that subnetwork.
 
 ### [`gcp-iam-service-account`](/sources/gcp/Types/gcp-iam-service-account)
 
-Each Revision runs with an IAM service account specified in its `serviceAccountName` field. Linking to the service account lets you inspect the permissions that the workload inherits.
+Each revision runs with an IAM service account whose permissions govern outbound calls and resource access. The revision therefore **runs-as** the referenced service account.
 
 ### [`gcp-run-service`](/sources/gcp/Types/gcp-run-service)
 
-A Revision belongs to exactly one Cloud Run Service. The link to the parent Service shows the traffic allocation, routing configuration and other higher-level settings that govern how the Revision is invoked.
+The revision is a child resource of a Cloud Run Service. All traffic routing and lifecycle events are managed at the service level.
+
+### [`gcp-secret-manager-secret`](/sources/gcp/Types/gcp-secret-manager-secret)
+
+Environment variables or mounted volumes in the revision can pull values from Secret Manager. This establishes a **consumes-secret** relationship.
 
 ### [`gcp-sql-admin-instance`](/sources/gcp/Types/gcp-sql-admin-instance)
 
-If the Revision’s metadata includes Cloud SQL connection strings (via the `cloudSqlInstances` setting), Overmind links to the referenced Cloud SQL instances, making database dependencies explicit.
+If the revision defines Cloud SQL connections, it will list one or more Cloud SQL instances it can connect to through the Cloud SQL proxy.
 
 ### [`gcp-storage-bucket`](/sources/gcp/Types/gcp-storage-bucket)
 
-Revisions can mount Cloud Storage buckets using Cloud Storage FUSE volumes or reference buckets through environment variables. When such configuration is detected, the corresponding buckets are linked so you can assess data-at-rest exposure.
+A revision may read from or write to Cloud Storage buckets (for example for static assets or generated files) when granted the appropriate IAM permissions, creating a potential dependency on those buckets.

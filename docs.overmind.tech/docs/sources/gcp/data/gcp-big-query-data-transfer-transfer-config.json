@@ -4,6 +4,7 @@
   "potentialLinks": [
     "gcp-big-query-dataset",
     "gcp-cloud-kms-crypto-key",
+    "gcp-iam-service-account",
     "gcp-pub-sub-topic"
   ],
   "descriptiveName": "GCP Big Query Data Transfer Transfer Config",

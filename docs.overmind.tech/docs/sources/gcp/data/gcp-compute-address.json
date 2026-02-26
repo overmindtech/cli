@@ -3,7 +3,12 @@
   "category": 3,
   "potentialLinks": [
     "gcp-compute-address",
+    "gcp-compute-forwarding-rule",
+    "gcp-compute-global-forwarding-rule",
+    "gcp-compute-instance",
     "gcp-compute-network",
+    "gcp-compute-public-delegated-prefix",
+    "gcp-compute-router",
     "gcp-compute-subnetwork"
   ],
   "descriptiveName": "GCP Compute Address",

@@ -4,7 +4,8 @@
   "potentialLinks": [
     "gcp-cloud-kms-crypto-key",
     "gcp-compute-network",
-    "gcp-logging-bucket"
+    "gcp-logging-bucket",
+    "gcp-storage-bucket-iam-policy"
   ],
   "descriptiveName": "GCP Storage Bucket",
   "supportedQueryMethods": {
@@ -16,6 +17,15 @@
   "terraformMappings": [
     {
       "terraformQueryMap": "google_storage_bucket.name"
+    },
+    {
+      "terraformQueryMap": "google_storage_bucket_iam_binding.bucket"
+    },
+    {
+      "terraformQueryMap": "google_storage_bucket_iam_member.bucket"
+    },
+    {
+      "terraformQueryMap": "google_storage_bucket_iam_policy.bucket"
     }
   ]
 }

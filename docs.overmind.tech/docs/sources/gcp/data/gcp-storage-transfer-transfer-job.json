@@ -5,6 +5,7 @@
     "gcp-iam-service-account",
     "gcp-pub-sub-subscription",
     "gcp-pub-sub-topic",
+    "gcp-secret-manager-secret",
     "gcp-storage-bucket"
   ],
   "descriptiveName": "GCP Storage Transfer Transfer Job",

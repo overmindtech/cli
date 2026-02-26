@@ -3,6 +3,7 @@
   "category": 7,
   "potentialLinks": [
     "gcp-big-query-table",
+    "gcp-iam-service-account",
     "gcp-pub-sub-subscription",
     "gcp-pub-sub-topic",
     "gcp-storage-bucket"
@@ -17,6 +18,15 @@
   "terraformMappings": [
     {
       "terraformQueryMap": "google_pubsub_subscription.name"
+    },
+    {
+      "terraformQueryMap": "google_pubsub_subscription_iam_binding.subscription"
+    },
+    {
+      "terraformQueryMap": "google_pubsub_subscription_iam_member.subscription"
+    },
+    {
+      "terraformQueryMap": "google_pubsub_subscription_iam_policy.subscription"
     }
   ]
 }

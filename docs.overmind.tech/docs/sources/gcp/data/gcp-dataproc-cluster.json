@@ -8,7 +8,10 @@
     "gcp-compute-network",
     "gcp-compute-node-group",
     "gcp-compute-subnetwork",
+    "gcp-container-cluster",
+    "gcp-container-node-pool",
     "gcp-dataproc-autoscaling-policy",
+    "gcp-dataproc-cluster",
     "gcp-iam-service-account",
     "gcp-storage-bucket"
   ],

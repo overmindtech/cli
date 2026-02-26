@@ -2,10 +2,14 @@
   "type": "gcp-compute-machine-image",
   "category": 1,
   "potentialLinks": [
+    "gcp-cloud-kms-crypto-key-version",
     "gcp-compute-disk",
+    "gcp-compute-image",
     "gcp-compute-instance",
     "gcp-compute-network",
-    "gcp-compute-subnetwork"
+    "gcp-compute-snapshot",
+    "gcp-compute-subnetwork",
+    "gcp-iam-service-account"
   ],
   "descriptiveName": "GCP Compute Machine Image",
   "supportedQueryMethods": {

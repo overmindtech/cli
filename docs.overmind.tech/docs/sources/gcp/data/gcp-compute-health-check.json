@@ -11,6 +11,9 @@
   "terraformMappings": [
     {
       "terraformQueryMap": "google_compute_health_check.name"
+    },
+    {
+      "terraformQueryMap": "google_compute_region_health_check.name"
     }
   ]
 }

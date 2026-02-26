@@ -3,6 +3,7 @@
   "category": 6,
   "potentialLinks": [
     "gcp-cloud-kms-crypto-key",
+    "gcp-cloud-kms-crypto-key-version",
     "gcp-iam-service-account",
     "gcp-secret-manager-secret"
   ],

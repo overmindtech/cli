@@ -1,7 +1,10 @@
 {
   "type": "gcp-service-usage-service",
   "category": 7,
-  "potentialLinks": ["gcp-pub-sub-topic"],
+  "potentialLinks": [
+    "gcp-cloud-resource-manager-project",
+    "gcp-pub-sub-topic"
+  ],
   "descriptiveName": "GCP Service Usage Service",
   "supportedQueryMethods": {
     "get": true,

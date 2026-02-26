@@ -3,18 +3,24 @@ title: GCP Cloud Billing Billing Info
 sidebar_label: gcp-cloud-billing-billing-info
 ---
 
-`gcp-cloud-billing-billing-info` represents a Google Cloud **ProjectBillingInfo** resource, i.e. the object that records which Cloud Billing Account a particular GCP project is attached to and whether billing is currently enabled.  
-Knowing which Billing Account is used – and whether charges can actually accrue – is often vital when assessing the financial risk of a new deployment.  
-Official documentation: https://cloud.google.com/billing/docs/reference/rest/v1/projects/getBillingInfo
+The **Cloud Billing – Billing Info** resource represents the billing configuration that is attached to an individual Google Cloud project.  
+For a given project it records which Cloud Billing Account is linked, whether billing is currently enabled, and other metadata that controls how usage costs are charged.  
+The resource is surfaced by the Cloud Billing API endpoint  
+`cloudbilling.googleapis.com/v1/projects/{projectId}/billingInfo`.  
+Full details are available in the official Google documentation:  
+https://cloud.google.com/billing/docs/reference/rest/v1/projects/getBillingInfo
+
+Knowing the contents of this object allows Overmind to determine, for example, whether a project is running with an unexpectedly disabled billing account or whether it is tied to the correct cost centre before a deployment is made.
 
 ## Supported Methods
 
-- `GET`: Get a gcp-cloud-billing-billing-info by its "name"
-- ~~`LIST`~~
-- ~~`SEARCH`~~
+* `GET`: Get a gcp-cloud-billing-billing-info by its "name"
+* ~~`LIST`~~
+* ~~`SEARCH`~~
 
 ## Possible Links
 
 ### [`gcp-cloud-resource-manager-project`](/sources/gcp/Types/gcp-cloud-resource-manager-project)
 
-Every ProjectBillingInfo belongs to exactly one Cloud project. Overmind therefore links the `gcp-cloud-billing-billing-info` item to the corresponding `gcp-cloud-resource-manager-project` item, allowing you to trace billing-account associations back to the project that will generate the spend.
+Every Billing Info object belongs to exactly one Cloud Resource Manager Project.  
+Overmind creates a link from `gcp-cloud-billing-billing-info` → `gcp-cloud-resource-manager-project` so that users can trace the billing configuration back to the workload and other resources that live inside the same project.

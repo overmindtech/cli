@@ -3,20 +3,20 @@ title: GCP Compute Region Commitment
 sidebar_label: gcp-compute-region-commitment
 ---
 
-A GCP Compute Region Commitment is an agreement in which you purchase a predefined amount of vCPU, memory or GPU capacity in a specific region for a fixed term (one or three years) in return for a reduced hourly price. Commitments are applied automatically to matching usage within the chosen region, helping to lower running costs while guaranteeing a baseline level of capacity. For a detailed explanation of the feature, see the official documentation: https://docs.cloud.google.com/compute/docs/reference/rest/v1/regionCommitments/list.
+A Compute Region Commitment in Google Cloud Platform (GCP) represents a contractual agreement to purchase a certain amount of vCPU, memory, GPUs or local SSD capacity within a specific region for one or three years. In exchange for this up-front commitment, you receive a discounted hourly rate for the covered resources, regardless of whether the capacity is actually in use. Commitments are created per-project and per-region, and the discount automatically applies to any eligible VM instances running in that region. For full details see the official documentation: https://cloud.google.com/compute/docs/instances/signing-up-committed-use-discounts
 
 **Terrafrom Mappings:**
 
-- `google_compute_region_commitment.name`
+  * `google_compute_region_commitment.name`
 
 ## Supported Methods
 
-- `GET`: Get a gcp-compute-region-commitment by its "name"
-- `LIST`: List all gcp-compute-region-commitment
-- ~~`SEARCH`~~
+* `GET`: Get a gcp-compute-region-commitment by its "name"
+* `LIST`: List all gcp-compute-region-commitment
+* ~~`SEARCH`~~
 
 ## Possible Links
 
 ### [`gcp-compute-reservation`](/sources/gcp/Types/gcp-compute-reservation)
 
-A region commitment can be consumed by one or more compute reservations in the same region. When a reservation launches virtual machine instances, the resources they use are first drawn from any applicable commitments so that the discounted commitment pricing is applied automatically.
+Reservations and commitments often work together: a reservation guarantees that capacity is available, while a commitment provides a discount for that capacity. When Overmind discovers a region commitment it links it to any compute reservations in the same project and region so you can see both the cost commitment and the capacity guarantee in one place.

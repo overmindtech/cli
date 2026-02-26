@@ -40,11 +40,11 @@ var _ = registerableAdapter{
 		"sourceServiceAccounts": gcpshared.IAMServiceAccountImpactInOnly,
 		"targetServiceAccounts": gcpshared.IAMServiceAccountImpactInOnly,
 		"targetTags": {
-			Description:   "Firewall targets instances with this network tag. Changing the tag on either side affects which VMs the rule applies to.",
+			Description:   "Firewall rule specifies target_tags to control traffic to VM instances and instance templates with those tags. Overmind automatically discovers these relationships by searching for instances and templates with matching network tags, enabling accurate blast radius analysis when tags change on either firewalls or instances.",
 			ToSDPItemType: gcpshared.ComputeInstance,
 		},
 		"sourceTags": {
-			Description:   "Firewall allows traffic from instances with this network tag. Changing the tag on either side affects traffic flow.",
+			Description:   "Firewall rule specifies source_tags to control traffic from VM instances with those tags. Overmind automatically discovers these relationships by searching for instances with matching network tags, enabling accurate blast radius analysis when tags change on either firewalls or instances.",
 			ToSDPItemType: gcpshared.ComputeInstance,
 		},
 	},

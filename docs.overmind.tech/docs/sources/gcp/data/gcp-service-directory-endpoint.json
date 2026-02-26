@@ -1,7 +1,9 @@
 {
   "type": "gcp-service-directory-endpoint",
   "category": 7,
-  "potentialLinks": ["gcp-compute-network"],
+  "potentialLinks": [
+    "gcp-compute-network"
+  ],
   "descriptiveName": "GCP Service Directory Endpoint",
   "supportedQueryMethods": {
     "get": true,

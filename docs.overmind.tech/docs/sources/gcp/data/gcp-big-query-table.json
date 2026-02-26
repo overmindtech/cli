@@ -1,7 +1,12 @@
 {
   "type": "gcp-big-query-table",
   "category": 6,
-  "potentialLinks": ["gcp-big-query-dataset", "gcp-cloud-kms-crypto-key"],
+  "potentialLinks": [
+    "gcp-big-query-dataset",
+    "gcp-big-query-table",
+    "gcp-cloud-kms-crypto-key",
+    "gcp-storage-bucket"
+  ],
   "descriptiveName": "GCP Big Query Table",
   "supportedQueryMethods": {
     "get": true,
@@ -11,7 +16,20 @@
   },
   "terraformMappings": [
     {
+      "terraformMethod": 2,
       "terraformQueryMap": "google_bigquery_table.id"
+    },
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "google_bigquery_table_iam_binding.dataset_id"
+    },
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "google_bigquery_table_iam_member.dataset_id"
+    },
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "google_bigquery_table_iam_policy.dataset_id"
     }
   ]
 }

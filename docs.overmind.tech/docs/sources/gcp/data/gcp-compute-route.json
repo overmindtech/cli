@@ -2,6 +2,7 @@
   "type": "gcp-compute-route",
   "category": 3,
   "potentialLinks": [
+    "gcp-compute-forwarding-rule",
     "gcp-compute-instance",
     "gcp-compute-network",
     "gcp-compute-vpn-tunnel"
@@ -11,7 +12,9 @@
     "get": true,
     "getDescription": "Get a gcp-compute-route by its \"name\"",
     "list": true,
-    "listDescription": "List all gcp-compute-route"
+    "listDescription": "List all gcp-compute-route",
+    "search": true,
+    "searchDescription": "Search for routes by network tag. The query is a plain network tag name."
   },
   "terraformMappings": [
     {

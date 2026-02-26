@@ -1,0 +1,23 @@
+{
+  "type": "gcp-compute-regional-instance-group-manager",
+  "category": 1,
+  "potentialLinks": [
+    "gcp-compute-autoscaler",
+    "gcp-compute-health-check",
+    "gcp-compute-instance-group",
+    "gcp-compute-instance-template",
+    "gcp-compute-target-pool"
+  ],
+  "descriptiveName": "GCP Compute Regional Instance Group Manager",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get GCP Compute Regional Instance Group Manager by \"gcp-compute-regional-instance-group-manager-name\"",
+    "list": true,
+    "listDescription": "List all GCP Compute Regional Instance Group Manager items"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_compute_region_instance_group_manager.name"
+    }
+  ]
+}

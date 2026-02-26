@@ -2,11 +2,13 @@
   "type": "gcp-compute-disk",
   "category": 2,
   "potentialLinks": [
+    "gcp-cloud-kms-crypto-key-version",
     "gcp-compute-disk",
     "gcp-compute-image",
     "gcp-compute-instance",
     "gcp-compute-instant-snapshot",
-    "gcp-compute-snapshot"
+    "gcp-compute-snapshot",
+    "gcp-storage-bucket"
   ],
   "descriptiveName": "GCP Compute Disk",
   "supportedQueryMethods": {

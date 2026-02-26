@@ -2,16 +2,27 @@
   "type": "gcp-compute-instance",
   "category": 1,
   "potentialLinks": [
+    "gcp-cloud-kms-crypto-key",
+    "gcp-cloud-kms-crypto-key-version",
     "gcp-compute-disk",
+    "gcp-compute-firewall",
+    "gcp-compute-image",
+    "gcp-compute-instance-group-manager",
+    "gcp-compute-instance-template",
     "gcp-compute-network",
-    "gcp-compute-subnetwork"
+    "gcp-compute-route",
+    "gcp-compute-snapshot",
+    "gcp-compute-subnetwork",
+    "gcp-iam-service-account"
   ],
   "descriptiveName": "GCP Compute Instance",
   "supportedQueryMethods": {
     "get": true,
     "getDescription": "Get GCP Compute Instance by \"gcp-compute-instance-name\"",
     "list": true,
-    "listDescription": "List all GCP Compute Instance items"
+    "listDescription": "List all GCP Compute Instance items",
+    "search": true,
+    "searchDescription": "Search for GCP Compute Instance by \"gcp-compute-instance-networkTag\""
   },
   "terraformMappings": [
     {

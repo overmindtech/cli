@@ -3,8 +3,10 @@
   "category": 7,
   "potentialLinks": [
     "gcp-artifact-registry-docker-image",
+    "gcp-cloud-kms-crypto-key",
     "gcp-iam-service-account",
     "gcp-logging-bucket",
+    "gcp-secret-manager-secret",
     "gcp-storage-bucket"
   ],
   "descriptiveName": "GCP Cloud Build Build",

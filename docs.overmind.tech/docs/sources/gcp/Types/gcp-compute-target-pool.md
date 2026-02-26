@@ -3,28 +3,28 @@ title: GCP Compute Target Pool
 sidebar_label: gcp-compute-target-pool
 ---
 
-A Compute Target Pool is a regional resource that groups multiple VM instances so they can receive incoming traffic from legacy network TCP load balancers or be used as failover targets for forwarding rules. Target pools can also be linked to one or more Health Checks to determine the availability of their member instances. Official documentation: https://docs.cloud.google.com/load-balancing/docs/target-pools
+A Google Cloud Compute Target Pool is a regional grouping of VM instances that acts as the backend for the legacy TCP/UDP network load balancer. The pool defines which instances receive traffic, the optional session-affinity policy, the associated health checks that determine instance health, and an optional fail-over target pool for backup. See the official documentation for full details: https://cloud.google.com/compute/docs/reference/rest/v1/targetPools
 
 **Terrafrom Mappings:**
 
-- `google_compute_target_pool.id`
+  * `google_compute_target_pool.id`
 
 ## Supported Methods
 
-- `GET`: Get a gcp-compute-target-pool by its "name"
-- `LIST`: List all gcp-compute-target-pool
-- `SEARCH`: Search with full ID: projects/[project]/regions/[region]/targetPools/[name] (used for terraform mapping).
+* `GET`: Get a gcp-compute-target-pool by its "name"
+* `LIST`: List all gcp-compute-target-pool
+* `SEARCH`: Search with full ID: projects/[project]/regions/[region]/targetPools/[name] (used for terraform mapping).
 
 ## Possible Links
 
 ### [`gcp-compute-health-check`](/sources/gcp/Types/gcp-compute-health-check)
 
-A target pool may reference one or more Health Checks. These checks are executed against each instance in the pool to decide whether the instance should receive traffic. Overmind links a target pool to any health check resources it is configured to use.
+A target pool may reference one or more health checks through its `healthChecks` field. These health checks are used by Google Cloud to probe the instances in the pool and decide whether traffic should be sent to a particular VM.
 
 ### [`gcp-compute-instance`](/sources/gcp/Types/gcp-compute-instance)
 
-Member virtual machines are registered in the target pool. Overmind establishes links from the target pool to every compute instance that is currently part of the pool.
+Each target pool contains a list of VM instances (`instances` field) that will receive load-balanced traffic. Overmind links the pool to every instance it contains.
 
 ### [`gcp-compute-target-pool`](/sources/gcp/Types/gcp-compute-target-pool)
 
-Target pools can appear as dependencies of other target pools in scenarios such as cross-region failover configurations. Overmind represents these intra-type relationships with links between the relevant target pool resources.
+A target pool can specify another target pool as its `backupPool` to provide fail-over capacity, and it can itself be referenced as a backup by other pools. Overmind surfaces these peer-to-peer relationships between target pools.

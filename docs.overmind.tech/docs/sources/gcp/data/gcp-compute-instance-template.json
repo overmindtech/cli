@@ -4,11 +4,13 @@
   "potentialLinks": [
     "gcp-cloud-kms-crypto-key",
     "gcp-compute-disk",
+    "gcp-compute-firewall",
     "gcp-compute-image",
     "gcp-compute-instance",
     "gcp-compute-network",
     "gcp-compute-node-group",
     "gcp-compute-reservation",
+    "gcp-compute-route",
     "gcp-compute-security-policy",
     "gcp-compute-snapshot",
     "gcp-compute-subnetwork",
@@ -19,7 +21,9 @@
     "get": true,
     "getDescription": "Get a gcp-compute-instance-template by its \"name\"",
     "list": true,
-    "listDescription": "List all gcp-compute-instance-template"
+    "listDescription": "List all gcp-compute-instance-template",
+    "search": true,
+    "searchDescription": "Search for instance templates by network tag. The query is a plain network tag name."
   },
   "terraformMappings": [
     {

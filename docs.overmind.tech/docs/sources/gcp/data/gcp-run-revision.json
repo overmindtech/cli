@@ -8,6 +8,7 @@
     "gcp-compute-subnetwork",
     "gcp-iam-service-account",
     "gcp-run-service",
+    "gcp-secret-manager-secret",
     "gcp-sql-admin-instance",
     "gcp-storage-bucket"
   ],

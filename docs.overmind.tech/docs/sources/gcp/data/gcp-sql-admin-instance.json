@@ -4,6 +4,7 @@
   "potentialLinks": [
     "gcp-cloud-kms-crypto-key",
     "gcp-compute-network",
+    "gcp-compute-subnetwork",
     "gcp-iam-service-account",
     "gcp-sql-admin-backup-run",
     "gcp-sql-admin-instance",

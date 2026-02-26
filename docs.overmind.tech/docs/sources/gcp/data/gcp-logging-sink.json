@@ -3,6 +3,7 @@
   "category": 7,
   "potentialLinks": [
     "gcp-big-query-dataset",
+    "gcp-iam-service-account",
     "gcp-logging-bucket",
     "gcp-pub-sub-topic",
     "gcp-storage-bucket"

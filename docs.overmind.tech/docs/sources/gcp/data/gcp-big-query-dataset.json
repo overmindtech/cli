@@ -3,7 +3,6 @@
   "category": 6,
   "potentialLinks": [
     "gcp-big-query-dataset",
-    "gcp-big-query-model",
     "gcp-big-query-routine",
     "gcp-big-query-table",
     "gcp-cloud-kms-crypto-key",
@@ -19,6 +18,15 @@
   "terraformMappings": [
     {
       "terraformQueryMap": "google_bigquery_dataset.dataset_id"
+    },
+    {
+      "terraformQueryMap": "google_bigquery_dataset_iam_binding.dataset_id"
+    },
+    {
+      "terraformQueryMap": "google_bigquery_dataset_iam_member.dataset_id"
+    },
+    {
+      "terraformQueryMap": "google_bigquery_dataset_iam_policy.dataset_id"
     }
   ]
 }

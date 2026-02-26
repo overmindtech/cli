@@ -1,7 +1,12 @@
 {
   "type": "gcp-spanner-database",
   "category": 6,
-  "potentialLinks": ["gcp-cloud-kms-crypto-key", "gcp-spanner-instance"],
+  "potentialLinks": [
+    "gcp-cloud-kms-crypto-key",
+    "gcp-cloud-kms-crypto-key-version",
+    "gcp-spanner-database",
+    "gcp-spanner-instance"
+  ],
   "descriptiveName": "GCP Spanner Database",
   "supportedQueryMethods": {
     "get": true,

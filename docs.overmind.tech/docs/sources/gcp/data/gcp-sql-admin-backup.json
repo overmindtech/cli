@@ -3,7 +3,8 @@
   "category": 6,
   "potentialLinks": [
     "gcp-cloud-kms-crypto-key",
-    "gcp-sql-admin-backup-run",
+    "gcp-cloud-kms-crypto-key-version",
+    "gcp-compute-network",
     "gcp-sql-admin-instance"
   ],
   "descriptiveName": "GCP Sql Admin Backup",

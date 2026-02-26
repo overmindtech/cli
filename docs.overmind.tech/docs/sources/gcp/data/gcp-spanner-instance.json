@@ -1,7 +1,9 @@
 {
   "type": "gcp-spanner-instance",
   "category": 6,
-  "potentialLinks": ["gcp-spanner-database"],
+  "potentialLinks": [
+    "gcp-spanner-database"
+  ],
   "descriptiveName": "GCP Spanner Instance",
   "supportedQueryMethods": {
     "get": true,

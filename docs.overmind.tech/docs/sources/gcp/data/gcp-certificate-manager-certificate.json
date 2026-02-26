@@ -1,0 +1,17 @@
+{
+  "type": "gcp-certificate-manager-certificate",
+  "category": 4,
+  "descriptiveName": "GCP Certificate Manager Certificate",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get GCP Certificate Manager Certificate by \"gcp-certificate-manager-certificate-location|gcp-certificate-manager-certificate-name\"",
+    "search": true,
+    "searchDescription": "Search for GCP Certificate Manager Certificate by \"gcp-certificate-manager-certificate-location\""
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "google_certificate_manager_certificate.id"
+    }
+  ]
+}

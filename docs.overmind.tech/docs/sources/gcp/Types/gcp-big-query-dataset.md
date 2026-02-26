@@ -3,37 +3,39 @@ title: GCP Big Query Dataset
 sidebar_label: gcp-big-query-dataset
 ---
 
-A BigQuery Dataset is a top-level container that holds BigQuery tables, views, models and routines, and defines the geographic location where that data is stored. It also acts as the unit for access control, default encryption configuration and data lifecycle policies.  
-For full details see the Google Cloud documentation: https://cloud.google.com/bigquery/docs/datasets
+A Google Cloud BigQuery Dataset is a logical container that holds tables, views, routines (stored procedures and functions) and metadata, and defines the geographic location where the underlying data is stored. Datasets also act as the administrative boundary for access-control policies and encryption configuration. For a full description, see the official documentation: https://cloud.google.com/bigquery/docs/datasets-intro
 
 **Terrafrom Mappings:**
 
-- `google_bigquery_dataset.dataset_id`
+  * `google_bigquery_dataset.dataset_id`
+  * `google_bigquery_dataset_iam_binding.dataset_id`
+  * `google_bigquery_dataset_iam_member.dataset_id`
+  * `google_bigquery_dataset_iam_policy.dataset_id`
 
 ## Supported Methods
 
-- `GET`: Get GCP Big Query Dataset by "gcp-big-query-dataset-id"
-- `LIST`: List all GCP Big Query Dataset items
-- ~~`SEARCH`~~
+* `GET`: Get GCP Big Query Dataset by "gcp-big-query-dataset-id"
+* `LIST`: List all GCP Big Query Dataset items
+* ~~`SEARCH`~~
 
 ## Possible Links
 
 ### [`gcp-big-query-dataset`](/sources/gcp/Types/gcp-big-query-dataset)
 
-A dataset can reference other datasets via authorised views or cross-dataset access entries. Those referenced datasets will be linked to the current item.
+Datasets can reference, copy from or authorise access to other BigQuery datasets, so Overmind may surface links where cross-dataset operations or shared access exist.
 
-### [`gcp-big-query-model`](/sources/gcp/Types/gcp-big-query-model)
+### [`gcp-big-query-routine`](/sources/gcp/Types/gcp-big-query-routine)
 
-Every BigQuery ML model belongs to exactly one dataset. All models whose `dataset_id` matches this dataset will be linked.
+Every BigQuery routine (stored procedure or user-defined function) resides inside a specific dataset; therefore routines are children of the current dataset.
 
 ### [`gcp-big-query-table`](/sources/gcp/Types/gcp-big-query-table)
 
-Tables and views are stored inside a dataset. All tables whose `dataset_id` equals this dataset will be linked.
+Tables and views are stored within a dataset. All tables that belong to this dataset will be linked here.
 
 ### [`gcp-cloud-kms-crypto-key`](/sources/gcp/Types/gcp-cloud-kms-crypto-key)
 
-If the dataset is encrypted with a customer-managed key, the KMS Crypto Key used for default encryption will be linked here.
+If customer-managed encryption is enabled, the dataset (and everything inside it) may be encrypted with a specific Cloud KMS crypto key. This link shows which key is in use.
 
 ### [`gcp-iam-service-account`](/sources/gcp/Types/gcp-iam-service-account)
 
-Service accounts that appear in the dataset’s IAM policy (for example as editors, owners, readers or custom roles) will be linked to show who can access or manage the dataset.
+Access to a dataset is granted via IAM, often to service accounts. Linked service accounts represent principals that have explicit permissions on the dataset.

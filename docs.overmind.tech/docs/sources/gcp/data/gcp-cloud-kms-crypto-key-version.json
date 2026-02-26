@@ -1,0 +1,20 @@
+{
+  "type": "gcp-cloud-kms-crypto-key-version",
+  "category": 4,
+  "potentialLinks": [
+    "gcp-cloud-kms-crypto-key"
+  ],
+  "descriptiveName": "GCP Cloud Kms Crypto Key Version",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get GCP Cloud Kms Crypto Key Version by \"gcp-cloud-kms-key-ring-location|gcp-cloud-kms-key-ring-name|gcp-cloud-kms-crypto-key-name|gcp-cloud-kms-crypto-key-version-version\"",
+    "search": true,
+    "searchDescription": "Search for GCP Cloud Kms Crypto Key Version by \"gcp-cloud-kms-key-ring-location|gcp-cloud-kms-key-ring-name|gcp-cloud-kms-crypto-key-name\""
+  },
+  "terraformMappings": [
+    {
+      "terraformMethod": 2,
+      "terraformQueryMap": "google_kms_crypto_key_version.id"
+    }
+  ]
+}
