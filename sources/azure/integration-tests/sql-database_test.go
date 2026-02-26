@@ -15,7 +15,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql/v2"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -299,7 +298,7 @@ func createSQLServer(ctx context.Context, client *armsql.ServersClient, resource
 	}
 
 	var respErr *azcore.ResponseError
-	if err != nil && !errors.As(err, &respErr) {
+	if !errors.As(err, &respErr) {
 		// Some other error occurred
 		return fmt.Errorf("failed to check if SQL server exists: %w", err)
 	}
@@ -321,15 +320,15 @@ func createSQLServer(ctx context.Context, client *armsql.ServersClient, resource
 	}
 
 	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroup, serverName, armsql.Server{
-		Location: ptr.To(location),
+		Location: new(location),
 		Properties: &armsql.ServerProperties{
-			AdministratorLogin:         ptr.To(adminLogin),
-			AdministratorLoginPassword: ptr.To(adminPassword),
-			Version:                    ptr.To("12.0"),
+			AdministratorLogin:         new(adminLogin),
+			AdministratorLoginPassword: new(adminPassword),
+			Version:                    new("12.0"),
 		},
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
-			"managed": ptr.To("true"),
+			"purpose": new("overmind-integration-tests"),
+			"managed": new("true"),
 		},
 	}, nil)
 	if err != nil {
@@ -372,7 +371,7 @@ func createSQLDatabase(ctx context.Context, client *armsql.DatabasesClient, reso
 	}
 
 	var respErr *azcore.ResponseError
-	if err != nil && !errors.As(err, &respErr) {
+	if !errors.As(err, &respErr) {
 		// Some other error occurred
 		return fmt.Errorf("failed to check if SQL database exists: %w", err)
 	}
@@ -386,13 +385,13 @@ func createSQLDatabase(ctx context.Context, client *armsql.DatabasesClient, reso
 	// Create the SQL database
 	// Using Basic tier for integration tests (cheaper)
 	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroup, serverName, databaseName, armsql.Database{
-		Location: ptr.To(location),
+		Location: new(location),
 		Properties: &armsql.DatabaseProperties{
-			RequestedServiceObjectiveName: ptr.To("Basic"),
+			RequestedServiceObjectiveName: new("Basic"),
 		},
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
-			"managed": ptr.To("true"),
+			"purpose": new("overmind-integration-tests"),
+			"managed": new("true"),
 		},
 	}, nil)
 	if err != nil {

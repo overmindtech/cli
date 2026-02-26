@@ -13,7 +13,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdpcache"
@@ -189,24 +188,24 @@ func createCosmosDBAccount(ctx context.Context, client *armcosmos.DatabaseAccoun
 	// Create the Cosmos DB account
 	// Using SQL API as the default, which is the most common
 	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroupName, accountName, armcosmos.DatabaseAccountCreateUpdateParameters{
-		Location: ptr.To(location),
-		Kind:     ptr.To(armcosmos.DatabaseAccountKindGlobalDocumentDB),
+		Location: new(location),
+		Kind:     new(armcosmos.DatabaseAccountKindGlobalDocumentDB),
 		Properties: &armcosmos.DatabaseAccountCreateUpdateProperties{
-			DatabaseAccountOfferType: ptr.To("Standard"),
+			DatabaseAccountOfferType: new("Standard"),
 			Locations: []*armcosmos.Location{
 				{
-					LocationName:     ptr.To(location),
-					FailoverPriority: ptr.To[int32](0),
-					IsZoneRedundant:  ptr.To(false),
+					LocationName:     new(location),
+					FailoverPriority: new(int32(0)),
+					IsZoneRedundant:  new(false),
 				},
 			},
 			ConsistencyPolicy: &armcosmos.ConsistencyPolicy{
-				DefaultConsistencyLevel: ptr.To(armcosmos.DefaultConsistencyLevelSession),
+				DefaultConsistencyLevel: new(armcosmos.DefaultConsistencyLevelSession),
 			},
 		},
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
-			"test":    ptr.To("documentdb-database-accounts"),
+			"purpose": new("overmind-integration-tests"),
+			"test":    new("documentdb-database-accounts"),
 		},
 	}, nil)
 	if err != nil {

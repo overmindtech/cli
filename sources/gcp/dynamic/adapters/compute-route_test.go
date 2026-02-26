@@ -141,7 +141,7 @@ func TestComputeRoute(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/global/routes/%s", projectID, routeName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Route not found"},
+				Body:       map[string]any{"error": "Route not found"},
 			},
 		}
 

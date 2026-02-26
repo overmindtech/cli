@@ -10,29 +10,29 @@ import (
 
 func TestOriginRequestPolicyItemMapper(t *testing.T) {
 	x := types.OriginRequestPolicy{
-		Id:               PtrString("test"),
-		LastModifiedTime: PtrTime(time.Now()),
+		Id:               new("test"),
+		LastModifiedTime: new(time.Now()),
 		OriginRequestPolicyConfig: &types.OriginRequestPolicyConfig{
-			Name:    PtrString("example-policy"),
-			Comment: PtrString("example comment"),
+			Name:    new("example-policy"),
+			Comment: new("example comment"),
 			QueryStringsConfig: &types.OriginRequestPolicyQueryStringsConfig{
 				QueryStringBehavior: types.OriginRequestPolicyQueryStringBehaviorAllExcept,
 				QueryStrings: &types.QueryStringNames{
-					Quantity: PtrInt32(1),
+					Quantity: new(int32(1)),
 					Items:    []string{"test"},
 				},
 			},
 			CookiesConfig: &types.OriginRequestPolicyCookiesConfig{
 				CookieBehavior: types.OriginRequestPolicyCookieBehaviorAll,
 				Cookies: &types.CookieNames{
-					Quantity: PtrInt32(1),
+					Quantity: new(int32(1)),
 					Items:    []string{"test"},
 				},
 			},
 			HeadersConfig: &types.OriginRequestPolicyHeadersConfig{
 				HeaderBehavior: types.OriginRequestPolicyHeaderBehaviorAllViewer,
 				Headers: &types.Headers{
-					Quantity: PtrInt32(1),
+					Quantity: new(int32(1)),
 					Items:    []string{"test"},
 				},
 			},

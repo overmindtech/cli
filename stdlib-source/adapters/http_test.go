@@ -306,7 +306,7 @@ func TestHTTPGet(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		var status interface{}
+		var status any
 
 		status, err = item.GetAttributes().Get("status")
 		if err != nil {
@@ -326,7 +326,7 @@ func TestHTTPGet(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		var status interface{}
+		var status any
 
 		status, err = item.GetAttributes().Get("status")
 		if err != nil {
@@ -360,7 +360,7 @@ func TestHTTPGet(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		var status interface{}
+		var status any
 		status, err = item.GetAttributes().Get("status")
 		if err != nil {
 			t.Fatal(err)
@@ -371,7 +371,7 @@ func TestHTTPGet(t *testing.T) {
 		}
 
 		// Check that the location header contains the relative URL
-		var location interface{}
+		var location any
 		location, err = item.GetAttributes().Get("location")
 		if err != nil {
 			t.Fatal(err)
@@ -502,7 +502,7 @@ func TestHTTPGet(t *testing.T) {
 		}
 
 		// The request should succeed, but the redirect should be marked as blocked
-		var locationError interface{}
+		var locationError any
 		locationError, err = item.GetAttributes().Get("location-error")
 		if err != nil {
 			t.Fatal("Expected location-error attribute for blocked redirect")
@@ -560,7 +560,7 @@ func TestHTTPSearch(t *testing.T) {
 		}
 
 		// Verify the item has the expected status (200 for OK page)
-		var status interface{}
+		var status any
 		status, err = item.GetAttributes().Get("status")
 		if err != nil {
 			t.Fatal(err)

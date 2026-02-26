@@ -158,7 +158,7 @@ func (w *storageBucketIAMPolicyWrapper) policyToItem(location gcpshared.Location
 	}
 
 	type policyAttrs struct {
-		Bucket   string         `json:"bucket"`
+		Bucket   string          `json:"bucket"`
 		Bindings []policyBinding `json:"bindings"`
 	}
 	attrs, err := shared.ToAttributesWithExclude(policyAttrs{Bucket: bucketName, Bindings: policyBindings})
@@ -274,12 +274,12 @@ func extractCustomRoleProjectAndID(role string) (projectID, roleID string) {
 		return "", ""
 	}
 	rest := strings.TrimPrefix(role, prefix)
-	idx := strings.Index(rest, suffix)
-	if idx == -1 {
+	before, after, ok := strings.Cut(rest, suffix)
+	if !ok {
 		return "", ""
 	}
-	projectID = rest[:idx]
-	roleID = rest[idx+len(suffix):]
+	projectID = before
+	roleID = after
 	if projectID == "" || roleID == "" {
 		return "", ""
 	}
@@ -291,10 +291,10 @@ func extractCustomRoleProjectAndID(role string) (projectID, roleID string) {
 // For deleted members, any "?uid=..." suffix is stripped so the result is a valid DNS link.
 func extractDomainFromDomainMember(member string) string {
 	var domain string
-	if strings.HasPrefix(member, "deleted:domain:") {
-		domain = strings.TrimPrefix(member, "deleted:domain:")
-	} else if strings.HasPrefix(member, "domain:") {
-		domain = strings.TrimPrefix(member, "domain:")
+	if after, ok := strings.CutPrefix(member, "deleted:domain:"); ok {
+		domain = after
+	} else if after, ok := strings.CutPrefix(member, "domain:"); ok {
+		domain = after
 	} else {
 		return ""
 	}
@@ -309,8 +309,8 @@ func extractDomainFromDomainMember(member string) string {
 // (projectOwner:projectId, projectEditor:projectId, projectViewer:projectId), or "" otherwise.
 func extractProjectIDFromProjectPrincipalMember(member string) string {
 	for _, prefix := range []string{"projectOwner:", "projectEditor:", "projectViewer:"} {
-		if strings.HasPrefix(member, prefix) {
-			return strings.TrimPrefix(member, prefix)
+		if after, ok := strings.CutPrefix(member, prefix); ok {
+			return after
 		}
 	}
 	return ""
@@ -320,10 +320,10 @@ func extractProjectIDFromProjectPrincipalMember(member string) string {
 // For deleted members, any "?uid=..." suffix is stripped so the result is a valid IAMServiceAccount lookup query (email only).
 func extractServiceAccountEmailFromMember(member string) string {
 	var email string
-	if strings.HasPrefix(member, "deleted:serviceAccount:") {
-		email = strings.TrimPrefix(member, "deleted:serviceAccount:")
-	} else if strings.HasPrefix(member, "serviceAccount:") {
-		email = strings.TrimPrefix(member, "serviceAccount:")
+	if after, ok := strings.CutPrefix(member, "deleted:serviceAccount:"); ok {
+		email = after
+	} else if after, ok := strings.CutPrefix(member, "serviceAccount:"); ok {
+		email = after
 	} else {
 		return ""
 	}
@@ -339,21 +339,21 @@ func extractServiceAccountEmailFromMember(member string) string {
 // use a shared domain where the first label is not a project ID, so we return "" to avoid invalid links.
 // For Google-managed SAs (e.g. name@gcp-sa-logging.iam.gserviceaccount.com) use isGoogleManagedServiceAccountDomain to skip.
 func extractProjectFromServiceAccountEmail(email string) string {
-	at := strings.Index(email, "@")
-	if at == -1 {
+	_, after, ok := strings.Cut(email, "@")
+	if !ok {
 		return ""
 	}
-	domain := email[at+1:]
+	domain := after
 	// Only use first label as project when domain is project.iam.gserviceaccount.com.
 	// developer.gserviceaccount.com and appspot.gserviceaccount.com must not be treated as project IDs.
 	if !strings.HasSuffix(domain, ".iam.gserviceaccount.com") {
 		return ""
 	}
-	dot := strings.Index(domain, ".")
-	if dot == -1 {
+	before, _, ok := strings.Cut(domain, ".")
+	if !ok {
 		return ""
 	}
-	return domain[:dot]
+	return before
 }
 
 // isGoogleManagedServiceAccountDomain reports whether the domain's first label is a known

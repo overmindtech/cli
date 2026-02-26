@@ -8,7 +8,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/api/iterator"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -314,17 +313,17 @@ func TestComputeRegionInstanceGroupManager(t *testing.T) {
 
 func createRegionInstanceGroupManager(name string, isStable bool, instanceTemplate string) *computepb.InstanceGroupManager {
 	return &computepb.InstanceGroupManager{
-		Name: ptr.To(name),
+		Name: new(name),
 		Status: &computepb.InstanceGroupManagerStatus{
-			IsStable:   ptr.To(isStable),
-			Autoscaler: ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/autoscalers/test-autoscaler"),
+			IsStable:   new(isStable),
+			Autoscaler: new("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/autoscalers/test-autoscaler"),
 		},
-		Region:           ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1"),
-		InstanceTemplate: ptr.To(instanceTemplate),
-		InstanceGroup:    ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/instanceGroups/test-group"),
+		Region:           new("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1"),
+		InstanceTemplate: new(instanceTemplate),
+		InstanceGroup:    new("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/instanceGroups/test-group"),
 		TargetPools:      []string{"https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/targetPools/test-pool"},
 		ResourcePolicies: &computepb.InstanceGroupManagerResourcePolicies{
-			WorkloadPolicy: ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/resourcePolicies/test-policy"),
+			WorkloadPolicy: new("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/resourcePolicies/test-policy"),
 		},
 	}
 }

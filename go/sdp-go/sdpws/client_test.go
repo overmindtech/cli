@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"os"
+	"slices"
 	"sync"
 	"testing"
 	"time"
@@ -20,12 +21,7 @@ import (
 
 // Helper function to check if a slice contains a string
 func contains(slice []string, item string) bool {
-	for _, s := range slice {
-		if s == item {
-			return true
-		}
-	}
-	return false
+	return slices.Contains(slice, item)
 }
 
 // TestServer is a test server for the websocket client. Note that this can only
@@ -643,19 +639,15 @@ func TestClient(t *testing.T) {
 		var wg sync.WaitGroup
 		results := make([]result, 2)
 
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			items, err := c.QueryOne(ctx, query1)
 			results[0] = result{items: items, err: err}
-		}()
+		})
 
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			items, err := c.QueryOne(ctx, query2)
 			results[1] = result{items: items, err: err}
-		}()
+		})
 
 		wg.Wait()
 
@@ -797,19 +789,15 @@ func TestClient(t *testing.T) {
 		resultsA := make([]result, 1)
 		resultsB := make([]result, 1)
 
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			items, err := c.QueryOne(ctx, queryA)
 			resultsA[0] = result{items: items, err: err}
-		}()
+		})
 
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
+		wg.Go(func() {
 			items, err := c.QueryOne(ctx, queryB)
 			resultsB[0] = result{items: items, err: err}
-		}()
+		})
 
 		wg.Wait()
 
@@ -914,9 +902,7 @@ func TestRaceConditionOnClose(t *testing.T) {
 			// Start a simulated receive() goroutine that will call postRequestChan
 			// This simulates the real receive() behavior where it processes messages
 			// and calls postRequestChan() until the context is cancelled
-			c.receiveDone.Add(1)
-			go func() {
-				defer c.receiveDone.Done()
+			c.receiveDone.Go(func() {
 				// Simulate receive() processing messages and calling postRequestChan
 				// It will be cancelled by Close() and should stop before channels are closed
 				for i := range 1000 {
@@ -939,19 +925,17 @@ func TestRaceConditionOnClose(t *testing.T) {
 					}()
 					time.Sleep(time.Nanosecond)
 				}
-			}()
+			})
 
 			// Start a goroutine that calls Close() concurrently
 			// Close() will cancel the receive context, wait for receive() to finish,
 			// and then close channels. This ensures receive() stops before channels are closed.
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				// Wait a tiny bit to let some postRequestChan calls start
 				time.Sleep(time.Microsecond * 10)
 				// Use Close() which properly cancels receive context and waits before closing channels
 				_ = c.Close(ctx)
-			}()
+			})
 
 			// Wait for all goroutines to complete
 			wg.Wait()

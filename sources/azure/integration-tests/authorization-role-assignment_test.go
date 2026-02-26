@@ -15,7 +15,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	"github.com/google/uuid"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -378,8 +377,8 @@ func createRoleAssignment(ctx context.Context, client *armauthorization.RoleAssi
 
 	parameters := armauthorization.RoleAssignmentCreateParameters{
 		Properties: &armauthorization.RoleAssignmentProperties{
-			PrincipalID:      ptr.To(principalID),
-			RoleDefinitionID: ptr.To(roleDefinitionID),
+			PrincipalID:      new(principalID),
+			RoleDefinitionID: new(roleDefinitionID),
 		},
 	}
 

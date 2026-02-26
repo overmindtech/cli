@@ -16,7 +16,7 @@ import (
 
 type ToAttributesTest struct {
 	Name  string
-	Input map[string]interface{}
+	Input map[string]any
 }
 
 type CustomString string
@@ -29,24 +29,24 @@ var Bool1 CustomBool = false
 var NilPointerBool *bool
 
 type CustomStruct struct {
-	Foo      string        `json:",omitempty"`
-	Bar      string        `json:",omitempty"`
-	Baz      string        `json:",omitempty"`
-	Time     time.Time     `json:",omitempty"`
+	Foo      string `json:",omitempty"`
+	Bar      string `json:",omitempty"`
+	Baz      string `json:",omitempty"`
+	Time     time.Time
 	Duration time.Duration `json:",omitempty"`
 }
 
 var ToAttributesTests = []ToAttributesTest{
 	{
 		Name: "Basic strings map",
-		Input: map[string]interface{}{
+		Input: map[string]any{
 			"firstName": "Dylan",
 			"lastName":  "Ratcliffe",
 		},
 	},
 	{
 		Name: "Arrays map",
-		Input: map[string]interface{}{
+		Input: map[string]any{
 			"empty": []string{},
 			"single-level": []string{
 				"one",
@@ -66,7 +66,7 @@ var ToAttributesTests = []ToAttributesTest{
 	},
 	{
 		Name: "Nested strings maps",
-		Input: map[string]interface{}{
+		Input: map[string]any{
 			"strings map": map[string]string{
 				"foo": "bar",
 			},
@@ -74,7 +74,7 @@ var ToAttributesTests = []ToAttributesTest{
 	},
 	{
 		Name: "Nested integer map",
-		Input: map[string]interface{}{
+		Input: map[string]any{
 			"numbers map": map[string]int{
 				"one": 1,
 				"two": 2,
@@ -83,7 +83,7 @@ var ToAttributesTests = []ToAttributesTest{
 	},
 	{
 		Name: "Nested string-array map",
-		Input: map[string]interface{}{
+		Input: map[string]any{
 			"arrays map": map[string][]string{
 				"dogs": {
 					"pug",
@@ -94,7 +94,7 @@ var ToAttributesTests = []ToAttributesTest{
 	},
 	{
 		Name: "Nested non-string keys map",
-		Input: map[string]interface{}{
+		Input: map[string]any{
 			"non-string keys": map[int]string{
 				1: "one",
 				2: "two",
@@ -104,21 +104,21 @@ var ToAttributesTests = []ToAttributesTest{
 	},
 	{
 		Name: "Composite types",
-		Input: map[string]interface{}{
+		Input: map[string]any{
 			"underlying string": Dylan,
 			"underlying bool":   Bool1,
 		},
 	},
 	{
 		Name: "Pointers",
-		Input: map[string]interface{}{
+		Input: map[string]any{
 			"pointer bool":   &Bool1,
 			"pointer string": &Dylan,
 		},
 	},
 	{
 		Name: "structs",
-		Input: map[string]interface{}{
+		Input: map[string]any{
 			"named struct": CustomStruct{
 				Foo:  "foo",
 				Bar:  "bar",
@@ -134,7 +134,7 @@ var ToAttributesTests = []ToAttributesTest{
 	},
 	{
 		Name: "Zero-value structs",
-		Input: map[string]interface{}{
+		Input: map[string]any{
 			"something": CustomStruct{
 				Foo:  "yes",
 				Time: time.Now(),
@@ -180,8 +180,8 @@ func TestToAttributes(t *testing.T) {
 				t.Fatal(err)
 			}
 
-			var input map[string]interface{}
-			var output map[string]interface{}
+			var input map[string]any
+			var output map[string]any
 
 			err = json.Unmarshal(inputBytes, &input)
 
@@ -208,7 +208,7 @@ func TestToAttributes(t *testing.T) {
 }
 
 func TestDefaultTransformMap(t *testing.T) {
-	input := map[string]interface{}{
+	input := map[string]any{
 		// Use a duration
 		"hour": 1 * time.Hour,
 	}
@@ -236,8 +236,8 @@ func TestCustomTransforms(t *testing.T) {
 			Value string
 		}
 
-		data := map[string]interface{}{
-			"user": map[string]interface{}{
+		data := map[string]any{
+			"user": map[string]any{
 				"name": "Hunter",
 				"password": Secret{
 					Value: "hunter2",
@@ -246,7 +246,7 @@ func TestCustomTransforms(t *testing.T) {
 		}
 
 		attributes, err := ToAttributesCustom(data, true, TransformMap{
-			reflect.TypeOf(Secret{}): func(i interface{}) interface{} {
+			reflect.TypeFor[Secret](): func(i any) any {
 				// Remove it
 				return "REDACTED"
 			},
@@ -262,7 +262,7 @@ func TestCustomTransforms(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		userMap, ok := user.(map[string]interface{})
+		userMap, ok := user.(map[string]any)
 
 		if !ok {
 			t.Fatalf("Expected user to be a map, got %T", user)
@@ -280,7 +280,7 @@ func TestCustomTransforms(t *testing.T) {
 			Bar string
 		}
 
-		data := map[string]interface{}{
+		data := map[string]any{
 			"something": Something{
 				Foo: "foo",
 				Bar: "bar",
@@ -288,7 +288,7 @@ func TestCustomTransforms(t *testing.T) {
 		}
 
 		attributes, err := ToAttributesCustom(data, true, TransformMap{
-			reflect.TypeOf(Something{}): func(i interface{}) interface{} {
+			reflect.TypeFor[Something](): func(i any) any {
 				something := i.(Something)
 
 				return map[string]string{
@@ -308,7 +308,7 @@ func TestCustomTransforms(t *testing.T) {
 			t.Fatal(err)
 		}
 
-		somethingMap, ok := something.(map[string]interface{})
+		somethingMap, ok := something.(map[string]any)
 
 		if !ok {
 			t.Fatalf("Expected something to be a map, got %T", something)
@@ -328,7 +328,7 @@ func TestCustomTransforms(t *testing.T) {
 			Bar string
 		}
 
-		data := map[string]interface{}{
+		data := map[string]any{
 			"something": Something{
 				Foo: "foo",
 				Bar: "bar",
@@ -337,7 +337,7 @@ func TestCustomTransforms(t *testing.T) {
 		}
 
 		_, err := ToAttributesCustom(data, true, TransformMap{
-			reflect.TypeOf(Something{}): func(i interface{}) interface{} {
+			reflect.TypeFor[Something](): func(i any) any {
 				return nil
 			},
 		})
@@ -349,7 +349,7 @@ func TestCustomTransforms(t *testing.T) {
 }
 
 func TestCopy(t *testing.T) {
-	exampleAttributes, err := ToAttributes(map[string]interface{}{
+	exampleAttributes, err := ToAttributes(map[string]any{
 		"name":   "Dylan",
 		"friend": "Mike",
 		"age":    27,
@@ -472,8 +472,8 @@ func AssertItemsEqual(itemA *Item, itemB *Item, t *testing.T) {
 		t.Error("UniqueAttribute did not match")
 	}
 
-	var nameA interface{}
-	var nameB interface{}
+	var nameA any
+	var nameB any
 	var err error
 
 	nameA, err = itemA.GetAttributes().Get("name")
@@ -643,9 +643,9 @@ func TestToAttributesViaJson(t *testing.T) {
 }
 
 func TestAttributesGet(t *testing.T) {
-	mapData := map[string]interface{}{
+	mapData := map[string]any{
 		"foo": "bar",
-		"nest": map[string]interface{}{
+		"nest": map[string]any{
 			"nest2": map[string]string{
 				"nest3": "nestValue",
 			},
@@ -668,9 +668,9 @@ func TestAttributesGet(t *testing.T) {
 }
 
 func TestAttributesSet(t *testing.T) {
-	mapData := map[string]interface{}{
+	mapData := map[string]any{
 		"foo": "bar",
-		"nest": map[string]interface{}{
+		"nest": map[string]any{
 			"nest2": map[string]string{
 				"nest3": "nestValue",
 			},

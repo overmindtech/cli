@@ -15,10 +15,10 @@ func TestDirectConnectGatewayOutputMapper_Health_OK(t *testing.T) {
 	output := &directconnect.DescribeDirectConnectGatewaysOutput{
 		DirectConnectGateways: []types.DirectConnectGateway{
 			{
-				AmazonSideAsn:             PtrInt64(64512),
-				DirectConnectGatewayId:    PtrString("cf68415c-f4ae-48f2-87a7-3b52cexample"),
-				OwnerAccount:              PtrString("123456789012"),
-				DirectConnectGatewayName:  PtrString("DxGateway2"),
+				AmazonSideAsn:             new(int64(64512)),
+				DirectConnectGatewayId:    new("cf68415c-f4ae-48f2-87a7-3b52cexample"),
+				OwnerAccount:              new("123456789012"),
+				DirectConnectGatewayName:  new("DxGateway2"),
 				DirectConnectGatewayState: types.DirectConnectGatewayStateAvailable,
 			},
 		},
@@ -48,12 +48,12 @@ func TestDirectConnectGatewayOutputMapper_Health_ERROR(t *testing.T) {
 	output := &directconnect.DescribeDirectConnectGatewaysOutput{
 		DirectConnectGateways: []types.DirectConnectGateway{
 			{
-				AmazonSideAsn:             PtrInt64(64512),
-				DirectConnectGatewayId:    PtrString("cf68415c-f4ae-48f2-87a7-3b52cexample"),
-				OwnerAccount:              PtrString("123456789012"),
-				DirectConnectGatewayName:  PtrString("DxGateway2"),
+				AmazonSideAsn:             new(int64(64512)),
+				DirectConnectGatewayId:    new("cf68415c-f4ae-48f2-87a7-3b52cexample"),
+				OwnerAccount:              new("123456789012"),
+				DirectConnectGatewayName:  new("DxGateway2"),
 				DirectConnectGatewayState: types.DirectConnectGatewayStateAvailable,
-				StateChangeError:          PtrString("error"),
+				StateChangeError:          new("error"),
 			},
 		},
 	}

@@ -171,7 +171,7 @@ func parseRdapUrl(rdapUrl string) (*RDAPUrl, error) {
 }
 
 var RDAPTransforms = sdp.AddDefaultTransforms(sdp.TransformMap{
-	reflect.TypeOf(rdap.Link{}): func(i interface{}) interface{} {
+	reflect.TypeFor[rdap.Link](): func(i any) any {
 		// We only want to return the href for links
 		link, ok := i.(rdap.Link)
 
@@ -181,7 +181,7 @@ var RDAPTransforms = sdp.AddDefaultTransforms(sdp.TransformMap{
 
 		return ""
 	},
-	reflect.TypeOf(rdap.VCard{}): func(i interface{}) interface{} {
+	reflect.TypeFor[rdap.VCard](): func(i any) any {
 		vcard, ok := i.(rdap.VCard)
 
 		if ok {
@@ -230,7 +230,7 @@ var RDAPTransforms = sdp.AddDefaultTransforms(sdp.TransformMap{
 
 		return nil
 	},
-	reflect.TypeOf(&rdap.DecodeData{}): func(i interface{}) interface{} {
+	reflect.TypeFor[*rdap.DecodeData](): func(i any) any {
 		// Exclude these
 		return nil
 	},

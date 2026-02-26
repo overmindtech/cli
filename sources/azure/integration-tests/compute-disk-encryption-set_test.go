@@ -15,7 +15,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/msi/armmsi"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -358,26 +357,26 @@ func createDiskEncryptionSet(ctx context.Context, client *armcompute.DiskEncrypt
 
 	// New DES creation.
 	des := armcompute.DiskEncryptionSet{
-		Location: ptr.To(location),
+		Location: new(location),
 		Identity: &armcompute.EncryptionSetIdentity{
-			Type: ptr.To(armcompute.DiskEncryptionSetIdentityTypeUserAssigned),
+			Type: new(armcompute.DiskEncryptionSetIdentityTypeUserAssigned),
 			UserAssignedIdentities: map[string]*armcompute.UserAssignedIdentitiesValue{
 				userAssignedIdentityResourceID: &armcompute.UserAssignedIdentitiesValue{},
 			},
 		},
 		Properties: &armcompute.EncryptionSetProperties{
-			EncryptionType: ptr.To(armcompute.DiskEncryptionSetTypeEncryptionAtRestWithCustomerKey),
+			EncryptionType: new(armcompute.DiskEncryptionSetTypeEncryptionAtRestWithCustomerKey),
 			ActiveKey: &armcompute.KeyForDiskEncryptionSet{
-				KeyURL: ptr.To(keyURL),
+				KeyURL: new(keyURL),
 				SourceVault: &armcompute.SourceVault{
-					ID: ptr.To(vaultID),
+					ID: new(vaultID),
 				},
 			},
-			RotationToLatestKeyVersionEnabled: ptr.To(false),
+			RotationToLatestKeyVersionEnabled: new(false),
 		},
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
-			"test":    ptr.To("compute-disk-encryption-set"),
+			"purpose": new("overmind-integration-tests"),
+			"test":    new("compute-disk-encryption-set"),
 		},
 	}
 

@@ -180,7 +180,7 @@ func TestAIPlatformModel(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://aiplatform.googleapis.com/v1/projects/%s/locations/global/models/%s", projectID, modelName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Model not found"},
+				Body:       map[string]any{"error": "Model not found"},
 			},
 		}
 

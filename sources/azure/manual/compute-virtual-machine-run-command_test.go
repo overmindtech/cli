@@ -5,7 +5,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	"go.uber.org/mock/gomock"
 
@@ -63,39 +62,39 @@ func (t *testVirtualMachineRunCommandsClient) NewListByVirtualMachinePager(resou
 
 func createAzureVirtualMachineRunCommand(runCommandName, vmName string) *armcompute.VirtualMachineRunCommand {
 	return &armcompute.VirtualMachineRunCommand{
-		Name:     to.Ptr(runCommandName),
-		Location: to.Ptr("eastus"),
+		Name:     new(runCommandName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env":     to.Ptr("test"),
-			"project": to.Ptr("testing"),
+			"env":     new("test"),
+			"project": new("testing"),
 		},
 		Properties: &armcompute.VirtualMachineRunCommandProperties{
-			ProvisioningState: to.Ptr("Succeeded"),
+			ProvisioningState: new("Succeeded"),
 		},
 	}
 }
 
 func createAzureVirtualMachineRunCommandWithBlobURIs(runCommandName, vmName string) *armcompute.VirtualMachineRunCommand {
 	runCommand := createAzureVirtualMachineRunCommand(runCommandName, vmName)
-	runCommand.Properties.OutputBlobURI = to.Ptr("https://mystorageaccount.blob.core.windows.net/outputcontainer/output.log")
-	runCommand.Properties.ErrorBlobURI = to.Ptr("https://mystorageaccount.blob.core.windows.net/errorcontainer/error.log")
+	runCommand.Properties.OutputBlobURI = new("https://mystorageaccount.blob.core.windows.net/outputcontainer/output.log")
+	runCommand.Properties.ErrorBlobURI = new("https://mystorageaccount.blob.core.windows.net/errorcontainer/error.log")
 	return runCommand
 }
 
 func createAzureVirtualMachineRunCommandWithHTTPScriptURI(runCommandName, vmName string) *armcompute.VirtualMachineRunCommand {
 	runCommand := createAzureVirtualMachineRunCommand(runCommandName, vmName)
 	runCommand.Properties.Source = &armcompute.VirtualMachineRunCommandScriptSource{
-		ScriptURI: to.Ptr("https://example.com/scripts/script.sh"),
+		ScriptURI: new("https://example.com/scripts/script.sh"),
 	}
 	return runCommand
 }
 
 func createAzureVirtualMachineRunCommandWithAllLinks(runCommandName, vmName string) *armcompute.VirtualMachineRunCommand {
 	runCommand := createAzureVirtualMachineRunCommand(runCommandName, vmName)
-	runCommand.Properties.OutputBlobURI = to.Ptr("https://mystorageaccount.blob.core.windows.net/outputcontainer/output.log")
-	runCommand.Properties.ErrorBlobURI = to.Ptr("https://mystorageaccount.blob.core.windows.net/errorcontainer/error.log")
+	runCommand.Properties.OutputBlobURI = new("https://mystorageaccount.blob.core.windows.net/outputcontainer/output.log")
+	runCommand.Properties.ErrorBlobURI = new("https://mystorageaccount.blob.core.windows.net/errorcontainer/error.log")
 	runCommand.Properties.Source = &armcompute.VirtualMachineRunCommandScriptSource{
-		ScriptURI: to.Ptr("https://mystorageaccount.blob.core.windows.net/scripts/script.sh"),
+		ScriptURI: new("https://mystorageaccount.blob.core.windows.net/scripts/script.sh"),
 	}
 	return runCommand
 }
@@ -502,9 +501,9 @@ func TestComputeVirtualMachineRunCommand(t *testing.T) {
 		t.Run("SkipItemsWithoutName", func(t *testing.T) {
 			runCommandWithName := createAzureVirtualMachineRunCommand("run-command-1", vmName)
 			runCommandWithoutName := &armcompute.VirtualMachineRunCommand{
-				Location: to.Ptr("eastus"),
+				Location: new("eastus"),
 				Properties: &armcompute.VirtualMachineRunCommandProperties{
-					ProvisioningState: to.Ptr("Succeeded"),
+					ProvisioningState: new("Succeeded"),
 				},
 			}
 

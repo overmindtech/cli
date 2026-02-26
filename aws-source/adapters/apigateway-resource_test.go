@@ -83,25 +83,25 @@ import (
 
 func TestResourceOutputMapper(t *testing.T) {
 	resource := &types.Resource{
-		Id:       PtrString("test-id"),
-		ParentId: PtrString("parent-id"),
-		Path:     PtrString("/test-path"),
-		PathPart: PtrString("test-path-part"),
+		Id:       new("test-id"),
+		ParentId: new("parent-id"),
+		Path:     new("/test-path"),
+		PathPart: new("test-path-part"),
 		ResourceMethods: map[string]types.Method{
 			"GET": {
-				ApiKeyRequired:      PtrBool(true),
+				ApiKeyRequired:      new(true),
 				AuthorizationScopes: []string{"scope1", "scope2"},
-				AuthorizationType:   PtrString("NONE"),
-				AuthorizerId:        PtrString("authorizer-id"),
-				HttpMethod:          PtrString("GET"),
+				AuthorizationType:   new("NONE"),
+				AuthorizerId:        new("authorizer-id"),
+				HttpMethod:          new("GET"),
 				MethodIntegration: &types.Integration{
 					CacheKeyParameters: []string{"param1", "param2"},
-					CacheNamespace:     PtrString("namespace"),
-					ConnectionId:       PtrString("connection-id"),
+					CacheNamespace:     new("namespace"),
+					ConnectionId:       new("connection-id"),
 					ConnectionType:     types.ConnectionTypeInternet,
 					ContentHandling:    types.ContentHandlingStrategyConvertToBinary,
-					Credentials:        PtrString("credentials"),
-					HttpMethod:         PtrString("POST"),
+					Credentials:        new("credentials"),
+					HttpMethod:         new("POST"),
 					IntegrationResponses: map[string]types.IntegrationResponse{
 						"200": {
 							ContentHandling: types.ContentHandlingStrategyConvertToText,
@@ -111,11 +111,11 @@ func TestResourceOutputMapper(t *testing.T) {
 							ResponseTemplates: map[string]string{
 								"template1": "value1",
 							},
-							SelectionPattern: PtrString("pattern"),
-							StatusCode:       PtrString("200"),
+							SelectionPattern: new("pattern"),
+							StatusCode:       new("200"),
 						},
 					},
-					PassthroughBehavior: PtrString("WHEN_NO_MATCH"),
+					PassthroughBehavior: new("WHEN_NO_MATCH"),
 					RequestParameters: map[string]string{
 						"param1": "value1",
 					},
@@ -127,7 +127,7 @@ func TestResourceOutputMapper(t *testing.T) {
 						InsecureSkipVerification: false,
 					},
 					Type: types.IntegrationTypeAwsProxy,
-					Uri:  PtrString("uri"),
+					Uri:  new("uri"),
 				},
 				MethodResponses: map[string]types.MethodResponse{
 					"200": {
@@ -137,17 +137,17 @@ func TestResourceOutputMapper(t *testing.T) {
 						ResponseParameters: map[string]bool{
 							"param1": true,
 						},
-						StatusCode: PtrString("200"),
+						StatusCode: new("200"),
 					},
 				},
-				OperationName: PtrString("operation"),
+				OperationName: new("operation"),
 				RequestModels: map[string]string{
 					"model1": "value1",
 				},
 				RequestParameters: map[string]bool{
 					"param1": true,
 				},
-				RequestValidatorId: PtrString("validator-id"),
+				RequestValidatorId: new("validator-id"),
 			},
 		},
 	}

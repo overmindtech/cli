@@ -155,7 +155,7 @@ func (s *RdapIPNetworkAdapter) Search(ctx context.Context, scope string, query s
 		s.IPCache.Store(network, ipNetwork, RdapCacheDuration)
 	}
 
-	attributes, err := sdp.ToAttributesCustom(map[string]interface{}{
+	attributes, err := sdp.ToAttributesCustom(map[string]any{
 		"conformance":     ipNetwork.Conformance,
 		"country":         ipNetwork.Country,
 		"endAddress":      ipNetwork.EndAddress,

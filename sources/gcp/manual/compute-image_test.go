@@ -12,7 +12,6 @@ import (
 	"google.golang.org/api/iterator"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -389,7 +388,7 @@ func TestComputeImage(t *testing.T) {
 			expectedImageName := "test-image-family-20240101"
 
 			// When searching by name (not URI), Search tries Get first, then falls back to GetFromFamily
-			mockClient.EXPECT().Get(ctx, gomock.Any()).DoAndReturn(func(ctx context.Context, req *computepb.GetImageRequest, opts ...interface{}) (*computepb.Image, error) {
+			mockClient.EXPECT().Get(ctx, gomock.Any()).DoAndReturn(func(ctx context.Context, req *computepb.GetImageRequest, opts ...any) (*computepb.Image, error) {
 				if req.GetProject() != projectID {
 					t.Errorf("Expected project %s, got %s", projectID, req.GetProject())
 				}
@@ -399,7 +398,7 @@ func TestComputeImage(t *testing.T) {
 				return nil, status.Error(codes.NotFound, "image not found")
 			})
 
-			mockClient.EXPECT().GetFromFamily(ctx, gomock.Any()).DoAndReturn(func(ctx context.Context, req *computepb.GetFromFamilyImageRequest, opts ...interface{}) (*computepb.Image, error) {
+			mockClient.EXPECT().GetFromFamily(ctx, gomock.Any()).DoAndReturn(func(ctx context.Context, req *computepb.GetFromFamilyImageRequest, opts ...any) (*computepb.Image, error) {
 				if req.GetProject() != projectID {
 					t.Errorf("Expected project %s, got %s", projectID, req.GetProject())
 				}
@@ -457,7 +456,7 @@ func TestComputeImage(t *testing.T) {
 			familyURI := "projects/" + projectID + "/global/images/family/test-image-family"
 			expectedImageName := "test-image-family-20240101"
 
-			mockClient.EXPECT().GetFromFamily(ctx, gomock.Any()).DoAndReturn(func(ctx context.Context, req *computepb.GetFromFamilyImageRequest, opts ...interface{}) (*computepb.Image, error) {
+			mockClient.EXPECT().GetFromFamily(ctx, gomock.Any()).DoAndReturn(func(ctx context.Context, req *computepb.GetFromFamilyImageRequest, opts ...any) (*computepb.Image, error) {
 				if req.GetProject() != projectID {
 					t.Errorf("Expected project %s, got %s", projectID, req.GetProject())
 				}
@@ -498,7 +497,7 @@ func TestComputeImage(t *testing.T) {
 			imageURI := "projects/" + projectID + "/global/images/test-image-exact"
 			expectedImageName := "test-image-exact"
 
-			mockClient.EXPECT().Get(ctx, gomock.Any()).DoAndReturn(func(ctx context.Context, req *computepb.GetImageRequest, opts ...interface{}) (*computepb.Image, error) {
+			mockClient.EXPECT().Get(ctx, gomock.Any()).DoAndReturn(func(ctx context.Context, req *computepb.GetImageRequest, opts ...any) (*computepb.Image, error) {
 				if req.GetProject() != projectID {
 					t.Errorf("Expected project %s, got %s", projectID, req.GetProject())
 				}
@@ -542,7 +541,7 @@ func TestComputeImage(t *testing.T) {
 			expectedImageName := "test-image-name"
 
 			// First Get call fails with NotFound
-			mockClient.EXPECT().Get(ctx, gomock.Any()).DoAndReturn(func(ctx context.Context, req *computepb.GetImageRequest, opts ...interface{}) (*computepb.Image, error) {
+			mockClient.EXPECT().Get(ctx, gomock.Any()).DoAndReturn(func(ctx context.Context, req *computepb.GetImageRequest, opts ...any) (*computepb.Image, error) {
 				if req.GetProject() != projectID {
 					t.Errorf("Expected project %s, got %s", projectID, req.GetProject())
 				}
@@ -553,7 +552,7 @@ func TestComputeImage(t *testing.T) {
 			})
 
 			// Then GetFromFamily succeeds (treating name as family)
-			mockClient.EXPECT().GetFromFamily(ctx, gomock.Any()).DoAndReturn(func(ctx context.Context, req *computepb.GetFromFamilyImageRequest, opts ...interface{}) (*computepb.Image, error) {
+			mockClient.EXPECT().GetFromFamily(ctx, gomock.Any()).DoAndReturn(func(ctx context.Context, req *computepb.GetFromFamilyImageRequest, opts ...any) (*computepb.Image, error) {
 				if req.GetProject() != projectID {
 					t.Errorf("Expected project %s, got %s", projectID, req.GetProject())
 				}
@@ -593,7 +592,7 @@ func TestComputeImage(t *testing.T) {
 
 		exactImageName := "test-image-exact"
 
-		mockClient.EXPECT().Get(ctx, gomock.Any()).DoAndReturn(func(ctx context.Context, req *computepb.GetImageRequest, opts ...interface{}) (*computepb.Image, error) {
+		mockClient.EXPECT().Get(ctx, gomock.Any()).DoAndReturn(func(ctx context.Context, req *computepb.GetImageRequest, opts ...any) (*computepb.Image, error) {
 			if req.GetProject() != projectID {
 				t.Errorf("Expected project %s, got %s", projectID, req.GetProject())
 			}
@@ -625,9 +624,9 @@ func TestComputeImage(t *testing.T) {
 
 func createComputeImage(imageName string, status computepb.Image_Status) *computepb.Image {
 	return &computepb.Image{
-		Name:   ptr.To(imageName),
+		Name:   new(imageName),
 		Labels: map[string]string{"env": "test"},
-		Status: ptr.To(status.String()),
+		Status: new(status.String()),
 	}
 }
 
@@ -639,9 +638,9 @@ func createComputeImageWithLinks(projectID, imageName string, status computepb.I
 	replacementImageURL := fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/images/test-replacement-image", projectID)
 
 	return &computepb.Image{
-		Name:           ptr.To(imageName),
+		Name:           new(imageName),
 		Labels:         map[string]string{"env": "test"},
-		Status:         ptr.To(status.String()),
+		Status:         new(status.String()),
 		SourceDisk:     &sourceDiskURL,
 		SourceSnapshot: &sourceSnapshotURL,
 		SourceImage:    &sourceImageURL,
@@ -650,19 +649,19 @@ func createComputeImageWithLinks(projectID, imageName string, status computepb.I
 			fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/licenses/test-license-2", projectID),
 		},
 		RawDisk: &computepb.RawDisk{
-			Source: ptr.To(fmt.Sprintf("gs://%s-raw-disk-bucket/raw-disk.tar.gz", projectID)),
+			Source: new(fmt.Sprintf("gs://%s-raw-disk-bucket/raw-disk.tar.gz", projectID)),
 		},
 		ImageEncryptionKey: &computepb.CustomerEncryptionKey{
-			KmsKeyName:           ptr.To(fmt.Sprintf("projects/%s/locations/global/keyRings/test-keyring/cryptoKeys/test-image-key/cryptoKeyVersions/test-version-image", projectID)),
-			KmsKeyServiceAccount: ptr.To(fmt.Sprintf("projects/%s/serviceAccounts/test-image-kms-sa@%s.iam.gserviceaccount.com", projectID, projectID)),
+			KmsKeyName:           new(fmt.Sprintf("projects/%s/locations/global/keyRings/test-keyring/cryptoKeys/test-image-key/cryptoKeyVersions/test-version-image", projectID)),
+			KmsKeyServiceAccount: new(fmt.Sprintf("projects/%s/serviceAccounts/test-image-kms-sa@%s.iam.gserviceaccount.com", projectID, projectID)),
 		},
 		SourceImageEncryptionKey: &computepb.CustomerEncryptionKey{
-			KmsKeyName:           ptr.To(fmt.Sprintf("projects/%s/locations/global/keyRings/test-keyring/cryptoKeys/test-source-image-key/cryptoKeyVersions/test-version-source-image", projectID)),
-			KmsKeyServiceAccount: ptr.To(fmt.Sprintf("projects/%s/serviceAccounts/test-source-image-kms-sa@%s.iam.gserviceaccount.com", projectID, projectID)),
+			KmsKeyName:           new(fmt.Sprintf("projects/%s/locations/global/keyRings/test-keyring/cryptoKeys/test-source-image-key/cryptoKeyVersions/test-version-source-image", projectID)),
+			KmsKeyServiceAccount: new(fmt.Sprintf("projects/%s/serviceAccounts/test-source-image-kms-sa@%s.iam.gserviceaccount.com", projectID, projectID)),
 		},
 		SourceSnapshotEncryptionKey: &computepb.CustomerEncryptionKey{
-			KmsKeyName:           ptr.To(fmt.Sprintf("projects/%s/locations/global/keyRings/test-keyring/cryptoKeys/test-source-snapshot-key/cryptoKeyVersions/test-version-source-snapshot", projectID)),
-			KmsKeyServiceAccount: ptr.To(fmt.Sprintf("projects/%s/serviceAccounts/test-source-snapshot-kms-sa@%s.iam.gserviceaccount.com", projectID, projectID)),
+			KmsKeyName:           new(fmt.Sprintf("projects/%s/locations/global/keyRings/test-keyring/cryptoKeys/test-source-snapshot-key/cryptoKeyVersions/test-version-source-snapshot", projectID)),
+			KmsKeyServiceAccount: new(fmt.Sprintf("projects/%s/serviceAccounts/test-source-snapshot-kms-sa@%s.iam.gserviceaccount.com", projectID, projectID)),
 		},
 		Deprecated: &computepb.DeprecationStatus{
 			Replacement: &replacementImageURL,

@@ -6,7 +6,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	"go.uber.org/mock/gomock"
 
@@ -365,9 +364,9 @@ func TestComputeDisk(t *testing.T) {
 		disk1 := createAzureDisk("test-disk-1", "Succeeded")
 		diskNilName := &armcompute.Disk{
 			Name:     nil, // nil name should be skipped
-			Location: to.Ptr("eastus"),
+			Location: new("eastus"),
 			Tags: map[string]*string{
-				"env": to.Ptr("test"),
+				"env": new("test"),
 			},
 		}
 
@@ -489,17 +488,17 @@ func TestComputeDisk(t *testing.T) {
 // createAzureDisk creates a mock Azure Disk for testing
 func createAzureDisk(diskName, provisioningState string) *armcompute.Disk {
 	return &armcompute.Disk{
-		Name:     to.Ptr(diskName),
-		Location: to.Ptr("eastus"),
+		Name:     new(diskName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env":     to.Ptr("test"),
-			"project": to.Ptr("testing"),
+			"env":     new("test"),
+			"project": new("testing"),
 		},
 		Properties: &armcompute.DiskProperties{
-			ProvisioningState: to.Ptr(provisioningState),
-			DiskSizeGB:        to.Ptr(int32(128)),
+			ProvisioningState: new(provisioningState),
+			DiskSizeGB:        new(int32(128)),
 			CreationData: &armcompute.CreationData{
-				CreateOption: to.Ptr(armcompute.DiskCreateOptionEmpty),
+				CreateOption: new(armcompute.DiskCreateOptionEmpty),
 			},
 		},
 	}
@@ -508,59 +507,59 @@ func createAzureDisk(diskName, provisioningState string) *armcompute.Disk {
 // createAzureDiskWithAllLinks creates a mock Azure Disk with all possible linked resources
 func createAzureDiskWithAllLinks(diskName, subscriptionID, resourceGroup string) *armcompute.Disk {
 	return &armcompute.Disk{
-		Name:     to.Ptr(diskName),
-		Location: to.Ptr("eastus"),
+		Name:     new(diskName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
-		ManagedBy: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/virtualMachines/test-vm"),
+		ManagedBy: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/virtualMachines/test-vm"),
 		ManagedByExtended: []*string{
-			to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/virtualMachines/test-vm-2"),
+			new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/virtualMachines/test-vm-2"),
 		},
 		Properties: &armcompute.DiskProperties{
-			ProvisioningState: to.Ptr("Succeeded"),
-			DiskSizeGB:        to.Ptr(int32(128)),
-			DiskAccessID:      to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/diskAccesses/test-disk-access"),
+			ProvisioningState: new("Succeeded"),
+			DiskSizeGB:        new(int32(128)),
+			DiskAccessID:      new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/diskAccesses/test-disk-access"),
 			Encryption: &armcompute.Encryption{
-				DiskEncryptionSetID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/diskEncryptionSets/test-disk-encryption-set"),
+				DiskEncryptionSetID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/diskEncryptionSets/test-disk-encryption-set"),
 			},
 			SecurityProfile: &armcompute.DiskSecurityProfile{
-				SecureVMDiskEncryptionSetID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/diskEncryptionSets/test-secure-vm-disk-encryption-set"),
+				SecureVMDiskEncryptionSetID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/diskEncryptionSets/test-secure-vm-disk-encryption-set"),
 			},
 			ShareInfo: []*armcompute.ShareInfoElement{
 				{
-					VMURI: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/virtualMachines/test-vm-3"),
+					VMURI: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/virtualMachines/test-vm-3"),
 				},
 			},
 			CreationData: &armcompute.CreationData{
-				CreateOption:     to.Ptr(armcompute.DiskCreateOptionCopy),
-				SourceResourceID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/disks/source-disk"),
-				StorageAccountID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Storage/storageAccounts/test-storage-account"),
+				CreateOption:     new(armcompute.DiskCreateOptionCopy),
+				SourceResourceID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/disks/source-disk"),
+				StorageAccountID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Storage/storageAccounts/test-storage-account"),
 				ImageReference: &armcompute.ImageDiskReference{
-					ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/images/test-image"),
+					ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/images/test-image"),
 				},
 				GalleryImageReference: &armcompute.ImageDiskReference{
-					ID:                      to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/galleries/test-gallery/images/test-gallery-image/versions/1.0.0"),
-					SharedGalleryImageID:    to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/galleries/test-gallery-2/images/test-gallery-image-2/versions/2.0.0"),
-					CommunityGalleryImageID: to.Ptr("/CommunityGalleries/test-community-gallery/Images/test-community-image/Versions/1.0.0"),
+					ID:                      new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/galleries/test-gallery/images/test-gallery-image/versions/1.0.0"),
+					SharedGalleryImageID:    new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/galleries/test-gallery-2/images/test-gallery-image-2/versions/2.0.0"),
+					CommunityGalleryImageID: new("/CommunityGalleries/test-community-gallery/Images/test-community-image/Versions/1.0.0"),
 				},
-				ElasticSanResourceID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.ElasticSan/elasticSans/test-elastic-san/volumegroups/test-volume-group/snapshots/test-snapshot"),
+				ElasticSanResourceID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.ElasticSan/elasticSans/test-elastic-san/volumegroups/test-volume-group/snapshots/test-snapshot"),
 			},
 			EncryptionSettingsCollection: &armcompute.EncryptionSettingsCollection{
-				Enabled: to.Ptr(true),
+				Enabled: new(true),
 				EncryptionSettings: []*armcompute.EncryptionSettingsElement{
 					{
 						DiskEncryptionKey: &armcompute.KeyVaultAndSecretReference{
 							SourceVault: &armcompute.SourceVault{
-								ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.KeyVault/vaults/test-keyvault"),
+								ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.KeyVault/vaults/test-keyvault"),
 							},
-							SecretURL: to.Ptr("https://test-keyvault.vault.azure.net/secrets/test-secret/version"),
+							SecretURL: new("https://test-keyvault.vault.azure.net/secrets/test-secret/version"),
 						},
 						KeyEncryptionKey: &armcompute.KeyVaultAndKeyReference{
 							SourceVault: &armcompute.SourceVault{
-								ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.KeyVault/vaults/test-keyvault-2"),
+								ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.KeyVault/vaults/test-keyvault-2"),
 							},
-							KeyURL: to.Ptr("https://test-keyvault-2.vault.azure.net/keys/test-key/version"),
+							KeyURL: new("https://test-keyvault-2.vault.azure.net/keys/test-key/version"),
 						},
 					},
 				},
@@ -572,17 +571,17 @@ func createAzureDiskWithAllLinks(diskName, subscriptionID, resourceGroup string)
 // createAzureDiskFromSnapshot creates a mock Azure Disk created from a snapshot
 func createAzureDiskFromSnapshot(diskName, subscriptionID, resourceGroup string) *armcompute.Disk {
 	return &armcompute.Disk{
-		Name:     to.Ptr(diskName),
-		Location: to.Ptr("eastus"),
+		Name:     new(diskName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armcompute.DiskProperties{
-			ProvisioningState: to.Ptr("Succeeded"),
-			DiskSizeGB:        to.Ptr(int32(128)),
+			ProvisioningState: new("Succeeded"),
+			DiskSizeGB:        new(int32(128)),
 			CreationData: &armcompute.CreationData{
-				CreateOption:     to.Ptr(armcompute.DiskCreateOptionCopy),
-				SourceResourceID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/snapshots/test-snapshot"),
+				CreateOption:     new(armcompute.DiskCreateOptionCopy),
+				SourceResourceID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/snapshots/test-snapshot"),
 			},
 		},
 	}
@@ -591,17 +590,17 @@ func createAzureDiskFromSnapshot(diskName, subscriptionID, resourceGroup string)
 // createAzureDiskWithCrossResourceGroupLinks creates a mock Azure Disk with links to resources in different resource groups
 func createAzureDiskWithCrossResourceGroupLinks(diskName, subscriptionID, resourceGroup string) *armcompute.Disk {
 	return &armcompute.Disk{
-		Name:     to.Ptr(diskName),
-		Location: to.Ptr("eastus"),
+		Name:     new(diskName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
-		ManagedBy: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/other-rg/providers/Microsoft.Compute/virtualMachines/test-vm-other-rg"),
+		ManagedBy: new("/subscriptions/" + subscriptionID + "/resourceGroups/other-rg/providers/Microsoft.Compute/virtualMachines/test-vm-other-rg"),
 		Properties: &armcompute.DiskProperties{
-			ProvisioningState: to.Ptr("Succeeded"),
-			DiskSizeGB:        to.Ptr(int32(128)),
+			ProvisioningState: new("Succeeded"),
+			DiskSizeGB:        new(int32(128)),
 			CreationData: &armcompute.CreationData{
-				CreateOption: to.Ptr(armcompute.DiskCreateOptionEmpty),
+				CreateOption: new(armcompute.DiskCreateOptionEmpty),
 			},
 		},
 	}

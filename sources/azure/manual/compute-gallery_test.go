@@ -6,7 +6,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	"go.uber.org/mock/gomock"
 
@@ -165,9 +164,9 @@ func TestComputeGallery(t *testing.T) {
 		gallery1 := createAzureGallery("test-gallery-1")
 		galleryNilName := &armcompute.Gallery{
 			Name:     nil,
-			Location: to.Ptr("eastus"),
+			Location: new("eastus"),
 			Tags: map[string]*string{
-				"env": to.Ptr("test"),
+				"env": new("test"),
 			},
 		}
 
@@ -235,18 +234,18 @@ func TestComputeGallery(t *testing.T) {
 
 func createAzureGallery(galleryName string) *armcompute.Gallery {
 	return &armcompute.Gallery{
-		Name:     to.Ptr(galleryName),
-		Location: to.Ptr("eastus"),
+		Name:     new(galleryName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env":     to.Ptr("test"),
-			"project": to.Ptr("testing"),
+			"env":     new("test"),
+			"project": new("testing"),
 		},
 		Properties: &armcompute.GalleryProperties{
-			Description: to.Ptr("Test shared image gallery"),
+			Description: new("Test shared image gallery"),
 			Identifier: &armcompute.GalleryIdentifier{
-				UniqueName: to.Ptr("unique-" + galleryName),
+				UniqueName: new("unique-" + galleryName),
 			},
-			ProvisioningState: to.Ptr(armcompute.GalleryProvisioningStateSucceeded),
+			ProvisioningState: new(armcompute.GalleryProvisioningStateSucceeded),
 		},
 	}
 }

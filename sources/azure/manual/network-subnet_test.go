@@ -5,7 +5,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
 	"go.uber.org/mock/gomock"
 
@@ -200,7 +199,7 @@ func TestNetworkSubnet(t *testing.T) {
 				{
 					SubnetListResult: armnetwork.SubnetListResult{
 						Value: []*armnetwork.Subnet{
-							{Name: nil, ID: to.Ptr("/some/id")},
+							{Name: nil, ID: new("/some/id")},
 							validSubnet,
 						},
 					},
@@ -268,11 +267,11 @@ func TestNetworkSubnet(t *testing.T) {
 
 func createAzureSubnet(subnetName, vnetName string) *armnetwork.Subnet {
 	return &armnetwork.Subnet{
-		ID:   to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Network/virtualNetworks/" + vnetName + "/subnets/" + subnetName),
-		Name: to.Ptr(subnetName),
-		Type: to.Ptr("Microsoft.Network/virtualNetworks/subnets"),
+		ID:   new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Network/virtualNetworks/" + vnetName + "/subnets/" + subnetName),
+		Name: new(subnetName),
+		Type: new("Microsoft.Network/virtualNetworks/subnets"),
 		Properties: &armnetwork.SubnetPropertiesFormat{
-			AddressPrefix: to.Ptr("10.0.0.0/24"),
+			AddressPrefix: new("10.0.0.0/24"),
 		},
 	}
 }

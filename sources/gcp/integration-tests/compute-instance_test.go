@@ -12,7 +12,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/googleapis/gax-go/v2/apierror"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdpcache"
@@ -121,27 +120,27 @@ func TestComputeInstanceIntegration(t *testing.T) {
 func createComputeInstance(ctx context.Context, client *compute.InstancesClient, projectID, zone, instanceName, network, subnetwork, region string) error {
 	// Construct the network interface
 	networkInterface := &computepb.NetworkInterface{
-		StackType: ptr.To("IPV4_ONLY"),
+		StackType: new("IPV4_ONLY"),
 	}
 
 	if network != "" {
-		networkInterface.Network = ptr.To(fmt.Sprintf("projects/%s/global/networks/%s", projectID, network))
+		networkInterface.Network = new(fmt.Sprintf("projects/%s/global/networks/%s", projectID, network))
 	}
 	if subnetwork != "" {
-		networkInterface.Subnetwork = ptr.To(fmt.Sprintf("projects/%s/regions/%s/subnetworks/%s", projectID, region, subnetwork))
+		networkInterface.Subnetwork = new(fmt.Sprintf("projects/%s/regions/%s/subnetworks/%s", projectID, region, subnetwork))
 	}
 
 	// Define the instance configuration
 	instance := &computepb.Instance{
-		Name:        ptr.To(instanceName),
-		MachineType: ptr.To(fmt.Sprintf("zones/%s/machineTypes/e2-micro", zone)),
+		Name:        new(instanceName),
+		MachineType: new(fmt.Sprintf("zones/%s/machineTypes/e2-micro", zone)),
 		Disks: []*computepb.AttachedDisk{
 			{
-				Boot:       ptr.To(true),
-				AutoDelete: ptr.To(true),
+				Boot:       new(true),
+				AutoDelete: new(true),
 				InitializeParams: &computepb.AttachedDiskInitializeParams{
-					SourceImage: ptr.To("projects/debian-cloud/global/images/debian-12-bookworm-v20250415"),
-					DiskSizeGb:  ptr.To(int64(10)),
+					SourceImage: new("projects/debian-cloud/global/images/debian-12-bookworm-v20250415"),
+					DiskSizeGb:  new(int64(10)),
 				},
 			},
 		},

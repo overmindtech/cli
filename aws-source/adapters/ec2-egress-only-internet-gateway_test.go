@@ -46,10 +46,10 @@ func TestEgressOnlyInternetGatewayOutputMapper(t *testing.T) {
 				Attachments: []types.InternetGatewayAttachment{
 					{
 						State: types.AttachmentStatusAttached,
-						VpcId: PtrString("vpc-0d7892e00e573e701"),
+						VpcId: new("vpc-0d7892e00e573e701"),
 					},
 				},
-				EgressOnlyInternetGatewayId: PtrString("eigw-0ff50f360e066777a"),
+				EgressOnlyInternetGatewayId: new("eigw-0ff50f360e066777a"),
 			},
 		},
 	}

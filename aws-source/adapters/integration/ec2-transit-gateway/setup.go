@@ -19,7 +19,7 @@ const integrationTestName = "integration-test"
 
 // Package-level state set by Setup and used by tests and Teardown.
 var (
-	createdTransitGatewayID  string
+	createdTransitGatewayID string
 	createdRouteTableID     string
 	createdVpcID            string
 	createdSubnetID         string
@@ -43,14 +43,14 @@ func Setup(t *testing.T) {
 
 func setup(ctx context.Context, logger *slog.Logger, client *ec2.Client) error {
 	out, err := client.CreateTransitGateway(ctx, &ec2.CreateTransitGatewayInput{
-		Description: ptr("Overmind " + integrationTestName),
+		Description: new("Overmind " + integrationTestName),
 		TagSpecifications: []types.TagSpecification{
 			{
 				ResourceType: types.ResourceTypeTransitGateway,
 				Tags: []types.Tag{
-					{Key: ptr(integration.TagTestKey), Value: ptr(integration.TagTestValue)},
-					{Key: ptr(integration.TagTestIDKey), Value: ptr(integrationTestName)},
-					{Key: ptr("Name"), Value: ptr(integrationTestName)},
+					{Key: new(integration.TagTestKey), Value: new(integration.TagTestValue)},
+					{Key: new(integration.TagTestIDKey), Value: new(integrationTestName)},
+					{Key: new("Name"), Value: new(integrationTestName)},
 				},
 			},
 		},
@@ -99,7 +99,7 @@ func setup(ctx context.Context, logger *slog.Logger, client *ec2.Client) error {
 	// Resolve default route table for this TGW (needed for attachment and static route).
 	rtOut, err := client.DescribeTransitGatewayRouteTables(ctx, &ec2.DescribeTransitGatewayRouteTablesInput{
 		Filters: []types.Filter{
-			{Name: ptr("transit-gateway-id"), Values: []string{tgwID}},
+			{Name: new("transit-gateway-id"), Values: []string{tgwID}},
 		},
 	})
 	if err != nil {
@@ -118,14 +118,14 @@ func setup(ctx context.Context, logger *slog.Logger, client *ec2.Client) error {
 
 	// Create VPC and subnet so we can create a VPC attachment (association + propagation + route target).
 	vpcOut, err := client.CreateVpc(ctx, &ec2.CreateVpcInput{
-		CidrBlock: ptr("10.99.0.0/16"),
+		CidrBlock: new("10.99.0.0/16"),
 		TagSpecifications: []types.TagSpecification{
 			{
 				ResourceType: types.ResourceTypeVpc,
 				Tags: []types.Tag{
-					{Key: ptr(integration.TagTestKey), Value: ptr(integration.TagTestValue)},
-					{Key: ptr(integration.TagTestIDKey), Value: ptr(integrationTestName)},
-					{Key: ptr("Name"), Value: ptr(integrationTestName)},
+					{Key: new(integration.TagTestKey), Value: new(integration.TagTestValue)},
+					{Key: new(integration.TagTestIDKey), Value: new(integrationTestName)},
+					{Key: new("Name"), Value: new(integrationTestName)},
 				},
 			},
 		},
@@ -142,7 +142,7 @@ func setup(ctx context.Context, logger *slog.Logger, client *ec2.Client) error {
 	// Pick one AZ for the subnet.
 	azOut, err := client.DescribeAvailabilityZones(ctx, &ec2.DescribeAvailabilityZonesInput{
 		Filters: []types.Filter{
-			{Name: ptr("state"), Values: []string{"available"}},
+			{Name: new("state"), Values: []string{"available"}},
 		},
 	})
 	if err != nil || len(azOut.AvailabilityZones) == 0 {
@@ -152,15 +152,15 @@ func setup(ctx context.Context, logger *slog.Logger, client *ec2.Client) error {
 
 	subOut, err := client.CreateSubnet(ctx, &ec2.CreateSubnetInput{
 		VpcId:            &createdVpcID,
-		CidrBlock:        ptr("10.99.1.0/24"),
+		CidrBlock:        new("10.99.1.0/24"),
 		AvailabilityZone: az,
 		TagSpecifications: []types.TagSpecification{
 			{
 				ResourceType: types.ResourceTypeSubnet,
 				Tags: []types.Tag{
-					{Key: ptr(integration.TagTestKey), Value: ptr(integration.TagTestValue)},
-					{Key: ptr(integration.TagTestIDKey), Value: ptr(integrationTestName)},
-					{Key: ptr("Name"), Value: ptr(integrationTestName)},
+					{Key: new(integration.TagTestKey), Value: new(integration.TagTestValue)},
+					{Key: new(integration.TagTestIDKey), Value: new(integrationTestName)},
+					{Key: new("Name"), Value: new(integrationTestName)},
 				},
 			},
 		},
@@ -182,9 +182,9 @@ func setup(ctx context.Context, logger *slog.Logger, client *ec2.Client) error {
 			{
 				ResourceType: types.ResourceTypeTransitGatewayAttachment,
 				Tags: []types.Tag{
-					{Key: ptr(integration.TagTestKey), Value: ptr(integration.TagTestValue)},
-					{Key: ptr(integration.TagTestIDKey), Value: ptr(integrationTestName)},
-					{Key: ptr("Name"), Value: ptr(integrationTestName)},
+					{Key: new(integration.TagTestKey), Value: new(integration.TagTestValue)},
+					{Key: new(integration.TagTestIDKey), Value: new(integrationTestName)},
+					{Key: new("Name"), Value: new(integrationTestName)},
 				},
 			},
 		},
@@ -239,5 +239,3 @@ func setup(ctx context.Context, logger *slog.Logger, client *ec2.Client) error {
 
 	return nil
 }
-
-func ptr(s string) *string { return &s }

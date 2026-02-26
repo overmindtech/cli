@@ -43,10 +43,10 @@ func TestInstanceStatusOutputMapper(t *testing.T) {
 	output := &ec2.DescribeInstanceStatusOutput{
 		InstanceStatuses: []types.InstanceStatus{
 			{
-				AvailabilityZone: PtrString("eu-west-2c"),          // link
-				InstanceId:       PtrString("i-022bdccde30270570"), // link
+				AvailabilityZone: new("eu-west-2c"),          // link
+				InstanceId:       new("i-022bdccde30270570"), // link
 				InstanceState: &types.InstanceState{
-					Code: PtrInt32(16),
+					Code: new(int32(16)),
 					Name: types.InstanceStateNameRunning,
 				},
 				InstanceStatus: &types.InstanceStatusSummary{

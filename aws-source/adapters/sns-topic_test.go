@@ -30,7 +30,7 @@ func (t testTopicClient) ListTopics(context.Context, *sns.ListTopicsInput, ...fu
 	return &sns.ListTopicsOutput{
 		Topics: []types.Topic{
 			{
-				TopicArn: PtrString("arn:aws:sns:us-west-2:123456789012:my-topic"),
+				TopicArn: new("arn:aws:sns:us-west-2:123456789012:my-topic"),
 			},
 		},
 	}, nil
@@ -39,8 +39,8 @@ func (t testTopicClient) ListTopics(context.Context, *sns.ListTopicsInput, ...fu
 func (t testTopicClient) ListTagsForResource(context.Context, *sns.ListTagsForResourceInput, ...func(*sns.Options)) (*sns.ListTagsForResourceOutput, error) {
 	return &sns.ListTagsForResourceOutput{
 		Tags: []types.Tag{
-			{Key: PtrString("tag1"), Value: PtrString("value1")},
-			{Key: PtrString("tag2"), Value: PtrString("value2")},
+			{Key: new("tag1"), Value: new("value1")},
+			{Key: new("tag2"), Value: new("value2")},
 		},
 	}, nil
 }
@@ -50,7 +50,7 @@ func TestGetTopicFunc(t *testing.T) {
 	cli := testTopicClient{}
 
 	item, err := getTopicFunc(ctx, cli, "scope", &sns.GetTopicAttributesInput{
-		TopicArn: PtrString("arn:aws:sns:us-west-2:123456789012:my-topic"),
+		TopicArn: new("arn:aws:sns:us-west-2:123456789012:my-topic"),
 	})
 	if err != nil {
 		t.Fatal(err)

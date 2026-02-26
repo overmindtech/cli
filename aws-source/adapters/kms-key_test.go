@@ -15,12 +15,12 @@ type kmsTestClient struct{}
 func (t kmsTestClient) DescribeKey(ctx context.Context, params *kms.DescribeKeyInput, optFns ...func(*kms.Options)) (*kms.DescribeKeyOutput, error) {
 	return &kms.DescribeKeyOutput{
 		KeyMetadata: &types.KeyMetadata{
-			AWSAccountId:          PtrString("846764612917"),
-			KeyId:                 PtrString("b8a9477d-836c-491f-857e-07937918959b"),
-			Arn:                   PtrString("arn:aws:kms:us-west-2:846764612917:key/b8a9477d-836c-491f-857e-07937918959b"),
-			CreationDate:          PtrTime(time.Date(2017, 6, 30, 21, 44, 32, 140000000, time.UTC)),
+			AWSAccountId:          new("846764612917"),
+			KeyId:                 new("b8a9477d-836c-491f-857e-07937918959b"),
+			Arn:                   new("arn:aws:kms:us-west-2:846764612917:key/b8a9477d-836c-491f-857e-07937918959b"),
+			CreationDate:          new(time.Date(2017, 6, 30, 21, 44, 32, 140000000, time.UTC)),
 			Enabled:               true,
-			Description:           PtrString("Default KMS key that protects my S3 objects when no other key is defined"),
+			Description:           new("Default KMS key that protects my S3 objects when no other key is defined"),
 			KeyUsage:              types.KeyUsageTypeEncryptDecrypt,
 			KeyState:              types.KeyStateEnabled,
 			Origin:                types.OriginTypeAwsKms,
@@ -37,16 +37,16 @@ func (t kmsTestClient) ListKeys(context.Context, *kms.ListKeysInput, ...func(*km
 	return &kms.ListKeysOutput{
 		Keys: []types.KeyListEntry{
 			{
-				KeyArn: PtrString("arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"),
-				KeyId:  PtrString("1234abcd-12ab-34cd-56ef-1234567890ab"),
+				KeyArn: new("arn:aws:kms:us-west-2:111122223333:key/1234abcd-12ab-34cd-56ef-1234567890ab"),
+				KeyId:  new("1234abcd-12ab-34cd-56ef-1234567890ab"),
 			},
 			{
-				KeyArn: PtrString("arn:aws:kms:us-west-2:111122223333:key/0987dcba-09fe-87dc-65ba-ab0987654321"),
-				KeyId:  PtrString("0987dcba-09fe-87dc-65ba-ab0987654321"),
+				KeyArn: new("arn:aws:kms:us-west-2:111122223333:key/0987dcba-09fe-87dc-65ba-ab0987654321"),
+				KeyId:  new("0987dcba-09fe-87dc-65ba-ab0987654321"),
 			},
 			{
-				KeyArn: PtrString("arn:aws:kms:us-east-2:111122223333:key/1a2b3c4d-5e6f-1a2b-3c4d-5e6f1a2b3c4d"),
-				KeyId:  PtrString("1a2b3c4d-5e6f-1a2b-3c4d-5e6f1a2b3c4d"),
+				KeyArn: new("arn:aws:kms:us-east-2:111122223333:key/1a2b3c4d-5e6f-1a2b-3c4d-5e6f1a2b3c4d"),
+				KeyId:  new("1a2b3c4d-5e6f-1a2b-3c4d-5e6f1a2b3c4d"),
 			},
 		},
 	}, nil
@@ -56,16 +56,16 @@ func (t kmsTestClient) ListResourceTags(context.Context, *kms.ListResourceTagsIn
 	return &kms.ListResourceTagsOutput{
 		Tags: []types.Tag{
 			{
-				TagKey:   PtrString("Dept"),
-				TagValue: PtrString("IT"),
+				TagKey:   new("Dept"),
+				TagValue: new("IT"),
 			},
 			{
-				TagKey:   PtrString("Purpose"),
-				TagValue: PtrString("Test"),
+				TagKey:   new("Purpose"),
+				TagValue: new("Test"),
 			},
 			{
-				TagKey:   PtrString("Name"),
-				TagValue: PtrString("Test"),
+				TagKey:   new("Name"),
+				TagValue: new("Test"),
 			},
 		},
 	}, nil
@@ -76,7 +76,7 @@ func TestKMSGetFunc(t *testing.T) {
 	cli := kmsTestClient{}
 
 	item, err := kmsKeyGetFunc(ctx, cli, "scope", &kms.DescribeKeyInput{
-		KeyId: PtrString("1234abcd-12ab-34cd-56ef-1234567890ab"),
+		KeyId: new("1234abcd-12ab-34cd-56ef-1234567890ab"),
 	})
 	if err != nil {
 		t.Fatal(err)

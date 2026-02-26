@@ -15,23 +15,23 @@ func TestDBSubnetGroupOutputMapper(t *testing.T) {
 	output := rds.DescribeDBSubnetGroupsOutput{
 		DBSubnetGroups: []types.DBSubnetGroup{
 			{
-				DBSubnetGroupName:        PtrString("default-vpc-0d7892e00e573e701"),
-				DBSubnetGroupDescription: PtrString("Created from the RDS Management Console"),
-				VpcId:                    PtrString("vpc-0d7892e00e573e701"), // link
-				SubnetGroupStatus:        PtrString("Complete"),
+				DBSubnetGroupName:        new("default-vpc-0d7892e00e573e701"),
+				DBSubnetGroupDescription: new("Created from the RDS Management Console"),
+				VpcId:                    new("vpc-0d7892e00e573e701"), // link
+				SubnetGroupStatus:        new("Complete"),
 				Subnets: []types.Subnet{
 					{
-						SubnetIdentifier: PtrString("subnet-0450a637af9984235"), // link
+						SubnetIdentifier: new("subnet-0450a637af9984235"), // link
 						SubnetAvailabilityZone: &types.AvailabilityZone{
-							Name: PtrString("eu-west-2c"), // link
+							Name: new("eu-west-2c"), // link
 						},
 						SubnetOutpost: &types.Outpost{
-							Arn: PtrString("arn:aws:service:region:account:type/id"), // link
+							Arn: new("arn:aws:service:region:account:type/id"), // link
 						},
-						SubnetStatus: PtrString("Active"),
+						SubnetStatus: new("Active"),
 					},
 				},
-				DBSubnetGroupArn: PtrString("arn:aws:rds:eu-west-2:052392120703:subgrp:default-vpc-0d7892e00e573e701"),
+				DBSubnetGroupArn: new("arn:aws:rds:eu-west-2:052392120703:subgrp:default-vpc-0d7892e00e573e701"),
 				SupportedNetworkTypes: []string{
 					"IPV4",
 				},

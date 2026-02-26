@@ -117,7 +117,7 @@ func TestComputeSubnetwork(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/subnetworks/%s", projectID, region, subnetworkName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Subnetwork not found"},
+				Body:       map[string]any{"error": "Subnetwork not found"},
 			},
 		}
 

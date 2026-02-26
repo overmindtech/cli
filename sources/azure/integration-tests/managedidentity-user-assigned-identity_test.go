@@ -13,7 +13,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/msi/armmsi"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -255,10 +254,10 @@ func createUserAssignedIdentity(ctx context.Context, client *armmsi.UserAssigned
 
 	// Create the User Assigned Identity
 	resp, err := client.CreateOrUpdate(ctx, resourceGroupName, identityName, armmsi.Identity{
-		Location: ptr.To(location),
+		Location: new(location),
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
-			"test":    ptr.To("managedidentity-user-assigned-identity"),
+			"purpose": new("overmind-integration-tests"),
+			"test":    new("managedidentity-user-assigned-identity"),
 		},
 	}, nil)
 	if err != nil {

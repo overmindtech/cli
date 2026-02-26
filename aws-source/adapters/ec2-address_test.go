@@ -43,16 +43,16 @@ func TestAddressOutputMapper(t *testing.T) {
 	output := ec2.DescribeAddressesOutput{
 		Addresses: []types.Address{
 			{
-				PublicIp:           PtrString("3.11.82.6"),
-				AllocationId:       PtrString("eipalloc-030a6f43bc6086267"),
+				PublicIp:           new("3.11.82.6"),
+				AllocationId:       new("eipalloc-030a6f43bc6086267"),
 				Domain:             types.DomainTypeVpc,
-				PublicIpv4Pool:     PtrString("amazon"),
-				NetworkBorderGroup: PtrString("eu-west-2"),
-				InstanceId:         PtrString("instance"),
-				CarrierIp:          PtrString("3.11.82.7"),
-				CustomerOwnedIp:    PtrString("3.11.82.8"),
-				NetworkInterfaceId: PtrString("foo"),
-				PrivateIpAddress:   PtrString("3.11.82.9"),
+				PublicIpv4Pool:     new("amazon"),
+				NetworkBorderGroup: new("eu-west-2"),
+				InstanceId:         new("instance"),
+				CarrierIp:          new("3.11.82.7"),
+				CustomerOwnedIp:    new("3.11.82.8"),
+				NetworkInterfaceId: new("foo"),
+				PrivateIpAddress:   new("3.11.82.9"),
 			},
 		},
 	}

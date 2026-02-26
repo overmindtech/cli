@@ -315,7 +315,7 @@ func TestContainerCluster(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://container.googleapis.com/v1/projects/%s/locations/%s/clusters/%s", projectID, location, clusterName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Cluster not found"},
+				Body:       map[string]any{"error": "Cluster not found"},
 			},
 		}
 

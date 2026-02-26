@@ -13,7 +13,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -318,27 +317,27 @@ func createNetworkSecurityGroup(ctx context.Context, client *armnetwork.Security
 	// Create a basic network security group with a sample security rule
 	// This creates an NSG with a default allow rule for testing
 	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroupName, nsgName, armnetwork.SecurityGroup{
-		Location: ptr.To(location),
+		Location: new(location),
 		Properties: &armnetwork.SecurityGroupPropertiesFormat{
 			SecurityRules: []*armnetwork.SecurityRule{
 				{
-					Name: ptr.To("AllowSSH"),
+					Name: new("AllowSSH"),
 					Properties: &armnetwork.SecurityRulePropertiesFormat{
-						Protocol:                 ptr.To(armnetwork.SecurityRuleProtocolTCP),
-						SourcePortRange:          ptr.To("*"),
-						DestinationPortRange:     ptr.To("22"),
-						SourceAddressPrefix:      ptr.To("*"),
-						DestinationAddressPrefix: ptr.To("*"),
-						Access:                   ptr.To(armnetwork.SecurityRuleAccessAllow),
-						Priority:                 ptr.To[int32](1000),
-						Direction:                ptr.To(armnetwork.SecurityRuleDirectionInbound),
+						Protocol:                 new(armnetwork.SecurityRuleProtocolTCP),
+						SourcePortRange:          new("*"),
+						DestinationPortRange:     new("22"),
+						SourceAddressPrefix:      new("*"),
+						DestinationAddressPrefix: new("*"),
+						Access:                   new(armnetwork.SecurityRuleAccessAllow),
+						Priority:                 new(int32(1000)),
+						Direction:                new(armnetwork.SecurityRuleDirectionInbound),
 					},
 				},
 			},
 		},
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
-			"test":    ptr.To("network-network-security-group"),
+			"purpose": new("overmind-integration-tests"),
+			"test":    new("network-network-security-group"),
 		},
 	}, nil)
 	if err != nil {

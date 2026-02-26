@@ -17,11 +17,11 @@ func (m mockElbClient) DescribeTags(ctx context.Context, params *elb.DescribeTag
 	return &elb.DescribeTagsOutput{
 		TagDescriptions: []types.TagDescription{
 			{
-				LoadBalancerName: PtrString("a8c3c8851f0df43fda89797c8e941a91"),
+				LoadBalancerName: new("a8c3c8851f0df43fda89797c8e941a91"),
 				Tags: []types.Tag{
 					{
-						Key:   PtrString("foo"),
-						Value: PtrString("bar"),
+						Key:   new("foo"),
+						Value: new("bar"),
 					},
 				},
 			},
@@ -37,35 +37,35 @@ func TestELBv2LoadBalancerOutputMapper(t *testing.T) {
 	output := &elb.DescribeLoadBalancersOutput{
 		LoadBalancerDescriptions: []types.LoadBalancerDescription{
 			{
-				LoadBalancerName:          PtrString("a8c3c8851f0df43fda89797c8e941a91"),
-				DNSName:                   PtrString("a8c3c8851f0df43fda89797c8e941a91-182843316.eu-west-2.elb.amazonaws.com"), // link
-				CanonicalHostedZoneName:   PtrString("a8c3c8851f0df43fda89797c8e941a91-182843316.eu-west-2.elb.amazonaws.com"), // link
-				CanonicalHostedZoneNameID: PtrString("ZHURV8PSTC4K8"),                                                          // link
+				LoadBalancerName:          new("a8c3c8851f0df43fda89797c8e941a91"),
+				DNSName:                   new("a8c3c8851f0df43fda89797c8e941a91-182843316.eu-west-2.elb.amazonaws.com"), // link
+				CanonicalHostedZoneName:   new("a8c3c8851f0df43fda89797c8e941a91-182843316.eu-west-2.elb.amazonaws.com"), // link
+				CanonicalHostedZoneNameID: new("ZHURV8PSTC4K8"),                                                          // link
 				ListenerDescriptions: []types.ListenerDescription{
 					{
 						Listener: &types.Listener{
-							Protocol:         PtrString("TCP"),
+							Protocol:         new("TCP"),
 							LoadBalancerPort: 7687,
-							InstanceProtocol: PtrString("TCP"),
-							InstancePort:     PtrInt32(30133),
+							InstanceProtocol: new("TCP"),
+							InstancePort:     new(int32(30133)),
 						},
 						PolicyNames: []string{},
 					},
 					{
 						Listener: &types.Listener{
-							Protocol:         PtrString("TCP"),
+							Protocol:         new("TCP"),
 							LoadBalancerPort: 7473,
-							InstanceProtocol: PtrString("TCP"),
-							InstancePort:     PtrInt32(31459),
+							InstanceProtocol: new("TCP"),
+							InstancePort:     new(int32(31459)),
 						},
 						PolicyNames: []string{},
 					},
 					{
 						Listener: &types.Listener{
-							Protocol:         PtrString("TCP"),
+							Protocol:         new("TCP"),
 							LoadBalancerPort: 7474,
-							InstanceProtocol: PtrString("TCP"),
-							InstancePort:     PtrInt32(30761),
+							InstanceProtocol: new("TCP"),
+							InstancePort:     new(int32(30761)),
 						},
 						PolicyNames: []string{},
 					},
@@ -73,21 +73,21 @@ func TestELBv2LoadBalancerOutputMapper(t *testing.T) {
 				Policies: &types.Policies{
 					AppCookieStickinessPolicies: []types.AppCookieStickinessPolicy{
 						{
-							CookieName: PtrString("foo"),
-							PolicyName: PtrString("policy"),
+							CookieName: new("foo"),
+							PolicyName: new("policy"),
 						},
 					},
 					LBCookieStickinessPolicies: []types.LBCookieStickinessPolicy{
 						{
-							CookieExpirationPeriod: PtrInt64(10),
-							PolicyName:             PtrString("name"),
+							CookieExpirationPeriod: new(int64(10)),
+							PolicyName:             new("name"),
 						},
 					},
 					OtherPolicies: []string{},
 				},
 				BackendServerDescriptions: []types.BackendServerDescription{
 					{
-						InstancePort: PtrInt32(443),
+						InstancePort: new(int32(443)),
 						PolicyNames:  []string{},
 					},
 				},
@@ -101,28 +101,28 @@ func TestELBv2LoadBalancerOutputMapper(t *testing.T) {
 					"subnet09d5f6fa75b0b4569",
 					"subnet0e234bef35fc4a9e1",
 				},
-				VPCId: PtrString("vpc-0c72199250cd479ea"), // link
+				VPCId: new("vpc-0c72199250cd479ea"), // link
 				Instances: []types.Instance{
 					{
-						InstanceId: PtrString("i-0337802d908b4a81e"), // link *2 to ec2-instance and health
+						InstanceId: new("i-0337802d908b4a81e"), // link *2 to ec2-instance and health
 					},
 				},
 				HealthCheck: &types.HealthCheck{
-					Target:             PtrString("HTTP:31151/healthz"),
-					Interval:           PtrInt32(10),
-					Timeout:            PtrInt32(5),
-					UnhealthyThreshold: PtrInt32(6),
-					HealthyThreshold:   PtrInt32(2),
+					Target:             new("HTTP:31151/healthz"),
+					Interval:           new(int32(10)),
+					Timeout:            new(int32(5)),
+					UnhealthyThreshold: new(int32(6)),
+					HealthyThreshold:   new(int32(2)),
 				},
 				SourceSecurityGroup: &types.SourceSecurityGroup{
-					OwnerAlias: PtrString("944651592624"),
-					GroupName:  PtrString("k8s-elb-a8c3c8851f0df43fda89797c8e941a91"), // link
+					OwnerAlias: new("944651592624"),
+					GroupName:  new("k8s-elb-a8c3c8851f0df43fda89797c8e941a91"), // link
 				},
 				SecurityGroups: []string{
 					"sg097e3cfdfc6d53b77", // link
 				},
-				CreatedTime: PtrTime(time.Now()),
-				Scheme:      PtrString("internet-facing"),
+				CreatedTime: new(time.Now()),
+				Scheme:      new("internet-facing"),
 			},
 		},
 	}

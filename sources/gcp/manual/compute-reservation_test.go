@@ -9,7 +9,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/api/iterator"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -283,18 +282,18 @@ func TestComputeReservation(t *testing.T) {
 
 func createComputeReservation(reservationName string, status computepb.Reservation_Status) *computepb.Reservation {
 	return &computepb.Reservation{
-		Name: ptr.To(reservationName),
-		Commitment: ptr.To(
+		Name: new(reservationName),
+		Commitment: new(
 			"https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/commitments/test-commitment",
 		),
 		SpecificReservation: &computepb.AllocationSpecificSKUReservation{
 			InstanceProperties: &computepb.AllocationSpecificSKUAllocationReservedInstanceProperties{
-				MachineType: ptr.To(
+				MachineType: new(
 					"https://www.googleapis.com/compute/v1/projects/test-project-id/zones/us-central1-a/machineTypes/n1-standard-1",
 				),
 				GuestAccelerators: []*computepb.AcceleratorConfig{
 					{
-						AcceleratorType: ptr.To(
+						AcceleratorType: new(
 							"https://www.googleapis.com/compute/v1/projects/test-project-id/zones/us-central1-a/acceleratorTypes/nvidia-tesla-k80",
 						),
 					},
@@ -304,6 +303,6 @@ func createComputeReservation(reservationName string, status computepb.Reservati
 		ResourcePolicies: map[string]string{
 			"policy1": "https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/resourcePolicies/test-policy",
 		},
-		Status: ptr.To(status.String()),
+		Status: new(status.String()),
 	}
 }

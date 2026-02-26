@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"maps"
 	"net/http"
 	"net/url"
 	"os"
@@ -56,7 +57,7 @@ type ProviderFile struct {
 type AWSProvider struct {
 	Name                           string   `hcl:"name,label" yaml:"name,omitempty"`
 	Alias                          string   `hcl:"alias,optional" yaml:"alias,omitempty"`
-	AccessKey                      string   `hcl:"access_key,optional" yaml:"access_key,omitempty"`
+	AccessKey                      string   `hcl:"access_key,optional" yaml:"access_key,omitempty"` //nolint:gosec // G101: field name, not a hardcoded credential; deserialized from local Terraform HCL config, never marshaled into logs or HTTP responses
 	SecretKey                      string   `hcl:"secret_key,optional" yaml:"secret_key,omitempty"`
 	Token                          string   `hcl:"token,optional" yaml:"token,omitempty"`
 	Region                         string   `hcl:"region,optional" yaml:"region,omitempty"`
@@ -117,7 +118,7 @@ type AssumeRoleWithWebIdentity struct {
 // restore the default value to a cty value after tfconfig has
 // passed it through JSON to "void the caller needing to deal with
 // cty"
-func ctyFromTfconfig(v interface{}) cty.Value {
+func ctyFromTfconfig(v any) cty.Value {
 	switch def := v.(type) {
 	case bool:
 		return cty.BoolVal(def)
@@ -127,13 +128,13 @@ func ctyFromTfconfig(v interface{}) cty.Value {
 		return cty.NumberIntVal(int64(def))
 	case string:
 		return cty.StringVal(def)
-	case []interface{}:
+	case []any:
 		d := make([]cty.Value, 0, len(def))
 		for _, v := range def {
 			d = append(d, ctyFromTfconfig(v))
 		}
 		return cty.ListVal(d)
-	case map[string]interface{}:
+	case map[string]any:
 		d := map[string]cty.Value{}
 		for k, v := range def {
 			d[k] = ctyFromTfconfig(v)
@@ -313,9 +314,7 @@ func setVariables(dest *hcl.EvalContext, variables map[string]cty.Value) {
 	if variablesDest == nil {
 		variablesDest = map[string]cty.Value{}
 	}
-	for k, v := range variables {
-		variablesDest[k] = v
-	}
+	maps.Copy(variablesDest, variables)
 	dest.Variables["var"] = cty.ObjectVal(variablesDest)
 }
 

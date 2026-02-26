@@ -214,7 +214,7 @@ func getImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope s
 	var wg sync.WaitGroup
 	var err error
 
-	bucketName := PtrString(query)
+	bucketName := new(query)
 
 	location, err = client.GetBucketLocation(ctx, &s3.GetBucketLocationInput{
 		Bucket: bucketName,

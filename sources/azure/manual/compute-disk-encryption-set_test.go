@@ -7,7 +7,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	"go.uber.org/mock/gomock"
 
@@ -264,7 +263,7 @@ func TestComputeDiskEncryptionSet(t *testing.T) {
 		desName := "test-des"
 		des := &armcompute.DiskEncryptionSet{
 			Name:     nil,
-			Location: to.Ptr("eastus"),
+			Location: new("eastus"),
 		}
 
 		mockClient := mocks.NewMockDiskEncryptionSetsClient(ctrl)
@@ -311,7 +310,7 @@ func TestComputeDiskEncryptionSet(t *testing.T) {
 		des1 := createAzureDiskEncryptionSet("test-des-1")
 		desNil := &armcompute.DiskEncryptionSet{
 			Name:     nil, // Should be skipped
-			Location: to.Ptr("eastus"),
+			Location: new("eastus"),
 		}
 
 		mockClient := mocks.NewMockDiskEncryptionSetsClient(ctrl)
@@ -430,30 +429,30 @@ func TestComputeDiskEncryptionSet(t *testing.T) {
 
 func createAzureDiskEncryptionSet(name string) *armcompute.DiskEncryptionSet {
 	return &armcompute.DiskEncryptionSet{
-		Name:     to.Ptr(name),
-		Location: to.Ptr("eastus"),
+		Name:     new(name),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armcompute.EncryptionSetProperties{
-			ProvisioningState: to.Ptr("Succeeded"),
+			ProvisioningState: new("Succeeded"),
 		},
 	}
 }
 
 func createAzureDiskEncryptionSetWithAllLinks(name, subscriptionID, resourceGroup string) *armcompute.DiskEncryptionSet {
 	return &armcompute.DiskEncryptionSet{
-		Name:     to.Ptr(name),
-		Location: to.Ptr("eastus"),
+		Name:     new(name),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armcompute.EncryptionSetProperties{
-			ProvisioningState: to.Ptr("Succeeded"),
+			ProvisioningState: new("Succeeded"),
 			ActiveKey: &armcompute.KeyForDiskEncryptionSet{
-				KeyURL: to.Ptr("https://test-vault.vault.azure.net/keys/test-key/00000000000000000000000000000000"),
+				KeyURL: new("https://test-vault.vault.azure.net/keys/test-key/00000000000000000000000000000000"),
 				SourceVault: &armcompute.SourceVault{
-					ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.KeyVault/vaults/test-vault"),
+					ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.KeyVault/vaults/test-vault"),
 				},
 			},
 		},
@@ -469,9 +468,9 @@ func createAzureDiskEncryptionSetWithPreviousKeys(name, subscriptionID, resource
 	des := createAzureDiskEncryptionSetWithAllLinks(name, subscriptionID, resourceGroup)
 	des.Properties.PreviousKeys = []*armcompute.KeyForDiskEncryptionSet{
 		{
-			KeyURL: to.Ptr("https://test-old-vault.vault.azure.net/keys/test-old-key/00000000000000000000000000000000"),
+			KeyURL: new("https://test-old-vault.vault.azure.net/keys/test-old-key/00000000000000000000000000000000"),
 			SourceVault: &armcompute.SourceVault{
-				ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.KeyVault/vaults/test-old-vault"),
+				ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.KeyVault/vaults/test-old-vault"),
 			},
 		},
 	}
@@ -483,9 +482,9 @@ func createAzureDiskEncryptionSetWithPreviousKeysSameVault(name, subscriptionID,
 	des.Properties.PreviousKeys = []*armcompute.KeyForDiskEncryptionSet{
 		{
 			// Same vault + key as ActiveKey.KeyURL to ensure links are deduplicated.
-			KeyURL: to.Ptr("https://test-vault.vault.azure.net/keys/test-key/00000000000000000000000000000000"),
+			KeyURL: new("https://test-vault.vault.azure.net/keys/test-key/00000000000000000000000000000000"),
 			SourceVault: &armcompute.SourceVault{
-				ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.KeyVault/vaults/test-vault"),
+				ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.KeyVault/vaults/test-vault"),
 			},
 		},
 	}

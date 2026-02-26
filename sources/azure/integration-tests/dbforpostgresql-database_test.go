@@ -15,7 +15,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers/v5"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -309,23 +308,23 @@ func createPostgreSQLFlexibleServer(ctx context.Context, client *armpostgresqlfl
 	// Create the PostgreSQL Flexible Server
 	// Using Burstable tier for cost-effective testing
 	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroupName, serverName, armpostgresqlflexibleservers.Server{
-		Location: ptr.To(location),
+		Location: new(location),
 		Properties: &armpostgresqlflexibleservers.ServerProperties{
-			AdministratorLogin:         ptr.To(adminLogin),
-			AdministratorLoginPassword: ptr.To(adminPassword),
-			Version:                    ptr.To(armpostgresqlflexibleservers.PostgresMajorVersion("14")),
-			Storage:                    &armpostgresqlflexibleservers.Storage{StorageSizeGB: ptr.To[int32](32)},
-			Backup:                     &armpostgresqlflexibleservers.Backup{BackupRetentionDays: ptr.To[int32](7), GeoRedundantBackup: ptr.To(armpostgresqlflexibleservers.GeographicallyRedundantBackupDisabled)},
-			Network:                    &armpostgresqlflexibleservers.Network{PublicNetworkAccess: ptr.To(armpostgresqlflexibleservers.ServerPublicNetworkAccessStateEnabled)},
+			AdministratorLogin:         new(adminLogin),
+			AdministratorLoginPassword: new(adminPassword),
+			Version:                    new(armpostgresqlflexibleservers.PostgresMajorVersion("14")),
+			Storage:                    &armpostgresqlflexibleservers.Storage{StorageSizeGB: new(int32(32))},
+			Backup:                     &armpostgresqlflexibleservers.Backup{BackupRetentionDays: new(int32(7)), GeoRedundantBackup: new(armpostgresqlflexibleservers.GeographicallyRedundantBackupDisabled)},
+			Network:                    &armpostgresqlflexibleservers.Network{PublicNetworkAccess: new(armpostgresqlflexibleservers.ServerPublicNetworkAccessStateEnabled)},
 			HighAvailability:           nil, // High availability disabled by not setting it
 		},
 		SKU: &armpostgresqlflexibleservers.SKU{
-			Name: ptr.To("Standard_B1ms"), // Burstable tier, 1 vCore, 2GB RAM
-			Tier: ptr.To(armpostgresqlflexibleservers.SKUTierBurstable),
+			Name: new("Standard_B1ms"), // Burstable tier, 1 vCore, 2GB RAM
+			Tier: new(armpostgresqlflexibleservers.SKUTierBurstable),
 		},
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
-			"test":    ptr.To("dbforpostgresql-database"),
+			"purpose": new("overmind-integration-tests"),
+			"test":    new("dbforpostgresql-database"),
 		},
 	}, nil)
 	if err != nil {
@@ -407,8 +406,8 @@ func createPostgreSQLDatabase(ctx context.Context, client *armpostgresqlflexible
 	// Create the PostgreSQL database
 	poller, err := client.BeginCreate(ctx, resourceGroupName, serverName, databaseName, armpostgresqlflexibleservers.Database{
 		Properties: &armpostgresqlflexibleservers.DatabaseProperties{
-			Charset:   ptr.To("UTF8"),
-			Collation: ptr.To("en_US.utf8"),
+			Charset:   new("UTF8"),
+			Collation: new("en_US.utf8"),
 		},
 	}, nil)
 	if err != nil {

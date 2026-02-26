@@ -16,7 +16,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v3"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -320,16 +319,16 @@ func createBatchAccount(ctx context.Context, client *armbatch.AccountClient, res
 
 	// Create the batch account
 	poller, err := client.BeginCreate(ctx, resourceGroupName, accountName, armbatch.AccountCreateParameters{
-		Location: ptr.To(location),
+		Location: new(location),
 		Properties: &armbatch.AccountCreateProperties{
 			AutoStorage: &armbatch.AutoStorageBaseProperties{
-				StorageAccountID: ptr.To(storageAccountID),
+				StorageAccountID: new(storageAccountID),
 			},
-			PoolAllocationMode: ptr.To(armbatch.PoolAllocationModeBatchService),
+			PoolAllocationMode: new(armbatch.PoolAllocationModeBatchService),
 		},
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
-			"test":    ptr.To("batch-account"),
+			"purpose": new("overmind-integration-tests"),
+			"test":    new("batch-account"),
 		},
 	}, nil)
 	if err != nil {

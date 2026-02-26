@@ -10,7 +10,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/api/iterator"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -233,9 +232,9 @@ func TestComputeInstanceGroup(t *testing.T) {
 
 func createComputeInstanceGroup(name, network, subnetwork, projectID, zone string) *computepb.InstanceGroup {
 	return &computepb.InstanceGroup{
-		Name:       ptr.To(name),
-		Network:    ptr.To(fmt.Sprintf("projects/%s/global/networks/%s", projectID, network)),
-		Subnetwork: ptr.To(fmt.Sprintf("projects/%s/regions/us-central1/subnetworks/%s", projectID, subnetwork)),
-		Zone:       ptr.To(fmt.Sprintf("projects/%s/zones/%s", projectID, zone)),
+		Name:       new(name),
+		Network:    new(fmt.Sprintf("projects/%s/global/networks/%s", projectID, network)),
+		Subnetwork: new(fmt.Sprintf("projects/%s/regions/us-central1/subnetworks/%s", projectID, subnetwork)),
+		Zone:       new(fmt.Sprintf("projects/%s/zones/%s", projectID, zone)),
 	}
 }

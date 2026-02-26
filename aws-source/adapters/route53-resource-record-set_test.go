@@ -15,50 +15,50 @@ import (
 
 func TestResourceRecordSetItemMapper(t *testing.T) {
 	recordSet := types.ResourceRecordSet{
-		Name: PtrString("overmind-demo.com."),
+		Name: new("overmind-demo.com."),
 		Type: types.RRTypeNs,
-		TTL:  PtrInt64(172800),
+		TTL:  new(int64(172800)),
 		GeoProximityLocation: &types.GeoProximityLocation{
-			AWSRegion:      PtrString("us-east-1"),
-			Bias:           PtrInt32(100),
+			AWSRegion:      new("us-east-1"),
+			Bias:           new(int32(100)),
 			Coordinates:    &types.Coordinates{},
-			LocalZoneGroup: PtrString("group"),
+			LocalZoneGroup: new("group"),
 		},
 		ResourceRecords: []types.ResourceRecord{
 			{
-				Value: PtrString("ns-1673.awsdns-17.co.uk."), // link
+				Value: new("ns-1673.awsdns-17.co.uk."), // link
 			},
 			{
-				Value: PtrString("ns-1505.awsdns-60.org."), // link
+				Value: new("ns-1505.awsdns-60.org."), // link
 			},
 			{
-				Value: PtrString("ns-955.awsdns-55.net."), // link
+				Value: new("ns-955.awsdns-55.net."), // link
 			},
 			{
-				Value: PtrString("ns-276.awsdns-34.com."), // link
+				Value: new("ns-276.awsdns-34.com."), // link
 			},
 		},
 		AliasTarget: &types.AliasTarget{
-			DNSName:              PtrString("foo.bar.com"), // link
+			DNSName:              new("foo.bar.com"), // link
 			EvaluateTargetHealth: true,
-			HostedZoneId:         PtrString("id"),
+			HostedZoneId:         new("id"),
 		},
 		CidrRoutingConfig: &types.CidrRoutingConfig{
-			CollectionId: PtrString("id"),
-			LocationName: PtrString("somewhere"),
+			CollectionId: new("id"),
+			LocationName: new("somewhere"),
 		},
 		Failover: types.ResourceRecordSetFailoverPrimary,
 		GeoLocation: &types.GeoLocation{
-			ContinentCode:   PtrString("GB"),
-			CountryCode:     PtrString("GB"),
-			SubdivisionCode: PtrString("ENG"),
+			ContinentCode:   new("GB"),
+			CountryCode:     new("GB"),
+			SubdivisionCode: new("ENG"),
 		},
-		HealthCheckId:           PtrString("id"), // link
-		MultiValueAnswer:        PtrBool(true),
+		HealthCheckId:           new("id"), // link
+		MultiValueAnswer:        new(true),
 		Region:                  types.ResourceRecordSetRegionApEast1,
-		SetIdentifier:           PtrString("identifier"),
-		TrafficPolicyInstanceId: PtrString("id"),
-		Weight:                  PtrInt64(100),
+		SetIdentifier:           new("identifier"),
+		TrafficPolicyInstanceId: new("id"),
+		Weight:                  new(int64(100)),
 	}
 
 	item, err := resourceRecordSetItemMapper("", "foo", &recordSet)

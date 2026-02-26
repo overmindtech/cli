@@ -5,7 +5,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers/v5"
 	"go.uber.org/mock/gomock"
 
@@ -327,7 +326,7 @@ func TestDBforPostgreSQLFlexibleServer(t *testing.T) {
 		server2 := &armpostgresqlflexibleservers.Server{
 			Name: nil, // Server with nil name should be skipped
 			Properties: &armpostgresqlflexibleservers.ServerProperties{
-				Version: to.Ptr(armpostgresqlflexibleservers.PostgresMajorVersion("14")),
+				Version: new(armpostgresqlflexibleservers.PostgresMajorVersion("14")),
 			},
 		}
 
@@ -421,10 +420,10 @@ func TestDBforPostgreSQLFlexibleServer(t *testing.T) {
 		geoBackupIdentityID := "/subscriptions/sub-id/resourceGroups/rg-id/providers/Microsoft.ManagedIdentity/userAssignedIdentities/geo-identity"
 
 		server.Properties.DataEncryption = &armpostgresqlflexibleservers.DataEncryption{
-			PrimaryKeyURI:                   to.Ptr(primaryKeyURI),
-			PrimaryUserAssignedIdentityID:   to.Ptr(primaryIdentityID),
-			GeoBackupKeyURI:                 to.Ptr(geoBackupKeyURI),
-			GeoBackupUserAssignedIdentityID: to.Ptr(geoBackupIdentityID),
+			PrimaryKeyURI:                   new(primaryKeyURI),
+			PrimaryUserAssignedIdentityID:   new(primaryIdentityID),
+			GeoBackupKeyURI:                 new(geoBackupKeyURI),
+			GeoBackupUserAssignedIdentityID: new(geoBackupIdentityID),
 		}
 
 		mockClient := mocks.NewMockPostgreSQLFlexibleServersClient(ctrl)
@@ -526,8 +525,8 @@ func TestDBforPostgreSQLFlexibleServer(t *testing.T) {
 		replicaServerName := "replica-server"
 		sourceServerID := "/subscriptions/sub-id/resourceGroups/source-rg/providers/Microsoft.DBforPostgreSQL/flexibleServers/source-server"
 		server := createAzurePostgreSQLFlexibleServer(replicaServerName, "", "")
-		server.Properties.SourceServerResourceID = to.Ptr(sourceServerID)
-		server.Properties.ReplicationRole = to.Ptr(armpostgresqlflexibleservers.ReplicationRoleAsyncReplica)
+		server.Properties.SourceServerResourceID = new(sourceServerID)
+		server.Properties.ReplicationRole = new(armpostgresqlflexibleservers.ReplicationRoleAsyncReplica)
 
 		mockClient := mocks.NewMockPostgreSQLFlexibleServersClient(ctrl)
 		mockClient.EXPECT().Get(ctx, resourceGroup, replicaServerName, nil).Return(
@@ -608,32 +607,32 @@ func createAzurePostgreSQLFlexibleServer(serverName, subnetID, fqdn string) *arm
 	serverID := "/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.DBforPostgreSQL/flexibleServers/" + serverName
 
 	server := &armpostgresqlflexibleservers.Server{
-		Name:     to.Ptr(serverName),
-		ID:       to.Ptr(serverID),
-		Location: to.Ptr("eastus"),
+		Name:     new(serverName),
+		ID:       new(serverID),
+		Location: new("eastus"),
 		Properties: &armpostgresqlflexibleservers.ServerProperties{
-			Version: to.Ptr(armpostgresqlflexibleservers.PostgresMajorVersion("14")),
-			State:   to.Ptr(armpostgresqlflexibleservers.ServerStateReady),
+			Version: new(armpostgresqlflexibleservers.PostgresMajorVersion("14")),
+			State:   new(armpostgresqlflexibleservers.ServerStateReady),
 		},
 		SKU: &armpostgresqlflexibleservers.SKU{
-			Name: to.Ptr("Standard_B1ms"),
-			Tier: to.Ptr(armpostgresqlflexibleservers.SKUTierBurstable),
+			Name: new("Standard_B1ms"),
+			Tier: new(armpostgresqlflexibleservers.SKUTierBurstable),
 		},
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 	}
 
 	// Add network configuration if subnet ID is provided
 	if subnetID != "" {
 		server.Properties.Network = &armpostgresqlflexibleservers.Network{
-			DelegatedSubnetResourceID: to.Ptr(subnetID),
+			DelegatedSubnetResourceID: new(subnetID),
 		}
 	}
 
 	// Add FQDN if provided
 	if fqdn != "" {
-		server.Properties.FullyQualifiedDomainName = to.Ptr(fqdn)
+		server.Properties.FullyQualifiedDomainName = new(fqdn)
 	}
 
 	return server

@@ -8,7 +8,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/api/iterator"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -199,13 +198,13 @@ func TestComputeSecurityPolicy(t *testing.T) {
 
 func createComputeSecurityPolicy(policyName string) *computepb.SecurityPolicy {
 	return &computepb.SecurityPolicy{
-		Name:   ptr.To(policyName),
+		Name:   new(policyName),
 		Labels: map[string]string{"env": "test"},
 		Rules: []*computepb.SecurityPolicyRule{
 			{
-				Priority: ptr.To(int32(1000)),
+				Priority: new(int32(1000)),
 			},
 		},
-		Region: ptr.To("us-central1"),
+		Region: new("us-central1"),
 	}
 }

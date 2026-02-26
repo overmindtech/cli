@@ -129,7 +129,7 @@ func TestComputeNetwork(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/global/networks/%s", projectID, networkName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Network not found"},
+				Body:       map[string]any{"error": "Network not found"},
 			},
 		}
 

@@ -12,7 +12,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/googleapis/gax-go/v2/apierror"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdpcache"
@@ -153,22 +152,22 @@ func TestComputeInstanceGroupManagerIntegration(t *testing.T) {
 // createInstanceTemplate creates a GCP Compute Engine instance template.
 func createInstanceTemplate(ctx context.Context, client *compute.InstanceTemplatesClient, projectID, templateName string) error {
 	template := &computepb.InstanceTemplate{
-		Name: ptr.To(templateName),
+		Name: new(templateName),
 		Properties: &computepb.InstanceProperties{
-			MachineType: ptr.To("e2-micro"),
+			MachineType: new("e2-micro"),
 			Disks: []*computepb.AttachedDisk{
 				{
-					Boot:       ptr.To(true),
-					AutoDelete: ptr.To(true),
-					Type:       ptr.To("PERSISTENT"),
+					Boot:       new(true),
+					AutoDelete: new(true),
+					Type:       new("PERSISTENT"),
 					InitializeParams: &computepb.AttachedDiskInitializeParams{
-						SourceImage: ptr.To("projects/debian-cloud/global/images/family/debian-11"),
+						SourceImage: new("projects/debian-cloud/global/images/family/debian-11"),
 					},
 				},
 			},
 			NetworkInterfaces: []*computepb.NetworkInterface{
 				{
-					Network: ptr.To("global/networks/default"),
+					Network: new("global/networks/default"),
 				},
 			},
 		},
@@ -224,9 +223,9 @@ func deleteInstanceTemplate(ctx context.Context, client *compute.InstanceTemplat
 // createInstanceGroupManager creates a GCP Compute Engine instance group manager.
 func createInstanceGroupManager(ctx context.Context, client *compute.InstanceGroupManagersClient, projectID, zone, instanceGroupManagerName, templateName string) error {
 	instanceGroupManager := &computepb.InstanceGroupManager{
-		Name:             ptr.To(instanceGroupManagerName),
-		InstanceTemplate: ptr.To(fmt.Sprintf("projects/%s/global/instanceTemplates/%s", projectID, templateName)),
-		TargetSize:       ptr.To(int32(1)),
+		Name:             new(instanceGroupManagerName),
+		InstanceTemplate: new(fmt.Sprintf("projects/%s/global/instanceTemplates/%s", projectID, templateName)),
+		TargetSize:       new(int32(1)),
 	}
 
 	req := &computepb.InsertInstanceGroupManagerRequest{

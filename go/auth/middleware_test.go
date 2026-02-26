@@ -122,8 +122,7 @@ func TestNewAuthMiddleware(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	jwksURL := server.Start(ctx)
 
@@ -699,8 +698,7 @@ func TestConnectErrorHandling(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
+	ctx := t.Context()
 
 	jwksURL := server.Start(ctx)
 

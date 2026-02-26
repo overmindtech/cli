@@ -13,29 +13,29 @@ import (
 func (c testNetworkFirewallClient) DescribeFirewall(ctx context.Context, params *networkfirewall.DescribeFirewallInput, optFns ...func(*networkfirewall.Options)) (*networkfirewall.DescribeFirewallOutput, error) {
 	return &networkfirewall.DescribeFirewallOutput{
 		Firewall: &types.Firewall{
-			FirewallId:        PtrString("test"),
-			FirewallPolicyArn: PtrString("arn:aws:network-firewall:us-east-1:123456789012:stateless-rulegroup/aws-network-firewall-DefaultStatelessRuleGroup-1J3Z3W2ZQXV3"), // link
+			FirewallId:        new("test"),
+			FirewallPolicyArn: new("arn:aws:network-firewall:us-east-1:123456789012:stateless-rulegroup/aws-network-firewall-DefaultStatelessRuleGroup-1J3Z3W2ZQXV3"), // link
 			SubnetMappings: []types.SubnetMapping{
 				{
-					SubnetId:      PtrString("subnet-12345678901234567"), // link
+					SubnetId:      new("subnet-12345678901234567"), // link
 					IPAddressType: types.IPAddressTypeIpv4,
 				},
 			},
-			VpcId:            PtrString("vpc-12345678901234567"), // link
+			VpcId:            new("vpc-12345678901234567"), // link
 			DeleteProtection: false,
-			Description:      PtrString("test"),
+			Description:      new("test"),
 			EncryptionConfiguration: &types.EncryptionConfiguration{
 				Type:  types.EncryptionTypeAwsOwnedKmsKey,
-				KeyId: PtrString("arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"), // link (this can be an ARN or ID)
+				KeyId: new("arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"), // link (this can be an ARN or ID)
 			},
-			FirewallArn:                    PtrString("arn:aws:network-firewall:us-east-1:123456789012:firewall/aws-network-firewall-DefaultFirewall-1J3Z3W2ZQXV3"),
-			FirewallName:                   PtrString("test"),
+			FirewallArn:                    new("arn:aws:network-firewall:us-east-1:123456789012:firewall/aws-network-firewall-DefaultFirewall-1J3Z3W2ZQXV3"),
+			FirewallName:                   new("test"),
 			FirewallPolicyChangeProtection: false,
 			SubnetChangeProtection:         false,
 			Tags: []types.Tag{
 				{
-					Key:   PtrString("test"),
-					Value: PtrString("test"),
+					Key:   new("test"),
+					Value: new("test"),
 				},
 			},
 		},
@@ -44,22 +44,22 @@ func (c testNetworkFirewallClient) DescribeFirewall(ctx context.Context, params 
 			Status:                        types.FirewallStatusValueDeleting,
 			CapacityUsageSummary: &types.CapacityUsageSummary{
 				CIDRs: &types.CIDRSummary{
-					AvailableCIDRCount: PtrInt32(1),
+					AvailableCIDRCount: new(int32(1)),
 					IPSetReferences: map[string]types.IPSetMetadata{
 						"test": {
-							ResolvedCIDRCount: PtrInt32(1),
+							ResolvedCIDRCount: new(int32(1)),
 						},
 					},
-					UtilizedCIDRCount: PtrInt32(1),
+					UtilizedCIDRCount: new(int32(1)),
 				},
 			},
 			SyncStates: map[string]types.SyncState{
 				"test": {
 					Attachment: &types.Attachment{
-						EndpointId:    PtrString("test"),
+						EndpointId:    new("test"),
 						Status:        types.AttachmentStatusCreating,
-						StatusMessage: PtrString("test"),
-						SubnetId:      PtrString("test"), // link,
+						StatusMessage: new("test"),
+						SubnetId:      new("test"), // link,
 					},
 				},
 			},
@@ -69,7 +69,7 @@ func (c testNetworkFirewallClient) DescribeFirewall(ctx context.Context, params 
 
 func (c testNetworkFirewallClient) DescribeLoggingConfiguration(ctx context.Context, params *networkfirewall.DescribeLoggingConfigurationInput, optFns ...func(*networkfirewall.Options)) (*networkfirewall.DescribeLoggingConfigurationOutput, error) {
 	return &networkfirewall.DescribeLoggingConfigurationOutput{
-		FirewallArn: PtrString("arn:aws:network-firewall:us-east-1:123456789012:firewall/aws-network-firewall-DefaultFirewall-1J3Z3W2ZQXV3"),
+		FirewallArn: new("arn:aws:network-firewall:us-east-1:123456789012:firewall/aws-network-firewall-DefaultFirewall-1J3Z3W2ZQXV3"),
 		LoggingConfiguration: &types.LoggingConfiguration{
 			LogDestinationConfigs: []types.LogDestinationConfig{
 				{
@@ -101,7 +101,7 @@ func (c testNetworkFirewallClient) DescribeLoggingConfiguration(ctx context.Cont
 
 func (c testNetworkFirewallClient) DescribeResourcePolicy(ctx context.Context, params *networkfirewall.DescribeResourcePolicyInput, optFns ...func(*networkfirewall.Options)) (*networkfirewall.DescribeResourcePolicyOutput, error) {
 	return &networkfirewall.DescribeResourcePolicyOutput{
-		Policy: PtrString("test"), // link
+		Policy: new("test"), // link
 	}, nil
 }
 
@@ -109,7 +109,7 @@ func (c testNetworkFirewallClient) ListFirewalls(context.Context, *networkfirewa
 	return &networkfirewall.ListFirewallsOutput{
 		Firewalls: []types.FirewallMetadata{
 			{
-				FirewallArn: PtrString("arn:aws:network-firewall:us-east-1:123456789012:firewall/aws-network-firewall-DefaultFirewall-1J3Z3W2ZQXV3"),
+				FirewallArn: new("arn:aws:network-firewall:us-east-1:123456789012:firewall/aws-network-firewall-DefaultFirewall-1J3Z3W2ZQXV3"),
 			},
 		},
 	}, nil

@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"github.com/overmindtech/cli/go/discovery"
@@ -135,13 +136,7 @@ func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]
 		return true
 	}
 
-	for _, s := range s.Scopes() {
-		if s == scope {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(s.Scopes(), scope)
 }
 
 // Get retrieves an item from the adapter based on the provided scope, query, and

@@ -3,10 +3,10 @@ package manual_test
 import (
 	"context"
 	"errors"
+	"slices"
 	"sync"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql/v2"
 	"go.uber.org/mock/gomock"
 
@@ -376,14 +376,14 @@ func TestSqlServer(t *testing.T) {
 				{
 					Properties: &armsql.PrivateEndpointConnectionProperties{
 						PrivateEndpoint: &armsql.PrivateEndpointProperty{
-							ID: to.Ptr(privateEndpointID1),
+							ID: new(privateEndpointID1),
 						},
 					},
 				},
 				{
 					Properties: &armsql.PrivateEndpointConnectionProperties{
 						PrivateEndpoint: &armsql.PrivateEndpointProperty{
-							ID: to.Ptr(privateEndpointID2),
+							ID: new(privateEndpointID2),
 						},
 					},
 				},
@@ -638,12 +638,12 @@ func TestSqlServer(t *testing.T) {
 		server1 := createAzureSqlServer("server-1", "", "")
 		server2 := &armsql.Server{
 			Name:     nil, // Server with nil name should be skipped
-			Location: to.Ptr("eastus"),
+			Location: new("eastus"),
 			Tags: map[string]*string{
-				"env": to.Ptr("test"),
+				"env": new("test"),
 			},
 			Properties: &armsql.ServerProperties{
-				Version: to.Ptr("12.0"),
+				Version: new("12.0"),
 			},
 		}
 
@@ -838,20 +838,14 @@ func TestSqlServer(t *testing.T) {
 			t.Error("Expected IAMPermissions to return at least one permission")
 		}
 		expectedPermission := "Microsoft.Sql/servers/read"
-		found := false
-		for _, perm := range permissions {
-			if perm == expectedPermission {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(permissions, expectedPermission)
 		if !found {
 			t.Errorf("Expected IAMPermissions to include %s", expectedPermission)
 		}
 
 		// Verify PredefinedRole
 		// PredefinedRole is available on the wrapper, not the adapter
-		if roleInterface, ok := interface{}(wrapper).(interface{ PredefinedRole() string }); ok {
+		if roleInterface, ok := any(wrapper).(interface{ PredefinedRole() string }); ok {
 			role := roleInterface.PredefinedRole()
 			if role != "Reader" {
 				t.Errorf("Expected PredefinedRole to be 'Reader', got %s", role)
@@ -902,27 +896,27 @@ func createAzureSqlServer(serverName, primaryUserAssignedIdentityID, fullyQualif
 	serverID := "/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Sql/servers/" + serverName
 
 	server := &armsql.Server{
-		Name:     to.Ptr(serverName),
-		Location: to.Ptr("eastus"),
+		Name:     new(serverName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env":     to.Ptr("test"),
-			"project": to.Ptr("testing"),
+			"env":     new("test"),
+			"project": new("testing"),
 		},
-		ID: to.Ptr(serverID),
+		ID: new(serverID),
 		Properties: &armsql.ServerProperties{
-			Version:                  to.Ptr("12.0"),
-			AdministratorLogin:       to.Ptr("admin"),
-			FullyQualifiedDomainName: to.Ptr(fullyQualifiedDomainName),
+			Version:                  new("12.0"),
+			AdministratorLogin:       new("admin"),
+			FullyQualifiedDomainName: new(fullyQualifiedDomainName),
 		},
 	}
 
 	if primaryUserAssignedIdentityID != "" {
-		server.Properties.PrimaryUserAssignedIdentityID = to.Ptr(primaryUserAssignedIdentityID)
+		server.Properties.PrimaryUserAssignedIdentityID = new(primaryUserAssignedIdentityID)
 	}
 
 	if fullyQualifiedDomainName == "" && serverName != "" {
 		// Set a default FQDN if not provided but server name is set
-		server.Properties.FullyQualifiedDomainName = to.Ptr(serverName + ".database.windows.net")
+		server.Properties.FullyQualifiedDomainName = new(serverName + ".database.windows.net")
 	}
 
 	return server
@@ -933,7 +927,7 @@ func createAzureSqlServerWithUserAssignedIdentities(serverName, primaryUserAssig
 	server := createAzureSqlServer(serverName, primaryUserAssignedIdentityID, fullyQualifiedDomainName)
 	if userAssignedIdentities != nil {
 		server.Identity = &armsql.ResourceIdentity{
-			Type:                   to.Ptr(armsql.IdentityTypeUserAssigned),
+			Type:                   new(armsql.IdentityTypeUserAssigned),
 			UserAssignedIdentities: userAssignedIdentities,
 		}
 	}
@@ -953,7 +947,7 @@ func createAzureSqlServerWithPrivateEndpointConnections(serverName, primaryUserA
 func createAzureSqlServerWithKeyId(serverName, primaryUserAssignedIdentityID, fullyQualifiedDomainName, keyID string) *armsql.Server {
 	server := createAzureSqlServer(serverName, primaryUserAssignedIdentityID, fullyQualifiedDomainName)
 	if keyID != "" {
-		server.Properties.KeyID = to.Ptr(keyID)
+		server.Properties.KeyID = new(keyID)
 	}
 	return server
 }

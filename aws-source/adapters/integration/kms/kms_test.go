@@ -148,7 +148,7 @@ func KMS(t *testing.T) {
 	}
 
 	// Get the alias for this key
-	var aliasUniqueAttributeValue interface{}
+	var aliasUniqueAttributeValue any
 
 	for _, alias := range sdpListAliases {
 		// Check if the alias is for the key

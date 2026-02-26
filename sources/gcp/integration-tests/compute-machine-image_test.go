@@ -12,7 +12,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/googleapis/gax-go/v2/apierror"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdpcache"
@@ -153,8 +152,8 @@ func TestComputeMachineImageIntegration(t *testing.T) {
 // createComputeMachineImage creates a GCP Compute Machine Image with the given parameters.
 func createComputeMachineImage(t *testing.T, ctx context.Context, client *compute.MachineImagesClient, projectID, zone, machineImageName, sourceInstanceName string) error {
 	machineImage := &computepb.MachineImage{
-		Name: ptr.To(machineImageName),
-		SourceInstance: ptr.To(fmt.Sprintf(
+		Name: new(machineImageName),
+		SourceInstance: new(fmt.Sprintf(
 			"projects/%s/zones/%s/instances/%s",
 			projectID, zone, sourceInstanceName,
 		)),

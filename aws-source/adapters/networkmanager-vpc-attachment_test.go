@@ -10,8 +10,8 @@ import (
 func TestVPCAttachmentItemMapper(t *testing.T) {
 	input := types.VpcAttachment{
 		Attachment: &types.Attachment{
-			AttachmentId:  PtrString("attachment1"),
-			CoreNetworkId: PtrString("corenetwork1"),
+			AttachmentId:  new("attachment1"),
+			CoreNetworkId: new("corenetwork1"),
 		},
 	}
 	scope := "123456789012.eu-west-2"

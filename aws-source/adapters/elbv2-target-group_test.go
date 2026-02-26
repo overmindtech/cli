@@ -16,28 +16,28 @@ func TestTargetGroupOutputMapper(t *testing.T) {
 	output := elbv2.DescribeTargetGroupsOutput{
 		TargetGroups: []types.TargetGroup{
 			{
-				TargetGroupArn:             PtrString("arn:aws:elasticloadbalancing:eu-west-2:944651592624:targetgroup/k8s-default-apiserve-d87e8f7010/559d207158e41222"),
-				TargetGroupName:            PtrString("k8s-default-apiserve-d87e8f7010"),
+				TargetGroupArn:             new("arn:aws:elasticloadbalancing:eu-west-2:944651592624:targetgroup/k8s-default-apiserve-d87e8f7010/559d207158e41222"),
+				TargetGroupName:            new("k8s-default-apiserve-d87e8f7010"),
 				Protocol:                   types.ProtocolEnumHttp,
-				Port:                       PtrInt32(8080),
-				VpcId:                      PtrString("vpc-0c72199250cd479ea"), // link
+				Port:                       new(int32(8080)),
+				VpcId:                      new("vpc-0c72199250cd479ea"), // link
 				HealthCheckProtocol:        types.ProtocolEnumHttp,
-				HealthCheckPort:            PtrString("traffic-port"),
-				HealthCheckEnabled:         PtrBool(true),
-				HealthCheckIntervalSeconds: PtrInt32(10),
-				HealthCheckTimeoutSeconds:  PtrInt32(10),
-				HealthyThresholdCount:      PtrInt32(10),
-				UnhealthyThresholdCount:    PtrInt32(10),
-				HealthCheckPath:            PtrString("/"),
+				HealthCheckPort:            new("traffic-port"),
+				HealthCheckEnabled:         new(true),
+				HealthCheckIntervalSeconds: new(int32(10)),
+				HealthCheckTimeoutSeconds:  new(int32(10)),
+				HealthyThresholdCount:      new(int32(10)),
+				UnhealthyThresholdCount:    new(int32(10)),
+				HealthCheckPath:            new("/"),
 				Matcher: &types.Matcher{
-					HttpCode: PtrString("200"),
-					GrpcCode: PtrString("code"),
+					HttpCode: new("200"),
+					GrpcCode: new("code"),
 				},
 				LoadBalancerArns: []string{
 					"arn:aws:elasticloadbalancing:eu-west-2:944651592624:loadbalancer/app/ingress/1bf10920c5bd199d", // link
 				},
 				TargetType:      types.TargetTypeEnumIp,
-				ProtocolVersion: PtrString("HTTP1"),
+				ProtocolVersion: new("HTTP1"),
 				IpAddressType:   types.TargetGroupIpAddressTypeEnumIpv4,
 			},
 		},

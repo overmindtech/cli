@@ -13,42 +13,42 @@ func (c testNetworkFirewallClient) DescribeTLSInspectionConfiguration(ctx contex
 	now := time.Now()
 	return &networkfirewall.DescribeTLSInspectionConfigurationOutput{
 		TLSInspectionConfigurationResponse: &types.TLSInspectionConfigurationResponse{
-			TLSInspectionConfigurationArn:  PtrString("arn:aws:network-firewall:us-east-1:123456789012:tls-inspection-configuration/aws-network-firewall-DefaultTLSInspectionConfiguration-1J3Z3W2ZQXV3"),
-			TLSInspectionConfigurationId:   PtrString("test"),
-			TLSInspectionConfigurationName: PtrString("test"),
+			TLSInspectionConfigurationArn:  new("arn:aws:network-firewall:us-east-1:123456789012:tls-inspection-configuration/aws-network-firewall-DefaultTLSInspectionConfiguration-1J3Z3W2ZQXV3"),
+			TLSInspectionConfigurationId:   new("test"),
+			TLSInspectionConfigurationName: new("test"),
 			CertificateAuthority: &types.TlsCertificateData{
-				CertificateArn:    PtrString("arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012"), // link
-				CertificateSerial: PtrString("test"),
-				Status:            PtrString("OK"),
-				StatusMessage:     PtrString("test"),
+				CertificateArn:    new("arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012"), // link
+				CertificateSerial: new("test"),
+				Status:            new("OK"),
+				StatusMessage:     new("test"),
 			},
 			Certificates: []types.TlsCertificateData{
 				{
-					CertificateArn:    PtrString("arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012"), // link
-					CertificateSerial: PtrString("test"),
-					Status:            PtrString("OK"),
-					StatusMessage:     PtrString("test"),
+					CertificateArn:    new("arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012"), // link
+					CertificateSerial: new("test"),
+					Status:            new("OK"),
+					StatusMessage:     new("test"),
 				},
 			},
-			Description: PtrString("test"),
+			Description: new("test"),
 			EncryptionConfiguration: &types.EncryptionConfiguration{
 				Type:  types.EncryptionTypeAwsOwnedKmsKey,
-				KeyId: PtrString("arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"), // link (this can be an ARN or ID)
+				KeyId: new("arn:aws:kms:us-east-1:123456789012:key/12345678-1234-1234-1234-123456789012"), // link (this can be an ARN or ID)
 			},
 			LastModifiedTime:                 &now,
-			NumberOfAssociations:             PtrInt32(1),
+			NumberOfAssociations:             new(int32(1)),
 			TLSInspectionConfigurationStatus: types.ResourceStatusActive, // health
 			Tags: []types.Tag{
 				{
-					Key:   PtrString("test"),
-					Value: PtrString("test"),
+					Key:   new("test"),
+					Value: new("test"),
 				},
 			},
 		},
 		TLSInspectionConfiguration: &types.TLSInspectionConfiguration{
 			ServerCertificateConfigurations: []types.ServerCertificateConfiguration{
 				{
-					CertificateAuthorityArn: PtrString("arn:aws:acm:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012"), // link
+					CertificateAuthorityArn: new("arn:aws:acm:us-east-1:123456789012:certificate-authority/12345678-1234-1234-1234-123456789012"), // link
 					CheckCertificateRevocationStatus: &types.CheckCertificateRevocationStatusActions{
 						RevokedStatusAction: types.RevocationCheckActionPass,
 						UnknownStatusAction: types.RevocationCheckActionPass,
@@ -63,7 +63,7 @@ func (c testNetworkFirewallClient) DescribeTLSInspectionConfiguration(ctx contex
 							},
 							Destinations: []types.Address{
 								{
-									AddressDefinition: PtrString("test"),
+									AddressDefinition: new("test"),
 								},
 							},
 							Protocols: []int32{1},
@@ -75,14 +75,14 @@ func (c testNetworkFirewallClient) DescribeTLSInspectionConfiguration(ctx contex
 							},
 							Sources: []types.Address{
 								{
-									AddressDefinition: PtrString("test"),
+									AddressDefinition: new("test"),
 								},
 							},
 						},
 					},
 					ServerCertificates: []types.ServerCertificate{
 						{
-							ResourceArn: PtrString("arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012"), // link
+							ResourceArn: new("arn:aws:acm:us-east-1:123456789012:certificate/12345678-1234-1234-1234-123456789012"), // link
 						},
 					},
 				},
@@ -95,7 +95,7 @@ func (c testNetworkFirewallClient) ListTLSInspectionConfigurations(ctx context.C
 	return &networkfirewall.ListTLSInspectionConfigurationsOutput{
 		TLSInspectionConfigurations: []types.TLSInspectionConfigurationMetadata{
 			{
-				Arn: PtrString("arn:aws:network-firewall:us-east-1:123456789012:tls-inspection-configuration/aws-network-firewall-DefaultTLSInspectionConfiguration-1J3Z3W2ZQXV3"),
+				Arn: new("arn:aws:network-firewall:us-east-1:123456789012:tls-inspection-configuration/aws-network-firewall-DefaultTLSInspectionConfiguration-1J3Z3W2ZQXV3"),
 			},
 		},
 	}, nil

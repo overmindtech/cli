@@ -495,9 +495,7 @@ func TestQueryProgressParallel(t *testing.T) {
 		var wg sync.WaitGroup
 
 		for i := 0; i != 10; i++ {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
+			wg.Go(func() {
 				// Test the initial response
 				sq.handleQueryResponse(ctx, &QueryResponse{
 					ResponseType: &QueryResponse_Response{
@@ -509,7 +507,7 @@ func TestQueryProgressParallel(t *testing.T) {
 						},
 					},
 				})
-			}()
+			})
 		}
 
 		wg.Wait()
@@ -637,8 +635,7 @@ func TestRogueResponder(t *testing.T) {
 
 	// Create our rogue responder that doesn't cancel when it should
 	ticker := time.NewTicker(5 * time.Second)
-	tickerCtx, tickerCancel := context.WithCancel(context.Background())
-	defer tickerCancel()
+	tickerCtx := t.Context()
 	defer ticker.Stop()
 
 	go func() {

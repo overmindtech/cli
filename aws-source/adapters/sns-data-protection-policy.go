@@ -28,7 +28,7 @@ func getDataProtectionPolicyFunc(ctx context.Context, client dataProtectionPolic
 	}
 
 	// ResourceArn is the topic ARN that the policy is associated with
-	attr := map[string]interface{}{
+	attr := map[string]any{
 		"TopicArn": *input.ResourceArn,
 	}
 
@@ -64,7 +64,7 @@ func NewSNSDataProtectionPolicyAdapter(client dataProtectionPolicyClient, accoun
 		Region:          region,
 		DisableList:     true,
 		AdapterMetadata: dataProtectionPolicyAdapterMetadata,
-		cache:        cache,
+		cache:           cache,
 		GetInputMapper: func(scope, query string) *sns.GetDataProtectionPolicyInput {
 			return &sns.GetDataProtectionPolicyInput{
 				ResourceArn: &query,

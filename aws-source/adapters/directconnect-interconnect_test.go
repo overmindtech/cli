@@ -15,23 +15,23 @@ func TestInterconnectOutputMapper(t *testing.T) {
 	output := &directconnect.DescribeInterconnectsOutput{
 		Interconnects: []types.Interconnect{
 			{
-				AwsDeviceV2:          PtrString("EqDC2-123h49s71dabc"),
-				AwsLogicalDeviceId:   PtrString("device-1"),
-				Bandwidth:            PtrString("1Gbps"),
+				AwsDeviceV2:          new("EqDC2-123h49s71dabc"),
+				AwsLogicalDeviceId:   new("device-1"),
+				Bandwidth:            new("1Gbps"),
 				HasLogicalRedundancy: types.HasLogicalRedundancyUnknown,
-				InterconnectId:       PtrString("dxcon-fguhmqlc"),
-				InterconnectName:     PtrString("interconnect-1"),
+				InterconnectId:       new("dxcon-fguhmqlc"),
+				InterconnectName:     new("interconnect-1"),
 				InterconnectState:    types.InterconnectStateAvailable,
-				JumboFrameCapable:    PtrBool(true),
-				LagId:                PtrString("dxlag-ffrz71kw"),
-				LoaIssueTime:         PtrTime(time.Now()),
-				Location:             PtrString("EqDC2"),
-				Region:               PtrString("us-east-1"),
-				ProviderName:         PtrString("provider-1"),
+				JumboFrameCapable:    new(true),
+				LagId:                new("dxlag-ffrz71kw"),
+				LoaIssueTime:         new(time.Now()),
+				Location:             new("EqDC2"),
+				Region:               new("us-east-1"),
+				ProviderName:         new("provider-1"),
 				Tags: []types.Tag{
 					{
-						Key:   PtrString("foo"),
-						Value: PtrString("bar"),
+						Key:   new("foo"),
+						Value: new("bar"),
 					},
 				},
 			},
@@ -125,7 +125,7 @@ func TestInterconnectHealth(t *testing.T) {
 			Interconnects: []types.Interconnect{
 				{
 					InterconnectState: c.state,
-					LagId:             PtrString("dxlag-fgsu9erb"),
+					LagId:             new("dxlag-fgsu9erb"),
 				},
 			},
 		}

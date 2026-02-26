@@ -39,22 +39,22 @@ func TestRestApiOutputMapper(t *testing.T) {
 	output := &apigateway.GetRestApiOutput{
 		ApiKeySource:              types.ApiKeySourceTypeHeader,
 		BinaryMediaTypes:          []string{"application/json"},
-		CreatedDate:               PtrTime(time.Now()),
-		Description:               PtrString("Example API"),
+		CreatedDate:               new(time.Now()),
+		Description:               new("Example API"),
 		DisableExecuteApiEndpoint: false,
 		EndpointConfiguration: &types.EndpointConfiguration{
 			Types:          []types.EndpointType{types.EndpointTypePrivate},
 			VpcEndpointIds: []string{"vpce-12345678"},
 		},
-		Id:                     PtrString("abc123"),
-		MinimumCompressionSize: PtrInt32(1024),
-		Name:                   PtrString("ExampleAPI"),
-		Policy:                 PtrString("{\"Version\": \"2012-10-17\", \"Statement\": [{\"Effect\": \"Allow\", \"Principal\": \"*\", \"Action\": \"execute-api:Invoke\", \"Resource\": \"*\"}]}"),
-		RootResourceId:         PtrString("root123"),
+		Id:                     new("abc123"),
+		MinimumCompressionSize: new(int32(1024)),
+		Name:                   new("ExampleAPI"),
+		Policy:                 new("{\"Version\": \"2012-10-17\", \"Statement\": [{\"Effect\": \"Allow\", \"Principal\": \"*\", \"Action\": \"execute-api:Invoke\", \"Resource\": \"*\"}]}"),
+		RootResourceId:         new("root123"),
 		Tags: map[string]string{
 			"env": "production",
 		},
-		Version:  PtrString("v1"),
+		Version:  new("v1"),
 		Warnings: []string{"This is a warning"},
 	}
 

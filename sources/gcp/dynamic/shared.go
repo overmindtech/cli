@@ -17,8 +17,8 @@ import (
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
 	"github.com/overmindtech/cli/go/sdpcache"
-	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources"
+	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
 )
 
@@ -96,7 +96,7 @@ func externalToSDP(
 	ctx context.Context,
 	location gcpshared.LocationInfo,
 	uniqueAttrKeys []string,
-	resp map[string]interface{},
+	resp map[string]any,
 	sdpAssetType shared.ItemType,
 	linker *gcpshared.Linker,
 	nameSelector string,
@@ -148,13 +148,13 @@ func externalToSDP(
 	return sdpItem, nil
 }
 
-func externalCallSingle(ctx context.Context, httpCli *http.Client, url string) (map[string]interface{}, error) {
+func externalCallSingle(ctx context.Context, httpCli *http.Client, url string) (map[string]any, error) {
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
 	}
 
-	resp, err := httpCli.Do(req)
+	resp, err := httpCli.Do(req) //nolint:gosec // G107 (SSRF): URL built from GCP API discovery document endpoints and project config, not user input
 	if err != nil {
 		return nil, err
 	}
@@ -194,7 +194,7 @@ func externalCallSingle(ctx context.Context, httpCli *http.Client, url string) (
 		return nil, err
 	}
 
-	var result map[string]interface{}
+	var result map[string]any
 	if err = json.Unmarshal(data, &result); err != nil {
 		return nil, err
 	}
@@ -215,7 +215,7 @@ func externalCallMulti(ctx context.Context, itemsSelector string, httpCli *http.
 			return err
 		}
 
-		resp, err := httpCli.Do(req)
+		resp, err := httpCli.Do(req) //nolint:gosec // G107 (SSRF): URL built from GCP API discovery document endpoints with pagination token from GCP responses
 		if err != nil {
 			return err
 		}
@@ -250,7 +250,7 @@ func externalCallMulti(ctx context.Context, itemsSelector string, httpCli *http.
 			return err
 		}
 
-		var result map[string]interface{}
+		var result map[string]any
 		if err = json.Unmarshal(data, &result); err != nil {
 			return err
 		}
@@ -282,7 +282,7 @@ func externalCallMulti(ctx context.Context, itemsSelector string, httpCli *http.
 
 		// Add items from this page to our collection
 		for _, item := range items {
-			if itemMap, ok := item.(map[string]interface{}); ok {
+			if itemMap, ok := item.(map[string]any); ok {
 				// If out channel is provided, send the item to it
 				select {
 				case out <- itemMap:
@@ -361,7 +361,7 @@ func aggregateSDPItems(ctx context.Context, a Adapter, url string, location gcps
 		itemsSelector = a.listResponseSelector
 	}
 
-	out := make(chan map[string]interface{})
+	out := make(chan map[string]any)
 	p := pool.New().WithErrors().WithContext(ctx)
 	p.Go(func(ctx context.Context) error {
 		defer close(out)
@@ -412,7 +412,7 @@ func streamSDPItems(ctx context.Context, a Adapter, url string, location gcpshar
 		itemsSelector = a.listResponseSelector
 	}
 
-	out := make(chan map[string]interface{})
+	out := make(chan map[string]any)
 	p := pool.New().WithErrors().WithContext(ctx)
 	p.Go(func(ctx context.Context) error {
 		defer close(out)

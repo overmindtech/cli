@@ -10,7 +10,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/api/iterator"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -372,16 +371,16 @@ func TestComputeInstance(t *testing.T) {
 		instance := createComputeInstance("test-instance", computepb.Instance_RUNNING)
 		instance.Disks = []*computepb.AttachedDisk{
 			{
-				DeviceName: ptr.To("test-disk"),
-				Source:     ptr.To(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/zones/%s/disks/test-instance", projectID, zone)),
+				DeviceName: new("test-disk"),
+				Source:     new(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/zones/%s/disks/test-instance", projectID, zone)),
 				InitializeParams: &computepb.AttachedDiskInitializeParams{
-					SourceImage:    ptr.To(sourceImageURL),
-					SourceSnapshot: ptr.To(sourceSnapshotURL),
+					SourceImage:    new(sourceImageURL),
+					SourceSnapshot: new(sourceSnapshotURL),
 					SourceImageEncryptionKey: &computepb.CustomerEncryptionKey{
-						KmsKeyName: ptr.To(sourceImageKeyName),
+						KmsKeyName: new(sourceImageKeyName),
 					},
 					SourceSnapshotEncryptionKey: &computepb.CustomerEncryptionKey{
-						KmsKeyName: ptr.To(sourceSnapshotKeyName),
+						KmsKeyName: new(sourceSnapshotKeyName),
 					},
 				},
 			},
@@ -478,10 +477,10 @@ func TestComputeInstance(t *testing.T) {
 		instance := createComputeInstance("test-instance", computepb.Instance_RUNNING)
 		instance.Disks = []*computepb.AttachedDisk{
 			{
-				DeviceName: ptr.To("test-disk"),
-				Source:     ptr.To(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/zones/%s/disks/test-instance", projectID, zone)),
+				DeviceName: new("test-disk"),
+				Source:     new(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/zones/%s/disks/test-instance", projectID, zone)),
 				DiskEncryptionKey: &computepb.CustomerEncryptionKey{
-					KmsKeyName: ptr.To(diskKeyName),
+					KmsKeyName: new(diskKeyName),
 				},
 			},
 		}
@@ -557,10 +556,10 @@ func TestComputeInstance(t *testing.T) {
 		instance := createComputeInstance("test-instance", computepb.Instance_RUNNING)
 		instance.Disks = []*computepb.AttachedDisk{
 			{
-				DeviceName: ptr.To("test-disk"),
-				Source:     ptr.To(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/zones/%s/disks/test-instance", projectID, zone)),
+				DeviceName: new("test-disk"),
+				Source:     new(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/zones/%s/disks/test-instance", projectID, zone)),
 				DiskEncryptionKey: &computepb.CustomerEncryptionKey{
-					KmsKeyName: ptr.To(diskKeyName),
+					KmsKeyName: new(diskKeyName),
 				},
 			},
 		}
@@ -636,7 +635,7 @@ func TestComputeInstance(t *testing.T) {
 		instance := createComputeInstance("test-instance", computepb.Instance_RUNNING)
 		instance.ServiceAccounts = []*computepb.ServiceAccount{
 			{
-				Email: ptr.To(serviceAccountEmail),
+				Email: new(serviceAccountEmail),
 			},
 		}
 
@@ -715,12 +714,12 @@ func TestComputeInstance(t *testing.T) {
 		instance.Metadata = &computepb.Metadata{
 			Items: []*computepb.Items{
 				{
-					Key:   ptr.To("instance-template"),
-					Value: ptr.To(instanceTemplateURI),
+					Key:   new("instance-template"),
+					Value: new(instanceTemplateURI),
 				},
 				{
-					Key:   ptr.To("created-by"),
-					Value: ptr.To(igmURI),
+					Key:   new("created-by"),
+					Value: new(igmURI),
 				},
 			},
 		}
@@ -806,8 +805,8 @@ func TestComputeInstance(t *testing.T) {
 		instance.Metadata = &computepb.Metadata{
 			Items: []*computepb.Items{
 				{
-					Key:   ptr.To("instance-template"),
-					Value: ptr.To(instanceTemplateURI),
+					Key:   new("instance-template"),
+					Value: new(instanceTemplateURI),
 				},
 			},
 		}
@@ -1081,23 +1080,23 @@ func TestComputeInstance(t *testing.T) {
 
 func createComputeInstance(instanceName string, status computepb.Instance_Status) *computepb.Instance {
 	return &computepb.Instance{
-		Name:   ptr.To(instanceName),
+		Name:   new(instanceName),
 		Labels: map[string]string{"env": "test"},
 		Disks: []*computepb.AttachedDisk{
 			{
-				DeviceName: ptr.To("test-disk"),
-				Source:     ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/zones/us-central1-a/disks/test-instance"),
+				DeviceName: new("test-disk"),
+				Source:     new("https://www.googleapis.com/compute/v1/projects/test-project-id/zones/us-central1-a/disks/test-instance"),
 			},
 		},
 		NetworkInterfaces: []*computepb.NetworkInterface{
 			{
-				NetworkIP:   ptr.To("192.168.1.3"),
-				Subnetwork:  ptr.To("projects/test-project-id/regions/us-central1/subnetworks/default"),
-				Network:     ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/global/networks/network"),
-				Ipv6Address: ptr.To("2001:0db8:85a3:0000:0000:8a2e:0370:7334"),
+				NetworkIP:   new("192.168.1.3"),
+				Subnetwork:  new("projects/test-project-id/regions/us-central1/subnetworks/default"),
+				Network:     new("https://www.googleapis.com/compute/v1/projects/test-project-id/global/networks/network"),
+				Ipv6Address: new("2001:0db8:85a3:0000:0000:8a2e:0370:7334"),
 			},
 		},
-		Status: ptr.To(status.String()),
+		Status: new(status.String()),
 		ResourcePolicies: []string{
 			"projects/test-project-id/regions/us-central1/resourcePolicies/test-policy",
 		},

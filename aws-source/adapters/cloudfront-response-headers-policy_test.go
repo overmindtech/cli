@@ -10,68 +10,68 @@ import (
 
 func TestResponseHeadersPolicyItemMapper(t *testing.T) {
 	x := types.ResponseHeadersPolicy{
-		Id:               PtrString("test"),
-		LastModifiedTime: PtrTime(time.Now()),
+		Id:               new("test"),
+		LastModifiedTime: new(time.Now()),
 		ResponseHeadersPolicyConfig: &types.ResponseHeadersPolicyConfig{
-			Name:    PtrString("example-policy"),
-			Comment: PtrString("example comment"),
+			Name:    new("example-policy"),
+			Comment: new("example comment"),
 			CorsConfig: &types.ResponseHeadersPolicyCorsConfig{
-				AccessControlAllowCredentials: PtrBool(true),
+				AccessControlAllowCredentials: new(true),
 				AccessControlAllowHeaders: &types.ResponseHeadersPolicyAccessControlAllowHeaders{
 					Items:    []string{"X-Customer-Header"},
-					Quantity: PtrInt32(1),
+					Quantity: new(int32(1)),
 				},
 			},
 			CustomHeadersConfig: &types.ResponseHeadersPolicyCustomHeadersConfig{
-				Quantity: PtrInt32(1),
+				Quantity: new(int32(1)),
 				Items: []types.ResponseHeadersPolicyCustomHeader{
 					{
-						Header:   PtrString("X-Customer-Header"),
-						Override: PtrBool(true),
-						Value:    PtrString("test"),
+						Header:   new("X-Customer-Header"),
+						Override: new(true),
+						Value:    new("test"),
 					},
 				},
 			},
 			RemoveHeadersConfig: &types.ResponseHeadersPolicyRemoveHeadersConfig{
-				Quantity: PtrInt32(1),
+				Quantity: new(int32(1)),
 				Items: []types.ResponseHeadersPolicyRemoveHeader{
 					{
-						Header: PtrString("X-Private-Header"),
+						Header: new("X-Private-Header"),
 					},
 				},
 			},
 			SecurityHeadersConfig: &types.ResponseHeadersPolicySecurityHeadersConfig{
 				ContentSecurityPolicy: &types.ResponseHeadersPolicyContentSecurityPolicy{
-					ContentSecurityPolicy: PtrString("default-src 'none';"),
-					Override:              PtrBool(true),
+					ContentSecurityPolicy: new("default-src 'none';"),
+					Override:              new(true),
 				},
 				ContentTypeOptions: &types.ResponseHeadersPolicyContentTypeOptions{
-					Override: PtrBool(true),
+					Override: new(true),
 				},
 				FrameOptions: &types.ResponseHeadersPolicyFrameOptions{
 					FrameOption: types.FrameOptionsListDeny,
-					Override:    PtrBool(true),
+					Override:    new(true),
 				},
 				ReferrerPolicy: &types.ResponseHeadersPolicyReferrerPolicy{
-					Override:       PtrBool(true),
+					Override:       new(true),
 					ReferrerPolicy: types.ReferrerPolicyListNoReferrer,
 				},
 				StrictTransportSecurity: &types.ResponseHeadersPolicyStrictTransportSecurity{
-					AccessControlMaxAgeSec: PtrInt32(86400),
-					Override:               PtrBool(true),
-					IncludeSubdomains:      PtrBool(true),
-					Preload:                PtrBool(true),
+					AccessControlMaxAgeSec: new(int32(86400)),
+					Override:               new(true),
+					IncludeSubdomains:      new(true),
+					Preload:                new(true),
 				},
 				XSSProtection: &types.ResponseHeadersPolicyXSSProtection{
-					Override:   PtrBool(true),
-					Protection: PtrBool(true),
-					ModeBlock:  PtrBool(true),
-					ReportUri:  PtrString("https://example.com/report"),
+					Override:   new(true),
+					Protection: new(true),
+					ModeBlock:  new(true),
+					ReportUri:  new("https://example.com/report"),
 				},
 			},
 			ServerTimingHeadersConfig: &types.ResponseHeadersPolicyServerTimingHeadersConfig{
-				Enabled:      PtrBool(true),
-				SamplingRate: PtrFloat64(0.1),
+				Enabled:      new(true),
+				SamplingRate: new(0.1),
 			},
 		},
 	}

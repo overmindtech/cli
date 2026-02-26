@@ -7,14 +7,15 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"slices"
 	"strings"
 	"testing"
 	"time"
 
-	compute "cloud.google.com/go/compute/apiv1"
-	"cloud.google.com/go/compute/apiv1/computepb"
 	authcredentials "cloud.google.com/go/auth/credentials"
 	"cloud.google.com/go/auth/oauth2adapt"
+	compute "cloud.google.com/go/compute/apiv1"
+	"cloud.google.com/go/compute/apiv1/computepb"
 	credentials "cloud.google.com/go/iam/credentials/apiv1"
 	credentialspb "cloud.google.com/go/iam/credentials/apiv1/credentialspb"
 	"github.com/google/uuid"
@@ -562,13 +563,7 @@ func grantServiceAccountTokenCreator(ctx context.Context, iamService *iam.Servic
 	for i, binding := range policy.Bindings {
 		if binding.Role == role {
 			// Check if member already exists
-			memberFound := false
-			for _, m := range binding.Members {
-				if m == member {
-					memberFound = true
-					break
-				}
-			}
+			memberFound := slices.Contains(binding.Members, member)
 			if !memberFound {
 				policy.Bindings[i].Members = append(policy.Bindings[i].Members, member)
 			}
@@ -632,10 +627,8 @@ func verifyServiceAccountTokenCreatorBinding(ctx context.Context, iamService *ia
 	for _, binding := range policy.Bindings {
 		if binding.Role == role {
 			// Check if the impersonator service account is in the members list
-			for _, m := range binding.Members {
-				if m == member {
-					return true, nil
-				}
+			if slices.Contains(binding.Members, member) {
+				return true, nil
 			}
 		}
 	}
@@ -686,13 +679,7 @@ func grantProjectIAMRole(ctx context.Context, crmService *cloudresourcemanager.S
 	for i, binding := range policy.Bindings {
 		if binding.Role == role {
 			// Check if member already exists
-			memberFound := false
-			for _, m := range binding.Members {
-				if m == member {
-					memberFound = true
-					break
-				}
-			}
+			memberFound := slices.Contains(binding.Members, member)
 			if !memberFound {
 				policy.Bindings[i].Members = append(policy.Bindings[i].Members, member)
 			}

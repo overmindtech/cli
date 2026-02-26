@@ -17,33 +17,33 @@ func TestAutoScalingGroupOutputMapper(t *testing.T) {
 	output := autoscaling.DescribeAutoScalingGroupsOutput{
 		AutoScalingGroups: []types.AutoScalingGroup{
 			{
-				AutoScalingGroupName: PtrString("eks-default-20230117110031319900000013-96c2dfb1-a11b-b5e4-6efb-0fea7e22855c"),
-				AutoScalingGroupARN:  PtrString("arn:aws:autoscaling:eu-west-2:944651592624:autoScalingGroup:1cbb0e22-818f-4d8b-8662-77f73d3713ca:autoScalingGroupName/eks-default-20230117110031319900000013-96c2dfb1-a11b-b5e4-6efb-0fea7e22855c"),
+				AutoScalingGroupName: new("eks-default-20230117110031319900000013-96c2dfb1-a11b-b5e4-6efb-0fea7e22855c"),
+				AutoScalingGroupARN:  new("arn:aws:autoscaling:eu-west-2:944651592624:autoScalingGroup:1cbb0e22-818f-4d8b-8662-77f73d3713ca:autoScalingGroupName/eks-default-20230117110031319900000013-96c2dfb1-a11b-b5e4-6efb-0fea7e22855c"),
 				MixedInstancesPolicy: &types.MixedInstancesPolicy{
 					LaunchTemplate: &types.LaunchTemplate{
 						LaunchTemplateSpecification: &types.LaunchTemplateSpecification{
-							LaunchTemplateId:   PtrString("lt-0174ff2b8909d0c75"), // link
-							LaunchTemplateName: PtrString("eks-96c2dfb1-a11b-b5e4-6efb-0fea7e22855c"),
-							Version:            PtrString("1"),
+							LaunchTemplateId:   new("lt-0174ff2b8909d0c75"), // link
+							LaunchTemplateName: new("eks-96c2dfb1-a11b-b5e4-6efb-0fea7e22855c"),
+							Version:            new("1"),
 						},
 						Overrides: []types.LaunchTemplateOverrides{
 							{
-								InstanceType: PtrString("t3.large"),
+								InstanceType: new("t3.large"),
 							},
 						},
 					},
 					InstancesDistribution: &types.InstancesDistribution{
-						OnDemandAllocationStrategy:          PtrString("prioritized"),
-						OnDemandBaseCapacity:                PtrInt32(0),
-						OnDemandPercentageAboveBaseCapacity: PtrInt32(100),
-						SpotAllocationStrategy:              PtrString("lowest-price"),
-						SpotInstancePools:                   PtrInt32(2),
+						OnDemandAllocationStrategy:          new("prioritized"),
+						OnDemandBaseCapacity:                new(int32(0)),
+						OnDemandPercentageAboveBaseCapacity: new(int32(100)),
+						SpotAllocationStrategy:              new("lowest-price"),
+						SpotInstancePools:                   new(int32(2)),
 					},
 				},
-				MinSize:         PtrInt32(1),
-				MaxSize:         PtrInt32(3),
-				DesiredCapacity: PtrInt32(1),
-				DefaultCooldown: PtrInt32(300),
+				MinSize:         new(int32(1)),
+				MaxSize:         new(int32(3)),
+				DesiredCapacity: new(int32(1)),
+				DefaultCooldown: new(int32(300)),
 				AvailabilityZones: []string{ // link
 					"eu-west-2c",
 					"eu-west-2a",
@@ -53,62 +53,62 @@ func TestAutoScalingGroupOutputMapper(t *testing.T) {
 				TargetGroupARNs: []string{
 					"arn:partition:service:region:account-id:resource-type/resource-id", // link
 				},
-				HealthCheckType:        PtrString("EC2"),
-				HealthCheckGracePeriod: PtrInt32(15),
+				HealthCheckType:        new("EC2"),
+				HealthCheckGracePeriod: new(int32(15)),
 				Instances: []types.Instance{
 					{
-						InstanceId:       PtrString("i-0be6c4fe789cb1b78"), // link
-						InstanceType:     PtrString("t3.large"),
-						AvailabilityZone: PtrString("eu-west-2c"),
+						InstanceId:       new("i-0be6c4fe789cb1b78"), // link
+						InstanceType:     new("t3.large"),
+						AvailabilityZone: new("eu-west-2c"),
 						LifecycleState:   types.LifecycleStateInService,
-						HealthStatus:     PtrString("Healthy"),
+						HealthStatus:     new("Healthy"),
 						LaunchTemplate: &types.LaunchTemplateSpecification{
-							LaunchTemplateId:   PtrString("lt-0174ff2b8909d0c75"), // Link
-							LaunchTemplateName: PtrString("eks-96c2dfb1-a11b-b5e4-6efb-0fea7e22855c"),
-							Version:            PtrString("1"),
+							LaunchTemplateId:   new("lt-0174ff2b8909d0c75"), // Link
+							LaunchTemplateName: new("eks-96c2dfb1-a11b-b5e4-6efb-0fea7e22855c"),
+							Version:            new("1"),
 						},
-						ProtectedFromScaleIn: PtrBool(false),
+						ProtectedFromScaleIn: new(false),
 					},
 				},
-				CreatedTime:        PtrTime(time.Now()),
+				CreatedTime:        new(time.Now()),
 				SuspendedProcesses: []types.SuspendedProcess{},
-				VPCZoneIdentifier:  PtrString("subnet-0e234bef35fc4a9e1,subnet-09d5f6fa75b0b4569,subnet-0960234bbc4edca03"),
+				VPCZoneIdentifier:  new("subnet-0e234bef35fc4a9e1,subnet-09d5f6fa75b0b4569,subnet-0960234bbc4edca03"),
 				EnabledMetrics:     []types.EnabledMetric{},
 				Tags: []types.TagDescription{
 					{
-						ResourceId:        PtrString("eks-default-20230117110031319900000013-96c2dfb1-a11b-b5e4-6efb-0fea7e22855c"),
-						ResourceType:      PtrString("auto-scaling-group"),
-						Key:               PtrString("eks:cluster-name"),
-						Value:             PtrString("dogfood"),
-						PropagateAtLaunch: PtrBool(true),
+						ResourceId:        new("eks-default-20230117110031319900000013-96c2dfb1-a11b-b5e4-6efb-0fea7e22855c"),
+						ResourceType:      new("auto-scaling-group"),
+						Key:               new("eks:cluster-name"),
+						Value:             new("dogfood"),
+						PropagateAtLaunch: new(true),
 					},
 					{
-						ResourceId:        PtrString("eks-default-20230117110031319900000013-96c2dfb1-a11b-b5e4-6efb-0fea7e22855c"),
-						ResourceType:      PtrString("auto-scaling-group"),
-						Key:               PtrString("eks:nodegroup-name"),
-						Value:             PtrString("default-20230117110031319900000013"),
-						PropagateAtLaunch: PtrBool(true),
+						ResourceId:        new("eks-default-20230117110031319900000013-96c2dfb1-a11b-b5e4-6efb-0fea7e22855c"),
+						ResourceType:      new("auto-scaling-group"),
+						Key:               new("eks:nodegroup-name"),
+						Value:             new("default-20230117110031319900000013"),
+						PropagateAtLaunch: new(true),
 					},
 					{
-						ResourceId:        PtrString("eks-default-20230117110031319900000013-96c2dfb1-a11b-b5e4-6efb-0fea7e22855c"),
-						ResourceType:      PtrString("auto-scaling-group"),
-						Key:               PtrString("k8s.io/cluster-autoscaler/dogfood"),
-						Value:             PtrString("owned"),
-						PropagateAtLaunch: PtrBool(true),
+						ResourceId:        new("eks-default-20230117110031319900000013-96c2dfb1-a11b-b5e4-6efb-0fea7e22855c"),
+						ResourceType:      new("auto-scaling-group"),
+						Key:               new("k8s.io/cluster-autoscaler/dogfood"),
+						Value:             new("owned"),
+						PropagateAtLaunch: new(true),
 					},
 					{
-						ResourceId:        PtrString("eks-default-20230117110031319900000013-96c2dfb1-a11b-b5e4-6efb-0fea7e22855c"),
-						ResourceType:      PtrString("auto-scaling-group"),
-						Key:               PtrString("k8s.io/cluster-autoscaler/enabled"),
-						Value:             PtrString("true"),
-						PropagateAtLaunch: PtrBool(true),
+						ResourceId:        new("eks-default-20230117110031319900000013-96c2dfb1-a11b-b5e4-6efb-0fea7e22855c"),
+						ResourceType:      new("auto-scaling-group"),
+						Key:               new("k8s.io/cluster-autoscaler/enabled"),
+						Value:             new("true"),
+						PropagateAtLaunch: new(true),
 					},
 					{
-						ResourceId:        PtrString("eks-default-20230117110031319900000013-96c2dfb1-a11b-b5e4-6efb-0fea7e22855c"),
-						ResourceType:      PtrString("auto-scaling-group"),
-						Key:               PtrString("kubernetes.io/cluster/dogfood"),
-						Value:             PtrString("owned"),
-						PropagateAtLaunch: PtrBool(true),
+						ResourceId:        new("eks-default-20230117110031319900000013-96c2dfb1-a11b-b5e4-6efb-0fea7e22855c"),
+						ResourceType:      new("auto-scaling-group"),
+						Key:               new("kubernetes.io/cluster/dogfood"),
+						Value:             new("owned"),
+						PropagateAtLaunch: new(true),
 					},
 				},
 				TerminationPolicies: []string{
@@ -116,36 +116,36 @@ func TestAutoScalingGroupOutputMapper(t *testing.T) {
 					"OldestLaunchTemplate",
 					"OldestInstance",
 				},
-				NewInstancesProtectedFromScaleIn: PtrBool(false),
-				ServiceLinkedRoleARN:             PtrString("arn:aws:iam::944651592624:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"), // link
-				CapacityRebalance:                PtrBool(true),
+				NewInstancesProtectedFromScaleIn: new(false),
+				ServiceLinkedRoleARN:             new("arn:aws:iam::944651592624:role/aws-service-role/autoscaling.amazonaws.com/AWSServiceRoleForAutoScaling"), // link
+				CapacityRebalance:                new(true),
 				TrafficSources: []types.TrafficSourceIdentifier{
 					{
-						Identifier: PtrString("arn:partition:service:region:account-id:resource-type/resource-id"), // We will skip this for now since it's related to VPC lattice groups which are still in preview
+						Identifier: new("arn:partition:service:region:account-id:resource-type/resource-id"), // We will skip this for now since it's related to VPC lattice groups which are still in preview
 					},
 				},
-				Context:                 PtrString("foo"),
-				DefaultInstanceWarmup:   PtrInt32(10),
-				DesiredCapacityType:     PtrString("foo"),
-				LaunchConfigurationName: PtrString("launchConfig"), // link
+				Context:                 new("foo"),
+				DefaultInstanceWarmup:   new(int32(10)),
+				DesiredCapacityType:     new("foo"),
+				LaunchConfigurationName: new("launchConfig"), // link
 				LaunchTemplate: &types.LaunchTemplateSpecification{
-					LaunchTemplateId:   PtrString("id"), // link
-					LaunchTemplateName: PtrString("launchTemplateName"),
+					LaunchTemplateId:   new("id"), // link
+					LaunchTemplateName: new("launchTemplateName"),
 				},
-				MaxInstanceLifetime: PtrInt32(30),
-				PlacementGroup:      PtrString("placementGroup"), // link (ec2)
-				PredictedCapacity:   PtrInt32(1),
-				Status:              PtrString("OK"),
+				MaxInstanceLifetime: new(int32(30)),
+				PlacementGroup:      new("placementGroup"), // link (ec2)
+				PredictedCapacity:   new(int32(1)),
+				Status:              new("OK"),
 				WarmPoolConfiguration: &types.WarmPoolConfiguration{
 					InstanceReusePolicy: &types.InstanceReusePolicy{
-						ReuseOnScaleIn: PtrBool(true),
+						ReuseOnScaleIn: new(true),
 					},
-					MaxGroupPreparedCapacity: PtrInt32(1),
-					MinSize:                  PtrInt32(1),
+					MaxGroupPreparedCapacity: new(int32(1)),
+					MinSize:                  new(int32(1)),
 					PoolState:                types.WarmPoolStateHibernated,
 					Status:                   types.WarmPoolStatusPendingDelete,
 				},
-				WarmPoolSize: PtrInt32(1),
+				WarmPoolSize: new(int32(1)),
 			},
 		},
 	}

@@ -13,7 +13,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/googleapis/gax-go/v2/apierror"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -204,7 +203,7 @@ func TestComputeNodeGroupIntegration(t *testing.T) {
 					ExpectedType:   gcpshared.ComputeNodeGroup.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  nodeTemplateName,
-					ExpectedScope: "*",
+					ExpectedScope:  "*",
 				},
 			}
 
@@ -274,8 +273,8 @@ func TestComputeNodeGroupIntegration(t *testing.T) {
 func createComputeNodeTemplate(ctx context.Context, client *compute.NodeTemplatesClient, projectID, region, name string) error {
 	// Create a new node template
 	nodeTemplate := &computepb.NodeTemplate{
-		Name:     ptr.To(name),
-		NodeType: ptr.To("c2-node-60-240"),
+		Name:     new(name),
+		NodeType: new("c2-node-60-240"),
 	}
 
 	// Create the node template
@@ -336,12 +335,12 @@ func deleteComputeNodeTemplate(ctx context.Context, client *compute.NodeTemplate
 func createComputeNodeGroup(ctx context.Context, client *compute.NodeGroupsClient, nodeTemplate, projectID, zone, name string) error {
 	// Create a new node group
 	nodeGroup := &computepb.NodeGroup{
-		Name:         ptr.To(name),
-		NodeTemplate: ptr.To(nodeTemplate),
+		Name:         new(name),
+		NodeTemplate: new(nodeTemplate),
 		AutoscalingPolicy: &computepb.NodeGroupAutoscalingPolicy{
-			Mode:     ptr.To(computepb.NodeGroupAutoscalingPolicy_OFF.String()),
-			MinNodes: ptr.To(int32(0)),
-			MaxNodes: ptr.To(int32(1)),
+			Mode:     new(computepb.NodeGroupAutoscalingPolicy_OFF.String()),
+			MinNodes: new(int32(0)),
+			MaxNodes: new(int32(1)),
 		},
 	}
 

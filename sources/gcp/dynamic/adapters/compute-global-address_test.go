@@ -24,42 +24,42 @@ func TestComputeGlobalAddress(t *testing.T) {
 	addressName := "test-global-address"
 	globalAddress := &computepb.Address{
 		Name:        &addressName,
-		Description: stringPtr("Test global address for load balancer"),
-		Address:     stringPtr("203.0.113.12"),
-		AddressType: stringPtr("EXTERNAL"),
-		Status:      stringPtr("RESERVED"),
-		Network:     stringPtr("global/networks/test-network"),
+		Description: new("Test global address for load balancer"),
+		Address:     new("203.0.113.12"),
+		AddressType: new("EXTERNAL"),
+		Status:      new("RESERVED"),
+		Network:     new("global/networks/test-network"),
 		Labels: map[string]string{
 			"env":  "test",
 			"team": "networking",
 		},
-		Region:            stringPtr("global"),
-		NetworkTier:       stringPtr("PREMIUM"),
-		CreationTimestamp: stringPtr("2023-01-15T10:30:00.000-08:00"),
-		Id:                uint64Ptr(1234567890123456789),
-		Kind:              stringPtr("compute#globalAddress"),
-		SelfLink:          stringPtr(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/addresses/%s", projectID, addressName)),
+		Region:            new("global"),
+		NetworkTier:       new("PREMIUM"),
+		CreationTimestamp: new("2023-01-15T10:30:00.000-08:00"),
+		Id:                new(uint64(1234567890123456789)),
+		Kind:              new("compute#globalAddress"),
+		SelfLink:          new(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/addresses/%s", projectID, addressName)),
 	}
 
 	// Create a second global address for list testing
 	addressName2 := "test-global-address-2"
 	globalAddress2 := &computepb.Address{
 		Name:        &addressName2,
-		Description: stringPtr("Second test global address"),
-		Address:     stringPtr("203.0.113.13"),
-		AddressType: stringPtr("EXTERNAL"),
-		Status:      stringPtr("RESERVED"),
-		Network:     stringPtr("global/networks/test-network-2"),
+		Description: new("Second test global address"),
+		Address:     new("203.0.113.13"),
+		AddressType: new("EXTERNAL"),
+		Status:      new("RESERVED"),
+		Network:     new("global/networks/test-network-2"),
 		Labels: map[string]string{
 			"env":  "prod",
 			"team": "networking",
 		},
-		Region:            stringPtr("global"),
-		NetworkTier:       stringPtr("PREMIUM"),
-		CreationTimestamp: stringPtr("2023-01-16T11:45:00.000-08:00"),
-		Id:                uint64Ptr(1234567890123456790),
-		Kind:              stringPtr("compute#globalAddress"),
-		SelfLink:          stringPtr(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/addresses/%s", projectID, addressName2)),
+		Region:            new("global"),
+		NetworkTier:       new("PREMIUM"),
+		CreationTimestamp: new("2023-01-16T11:45:00.000-08:00"),
+		Id:                new(uint64(1234567890123456790)),
+		Kind:              new("compute#globalAddress"),
+		SelfLink:          new(fmt.Sprintf("https://www.googleapis.com/compute/v1/projects/%s/global/addresses/%s", projectID, addressName2)),
 	}
 
 	globalAddresses := &computepb.AddressList{
@@ -192,17 +192,4 @@ func TestComputeGlobalAddress(t *testing.T) {
 			t.Errorf("Expected 2 global addresses, got %d", len(sdpItems))
 		}
 	})
-}
-
-// Helper functions for pointer creation
-func stringPtr(s string) *string {
-	return &s
-}
-
-func uint64Ptr(u uint64) *uint64 {
-	return &u
-}
-
-func boolPtr(b bool) *bool {
-	return &b
 }

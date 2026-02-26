@@ -152,7 +152,7 @@ func TestDataplexDataScan(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://dataplex.googleapis.com/v1/projects/%s/locations/%s/dataScans/%s", projectID, location, dataScanName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Data scan not found"},
+				Body:       map[string]any{"error": "Data scan not found"},
 			},
 		}
 

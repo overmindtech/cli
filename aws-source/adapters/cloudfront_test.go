@@ -13,8 +13,8 @@ func (c TestCloudFrontClient) ListTagsForResource(ctx context.Context, params *c
 		Tags: &types.Tags{
 			Items: []types.Tag{
 				{
-					Key:   PtrString("foo"),
-					Value: PtrString("bar"),
+					Key:   new("foo"),
+					Value: new("bar"),
 				},
 			},
 		},

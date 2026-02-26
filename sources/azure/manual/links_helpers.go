@@ -2,6 +2,7 @@ package manual
 
 import (
 	"net"
+	"slices"
 	"strings"
 
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -21,10 +22,8 @@ func appendLinkIfValid(
 	if value == "" {
 		return
 	}
-	for _, skip := range skipValues {
-		if value == skip {
-			return
-		}
+	if slices.Contains(skipValues, value) {
+		return
 	}
 	if q := createQuery(value); q != nil {
 		*queries = append(*queries, q)

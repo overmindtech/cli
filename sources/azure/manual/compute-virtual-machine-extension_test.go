@@ -5,7 +5,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	"go.uber.org/mock/gomock"
 
@@ -134,9 +133,9 @@ func TestComputeVirtualMachineExtension(t *testing.T) {
 		extension := createAzureVirtualMachineExtension(extensionName, vmName)
 		extension.Properties.ProtectedSettingsFromKeyVault = &armcompute.KeyVaultSecretReference{
 			SourceVault: &armcompute.SubResource{
-				ID: to.Ptr("/subscriptions/test-subscription/resourceGroups/different-rg/providers/Microsoft.KeyVault/vaults/test-keyvault"),
+				ID: new("/subscriptions/test-subscription/resourceGroups/different-rg/providers/Microsoft.KeyVault/vaults/test-keyvault"),
 			},
-			SecretURL: to.Ptr("https://test-keyvault.vault.azure.net/secrets/test-secret/version"),
+			SecretURL: new("https://test-keyvault.vault.azure.net/secrets/test-secret/version"),
 		}
 
 		mockClient := mocks.NewMockVirtualMachineExtensionsClient(ctrl)
@@ -673,18 +672,18 @@ func TestComputeVirtualMachineExtension(t *testing.T) {
 
 func createAzureVirtualMachineExtension(extensionName, vmName string) *armcompute.VirtualMachineExtension {
 	return &armcompute.VirtualMachineExtension{
-		Name:     to.Ptr(extensionName),
-		Location: to.Ptr("eastus"),
-		Type:     to.Ptr("Microsoft.Compute/virtualMachines/extensions"),
+		Name:     new(extensionName),
+		Location: new("eastus"),
+		Type:     new("Microsoft.Compute/virtualMachines/extensions"),
 		Tags: map[string]*string{
-			"env":     to.Ptr("test"),
-			"project": to.Ptr("testing"),
+			"env":     new("test"),
+			"project": new("testing"),
 		},
 		Properties: &armcompute.VirtualMachineExtensionProperties{
-			Publisher:          to.Ptr("Microsoft.Compute"),
-			Type:               to.Ptr("CustomScriptExtension"),
-			TypeHandlerVersion: to.Ptr("1.10"),
-			ProvisioningState:  to.Ptr("Succeeded"),
+			Publisher:          new("Microsoft.Compute"),
+			Type:               new("CustomScriptExtension"),
+			TypeHandlerVersion: new("1.10"),
+			ProvisioningState:  new("Succeeded"),
 		},
 	}
 }
@@ -693,7 +692,7 @@ func createAzureVirtualMachineExtensionWithKeyVault(extensionName, vmName string
 	extension := createAzureVirtualMachineExtension(extensionName, vmName)
 	extension.Properties.ProtectedSettingsFromKeyVault = &armcompute.KeyVaultSecretReference{
 		SourceVault: &armcompute.SubResource{
-			ID: to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.KeyVault/vaults/test-keyvault"),
+			ID: new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.KeyVault/vaults/test-keyvault"),
 		},
 	}
 	return extension
@@ -701,8 +700,8 @@ func createAzureVirtualMachineExtensionWithKeyVault(extensionName, vmName string
 
 func createAzureVirtualMachineExtensionWithSettingsURL(extensionName, vmName string) *armcompute.VirtualMachineExtension {
 	extension := createAzureVirtualMachineExtension(extensionName, vmName)
-	extension.Properties.Settings = map[string]interface{}{
-		"fileUris": []interface{}{
+	extension.Properties.Settings = map[string]any{
+		"fileUris": []any{
 			"https://example.com/scripts/script.sh",
 		},
 		"commandToExecute": "bash script.sh",
@@ -712,7 +711,7 @@ func createAzureVirtualMachineExtensionWithSettingsURL(extensionName, vmName str
 
 func createAzureVirtualMachineExtensionWithSettingsIP(extensionName, vmName string) *armcompute.VirtualMachineExtension {
 	extension := createAzureVirtualMachineExtension(extensionName, vmName)
-	extension.Properties.Settings = map[string]interface{}{
+	extension.Properties.Settings = map[string]any{
 		"serverIP": "10.0.0.1",
 		"port":     8080,
 	}
@@ -721,7 +720,7 @@ func createAzureVirtualMachineExtensionWithSettingsIP(extensionName, vmName stri
 
 func createAzureVirtualMachineExtensionWithProtectedSettings(extensionName, vmName string) *armcompute.VirtualMachineExtension {
 	extension := createAzureVirtualMachineExtension(extensionName, vmName)
-	extension.Properties.ProtectedSettings = map[string]interface{}{
+	extension.Properties.ProtectedSettings = map[string]any{
 		"storageAccountName": "mystorageaccount",
 		"storageAccountKey":  "secret-key",
 		"endpoint":           "https://api.example.com/v1",
@@ -733,16 +732,16 @@ func createAzureVirtualMachineExtensionWithAllLinks(extensionName, vmName string
 	extension := createAzureVirtualMachineExtension(extensionName, vmName)
 	extension.Properties.ProtectedSettingsFromKeyVault = &armcompute.KeyVaultSecretReference{
 		SourceVault: &armcompute.SubResource{
-			ID: to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.KeyVault/vaults/test-keyvault"),
+			ID: new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.KeyVault/vaults/test-keyvault"),
 		},
 	}
-	extension.Properties.Settings = map[string]interface{}{
-		"fileUris": []interface{}{
+	extension.Properties.Settings = map[string]any{
+		"fileUris": []any{
 			"https://example.com/scripts/script.sh",
 		},
 		"serverIP": "10.0.0.1",
 	}
-	extension.Properties.ProtectedSettings = map[string]interface{}{
+	extension.Properties.ProtectedSettings = map[string]any{
 		"endpoint": "https://api.example.com/v1",
 	}
 	return extension

@@ -160,8 +160,8 @@ func TestS3SourceCaching(t *testing.T) {
 }
 
 var owner = types.Owner{
-	DisplayName: PtrString("dylan"),
-	ID:          PtrString("id"),
+	DisplayName: new("dylan"),
+	ID:          new("id"),
 }
 
 // TestS3Client A client that returns example data
@@ -171,8 +171,8 @@ func (t TestS3Client) ListBuckets(ctx context.Context, params *s3.ListBucketsInp
 	return &s3.ListBucketsOutput{
 		Buckets: []types.Bucket{
 			{
-				CreationDate: PtrTime(time.Now()),
-				Name:         PtrString("foo"),
+				CreationDate: new(time.Now()),
+				Name:         new("foo"),
 			},
 		},
 		Owner: &owner,
@@ -185,10 +185,10 @@ func (t TestS3Client) GetBucketAcl(ctx context.Context, params *s3.GetBucketAclI
 			{
 				Grantee: &types.Grantee{
 					Type:         types.TypeAmazonCustomerByEmail,
-					DisplayName:  PtrString("dylan"),
-					EmailAddress: PtrString("dylan@company.com"),
-					ID:           PtrString("id"),
-					URI:          PtrString("uri"),
+					DisplayName:  new("dylan"),
+					EmailAddress: new("dylan@company.com"),
+					ID:           new("id"),
+					URI:          new("uri"),
 				},
 			},
 		},
@@ -199,15 +199,15 @@ func (t TestS3Client) GetBucketAcl(ctx context.Context, params *s3.GetBucketAclI
 func (t TestS3Client) GetBucketAnalyticsConfiguration(ctx context.Context, params *s3.GetBucketAnalyticsConfigurationInput, optFns ...func(*s3.Options)) (*s3.GetBucketAnalyticsConfigurationOutput, error) {
 	return &s3.GetBucketAnalyticsConfigurationOutput{
 		AnalyticsConfiguration: &types.AnalyticsConfiguration{
-			Id: PtrString("id"),
+			Id: new("id"),
 			StorageClassAnalysis: &types.StorageClassAnalysis{
 				DataExport: &types.StorageClassAnalysisDataExport{
 					Destination: &types.AnalyticsExportDestination{
 						S3BucketDestination: &types.AnalyticsS3BucketDestination{
-							Bucket:          PtrString("arn:aws:s3:::amzn-s3-demo-bucket"),
+							Bucket:          new("arn:aws:s3:::amzn-s3-demo-bucket"),
 							Format:          types.AnalyticsS3ExportFileFormatCsv,
-							BucketAccountId: PtrString("id"),
-							Prefix:          PtrString("pre"),
+							BucketAccountId: new("id"),
+							Prefix:          new("pre"),
 						},
 					},
 					OutputSchemaVersion: types.StorageClassAnalysisSchemaVersionV1,
@@ -233,8 +233,8 @@ func (t TestS3Client) GetBucketCors(ctx context.Context, params *s3.GetBucketCor
 				ExposeHeaders: []string{
 					"foo",
 				},
-				ID:            PtrString("id"),
-				MaxAgeSeconds: PtrInt32(10),
+				ID:            new("id"),
+				MaxAgeSeconds: new(int32(10)),
 			},
 		},
 	}, nil
@@ -247,9 +247,9 @@ func (t TestS3Client) GetBucketEncryption(ctx context.Context, params *s3.GetBuc
 				{
 					ApplyServerSideEncryptionByDefault: &types.ServerSideEncryptionByDefault{
 						SSEAlgorithm:   types.ServerSideEncryptionAes256,
-						KMSMasterKeyID: PtrString("id"),
+						KMSMasterKeyID: new("id"),
 					},
-					BucketKeyEnabled: PtrBool(true),
+					BucketKeyEnabled: new(true),
 				},
 			},
 		},
@@ -259,12 +259,12 @@ func (t TestS3Client) GetBucketEncryption(ctx context.Context, params *s3.GetBuc
 func (t TestS3Client) GetBucketIntelligentTieringConfiguration(ctx context.Context, params *s3.GetBucketIntelligentTieringConfigurationInput, optFns ...func(*s3.Options)) (*s3.GetBucketIntelligentTieringConfigurationOutput, error) {
 	return &s3.GetBucketIntelligentTieringConfigurationOutput{
 		IntelligentTieringConfiguration: &types.IntelligentTieringConfiguration{
-			Id:     PtrString("id"),
+			Id:     new("id"),
 			Status: types.IntelligentTieringStatusEnabled,
 			Tierings: []types.Tiering{
 				{
 					AccessTier: types.IntelligentTieringAccessTierDeepArchiveAccess,
-					Days:       PtrInt32(100),
+					Days:       new(int32(100)),
 				},
 			},
 			Filter: &types.IntelligentTieringFilter{},
@@ -277,20 +277,20 @@ func (t TestS3Client) GetBucketInventoryConfiguration(ctx context.Context, param
 		InventoryConfiguration: &types.InventoryConfiguration{
 			Destination: &types.InventoryDestination{
 				S3BucketDestination: &types.InventoryS3BucketDestination{
-					Bucket:    PtrString("arn:aws:s3:::amzn-s3-demo-bucket"),
+					Bucket:    new("arn:aws:s3:::amzn-s3-demo-bucket"),
 					Format:    types.InventoryFormatCsv,
-					AccountId: PtrString("id"),
+					AccountId: new("id"),
 					Encryption: &types.InventoryEncryption{
 						SSEKMS: &types.SSEKMS{
-							KeyId: PtrString("key"),
+							KeyId: new("key"),
 						},
 					},
-					Prefix: PtrString("pre"),
+					Prefix: new("pre"),
 				},
 			},
-			Id:                     PtrString("id"),
+			Id:                     new("id"),
 			IncludedObjectVersions: types.InventoryIncludedObjectVersionsAll,
-			IsEnabled:              PtrBool(true),
+			IsEnabled:              new(true),
 			Schedule: &types.InventorySchedule{
 				Frequency: types.InventoryFrequencyDaily,
 			},
@@ -304,30 +304,30 @@ func (t TestS3Client) GetBucketLifecycleConfiguration(ctx context.Context, param
 			{
 				Status: types.ExpirationStatusEnabled,
 				AbortIncompleteMultipartUpload: &types.AbortIncompleteMultipartUpload{
-					DaysAfterInitiation: PtrInt32(1),
+					DaysAfterInitiation: new(int32(1)),
 				},
 				Expiration: &types.LifecycleExpiration{
-					Date:                      PtrTime(time.Now()),
-					Days:                      PtrInt32(3),
-					ExpiredObjectDeleteMarker: PtrBool(true),
+					Date:                      new(time.Now()),
+					Days:                      new(int32(3)),
+					ExpiredObjectDeleteMarker: new(true),
 				},
-				ID: PtrString("id"),
+				ID: new("id"),
 				NoncurrentVersionExpiration: &types.NoncurrentVersionExpiration{
-					NewerNoncurrentVersions: PtrInt32(3),
-					NoncurrentDays:          PtrInt32(1),
+					NewerNoncurrentVersions: new(int32(3)),
+					NoncurrentDays:          new(int32(1)),
 				},
 				NoncurrentVersionTransitions: []types.NoncurrentVersionTransition{
 					{
-						NewerNoncurrentVersions: PtrInt32(1),
-						NoncurrentDays:          PtrInt32(1),
+						NewerNoncurrentVersions: new(int32(1)),
+						NoncurrentDays:          new(int32(1)),
 						StorageClass:            types.TransitionStorageClassGlacierIr,
 					},
 				},
-				Prefix: PtrString("pre"),
+				Prefix: new("pre"),
 				Transitions: []types.Transition{
 					{
-						Date:         PtrTime(time.Now()),
-						Days:         PtrInt32(12),
+						Date:         new(time.Now()),
+						Days:         new(int32(12)),
 						StorageClass: types.TransitionStorageClassGlacierIr,
 					},
 				},
@@ -345,13 +345,13 @@ func (t TestS3Client) GetBucketLocation(ctx context.Context, params *s3.GetBucke
 func (t TestS3Client) GetBucketLogging(ctx context.Context, params *s3.GetBucketLoggingInput, optFns ...func(*s3.Options)) (*s3.GetBucketLoggingOutput, error) {
 	return &s3.GetBucketLoggingOutput{
 		LoggingEnabled: &types.LoggingEnabled{
-			TargetBucket: PtrString("bucket"),
-			TargetPrefix: PtrString("pre"),
+			TargetBucket: new("bucket"),
+			TargetPrefix: new("pre"),
 			TargetGrants: []types.TargetGrant{
 				{
 					Grantee: &types.Grantee{
 						Type: types.TypeGroup,
-						ID:   PtrString("id"),
+						ID:   new("id"),
 					},
 				},
 			},
@@ -362,7 +362,7 @@ func (t TestS3Client) GetBucketLogging(ctx context.Context, params *s3.GetBucket
 func (t TestS3Client) GetBucketMetricsConfiguration(ctx context.Context, params *s3.GetBucketMetricsConfigurationInput, optFns ...func(*s3.Options)) (*s3.GetBucketMetricsConfigurationOutput, error) {
 	return &s3.GetBucketMetricsConfigurationOutput{
 		MetricsConfiguration: &types.MetricsConfiguration{
-			Id: PtrString("id"),
+			Id: new("id"),
 		},
 	}, nil
 }
@@ -372,43 +372,43 @@ func (t TestS3Client) GetBucketNotificationConfiguration(ctx context.Context, pa
 		LambdaFunctionConfigurations: []types.LambdaFunctionConfiguration{
 			{
 				Events:            []types.Event{},
-				LambdaFunctionArn: PtrString("arn:partition:service:region:account-id:resource-type:resource-id"),
-				Id:                PtrString("id"),
+				LambdaFunctionArn: new("arn:partition:service:region:account-id:resource-type:resource-id"),
+				Id:                new("id"),
 			},
 		},
 		EventBridgeConfiguration: &types.EventBridgeConfiguration{},
 		QueueConfigurations: []types.QueueConfiguration{
 			{
 				Events:   []types.Event{},
-				QueueArn: PtrString("arn:partition:service:region:account-id:resource-type:resource-id"),
+				QueueArn: new("arn:partition:service:region:account-id:resource-type:resource-id"),
 				Filter: &types.NotificationConfigurationFilter{
 					Key: &types.S3KeyFilter{
 						FilterRules: []types.FilterRule{
 							{
 								Name:  types.FilterRuleNamePrefix,
-								Value: PtrString("foo"),
+								Value: new("foo"),
 							},
 						},
 					},
 				},
-				Id: PtrString("id"),
+				Id: new("id"),
 			},
 		},
 		TopicConfigurations: []types.TopicConfiguration{
 			{
 				Events:   []types.Event{},
-				TopicArn: PtrString("arn:partition:service:region:account-id:resource-type:resource-id"),
+				TopicArn: new("arn:partition:service:region:account-id:resource-type:resource-id"),
 				Filter: &types.NotificationConfigurationFilter{
 					Key: &types.S3KeyFilter{
 						FilterRules: []types.FilterRule{
 							{
 								Name:  types.FilterRuleNameSuffix,
-								Value: PtrString("fix"),
+								Value: new("fix"),
 							},
 						},
 					},
 				},
-				Id: PtrString("id"),
+				Id: new("id"),
 			},
 		},
 	}, nil
@@ -428,14 +428,14 @@ func (t TestS3Client) GetBucketOwnershipControls(ctx context.Context, params *s3
 
 func (t TestS3Client) GetBucketPolicy(ctx context.Context, params *s3.GetBucketPolicyInput, optFns ...func(*s3.Options)) (*s3.GetBucketPolicyOutput, error) {
 	return &s3.GetBucketPolicyOutput{
-		Policy: PtrString("policy"),
+		Policy: new("policy"),
 	}, nil
 }
 
 func (t TestS3Client) GetBucketPolicyStatus(ctx context.Context, params *s3.GetBucketPolicyStatusInput, optFns ...func(*s3.Options)) (*s3.GetBucketPolicyStatusOutput, error) {
 	return &s3.GetBucketPolicyStatusOutput{
 		PolicyStatus: &types.PolicyStatus{
-			IsPublic: PtrBool(true),
+			IsPublic: new(true),
 		},
 	}, nil
 }
@@ -443,28 +443,28 @@ func (t TestS3Client) GetBucketPolicyStatus(ctx context.Context, params *s3.GetB
 func (t TestS3Client) GetBucketReplication(ctx context.Context, params *s3.GetBucketReplicationInput, optFns ...func(*s3.Options)) (*s3.GetBucketReplicationOutput, error) {
 	return &s3.GetBucketReplicationOutput{
 		ReplicationConfiguration: &types.ReplicationConfiguration{
-			Role: PtrString("role"),
+			Role: new("role"),
 			Rules: []types.ReplicationRule{
 				{
 					Destination: &types.Destination{
-						Bucket: PtrString("bucket"),
+						Bucket: new("bucket"),
 						AccessControlTranslation: &types.AccessControlTranslation{
 							Owner: types.OwnerOverrideDestination,
 						},
-						Account: PtrString("account"),
+						Account: new("account"),
 						EncryptionConfiguration: &types.EncryptionConfiguration{
-							ReplicaKmsKeyID: PtrString("keyId"),
+							ReplicaKmsKeyID: new("keyId"),
 						},
 						Metrics: &types.Metrics{
 							Status: types.MetricsStatusEnabled,
 							EventThreshold: &types.ReplicationTimeValue{
-								Minutes: PtrInt32(1),
+								Minutes: new(int32(1)),
 							},
 						},
 						ReplicationTime: &types.ReplicationTime{
 							Status: types.ReplicationTimeStatusEnabled,
 							Time: &types.ReplicationTimeValue{
-								Minutes: PtrInt32(1),
+								Minutes: new(int32(1)),
 							},
 						},
 						StorageClass: types.StorageClassGlacier,
@@ -497,23 +497,23 @@ func (t TestS3Client) GetBucketVersioning(ctx context.Context, params *s3.GetBuc
 func (t TestS3Client) GetBucketWebsite(ctx context.Context, params *s3.GetBucketWebsiteInput, optFns ...func(*s3.Options)) (*s3.GetBucketWebsiteOutput, error) {
 	return &s3.GetBucketWebsiteOutput{
 		ErrorDocument: &types.ErrorDocument{
-			Key: PtrString("key"),
+			Key: new("key"),
 		},
 		IndexDocument: &types.IndexDocument{
-			Suffix: PtrString("html"),
+			Suffix: new("html"),
 		},
 		RedirectAllRequestsTo: &types.RedirectAllRequestsTo{
-			HostName: PtrString("hostname"),
+			HostName: new("hostname"),
 			Protocol: types.ProtocolHttps,
 		},
 		RoutingRules: []types.RoutingRule{
 			{
 				Redirect: &types.Redirect{
-					HostName:             PtrString("hostname"),
-					HttpRedirectCode:     PtrString("303"),
+					HostName:             new("hostname"),
+					HttpRedirectCode:     new("303"),
 					Protocol:             types.ProtocolHttp,
-					ReplaceKeyPrefixWith: PtrString("pre"),
-					ReplaceKeyWith:       PtrString("key"),
+					ReplaceKeyPrefixWith: new("pre"),
+					ReplaceKeyWith:       new("key"),
 				},
 			},
 		},

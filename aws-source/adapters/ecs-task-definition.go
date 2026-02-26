@@ -159,12 +159,12 @@ func NewECSTaskDefinitionAdapter(client ECSClient, accountID string, region stri
 		GetFunc:         taskDefinitionGetFunc,
 		ListInput:       &ecs.ListTaskDefinitionsInput{},
 		AdapterMetadata: taskDefinitionAdapterMetadata,
-		cache:        cache,
+		cache:           cache,
 		GetInputMapper: func(scope, query string) *ecs.DescribeTaskDefinitionInput {
 			// AWS actually supports "family:revision" format as an input here
 			// so we can just push it in directly
 			return &ecs.DescribeTaskDefinitionInput{
-				TaskDefinition: PtrString(query),
+				TaskDefinition: new(query),
 			}
 		},
 		ListFuncPaginatorBuilder: func(client ECSClient, input *ecs.ListTaskDefinitionsInput) Paginator[*ecs.ListTaskDefinitionsOutput, *ecs.Options] {
@@ -176,7 +176,7 @@ func NewECSTaskDefinitionAdapter(client ECSClient, accountID string, region stri
 			for _, arn := range output.TaskDefinitionArns {
 				if a, err := ParseARN(arn); err == nil {
 					getInputs = append(getInputs, &ecs.DescribeTaskDefinitionInput{
-						TaskDefinition: PtrString(a.ResourceID()),
+						TaskDefinition: new(a.ResourceID()),
 					})
 				}
 			}

@@ -16,7 +16,7 @@ func TestBackupPolicyOutputMapper(t *testing.T) {
 	}
 
 	items, err := BackupPolicyOutputMapper(context.Background(), nil, "foo", &efs.DescribeBackupPolicyInput{
-		FileSystemId: PtrString("fs-1234"),
+		FileSystemId: new("fs-1234"),
 	}, output)
 
 	if err != nil {

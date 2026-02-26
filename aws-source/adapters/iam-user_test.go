@@ -21,7 +21,7 @@ func (t *TestIAMClient) ListGroupsForUser(ctx context.Context, params *iam.ListG
 	marker := params.Marker
 
 	if marker == nil {
-		marker = PtrString("0")
+		marker = new("0")
 	}
 
 	// Get the current page
@@ -34,17 +34,17 @@ func (t *TestIAMClient) ListGroupsForUser(ctx context.Context, params *iam.ListG
 		isTruncated = false
 		marker = nil
 	} else {
-		marker = PtrString(fmt.Sprint(markerInt))
+		marker = new(fmt.Sprint(markerInt))
 	}
 
 	return &iam.ListGroupsForUserOutput{
 		Groups: []types.Group{
 			{
-				Arn:        PtrString("arn:aws:iam::801795385023:Group/something"),
-				CreateDate: PtrTime(time.Now()),
-				GroupId:    PtrString("id"),
-				GroupName:  PtrString(fmt.Sprintf("group-%v", marker)),
-				Path:       PtrString("/"),
+				Arn:        new("arn:aws:iam::801795385023:Group/something"),
+				CreateDate: new(time.Now()),
+				GroupId:    new("id"),
+				GroupName:  new(fmt.Sprintf("group-%v", marker)),
+				Path:       new("/"),
 			},
 		},
 		IsTruncated: isTruncated,
@@ -55,11 +55,11 @@ func (t *TestIAMClient) ListGroupsForUser(ctx context.Context, params *iam.ListG
 func (t *TestIAMClient) GetUser(ctx context.Context, params *iam.GetUserInput, optFns ...func(*iam.Options)) (*iam.GetUserOutput, error) {
 	return &iam.GetUserOutput{
 		User: &types.User{
-			Path:       PtrString("/"),
-			UserName:   PtrString("power-users"),
-			UserId:     PtrString("AGPA3VLV2U27T6SSLJMDS"),
-			Arn:        PtrString("arn:aws:iam::801795385023:User/power-users"),
-			CreateDate: PtrTime(time.Now()),
+			Path:       new("/"),
+			UserName:   new("power-users"),
+			UserId:     new("AGPA3VLV2U27T6SSLJMDS"),
+			Arn:        new("arn:aws:iam::801795385023:User/power-users"),
+			CreateDate: new(time.Now()),
 		},
 	}, nil
 }
@@ -69,7 +69,7 @@ func (t *TestIAMClient) ListUsers(ctx context.Context, params *iam.ListUsersInpu
 	marker := params.Marker
 
 	if marker == nil {
-		marker = PtrString("0")
+		marker = new("0")
 	}
 
 	// Get the current page
@@ -82,17 +82,17 @@ func (t *TestIAMClient) ListUsers(ctx context.Context, params *iam.ListUsersInpu
 		isTruncated = false
 		marker = nil
 	} else {
-		marker = PtrString(fmt.Sprint(markerInt))
+		marker = new(fmt.Sprint(markerInt))
 	}
 
 	return &iam.ListUsersOutput{
 		Users: []types.User{
 			{
-				Path:       PtrString("/"),
-				UserName:   PtrString(fmt.Sprintf("user-%v", marker)),
-				UserId:     PtrString("AGPA3VLV2U27T6SSLJMDS"),
-				Arn:        PtrString("arn:aws:iam::801795385023:User/power-users"),
-				CreateDate: PtrTime(time.Now()),
+				Path:       new("/"),
+				UserName:   new(fmt.Sprintf("user-%v", marker)),
+				UserId:     new("AGPA3VLV2U27T6SSLJMDS"),
+				Arn:        new("arn:aws:iam::801795385023:User/power-users"),
+				CreateDate: new(time.Now()),
 			},
 		},
 		IsTruncated: isTruncated,
@@ -104,8 +104,8 @@ func (t *TestIAMClient) ListUserTags(context.Context, *iam.ListUserTagsInput, ..
 	return &iam.ListUserTagsOutput{
 		Tags: []types.Tag{
 			{
-				Key:   PtrString("foo"),
-				Value: PtrString("bar"),
+				Key:   new("foo"),
+				Value: new("bar"),
 			},
 		},
 		IsTruncated: false,
@@ -114,7 +114,7 @@ func (t *TestIAMClient) ListUserTags(context.Context, *iam.ListUserTagsInput, ..
 }
 
 func TestGetUserGroups(t *testing.T) {
-	groups, err := getUserGroups(context.Background(), &TestIAMClient{}, PtrString("foo"))
+	groups, err := getUserGroups(context.Background(), &TestIAMClient{}, new("foo"))
 	if err != nil {
 		t.Error(err)
 	}
@@ -168,7 +168,7 @@ func TestUserListFunc(t *testing.T) {
 func TestUserListTagsFunc(t *testing.T) {
 	tags, err := userListTagsFunc(context.Background(), &UserDetails{
 		User: &types.User{
-			UserName: PtrString("foo"),
+			UserName: new("foo"),
 		},
 	}, &TestIAMClient{})
 	if err != nil {
@@ -183,19 +183,19 @@ func TestUserListTagsFunc(t *testing.T) {
 func TestUserItemMapper(t *testing.T) {
 	details := UserDetails{
 		User: &types.User{
-			Path:       PtrString("/"),
-			UserName:   PtrString("power-users"),
-			UserId:     PtrString("AGPA3VLV2U27T6SSLJMDS"),
-			Arn:        PtrString("arn:aws:iam::801795385023:User/power-users"),
-			CreateDate: PtrTime(time.Now()),
+			Path:       new("/"),
+			UserName:   new("power-users"),
+			UserId:     new("AGPA3VLV2U27T6SSLJMDS"),
+			Arn:        new("arn:aws:iam::801795385023:User/power-users"),
+			CreateDate: new(time.Now()),
 		},
 		UserGroups: []types.Group{
 			{
-				Arn:        PtrString("arn:aws:iam::801795385023:Group/something"),
-				CreateDate: PtrTime(time.Now()),
-				GroupId:    PtrString("id"),
-				GroupName:  PtrString("name"),
-				Path:       PtrString("/"),
+				Arn:        new("arn:aws:iam::801795385023:Group/something"),
+				CreateDate: new(time.Now()),
+				GroupId:    new("id"),
+				GroupName:  new("name"),
+				Path:       new("/"),
 			},
 		},
 	}

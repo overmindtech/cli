@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"slices"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
 	"go.uber.org/mock/gomock"
 
@@ -209,9 +209,9 @@ func TestNetworkLoadBalancer(t *testing.T) {
 		lb1 := createAzureLoadBalancer("test-lb-1", subscriptionID, resourceGroup)
 		lb2 := &armnetwork.LoadBalancer{
 			Name:     nil, // Load balancer with nil name should be skipped
-			Location: to.Ptr("eastus"),
+			Location: new("eastus"),
 			Tags: map[string]*string{
-				"env": to.Ptr("test"),
+				"env": new("test"),
 			},
 			Properties: &armnetwork.LoadBalancerPropertiesFormat{},
 		}
@@ -317,13 +317,7 @@ func TestNetworkLoadBalancer(t *testing.T) {
 			t.Error("Expected IAMPermissions to return at least one permission")
 		}
 		expectedPermission := "Microsoft.Network/loadBalancers/read"
-		found := false
-		for _, perm := range permissions {
-			if perm == expectedPermission {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(permissions, expectedPermission)
 		if !found {
 			t.Errorf("Expected IAMPermissions to include %s", expectedPermission)
 		}
@@ -493,7 +487,7 @@ func (m *MockLoadBalancersPager) More() bool {
 
 func (mr *MockLoadBalancersPagerMockRecorder) More() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "More", reflect.TypeOf((*MockLoadBalancersPager)(nil).More))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "More", reflect.TypeFor[func() bool]())
 }
 
 func (m *MockLoadBalancersPager) NextPage(ctx context.Context) (armnetwork.LoadBalancersClientListResponse, error) {
@@ -504,9 +498,9 @@ func (m *MockLoadBalancersPager) NextPage(ctx context.Context) (armnetwork.LoadB
 	return ret0, ret1
 }
 
-func (mr *MockLoadBalancersPagerMockRecorder) NextPage(ctx interface{}) *gomock.Call {
+func (mr *MockLoadBalancersPagerMockRecorder) NextPage(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NextPage", reflect.TypeOf((*MockLoadBalancersPager)(nil).NextPage), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NextPage", reflect.TypeFor[func(ctx context.Context) (armnetwork.LoadBalancersClientListResponse, error)](), ctx)
 }
 
 // createAzureLoadBalancer creates a mock Azure load balancer for testing with all linked resources
@@ -516,61 +510,61 @@ func createAzureLoadBalancer(lbName, subscriptionID, resourceGroup string) *armn
 	nicID := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/networkInterfaces/test-nic/ipConfigurations/ipconfig1", subscriptionID, resourceGroup)
 
 	return &armnetwork.LoadBalancer{
-		Name:     to.Ptr(lbName),
-		Location: to.Ptr("eastus"),
+		Name:     new(lbName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env":     to.Ptr("test"),
-			"project": to.Ptr("testing"),
+			"env":     new("test"),
+			"project": new("testing"),
 		},
 		Properties: &armnetwork.LoadBalancerPropertiesFormat{
 			FrontendIPConfigurations: []*armnetwork.FrontendIPConfiguration{
 				{
-					Name: to.Ptr("frontend-ip-config"),
+					Name: new("frontend-ip-config"),
 					Properties: &armnetwork.FrontendIPConfigurationPropertiesFormat{
 						PublicIPAddress: &armnetwork.PublicIPAddress{
-							ID: to.Ptr(publicIPID),
+							ID: new(publicIPID),
 						},
 						Subnet: &armnetwork.Subnet{
-							ID: to.Ptr(subnetID),
+							ID: new(subnetID),
 						},
 						// PrivateIPAddress is present when using a subnet (internal load balancer)
-						PrivateIPAddress: to.Ptr("10.2.0.5"),
+						PrivateIPAddress: new("10.2.0.5"),
 					},
 				},
 			},
 			BackendAddressPools: []*armnetwork.BackendAddressPool{
 				{
-					Name: to.Ptr("backend-pool"),
+					Name: new("backend-pool"),
 				},
 			},
 			InboundNatRules: []*armnetwork.InboundNatRule{
 				{
-					Name: to.Ptr("inbound-nat-rule"),
+					Name: new("inbound-nat-rule"),
 					Properties: &armnetwork.InboundNatRulePropertiesFormat{
 						BackendIPConfiguration: &armnetwork.InterfaceIPConfiguration{
-							ID: to.Ptr(nicID),
+							ID: new(nicID),
 						},
 					},
 				},
 			},
 			LoadBalancingRules: []*armnetwork.LoadBalancingRule{
 				{
-					Name: to.Ptr("lb-rule"),
+					Name: new("lb-rule"),
 				},
 			},
 			Probes: []*armnetwork.Probe{
 				{
-					Name: to.Ptr("probe"),
+					Name: new("probe"),
 				},
 			},
 			OutboundRules: []*armnetwork.OutboundRule{
 				{
-					Name: to.Ptr("outbound-rule"),
+					Name: new("outbound-rule"),
 				},
 			},
 			InboundNatPools: []*armnetwork.InboundNatPool{
 				{
-					Name: to.Ptr("nat-pool"),
+					Name: new("nat-pool"),
 				},
 			},
 		},
@@ -582,18 +576,18 @@ func createAzureLoadBalancerWithDifferentScopePublicIP(lbName, subscriptionID, r
 	publicIPID := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/publicIPAddresses/test-public-ip", otherSub, otherRG)
 
 	return &armnetwork.LoadBalancer{
-		Name:     to.Ptr(lbName),
-		Location: to.Ptr("eastus"),
+		Name:     new(lbName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armnetwork.LoadBalancerPropertiesFormat{
 			FrontendIPConfigurations: []*armnetwork.FrontendIPConfiguration{
 				{
-					Name: to.Ptr("frontend-ip-config"),
+					Name: new("frontend-ip-config"),
 					Properties: &armnetwork.FrontendIPConfigurationPropertiesFormat{
 						PublicIPAddress: &armnetwork.PublicIPAddress{
-							ID: to.Ptr(publicIPID),
+							ID: new(publicIPID),
 						},
 					},
 				},
@@ -607,18 +601,18 @@ func createAzureLoadBalancerWithDifferentScopeSubnet(lbName, subscriptionID, res
 	subnetID := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/test-subnet", otherSub, otherRG)
 
 	return &armnetwork.LoadBalancer{
-		Name:     to.Ptr(lbName),
-		Location: to.Ptr("eastus"),
+		Name:     new(lbName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armnetwork.LoadBalancerPropertiesFormat{
 			FrontendIPConfigurations: []*armnetwork.FrontendIPConfiguration{
 				{
-					Name: to.Ptr("frontend-ip-config"),
+					Name: new("frontend-ip-config"),
 					Properties: &armnetwork.FrontendIPConfigurationPropertiesFormat{
 						Subnet: &armnetwork.Subnet{
-							ID: to.Ptr(subnetID),
+							ID: new(subnetID),
 						},
 					},
 				},

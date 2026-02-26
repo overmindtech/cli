@@ -15,7 +15,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -342,22 +341,22 @@ func createVirtualNetworkForVMSS(ctx context.Context, client *armnetwork.Virtual
 
 	// Create the VNet
 	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroupName, vnetName, armnetwork.VirtualNetwork{
-		Location: ptr.To(location),
+		Location: new(location),
 		Properties: &armnetwork.VirtualNetworkPropertiesFormat{
 			AddressSpace: &armnetwork.AddressSpace{
-				AddressPrefixes: []*string{ptr.To("10.1.0.0/16")},
+				AddressPrefixes: []*string{new("10.1.0.0/16")},
 			},
 			Subnets: []*armnetwork.Subnet{
 				{
-					Name: ptr.To(integrationTestVMSSSubnetName),
+					Name: new(integrationTestVMSSSubnetName),
 					Properties: &armnetwork.SubnetPropertiesFormat{
-						AddressPrefix: ptr.To("10.1.0.0/24"),
+						AddressPrefix: new("10.1.0.0/24"),
 					},
 				},
 			},
 		},
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
+			"purpose": new("overmind-integration-tests"),
 		},
 	}, nil)
 	if err != nil {
@@ -408,53 +407,53 @@ func createVirtualMachineScaleSet(ctx context.Context, client *armcompute.Virtua
 
 	// Create the VMSS
 	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroupName, vmssName, armcompute.VirtualMachineScaleSet{
-		Location: ptr.To(location),
+		Location: new(location),
 		SKU: &armcompute.SKU{
-			Name:     ptr.To("Standard_B1s"), // Burstable B-series VM - cheaper and more widely available
-			Tier:     ptr.To("Standard"),
-			Capacity: ptr.To[int64](1), // Start with 1 instance for testing
+			Name:     new("Standard_B1s"), // Burstable B-series VM - cheaper and more widely available
+			Tier:     new("Standard"),
+			Capacity: new(int64(1)), // Start with 1 instance for testing
 		},
 		Properties: &armcompute.VirtualMachineScaleSetProperties{
 			UpgradePolicy: &armcompute.UpgradePolicy{
-				Mode: ptr.To(armcompute.UpgradeModeManual),
+				Mode: new(armcompute.UpgradeModeManual),
 			},
 			VirtualMachineProfile: &armcompute.VirtualMachineScaleSetVMProfile{
 				OSProfile: &armcompute.VirtualMachineScaleSetOSProfile{
-					ComputerNamePrefix: ptr.To(vmssName),
-					AdminUsername:      ptr.To("azureuser"),
-					AdminPassword:      ptr.To("OvmIntegTest2024!"),
+					ComputerNamePrefix: new(vmssName),
+					AdminUsername:      new("azureuser"),
+					AdminPassword:      new("OvmIntegTest2024!"),
 					LinuxConfiguration: &armcompute.LinuxConfiguration{
-						DisablePasswordAuthentication: ptr.To(false),
+						DisablePasswordAuthentication: new(false),
 					},
 				},
 				StorageProfile: &armcompute.VirtualMachineScaleSetStorageProfile{
 					ImageReference: &armcompute.ImageReference{
-						Publisher: ptr.To("Canonical"),
-						Offer:     ptr.To("0001-com-ubuntu-server-jammy"),
-						SKU:       ptr.To("22_04-lts"), // x64 image for B-series VM
-						Version:   ptr.To("latest"),
+						Publisher: new("Canonical"),
+						Offer:     new("0001-com-ubuntu-server-jammy"),
+						SKU:       new("22_04-lts"), // x64 image for B-series VM
+						Version:   new("latest"),
 					},
 					OSDisk: &armcompute.VirtualMachineScaleSetOSDisk{
-						CreateOption: ptr.To(armcompute.DiskCreateOptionTypesFromImage),
+						CreateOption: new(armcompute.DiskCreateOptionTypesFromImage),
 						ManagedDisk: &armcompute.VirtualMachineScaleSetManagedDiskParameters{
-							StorageAccountType: ptr.To(armcompute.StorageAccountTypesStandardLRS),
+							StorageAccountType: new(armcompute.StorageAccountTypesStandardLRS),
 						},
 					},
 				},
 				NetworkProfile: &armcompute.VirtualMachineScaleSetNetworkProfile{
 					NetworkInterfaceConfigurations: []*armcompute.VirtualMachineScaleSetNetworkConfiguration{
 						{
-							Name: ptr.To("vmss-nic-config"),
+							Name: new("vmss-nic-config"),
 							Properties: &armcompute.VirtualMachineScaleSetNetworkConfigurationProperties{
-								Primary: ptr.To(true),
+								Primary: new(true),
 								IPConfigurations: []*armcompute.VirtualMachineScaleSetIPConfiguration{
 									{
-										Name: ptr.To("ipconfig1"),
+										Name: new("ipconfig1"),
 										Properties: &armcompute.VirtualMachineScaleSetIPConfigurationProperties{
 											Subnet: &armcompute.APIEntityReference{
-												ID: ptr.To(subnetID),
+												ID: new(subnetID),
 											},
-											Primary: ptr.To(true),
+											Primary: new(true),
 										},
 									},
 								},
@@ -465,8 +464,8 @@ func createVirtualMachineScaleSet(ctx context.Context, client *armcompute.Virtua
 			},
 		},
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
-			"test":    ptr.To("compute-virtual-machine-scale-set"),
+			"purpose": new("overmind-integration-tests"),
+			"test":    new("compute-virtual-machine-scale-set"),
 		},
 	}, nil)
 	if err != nil {
@@ -485,53 +484,53 @@ func createVirtualMachineScaleSet(ctx context.Context, client *armcompute.Virtua
 
 					// Retry creation
 					retryPoller, retryErr := client.BeginCreateOrUpdate(ctx, resourceGroupName, vmssName, armcompute.VirtualMachineScaleSet{
-						Location: ptr.To(location),
+						Location: new(location),
 						SKU: &armcompute.SKU{
-							Name:     ptr.To("Standard_B1s"),
-							Tier:     ptr.To("Standard"),
-							Capacity: ptr.To[int64](1),
+							Name:     new("Standard_B1s"),
+							Tier:     new("Standard"),
+							Capacity: new(int64(1)),
 						},
 						Properties: &armcompute.VirtualMachineScaleSetProperties{
 							UpgradePolicy: &armcompute.UpgradePolicy{
-								Mode: ptr.To(armcompute.UpgradeModeManual),
+								Mode: new(armcompute.UpgradeModeManual),
 							},
 							VirtualMachineProfile: &armcompute.VirtualMachineScaleSetVMProfile{
 								OSProfile: &armcompute.VirtualMachineScaleSetOSProfile{
-									ComputerNamePrefix: ptr.To(vmssName),
-									AdminUsername:      ptr.To("azureuser"),
-									AdminPassword:      ptr.To("OvmIntegTest2024!"),
+									ComputerNamePrefix: new(vmssName),
+									AdminUsername:      new("azureuser"),
+									AdminPassword:      new("OvmIntegTest2024!"),
 									LinuxConfiguration: &armcompute.LinuxConfiguration{
-										DisablePasswordAuthentication: ptr.To(false),
+										DisablePasswordAuthentication: new(false),
 									},
 								},
 								StorageProfile: &armcompute.VirtualMachineScaleSetStorageProfile{
 									ImageReference: &armcompute.ImageReference{
-										Publisher: ptr.To("Canonical"),
-										Offer:     ptr.To("0001-com-ubuntu-server-jammy"),
-										SKU:       ptr.To("22_04-lts"),
-										Version:   ptr.To("latest"),
+										Publisher: new("Canonical"),
+										Offer:     new("0001-com-ubuntu-server-jammy"),
+										SKU:       new("22_04-lts"),
+										Version:   new("latest"),
 									},
 									OSDisk: &armcompute.VirtualMachineScaleSetOSDisk{
-										CreateOption: ptr.To(armcompute.DiskCreateOptionTypesFromImage),
+										CreateOption: new(armcompute.DiskCreateOptionTypesFromImage),
 										ManagedDisk: &armcompute.VirtualMachineScaleSetManagedDiskParameters{
-											StorageAccountType: ptr.To(armcompute.StorageAccountTypesStandardLRS),
+											StorageAccountType: new(armcompute.StorageAccountTypesStandardLRS),
 										},
 									},
 								},
 								NetworkProfile: &armcompute.VirtualMachineScaleSetNetworkProfile{
 									NetworkInterfaceConfigurations: []*armcompute.VirtualMachineScaleSetNetworkConfiguration{
 										{
-											Name: ptr.To("vmss-nic-config"),
+											Name: new("vmss-nic-config"),
 											Properties: &armcompute.VirtualMachineScaleSetNetworkConfigurationProperties{
-												Primary: ptr.To(true),
+												Primary: new(true),
 												IPConfigurations: []*armcompute.VirtualMachineScaleSetIPConfiguration{
 													{
-														Name: ptr.To("ipconfig1"),
+														Name: new("ipconfig1"),
 														Properties: &armcompute.VirtualMachineScaleSetIPConfigurationProperties{
 															Subnet: &armcompute.APIEntityReference{
-																ID: ptr.To(subnetID),
+																ID: new(subnetID),
 															},
-															Primary: ptr.To(true),
+															Primary: new(true),
 														},
 													},
 												},
@@ -542,8 +541,8 @@ func createVirtualMachineScaleSet(ctx context.Context, client *armcompute.Virtua
 							},
 						},
 						Tags: map[string]*string{
-							"purpose": ptr.To("overmind-integration-tests"),
-							"test":    ptr.To("compute-virtual-machine-scale-set"),
+							"purpose": new("overmind-integration-tests"),
+							"test":    new("compute-virtual-machine-scale-set"),
 						},
 					}, nil)
 					if retryErr != nil {
@@ -680,7 +679,7 @@ func waitForVMSSAvailable(ctx context.Context, client *armcompute.VirtualMachine
 func deleteVirtualMachineScaleSet(ctx context.Context, client *armcompute.VirtualMachineScaleSetsClient, resourceGroupName, vmssName string) error {
 	// Use forceDeletion to speed up cleanup
 	poller, err := client.BeginDelete(ctx, resourceGroupName, vmssName, &armcompute.VirtualMachineScaleSetsClientBeginDeleteOptions{
-		ForceDeletion: ptr.To(true),
+		ForceDeletion: new(true),
 	})
 	if err != nil {
 		var respErr *azcore.ResponseError

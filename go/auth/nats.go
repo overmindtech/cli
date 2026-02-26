@@ -224,10 +224,7 @@ func (o NATSOptions) Connect() (sdp.EncodedConnection, error) {
 			triesLeft--
 		}
 		// Log a non-negative value: 0 means unlimited retries (NumRetries < 0)
-		logTriesLeft := triesLeft
-		if logTriesLeft < 0 {
-			logTriesLeft = 0
-		}
+		logTriesLeft := max(triesLeft, 0)
 		lf := log.Fields{
 			"servers":   servers,
 			"triesLeft": logTriesLeft,

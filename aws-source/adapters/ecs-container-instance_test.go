@@ -15,32 +15,32 @@ func (t *ecsTestClient) DescribeContainerInstances(ctx context.Context, params *
 	return &ecs.DescribeContainerInstancesOutput{
 		ContainerInstances: []types.ContainerInstance{
 			{
-				ContainerInstanceArn: PtrString("arn:aws:ecs:eu-west-1:052392120703:container-instance/ecs-template-ECSCluster-8nS0WOLbs3nZ/50e9bf71ed57450ca56293cc5a042886"),
-				Ec2InstanceId:        PtrString("i-0e778f25705bc0c84"), // link
+				ContainerInstanceArn: new("arn:aws:ecs:eu-west-1:052392120703:container-instance/ecs-template-ECSCluster-8nS0WOLbs3nZ/50e9bf71ed57450ca56293cc5a042886"),
+				Ec2InstanceId:        new("i-0e778f25705bc0c84"), // link
 				Version:              4,
 				VersionInfo: &types.VersionInfo{
-					AgentVersion:  PtrString("1.47.0"),
-					AgentHash:     PtrString("1489adfa"),
-					DockerVersion: PtrString("DockerVersion: 19.03.6-ce"),
+					AgentVersion:  new("1.47.0"),
+					AgentHash:     new("1489adfa"),
+					DockerVersion: new("DockerVersion: 19.03.6-ce"),
 				},
 				RemainingResources: []types.Resource{
 					{
-						Name:         PtrString("CPU"),
-						Type:         PtrString("INTEGER"),
+						Name:         new("CPU"),
+						Type:         new("INTEGER"),
 						DoubleValue:  0.0,
 						LongValue:    0,
 						IntegerValue: 2028,
 					},
 					{
-						Name:         PtrString("MEMORY"),
-						Type:         PtrString("INTEGER"),
+						Name:         new("MEMORY"),
+						Type:         new("INTEGER"),
 						DoubleValue:  0.0,
 						LongValue:    0,
 						IntegerValue: 7474,
 					},
 					{
-						Name:         PtrString("PORTS"),
-						Type:         PtrString("STRINGSET"),
+						Name:         new("PORTS"),
+						Type:         new("STRINGSET"),
 						DoubleValue:  0.0,
 						LongValue:    0,
 						IntegerValue: 0,
@@ -53,8 +53,8 @@ func (t *ecsTestClient) DescribeContainerInstances(ctx context.Context, params *
 						},
 					},
 					{
-						Name:           PtrString("PORTS_UDP"),
-						Type:           PtrString("STRINGSET"),
+						Name:           new("PORTS_UDP"),
+						Type:           new("STRINGSET"),
 						DoubleValue:    0.0,
 						LongValue:      0,
 						IntegerValue:   0,
@@ -63,22 +63,22 @@ func (t *ecsTestClient) DescribeContainerInstances(ctx context.Context, params *
 				},
 				RegisteredResources: []types.Resource{
 					{
-						Name:         PtrString("CPU"),
-						Type:         PtrString("INTEGER"),
+						Name:         new("CPU"),
+						Type:         new("INTEGER"),
 						DoubleValue:  0.0,
 						LongValue:    0,
 						IntegerValue: 2048,
 					},
 					{
-						Name:         PtrString("MEMORY"),
-						Type:         PtrString("INTEGER"),
+						Name:         new("MEMORY"),
+						Type:         new("INTEGER"),
 						DoubleValue:  0.0,
 						LongValue:    0,
 						IntegerValue: 7974,
 					},
 					{
-						Name:         PtrString("PORTS"),
-						Type:         PtrString("STRINGSET"),
+						Name:         new("PORTS"),
+						Type:         new("STRINGSET"),
 						DoubleValue:  0.0,
 						LongValue:    0,
 						IntegerValue: 0,
@@ -91,223 +91,223 @@ func (t *ecsTestClient) DescribeContainerInstances(ctx context.Context, params *
 						},
 					},
 					{
-						Name:           PtrString("PORTS_UDP"),
-						Type:           PtrString("STRINGSET"),
+						Name:           new("PORTS_UDP"),
+						Type:           new("STRINGSET"),
 						DoubleValue:    0.0,
 						LongValue:      0,
 						IntegerValue:   0,
 						StringSetValue: []string{},
 					},
 				},
-				Status:            PtrString("ACTIVE"),
+				Status:            new("ACTIVE"),
 				AgentConnected:    true,
 				RunningTasksCount: 1,
 				PendingTasksCount: 0,
 				Attributes: []types.Attribute{
 					{
-						Name: PtrString("ecs.capability.secrets.asm.environment-variables"),
+						Name: new("ecs.capability.secrets.asm.environment-variables"),
 					},
 					{
-						Name:  PtrString("ecs.capability.branch-cni-plugin-version"),
-						Value: PtrString("a21d3a41-"),
+						Name:  new("ecs.capability.branch-cni-plugin-version"),
+						Value: new("a21d3a41-"),
 					},
 					{
-						Name:  PtrString("ecs.ami-id"),
-						Value: PtrString("ami-0c9ef930279337028"),
+						Name:  new("ecs.ami-id"),
+						Value: new("ami-0c9ef930279337028"),
 					},
 					{
-						Name: PtrString("ecs.capability.secrets.asm.bootstrap.log-driver"),
+						Name: new("ecs.capability.secrets.asm.bootstrap.log-driver"),
 					},
 					{
-						Name: PtrString("ecs.capability.task-eia.optimized-cpu"),
+						Name: new("ecs.capability.task-eia.optimized-cpu"),
 					},
 					{
-						Name: PtrString("com.amazonaws.ecs.capability.logging-driver.none"),
+						Name: new("com.amazonaws.ecs.capability.logging-driver.none"),
 					},
 					{
-						Name: PtrString("ecs.capability.ecr-endpoint"),
+						Name: new("ecs.capability.ecr-endpoint"),
 					},
 					{
-						Name: PtrString("ecs.capability.docker-plugin.local"),
+						Name: new("ecs.capability.docker-plugin.local"),
 					},
 					{
-						Name: PtrString("ecs.capability.task-cpu-mem-limit"),
+						Name: new("ecs.capability.task-cpu-mem-limit"),
 					},
 					{
-						Name: PtrString("ecs.capability.secrets.ssm.bootstrap.log-driver"),
+						Name: new("ecs.capability.secrets.ssm.bootstrap.log-driver"),
 					},
 					{
-						Name: PtrString("ecs.capability.efsAuth"),
+						Name: new("ecs.capability.efsAuth"),
 					},
 					{
-						Name: PtrString("ecs.capability.full-sync"),
+						Name: new("ecs.capability.full-sync"),
 					},
 					{
-						Name: PtrString("com.amazonaws.ecs.capability.docker-remote-api.1.30"),
+						Name: new("com.amazonaws.ecs.capability.docker-remote-api.1.30"),
 					},
 					{
-						Name: PtrString("com.amazonaws.ecs.capability.docker-remote-api.1.31"),
+						Name: new("com.amazonaws.ecs.capability.docker-remote-api.1.31"),
 					},
 					{
-						Name: PtrString("com.amazonaws.ecs.capability.docker-remote-api.1.32"),
+						Name: new("com.amazonaws.ecs.capability.docker-remote-api.1.32"),
 					},
 					{
-						Name: PtrString("com.amazonaws.ecs.capability.logging-driver.fluentd"),
+						Name: new("com.amazonaws.ecs.capability.logging-driver.fluentd"),
 					},
 					{
-						Name: PtrString("ecs.capability.firelens.options.config.file"),
+						Name: new("ecs.capability.firelens.options.config.file"),
 					},
 					{
-						Name:  PtrString("ecs.availability-zone"),
-						Value: PtrString("eu-west-1a"),
+						Name:  new("ecs.availability-zone"),
+						Value: new("eu-west-1a"),
 					},
 					{
-						Name: PtrString("ecs.capability.aws-appmesh"),
+						Name: new("ecs.capability.aws-appmesh"),
 					},
 					{
-						Name: PtrString("com.amazonaws.ecs.capability.logging-driver.awslogs"),
+						Name: new("com.amazonaws.ecs.capability.logging-driver.awslogs"),
 					},
 					{
-						Name: PtrString("com.amazonaws.ecs.capability.docker-remote-api.1.24"),
+						Name: new("com.amazonaws.ecs.capability.docker-remote-api.1.24"),
 					},
 					{
-						Name: PtrString("ecs.capability.task-eni-trunking"),
+						Name: new("ecs.capability.task-eni-trunking"),
 					},
 					{
-						Name: PtrString("com.amazonaws.ecs.capability.docker-remote-api.1.25"),
+						Name: new("com.amazonaws.ecs.capability.docker-remote-api.1.25"),
 					},
 					{
-						Name: PtrString("com.amazonaws.ecs.capability.docker-remote-api.1.26"),
+						Name: new("com.amazonaws.ecs.capability.docker-remote-api.1.26"),
 					},
 					{
-						Name: PtrString("com.amazonaws.ecs.capability.docker-remote-api.1.27"),
+						Name: new("com.amazonaws.ecs.capability.docker-remote-api.1.27"),
 					},
 					{
-						Name: PtrString("com.amazonaws.ecs.capability.privileged-container"),
+						Name: new("com.amazonaws.ecs.capability.privileged-container"),
 					},
 					{
-						Name: PtrString("com.amazonaws.ecs.capability.docker-remote-api.1.28"),
+						Name: new("com.amazonaws.ecs.capability.docker-remote-api.1.28"),
 					},
 					{
-						Name: PtrString("com.amazonaws.ecs.capability.docker-remote-api.1.29"),
+						Name: new("com.amazonaws.ecs.capability.docker-remote-api.1.29"),
 					},
 					{
-						Name:  PtrString("ecs.cpu-architecture"),
-						Value: PtrString("x86_64"),
+						Name:  new("ecs.cpu-architecture"),
+						Value: new("x86_64"),
 					},
 					{
-						Name: PtrString("com.amazonaws.ecs.capability.ecr-auth"),
+						Name: new("com.amazonaws.ecs.capability.ecr-auth"),
 					},
 					{
-						Name: PtrString("ecs.capability.firelens.fluentbit"),
+						Name: new("ecs.capability.firelens.fluentbit"),
 					},
 					{
-						Name: PtrString("com.amazonaws.ecs.capability.docker-remote-api.1.20"),
+						Name: new("com.amazonaws.ecs.capability.docker-remote-api.1.20"),
 					},
 					{
-						Name:  PtrString("ecs.os-type"),
-						Value: PtrString("linux"),
+						Name:  new("ecs.os-type"),
+						Value: new("linux"),
 					},
 					{
-						Name: PtrString("com.amazonaws.ecs.capability.docker-remote-api.1.21"),
+						Name: new("com.amazonaws.ecs.capability.docker-remote-api.1.21"),
 					},
 					{
-						Name: PtrString("com.amazonaws.ecs.capability.docker-remote-api.1.22"),
+						Name: new("com.amazonaws.ecs.capability.docker-remote-api.1.22"),
 					},
 					{
-						Name: PtrString("com.amazonaws.ecs.capability.docker-remote-api.1.23"),
+						Name: new("com.amazonaws.ecs.capability.docker-remote-api.1.23"),
 					},
 					{
-						Name: PtrString("ecs.capability.task-eia"),
+						Name: new("ecs.capability.task-eia"),
 					},
 					{
-						Name: PtrString("ecs.capability.private-registry-authentication.secretsmanager"),
+						Name: new("ecs.capability.private-registry-authentication.secretsmanager"),
 					},
 					{
-						Name: PtrString("com.amazonaws.ecs.capability.logging-driver.syslog"),
+						Name: new("com.amazonaws.ecs.capability.logging-driver.syslog"),
 					},
 					{
-						Name: PtrString("com.amazonaws.ecs.capability.logging-driver.awsfirelens"),
+						Name: new("com.amazonaws.ecs.capability.logging-driver.awsfirelens"),
 					},
 					{
-						Name: PtrString("ecs.capability.firelens.options.config.s3"),
+						Name: new("ecs.capability.firelens.options.config.s3"),
 					},
 					{
-						Name: PtrString("com.amazonaws.ecs.capability.logging-driver.json-file"),
+						Name: new("com.amazonaws.ecs.capability.logging-driver.json-file"),
 					},
 					{
-						Name: PtrString("ecs.capability.execution-role-awslogs"),
+						Name: new("ecs.capability.execution-role-awslogs"),
 					},
 					{
-						Name:  PtrString("ecs.vpc-id"),
-						Value: PtrString("vpc-0e120717a7263de70"),
+						Name:  new("ecs.vpc-id"),
+						Value: new("vpc-0e120717a7263de70"),
 					},
 					{
-						Name: PtrString("com.amazonaws.ecs.capability.docker-remote-api.1.17"),
+						Name: new("com.amazonaws.ecs.capability.docker-remote-api.1.17"),
 					},
 					{
-						Name: PtrString("com.amazonaws.ecs.capability.docker-remote-api.1.18"),
+						Name: new("com.amazonaws.ecs.capability.docker-remote-api.1.18"),
 					},
 					{
-						Name: PtrString("com.amazonaws.ecs.capability.docker-remote-api.1.19"),
+						Name: new("com.amazonaws.ecs.capability.docker-remote-api.1.19"),
 					},
 					{
-						Name: PtrString("ecs.capability.docker-plugin.amazon-ecs-volume-plugin"),
+						Name: new("ecs.capability.docker-plugin.amazon-ecs-volume-plugin"),
 					},
 					{
-						Name: PtrString("ecs.capability.task-eni"),
+						Name: new("ecs.capability.task-eni"),
 					},
 					{
-						Name: PtrString("ecs.capability.firelens.fluentd"),
+						Name: new("ecs.capability.firelens.fluentd"),
 					},
 					{
-						Name: PtrString("ecs.capability.efs"),
+						Name: new("ecs.capability.efs"),
 					},
 					{
-						Name: PtrString("ecs.capability.execution-role-ecr-pull"),
+						Name: new("ecs.capability.execution-role-ecr-pull"),
 					},
 					{
-						Name: PtrString("ecs.capability.task-eni.ipv6"),
+						Name: new("ecs.capability.task-eni.ipv6"),
 					},
 					{
-						Name: PtrString("ecs.capability.container-health-check"),
+						Name: new("ecs.capability.container-health-check"),
 					},
 					{
-						Name:  PtrString("ecs.subnet-id"),
-						Value: PtrString("subnet-0bfdb717a234c01b3"),
+						Name:  new("ecs.subnet-id"),
+						Value: new("subnet-0bfdb717a234c01b3"),
 					},
 					{
-						Name:  PtrString("ecs.instance-type"),
-						Value: PtrString("t2.large"),
+						Name:  new("ecs.instance-type"),
+						Value: new("t2.large"),
 					},
 					{
-						Name: PtrString("com.amazonaws.ecs.capability.task-iam-role-network-host"),
+						Name: new("com.amazonaws.ecs.capability.task-iam-role-network-host"),
 					},
 					{
-						Name: PtrString("ecs.capability.container-ordering"),
+						Name: new("ecs.capability.container-ordering"),
 					},
 					{
-						Name:  PtrString("ecs.capability.cni-plugin-version"),
-						Value: PtrString("55b2ae77-2020.09.0"),
+						Name:  new("ecs.capability.cni-plugin-version"),
+						Value: new("55b2ae77-2020.09.0"),
 					},
 					{
-						Name: PtrString("ecs.capability.env-files.s3"),
+						Name: new("ecs.capability.env-files.s3"),
 					},
 					{
-						Name: PtrString("ecs.capability.pid-ipc-namespace-sharing"),
+						Name: new("ecs.capability.pid-ipc-namespace-sharing"),
 					},
 					{
-						Name: PtrString("ecs.capability.secrets.ssm.environment-variables"),
+						Name: new("ecs.capability.secrets.ssm.environment-variables"),
 					},
 					{
-						Name: PtrString("com.amazonaws.ecs.capability.task-iam-role"),
+						Name: new("com.amazonaws.ecs.capability.task-iam-role"),
 					},
 				},
-				RegisteredAt:         PtrTime(time.Now()),
+				RegisteredAt:         new(time.Now()),
 				Attachments:          []types.Attachment{}, // There is probably an opportunity for some links here but I don't have example data
 				Tags:                 []types.Tag{},
 				AgentUpdateStatus:    types.AgentUpdateStatusFailed,
-				CapacityProviderName: PtrString("name"),
+				CapacityProviderName: new("name"),
 				HealthStatus: &types.ContainerInstanceHealthStatus{
 					OverallStatus: types.InstanceHealthCheckStateImpaired,
 				},

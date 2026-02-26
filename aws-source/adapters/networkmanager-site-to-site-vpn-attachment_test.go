@@ -20,11 +20,11 @@ func TestSiteToSiteVpnAttachmentOutputMapper(t *testing.T) {
 			name: "ok",
 			item: &types.SiteToSiteVpnAttachment{
 				Attachment: &types.Attachment{
-					AttachmentId:  PtrString("stsa-1"),
-					CoreNetworkId: PtrString("cn-1"),
+					AttachmentId:  new("stsa-1"),
+					CoreNetworkId: new("cn-1"),
 					State:         types.AttachmentStateAvailable,
 				},
-				VpnConnectionArn: PtrString("arn:aws:ec2:us-west-2:123456789012:vpn-connection/vpn-1234"),
+				VpnConnectionArn: new("arn:aws:ec2:us-west-2:123456789012:vpn-connection/vpn-1234"),
 			},
 			expectedHealth: sdp.Health_HEALTH_OK,
 			expectedAttr:   "stsa-1",

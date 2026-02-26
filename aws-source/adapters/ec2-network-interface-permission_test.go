@@ -43,9 +43,9 @@ func TestNetworkInterfacePermissionOutputMapper(t *testing.T) {
 	output := &ec2.DescribeNetworkInterfacePermissionsOutput{
 		NetworkInterfacePermissions: []types.NetworkInterfacePermission{
 			{
-				NetworkInterfacePermissionId: PtrString("eni-perm-0b6211455242c105e"),
-				NetworkInterfaceId:           PtrString("eni-07f8f3d404036c833"),
-				AwsService:                   PtrString("routing.hyperplane.eu-west-2.amazonaws.com"),
+				NetworkInterfacePermissionId: new("eni-perm-0b6211455242c105e"),
+				NetworkInterfaceId:           new("eni-07f8f3d404036c833"),
+				AwsService:                   new("routing.hyperplane.eu-west-2.amazonaws.com"),
 				Permission:                   types.InterfacePermissionTypeInstanceAttach,
 				PermissionState: &types.NetworkInterfacePermissionState{
 					State: types.NetworkInterfacePermissionStateCodeGranted,

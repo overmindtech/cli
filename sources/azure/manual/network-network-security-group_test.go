@@ -4,9 +4,9 @@ import (
 	"context"
 	"errors"
 	"reflect"
+	"slices"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
 	"go.uber.org/mock/gomock"
 
@@ -133,9 +133,9 @@ func TestNetworkNetworkSecurityGroup(t *testing.T) {
 	t.Run("Get_WithNilName", func(t *testing.T) {
 		nsg := &armnetwork.SecurityGroup{
 			Name:     nil, // NSG with nil name should cause an error
-			Location: to.Ptr("eastus"),
+			Location: new("eastus"),
 			Tags: map[string]*string{
-				"env": to.Ptr("test"),
+				"env": new("test"),
 			},
 		}
 
@@ -212,9 +212,9 @@ func TestNetworkNetworkSecurityGroup(t *testing.T) {
 		nsg1 := createAzureNetworkSecurityGroup("test-nsg-1")
 		nsg2 := &armnetwork.SecurityGroup{
 			Name:     nil, // NSG with nil name should be skipped
-			Location: to.Ptr("eastus"),
+			Location: new("eastus"),
 			Tags: map[string]*string{
-				"env": to.Ptr("test"),
+				"env": new("test"),
 			},
 		}
 
@@ -306,20 +306,20 @@ func TestNetworkNetworkSecurityGroup(t *testing.T) {
 		otherSubscriptionID := "other-subscription"
 
 		nsg := &armnetwork.SecurityGroup{
-			Name:     to.Ptr(nsgName),
-			Location: to.Ptr("eastus"),
+			Name:     new(nsgName),
+			Location: new("eastus"),
 			Tags: map[string]*string{
-				"env": to.Ptr("test"),
+				"env": new("test"),
 			},
 			Properties: &armnetwork.SecurityGroupPropertiesFormat{
 				Subnets: []*armnetwork.Subnet{
 					{
-						ID: to.Ptr("/subscriptions/" + otherSubscriptionID + "/resourceGroups/" + otherResourceGroup + "/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/test-subnet"),
+						ID: new("/subscriptions/" + otherSubscriptionID + "/resourceGroups/" + otherResourceGroup + "/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/test-subnet"),
 					},
 				},
 				NetworkInterfaces: []*armnetwork.Interface{
 					{
-						ID: to.Ptr("/subscriptions/" + otherSubscriptionID + "/resourceGroups/" + otherResourceGroup + "/providers/Microsoft.Network/networkInterfaces/test-nic"),
+						ID: new("/subscriptions/" + otherSubscriptionID + "/resourceGroups/" + otherResourceGroup + "/providers/Microsoft.Network/networkInterfaces/test-nic"),
 					},
 				},
 			},
@@ -386,13 +386,7 @@ func TestNetworkNetworkSecurityGroup(t *testing.T) {
 			t.Error("Expected IAMPermissions to return at least one permission")
 		}
 		expectedPermission := "Microsoft.Network/networkSecurityGroups/read"
-		found := false
-		for _, perm := range permissions {
-			if perm == expectedPermission {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(permissions, expectedPermission)
 		if !found {
 			t.Errorf("Expected IAMPermissions to include %s", expectedPermission)
 		}
@@ -472,7 +466,7 @@ func (m *MockNetworkSecurityGroupsPager) More() bool {
 
 func (mr *MockNetworkSecurityGroupsPagerMockRecorder) More() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "More", reflect.TypeOf((*MockNetworkSecurityGroupsPager)(nil).More))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "More", reflect.TypeFor[func() bool]())
 }
 
 func (m *MockNetworkSecurityGroupsPager) NextPage(ctx context.Context) (armnetwork.SecurityGroupsClientListResponse, error) {
@@ -483,9 +477,9 @@ func (m *MockNetworkSecurityGroupsPager) NextPage(ctx context.Context) (armnetwo
 	return ret0, ret1
 }
 
-func (mr *MockNetworkSecurityGroupsPagerMockRecorder) NextPage(ctx interface{}) *gomock.Call {
+func (mr *MockNetworkSecurityGroupsPagerMockRecorder) NextPage(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NextPage", reflect.TypeOf((*MockNetworkSecurityGroupsPager)(nil).NextPage), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NextPage", reflect.TypeFor[func(ctx context.Context) (armnetwork.SecurityGroupsClientListResponse, error)](), ctx)
 }
 
 // createAzureNetworkSecurityGroup creates a mock Azure network security group for testing
@@ -494,29 +488,29 @@ func createAzureNetworkSecurityGroup(nsgName string) *armnetwork.SecurityGroup {
 	resourceGroup := "test-rg"
 
 	return &armnetwork.SecurityGroup{
-		Name:     to.Ptr(nsgName),
-		Location: to.Ptr("eastus"),
+		Name:     new(nsgName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env":     to.Ptr("test"),
-			"project": to.Ptr("testing"),
+			"env":     new("test"),
+			"project": new("testing"),
 		},
 		Properties: &armnetwork.SecurityGroupPropertiesFormat{
 			// SecurityRules (child resources)
 			SecurityRules: []*armnetwork.SecurityRule{
 				{
-					Name: to.Ptr("test-security-rule"),
+					Name: new("test-security-rule"),
 					Properties: &armnetwork.SecurityRulePropertiesFormat{
-						Priority:  to.Ptr(int32(1000)),
-						Direction: to.Ptr(armnetwork.SecurityRuleDirectionInbound),
-						Access:    to.Ptr(armnetwork.SecurityRuleAccessAllow),
+						Priority:  new(int32(1000)),
+						Direction: new(armnetwork.SecurityRuleDirectionInbound),
+						Access:    new(armnetwork.SecurityRuleAccessAllow),
 						SourceApplicationSecurityGroups: []*armnetwork.ApplicationSecurityGroup{
 							{
-								ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/applicationSecurityGroups/test-asg-source"),
+								ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/applicationSecurityGroups/test-asg-source"),
 							},
 						},
 						DestinationApplicationSecurityGroups: []*armnetwork.ApplicationSecurityGroup{
 							{
-								ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/applicationSecurityGroups/test-asg-dest"),
+								ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/applicationSecurityGroups/test-asg-dest"),
 							},
 						},
 					},
@@ -525,14 +519,14 @@ func createAzureNetworkSecurityGroup(nsgName string) *armnetwork.SecurityGroup {
 			// DefaultSecurityRules (child resources)
 			DefaultSecurityRules: []*armnetwork.SecurityRule{
 				{
-					Name: to.Ptr("AllowVnetInBound"),
+					Name: new("AllowVnetInBound"),
 					Properties: &armnetwork.SecurityRulePropertiesFormat{
-						Priority:  to.Ptr(int32(65000)),
-						Direction: to.Ptr(armnetwork.SecurityRuleDirectionInbound),
-						Access:    to.Ptr(armnetwork.SecurityRuleAccessAllow),
+						Priority:  new(int32(65000)),
+						Direction: new(armnetwork.SecurityRuleDirectionInbound),
+						Access:    new(armnetwork.SecurityRuleAccessAllow),
 						SourceApplicationSecurityGroups: []*armnetwork.ApplicationSecurityGroup{
 							{
-								ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/applicationSecurityGroups/test-asg-default-source"),
+								ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/applicationSecurityGroups/test-asg-default-source"),
 							},
 						},
 					},
@@ -541,13 +535,13 @@ func createAzureNetworkSecurityGroup(nsgName string) *armnetwork.SecurityGroup {
 			// Subnets (external resources)
 			Subnets: []*armnetwork.Subnet{
 				{
-					ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/test-subnet"),
+					ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/test-subnet"),
 				},
 			},
 			// NetworkInterfaces (external resources)
 			NetworkInterfaces: []*armnetwork.Interface{
 				{
-					ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/networkInterfaces/test-nic"),
+					ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/networkInterfaces/test-nic"),
 				},
 			},
 		},

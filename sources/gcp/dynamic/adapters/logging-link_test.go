@@ -114,7 +114,7 @@ func TestLoggingLink(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://logging.googleapis.com/v2/projects/%s/locations/%s/buckets/%s/links/%s", projectID, location, bucketName, linkName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Link not found"},
+				Body:       map[string]any{"error": "Link not found"},
 			},
 		}
 

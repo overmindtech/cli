@@ -15,12 +15,12 @@ func TestConnectionOutputMapper(t *testing.T) {
 	output := networkmanager.GetConnectionsOutput{
 		Connections: []types.Connection{
 			{
-				GlobalNetworkId:   PtrString("default"),
-				ConnectionId:      PtrString("conn-1"),
-				DeviceId:          PtrString("dvc-1"),
-				ConnectedDeviceId: PtrString("dvc-2"),
-				LinkId:            PtrString("link-1"),
-				ConnectedLinkId:   PtrString("link-2"),
+				GlobalNetworkId:   new("default"),
+				ConnectionId:      new("conn-1"),
+				DeviceId:          new("dvc-1"),
+				ConnectedDeviceId: new("dvc-2"),
+				LinkId:            new("link-1"),
+				ConnectedLinkId:   new("link-2"),
 			},
 		},
 	}
@@ -103,7 +103,7 @@ func TestConnectionInputMapperSearch(t *testing.T) {
 			name:  "Valid networkmanager-connection ARN",
 			query: "arn:aws:networkmanager::123456789012:device/global-network-0d47f6t230mz46dy4/connection-07f6fd08867abc123",
 			expectedInput: &networkmanager.GetConnectionsInput{
-				GlobalNetworkId: PtrString("global-network-0d47f6t230mz46dy4"),
+				GlobalNetworkId: new("global-network-0d47f6t230mz46dy4"),
 				ConnectionIds:   []string{"connection-07f6fd08867abc123"},
 			},
 			expectError: false,
@@ -112,8 +112,8 @@ func TestConnectionInputMapperSearch(t *testing.T) {
 			name:  "Valid networkmanager-device ARN",
 			query: "arn:aws:networkmanager::123456789012:device/global-network-01231231231231231/device-07f6fd08867abc123",
 			expectedInput: &networkmanager.GetConnectionsInput{
-				GlobalNetworkId: PtrString("global-network-01231231231231231"),
-				DeviceId:        PtrString("device-07f6fd08867abc123"),
+				GlobalNetworkId: new("global-network-01231231231231231"),
+				DeviceId:        new("device-07f6fd08867abc123"),
 			},
 			expectError: false,
 		},
@@ -121,7 +121,7 @@ func TestConnectionInputMapperSearch(t *testing.T) {
 			name:  "Global Network ID only",
 			query: "global-network-123456789",
 			expectedInput: &networkmanager.GetConnectionsInput{
-				GlobalNetworkId: PtrString("global-network-123456789"),
+				GlobalNetworkId: new("global-network-123456789"),
 			},
 			expectError: false,
 		},
@@ -129,8 +129,8 @@ func TestConnectionInputMapperSearch(t *testing.T) {
 			name:  "Global Network ID and Device ID",
 			query: "global-network-123456789|device-987654321",
 			expectedInput: &networkmanager.GetConnectionsInput{
-				GlobalNetworkId: PtrString("global-network-123456789"),
-				DeviceId:        PtrString("device-987654321"),
+				GlobalNetworkId: new("global-network-123456789"),
+				DeviceId:        new("device-987654321"),
 			},
 			expectError: false,
 		},

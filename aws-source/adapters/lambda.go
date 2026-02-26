@@ -30,8 +30,8 @@ type PolicyDocument struct {
 // PolicyStatement defines a statement in a policy document.
 type PolicyStatement struct {
 	Action    string
-	Principal Principal `json:",omitempty"`
-	Condition Condition `json:",omitempty"`
+	Principal Principal
+	Condition Condition
 }
 
 type Principal struct {
@@ -39,8 +39,8 @@ type Principal struct {
 }
 
 type Condition struct {
-	ArnLike      ArnLikeCondition      `json:",omitempty"`
-	StringEquals StringEqualsCondition `json:",omitempty"`
+	ArnLike      ArnLikeCondition
+	StringEquals StringEqualsCondition
 }
 
 type StringEqualsCondition struct {

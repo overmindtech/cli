@@ -266,7 +266,7 @@ func TestBigQueryDataTransferTransferConfig(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://bigquerydatatransfer.googleapis.com/v1/projects/%s/locations/%s/transferConfigs/%s", projectID, location, transferConfigName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Resource not found"},
+				Body:       map[string]any{"error": "Resource not found"},
 			},
 		}
 

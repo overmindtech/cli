@@ -130,7 +130,7 @@ func TestComputeFirewall(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/global/firewalls/%s", projectID, firewallName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Firewall not found"},
+				Body:       map[string]any{"error": "Firewall not found"},
 			},
 		}
 

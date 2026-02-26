@@ -19,8 +19,8 @@ func (m mockElbv2Client) DescribeTags(ctx context.Context, params *elbv2.Describ
 			ResourceArn: &arn,
 			Tags: []types.Tag{
 				{
-					Key:   PtrString("foo"),
-					Value: PtrString("bar"),
+					Key:   new("foo"),
+					Value: new("bar"),
 				},
 			},
 		})
@@ -50,59 +50,59 @@ func (m mockElbv2Client) DescribeTargetGroups(ctx context.Context, params *elbv2
 func TestActionToRequests(t *testing.T) {
 	action := types.Action{
 		Type:  types.ActionTypeEnumFixedResponse,
-		Order: PtrInt32(1),
+		Order: new(int32(1)),
 		FixedResponseConfig: &types.FixedResponseActionConfig{
-			StatusCode:  PtrString("404"),
-			ContentType: PtrString("text/plain"),
-			MessageBody: PtrString("not found"),
+			StatusCode:  new("404"),
+			ContentType: new("text/plain"),
+			MessageBody: new("not found"),
 		},
 		AuthenticateCognitoConfig: &types.AuthenticateCognitoActionConfig{
-			UserPoolArn:      PtrString("arn:partition:service:region:account-id:resource-type:resource-id"), // link
-			UserPoolClientId: PtrString("clientID"),
-			UserPoolDomain:   PtrString("domain.com"),
+			UserPoolArn:      new("arn:partition:service:region:account-id:resource-type:resource-id"), // link
+			UserPoolClientId: new("clientID"),
+			UserPoolDomain:   new("domain.com"),
 			AuthenticationRequestExtraParams: map[string]string{
 				"foo": "bar",
 			},
 			OnUnauthenticatedRequest: types.AuthenticateCognitoActionConditionalBehaviorEnumAuthenticate,
-			Scope:                    PtrString("foo"),
-			SessionCookieName:        PtrString("cookie"),
-			SessionTimeout:           PtrInt64(10),
+			Scope:                    new("foo"),
+			SessionCookieName:        new("cookie"),
+			SessionTimeout:           new(int64(10)),
 		},
 		AuthenticateOidcConfig: &types.AuthenticateOidcActionConfig{
-			AuthorizationEndpoint:            PtrString("https://auth.somewhere.com/app1"), // link
-			ClientId:                         PtrString("CLIENT-ID"),
-			Issuer:                           PtrString("Someone"),
-			TokenEndpoint:                    PtrString("https://auth.somewhere.com/app1/tokens"), // link
-			UserInfoEndpoint:                 PtrString("https://auth.somewhere.com/app1/users"),  // link
+			AuthorizationEndpoint:            new("https://auth.somewhere.com/app1"), // link
+			ClientId:                         new("CLIENT-ID"),
+			Issuer:                           new("Someone"),
+			TokenEndpoint:                    new("https://auth.somewhere.com/app1/tokens"), // link
+			UserInfoEndpoint:                 new("https://auth.somewhere.com/app1/users"),  // link
 			AuthenticationRequestExtraParams: map[string]string{},
-			ClientSecret:                     PtrString("secret"), // Redact
+			ClientSecret:                     new("secret"), // Redact
 			OnUnauthenticatedRequest:         types.AuthenticateOidcActionConditionalBehaviorEnumAllow,
-			Scope:                            PtrString("foo"),
-			SessionCookieName:                PtrString("cookie"),
-			SessionTimeout:                   PtrInt64(10),
-			UseExistingClientSecret:          PtrBool(true),
+			Scope:                            new("foo"),
+			SessionCookieName:                new("cookie"),
+			SessionTimeout:                   new(int64(10)),
+			UseExistingClientSecret:          new(true),
 		},
 		ForwardConfig: &types.ForwardActionConfig{
 			TargetGroupStickinessConfig: &types.TargetGroupStickinessConfig{
-				DurationSeconds: PtrInt32(10),
-				Enabled:         PtrBool(true),
+				DurationSeconds: new(int32(10)),
+				Enabled:         new(true),
 			},
 			TargetGroups: []types.TargetGroupTuple{
 				{
-					TargetGroupArn: PtrString("arn:partition:service:region:account-id:resource-type:resource-id1"), // link
-					Weight:         PtrInt32(1),
+					TargetGroupArn: new("arn:partition:service:region:account-id:resource-type:resource-id1"), // link
+					Weight:         new(int32(1)),
 				},
 			},
 		},
 		RedirectConfig: &types.RedirectActionConfig{
 			StatusCode: types.RedirectActionStatusCodeEnumHttp302,
-			Host:       PtrString("somewhere.else.com"), // combine and link
-			Path:       PtrString("/login"),             // combine and link
-			Port:       PtrString("8080"),               // combine and link
-			Protocol:   PtrString("https"),              // combine and link
-			Query:      PtrString("foo=bar"),            // combine and link
+			Host:       new("somewhere.else.com"), // combine and link
+			Path:       new("/login"),             // combine and link
+			Port:       new("8080"),               // combine and link
+			Protocol:   new("https"),              // combine and link
+			Query:      new("foo=bar"),            // combine and link
 		},
-		TargetGroupArn: PtrString("arn:partition:service:region:account-id:resource-type:resource-id2"), // link
+		TargetGroupArn: new("arn:partition:service:region:account-id:resource-type:resource-id2"), // link
 	}
 
 	item := sdp.Item{

@@ -44,7 +44,7 @@ const MaxLinkedItemQueries = 10
 // GenerateRandomItem Generates a random item and the tags for this item. The
 // tags include the name, type and a tag called "all" with a value of "all"
 func GenerateRandomItem() *sdp.Item {
-	attrs := make(map[string]interface{})
+	attrs := make(map[string]any)
 
 	name := randSeq(rand.Intn(MaxAttributeValueLength))
 	typ := Types[rand.Intn(len(Types))]

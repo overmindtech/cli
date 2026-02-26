@@ -7,7 +7,6 @@ import (
 	"reflect"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
 	"go.uber.org/mock/gomock"
 
@@ -245,9 +244,9 @@ func TestNetworkApplicationGateway(t *testing.T) {
 	t.Run("Get_WithNilName", func(t *testing.T) {
 		applicationGateway := &armnetwork.ApplicationGateway{
 			Name:     nil, // Application Gateway with nil name should cause an error
-			Location: to.Ptr("eastus"),
+			Location: new("eastus"),
 			Tags: map[string]*string{
-				"env": to.Ptr("test"),
+				"env": new("test"),
 			},
 		}
 
@@ -337,9 +336,9 @@ func TestNetworkApplicationGateway(t *testing.T) {
 		ag1 := createAzureApplicationGateway("test-ag-1", subscriptionID, resourceGroup)
 		ag2 := &armnetwork.ApplicationGateway{
 			Name:     nil, // Application Gateway with nil name should be skipped
-			Location: to.Ptr("eastus"),
+			Location: new("eastus"),
 			Tags: map[string]*string{
-				"env": to.Ptr("test"),
+				"env": new("test"),
 			},
 		}
 
@@ -505,7 +504,7 @@ func TestNetworkApplicationGateway(t *testing.T) {
 		}
 
 		// Verify PredefinedRole
-		if roleInterface, ok := interface{}(wrapper).(interface{ PredefinedRole() string }); ok {
+		if roleInterface, ok := any(wrapper).(interface{ PredefinedRole() string }); ok {
 			role := roleInterface.PredefinedRole()
 			if role != "Reader" {
 				t.Errorf("Expected PredefinedRole to be 'Reader', got %s", role)
@@ -545,7 +544,7 @@ func (m *MockApplicationGatewaysPager) More() bool {
 
 func (mr *MockApplicationGatewaysPagerMockRecorder) More() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "More", reflect.TypeOf((*MockApplicationGatewaysPager)(nil).More))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "More", reflect.TypeFor[func() bool]())
 }
 
 func (m *MockApplicationGatewaysPager) NextPage(ctx context.Context) (armnetwork.ApplicationGatewaysClientListResponse, error) {
@@ -556,28 +555,28 @@ func (m *MockApplicationGatewaysPager) NextPage(ctx context.Context) (armnetwork
 	return ret0, ret1
 }
 
-func (mr *MockApplicationGatewaysPagerMockRecorder) NextPage(ctx interface{}) *gomock.Call {
+func (mr *MockApplicationGatewaysPagerMockRecorder) NextPage(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NextPage", reflect.TypeOf((*MockApplicationGatewaysPager)(nil).NextPage), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NextPage", reflect.TypeFor[func(ctx context.Context) (armnetwork.ApplicationGatewaysClientListResponse, error)](), ctx)
 }
 
 // createAzureApplicationGateway creates a mock Azure Application Gateway for testing
 func createAzureApplicationGateway(agName, subscriptionID, resourceGroup string) *armnetwork.ApplicationGateway {
 	return &armnetwork.ApplicationGateway{
-		Name:     to.Ptr(agName),
-		Location: to.Ptr("eastus"),
+		Name:     new(agName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env":     to.Ptr("test"),
-			"project": to.Ptr("testing"),
+			"env":     new("test"),
+			"project": new("testing"),
 		},
 		Properties: &armnetwork.ApplicationGatewayPropertiesFormat{
 			// GatewayIPConfigurations (Child Resource)
 			GatewayIPConfigurations: []*armnetwork.ApplicationGatewayIPConfiguration{
 				{
-					Name: to.Ptr("gateway-ip-config"),
+					Name: new("gateway-ip-config"),
 					Properties: &armnetwork.ApplicationGatewayIPConfigurationPropertiesFormat{
 						Subnet: &armnetwork.SubResource{
-							ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/test-subnet"),
+							ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/test-subnet"),
 						},
 					},
 				},
@@ -585,23 +584,23 @@ func createAzureApplicationGateway(agName, subscriptionID, resourceGroup string)
 			// FrontendIPConfigurations (Child Resource)
 			FrontendIPConfigurations: []*armnetwork.ApplicationGatewayFrontendIPConfiguration{
 				{
-					Name: to.Ptr("frontend-ip-config"),
+					Name: new("frontend-ip-config"),
 					Properties: &armnetwork.ApplicationGatewayFrontendIPConfigurationPropertiesFormat{
 						PublicIPAddress: &armnetwork.SubResource{
-							ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/publicIPAddresses/test-public-ip"),
+							ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/publicIPAddresses/test-public-ip"),
 						},
-						PrivateIPAddress: to.Ptr("10.2.0.5"),
+						PrivateIPAddress: new("10.2.0.5"),
 					},
 				},
 			},
 			// BackendAddressPools (Child Resource)
 			BackendAddressPools: []*armnetwork.ApplicationGatewayBackendAddressPool{
 				{
-					Name: to.Ptr("backend-pool"),
+					Name: new("backend-pool"),
 					Properties: &armnetwork.ApplicationGatewayBackendAddressPoolPropertiesFormat{
 						BackendAddresses: []*armnetwork.ApplicationGatewayBackendAddress{
 							{
-								IPAddress: to.Ptr("10.0.1.4"),
+								IPAddress: new("10.0.1.4"),
 							},
 						},
 					},
@@ -610,76 +609,76 @@ func createAzureApplicationGateway(agName, subscriptionID, resourceGroup string)
 			// HTTPListeners (Child Resource)
 			HTTPListeners: []*armnetwork.ApplicationGatewayHTTPListener{
 				{
-					Name: to.Ptr("http-listener"),
+					Name: new("http-listener"),
 				},
 			},
 			// BackendHTTPSettingsCollection (Child Resource)
 			BackendHTTPSettingsCollection: []*armnetwork.ApplicationGatewayBackendHTTPSettings{
 				{
-					Name: to.Ptr("backend-http-settings"),
+					Name: new("backend-http-settings"),
 				},
 			},
 			// RequestRoutingRules (Child Resource)
 			RequestRoutingRules: []*armnetwork.ApplicationGatewayRequestRoutingRule{
 				{
-					Name: to.Ptr("routing-rule"),
+					Name: new("routing-rule"),
 				},
 			},
 			// Probes (Child Resource)
 			Probes: []*armnetwork.ApplicationGatewayProbe{
 				{
-					Name: to.Ptr("health-probe"),
+					Name: new("health-probe"),
 				},
 			},
 			// SSLCertificates (Child Resource)
 			SSLCertificates: []*armnetwork.ApplicationGatewaySSLCertificate{
 				{
-					Name: to.Ptr("ssl-cert"),
+					Name: new("ssl-cert"),
 					Properties: &armnetwork.ApplicationGatewaySSLCertificatePropertiesFormat{
-						KeyVaultSecretID: to.Ptr("https://test-keyvault.vault.azure.net/secrets/test-secret/version"),
+						KeyVaultSecretID: new("https://test-keyvault.vault.azure.net/secrets/test-secret/version"),
 					},
 				},
 			},
 			// URLPathMaps (Child Resource)
 			URLPathMaps: []*armnetwork.ApplicationGatewayURLPathMap{
 				{
-					Name: to.Ptr("url-path-map"),
+					Name: new("url-path-map"),
 				},
 			},
 			// AuthenticationCertificates (Child Resource)
 			AuthenticationCertificates: []*armnetwork.ApplicationGatewayAuthenticationCertificate{
 				{
-					Name: to.Ptr("auth-cert"),
+					Name: new("auth-cert"),
 				},
 			},
 			// TrustedRootCertificates (Child Resource)
 			TrustedRootCertificates: []*armnetwork.ApplicationGatewayTrustedRootCertificate{
 				{
-					Name: to.Ptr("trusted-root-cert"),
+					Name: new("trusted-root-cert"),
 					Properties: &armnetwork.ApplicationGatewayTrustedRootCertificatePropertiesFormat{
-						KeyVaultSecretID: to.Ptr("https://test-trusted-keyvault.vault.azure.net/secrets/test-trusted-secret/version"),
+						KeyVaultSecretID: new("https://test-trusted-keyvault.vault.azure.net/secrets/test-trusted-secret/version"),
 					},
 				},
 			},
 			// RewriteRuleSets (Child Resource)
 			RewriteRuleSets: []*armnetwork.ApplicationGatewayRewriteRuleSet{
 				{
-					Name: to.Ptr("rewrite-rule-set"),
+					Name: new("rewrite-rule-set"),
 				},
 			},
 			// RedirectConfigurations (Child Resource)
 			RedirectConfigurations: []*armnetwork.ApplicationGatewayRedirectConfiguration{
 				{
-					Name: to.Ptr("redirect-config"),
+					Name: new("redirect-config"),
 				},
 			},
 			// FirewallPolicy (External Resource)
 			FirewallPolicy: &armnetwork.SubResource{
-				ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies/test-waf-policy"),
+				ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/ApplicationGatewayWebApplicationFirewallPolicies/test-waf-policy"),
 			},
 		},
 		Identity: &armnetwork.ManagedServiceIdentity{
-			Type: to.Ptr(armnetwork.ResourceIdentityTypeUserAssigned),
+			Type: new(armnetwork.ResourceIdentityTypeUserAssigned),
 			UserAssignedIdentities: map[string]*armnetwork.Components1Jq1T4ISchemasManagedserviceidentityPropertiesUserassignedidentitiesAdditionalproperties{
 				"/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.ManagedIdentity/userAssignedIdentities/test-identity": {},
 			},
@@ -693,10 +692,10 @@ func createAzureApplicationGatewayWithDifferentScopePublicIP(agName, subscriptio
 	// Override FrontendIPConfiguration with PublicIPAddress in different scope
 	ag.Properties.FrontendIPConfigurations = []*armnetwork.ApplicationGatewayFrontendIPConfiguration{
 		{
-			Name: to.Ptr("frontend-ip-config"),
+			Name: new("frontend-ip-config"),
 			Properties: &armnetwork.ApplicationGatewayFrontendIPConfigurationPropertiesFormat{
 				PublicIPAddress: &armnetwork.SubResource{
-					ID: to.Ptr("/subscriptions/" + otherSubscriptionID + "/resourceGroups/" + otherResourceGroup + "/providers/Microsoft.Network/publicIPAddresses/test-public-ip"),
+					ID: new("/subscriptions/" + otherSubscriptionID + "/resourceGroups/" + otherResourceGroup + "/providers/Microsoft.Network/publicIPAddresses/test-public-ip"),
 				},
 			},
 		},

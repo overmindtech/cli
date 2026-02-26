@@ -304,7 +304,7 @@ func NewECSServiceAdapter(client ECSClient, accountID string, region string, cac
 		GetFunc:         serviceGetFunc,
 		DisableList:     true,
 		AdapterMetadata: ecsServiceAdapterMetadata,
-		cache:        cache,
+		cache:           cache,
 		GetInputMapper: func(scope, query string) *ecs.DescribeServicesInput {
 			// We are using a custom id of {clusterName}/{id} e.g.
 			// ecs-template-ECSCluster-8nS0WOLbs3nZ/ecs-template-service-i0mQKzkhDI2C
@@ -329,7 +329,7 @@ func NewECSServiceAdapter(client ECSClient, accountID string, region string, cac
 		SearchInputMapper: func(scope, query string) (*ecs.ListServicesInput, error) {
 			// Custom search by cluster
 			return &ecs.ListServicesInput{
-				Cluster: PtrString(query),
+				Cluster: new(query),
 			}, nil
 		},
 		ListFuncOutputMapper: serviceListFuncOutputMapper,

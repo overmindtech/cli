@@ -16,46 +16,46 @@ func (t *DynamoDBTestClient) DescribeTable(context.Context, *dynamodb.DescribeTa
 		Table: &types.TableDescription{
 			AttributeDefinitions: []types.AttributeDefinition{
 				{
-					AttributeName: PtrString("ArtistId"),
+					AttributeName: new("ArtistId"),
 					AttributeType: types.ScalarAttributeTypeS,
 				},
 				{
-					AttributeName: PtrString("Concert"),
+					AttributeName: new("Concert"),
 					AttributeType: types.ScalarAttributeTypeS,
 				},
 				{
-					AttributeName: PtrString("TicketSales"),
+					AttributeName: new("TicketSales"),
 					AttributeType: types.ScalarAttributeTypeS,
 				},
 			},
-			TableName: PtrString("test-DDBTable-1X52D7BWAAB2H"),
+			TableName: new("test-DDBTable-1X52D7BWAAB2H"),
 			KeySchema: []types.KeySchemaElement{
 				{
-					AttributeName: PtrString("ArtistId"),
+					AttributeName: new("ArtistId"),
 					KeyType:       types.KeyTypeHash,
 				},
 				{
-					AttributeName: PtrString("Concert"),
+					AttributeName: new("Concert"),
 					KeyType:       types.KeyTypeRange,
 				},
 			},
 			TableStatus:      types.TableStatusActive,
-			CreationDateTime: PtrTime(time.Now()),
+			CreationDateTime: new(time.Now()),
 			ProvisionedThroughput: &types.ProvisionedThroughputDescription{
-				NumberOfDecreasesToday: PtrInt64(0),
-				ReadCapacityUnits:      PtrInt64(5),
-				WriteCapacityUnits:     PtrInt64(5),
+				NumberOfDecreasesToday: new(int64(0)),
+				ReadCapacityUnits:      new(int64(5)),
+				WriteCapacityUnits:     new(int64(5)),
 			},
-			TableSizeBytes: PtrInt64(0),
-			ItemCount:      PtrInt64(0),
-			TableArn:       PtrString("arn:aws:dynamodb:eu-west-1:052392120703:table/test-DDBTable-1X52D7BWAAB2H"),
-			TableId:        PtrString("32ef65bf-d6f3-4508-a3db-f201df09e437"),
+			TableSizeBytes: new(int64(0)),
+			ItemCount:      new(int64(0)),
+			TableArn:       new("arn:aws:dynamodb:eu-west-1:052392120703:table/test-DDBTable-1X52D7BWAAB2H"),
+			TableId:        new("32ef65bf-d6f3-4508-a3db-f201df09e437"),
 			GlobalSecondaryIndexes: []types.GlobalSecondaryIndexDescription{
 				{
-					IndexName: PtrString("GSI"),
+					IndexName: new("GSI"),
 					KeySchema: []types.KeySchemaElement{
 						{
-							AttributeName: PtrString("TicketSales"),
+							AttributeName: new("TicketSales"),
 							KeyType:       types.KeyTypeHash,
 						},
 					},
@@ -64,35 +64,35 @@ func (t *DynamoDBTestClient) DescribeTable(context.Context, *dynamodb.DescribeTa
 					},
 					IndexStatus: types.IndexStatusActive,
 					ProvisionedThroughput: &types.ProvisionedThroughputDescription{
-						NumberOfDecreasesToday: PtrInt64(0),
-						ReadCapacityUnits:      PtrInt64(5),
-						WriteCapacityUnits:     PtrInt64(5),
+						NumberOfDecreasesToday: new(int64(0)),
+						ReadCapacityUnits:      new(int64(5)),
+						WriteCapacityUnits:     new(int64(5)),
 					},
-					IndexSizeBytes: PtrInt64(0),
-					ItemCount:      PtrInt64(0),
-					IndexArn:       PtrString("arn:aws:dynamodb:eu-west-1:052392120703:table/test-DDBTable-1X52D7BWAAB2H/index/GSI"), // no link, t
+					IndexSizeBytes: new(int64(0)),
+					ItemCount:      new(int64(0)),
+					IndexArn:       new("arn:aws:dynamodb:eu-west-1:052392120703:table/test-DDBTable-1X52D7BWAAB2H/index/GSI"), // no link, t
 				},
 			},
 			ArchivalSummary: &types.ArchivalSummary{
-				ArchivalBackupArn: PtrString("arn:aws:backups:eu-west-1:052392120703:some-backup/one"), // link
-				ArchivalDateTime:  PtrTime(time.Now()),
-				ArchivalReason:    PtrString("fear"),
+				ArchivalBackupArn: new("arn:aws:backups:eu-west-1:052392120703:some-backup/one"), // link
+				ArchivalDateTime:  new(time.Now()),
+				ArchivalReason:    new("fear"),
 			},
 			BillingModeSummary: &types.BillingModeSummary{
 				BillingMode: types.BillingModePayPerRequest,
 			},
-			GlobalTableVersion: PtrString("1"),
-			LatestStreamArn:    PtrString("arn:aws:dynamodb:eu-west-1:052392120703:table/test-DDBTable-1X52D7BWAAB2H/stream/2023-01-11T16:53:02.371"), // This doesn't get linked because there is no more data to get
-			LatestStreamLabel:  PtrString("2023-01-11T16:53:02.371"),
+			GlobalTableVersion: new("1"),
+			LatestStreamArn:    new("arn:aws:dynamodb:eu-west-1:052392120703:table/test-DDBTable-1X52D7BWAAB2H/stream/2023-01-11T16:53:02.371"), // This doesn't get linked because there is no more data to get
+			LatestStreamLabel:  new("2023-01-11T16:53:02.371"),
 			LocalSecondaryIndexes: []types.LocalSecondaryIndexDescription{
 				{
-					IndexArn:       PtrString("arn:aws:dynamodb:eu-west-1:052392120703:table/test-DDBTable-1X52D7BWAAB2H/index/GSX"), // no link
-					IndexName:      PtrString("GSX"),
-					IndexSizeBytes: PtrInt64(29103),
-					ItemCount:      PtrInt64(234234),
+					IndexArn:       new("arn:aws:dynamodb:eu-west-1:052392120703:table/test-DDBTable-1X52D7BWAAB2H/index/GSX"), // no link
+					IndexName:      new("GSX"),
+					IndexSizeBytes: new(int64(29103)),
+					ItemCount:      new(int64(234234)),
 					KeySchema: []types.KeySchemaElement{
 						{
-							AttributeName: PtrString("TicketSales"),
+							AttributeName: new("TicketSales"),
 							KeyType:       types.KeyTypeHash,
 						},
 					},
@@ -108,11 +108,11 @@ func (t *DynamoDBTestClient) DescribeTable(context.Context, *dynamodb.DescribeTa
 				{
 					GlobalSecondaryIndexes: []types.ReplicaGlobalSecondaryIndexDescription{
 						{
-							IndexName: PtrString("name"),
+							IndexName: new("name"),
 						},
 					},
-					KMSMasterKeyId: PtrString("keyID"),
-					RegionName:     PtrString("eu-west-2"), // link
+					KMSMasterKeyId: new("keyID"),
+					RegionName:     new("eu-west-2"), // link
 					ReplicaStatus:  types.ReplicaStatusActive,
 					ReplicaTableClassSummary: &types.TableClassSummary{
 						TableClass: types.TableClassStandard,
@@ -120,23 +120,23 @@ func (t *DynamoDBTestClient) DescribeTable(context.Context, *dynamodb.DescribeTa
 				},
 			},
 			RestoreSummary: &types.RestoreSummary{
-				RestoreDateTime:   PtrTime(time.Now()),
-				RestoreInProgress: PtrBool(false),
-				SourceBackupArn:   PtrString("arn:aws:backup:eu-west-1:052392120703:recovery-point:89d0f956-d3a6-42fd-abbd-7d397766bc7e"), // link
-				SourceTableArn:    PtrString("arn:aws:dynamodb:eu-west-1:052392120703:table/test-DDBTable-1X52D7BWAAB2H"),                 // link
+				RestoreDateTime:   new(time.Now()),
+				RestoreInProgress: new(false),
+				SourceBackupArn:   new("arn:aws:backup:eu-west-1:052392120703:recovery-point:89d0f956-d3a6-42fd-abbd-7d397766bc7e"), // link
+				SourceTableArn:    new("arn:aws:dynamodb:eu-west-1:052392120703:table/test-DDBTable-1X52D7BWAAB2H"),                 // link
 			},
 			SSEDescription: &types.SSEDescription{
-				InaccessibleEncryptionDateTime: PtrTime(time.Now()),
-				KMSMasterKeyArn:                PtrString("arn:aws:service:region:account:type/id"), // link
+				InaccessibleEncryptionDateTime: new(time.Now()),
+				KMSMasterKeyArn:                new("arn:aws:service:region:account:type/id"), // link
 				SSEType:                        types.SSETypeAes256,
 				Status:                         types.SSEStatusDisabling,
 			},
 			StreamSpecification: &types.StreamSpecification{
-				StreamEnabled:  PtrBool(true),
+				StreamEnabled:  new(true),
 				StreamViewType: types.StreamViewTypeKeysOnly,
 			},
 			TableClassSummary: &types.TableClassSummary{
-				LastUpdateDateTime: PtrTime(time.Now()),
+				LastUpdateDateTime: new(time.Now()),
 				TableClass:         types.TableClassStandard,
 			},
 		},
@@ -156,8 +156,8 @@ func (t *DynamoDBTestClient) DescribeKinesisStreamingDestination(ctx context.Con
 		KinesisDataStreamDestinations: []types.KinesisDataStreamDestination{
 			{
 				DestinationStatus:            types.DestinationStatusActive,
-				DestinationStatusDescription: PtrString("description"),
-				StreamArn:                    PtrString("arn:aws:kinesis:eu-west-1:052392120703:stream/test"),
+				DestinationStatusDescription: new("description"),
+				StreamArn:                    new("arn:aws:kinesis:eu-west-1:052392120703:stream/test"),
 			},
 		},
 	}, nil
@@ -167,8 +167,8 @@ func (t *DynamoDBTestClient) ListTagsOfResource(context.Context, *dynamodb.ListT
 	return &dynamodb.ListTagsOfResourceOutput{
 		Tags: []types.Tag{
 			{
-				Key:   PtrString("key"),
-				Value: PtrString("value"),
+				Key:   new("key"),
+				Value: new("value"),
 			},
 		},
 		NextToken: nil,

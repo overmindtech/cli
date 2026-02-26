@@ -19,12 +19,12 @@ import (
 func (t *TestIAMClient) GetRole(ctx context.Context, params *iam.GetRoleInput, optFns ...func(*iam.Options)) (*iam.GetRoleOutput, error) {
 	return &iam.GetRoleOutput{
 		Role: &types.Role{
-			Path:       PtrString("/service-role/"),
-			RoleName:   PtrString("AWSControlTowerConfigAggregatorRoleForOrganizations"),
-			RoleId:     PtrString("AROA3VLV2U27YSTBFCGCJ"),
-			Arn:        PtrString("arn:aws:iam::801795385023:role/service-role/AWSControlTowerConfigAggregatorRoleForOrganizations"),
-			CreateDate: PtrTime(time.Now()),
-			AssumeRolePolicyDocument: PtrString(`{
+			Path:       new("/service-role/"),
+			RoleName:   new("AWSControlTowerConfigAggregatorRoleForOrganizations"),
+			RoleId:     new("AROA3VLV2U27YSTBFCGCJ"),
+			Arn:        new("arn:aws:iam::801795385023:role/service-role/AWSControlTowerConfigAggregatorRoleForOrganizations"),
+			CreateDate: new(time.Now()),
+			AssumeRolePolicyDocument: new(`{
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -36,7 +36,7 @@ func (t *TestIAMClient) GetRole(ctx context.Context, params *iam.GetRoleInput, o
     }
   ]
 }`),
-			MaxSessionDuration: PtrInt32(3600),
+			MaxSessionDuration: new(int32(3600)),
 		},
 	}, nil
 }
@@ -54,12 +54,12 @@ func (t *TestIAMClient) ListRoles(context.Context, *iam.ListRolesInput, ...func(
 	return &iam.ListRolesOutput{
 		Roles: []types.Role{
 			{
-				Path:       PtrString("/service-role/"),
-				RoleName:   PtrString("AWSControlTowerConfigAggregatorRoleForOrganizations"),
-				RoleId:     PtrString("AROA3VLV2U27YSTBFCGCJ"),
-				Arn:        PtrString("arn:aws:iam::801795385023:role/service-role/AWSControlTowerConfigAggregatorRoleForOrganizations"),
-				CreateDate: PtrTime(time.Now()),
-				AssumeRolePolicyDocument: PtrString(`{
+				Path:       new("/service-role/"),
+				RoleName:   new("AWSControlTowerConfigAggregatorRoleForOrganizations"),
+				RoleId:     new("AROA3VLV2U27YSTBFCGCJ"),
+				Arn:        new("arn:aws:iam::801795385023:role/service-role/AWSControlTowerConfigAggregatorRoleForOrganizations"),
+				CreateDate: new(time.Now()),
+				AssumeRolePolicyDocument: new(`{
   "Version": "2012-10-17",
   "Statement": [
     {
@@ -71,7 +71,7 @@ func (t *TestIAMClient) ListRoles(context.Context, *iam.ListRolesInput, ...func(
     }
   ]
 }`),
-				MaxSessionDuration: PtrInt32(3600),
+				MaxSessionDuration: new(int32(3600)),
 			},
 		},
 	}, nil
@@ -81,8 +81,8 @@ func (t *TestIAMClient) ListRoleTags(ctx context.Context, params *iam.ListRoleTa
 	return &iam.ListRoleTagsOutput{
 		Tags: []types.Tag{
 			{
-				Key:   PtrString("foo"),
-				Value: PtrString("bar"),
+				Key:   new("foo"),
+				Value: new("bar"),
 			},
 		},
 	}, nil
@@ -91,7 +91,7 @@ func (t *TestIAMClient) ListRoleTags(ctx context.Context, params *iam.ListRoleTa
 func (t *TestIAMClient) GetRolePolicy(ctx context.Context, params *iam.GetRolePolicyInput, optFns ...func(*iam.Options)) (*iam.GetRolePolicyOutput, error) {
 	return &iam.GetRolePolicyOutput{
 		PolicyName: params.PolicyName,
-		PolicyDocument: PtrString(`{
+		PolicyDocument: new(`{
 			"Version": "2012-10-17",
 			"Statement": [
 				{
@@ -110,12 +110,12 @@ func (t *TestIAMClient) ListAttachedRolePolicies(ctx context.Context, params *ia
 	return &iam.ListAttachedRolePoliciesOutput{
 		AttachedPolicies: []types.AttachedPolicy{
 			{
-				PolicyArn:  PtrString("arn:aws:iam::aws:policy/AdministratorAccess"),
-				PolicyName: PtrString("AdministratorAccess"),
+				PolicyArn:  new("arn:aws:iam::aws:policy/AdministratorAccess"),
+				PolicyName: new("AdministratorAccess"),
 			},
 			{
-				PolicyArn:  PtrString("arn:aws:iam::aws:policy/AmazonS3FullAccess"),
-				PolicyName: PtrString("AmazonS3FullAccess"),
+				PolicyArn:  new("arn:aws:iam::aws:policy/AmazonS3FullAccess"),
+				PolicyName: new("AmazonS3FullAccess"),
 			},
 		},
 	}, nil
@@ -160,7 +160,7 @@ func TestRoleListFunc(t *testing.T) {
 func TestRoleListTagsFunc(t *testing.T) {
 	tags, err := roleListTagsFunc(context.Background(), &RoleDetails{
 		Role: &types.Role{
-			Arn: PtrString("arn:aws:iam::801795385023:role/service-role/AWSControlTowerConfigAggregatorRoleForOrganizations"),
+			Arn: new("arn:aws:iam::801795385023:role/service-role/AWSControlTowerConfigAggregatorRoleForOrganizations"),
 		},
 	}, &TestIAMClient{})
 	if err != nil {
@@ -193,21 +193,21 @@ func TestRoleItemMapper(t *testing.T) {
 
 	role := RoleDetails{
 		Role: &types.Role{
-			Path:                     PtrString("/service-role/"),
-			RoleName:                 PtrString("AWSControlTowerConfigAggregatorRoleForOrganizations"),
-			RoleId:                   PtrString("AROA3VLV2U27YSTBFCGCJ"),
-			Arn:                      PtrString("arn:aws:iam::801795385023:role/service-role/AWSControlTowerConfigAggregatorRoleForOrganizations"),
-			CreateDate:               PtrTime(time.Now()),
-			AssumeRolePolicyDocument: PtrString(`%7B%22Version%22%3A%222012-10-17%22%2C%22Statement%22%3A%5B%7B%22Effect%22%3A%22Allow%22%2C%22Principal%22%3A%7B%22Service%22%3A%22config.amazonaws.com%22%7D%2C%22Action%22%3A%22sts%3AAssumeRole%22%7D%5D%7D`),
-			MaxSessionDuration:       PtrInt32(3600),
-			Description:              PtrString("description"),
+			Path:                     new("/service-role/"),
+			RoleName:                 new("AWSControlTowerConfigAggregatorRoleForOrganizations"),
+			RoleId:                   new("AROA3VLV2U27YSTBFCGCJ"),
+			Arn:                      new("arn:aws:iam::801795385023:role/service-role/AWSControlTowerConfigAggregatorRoleForOrganizations"),
+			CreateDate:               new(time.Now()),
+			AssumeRolePolicyDocument: new(`%7B%22Version%22%3A%222012-10-17%22%2C%22Statement%22%3A%5B%7B%22Effect%22%3A%22Allow%22%2C%22Principal%22%3A%7B%22Service%22%3A%22config.amazonaws.com%22%7D%2C%22Action%22%3A%22sts%3AAssumeRole%22%7D%5D%7D`),
+			MaxSessionDuration:       new(int32(3600)),
+			Description:              new("description"),
 			PermissionsBoundary: &types.AttachedPermissionsBoundary{
-				PermissionsBoundaryArn:  PtrString("arn:aws:iam::801795385023:role/service-role/AWSControlTowerConfigAggregatorRoleForOrganizations"),
+				PermissionsBoundaryArn:  new("arn:aws:iam::801795385023:role/service-role/AWSControlTowerConfigAggregatorRoleForOrganizations"),
 				PermissionsBoundaryType: types.PermissionsBoundaryAttachmentTypePolicy,
 			},
 			RoleLastUsed: &types.RoleLastUsed{
-				LastUsedDate: PtrTime(time.Now()),
-				Region:       PtrString("us-east-2"),
+				LastUsedDate: new(time.Now()),
+				Region:       new("us-east-2"),
 			},
 		},
 		EmbeddedPolicies: []embeddedPolicy{
@@ -218,8 +218,8 @@ func TestRoleItemMapper(t *testing.T) {
 		},
 		AttachedPolicies: []types.AttachedPolicy{
 			{
-				PolicyArn:  PtrString("arn:aws:iam::aws:policy/AdministratorAccess"),
-				PolicyName: PtrString("AdministratorAccess"),
+				PolicyArn:  new("arn:aws:iam::aws:policy/AdministratorAccess"),
+				PolicyName: new("AdministratorAccess"),
 			},
 		},
 	}

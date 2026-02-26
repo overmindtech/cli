@@ -28,8 +28,8 @@ func ExtractLinksFromAttributes(attributes *ItemAttributes) []*LinkedItemQuery {
 // converts it to a set of ItemAttributes via the `ToAttributes` function. This
 // uses reflection. `ExtractLinksFromAttributes` is more efficient if you have
 // the attributes already in the correct format.
-func ExtractLinksFrom(anything interface{}) ([]*LinkedItemQuery, error) {
-	attributes, err := ToAttributes(map[string]interface{}{
+func ExtractLinksFrom(anything any) ([]*LinkedItemQuery, error) {
+	attributes, err := ToAttributes(map[string]any{
 		"": anything,
 	})
 	if err != nil {

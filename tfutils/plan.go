@@ -18,14 +18,14 @@ type Plan struct {
 	FormatVersion    string      `json:"format_version,omitempty"`
 	TerraformVersion string      `json:"terraform_version,omitempty"`
 	Variables        Variables   `json:"variables,omitempty"`
-	PlannedValues    StateValues `json:"planned_values,omitempty"`
+	PlannedValues    StateValues `json:"planned_values"`
 	// ResourceDrift and ResourceChanges are sorted in a user-friendly order
 	// that is undefined at this time, but consistent.
 	ResourceDrift      []ResourceChange  `json:"resource_drift,omitempty"`
 	ResourceChanges    []ResourceChange  `json:"resource_changes,omitempty"`
 	OutputChanges      map[string]Change `json:"output_changes,omitempty"`
-	PriorState         State             `json:"prior_state,omitempty"`
-	Config             planConfig        `json:"configuration,omitempty"`
+	PriorState         State             `json:"prior_state"`
+	Config             planConfig        `json:"configuration"`
 	RelevantAttributes []ResourceAttr    `json:"relevant_attributes,omitempty"`
 	Checks             json.RawMessage   `json:"checks,omitempty"`
 	Timestamp          string            `json:"timestamp,omitempty"`
@@ -35,7 +35,7 @@ type Plan struct {
 // Config represents the complete configuration source
 type planConfig struct {
 	ProviderConfigs map[string]ProviderConfig `json:"provider_config,omitempty"`
-	RootModule      ConfigModule              `json:"root_module,omitempty"`
+	RootModule      ConfigModule              `json:"root_module"`
 }
 
 // ProviderConfig describes all of the provider configurations throughout the
@@ -43,12 +43,12 @@ type planConfig struct {
 // provider configurations are the one concept in Terraform that can span across
 // module boundaries.
 type ProviderConfig struct {
-	Name              string                 `json:"name,omitempty"`
-	FullName          string                 `json:"full_name,omitempty"`
-	Alias             string                 `json:"alias,omitempty"`
-	VersionConstraint string                 `json:"version_constraint,omitempty"`
-	ModuleAddress     string                 `json:"module_address,omitempty"`
-	Expressions       map[string]interface{} `json:"expressions,omitempty"`
+	Name              string         `json:"name,omitempty"`
+	FullName          string         `json:"full_name,omitempty"`
+	Alias             string         `json:"alias,omitempty"`
+	VersionConstraint string         `json:"version_constraint,omitempty"`
+	ModuleAddress     string         `json:"module_address,omitempty"`
+	Expressions       map[string]any `json:"expressions,omitempty"`
 }
 
 type ConfigModule struct {
@@ -120,13 +120,13 @@ func (m ConfigModule) DigResource(address string) *ConfigResource {
 }
 
 type moduleCall struct {
-	Source            string                 `json:"source,omitempty"`
-	Expressions       map[string]interface{} `json:"expressions,omitempty"`
-	CountExpression   *expression            `json:"count_expression,omitempty"`
-	ForEachExpression *expression            `json:"for_each_expression,omitempty"`
-	Module            ConfigModule           `json:"module,omitempty"`
-	VersionConstraint string                 `json:"version_constraint,omitempty"`
-	DependsOn         []string               `json:"depends_on,omitempty"`
+	Source            string         `json:"source,omitempty"`
+	Expressions       map[string]any `json:"expressions,omitempty"`
+	CountExpression   *expression    `json:"count_expression,omitempty"`
+	ForEachExpression *expression    `json:"for_each_expression,omitempty"`
+	Module            ConfigModule   `json:"module"`
+	VersionConstraint string         `json:"version_constraint,omitempty"`
+	DependsOn         []string       `json:"depends_on,omitempty"`
 }
 
 // variables is the JSON representation of the variables provided to the current
@@ -164,7 +164,7 @@ type ConfigResource struct {
 
 	// Expressions" describes the resource-type-specific  content of the
 	// configuration block.
-	Expressions map[string]interface{} `json:"expressions,omitempty"`
+	Expressions map[string]any `json:"expressions,omitempty"`
 
 	// SchemaVersion indicates which version of the resource type schema the
 	// "values" property conforms to.
@@ -181,14 +181,14 @@ type ConfigResource struct {
 
 type output struct {
 	Sensitive   bool       `json:"sensitive,omitempty"`
-	Expression  expression `json:"expression,omitempty"`
+	Expression  expression `json:"expression"`
 	DependsOn   []string   `json:"depends_on,omitempty"`
 	Description string     `json:"description,omitempty"`
 }
 
 type provisioner struct {
-	Type        string                 `json:"type,omitempty"`
-	Expressions map[string]interface{} `json:"expressions,omitempty"`
+	Type        string         `json:"type,omitempty"`
+	Expressions map[string]any `json:"expressions,omitempty"`
 }
 
 // expression represents any unparsed expression
@@ -220,7 +220,7 @@ type Variable struct {
 // prior state (which is always complete) and the planned new state.
 type StateValues struct {
 	Outputs    map[string]Output `json:"outputs,omitempty"`
-	RootModule Module            `json:"root_module,omitempty"`
+	RootModule Module            `json:"root_module"`
 }
 
 // Get a specific resource from this module or its children
@@ -293,13 +293,13 @@ type Resource struct {
 
 // AttributeValues is the JSON representation of the attribute values of the
 // resource, whose structure depends on the resource type schema.
-type AttributeValues map[string]interface{}
+type AttributeValues map[string]any
 
 var indexBrackets = regexp.MustCompile(`\[(\d+)\]`)
 
 // Digs through the attribute values to find the value at the given key. This
 // supports nested keys i.e. "foo.bar" and arrays i.e. "foo[0]"
-func (av AttributeValues) Dig(key string) (interface{}, bool) {
+func (av AttributeValues) Dig(key string) (any, bool) {
 	sections := strings.Split(key, ".")
 
 	if len(sections) == 0 {
@@ -312,7 +312,7 @@ func (av AttributeValues) Dig(key string) (interface{}, bool) {
 	// Check for an index
 	indexMatches := indexBrackets.FindStringSubmatch(section)
 
-	var value interface{}
+	var value any
 	var ok bool
 
 	if len(indexMatches) == 0 {
@@ -339,7 +339,7 @@ func (av AttributeValues) Dig(key string) (interface{}, bool) {
 		}
 
 		// Check if the value is an array
-		array, ok := arr.([]interface{})
+		array, ok := arr.([]any)
 
 		if !ok {
 			return nil, false
@@ -359,7 +359,7 @@ func (av AttributeValues) Dig(key string) (interface{}, bool) {
 	}
 
 	// If there are more sections, then we need to dig deeper
-	childMap, ok := value.(map[string]interface{})
+	childMap, ok := value.(map[string]any)
 
 	if !ok {
 		return nil, false
@@ -413,7 +413,7 @@ type ResourceChange struct {
 	Deposed string `json:"deposed,omitempty"`
 
 	// Change describes the change that will be made to this object
-	Change Change `json:"change,omitempty"`
+	Change Change `json:"change"`
 
 	// ActionReason is a keyword representing some optional extra context
 	// for why the actions in Change.Actions were chosen.

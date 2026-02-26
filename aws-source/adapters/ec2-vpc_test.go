@@ -42,38 +42,38 @@ func TestVpcOutputMapper(t *testing.T) {
 	output := &ec2.DescribeVpcsOutput{
 		Vpcs: []types.Vpc{
 			{
-				CidrBlock:       PtrString("172.31.0.0/16"),
-				DhcpOptionsId:   PtrString("dopt-0959b838bf4a4c7b8"),
+				CidrBlock:       new("172.31.0.0/16"),
+				DhcpOptionsId:   new("dopt-0959b838bf4a4c7b8"),
 				State:           types.VpcStateAvailable,
-				VpcId:           PtrString("vpc-0d7892e00e573e701"),
-				OwnerId:         PtrString("052392120703"),
+				VpcId:           new("vpc-0d7892e00e573e701"),
+				OwnerId:         new("052392120703"),
 				InstanceTenancy: types.TenancyDefault,
 				CidrBlockAssociationSet: []types.VpcCidrBlockAssociation{
 					{
-						AssociationId: PtrString("vpc-cidr-assoc-0b77866f37f500af6"),
-						CidrBlock:     PtrString("172.31.0.0/16"),
+						AssociationId: new("vpc-cidr-assoc-0b77866f37f500af6"),
+						CidrBlock:     new("172.31.0.0/16"),
 						CidrBlockState: &types.VpcCidrBlockState{
 							State: types.VpcCidrBlockStateCodeAssociated,
 						},
 					},
 				},
-				IsDefault: PtrBool(false),
+				IsDefault: new(false),
 				Tags: []types.Tag{
 					{
-						Key:   PtrString("aws:cloudformation:logical-id"),
-						Value: PtrString("VPC"),
+						Key:   new("aws:cloudformation:logical-id"),
+						Value: new("VPC"),
 					},
 					{
-						Key:   PtrString("aws:cloudformation:stack-id"),
-						Value: PtrString("arn:aws:cloudformation:eu-west-2:052392120703:stack/StackSet-AWSControlTowerBP-VPC-ACCOUNT-FACTORY-V1-8c2a9348-a30c-4ac3-94c2-8279157c9243/ccde3240-7afa-11ed-81ff-02845d4c2702"),
+						Key:   new("aws:cloudformation:stack-id"),
+						Value: new("arn:aws:cloudformation:eu-west-2:052392120703:stack/StackSet-AWSControlTowerBP-VPC-ACCOUNT-FACTORY-V1-8c2a9348-a30c-4ac3-94c2-8279157c9243/ccde3240-7afa-11ed-81ff-02845d4c2702"),
 					},
 					{
-						Key:   PtrString("aws:cloudformation:stack-name"),
-						Value: PtrString("StackSet-AWSControlTowerBP-VPC-ACCOUNT-FACTORY-V1-8c2a9348-a30c-4ac3-94c2-8279157c9243"),
+						Key:   new("aws:cloudformation:stack-name"),
+						Value: new("StackSet-AWSControlTowerBP-VPC-ACCOUNT-FACTORY-V1-8c2a9348-a30c-4ac3-94c2-8279157c9243"),
 					},
 					{
-						Key:   PtrString("Name"),
-						Value: PtrString("aws-controltower-VPC"),
+						Key:   new("Name"),
+						Value: new("aws-controltower-VPC"),
 					},
 				},
 			},

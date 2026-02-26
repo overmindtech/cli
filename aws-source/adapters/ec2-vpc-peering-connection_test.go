@@ -15,48 +15,48 @@ func TestVpcPeeringConnectionOutputMapper(t *testing.T) {
 	output := &ec2.DescribeVpcPeeringConnectionsOutput{
 		VpcPeeringConnections: []types.VpcPeeringConnection{
 			{
-				VpcPeeringConnectionId: PtrString("pcx-1234567890"),
+				VpcPeeringConnectionId: new("pcx-1234567890"),
 				Status: &types.VpcPeeringConnectionStateReason{
 					Code:    types.VpcPeeringConnectionStateReasonCodeActive, // health
-					Message: PtrString("message"),
+					Message: new("message"),
 				},
 				AccepterVpcInfo: &types.VpcPeeringConnectionVpcInfo{
-					CidrBlock: PtrString("10.0.0.1/24"),
+					CidrBlock: new("10.0.0.1/24"),
 					CidrBlockSet: []types.CidrBlock{
 						{
-							CidrBlock: PtrString("10.0.2.1/24"),
+							CidrBlock: new("10.0.2.1/24"),
 						},
 					},
 					Ipv6CidrBlockSet: []types.Ipv6CidrBlock{
 						{
-							Ipv6CidrBlock: PtrString("::/64"),
+							Ipv6CidrBlock: new("::/64"),
 						},
 					},
-					OwnerId: PtrString("123456789012"),
-					Region:  PtrString("eu-west-2"),      // link
-					VpcId:   PtrString("vpc-1234567890"), // link
+					OwnerId: new("123456789012"),
+					Region:  new("eu-west-2"),      // link
+					VpcId:   new("vpc-1234567890"), // link
 					PeeringOptions: &types.VpcPeeringConnectionOptionsDescription{
-						AllowDnsResolutionFromRemoteVpc: PtrBool(true),
+						AllowDnsResolutionFromRemoteVpc: new(true),
 					},
 				},
 				RequesterVpcInfo: &types.VpcPeeringConnectionVpcInfo{
-					CidrBlock: PtrString("10.0.0.1/24"),
+					CidrBlock: new("10.0.0.1/24"),
 					CidrBlockSet: []types.CidrBlock{
 						{
-							CidrBlock: PtrString("10.0.2.1/24"),
+							CidrBlock: new("10.0.2.1/24"),
 						},
 					},
 					Ipv6CidrBlockSet: []types.Ipv6CidrBlock{
 						{
-							Ipv6CidrBlock: PtrString("::/64"),
+							Ipv6CidrBlock: new("::/64"),
 						},
 					},
-					OwnerId: PtrString("987654321098"),
+					OwnerId: new("987654321098"),
 					PeeringOptions: &types.VpcPeeringConnectionOptionsDescription{
-						AllowDnsResolutionFromRemoteVpc: PtrBool(true),
+						AllowDnsResolutionFromRemoteVpc: new(true),
 					},
-					Region: PtrString("eu-west-5"),      // link
-					VpcId:  PtrString("vpc-9887654321"), // link
+					Region: new("eu-west-5"),      // link
+					VpcId:  new("vpc-9887654321"), // link
 				},
 			},
 		},

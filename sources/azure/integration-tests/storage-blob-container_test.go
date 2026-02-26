@@ -15,7 +15,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v3"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdpcache"
@@ -275,17 +274,17 @@ func createStorageAccount(ctx context.Context, client *armstorage.AccountsClient
 
 	// Create the storage account
 	poller, err := client.BeginCreate(ctx, resourceGroupName, accountName, armstorage.AccountCreateParameters{
-		Location: ptr.To(location),
-		Kind:     ptr.To(armstorage.KindStorageV2),
+		Location: new(location),
+		Kind:     new(armstorage.KindStorageV2),
 		SKU: &armstorage.SKU{
-			Name: ptr.To(armstorage.SKUNameStandardLRS),
+			Name: new(armstorage.SKUNameStandardLRS),
 		},
 		Properties: &armstorage.AccountPropertiesCreateParameters{
-			AccessTier: ptr.To(armstorage.AccessTierHot),
+			AccessTier: new(armstorage.AccessTierHot),
 		},
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
-			"test":    ptr.To("storage-blob-container"),
+			"purpose": new("overmind-integration-tests"),
+			"test":    new("storage-blob-container"),
 		},
 	}, nil)
 	if err != nil {
@@ -372,7 +371,7 @@ func createBlobContainer(ctx context.Context, client *armstorage.BlobContainersC
 	// Create the blob container
 	resp, err := client.Create(ctx, resourceGroupName, accountName, containerName, armstorage.BlobContainer{
 		ContainerProperties: &armstorage.ContainerProperties{
-			PublicAccess: ptr.To(armstorage.PublicAccessNone),
+			PublicAccess: new(armstorage.PublicAccessNone),
 		},
 	}, nil)
 	if err != nil {

@@ -152,7 +152,7 @@ func TestComputeNetworkEndpointGroup(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/zones/%s/networkEndpointGroups/%s", projectID, zone, negName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "NEG not found"},
+				Body:       map[string]any{"error": "NEG not found"},
 			},
 		}
 

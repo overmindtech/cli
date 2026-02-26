@@ -14,7 +14,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -307,22 +306,22 @@ func createVirtualNetwork(ctx context.Context, client *armnetwork.VirtualNetwork
 
 	// Create the VNet
 	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroupName, vnetName, armnetwork.VirtualNetwork{
-		Location: ptr.To(location),
+		Location: new(location),
 		Properties: &armnetwork.VirtualNetworkPropertiesFormat{
 			AddressSpace: &armnetwork.AddressSpace{
-				AddressPrefixes: []*string{ptr.To("10.0.0.0/16")},
+				AddressPrefixes: []*string{new("10.0.0.0/16")},
 			},
 			Subnets: []*armnetwork.Subnet{
 				{
-					Name: ptr.To(integrationTestSubnetName),
+					Name: new(integrationTestSubnetName),
 					Properties: &armnetwork.SubnetPropertiesFormat{
-						AddressPrefix: ptr.To("10.0.0.0/24"),
+						AddressPrefix: new("10.0.0.0/24"),
 					},
 				},
 			},
 		},
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
+			"purpose": new("overmind-integration-tests"),
 		},
 	}, nil)
 	if err != nil {
@@ -349,22 +348,22 @@ func createNetworkInterface(ctx context.Context, client *armnetwork.InterfacesCl
 
 	// Create the NIC
 	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroupName, nicName, armnetwork.Interface{
-		Location: ptr.To(location),
+		Location: new(location),
 		Properties: &armnetwork.InterfacePropertiesFormat{
 			IPConfigurations: []*armnetwork.InterfaceIPConfiguration{
 				{
-					Name: ptr.To("ipconfig1"),
+					Name: new("ipconfig1"),
 					Properties: &armnetwork.InterfaceIPConfigurationPropertiesFormat{
 						Subnet: &armnetwork.Subnet{
-							ID: ptr.To(subnetID),
+							ID: new(subnetID),
 						},
-						PrivateIPAllocationMethod: ptr.To(armnetwork.IPAllocationMethodDynamic),
+						PrivateIPAllocationMethod: new(armnetwork.IPAllocationMethodDynamic),
 					},
 				},
 			},
 		},
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
+			"purpose": new("overmind-integration-tests"),
 		},
 	}, nil)
 	if err != nil {
@@ -401,51 +400,51 @@ func createVirtualMachine(ctx context.Context, client *armcompute.VirtualMachine
 
 	// Create the VM
 	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroupName, vmName, armcompute.VirtualMachine{
-		Location: ptr.To(location),
+		Location: new(location),
 		Properties: &armcompute.VirtualMachineProperties{
 			HardwareProfile: &armcompute.HardwareProfile{
 				// Use Standard_D2ps_v5 - ARM-based VM with good availability in westus2
-				VMSize: ptr.To(armcompute.VirtualMachineSizeTypes("Standard_D2ps_v5")),
+				VMSize: new(armcompute.VirtualMachineSizeTypes("Standard_D2ps_v5")),
 			},
 			StorageProfile: &armcompute.StorageProfile{
 				ImageReference: &armcompute.ImageReference{
-					Publisher: ptr.To("Canonical"),
-					Offer:     ptr.To("0001-com-ubuntu-server-jammy"),
-					SKU:       ptr.To("22_04-lts-arm64"), // ARM64 image for ARM-based VM
-					Version:   ptr.To("latest"),
+					Publisher: new("Canonical"),
+					Offer:     new("0001-com-ubuntu-server-jammy"),
+					SKU:       new("22_04-lts-arm64"), // ARM64 image for ARM-based VM
+					Version:   new("latest"),
 				},
 				OSDisk: &armcompute.OSDisk{
-					Name:         ptr.To(fmt.Sprintf("%s-osdisk", vmName)),
-					CreateOption: ptr.To(armcompute.DiskCreateOptionTypesFromImage),
+					Name:         new(fmt.Sprintf("%s-osdisk", vmName)),
+					CreateOption: new(armcompute.DiskCreateOptionTypesFromImage),
 					ManagedDisk: &armcompute.ManagedDiskParameters{
-						StorageAccountType: ptr.To(armcompute.StorageAccountTypesStandardLRS),
+						StorageAccountType: new(armcompute.StorageAccountTypesStandardLRS),
 					},
-					DeleteOption: ptr.To(armcompute.DiskDeleteOptionTypesDelete),
+					DeleteOption: new(armcompute.DiskDeleteOptionTypesDelete),
 				},
 			},
 			OSProfile: &armcompute.OSProfile{
-				ComputerName:  ptr.To(vmName),
-				AdminUsername: ptr.To("azureuser"),
+				ComputerName:  new(vmName),
+				AdminUsername: new("azureuser"),
 				// Use password authentication for integration tests (simpler than SSH keys)
-				AdminPassword: ptr.To("OvmIntegTest2024!"),
+				AdminPassword: new("OvmIntegTest2024!"),
 				LinuxConfiguration: &armcompute.LinuxConfiguration{
-					DisablePasswordAuthentication: ptr.To(false),
+					DisablePasswordAuthentication: new(false),
 				},
 			},
 			NetworkProfile: &armcompute.NetworkProfile{
 				NetworkInterfaces: []*armcompute.NetworkInterfaceReference{
 					{
-						ID: ptr.To(nicID),
+						ID: new(nicID),
 						Properties: &armcompute.NetworkInterfaceReferenceProperties{
-							Primary: ptr.To(true),
+							Primary: new(true),
 						},
 					},
 				},
 			},
 		},
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
-			"test":    ptr.To("compute-virtual-machine"),
+			"purpose": new("overmind-integration-tests"),
+			"test":    new("compute-virtual-machine"),
 		},
 	}, nil)
 	if err != nil {
@@ -525,7 +524,7 @@ func waitForVMAvailable(ctx context.Context, client *armcompute.VirtualMachinesC
 func deleteVirtualMachine(ctx context.Context, client *armcompute.VirtualMachinesClient, resourceGroupName, vmName string) error {
 	// Use forceDeletion to speed up cleanup
 	poller, err := client.BeginDelete(ctx, resourceGroupName, vmName, &armcompute.VirtualMachinesClientBeginDeleteOptions{
-		ForceDeletion: ptr.To(true),
+		ForceDeletion: new(true),
 	})
 	if err != nil {
 		var respErr *azcore.ResponseError

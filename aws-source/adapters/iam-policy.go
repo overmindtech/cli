@@ -39,7 +39,7 @@ func policyGetFunc(ctx context.Context, client IAMClient, scope, query string) (
 		},
 	}
 	out, err := client.GetPolicy(ctx, &iam.GetPolicyInput{
-		PolicyArn: PtrString(a.String()),
+		PolicyArn: new(a.String()),
 	})
 	if err != nil {
 		return nil, err

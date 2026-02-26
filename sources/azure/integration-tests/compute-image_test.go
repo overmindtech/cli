@@ -13,7 +13,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -336,22 +335,22 @@ func createImage(ctx context.Context, client *armcompute.ImagesClient, resourceG
 
 	// Create an image from a managed disk
 	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroupName, imageName, armcompute.Image{
-		Location: ptr.To(location),
+		Location: new(location),
 		Properties: &armcompute.ImageProperties{
-			HyperVGeneration: ptr.To(armcompute.HyperVGenerationTypesV1),
+			HyperVGeneration: new(armcompute.HyperVGenerationTypesV1),
 			StorageProfile: &armcompute.ImageStorageProfile{
 				OSDisk: &armcompute.ImageOSDisk{
 					ManagedDisk: &armcompute.SubResource{
-						ID: ptr.To(sourceDiskID),
+						ID: new(sourceDiskID),
 					},
-					OSState: ptr.To(armcompute.OperatingSystemStateTypesGeneralized),
-					OSType:  ptr.To(armcompute.OperatingSystemTypesLinux),
+					OSState: new(armcompute.OperatingSystemStateTypesGeneralized),
+					OSType:  new(armcompute.OperatingSystemTypesLinux),
 				},
 			},
 		},
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
-			"test":    ptr.To("compute-image"),
+			"purpose": new("overmind-integration-tests"),
+			"test":    new("compute-image"),
 		},
 	}, nil)
 	if err != nil {

@@ -122,7 +122,7 @@ func TestDataplexEntryGroup(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://dataplex.googleapis.com/v1/projects/%s/locations/%s/entryGroups/%s", projectID, location, entryGroupID): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Entry group not found"},
+				Body:       map[string]any{"error": "Entry group not found"},
 			},
 		}
 

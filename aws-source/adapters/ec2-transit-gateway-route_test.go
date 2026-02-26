@@ -8,10 +8,10 @@ import (
 )
 
 func TestTransitGatewayRouteDestination(t *testing.T) {
-	if transitGatewayRouteDestination(&types.TransitGatewayRoute{DestinationCidrBlock: PtrString("10.0.0.0/16")}) != "10.0.0.0/16" {
+	if transitGatewayRouteDestination(&types.TransitGatewayRoute{DestinationCidrBlock: new("10.0.0.0/16")}) != "10.0.0.0/16" {
 		t.Error("expected CIDR destination")
 	}
-	if transitGatewayRouteDestination(&types.TransitGatewayRoute{PrefixListId: PtrString("pl-123")}) != "pl:pl-123" {
+	if transitGatewayRouteDestination(&types.TransitGatewayRoute{PrefixListId: new("pl-123")}) != "pl:pl-123" {
 		t.Error("expected prefix list destination")
 	}
 }
@@ -42,7 +42,7 @@ func TestTransitGatewayRouteItemMapper(t *testing.T) {
 	item := &transitGatewayRouteItem{
 		RouteTableID: "tgw-rtb-123",
 		Route: types.TransitGatewayRoute{
-			DestinationCidrBlock: PtrString("10.0.0.0/16"),
+			DestinationCidrBlock: new("10.0.0.0/16"),
 			State:                types.TransitGatewayRouteStateActive,
 			Type:                 types.TransitGatewayRouteTypeStatic,
 		},

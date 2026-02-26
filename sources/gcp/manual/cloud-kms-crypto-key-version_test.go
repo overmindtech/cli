@@ -23,7 +23,7 @@ func TestCloudKMSCryptoKeyVersion(t *testing.T) {
 		defer cache.Clear()
 
 		// Pre-populate cache with a CryptoKeyVersion item
-		attrs, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+		attrs, _ := sdp.ToAttributesViaJson(map[string]any{
 			"name":       "projects/test-project-id/locations/us/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/1",
 			"uniqueAttr": "us|test-keyring|test-key|1",
 			"state":      "ENABLED",
@@ -105,13 +105,13 @@ func TestCloudKMSCryptoKeyVersion(t *testing.T) {
 		defer cache.Clear()
 
 		// Pre-populate cache with CryptoKeyVersion items under SEARCH cache key (by cryptoKey)
-		attrs1, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+		attrs1, _ := sdp.ToAttributesViaJson(map[string]any{
 			"name":       "projects/test-project-id/locations/us/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/1",
 			"uniqueAttr": "us|test-keyring|test-key|1",
 		})
 		_ = attrs1.Set("uniqueAttr", "us|test-keyring|test-key|1")
 
-		attrs2, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+		attrs2, _ := sdp.ToAttributesViaJson(map[string]any{
 			"name":       "projects/test-project-id/locations/us/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/2",
 			"uniqueAttr": "us|test-keyring|test-key|2",
 		})
@@ -256,13 +256,13 @@ func TestCloudKMSCryptoKeyVersion(t *testing.T) {
 		defer cache.Clear()
 
 		// Pre-populate cache with CryptoKeyVersion items under SEARCH cache key (by cryptoKey)
-		attrs1, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+		attrs1, _ := sdp.ToAttributesViaJson(map[string]any{
 			"name":       "projects/test-project-id/locations/us-central1/keyRings/my-keyring/cryptoKeys/my-key/cryptoKeyVersions/1",
 			"uniqueAttr": "us-central1|my-keyring|my-key|1",
 		})
 		_ = attrs1.Set("uniqueAttr", "us-central1|my-keyring|my-key|1")
 
-		attrs2, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+		attrs2, _ := sdp.ToAttributesViaJson(map[string]any{
 			"name":       "projects/test-project-id/locations/us-central1/keyRings/my-keyring/cryptoKeys/my-key/cryptoKeyVersions/2",
 			"uniqueAttr": "us-central1|my-keyring|my-key|2",
 		})
@@ -332,7 +332,7 @@ func TestCloudKMSCryptoKeyVersion(t *testing.T) {
 		defer cache.Clear()
 
 		// Pre-populate cache with CryptoKeyVersion items
-		attrs1, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+		attrs1, _ := sdp.ToAttributesViaJson(map[string]any{
 			"name":       "projects/test-project-id/locations/europe-west1/keyRings/prod-keyring/cryptoKeys/prod-key/cryptoKeyVersions/1",
 			"uniqueAttr": "europe-west1|prod-keyring|prod-key|1",
 		})
@@ -376,7 +376,7 @@ func TestCloudKMSCryptoKeyVersion(t *testing.T) {
 		defer cache.Clear()
 
 		// Pre-populate cache with a CryptoKeyVersion item with linked queries
-		attrs, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+		attrs, _ := sdp.ToAttributesViaJson(map[string]any{
 			"name":       "projects/test-project-id/locations/us/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/1",
 			"uniqueAttr": "us|test-keyring|test-key|1",
 		})

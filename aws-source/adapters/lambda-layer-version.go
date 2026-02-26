@@ -28,7 +28,7 @@ func layerVersionGetInputMapper(scope, query string) *lambda.GetLayerVersionInpu
 
 	return &lambda.GetLayerVersionInput{
 		LayerName:     &name,
-		VersionNumber: PtrInt64(int64(versionInt)),
+		VersionNumber: new(int64(versionInt)),
 	}
 }
 
@@ -107,7 +107,7 @@ func NewLambdaLayerVersionAdapter(client LambdaClient, accountID string, region 
 		GetFunc:         layerVersionGetFunc,
 		ListInput:       &lambda.ListLayerVersionsInput{},
 		AdapterMetadata: layerVersionAdapterMetadata,
-		cache:        cache,
+		cache:           cache,
 		ListFuncOutputMapper: func(output *lambda.ListLayerVersionsOutput, input *lambda.ListLayerVersionsInput) ([]*lambda.GetLayerVersionInput, error) {
 			return []*lambda.GetLayerVersionInput{}, nil
 		},

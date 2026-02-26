@@ -54,7 +54,7 @@ func TestGetFunc(t *testing.T) {
 	cli := testClient{}
 
 	item, err := getFunc(ctx, cli, "scope", &sqs.GetQueueAttributesInput{
-		QueueUrl: PtrString("https://sqs.us-west-2.amazonaws.com/123456789012/MyQueue"),
+		QueueUrl: new("https://sqs.us-west-2.amazonaws.com/123456789012/MyQueue"),
 	})
 	if err != nil {
 		t.Fatal(err)

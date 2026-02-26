@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"slices"
 	"time"
 
 	"buf.build/go/protovalidate"
@@ -108,13 +109,7 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) hasScope(scope string) 
 		return true
 	}
 
-	for _, s := range s.Scopes() {
-		if s == scope {
-			return true
-		}
-	}
-
-	return false
+	return slices.Contains(s.Scopes(), scope)
 }
 
 // Get retrieves an item from the adapter based on the provided scope, query, and

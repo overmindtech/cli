@@ -6,7 +6,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	"go.uber.org/mock/gomock"
 
@@ -75,19 +74,19 @@ func TestComputeSnapshot(t *testing.T) {
 					ExpectedType:   azureshared.ComputeDiskAccess.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-disk-access",
-					ExpectedScope:  subscriptionID + "." + resourceGroup,				},
+					ExpectedScope:  subscriptionID + "." + resourceGroup},
 				{
 					// Properties.Encryption.DiskEncryptionSetID
 					ExpectedType:   azureshared.ComputeDiskEncryptionSet.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-des",
-					ExpectedScope:  subscriptionID + "." + resourceGroup,				},
+					ExpectedScope:  subscriptionID + "." + resourceGroup},
 				{
 					// Properties.CreationData.SourceResourceID (disk)
 					ExpectedType:   azureshared.ComputeDisk.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "source-disk",
-					ExpectedScope:  subscriptionID + "." + resourceGroup,				},
+					ExpectedScope:  subscriptionID + "." + resourceGroup},
 			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
@@ -119,7 +118,7 @@ func TestComputeSnapshot(t *testing.T) {
 					ExpectedType:   azureshared.ComputeSnapshot.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "source-snapshot",
-					ExpectedScope:  subscriptionID + "." + resourceGroup,				},
+					ExpectedScope:  subscriptionID + "." + resourceGroup},
 			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
@@ -151,25 +150,25 @@ func TestComputeSnapshot(t *testing.T) {
 					ExpectedType:   azureshared.StorageAccount.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "teststorageaccount",
-					ExpectedScope:  subscriptionID + "." + resourceGroup,				},
+					ExpectedScope:  subscriptionID + "." + resourceGroup},
 				{
 					// Properties.CreationData.SourceURI → Blob Container
 					ExpectedType:   azureshared.StorageBlobContainer.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("teststorageaccount", "vhds"),
-					ExpectedScope:  subscriptionID + "." + resourceGroup,				},
+					ExpectedScope:  subscriptionID + "." + resourceGroup},
 				{
 					// Properties.CreationData.SourceURI → HTTP
 					ExpectedType:   stdlib.NetworkHTTP.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  "https://teststorageaccount.blob.core.windows.net/vhds/my-disk.vhd",
-					ExpectedScope:  "global",				},
+					ExpectedScope:  "global"},
 				{
 					// Properties.CreationData.SourceURI → DNS
 					ExpectedType:   stdlib.NetworkDNS.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  "teststorageaccount.blob.core.windows.net",
-					ExpectedScope:  "global",				},
+					ExpectedScope:  "global"},
 			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
@@ -201,13 +200,13 @@ func TestComputeSnapshot(t *testing.T) {
 					ExpectedType:   stdlib.NetworkHTTP.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  "https://10.0.0.1/vhds/my-disk.vhd",
-					ExpectedScope:  "global",				},
+					ExpectedScope:  "global"},
 				{
 					// Properties.CreationData.SourceURI → IP (host is IP address)
 					ExpectedType:   stdlib.NetworkIP.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "10.0.0.1",
-					ExpectedScope:  "global",				},
+					ExpectedScope:  "global"},
 			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
@@ -429,9 +428,9 @@ func TestComputeSnapshot(t *testing.T) {
 		snapshot1 := createAzureSnapshot("test-snapshot-1", subscriptionID, resourceGroup)
 		snapshotNilName := &armcompute.Snapshot{
 			Name:     nil,
-			Location: to.Ptr("eastus"),
+			Location: new("eastus"),
 			Tags: map[string]*string{
-				"env": to.Ptr("test"),
+				"env": new("test"),
 			},
 		}
 
@@ -500,21 +499,21 @@ func TestComputeSnapshot(t *testing.T) {
 // createAzureSnapshot creates a mock Azure Snapshot with linked resources for testing
 func createAzureSnapshot(name, subscriptionID, resourceGroup string) *armcompute.Snapshot {
 	return &armcompute.Snapshot{
-		Name:     to.Ptr(name),
-		Location: to.Ptr("eastus"),
+		Name:     new(name),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env":     to.Ptr("test"),
-			"project": to.Ptr("testing"),
+			"env":     new("test"),
+			"project": new("testing"),
 		},
 		Properties: &armcompute.SnapshotProperties{
-			ProvisioningState: to.Ptr("Succeeded"),
-			DiskAccessID:      to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/diskAccesses/test-disk-access"),
+			ProvisioningState: new("Succeeded"),
+			DiskAccessID:      new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/diskAccesses/test-disk-access"),
 			Encryption: &armcompute.Encryption{
-				DiskEncryptionSetID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/diskEncryptionSets/test-des"),
+				DiskEncryptionSetID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/diskEncryptionSets/test-des"),
 			},
 			CreationData: &armcompute.CreationData{
-				CreateOption:    to.Ptr(armcompute.DiskCreateOptionCopy),
-				SourceResourceID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/disks/source-disk"),
+				CreateOption:     new(armcompute.DiskCreateOptionCopy),
+				SourceResourceID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/disks/source-disk"),
 			},
 		},
 	}
@@ -523,16 +522,16 @@ func createAzureSnapshot(name, subscriptionID, resourceGroup string) *armcompute
 // createAzureSnapshotFromSnapshot creates a mock Snapshot that was copied from another snapshot
 func createAzureSnapshotFromSnapshot(name, subscriptionID, resourceGroup string) *armcompute.Snapshot {
 	return &armcompute.Snapshot{
-		Name:     to.Ptr(name),
-		Location: to.Ptr("eastus"),
+		Name:     new(name),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armcompute.SnapshotProperties{
-			ProvisioningState: to.Ptr("Succeeded"),
+			ProvisioningState: new("Succeeded"),
 			CreationData: &armcompute.CreationData{
-				CreateOption:    to.Ptr(armcompute.DiskCreateOptionCopy),
-				SourceResourceID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/snapshots/source-snapshot"),
+				CreateOption:     new(armcompute.DiskCreateOptionCopy),
+				SourceResourceID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/snapshots/source-snapshot"),
 			},
 		},
 	}
@@ -541,16 +540,16 @@ func createAzureSnapshotFromSnapshot(name, subscriptionID, resourceGroup string)
 // createAzureSnapshotFromBlobURI creates a mock Snapshot imported from a blob URI
 func createAzureSnapshotFromBlobURI(name string) *armcompute.Snapshot {
 	return &armcompute.Snapshot{
-		Name:     to.Ptr(name),
-		Location: to.Ptr("eastus"),
+		Name:     new(name),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armcompute.SnapshotProperties{
-			ProvisioningState: to.Ptr("Succeeded"),
+			ProvisioningState: new("Succeeded"),
 			CreationData: &armcompute.CreationData{
-				CreateOption: to.Ptr(armcompute.DiskCreateOptionImport),
-				SourceURI:    to.Ptr("https://teststorageaccount.blob.core.windows.net/vhds/my-disk.vhd"),
+				CreateOption: new(armcompute.DiskCreateOptionImport),
+				SourceURI:    new("https://teststorageaccount.blob.core.windows.net/vhds/my-disk.vhd"),
 			},
 		},
 	}
@@ -559,16 +558,16 @@ func createAzureSnapshotFromBlobURI(name string) *armcompute.Snapshot {
 // createAzureSnapshotFromIPBlobURI creates a mock Snapshot imported from a blob URI with an IP address host
 func createAzureSnapshotFromIPBlobURI(name string) *armcompute.Snapshot {
 	return &armcompute.Snapshot{
-		Name:     to.Ptr(name),
-		Location: to.Ptr("eastus"),
+		Name:     new(name),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armcompute.SnapshotProperties{
-			ProvisioningState: to.Ptr("Succeeded"),
+			ProvisioningState: new("Succeeded"),
 			CreationData: &armcompute.CreationData{
-				CreateOption: to.Ptr(armcompute.DiskCreateOptionImport),
-				SourceURI:    to.Ptr("https://10.0.0.1/vhds/my-disk.vhd"),
+				CreateOption: new(armcompute.DiskCreateOptionImport),
+				SourceURI:    new("https://10.0.0.1/vhds/my-disk.vhd"),
 			},
 		},
 	}
@@ -577,31 +576,31 @@ func createAzureSnapshotFromIPBlobURI(name string) *armcompute.Snapshot {
 // createAzureSnapshotWithEncryptionIPHosts creates a mock Snapshot with encryption settings using IP-based SecretURL and KeyURL
 func createAzureSnapshotWithEncryptionIPHosts(name, subscriptionID, resourceGroup string) *armcompute.Snapshot {
 	return &armcompute.Snapshot{
-		Name:     to.Ptr(name),
-		Location: to.Ptr("eastus"),
+		Name:     new(name),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armcompute.SnapshotProperties{
-			ProvisioningState: to.Ptr("Succeeded"),
+			ProvisioningState: new("Succeeded"),
 			CreationData: &armcompute.CreationData{
-				CreateOption: to.Ptr(armcompute.DiskCreateOptionEmpty),
+				CreateOption: new(armcompute.DiskCreateOptionEmpty),
 			},
 			EncryptionSettingsCollection: &armcompute.EncryptionSettingsCollection{
-				Enabled: to.Ptr(true),
+				Enabled: new(true),
 				EncryptionSettings: []*armcompute.EncryptionSettingsElement{
 					{
 						DiskEncryptionKey: &armcompute.KeyVaultAndSecretReference{
 							SourceVault: &armcompute.SourceVault{
-								ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.KeyVault/vaults/test-vault"),
+								ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.KeyVault/vaults/test-vault"),
 							},
-							SecretURL: to.Ptr("https://10.0.0.2/secrets/my-secret/version1"),
+							SecretURL: new("https://10.0.0.2/secrets/my-secret/version1"),
 						},
 						KeyEncryptionKey: &armcompute.KeyVaultAndKeyReference{
 							SourceVault: &armcompute.SourceVault{
-								ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.KeyVault/vaults/test-vault"),
+								ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.KeyVault/vaults/test-vault"),
 							},
-							KeyURL: to.Ptr("https://10.0.0.3/keys/my-key/version1"),
+							KeyURL: new("https://10.0.0.3/keys/my-key/version1"),
 						},
 					},
 				},
@@ -613,17 +612,17 @@ func createAzureSnapshotWithEncryptionIPHosts(name, subscriptionID, resourceGrou
 // createAzureSnapshotWithCrossResourceGroupLinks creates a mock Snapshot with links to resources in different resource groups
 func createAzureSnapshotWithCrossResourceGroupLinks(name, subscriptionID string) *armcompute.Snapshot {
 	return &armcompute.Snapshot{
-		Name:     to.Ptr(name),
-		Location: to.Ptr("eastus"),
+		Name:     new(name),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armcompute.SnapshotProperties{
-			ProvisioningState: to.Ptr("Succeeded"),
-			DiskAccessID:      to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/other-rg/providers/Microsoft.Compute/diskAccesses/test-disk-access"),
+			ProvisioningState: new("Succeeded"),
+			DiskAccessID:      new("/subscriptions/" + subscriptionID + "/resourceGroups/other-rg/providers/Microsoft.Compute/diskAccesses/test-disk-access"),
 			CreationData: &armcompute.CreationData{
-				CreateOption:    to.Ptr(armcompute.DiskCreateOptionCopy),
-				SourceResourceID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/disk-rg/providers/Microsoft.Compute/disks/source-disk"),
+				CreateOption:     new(armcompute.DiskCreateOptionCopy),
+				SourceResourceID: new("/subscriptions/" + subscriptionID + "/resourceGroups/disk-rg/providers/Microsoft.Compute/disks/source-disk"),
 			},
 		},
 	}
@@ -632,15 +631,15 @@ func createAzureSnapshotWithCrossResourceGroupLinks(name, subscriptionID string)
 // createAzureSnapshotWithoutLinks creates a mock Snapshot without any linked resources
 func createAzureSnapshotWithoutLinks(name string) *armcompute.Snapshot {
 	return &armcompute.Snapshot{
-		Name:     to.Ptr(name),
-		Location: to.Ptr("eastus"),
+		Name:     new(name),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armcompute.SnapshotProperties{
-			ProvisioningState: to.Ptr("Succeeded"),
+			ProvisioningState: new("Succeeded"),
 			CreationData: &armcompute.CreationData{
-				CreateOption: to.Ptr(armcompute.DiskCreateOptionEmpty),
+				CreateOption: new(armcompute.DiskCreateOptionEmpty),
 			},
 		},
 	}

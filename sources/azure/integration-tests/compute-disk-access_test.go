@@ -13,7 +13,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -261,10 +260,10 @@ func createDiskAccess(ctx context.Context, client *armcompute.DiskAccessesClient
 	}
 
 	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroupName, diskAccessName, armcompute.DiskAccess{
-		Location: ptr.To(location),
+		Location: new(location),
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
-			"test":    ptr.To("compute-disk-access"),
+			"purpose": new("overmind-integration-tests"),
+			"test":    new("compute-disk-access"),
 		},
 	}, nil)
 	if err != nil {

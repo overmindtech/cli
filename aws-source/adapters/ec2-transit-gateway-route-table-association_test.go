@@ -33,8 +33,8 @@ func TestTransitGatewayRouteTableAssociationItemMapper(t *testing.T) {
 	item := &transitGatewayRouteTableAssociationItem{
 		RouteTableID: "tgw-rtb-123",
 		Association: types.TransitGatewayRouteTableAssociation{
-			TransitGatewayAttachmentId: PtrString("tgw-attach-456"),
-			ResourceId:                 PtrString("vpc-abc"),
+			TransitGatewayAttachmentId: new("tgw-attach-456"),
+			ResourceId:                 new("vpc-abc"),
 			ResourceType:               types.TransitGatewayAttachmentResourceTypeVpc,
 			State:                      types.TransitGatewayAssociationStateAssociated,
 		},

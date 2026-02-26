@@ -11,15 +11,15 @@ import (
 
 func TestRealtimeLogConfigsItemMapper(t *testing.T) {
 	x := types.RealtimeLogConfig{
-		Name:         PtrString("test"),
-		SamplingRate: PtrInt64(100),
-		ARN:          PtrString("arn:aws:cloudfront::123456789012:realtime-log-config/12345678-1234-1234-1234-123456789012"),
+		Name:         new("test"),
+		SamplingRate: new(int64(100)),
+		ARN:          new("arn:aws:cloudfront::123456789012:realtime-log-config/12345678-1234-1234-1234-123456789012"),
 		EndPoints: []types.EndPoint{
 			{
-				StreamType: PtrString("Kinesis"),
+				StreamType: new("Kinesis"),
 				KinesisStreamConfig: &types.KinesisStreamConfig{
-					RoleARN:   PtrString("arn:aws:iam::123456789012:role/CloudFront_Logger"),              // link
-					StreamARN: PtrString("arn:aws:kinesis:us-east-1:123456789012:stream/cloudfront-logs"), // link
+					RoleARN:   new("arn:aws:iam::123456789012:role/CloudFront_Logger"),              // link
+					StreamARN: new("arn:aws:kinesis:us-east-1:123456789012:stream/cloudfront-logs"), // link
 				},
 			},
 		},

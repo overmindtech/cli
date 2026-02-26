@@ -12,7 +12,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/googleapis/gax-go/v2/apierror"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdpcache"
@@ -143,8 +142,8 @@ func TestComputeSnapshotIntegration(t *testing.T) {
 // createComputeSnapshot creates a GCP Compute Snapshot with the given parameters.
 func createComputeSnapshot(ctx context.Context, client *compute.SnapshotsClient, projectID, zone, snapshotName, diskName string) error {
 	snapshot := &computepb.Snapshot{
-		Name: ptr.To(snapshotName),
-		SourceDisk: ptr.To(fmt.Sprintf(
+		Name: new(snapshotName),
+		SourceDisk: new(fmt.Sprintf(
 			"projects/%s/zones/%s/disks/%s",
 			projectID, zone, diskName,
 		)),

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v3"
 	"go.uber.org/mock/gomock"
 
@@ -241,9 +240,9 @@ func TestStorageFileShare(t *testing.T) {
 								Name: nil,
 							},
 							{
-								ID:   to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorageaccount/fileServices/default/shares/valid-share"),
-								Name: to.Ptr("valid-share"),
-								Type: to.Ptr("Microsoft.Storage/storageAccounts/fileServices/shares"),
+								ID:   new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorageaccount/fileServices/default/shares/valid-share"),
+								Name: new("valid-share"),
+								Type: new("Microsoft.Storage/storageAccounts/fileServices/shares"),
 							},
 						},
 					},
@@ -327,13 +326,13 @@ func TestStorageFileShare(t *testing.T) {
 // createAzureFileShare creates a mock Azure file share for testing
 func createAzureFileShare(shareName string) *armstorage.FileShare {
 	return &armstorage.FileShare{
-		ID:   to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorageaccount/fileServices/default/shares/" + shareName),
-		Name: to.Ptr(shareName),
-		Type: to.Ptr("Microsoft.Storage/storageAccounts/fileServices/shares"),
+		ID:   new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorageaccount/fileServices/default/shares/" + shareName),
+		Name: new(shareName),
+		Type: new("Microsoft.Storage/storageAccounts/fileServices/shares"),
 		FileShareProperties: &armstorage.FileShareProperties{
-			AccessTier: to.Ptr(armstorage.ShareAccessTierHot),
-			ShareQuota: to.Ptr(int32(5120)), // 5GB
+			AccessTier: new(armstorage.ShareAccessTierHot),
+			ShareQuota: new(int32(5120)), // 5GB
 		},
-		Etag: to.Ptr("\"0x8D1234567890ABC\""),
+		Etag: new("\"0x8D1234567890ABC\""),
 	}
 }

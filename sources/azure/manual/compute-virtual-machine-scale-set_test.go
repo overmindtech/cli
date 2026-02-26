@@ -7,7 +7,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	"go.uber.org/mock/gomock"
 
@@ -504,7 +503,7 @@ func (m *MockVirtualMachineScaleSetsPager) More() bool {
 
 func (mr *MockVirtualMachineScaleSetsPagerMockRecorder) More() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "More", reflect.TypeOf((*MockVirtualMachineScaleSetsPager)(nil).More))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "More", reflect.TypeFor[func() bool]())
 }
 
 func (m *MockVirtualMachineScaleSetsPager) NextPage(ctx context.Context) (armcompute.VirtualMachineScaleSetsClientListResponse, error) {
@@ -515,34 +514,34 @@ func (m *MockVirtualMachineScaleSetsPager) NextPage(ctx context.Context) (armcom
 	return ret0, ret1
 }
 
-func (mr *MockVirtualMachineScaleSetsPagerMockRecorder) NextPage(ctx interface{}) *gomock.Call {
+func (mr *MockVirtualMachineScaleSetsPagerMockRecorder) NextPage(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NextPage", reflect.TypeOf((*MockVirtualMachineScaleSetsPager)(nil).NextPage), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NextPage", reflect.TypeFor[func(ctx context.Context) (armcompute.VirtualMachineScaleSetsClientListResponse, error)](), ctx)
 }
 
 // createAzureVirtualMachineScaleSet creates a mock Azure Virtual Machine Scale Set for testing
 func createAzureVirtualMachineScaleSet(scaleSetName, provisioningState string) *armcompute.VirtualMachineScaleSet {
 	return &armcompute.VirtualMachineScaleSet{
-		Name:     to.Ptr(scaleSetName),
-		Location: to.Ptr("eastus"),
+		Name:     new(scaleSetName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env":     to.Ptr("test"),
-			"project": to.Ptr("testing"),
+			"env":     new("test"),
+			"project": new("testing"),
 		},
 		Properties: &armcompute.VirtualMachineScaleSetProperties{
-			ProvisioningState: to.Ptr(provisioningState),
+			ProvisioningState: new(provisioningState),
 			VirtualMachineProfile: &armcompute.VirtualMachineScaleSetVMProfile{
 				ExtensionProfile: &armcompute.VirtualMachineScaleSetExtensionProfile{
 					Extensions: []*armcompute.VirtualMachineScaleSetExtension{
 						{
-							Name: to.Ptr("CustomScriptExtension"),
+							Name: new("CustomScriptExtension"),
 							Properties: &armcompute.VirtualMachineScaleSetExtensionProperties{
-								Type:               to.Ptr("CustomScriptExtension"),
-								Publisher:          to.Ptr("Microsoft.Compute"),
-								TypeHandlerVersion: to.Ptr("1.10"),
+								Type:               new("CustomScriptExtension"),
+								Publisher:          new("Microsoft.Compute"),
+								TypeHandlerVersion: new("1.10"),
 								ProtectedSettingsFromKeyVault: &armcompute.KeyVaultSecretReference{
 									SourceVault: &armcompute.SubResource{
-										ID: to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.KeyVault/vaults/test-keyvault-ext"),
+										ID: new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.KeyVault/vaults/test-keyvault-ext"),
 									},
 								},
 							},
@@ -551,48 +550,48 @@ func createAzureVirtualMachineScaleSet(scaleSetName, provisioningState string) *
 				},
 				NetworkProfile: &armcompute.VirtualMachineScaleSetNetworkProfile{
 					HealthProbe: &armcompute.APIEntityReference{
-						ID: to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Network/loadBalancers/test-lb/probes/test-probe"),
+						ID: new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Network/loadBalancers/test-lb/probes/test-probe"),
 					},
 					NetworkInterfaceConfigurations: []*armcompute.VirtualMachineScaleSetNetworkConfiguration{
 						{
-							Name: to.Ptr("nic-config"),
+							Name: new("nic-config"),
 							Properties: &armcompute.VirtualMachineScaleSetNetworkConfigurationProperties{
 								NetworkSecurityGroup: &armcompute.SubResource{
-									ID: to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Network/networkSecurityGroups/test-nsg"),
+									ID: new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Network/networkSecurityGroups/test-nsg"),
 								},
 								IPConfigurations: []*armcompute.VirtualMachineScaleSetIPConfiguration{
 									{
-										Name: to.Ptr("ip-config"),
+										Name: new("ip-config"),
 										Properties: &armcompute.VirtualMachineScaleSetIPConfigurationProperties{
 											Subnet: &armcompute.APIEntityReference{
-												ID: to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/default"),
+												ID: new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/default"),
 											},
 											PublicIPAddressConfiguration: &armcompute.VirtualMachineScaleSetPublicIPAddressConfiguration{
-												Name: to.Ptr("public-ip-config"),
+												Name: new("public-ip-config"),
 												Properties: &armcompute.VirtualMachineScaleSetPublicIPAddressConfigurationProperties{
 													PublicIPPrefix: &armcompute.SubResource{
-														ID: to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Network/publicIPPrefixes/test-pip-prefix"),
+														ID: new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Network/publicIPPrefixes/test-pip-prefix"),
 													},
 												},
 											},
 											LoadBalancerBackendAddressPools: []*armcompute.SubResource{
 												{
-													ID: to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Network/loadBalancers/test-lb/backendAddressPools/test-backend-pool"),
+													ID: new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Network/loadBalancers/test-lb/backendAddressPools/test-backend-pool"),
 												},
 											},
 											LoadBalancerInboundNatPools: []*armcompute.SubResource{
 												{
-													ID: to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Network/loadBalancers/test-lb/inboundNatPools/test-nat-pool"),
+													ID: new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Network/loadBalancers/test-lb/inboundNatPools/test-nat-pool"),
 												},
 											},
 											ApplicationGatewayBackendAddressPools: []*armcompute.SubResource{
 												{
-													ID: to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Network/applicationGateways/test-ag/backendAddressPools/test-ag-pool"),
+													ID: new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Network/applicationGateways/test-ag/backendAddressPools/test-ag-pool"),
 												},
 											},
 											ApplicationSecurityGroups: []*armcompute.SubResource{
 												{
-													ID: to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Network/applicationSecurityGroups/test-asg"),
+													ID: new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Network/applicationSecurityGroups/test-asg"),
 												},
 											},
 										},
@@ -604,22 +603,22 @@ func createAzureVirtualMachineScaleSet(scaleSetName, provisioningState string) *
 				},
 				StorageProfile: &armcompute.VirtualMachineScaleSetStorageProfile{
 					ImageReference: &armcompute.ImageReference{
-						ID: to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Compute/images/test-image"),
+						ID: new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Compute/images/test-image"),
 					},
 					OSDisk: &armcompute.VirtualMachineScaleSetOSDisk{
-						Name: to.Ptr("os-disk"),
+						Name: new("os-disk"),
 						ManagedDisk: &armcompute.VirtualMachineScaleSetManagedDiskParameters{
 							DiskEncryptionSet: &armcompute.DiskEncryptionSetParameters{
-								ID: to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Compute/diskEncryptionSets/test-disk-encryption-set"),
+								ID: new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Compute/diskEncryptionSets/test-disk-encryption-set"),
 							},
 						},
 					},
 					DataDisks: []*armcompute.VirtualMachineScaleSetDataDisk{
 						{
-							Name: to.Ptr("data-disk-1"),
+							Name: new("data-disk-1"),
 							ManagedDisk: &armcompute.VirtualMachineScaleSetManagedDiskParameters{
 								DiskEncryptionSet: &armcompute.DiskEncryptionSetParameters{
-									ID: to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Compute/diskEncryptionSets/test-disk-encryption-set-data"),
+									ID: new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Compute/diskEncryptionSets/test-disk-encryption-set-data"),
 								},
 							},
 						},
@@ -629,26 +628,26 @@ func createAzureVirtualMachineScaleSet(scaleSetName, provisioningState string) *
 					Secrets: []*armcompute.VaultSecretGroup{
 						{
 							SourceVault: &armcompute.SubResource{
-								ID: to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.KeyVault/vaults/test-keyvault"),
+								ID: new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.KeyVault/vaults/test-keyvault"),
 							},
 						},
 					},
 				},
 				DiagnosticsProfile: &armcompute.DiagnosticsProfile{
 					BootDiagnostics: &armcompute.BootDiagnostics{
-						StorageURI: to.Ptr("https://teststorageaccount.blob.core.windows.net/"),
+						StorageURI: new("https://teststorageaccount.blob.core.windows.net/"),
 					},
 				},
 			},
 			ProximityPlacementGroup: &armcompute.SubResource{
-				ID: to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Compute/proximityPlacementGroups/test-ppg"),
+				ID: new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Compute/proximityPlacementGroups/test-ppg"),
 			},
 			HostGroup: &armcompute.SubResource{
-				ID: to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Compute/hostGroups/test-host-group"),
+				ID: new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Compute/hostGroups/test-host-group"),
 			},
 		},
 		Identity: &armcompute.VirtualMachineScaleSetIdentity{
-			Type: to.Ptr(armcompute.ResourceIdentityTypeUserAssigned),
+			Type: new(armcompute.ResourceIdentityTypeUserAssigned),
 			UserAssignedIdentities: map[string]*armcompute.UserAssignedIdentitiesValue{
 				"/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/test-identity": {},
 			},

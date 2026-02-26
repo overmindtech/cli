@@ -5,7 +5,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v3"
 	"go.uber.org/mock/gomock"
 
@@ -393,13 +392,13 @@ func TestStorageQueues(t *testing.T) {
 // createAzureQueue creates a mock Azure queue for testing
 func createAzureQueue(queueName string) *armstorage.Queue {
 	return &armstorage.Queue{
-		ID:   to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorageaccount/queueServices/default/queues/" + queueName),
-		Name: to.Ptr(queueName),
-		Type: to.Ptr("Microsoft.Storage/storageAccounts/queueServices/queues"),
+		ID:   new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorageaccount/queueServices/default/queues/" + queueName),
+		Name: new(queueName),
+		Type: new("Microsoft.Storage/storageAccounts/queueServices/queues"),
 		QueueProperties: &armstorage.QueueProperties{
 			Metadata: map[string]*string{
-				"env":     to.Ptr("test"),
-				"project": to.Ptr("testing"),
+				"env":     new("test"),
+				"project": new("testing"),
 			},
 		},
 	}

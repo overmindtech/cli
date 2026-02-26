@@ -119,7 +119,7 @@ func TestAIPlatformPipelineJob(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://aiplatform.googleapis.com/v1/projects/%s/locations/global/pipelineJobs/%s", projectID, jobID): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Pipeline job not found"},
+				Body:       map[string]any{"error": "Pipeline job not found"},
 			},
 		}
 

@@ -22,18 +22,18 @@ func TestComputeHttpHealthCheck(t *testing.T) {
 	healthCheckName := "test-health-check"
 
 	// Use map since HTTPHealthCheck protobuf doesn't have Name field
-	healthCheck := map[string]interface{}{
+	healthCheck := map[string]any{
 		"name": healthCheckName,
 		"host": "example.com",
 	}
 
 	healthCheckName2 := "test-health-check-2"
-	healthCheck2 := map[string]interface{}{
+	healthCheck2 := map[string]any{
 		"name": healthCheckName2,
 	}
 
-	healthCheckList := map[string]interface{}{
-		"items": []interface{}{healthCheck, healthCheck2},
+	healthCheckList := map[string]any{
+		"items": []any{healthCheck, healthCheck2},
 	}
 
 	sdpItemType := gcpshared.ComputeHttpHealthCheck
@@ -91,7 +91,7 @@ func TestComputeHttpHealthCheck(t *testing.T) {
 		// Even though the link rule uses stdlib.NetworkIP, it should detect
 		// that "192.168.1.1" is an IP address and create an IP link
 		t.Run("StaticTestsWithIP", func(t *testing.T) {
-			healthCheckWithIP := map[string]interface{}{
+			healthCheckWithIP := map[string]any{
 				"name": "test-health-check-ip",
 				"host": "192.168.1.1",
 			}
@@ -192,7 +192,7 @@ func TestComputeHttpHealthCheck(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/global/httpHealthChecks/%s", projectID, healthCheckName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Health check not found"},
+				Body:       map[string]any{"error": "Health check not found"},
 			},
 		}
 

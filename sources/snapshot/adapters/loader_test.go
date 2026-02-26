@@ -14,7 +14,7 @@ import (
 
 func TestLoadSnapshotFromFile(t *testing.T) {
 	// Create a test snapshot
-	attrs, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+	attrs, _ := sdp.ToAttributesViaJson(map[string]any{
 		"name": "test-item",
 	})
 
@@ -63,7 +63,7 @@ func TestLoadSnapshotFromFile(t *testing.T) {
 
 func TestLoadSnapshotFromURL(t *testing.T) {
 	// Create a test snapshot
-	attrs, _ := sdp.ToAttributesViaJson(map[string]interface{}{
+	attrs, _ := sdp.ToAttributesViaJson(map[string]any{
 		"name": "test-item",
 	})
 

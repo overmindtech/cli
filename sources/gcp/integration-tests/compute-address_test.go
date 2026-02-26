@@ -12,7 +12,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/googleapis/gax-go/v2/apierror"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdpcache"
@@ -118,12 +117,12 @@ func TestComputeAddressIntegration(t *testing.T) {
 func createComputeAddress(ctx context.Context, client *compute.AddressesClient, projectID, region, addressName string) error {
 	// Define the address configuration
 	address := &computepb.Address{
-		Name: ptr.To(addressName),
+		Name: new(addressName),
 		Labels: map[string]string{
 			"test": "integration",
 		},
-		NetworkTier: ptr.To("PREMIUM"),
-		Region:      ptr.To(region),
+		NetworkTier: new("PREMIUM"),
+		Region:      new(region),
 	}
 
 	// Create the address

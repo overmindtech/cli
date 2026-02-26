@@ -187,7 +187,7 @@ func TestBigTableAdminAppProfile(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s/appProfiles/%s", projectID, instanceName, appProfileID): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "App profile not found"},
+				Body:       map[string]any{"error": "App profile not found"},
 			},
 		}
 

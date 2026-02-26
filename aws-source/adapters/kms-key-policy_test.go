@@ -43,7 +43,7 @@ type mockKeyPolicyClient struct{}
 
 func (m *mockKeyPolicyClient) GetKeyPolicy(ctx context.Context, params *kms.GetKeyPolicyInput, optFns ...func(*kms.Options)) (*kms.GetKeyPolicyOutput, error) {
 	return &kms.GetKeyPolicyOutput{
-		Policy: PtrString(`{
+		Policy: new(`{
 			"Version" : "2012-10-17",
 			"Id" : "key-default-1",
 			"Statement" : [
@@ -67,7 +67,7 @@ func (m *mockKeyPolicyClient) GetKeyPolicy(ctx context.Context, params *kms.GetK
 				}
 			]
 		}`),
-		PolicyName: PtrString("default"),
+		PolicyName: new("default"),
 	}, nil
 }
 
@@ -82,7 +82,7 @@ func TestGetKeyPolicyFunc(t *testing.T) {
 	cli := &mockKeyPolicyClient{}
 
 	item, err := getKeyPolicyFunc(ctx, cli, "scope", &kms.GetKeyPolicyInput{
-		KeyId: PtrString("1234abcd-12ab-34cd-56ef-1234567890ab"),
+		KeyId: new("1234abcd-12ab-34cd-56ef-1234567890ab"),
 	})
 	if err != nil {
 		t.Fatal(err)

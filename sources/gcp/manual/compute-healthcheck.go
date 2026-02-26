@@ -5,12 +5,12 @@ import (
 	"errors"
 	"fmt"
 	"net"
+	"slices"
 	"sync/atomic"
 
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"github.com/sourcegraph/conc/pool"
 	"google.golang.org/api/iterator"
-	"google.golang.org/protobuf/proto"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -67,10 +67,8 @@ func (c computeHealthCheckWrapper) validateAndParseScope(scope string) (gcpshare
 	allLocations := append([]gcpshared.LocationInfo{}, c.projectLocations...)
 	allLocations = append(allLocations, c.regionLocations...)
 
-	for _, configuredLoc := range allLocations {
-		if location.Equals(configuredLoc) {
-			return location, nil
-		}
+	if slices.ContainsFunc(allLocations, location.Equals) {
+		return location, nil
 	}
 
 	return gcpshared.LocationInfo{}, &sdp.QueryError{
@@ -269,7 +267,7 @@ func (c computeHealthCheckWrapper) listAggregatedStream(ctx context.Context, str
 		p.Go(func(ctx context.Context) error {
 			it := c.globalClient.AggregatedList(ctx, &computepb.AggregatedListHealthChecksRequest{
 				Project:              projectID,
-				ReturnPartialSuccess: proto.Bool(true), // Handle partial failures gracefully
+				ReturnPartialSuccess: new(true), // Handle partial failures gracefully
 			})
 
 			for {

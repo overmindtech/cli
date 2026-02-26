@@ -79,7 +79,7 @@ func TestProtoCloneReplacesCustomCopy(t *testing.T) {
 		}
 
 		// Add attributes
-		attrs, err := ToAttributes(map[string]interface{}{
+		attrs, err := ToAttributes(map[string]any{
 			"name": "test-item",
 			"port": 8080,
 		})

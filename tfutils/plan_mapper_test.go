@@ -27,52 +27,52 @@ func TestMapResourceToQuery_PendingCreation(t *testing.T) {
 	t.Parallel()
 
 	tests := []struct {
-		name                string
-		itemDiffStatus      sdp.ItemDiffStatus
-		hasMappings         bool
-		expectedMapStatus   MapStatus
+		name                  string
+		itemDiffStatus        sdp.ItemDiffStatus
+		hasMappings           bool
+		expectedMapStatus     MapStatus
 		expectedMappingStatus sdp.MappedItemMappingStatus
-		expectMappingError  bool
+		expectMappingError    bool
 	}{
 		{
-			name:                "CREATED with missing attributes - pending creation",
-			itemDiffStatus:      sdp.ItemDiffStatus_ITEM_DIFF_STATUS_CREATED,
-			hasMappings:         true,
-			expectedMapStatus:   MapStatusPendingCreation,
+			name:                  "CREATED with missing attributes - pending creation",
+			itemDiffStatus:        sdp.ItemDiffStatus_ITEM_DIFF_STATUS_CREATED,
+			hasMappings:           true,
+			expectedMapStatus:     MapStatusPendingCreation,
 			expectedMappingStatus: sdp.MappedItemMappingStatus_MAPPED_ITEM_MAPPING_STATUS_PENDING_CREATION,
-			expectMappingError:  false,
+			expectMappingError:    false,
 		},
 		{
-			name:                "UPDATED with missing attributes - error",
-			itemDiffStatus:      sdp.ItemDiffStatus_ITEM_DIFF_STATUS_UPDATED,
-			hasMappings:         true,
-			expectedMapStatus:   MapStatusNotEnoughInfo,
+			name:                  "UPDATED with missing attributes - error",
+			itemDiffStatus:        sdp.ItemDiffStatus_ITEM_DIFF_STATUS_UPDATED,
+			hasMappings:           true,
+			expectedMapStatus:     MapStatusNotEnoughInfo,
 			expectedMappingStatus: sdp.MappedItemMappingStatus_MAPPED_ITEM_MAPPING_STATUS_ERROR,
-			expectMappingError:  true,
+			expectMappingError:    true,
 		},
 		{
-			name:                "DELETED with missing attributes - error",
-			itemDiffStatus:      sdp.ItemDiffStatus_ITEM_DIFF_STATUS_DELETED,
-			hasMappings:         true,
-			expectedMapStatus:   MapStatusNotEnoughInfo,
+			name:                  "DELETED with missing attributes - error",
+			itemDiffStatus:        sdp.ItemDiffStatus_ITEM_DIFF_STATUS_DELETED,
+			hasMappings:           true,
+			expectedMapStatus:     MapStatusNotEnoughInfo,
 			expectedMappingStatus: sdp.MappedItemMappingStatus_MAPPED_ITEM_MAPPING_STATUS_ERROR,
-			expectMappingError:  true,
+			expectMappingError:    true,
 		},
 		{
-			name:                "REPLACED with missing attributes - error",
-			itemDiffStatus:      sdp.ItemDiffStatus_ITEM_DIFF_STATUS_REPLACED,
-			hasMappings:         true,
-			expectedMapStatus:   MapStatusNotEnoughInfo,
+			name:                  "REPLACED with missing attributes - error",
+			itemDiffStatus:        sdp.ItemDiffStatus_ITEM_DIFF_STATUS_REPLACED,
+			hasMappings:           true,
+			expectedMapStatus:     MapStatusNotEnoughInfo,
 			expectedMappingStatus: sdp.MappedItemMappingStatus_MAPPED_ITEM_MAPPING_STATUS_ERROR,
-			expectMappingError:  true,
+			expectMappingError:    true,
 		},
 		{
-			name:                "No mappings - unsupported",
-			itemDiffStatus:      sdp.ItemDiffStatus_ITEM_DIFF_STATUS_CREATED,
-			hasMappings:         false,
-			expectedMapStatus:   MapStatusUnsupported,
+			name:                  "No mappings - unsupported",
+			itemDiffStatus:        sdp.ItemDiffStatus_ITEM_DIFF_STATUS_CREATED,
+			hasMappings:           false,
+			expectedMapStatus:     MapStatusUnsupported,
 			expectedMappingStatus: sdp.MappedItemMappingStatus_MAPPED_ITEM_MAPPING_STATUS_UNSUPPORTED,
-			expectMappingError:  false,
+			expectMappingError:    false,
 		},
 	}
 
@@ -629,28 +629,28 @@ func TestMaskSensitiveData(t *testing.T) {
 }
 
 func TestHandleKnownAfterApply(t *testing.T) {
-	before, err := sdp.ToAttributes(map[string]interface{}{
+	before, err := sdp.ToAttributes(map[string]any{
 		"string_value": "foo",
 		"int_value":    42,
 		"bool_value":   true,
 		"float_value":  3.14,
 		"data":         "secret", // Known after apply but doesn't exist in the "after" map, this happens sometimes
-		"list_value": []interface{}{
+		"list_value": []any{
 			"foo",
 			"bar",
 		},
-		"map_value": map[string]interface{}{
+		"map_value": map[string]any{
 			"foo": "bar",
 			"bar": "baz",
 		},
-		"map_value2": map[string]interface{}{
-			"ding": map[string]interface{}{
+		"map_value2": map[string]any{
+			"ding": map[string]any{
 				"foo": "bar",
 			},
 		},
-		"nested_list": []interface{}{
-			[]interface{}{},
-			[]interface{}{
+		"nested_list": []any{
+			[]any{},
+			[]any{
 				"foo",
 				"bar",
 			},
@@ -660,26 +660,26 @@ func TestHandleKnownAfterApply(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	after, err := sdp.ToAttributes(map[string]interface{}{
+	after, err := sdp.ToAttributes(map[string]any{
 		"string_value": "bar", // I want to see a diff here
 		"int_value":    nil,   // These are going to be known after apply
 		"bool_value":   nil,   // These are going to be known after apply
 		"float_value":  3.14,
-		"list_value": []interface{}{
+		"list_value": []any{
 			"foo",
 			"bar",
 			"baz", // So is this one
 		},
-		"map_value": map[string]interface{}{ // This whole thing will be known after apply
+		"map_value": map[string]any{ // This whole thing will be known after apply
 			"foo": "bar",
 		},
-		"map_value2": map[string]interface{}{
-			"ding": map[string]interface{}{
+		"map_value2": map[string]any{
+			"ding": map[string]any{
 				"foo": nil, // This will be known after apply
 			},
 		},
-		"nested_list": []interface{}{
-			[]interface{}{
+		"nested_list": []any{
+			[]any{
 				"foo",
 			},
 		},
@@ -748,7 +748,7 @@ func TestHandleKnownAfterApply(t *testing.T) {
 		t.Error(err)
 	}
 
-	if list, ok := i.([]interface{}); ok {
+	if list, ok := i.([]any); ok {
 		if list[2] != KnownAfterApply {
 			t.Errorf("expected third string_value to be %v, got %v", KnownAfterApply, list[2])
 		}
@@ -810,7 +810,7 @@ func interpolateScope(scope string, data map[string]any) (string, error) {
 }
 
 // Digs through a map using the same logic that terraform does i.e. foo.bar[0]
-func terraformDig(srcMapPtr interface{}, path string) interface{} {
+func terraformDig(srcMapPtr any, path string) any {
 	// Split the path on each period
 	parts := strings.Split(path, ".")
 
@@ -821,7 +821,7 @@ func terraformDig(srcMapPtr interface{}, path string) interface{} {
 	// Check for an index in this section
 	indexMatches := indexBrackets.FindStringSubmatch(parts[0])
 
-	var value interface{}
+	var value any
 
 	if len(indexMatches) == 0 {
 		// No index, just get the value
@@ -838,7 +838,7 @@ func terraformDig(srcMapPtr interface{}, path string) interface{} {
 		}
 
 		// Get the value
-		arr, ok := dig.Interface(srcMapPtr, keyName).([]interface{})
+		arr, ok := dig.Interface(srcMapPtr, keyName).([]any)
 
 		if !ok {
 			return nil
@@ -856,13 +856,13 @@ func terraformDig(srcMapPtr interface{}, path string) interface{} {
 		return value
 	} else {
 		// Force it to another map[string]interface{}
-		valueMap := make(map[string]interface{})
+		valueMap := make(map[string]any)
 
 		if mapString, ok := value.(map[string]string); ok {
 			for k, v := range mapString {
 				valueMap[k] = v
 			}
-		} else if mapInterface, ok := value.(map[string]interface{}); ok {
+		} else if mapInterface, ok := value.(map[string]any); ok {
 			valueMap = mapInterface
 		} else if mapAttributeValues, ok := value.(AttributeValues); ok {
 			valueMap = mapAttributeValues

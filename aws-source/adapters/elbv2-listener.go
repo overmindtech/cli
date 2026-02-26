@@ -37,9 +37,9 @@ func listenerOutputMapper(ctx context.Context, client elbv2Client, scope string,
 					sha := base64.URLEncoding.EncodeToString(h.Sum(nil))
 
 					if len(sha) > 12 {
-						action.AuthenticateOidcConfig.ClientSecret = PtrString(fmt.Sprintf("REDACTED (Version: %v)", sha[:11]))
+						action.AuthenticateOidcConfig.ClientSecret = new(fmt.Sprintf("REDACTED (Version: %v)", sha[:11]))
 					} else {
-						action.AuthenticateOidcConfig.ClientSecret = PtrString("[REDACTED]")
+						action.AuthenticateOidcConfig.ClientSecret = new("[REDACTED]")
 					}
 				}
 			}

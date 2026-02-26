@@ -9,7 +9,7 @@ import (
 // ToAttributesWithExclude converts an interface to SDP attributes using the `sdp.ToAttributesSorted`
 // function, and also allows the user to exclude certain top-level fields from
 // the resulting attributes
-func ToAttributesWithExclude(i interface{}, exclusions ...string) (*sdp.ItemAttributes, error) {
+func ToAttributesWithExclude(i any, exclusions ...string) (*sdp.ItemAttributes, error) {
 	attrs, err := sdp.ToAttributesViaJson(i)
 	if err != nil {
 		return nil, err

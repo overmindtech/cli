@@ -121,7 +121,7 @@ func TestLoggingBucket(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://logging.googleapis.com/v2/projects/%s/locations/%s/buckets/%s", projectID, location, bucketName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Bucket not found"},
+				Body:       map[string]any{"error": "Bucket not found"},
 			},
 		}
 

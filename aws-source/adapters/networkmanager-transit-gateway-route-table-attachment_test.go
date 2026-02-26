@@ -19,11 +19,11 @@ func TestTransitGatewayRouteTableAttachmentItemMapper(t *testing.T) {
 			name: "ok",
 			input: types.TransitGatewayRouteTableAttachment{
 				Attachment: &types.Attachment{
-					AttachmentId:  PtrString("attachment1"),
-					CoreNetworkId: PtrString("corenetwork1"),
+					AttachmentId:  new("attachment1"),
+					CoreNetworkId: new("corenetwork1"),
 				},
-				TransitGatewayRouteTableArn: PtrString("arn:aws:ec2:us-west-2:123456789012:transit-gateway-route-table/tgw-rtb-9876543210123456"),
-				PeeringId:                   PtrString("peer1"),
+				TransitGatewayRouteTableArn: new("arn:aws:ec2:us-west-2:123456789012:transit-gateway-route-table/tgw-rtb-9876543210123456"),
+				PeeringId:                   new("peer1"),
 			},
 			expectedAttr: "attachment1",
 			tests: QueryTests{
@@ -51,8 +51,8 @@ func TestTransitGatewayRouteTableAttachmentItemMapper(t *testing.T) {
 			name: "missing ec2-transit-gateway-route-table",
 			input: types.TransitGatewayRouteTableAttachment{
 				Attachment: &types.Attachment{
-					AttachmentId:  PtrString("attachment1"),
-					CoreNetworkId: PtrString("corenetwork1"),
+					AttachmentId:  new("attachment1"),
+					CoreNetworkId: new("corenetwork1"),
 				},
 			},
 			expectedAttr: "attachment1",
@@ -69,10 +69,10 @@ func TestTransitGatewayRouteTableAttachmentItemMapper(t *testing.T) {
 			name: "invalid ec2-transit-gateway-route-table",
 			input: types.TransitGatewayRouteTableAttachment{
 				Attachment: &types.Attachment{
-					AttachmentId:  PtrString("attachment1"),
-					CoreNetworkId: PtrString("corenetwork1"),
+					AttachmentId:  new("attachment1"),
+					CoreNetworkId: new("corenetwork1"),
 				},
-				TransitGatewayRouteTableArn: PtrString("arn:aws:ec2:us-west-2:123456789012:transit-gateway-route-table-tgw-rtb-9876543210123456"),
+				TransitGatewayRouteTableArn: new("arn:aws:ec2:us-west-2:123456789012:transit-gateway-route-table-tgw-rtb-9876543210123456"),
 			},
 			expectedAttr: "attachment1",
 			tests: QueryTests{

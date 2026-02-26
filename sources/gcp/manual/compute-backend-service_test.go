@@ -11,7 +11,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/api/iterator"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -439,7 +438,7 @@ func TestComputeBackendService(t *testing.T) {
 		backendService := createComputeBackendService("test-backend-service")
 		backendService.Backends = []*computepb.Backend{
 			{
-				Group: ptr.To(instanceGroupURL),
+				Group: new(instanceGroupURL),
 			},
 		}
 
@@ -512,9 +511,9 @@ func TestComputeBackendService(t *testing.T) {
 		backendService := createComputeBackendService("test-backend-service")
 		backendService.HaPolicy = &computepb.BackendServiceHAPolicy{
 			Leader: &computepb.BackendServiceHAPolicyLeader{
-				BackendGroup: ptr.To(backendGroupURL),
+				BackendGroup: new(backendGroupURL),
 				NetworkEndpoint: &computepb.BackendServiceHAPolicyLeaderNetworkEndpoint{
-					Instance: ptr.To(instanceName),
+					Instance: new(instanceName),
 				},
 			},
 		}
@@ -591,7 +590,7 @@ func TestComputeBackendService(t *testing.T) {
 		region := "us-central1"
 		regionURL := fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s", projectID, region)
 		backendService := createComputeBackendService("test-backend-service")
-		backendService.Region = ptr.To(regionURL)
+		backendService.Region = new(regionURL)
 
 		mockGlobalClient.EXPECT().Get(ctx, gomock.Any()).Return(backendService, nil)
 
@@ -726,14 +725,14 @@ func TestComputeBackendService(t *testing.T) {
 
 func createComputeBackendService(name string) *computepb.BackendService {
 	return &computepb.BackendService{
-		Name:               ptr.To(name),
-		Network:            ptr.To("global/networks/network"),
-		SecurityPolicy:     ptr.To("https://compute.googleapis.com/compute/v1/projects/test-project/global/securityPolicies/test-security-policy"),
-		EdgeSecurityPolicy: ptr.To("https://compute.googleapis.com/compute/v1/projects/test-project/global/securityPolicies/test-edge-security-policy"),
+		Name:               new(name),
+		Network:            new("global/networks/network"),
+		SecurityPolicy:     new("https://compute.googleapis.com/compute/v1/projects/test-project/global/securityPolicies/test-security-policy"),
+		EdgeSecurityPolicy: new("https://compute.googleapis.com/compute/v1/projects/test-project/global/securityPolicies/test-edge-security-policy"),
 		SecuritySettings: &computepb.SecuritySettings{
-			ClientTlsPolicy: ptr.To("https://networksecurity.googleapis.com/v1/projects/test-project/locations/test-location/clientTlsPolicies/test-client-tls-policy"),
+			ClientTlsPolicy: new("https://networksecurity.googleapis.com/v1/projects/test-project/locations/test-location/clientTlsPolicies/test-client-tls-policy"),
 		},
-		ServiceLbPolicy: ptr.To(" https://networkservices.googleapis.com/v1alpha1/name=projects/test-project/locations/test-location/serviceLbPolicies/test-service-lb-policy"),
+		ServiceLbPolicy: new(" https://networkservices.googleapis.com/v1alpha1/name=projects/test-project/locations/test-location/serviceLbPolicies/test-service-lb-policy"),
 		ServiceBindings: []string{
 			"https://networkservices.googleapis.com/v1alpha1/projects/test-project/locations/test-location/serviceBindings/test-service-binding",
 		},

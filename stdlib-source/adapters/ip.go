@@ -127,7 +127,7 @@ func (bc *IPAdapter) Get(ctx context.Context, scope string, query string, ignore
 		}
 	}
 
-	attributes, err = sdp.ToAttributes(map[string]interface{}{
+	attributes, err = sdp.ToAttributes(map[string]any{
 		"ip":                      ip.String(),
 		"unspecified":             ip.IsUnspecified(),
 		"loopback":                ip.IsLoopback(),

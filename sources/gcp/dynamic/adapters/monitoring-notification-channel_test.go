@@ -137,7 +137,7 @@ func TestMonitoringNotificationChannel(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://monitoring.googleapis.com/v3/projects/%s/notificationChannels/%s", projectID, channelID): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Notification channel not found"},
+				Body:       map[string]any{"error": "Notification channel not found"},
 			},
 		}
 

@@ -198,7 +198,7 @@ func TestAIPlatformEndpoint(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://aiplatform.googleapis.com/v1/projects/%s/locations/global/endpoints/%s", projectID, endpointName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Endpoint not found"},
+				Body:       map[string]any{"error": "Endpoint not found"},
 			},
 		}
 

@@ -165,7 +165,7 @@ func TestOrgPolicyPolicy(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://orgpolicy.googleapis.com/v2/projects/%s/policies/%s", projectID, policyName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Policy not found"},
+				Body:       map[string]any{"error": "Policy not found"},
 			},
 		}
 

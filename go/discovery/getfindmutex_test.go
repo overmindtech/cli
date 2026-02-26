@@ -149,14 +149,11 @@ func TestGetLock(t *testing.T) {
 
 		}()
 
-		actionWG.Add(1)
-
-		go func() {
+		actionWG.Go(func() {
 			for action := range actionChan {
 				order = append(order, action)
 			}
-			actionWG.Done()
-		}()
+		})
 
 		go func(t *testing.T) {
 			wg.Wait()

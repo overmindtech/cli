@@ -5,7 +5,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos"
 	"go.uber.org/mock/gomock"
 
@@ -177,7 +176,7 @@ func TestDocumentDBDatabaseAccounts(t *testing.T) {
 		account := &armcosmos.DatabaseAccountGetResults{
 			Name: nil, // No name field
 			Properties: &armcosmos.DatabaseAccountGetProperties{
-				ProvisioningState: to.Ptr("Succeeded"),
+				ProvisioningState: new("Succeeded"),
 			},
 		}
 
@@ -350,27 +349,27 @@ func TestDocumentDBDatabaseAccounts(t *testing.T) {
 // createAzureCosmosDBAccount creates a mock Azure Cosmos DB account with all linked resources
 func createAzureCosmosDBAccount(accountName, provisioningState, subscriptionID, resourceGroup string) *armcosmos.DatabaseAccountGetResults {
 	return &armcosmos.DatabaseAccountGetResults{
-		Name:     to.Ptr(accountName),
-		Location: to.Ptr("eastus"),
+		Name:     new(accountName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env":     to.Ptr("test"),
-			"project": to.Ptr("testing"),
+			"env":     new("test"),
+			"project": new("testing"),
 		},
 		Properties: &armcosmos.DatabaseAccountGetProperties{
-			ProvisioningState: to.Ptr(provisioningState),
+			ProvisioningState: new(provisioningState),
 			// Private Endpoint Connections
 			PrivateEndpointConnections: []*armcosmos.PrivateEndpointConnection{
 				{
 					Properties: &armcosmos.PrivateEndpointConnectionProperties{
 						PrivateEndpoint: &armcosmos.PrivateEndpointProperty{
-							ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/privateEndpoints/test-private-endpoint"),
+							ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/privateEndpoints/test-private-endpoint"),
 						},
 					},
 				},
 				{
 					Properties: &armcosmos.PrivateEndpointConnectionProperties{
 						PrivateEndpoint: &armcosmos.PrivateEndpointProperty{
-							ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/different-rg/providers/Microsoft.Network/privateEndpoints/test-private-endpoint-diff-rg"),
+							ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/different-rg/providers/Microsoft.Network/privateEndpoints/test-private-endpoint-diff-rg"),
 						},
 					},
 				},
@@ -378,17 +377,17 @@ func createAzureCosmosDBAccount(accountName, provisioningState, subscriptionID, 
 			// Virtual Network Rules
 			VirtualNetworkRules: []*armcosmos.VirtualNetworkRule{
 				{
-					ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/test-subnet"),
+					ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/test-subnet"),
 				},
 				{
-					ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/different-rg/providers/Microsoft.Network/virtualNetworks/test-vnet-diff-rg/subnets/test-subnet-diff-rg"),
+					ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/different-rg/providers/Microsoft.Network/virtualNetworks/test-vnet-diff-rg/subnets/test-subnet-diff-rg"),
 				},
 			},
 			// Key Vault Key URI
-			KeyVaultKeyURI: to.Ptr("https://test-keyvault.vault.azure.net/keys/test-key/version"),
+			KeyVaultKeyURI: new("https://test-keyvault.vault.azure.net/keys/test-key/version"),
 		},
 		Identity: &armcosmos.ManagedServiceIdentity{
-			Type: to.Ptr(armcosmos.ResourceIdentityTypeUserAssigned),
+			Type: new(armcosmos.ResourceIdentityTypeUserAssigned),
 			UserAssignedIdentities: map[string]*armcosmos.Components1Jq1T4ISchemasManagedserviceidentityPropertiesUserassignedidentitiesAdditionalproperties{
 				"/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.ManagedIdentity/userAssignedIdentities/test-identity": {},
 				"/subscriptions/" + subscriptionID + "/resourceGroups/identity-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/test-identity-diff-rg":   {},
@@ -400,13 +399,13 @@ func createAzureCosmosDBAccount(accountName, provisioningState, subscriptionID, 
 // createAzureCosmosDBAccountMinimal creates a minimal mock Azure Cosmos DB account without linked resources
 func createAzureCosmosDBAccountMinimal(accountName, provisioningState string) *armcosmos.DatabaseAccountGetResults {
 	return &armcosmos.DatabaseAccountGetResults{
-		Name:     to.Ptr(accountName),
-		Location: to.Ptr("eastus"),
+		Name:     new(accountName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armcosmos.DatabaseAccountGetProperties{
-			ProvisioningState: to.Ptr(provisioningState),
+			ProvisioningState: new(provisioningState),
 		},
 	}
 }
@@ -414,19 +413,19 @@ func createAzureCosmosDBAccountMinimal(accountName, provisioningState string) *a
 // createAzureCosmosDBAccountCrossRG creates a mock Azure Cosmos DB account with linked resources in different resource groups
 func createAzureCosmosDBAccountCrossRG(accountName, provisioningState, subscriptionID, resourceGroup string) *armcosmos.DatabaseAccountGetResults {
 	return &armcosmos.DatabaseAccountGetResults{
-		Name:     to.Ptr(accountName),
-		Location: to.Ptr("eastus"),
+		Name:     new(accountName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armcosmos.DatabaseAccountGetProperties{
-			ProvisioningState: to.Ptr(provisioningState),
+			ProvisioningState: new(provisioningState),
 			// Private Endpoint in different resource group
 			PrivateEndpointConnections: []*armcosmos.PrivateEndpointConnection{
 				{
 					Properties: &armcosmos.PrivateEndpointConnectionProperties{
 						PrivateEndpoint: &armcosmos.PrivateEndpointProperty{
-							ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/different-rg/providers/Microsoft.Network/privateEndpoints/test-pe-diff-rg"),
+							ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/different-rg/providers/Microsoft.Network/privateEndpoints/test-pe-diff-rg"),
 						},
 					},
 				},
@@ -434,12 +433,12 @@ func createAzureCosmosDBAccountCrossRG(accountName, provisioningState, subscript
 			// Subnet in different resource group
 			VirtualNetworkRules: []*armcosmos.VirtualNetworkRule{
 				{
-					ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/different-rg/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/test-subnet"),
+					ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/different-rg/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/test-subnet"),
 				},
 			},
 		},
 		Identity: &armcosmos.ManagedServiceIdentity{
-			Type: to.Ptr(armcosmos.ResourceIdentityTypeUserAssigned),
+			Type: new(armcosmos.ResourceIdentityTypeUserAssigned),
 			UserAssignedIdentities: map[string]*armcosmos.Components1Jq1T4ISchemasManagedserviceidentityPropertiesUserassignedidentitiesAdditionalproperties{
 				"/subscriptions/" + subscriptionID + "/resourceGroups/identity-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/test-identity": {},
 			},

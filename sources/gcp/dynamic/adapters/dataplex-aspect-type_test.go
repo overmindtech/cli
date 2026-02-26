@@ -58,8 +58,8 @@ func TestDataplexAspectType(t *testing.T) {
 	// Create the list response using a map structure instead of the protobuf ListAspectTypesResponse
 	// This is necessary because the dynamic adapter expects JSON-serializable structures
 	// Individual items use proper SDK types, but the list wrapper uses a simple map
-	aspectTypesList := map[string]interface{}{
-		"aspectTypes": []interface{}{aspectType, aspectType2},
+	aspectTypesList := map[string]any{
+		"aspectTypes": []any{aspectType, aspectType2},
 	}
 
 	sdpItemType := gcpshared.DataplexAspectType
@@ -236,7 +236,7 @@ func TestDataplexAspectType(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://dataplex.googleapis.com/v1/projects/%s/locations/%s/aspectTypes/nonexistent", projectID, location): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": map[string]interface{}{"code": 404, "message": "AspectType not found"}},
+				Body:       map[string]any{"error": map[string]any{"code": 404, "message": "AspectType not found"}},
 			},
 		}
 

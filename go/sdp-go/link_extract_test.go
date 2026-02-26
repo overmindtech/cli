@@ -7,7 +7,7 @@ import (
 )
 
 // Create a very large set of attributes for the benchmark
-func createTestData() (*ItemAttributes, interface{}) {
+func createTestData() (*ItemAttributes, any) {
 	yamlString := `---
 creationTimestamp: 2024-07-09T11:16:31Z
 data:
@@ -414,7 +414,7 @@ taskArn: arn:aws:ecs:eu-west-2:123456789:task/example-tfc/ded4f8eebe4144ddb9a93a
 version: 5
 `
 
-	mapData := make(map[string]interface{})
+	mapData := make(map[string]any)
 	_ = yaml.Unmarshal([]byte(yamlString), &mapData)
 
 	attrs, _ := ToAttributes(mapData)
@@ -616,7 +616,7 @@ func TestExtractLinksFromAttributes(t *testing.T) {
 func TestExtractLinksFrom(t *testing.T) {
 	tests := []struct {
 		Name            string
-		Object          interface{}
+		Object          any
 		ExpectedQueries []string
 	}{
 		{
@@ -677,8 +677,8 @@ func TestExtractLinksFrom(t *testing.T) {
 
 func TestExtractLinksFromConfigMapData(t *testing.T) {
 	// Test ConfigMap data with S3 bucket ARN
-	configMapData := map[string]interface{}{
-		"data": map[string]interface{}{
+	configMapData := map[string]any{
+		"data": map[string]any{
 			"S3_BUCKET_ARN":  "arn:aws:s3:::example-bucket-name",
 			"S3_BUCKET_NAME": "example-bucket-name",
 		},
@@ -761,7 +761,7 @@ func TestS3BucketARNTypeDetection(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			queries, err := ExtractLinksFrom(map[string]interface{}{
+			queries, err := ExtractLinksFrom(map[string]any{
 				"arn": tt.arn,
 			})
 			if err != nil {

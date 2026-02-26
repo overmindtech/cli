@@ -15,30 +15,30 @@ func TestCapacityReservationOutputMapper(t *testing.T) {
 	output := &ec2.DescribeCapacityReservationsOutput{
 		CapacityReservations: []types.CapacityReservation{
 			{
-				AvailabilityZone:           PtrString("us-east-1a"), // links
-				AvailabilityZoneId:         PtrString("use1-az1"),
-				AvailableInstanceCount:     PtrInt32(1),
-				CapacityReservationArn:     PtrString("arn:aws:ec2:us-east-1:123456789012:capacity-reservation/cr-1234567890abcdef0"),
-				CapacityReservationId:      PtrString("cr-1234567890abcdef0"),
-				CapacityReservationFleetId: PtrString("crf-1234567890abcdef0"), // link
-				CreateDate:                 PtrTime(time.Now()),
-				EbsOptimized:               PtrBool(true),
+				AvailabilityZone:           new("us-east-1a"), // links
+				AvailabilityZoneId:         new("use1-az1"),
+				AvailableInstanceCount:     new(int32(1)),
+				CapacityReservationArn:     new("arn:aws:ec2:us-east-1:123456789012:capacity-reservation/cr-1234567890abcdef0"),
+				CapacityReservationId:      new("cr-1234567890abcdef0"),
+				CapacityReservationFleetId: new("crf-1234567890abcdef0"), // link
+				CreateDate:                 new(time.Now()),
+				EbsOptimized:               new(true),
 				EndDateType:                types.EndDateTypeUnlimited,
 				EndDate:                    nil,
 				InstanceMatchCriteria:      types.InstanceMatchCriteriaTargeted,
 				InstancePlatform:           types.CapacityReservationInstancePlatformLinuxUnix,
-				InstanceType:               PtrString("t2.micro"),
-				OutpostArn:                 PtrString("arn:aws:ec2:us-east-1:123456789012:outpost/op-1234567890abcdef0"), // link
-				OwnerId:                    PtrString("123456789012"),
-				PlacementGroupArn:          PtrString("arn:aws:ec2:us-east-1:123456789012:placement-group/pg-1234567890abcdef0"), // link
-				StartDate:                  PtrTime(time.Now()),
+				InstanceType:               new("t2.micro"),
+				OutpostArn:                 new("arn:aws:ec2:us-east-1:123456789012:outpost/op-1234567890abcdef0"), // link
+				OwnerId:                    new("123456789012"),
+				PlacementGroupArn:          new("arn:aws:ec2:us-east-1:123456789012:placement-group/pg-1234567890abcdef0"), // link
+				StartDate:                  new(time.Now()),
 				State:                      types.CapacityReservationStateActive,
 				Tenancy:                    types.CapacityReservationTenancyDefault,
-				TotalInstanceCount:         PtrInt32(1),
+				TotalInstanceCount:         new(int32(1)),
 				CapacityAllocations: []types.CapacityAllocation{
 					{
 						AllocationType: types.AllocationTypeUsed,
-						Count:          PtrInt32(1),
+						Count:          new(int32(1)),
 					},
 				},
 			},

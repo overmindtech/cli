@@ -5,7 +5,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	"go.uber.org/mock/gomock"
 
@@ -65,15 +64,15 @@ func (t *testGalleryApplicationVersionsClient) NewListByGalleryApplicationPager(
 
 func createAzureGalleryApplicationVersion(versionName string) *armcompute.GalleryApplicationVersion {
 	return &armcompute.GalleryApplicationVersion{
-		Name:     to.Ptr(versionName),
-		Location: to.Ptr("eastus"),
+		Name:     new(versionName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armcompute.GalleryApplicationVersionProperties{
 			PublishingProfile: &armcompute.GalleryApplicationVersionPublishingProfile{
 				Source: &armcompute.UserArtifactSource{
-					MediaLink: to.Ptr("https://mystorageaccount.blob.core.windows.net/packages/app.zip"),
+					MediaLink: new("https://mystorageaccount.blob.core.windows.net/packages/app.zip"),
 				},
 			},
 		},
@@ -82,14 +81,14 @@ func createAzureGalleryApplicationVersion(versionName string) *armcompute.Galler
 
 func createAzureGalleryApplicationVersionWithLinks(versionName, subscriptionID, resourceGroup string) *armcompute.GalleryApplicationVersion {
 	v := createAzureGalleryApplicationVersion(versionName)
-	v.Properties.PublishingProfile.Source.DefaultConfigurationLink = to.Ptr("https://mystorageaccount.blob.core.windows.net/config/default.json")
+	v.Properties.PublishingProfile.Source.DefaultConfigurationLink = new("https://mystorageaccount.blob.core.windows.net/config/default.json")
 	desID := "/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Compute/diskEncryptionSets/test-des"
 	v.Properties.PublishingProfile.TargetRegions = []*armcompute.TargetRegion{
 		{
-			Name: to.Ptr("eastus"),
+			Name: new("eastus"),
 			Encryption: &armcompute.EncryptionImages{
 				OSDiskImage: &armcompute.OSDiskImageEncryption{
-					DiskEncryptionSetID: to.Ptr(desID),
+					DiskEncryptionSetID: new(desID),
 				},
 			},
 		},
@@ -234,7 +233,7 @@ func TestComputeGalleryApplicationVersion(t *testing.T) {
 	t.Run("Get_NonBlobURL_NoStorageLinks", func(t *testing.T) {
 		// MediaLink that is not Azure Blob Storage must not create StorageAccount/StorageBlobContainer links.
 		version := createAzureGalleryApplicationVersion(galleryApplicationVersionName)
-		version.Properties.PublishingProfile.Source.MediaLink = to.Ptr("https://example.com/artifacts/app.zip")
+		version.Properties.PublishingProfile.Source.MediaLink = new("https://example.com/artifacts/app.zip")
 
 		mockClient := NewMockGalleryApplicationVersionsClient(ctrl)
 		mockClient.EXPECT().Get(ctx, resourceGroup, galleryName, galleryApplicationName, galleryApplicationVersionName, nil).Return(
@@ -286,7 +285,7 @@ func TestComputeGalleryApplicationVersion(t *testing.T) {
 	t.Run("Get_IPHost_EmitsIPLink", func(t *testing.T) {
 		// When MediaLink or DefaultConfigurationLink has a literal IP host, emit stdlib.NetworkIP link (GET, global), not DNS.
 		version := createAzureGalleryApplicationVersion(galleryApplicationVersionName)
-		version.Properties.PublishingProfile.Source.MediaLink = to.Ptr("https://192.168.1.10:8443/artifacts/app.zip")
+		version.Properties.PublishingProfile.Source.MediaLink = new("https://192.168.1.10:8443/artifacts/app.zip")
 
 		mockClient := NewMockGalleryApplicationVersionsClient(ctrl)
 		mockClient.EXPECT().Get(ctx, resourceGroup, galleryName, galleryApplicationName, galleryApplicationVersionName, nil).Return(

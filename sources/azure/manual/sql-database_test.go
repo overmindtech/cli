@@ -3,9 +3,9 @@ package manual_test
 import (
 	"context"
 	"errors"
+	"slices"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql/v2"
 	"go.uber.org/mock/gomock"
 
@@ -244,13 +244,13 @@ func TestSqlDatabase(t *testing.T) {
 		database1 := createAzureSqlDatabase(serverName, "database-1", "")
 		database2 := &armsql.Database{
 			Name:     nil, // Database with nil name should be skipped
-			Location: to.Ptr("eastus"),
+			Location: new("eastus"),
 			Tags: map[string]*string{
-				"env": to.Ptr("test"),
+				"env": new("test"),
 			},
-			ID: to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Sql/servers/test-server/databases/database-2"),
+			ID: new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Sql/servers/test-server/databases/database-2"),
 			Properties: &armsql.DatabaseProperties{
-				Status: to.Ptr(armsql.DatabaseStatusOnline),
+				Status: new(armsql.DatabaseStatusOnline),
 			},
 		}
 
@@ -363,13 +363,7 @@ func TestSqlDatabase(t *testing.T) {
 			t.Error("Expected IAMPermissions to return at least one permission")
 		}
 		expectedPermission := "Microsoft.Sql/servers/databases/read"
-		found := false
-		for _, perm := range permissions {
-			if perm == expectedPermission {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(permissions, expectedPermission)
 		if !found {
 			t.Errorf("Expected IAMPermissions to include %s", expectedPermission)
 		}
@@ -410,20 +404,20 @@ func createAzureSqlDatabase(serverName, databaseName, elasticPoolID string) *arm
 	databaseID := "/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Sql/servers/" + serverName + "/databases/" + databaseName
 
 	db := &armsql.Database{
-		Name:     to.Ptr(databaseName),
-		Location: to.Ptr("eastus"),
+		Name:     new(databaseName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env":     to.Ptr("test"),
-			"project": to.Ptr("testing"),
+			"env":     new("test"),
+			"project": new("testing"),
 		},
-		ID: to.Ptr(databaseID),
+		ID: new(databaseID),
 		Properties: &armsql.DatabaseProperties{
-			Status: to.Ptr(armsql.DatabaseStatusOnline),
+			Status: new(armsql.DatabaseStatusOnline),
 		},
 	}
 
 	if elasticPoolID != "" {
-		db.Properties.ElasticPoolID = to.Ptr(elasticPoolID)
+		db.Properties.ElasticPoolID = new(elasticPoolID)
 	}
 
 	return db

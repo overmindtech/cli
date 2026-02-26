@@ -13,7 +13,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -374,14 +373,14 @@ func createVirtualNetworkForAG(ctx context.Context, client *armnetwork.VirtualNe
 
 	// Create the VNet
 	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroupName, vnetName, armnetwork.VirtualNetwork{
-		Location: ptr.To(location),
+		Location: new(location),
 		Properties: &armnetwork.VirtualNetworkPropertiesFormat{
 			AddressSpace: &armnetwork.AddressSpace{
-				AddressPrefixes: []*string{ptr.To("10.3.0.0/16")},
+				AddressPrefixes: []*string{new("10.3.0.0/16")},
 			},
 		},
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
+			"purpose": new("overmind-integration-tests"),
 		},
 	}, nil)
 	if err != nil {
@@ -410,7 +409,7 @@ func createAGSubnet(ctx context.Context, client *armnetwork.SubnetsClient, resou
 	// Create the subnet with /24 address space for Application Gateway
 	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroupName, vnetName, subnetName, armnetwork.Subnet{
 		Properties: &armnetwork.SubnetPropertiesFormat{
-			AddressPrefix: ptr.To("10.3.0.0/24"),
+			AddressPrefix: new("10.3.0.0/24"),
 		},
 	}, nil)
 	if err != nil {
@@ -463,16 +462,16 @@ func createPublicIPForAG(ctx context.Context, client *armnetwork.PublicIPAddress
 
 	// Create the public IP address with Standard SKU (required for Application Gateway v2)
 	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroupName, publicIPName, armnetwork.PublicIPAddress{
-		Location: ptr.To(location),
+		Location: new(location),
 		Properties: &armnetwork.PublicIPAddressPropertiesFormat{
-			PublicIPAllocationMethod: ptr.To(armnetwork.IPAllocationMethodStatic),
-			PublicIPAddressVersion:   ptr.To(armnetwork.IPVersionIPv4),
+			PublicIPAllocationMethod: new(armnetwork.IPAllocationMethodStatic),
+			PublicIPAddressVersion:   new(armnetwork.IPVersionIPv4),
 		},
 		SKU: &armnetwork.PublicIPAddressSKU{
-			Name: ptr.To(armnetwork.PublicIPAddressSKUNameStandard),
+			Name: new(armnetwork.PublicIPAddressSKUNameStandard),
 		},
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
+			"purpose": new("overmind-integration-tests"),
 		},
 	}, nil)
 	if err != nil {

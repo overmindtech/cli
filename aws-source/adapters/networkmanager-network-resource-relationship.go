@@ -43,7 +43,7 @@ func networkResourceRelationshipOutputMapper(_ context.Context, _ *networkmanage
 		hasher.Write([]byte(toArn.String()))
 		sha := base64.URLEncoding.EncodeToString(hasher.Sum(nil))
 
-		attrs, err := sdp.ToAttributes(map[string]interface{}{
+		attrs, err := sdp.ToAttributes(map[string]any{
 			"Hash": sha,
 			"From": fromArn.String(),
 			"To":   toArn.String(),
@@ -197,7 +197,7 @@ func NewNetworkManagerNetworkResourceRelationshipsAdapter(client *networkmanager
 		Region:          region,
 		ItemType:        "networkmanager-network-resource-relationship",
 		AdapterMetadata: networkResourceRelationshipAdapterMetadata,
-		cache:        cache,
+		cache:           cache,
 		OutputMapper:    networkResourceRelationshipOutputMapper,
 		DescribeFunc: func(ctx context.Context, client *networkmanager.Client, input *networkmanager.GetNetworkResourceRelationshipsInput) (*networkmanager.GetNetworkResourceRelationshipsOutput, error) {
 			return client.GetNetworkResourceRelationships(ctx, input)

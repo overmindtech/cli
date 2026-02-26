@@ -13,7 +13,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -289,19 +288,19 @@ func createDisk(ctx context.Context, client *armcompute.DisksClient, resourceGro
 	// Create an empty disk (DiskCreateOptionEmpty)
 	// This is the simplest type of disk to create for testing
 	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroupName, diskName, armcompute.Disk{
-		Location: ptr.To(location),
+		Location: new(location),
 		Properties: &armcompute.DiskProperties{
 			CreationData: &armcompute.CreationData{
-				CreateOption: ptr.To(armcompute.DiskCreateOptionEmpty),
+				CreateOption: new(armcompute.DiskCreateOptionEmpty),
 			},
-			DiskSizeGB: ptr.To[int32](10), // 10 GB disk
+			DiskSizeGB: new(int32(10)), // 10 GB disk
 		},
 		SKU: &armcompute.DiskSKU{
-			Name: ptr.To(armcompute.DiskStorageAccountTypesStandardLRS),
+			Name: new(armcompute.DiskStorageAccountTypesStandardLRS),
 		},
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
-			"test":    ptr.To("compute-disk"),
+			"purpose": new("overmind-integration-tests"),
+			"test":    new("compute-disk"),
 		},
 	}, nil)
 	if err != nil {

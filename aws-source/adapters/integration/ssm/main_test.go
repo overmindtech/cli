@@ -184,10 +184,7 @@ func TestIntegrationSSM(t *testing.T) {
 
 			// Delete parameters in batches of 100
 			for i := 0; i < len(output.Parameters); i += 100 {
-				end := i + 100
-				if end > len(output.Parameters) {
-					end = len(output.Parameters)
-				}
+				end := min(i+100, len(output.Parameters))
 
 				batch := output.Parameters[i:end]
 				names := make([]string, len(batch))

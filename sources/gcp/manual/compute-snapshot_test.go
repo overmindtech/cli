@@ -8,7 +8,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/api/iterator"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -77,10 +76,10 @@ func TestComputeSnapshot(t *testing.T) {
 					ExpectedScope:  "test-project-id",
 				},
 				{
-					ExpectedType:             gcpshared.ComputeResourcePolicy.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            "test-source-snapshot-schedule-policy",
-					ExpectedScope:            "test-project-id.us-central1",
+					ExpectedType:   gcpshared.ComputeResourcePolicy.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-source-snapshot-schedule-policy",
+					ExpectedScope:  "test-project-id.us-central1",
 				},
 				{
 					ExpectedType:   gcpshared.CloudKMSCryptoKeyVersion.String(),
@@ -295,23 +294,23 @@ func TestComputeSnapshot(t *testing.T) {
 
 func createComputeSnapshot(snapshotName string, status computepb.Snapshot_Status) *computepb.Snapshot {
 	return &computepb.Snapshot{
-		Name:                  ptr.To(snapshotName),
+		Name:                  new(snapshotName),
 		Labels:                map[string]string{"env": "test"},
-		Status:                ptr.To(status.String()),
-		SourceInstantSnapshot: ptr.To("projects/test-project-id/zones/us-central1-a/instantSnapshots/test-instant-snapshot"),
+		Status:                new(status.String()),
+		SourceInstantSnapshot: new("projects/test-project-id/zones/us-central1-a/instantSnapshots/test-instant-snapshot"),
 		StorageLocations:      []string{"us-central1"},
 		Licenses:              []string{"projects/test-project-id/global/licenses/test-license"},
 		SourceDiskEncryptionKey: &computepb.CustomerEncryptionKey{
-			KmsKeyName: ptr.To("projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/test-version-source-disk"),
+			KmsKeyName: new("projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/test-version-source-disk"),
 		},
-		SourceDisk: ptr.To("projects/test-project-id/zones/us-central1-a/disks/test-disk"),
+		SourceDisk: new("projects/test-project-id/zones/us-central1-a/disks/test-disk"),
 		SourceInstantSnapshotEncryptionKey: &computepb.CustomerEncryptionKey{
-			KmsKeyName: ptr.To("projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/test-version-source-snapshot"),
-			RawKey:     ptr.To("test-key"),
+			KmsKeyName: new("projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/test-version-source-snapshot"),
+			RawKey:     new("test-key"),
 		},
-		SourceSnapshotSchedulePolicy: ptr.To("projects/test-project-id/regions/us-central1/resourcePolicies/test-source-snapshot-schedule-policy"),
+		SourceSnapshotSchedulePolicy: new("projects/test-project-id/regions/us-central1/resourcePolicies/test-source-snapshot-schedule-policy"),
 		SnapshotEncryptionKey: &computepb.CustomerEncryptionKey{
-			KmsKeyName: ptr.To("projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/test-version-snapshot"),
+			KmsKeyName: new("projects/test-project-id/locations/global/keyRings/test-keyring/cryptoKeys/test-key/cryptoKeyVersions/test-version-snapshot"),
 		},
 	}
 }

@@ -12,28 +12,28 @@ import (
 
 func TestInstanceProfileItemMapper(t *testing.T) {
 	profile := types.InstanceProfile{
-		Arn:                 PtrString("arn:aws:iam::123456789012:instance-profile/webserver"),
-		CreateDate:          PtrTime(time.Now()),
-		InstanceProfileId:   PtrString("AIDACKCEVSQ6C2EXAMPLE"),
-		InstanceProfileName: PtrString("webserver"),
-		Path:                PtrString("/"),
+		Arn:                 new("arn:aws:iam::123456789012:instance-profile/webserver"),
+		CreateDate:          new(time.Now()),
+		InstanceProfileId:   new("AIDACKCEVSQ6C2EXAMPLE"),
+		InstanceProfileName: new("webserver"),
+		Path:                new("/"),
 		Roles: []types.Role{
 			{
-				Arn:                      PtrString("arn:aws:iam::123456789012:role/webserver"), // link
-				CreateDate:               PtrTime(time.Now()),
-				Path:                     PtrString("/"),
-				RoleId:                   PtrString("AIDACKCEVSQ6C2EXAMPLE"),
-				RoleName:                 PtrString("webserver"),
-				AssumeRolePolicyDocument: PtrString(`{}`),
-				Description:              PtrString("Allows EC2 instances to call AWS services on your behalf."),
-				MaxSessionDuration:       PtrInt32(3600),
+				Arn:                      new("arn:aws:iam::123456789012:role/webserver"), // link
+				CreateDate:               new(time.Now()),
+				Path:                     new("/"),
+				RoleId:                   new("AIDACKCEVSQ6C2EXAMPLE"),
+				RoleName:                 new("webserver"),
+				AssumeRolePolicyDocument: new(`{}`),
+				Description:              new("Allows EC2 instances to call AWS services on your behalf."),
+				MaxSessionDuration:       new(int32(3600)),
 				PermissionsBoundary: &types.AttachedPermissionsBoundary{
-					PermissionsBoundaryArn:  PtrString("arn:aws:iam::123456789012:policy/XCompanyBoundaries"), // link
+					PermissionsBoundaryArn:  new("arn:aws:iam::123456789012:policy/XCompanyBoundaries"), // link
 					PermissionsBoundaryType: types.PermissionsBoundaryAttachmentTypePolicy,
 				},
 				RoleLastUsed: &types.RoleLastUsed{
-					LastUsedDate: PtrTime(time.Now()),
-					Region:       PtrString("us-east-1"),
+					LastUsedDate: new(time.Now()),
+					Region:       new("us-east-1"),
 				},
 			},
 		},

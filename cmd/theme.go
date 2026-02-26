@@ -103,21 +103,21 @@ func MarkdownStyle() ansi.StyleConfig {
 				BlockSuffix: "\n",
 				Color:       getHex(ColorPalette.LabelBase),
 			},
-			Indent: ptrUint(2),
+			Indent: new(uint(2)),
 		},
 		BlockQuote: ansi.StyleBlock{
 			StylePrimitive: ansi.StylePrimitive{
-				Italic: ptrBool(true),
+				Italic: new(true),
 			},
-			Indent:      ptrUint(1),
-			IndentToken: ptrString("│ "),
+			Indent:      new(uint(1)),
+			IndentToken: new("│ "),
 		},
 		List: ansi.StyleList{
 			LevelIndent: 2,
 		},
 		Heading: ansi.StyleBlock{
 			StylePrimitive: ansi.StylePrimitive{
-				Bold:        ptrBool(true),
+				Bold:        new(true),
 				Color:       getHex(ColorPalette.LabelTitle),
 				BlockSuffix: "\n",
 			},
@@ -146,17 +146,17 @@ func MarkdownStyle() ansi.StyleConfig {
 		H6: ansi.StyleBlock{
 			StylePrimitive: ansi.StylePrimitive{
 				Prefix: "###### ",
-				Bold:   ptrBool(false),
+				Bold:   new(false),
 			},
 		},
 		Strikethrough: ansi.StylePrimitive{
-			CrossedOut: ptrBool(true),
+			CrossedOut: new(true),
 		},
 		Emph: ansi.StylePrimitive{
-			Italic: ptrBool(true),
+			Italic: new(true),
 		},
 		Strong: ansi.StylePrimitive{
-			Bold: ptrBool(true),
+			Bold: new(true),
 		},
 		HorizontalRule: ansi.StylePrimitive{
 			Color:  getHex(ColorPalette.LabelBase),
@@ -174,16 +174,16 @@ func MarkdownStyle() ansi.StyleConfig {
 		},
 		Link: ansi.StylePrimitive{
 			Color:       getHex(ColorPalette.LabelLink),
-			Underline:   ptrBool(true),
+			Underline:   new(true),
 			BlockPrefix: "(",
 			BlockSuffix: ")",
 		},
 		LinkText: ansi.StylePrimitive{
-			Bold: ptrBool(true),
+			Bold: new(true),
 		},
 		Image: ansi.StylePrimitive{
 			Color:       getHex(ColorPalette.LabelLink),
-			Underline:   ptrBool(true),
+			Underline:   new(true),
 			BlockPrefix: "(",
 			BlockSuffix: ")",
 		},
@@ -192,14 +192,14 @@ func MarkdownStyle() ansi.StyleConfig {
 		},
 		CodeBlock: ansi.StyleCodeBlock{
 			StyleBlock: ansi.StyleBlock{
-				Margin: ptrUint(4),
+				Margin: new(uint(4)),
 			},
 			Theme: "solarized-light",
 		},
 		Table: ansi.StyleTable{
-			CenterSeparator: ptrString("┼"),
-			ColumnSeparator: ptrString("│"),
-			RowSeparator:    ptrString("─"),
+			CenterSeparator: new("┼"),
+			ColumnSeparator: new("│"),
+			RowSeparator:    new("─"),
 		},
 		DefinitionDescription: ansi.StylePrimitive{
 			BlockPrefix: "\n🠶 ",
@@ -268,16 +268,6 @@ func IndentSymbol() string {
 		return "    "
 	}
 	return "   "
-}
-
-func ptrBool(b bool) *bool {
-	return &b
-}
-func ptrUint(u uint) *uint {
-	return &u
-}
-func ptrString(s string) *string {
-	return &s
 }
 
 func getHex(c color.Color) *string {

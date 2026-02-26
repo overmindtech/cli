@@ -42,7 +42,7 @@ func PTermSetup() {
 	// disrupting bubbletea rendering (and potentially getting overwritten).
 	// Otherwise, when TEABUG is set, log to a file.
 	if len(os.Getenv("TEABUG")) > 0 {
-		f, err := os.OpenFile("teabug.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o600) //nolint:gomnd
+		f, err := os.OpenFile("teabug.log", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0o600)
 		if err != nil {
 			fmt.Println("fatal:", err)
 			os.Exit(1)
@@ -151,7 +151,7 @@ func RunRevlinkWarmup(ctx context.Context, oi sdp.OvermindInstance, postPlanPrin
 }
 
 func RunPlan(ctx context.Context, args []string) error {
-	c := exec.CommandContext(ctx, "terraform", args...)
+	c := exec.CommandContext(ctx, "terraform", args...) //nolint:gosec // G702: args are CLI arguments from the local user who invoked this command; this tool runs on the user's own machine
 
 	// remove go's default process cancel behaviour, so that terraform has a
 	// chance to gracefully shutdown when ^C is pressed. Otherwise the
@@ -180,7 +180,7 @@ func RunPlan(ctx context.Context, args []string) error {
 }
 
 func RunApply(ctx context.Context, args []string) error {
-	c := exec.CommandContext(ctx, "terraform", args...)
+	c := exec.CommandContext(ctx, "terraform", args...) //nolint:gosec // G702: args are CLI arguments from the local user who invoked this command; this tool runs on the user's own machine
 
 	// remove go's default process cancel behaviour, so that terraform has a
 	// chance to gracefully shutdown when ^C is pressed. Otherwise the

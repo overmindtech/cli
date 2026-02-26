@@ -6,7 +6,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	"go.uber.org/mock/gomock"
 
@@ -314,26 +313,26 @@ func TestComputeVirtualMachine(t *testing.T) {
 // createAzureVirtualMachine creates a mock Azure VM for testing
 func createAzureVirtualMachine(vmName, provisioningState string) *armcompute.VirtualMachine {
 	return &armcompute.VirtualMachine{
-		Name:     to.Ptr(vmName),
-		Location: to.Ptr("eastus"),
+		Name:     new(vmName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env":     to.Ptr("test"),
-			"project": to.Ptr("testing"),
+			"env":     new("test"),
+			"project": new("testing"),
 		},
 		Properties: &armcompute.VirtualMachineProperties{
-			ProvisioningState: to.Ptr(provisioningState),
+			ProvisioningState: new(provisioningState),
 			StorageProfile: &armcompute.StorageProfile{
 				OSDisk: &armcompute.OSDisk{
-					Name: to.Ptr("os-disk"),
+					Name: new("os-disk"),
 					ManagedDisk: &armcompute.ManagedDiskParameters{
-						ID: to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Compute/disks/os-disk"),
+						ID: new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Compute/disks/os-disk"),
 					},
 				},
 				DataDisks: []*armcompute.DataDisk{
 					{
-						Name: to.Ptr("data-disk-1"),
+						Name: new("data-disk-1"),
 						ManagedDisk: &armcompute.ManagedDiskParameters{
-							ID: to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Compute/disks/data-disk-1"),
+							ID: new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Compute/disks/data-disk-1"),
 						},
 					},
 				},
@@ -341,19 +340,19 @@ func createAzureVirtualMachine(vmName, provisioningState string) *armcompute.Vir
 			NetworkProfile: &armcompute.NetworkProfile{
 				NetworkInterfaces: []*armcompute.NetworkInterfaceReference{
 					{
-						ID: to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Network/networkInterfaces/test-nic"),
+						ID: new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Network/networkInterfaces/test-nic"),
 					},
 				},
 			},
 			AvailabilitySet: &armcompute.SubResource{
-				ID: to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Compute/availabilitySets/test-avset"),
+				ID: new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Compute/availabilitySets/test-avset"),
 			},
 		},
 		// Add VM extensions to Resources
 		Resources: []*armcompute.VirtualMachineExtension{
 			{
-				Name: to.Ptr("CustomScriptExtension"),
-				Type: to.Ptr("Microsoft.Compute/virtualMachines/extensions"),
+				Name: new("CustomScriptExtension"),
+				Type: new("Microsoft.Compute/virtualMachines/extensions"),
 			},
 		},
 	}

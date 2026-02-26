@@ -13,24 +13,24 @@ import (
 var AddonTestClient = EKSTestClient{
 	DescribeAddonOutput: &eks.DescribeAddonOutput{
 		Addon: &types.Addon{
-			AddonName:           PtrString("aws-ebs-csi-driver"),
-			ClusterName:         PtrString("dylan"),
+			AddonName:           new("aws-ebs-csi-driver"),
+			ClusterName:         new("dylan"),
 			Status:              types.AddonStatusActive,
-			AddonVersion:        PtrString("v1.13.0-eksbuild.3"),
-			ConfigurationValues: PtrString("values"),
+			AddonVersion:        new("v1.13.0-eksbuild.3"),
+			ConfigurationValues: new("values"),
 			MarketplaceInformation: &types.MarketplaceInformation{
-				ProductId:  PtrString("id"),
-				ProductUrl: PtrString("url"),
+				ProductId:  new("id"),
+				ProductUrl: new("url"),
 			},
-			Publisher: PtrString("publisher"),
-			Owner:     PtrString("owner"),
+			Publisher: new("publisher"),
+			Owner:     new("owner"),
 			Health: &types.AddonHealth{
 				Issues: []types.AddonIssue{},
 			},
-			AddonArn:              PtrString("arn:aws:eks:eu-west-2:801795385023:addon/dylan/aws-ebs-csi-driver/a2c29d0e-72c4-a702-7887-2f739f4fc189"),
-			CreatedAt:             PtrTime(time.Now()),
-			ModifiedAt:            PtrTime(time.Now()),
-			ServiceAccountRoleArn: PtrString("arn:aws:iam::801795385023:role/eks-csi-dylan"),
+			AddonArn:              new("arn:aws:eks:eu-west-2:801795385023:addon/dylan/aws-ebs-csi-driver/a2c29d0e-72c4-a702-7887-2f739f4fc189"),
+			CreatedAt:             new(time.Now()),
+			ModifiedAt:            new(time.Now()),
+			ServiceAccountRoleArn: new("arn:aws:iam::801795385023:role/eks-csi-dylan"),
 		},
 	},
 }

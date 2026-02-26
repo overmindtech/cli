@@ -13,7 +13,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdpcache"
@@ -212,20 +211,20 @@ func createKeyVault(ctx context.Context, client *armkeyvault.VaultsClient, resou
 	// Key Vault names must be globally unique and 3-24 characters
 	// They can only contain alphanumeric characters and hyphens
 	params := armkeyvault.VaultCreateOrUpdateParameters{
-		Location: ptr.To(location),
+		Location: new(location),
 		Properties: &armkeyvault.VaultProperties{
-			TenantID: ptr.To(tenantID),
+			TenantID: new(tenantID),
 			SKU: &armkeyvault.SKU{
-				Family: ptr.To(armkeyvault.SKUFamilyA),
-				Name:   ptr.To(armkeyvault.SKUNameStandard),
+				Family: new(armkeyvault.SKUFamilyA),
+				Name:   new(armkeyvault.SKUNameStandard),
 			},
 			AccessPolicies: []*armkeyvault.AccessPolicyEntry{
 				// For integration tests, we create with minimal configuration.
 			},
 		},
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
-			"test":    ptr.To("keyvault-vault"),
+			"purpose": new("overmind-integration-tests"),
+			"test":    new("keyvault-vault"),
 		},
 	}
 

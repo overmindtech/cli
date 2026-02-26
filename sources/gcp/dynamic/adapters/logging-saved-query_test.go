@@ -88,7 +88,7 @@ func TestLoggingSavedQuery(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://logging.googleapis.com/v2/projects/%s/locations/%s/savedQueries/%s", projectID, location, queryName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Saved query not found"},
+				Body:       map[string]any{"error": "Saved query not found"},
 			},
 		}
 

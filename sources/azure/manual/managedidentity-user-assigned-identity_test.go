@@ -6,7 +6,6 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/msi/armmsi"
 	"go.uber.org/mock/gomock"
 
@@ -136,14 +135,14 @@ func TestManagedIdentityUserAssignedIdentity(t *testing.T) {
 		identity1 := createAzureUserAssignedIdentity("test-identity-1")
 		identity2 := &armmsi.Identity{
 			Name:     nil, // Identity with nil name should be skipped
-			Location: to.Ptr("eastus"),
+			Location: new("eastus"),
 			Tags: map[string]*string{
-				"env": to.Ptr("test"),
+				"env": new("test"),
 			},
 			Properties: &armmsi.UserAssignedIdentityProperties{
-				ClientID:    to.Ptr("test-client-id-2"),
-				PrincipalID: to.Ptr("test-principal-id-2"),
-				TenantID:    to.Ptr("test-tenant-id"),
+				ClientID:    new("test-client-id-2"),
+				PrincipalID: new("test-principal-id-2"),
+				TenantID:    new("test-tenant-id"),
 			},
 		}
 
@@ -299,16 +298,16 @@ func TestManagedIdentityUserAssignedIdentity(t *testing.T) {
 // createAzureUserAssignedIdentity creates a mock Azure User Assigned Identity for testing
 func createAzureUserAssignedIdentity(identityName string) *armmsi.Identity {
 	return &armmsi.Identity{
-		Name:     to.Ptr(identityName),
-		Location: to.Ptr("eastus"),
+		Name:     new(identityName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env":     to.Ptr("test"),
-			"project": to.Ptr("testing"),
+			"env":     new("test"),
+			"project": new("testing"),
 		},
 		Properties: &armmsi.UserAssignedIdentityProperties{
-			ClientID:    to.Ptr("test-client-id"),
-			PrincipalID: to.Ptr("test-principal-id"),
-			TenantID:    to.Ptr("test-tenant-id"),
+			ClientID:    new("test-client-id"),
+			PrincipalID: new("test-principal-id"),
+			TenantID:    new("test-tenant-id"),
 		},
 	}
 }

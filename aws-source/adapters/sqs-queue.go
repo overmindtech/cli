@@ -98,7 +98,7 @@ func sqsQueueSearchInputMapper(scope string, query string) (*sqs.GetQueueAttribu
 	}
 
 	return &sqs.GetQueueAttributesInput{
-		QueueUrl:       PtrString(fmt.Sprintf("https://sqs.%s.%s/%s/%s", arn.Region, GetPartitionDNSSuffix(arn.Partition), arn.AccountID, arn.Resource)),
+		QueueUrl:       new(fmt.Sprintf("https://sqs.%s.%s/%s/%s", arn.Region, GetPartitionDNSSuffix(arn.Partition), arn.AccountID, arn.Resource)),
 		AttributeNames: []types.QueueAttributeName{"All"},
 	}, nil
 }
@@ -111,7 +111,7 @@ func NewSQSQueueAdapter(client sqsClient, accountID string, region string, cache
 		Region:          region,
 		ListInput:       &sqs.ListQueuesInput{},
 		AdapterMetadata: sqsQueueAdapterMetadata,
-		cache:        cache,
+		cache:           cache,
 		GetInputMapper: func(scope, query string) *sqs.GetQueueAttributesInput {
 			return &sqs.GetQueueAttributesInput{
 				QueueUrl: &query,

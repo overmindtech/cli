@@ -11,17 +11,17 @@ import (
 
 func TestHostedZoneItemMapper(t *testing.T) {
 	zone := types.HostedZone{
-		Id:              PtrString("/hostedzone/Z08416862SZP5DJXIDB29"),
-		Name:            PtrString("overmind-demo.com."),
-		CallerReference: PtrString("RISWorkflow-RD:144d3779-1574-42bf-9e75-f309838ea0a1"),
+		Id:              new("/hostedzone/Z08416862SZP5DJXIDB29"),
+		Name:            new("overmind-demo.com."),
+		CallerReference: new("RISWorkflow-RD:144d3779-1574-42bf-9e75-f309838ea0a1"),
 		Config: &types.HostedZoneConfig{
-			Comment:     PtrString("HostedZone created by Route53 Registrar"),
+			Comment:     new("HostedZone created by Route53 Registrar"),
 			PrivateZone: false,
 		},
-		ResourceRecordSetCount: PtrInt64(3),
+		ResourceRecordSetCount: new(int64(3)),
 		LinkedService: &types.LinkedService{
-			Description:      PtrString("service description"),
-			ServicePrincipal: PtrString("principal"),
+			Description:      new("service description"),
+			ServicePrincipal: new("principal"),
 		},
 	}
 

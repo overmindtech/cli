@@ -135,7 +135,7 @@ func (s *CertificateAdapter) Search(ctx context.Context, scope string, query str
 			continue
 		}
 
-		attributes, err = sdp.ToAttributes(map[string]interface{}{
+		attributes, err = sdp.ToAttributes(map[string]any{
 			"issuer":             cert.Issuer.String(),
 			"subject":            cert.Subject.String(),
 			"notBefore":          cert.NotBefore.String(),
@@ -149,7 +149,7 @@ func (s *CertificateAdapter) Search(ctx context.Context, scope string, query str
 			"keyUsage":         getKeyUsage(cert.KeyUsage),
 			"extendedKeyUsage": getExtendedKeyUsage(cert.ExtKeyUsage),
 			"version":          cert.Version,
-			"basicConstraints": map[string]interface{}{
+			"basicConstraints": map[string]any{
 				"CA":      cert.IsCA,
 				"pathLen": cert.MaxPathLen,
 			},

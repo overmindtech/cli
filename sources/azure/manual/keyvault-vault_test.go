@@ -5,7 +5,6 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault/v2"
 	"go.uber.org/mock/gomock"
 
@@ -184,7 +183,7 @@ func TestKeyVaultVault(t *testing.T) {
 		vault := &armkeyvault.Vault{
 			Name: nil, // No name field
 			Properties: &armkeyvault.VaultProperties{
-				TenantID: to.Ptr("test-tenant-id"),
+				TenantID: new("test-tenant-id"),
 			},
 		}
 
@@ -379,27 +378,27 @@ func TestKeyVaultVault(t *testing.T) {
 // createAzureKeyVault creates a mock Azure Key Vault with linked resources
 func createAzureKeyVault(vaultName, subscriptionID, resourceGroup string) *armkeyvault.Vault {
 	return &armkeyvault.Vault{
-		Name:     to.Ptr(vaultName),
-		Location: to.Ptr("eastus"),
+		Name:     new(vaultName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env":     to.Ptr("test"),
-			"project": to.Ptr("testing"),
+			"env":     new("test"),
+			"project": new("testing"),
 		},
 		Properties: &armkeyvault.VaultProperties{
-			TenantID: to.Ptr("test-tenant-id"),
+			TenantID: new("test-tenant-id"),
 			// Private Endpoint Connections
 			PrivateEndpointConnections: []*armkeyvault.PrivateEndpointConnectionItem{
 				{
 					Properties: &armkeyvault.PrivateEndpointConnectionProperties{
 						PrivateEndpoint: &armkeyvault.PrivateEndpoint{
-							ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/privateEndpoints/test-private-endpoint"),
+							ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/privateEndpoints/test-private-endpoint"),
 						},
 					},
 				},
 				{
 					Properties: &armkeyvault.PrivateEndpointConnectionProperties{
 						PrivateEndpoint: &armkeyvault.PrivateEndpoint{
-							ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/different-rg/providers/Microsoft.Network/privateEndpoints/test-private-endpoint-diff-rg"),
+							ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/different-rg/providers/Microsoft.Network/privateEndpoints/test-private-endpoint-diff-rg"),
 						},
 					},
 				},
@@ -408,21 +407,21 @@ func createAzureKeyVault(vaultName, subscriptionID, resourceGroup string) *armke
 			NetworkACLs: &armkeyvault.NetworkRuleSet{
 				VirtualNetworkRules: []*armkeyvault.VirtualNetworkRule{
 					{
-						ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/test-subnet"),
+						ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/test-subnet"),
 					},
 					{
-						ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/different-rg/providers/Microsoft.Network/virtualNetworks/test-vnet-diff-rg/subnets/test-subnet-diff-rg"),
+						ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/different-rg/providers/Microsoft.Network/virtualNetworks/test-vnet-diff-rg/subnets/test-subnet-diff-rg"),
 					},
 				},
 				IPRules: []*armkeyvault.IPRule{
-					{Value: to.Ptr("192.168.1.100")},
-					{Value: to.Ptr("10.0.0.0/24")},
+					{Value: new("192.168.1.100")},
+					{Value: new("10.0.0.0/24")},
 				},
 			},
 			// Vault URI for keys and secrets operations
-			VaultURI: to.Ptr("https://" + vaultName + ".vault.azure.net/"),
+			VaultURI: new("https://" + vaultName + ".vault.azure.net/"),
 			// Managed HSM Pool Resource ID
-			HsmPoolResourceID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/hsm-rg/providers/Microsoft.KeyVault/managedHSMs/test-managed-hsm"),
+			HsmPoolResourceID: new("/subscriptions/" + subscriptionID + "/resourceGroups/hsm-rg/providers/Microsoft.KeyVault/managedHSMs/test-managed-hsm"),
 		},
 	}
 }
@@ -430,13 +429,13 @@ func createAzureKeyVault(vaultName, subscriptionID, resourceGroup string) *armke
 // createAzureKeyVaultMinimal creates a minimal mock Azure Key Vault without linked resources
 func createAzureKeyVaultMinimal(vaultName string) *armkeyvault.Vault {
 	return &armkeyvault.Vault{
-		Name:     to.Ptr(vaultName),
-		Location: to.Ptr("eastus"),
+		Name:     new(vaultName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armkeyvault.VaultProperties{
-			TenantID: to.Ptr("test-tenant-id"),
+			TenantID: new("test-tenant-id"),
 		},
 	}
 }
@@ -444,19 +443,19 @@ func createAzureKeyVaultMinimal(vaultName string) *armkeyvault.Vault {
 // createAzureKeyVaultCrossRG creates a mock Azure Key Vault with linked resources in different resource groups
 func createAzureKeyVaultCrossRG(vaultName, subscriptionID, resourceGroup string) *armkeyvault.Vault {
 	return &armkeyvault.Vault{
-		Name:     to.Ptr(vaultName),
-		Location: to.Ptr("eastus"),
+		Name:     new(vaultName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armkeyvault.VaultProperties{
-			TenantID: to.Ptr("test-tenant-id"),
+			TenantID: new("test-tenant-id"),
 			// Private Endpoint in different resource group
 			PrivateEndpointConnections: []*armkeyvault.PrivateEndpointConnectionItem{
 				{
 					Properties: &armkeyvault.PrivateEndpointConnectionProperties{
 						PrivateEndpoint: &armkeyvault.PrivateEndpoint{
-							ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/different-rg/providers/Microsoft.Network/privateEndpoints/test-pe-diff-rg"),
+							ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/different-rg/providers/Microsoft.Network/privateEndpoints/test-pe-diff-rg"),
 						},
 					},
 				},
@@ -465,12 +464,12 @@ func createAzureKeyVaultCrossRG(vaultName, subscriptionID, resourceGroup string)
 			NetworkACLs: &armkeyvault.NetworkRuleSet{
 				VirtualNetworkRules: []*armkeyvault.VirtualNetworkRule{
 					{
-						ID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/different-rg/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/test-subnet"),
+						ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/different-rg/providers/Microsoft.Network/virtualNetworks/test-vnet/subnets/test-subnet"),
 					},
 				},
 			},
 			// Managed HSM in different resource group
-			HsmPoolResourceID: to.Ptr("/subscriptions/" + subscriptionID + "/resourceGroups/hsm-rg/providers/Microsoft.KeyVault/managedHSMs/test-managed-hsm"),
+			HsmPoolResourceID: new("/subscriptions/" + subscriptionID + "/resourceGroups/hsm-rg/providers/Microsoft.KeyVault/managedHSMs/test-managed-hsm"),
 		},
 	}
 }

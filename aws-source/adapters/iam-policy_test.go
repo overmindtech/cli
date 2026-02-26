@@ -17,16 +17,16 @@ import (
 func (t *TestIAMClient) GetPolicy(ctx context.Context, params *iam.GetPolicyInput, optFns ...func(*iam.Options)) (*iam.GetPolicyOutput, error) {
 	return &iam.GetPolicyOutput{
 		Policy: &types.Policy{
-			PolicyName:                    PtrString("AWSControlTowerStackSetRolePolicy"),
-			PolicyId:                      PtrString("ANPA3VLV2U277MP54R2OV"),
-			Arn:                           PtrString("arn:aws:iam::801795385023:policy/service-role/AWSControlTowerStackSetRolePolicy"),
-			Path:                          PtrString("/service-role/"),
-			DefaultVersionId:              PtrString("v1"),
-			AttachmentCount:               PtrInt32(1),
-			PermissionsBoundaryUsageCount: PtrInt32(0),
+			PolicyName:                    new("AWSControlTowerStackSetRolePolicy"),
+			PolicyId:                      new("ANPA3VLV2U277MP54R2OV"),
+			Arn:                           new("arn:aws:iam::801795385023:policy/service-role/AWSControlTowerStackSetRolePolicy"),
+			Path:                          new("/service-role/"),
+			DefaultVersionId:              new("v1"),
+			AttachmentCount:               new(int32(1)),
+			PermissionsBoundaryUsageCount: new(int32(0)),
 			IsAttachable:                  true,
-			CreateDate:                    PtrTime(time.Now()),
-			UpdateDate:                    PtrTime(time.Now()),
+			CreateDate:                    new(time.Now()),
+			UpdateDate:                    new(time.Now()),
 		},
 	}, nil
 }
@@ -35,20 +35,20 @@ func (t *TestIAMClient) ListEntitiesForPolicy(context.Context, *iam.ListEntities
 	return &iam.ListEntitiesForPolicyOutput{
 		PolicyGroups: []types.PolicyGroup{
 			{
-				GroupId:   PtrString("groupId"),
-				GroupName: PtrString("groupName"),
+				GroupId:   new("groupId"),
+				GroupName: new("groupName"),
 			},
 		},
 		PolicyRoles: []types.PolicyRole{
 			{
-				RoleId:   PtrString("roleId"),
-				RoleName: PtrString("roleName"),
+				RoleId:   new("roleId"),
+				RoleName: new("roleName"),
 			},
 		},
 		PolicyUsers: []types.PolicyUser{
 			{
-				UserId:   PtrString("userId"),
-				UserName: PtrString("userName"),
+				UserId:   new("userId"),
+				UserName: new("userName"),
 			},
 		},
 	}, nil
@@ -58,28 +58,28 @@ func (t *TestIAMClient) ListPolicies(context.Context, *iam.ListPoliciesInput, ..
 	return &iam.ListPoliciesOutput{
 		Policies: []types.Policy{
 			{
-				PolicyName:                    PtrString("AWSControlTowerAdminPolicy"),
-				PolicyId:                      PtrString("ANPA3VLV2U2745H37HTHN"),
-				Arn:                           PtrString("arn:aws:iam::801795385023:policy/service-role/AWSControlTowerAdminPolicy"),
-				Path:                          PtrString("/service-role/"),
-				DefaultVersionId:              PtrString("v1"),
-				AttachmentCount:               PtrInt32(1),
-				PermissionsBoundaryUsageCount: PtrInt32(0),
+				PolicyName:                    new("AWSControlTowerAdminPolicy"),
+				PolicyId:                      new("ANPA3VLV2U2745H37HTHN"),
+				Arn:                           new("arn:aws:iam::801795385023:policy/service-role/AWSControlTowerAdminPolicy"),
+				Path:                          new("/service-role/"),
+				DefaultVersionId:              new("v1"),
+				AttachmentCount:               new(int32(1)),
+				PermissionsBoundaryUsageCount: new(int32(0)),
 				IsAttachable:                  true,
-				CreateDate:                    PtrTime(time.Now()),
-				UpdateDate:                    PtrTime(time.Now()),
+				CreateDate:                    new(time.Now()),
+				UpdateDate:                    new(time.Now()),
 			},
 			{
-				PolicyName:                    PtrString("AWSControlTowerCloudTrailRolePolicy"),
-				PolicyId:                      PtrString("ANPA3VLV2U27UOP7KSM6I"),
-				Arn:                           PtrString("arn:aws:iam::801795385023:policy/service-role/AWSControlTowerCloudTrailRolePolicy"),
-				Path:                          PtrString("/service-role/"),
-				DefaultVersionId:              PtrString("v1"),
-				AttachmentCount:               PtrInt32(1),
-				PermissionsBoundaryUsageCount: PtrInt32(0),
+				PolicyName:                    new("AWSControlTowerCloudTrailRolePolicy"),
+				PolicyId:                      new("ANPA3VLV2U27UOP7KSM6I"),
+				Arn:                           new("arn:aws:iam::801795385023:policy/service-role/AWSControlTowerCloudTrailRolePolicy"),
+				Path:                          new("/service-role/"),
+				DefaultVersionId:              new("v1"),
+				AttachmentCount:               new(int32(1)),
+				PermissionsBoundaryUsageCount: new(int32(0)),
 				IsAttachable:                  true,
-				CreateDate:                    PtrTime(time.Now()),
-				UpdateDate:                    PtrTime(time.Now()),
+				CreateDate:                    new(time.Now()),
+				UpdateDate:                    new(time.Now()),
 			},
 		},
 	}, nil
@@ -89,8 +89,8 @@ func (t *TestIAMClient) ListPolicyTags(ctx context.Context, params *iam.ListPoli
 	return &iam.ListPolicyTagsOutput{
 		Tags: []types.Tag{
 			{
-				Key:   PtrString("foo"),
-				Value: PtrString("foo"),
+				Key:   new("foo"),
+				Value: new("foo"),
 			},
 		},
 	}, nil
@@ -208,7 +208,7 @@ func TestPolicyGetFunc(t *testing.T) {
 func TestPolicyListTagsFunc(t *testing.T) {
 	tags, err := policyListTagsFunc(context.Background(), &PolicyDetails{
 		Policy: &types.Policy{
-			Arn: PtrString("arn:aws:iam::801795385023:policy/service-role/AWSControlTowerAdminPolicy"),
+			Arn: new("arn:aws:iam::801795385023:policy/service-role/AWSControlTowerAdminPolicy"),
 		},
 	}, &TestIAMClient{})
 	if err != nil {
@@ -223,33 +223,33 @@ func TestPolicyListTagsFunc(t *testing.T) {
 func TestPolicyItemMapper(t *testing.T) {
 	details := &PolicyDetails{
 		Policy: &types.Policy{
-			PolicyName:                    PtrString("AWSControlTowerAdminPolicy"),
-			PolicyId:                      PtrString("ANPA3VLV2U2745H37HTHN"),
-			Arn:                           PtrString("arn:aws:iam::801795385023:policy/service-role/AWSControlTowerAdminPolicy"),
-			Path:                          PtrString("/service-role/"),
-			DefaultVersionId:              PtrString("v1"),
-			AttachmentCount:               PtrInt32(1),
-			PermissionsBoundaryUsageCount: PtrInt32(0),
+			PolicyName:                    new("AWSControlTowerAdminPolicy"),
+			PolicyId:                      new("ANPA3VLV2U2745H37HTHN"),
+			Arn:                           new("arn:aws:iam::801795385023:policy/service-role/AWSControlTowerAdminPolicy"),
+			Path:                          new("/service-role/"),
+			DefaultVersionId:              new("v1"),
+			AttachmentCount:               new(int32(1)),
+			PermissionsBoundaryUsageCount: new(int32(0)),
 			IsAttachable:                  true,
-			CreateDate:                    PtrTime(time.Now()),
-			UpdateDate:                    PtrTime(time.Now()),
+			CreateDate:                    new(time.Now()),
+			UpdateDate:                    new(time.Now()),
 		},
 		PolicyGroups: []types.PolicyGroup{
 			{
-				GroupId:   PtrString("groupId"),
-				GroupName: PtrString("groupName"),
+				GroupId:   new("groupId"),
+				GroupName: new("groupName"),
 			},
 		},
 		PolicyRoles: []types.PolicyRole{
 			{
-				RoleId:   PtrString("roleId"),
-				RoleName: PtrString("roleName"),
+				RoleId:   new("roleId"),
+				RoleName: new("roleName"),
 			},
 		},
 		PolicyUsers: []types.PolicyUser{
 			{
-				UserId:   PtrString("userId"),
-				UserName: PtrString("userName"),
+				UserId:   new("userId"),
+				UserName: new("userName"),
 			},
 		},
 	}

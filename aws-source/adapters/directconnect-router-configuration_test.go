@@ -13,17 +13,17 @@ import (
 
 func TestRouterConfigurationOutputMapper(t *testing.T) {
 	output := &directconnect.DescribeRouterConfigurationOutput{
-		CustomerRouterConfig: PtrString("some config"),
+		CustomerRouterConfig: new("some config"),
 		Router: &types.RouterType{
-			Platform:                  PtrString("2900 Series Routers"),
-			RouterTypeIdentifier:      PtrString("CiscoSystemsInc-2900SeriesRouters-IOS124"),
-			Software:                  PtrString("IOS 12.4+"),
-			Vendor:                    PtrString("Cisco Systems, Inc."),
-			XsltTemplateName:          PtrString("customer-router-cisco-generic.xslt"),
-			XsltTemplateNameForMacSec: PtrString(""),
+			Platform:                  new("2900 Series Routers"),
+			RouterTypeIdentifier:      new("CiscoSystemsInc-2900SeriesRouters-IOS124"),
+			Software:                  new("IOS 12.4+"),
+			Vendor:                    new("Cisco Systems, Inc."),
+			XsltTemplateName:          new("customer-router-cisco-generic.xslt"),
+			XsltTemplateNameForMacSec: new(""),
 		},
-		VirtualInterfaceId:   PtrString("dxvif-ffhhk74f"),
-		VirtualInterfaceName: PtrString("PrivateVirtualInterface"),
+		VirtualInterfaceId:   new("dxvif-ffhhk74f"),
+		VirtualInterfaceName: new("PrivateVirtualInterface"),
 	}
 
 	items, err := routerConfigurationOutputMapper(context.Background(), nil, "foo", nil, output)

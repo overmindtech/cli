@@ -56,7 +56,7 @@ func parseRouteQuery(query string) (routeTableID, destination string, err error)
 // searchRoutesFilter returns a filter that returns all routes (active and blackhole).
 func searchRoutesFilter() []types.Filter {
 	return []types.Filter{
-		{Name: PtrString("state"), Values: []string{"active", "blackhole"}},
+		{Name: new("state"), Values: []string{"active", "blackhole"}},
 	}
 }
 
@@ -72,7 +72,7 @@ func getTransitGatewayRoute(ctx context.Context, client *ec2.Client, _, query st
 	out, err := client.SearchTransitGatewayRoutes(ctx, &ec2.SearchTransitGatewayRoutesInput{
 		TransitGatewayRouteTableId: &routeTableID,
 		Filters:                    searchRoutesFilter(),
-		MaxResults:                 PtrInt32(maxSearchRoutesResults),
+		MaxResults:                 new(int32(maxSearchRoutesResults)),
 	})
 	if err != nil {
 		return nil, err
@@ -112,7 +112,7 @@ func listTransitGatewayRoutes(ctx context.Context, client *ec2.Client, _ string)
 			routeOut, err := client.SearchTransitGatewayRoutes(ctx, &ec2.SearchTransitGatewayRoutesInput{
 				TransitGatewayRouteTableId: &rtID,
 				Filters:                    searchRoutesFilter(),
-				MaxResults:                 PtrInt32(maxSearchRoutesResults),
+				MaxResults:                 new(int32(maxSearchRoutesResults)),
 			})
 			if err != nil {
 				return nil, err
@@ -135,7 +135,7 @@ func searchTransitGatewayRoutes(ctx context.Context, client *ec2.Client, _, quer
 	routeOut, err := client.SearchTransitGatewayRoutes(ctx, &ec2.SearchTransitGatewayRoutesInput{
 		TransitGatewayRouteTableId: &routeTableID,
 		Filters:                    searchRoutesFilter(),
-		MaxResults:                 PtrInt32(maxSearchRoutesResults),
+		MaxResults:                 new(int32(maxSearchRoutesResults)),
 	})
 	if err != nil {
 		return nil, err
@@ -285,11 +285,11 @@ var transitGatewayRouteAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:            "ec2-transit-gateway-route",
 	DescriptiveName: "Transit Gateway Route",
 	SupportedQueryMethods: &sdp.AdapterSupportedQueryMethods{
-		Get:             true,
-		List:            true,
-		Search:          true,
-		GetDescription:  "Get by TransitGatewayRouteTableId|Destination (CIDR or pl:PrefixListId)",
-		ListDescription: "List all transit gateway routes",
+		Get:               true,
+		List:              true,
+		Search:            true,
+		GetDescription:    "Get by TransitGatewayRouteTableId|Destination (CIDR or pl:PrefixListId)",
+		ListDescription:   "List all transit gateway routes",
 		SearchDescription: "Search by TransitGatewayRouteTableId to list routes for that route table",
 	},
 	PotentialLinks: []string{"ec2-transit-gateway", "ec2-transit-gateway-route-table", "ec2-transit-gateway-route-table-association", "ec2-transit-gateway-attachment", "ec2-transit-gateway-route-table-announcement", "ec2-vpc", "ec2-vpn-connection", "ec2-managed-prefix-list", "directconnect-direct-connect-gateway"},

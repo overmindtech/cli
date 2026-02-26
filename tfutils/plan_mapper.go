@@ -12,10 +12,10 @@ import (
 	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
 	awsAdapters "github.com/overmindtech/cli/aws-source/adapters"
-	k8sAdapters "github.com/overmindtech/cli/k8s-source/adapters"
 	"github.com/overmindtech/cli/go/sdp-go"
-	gcpAdapters "github.com/overmindtech/cli/sources/gcp/proc"
+	k8sAdapters "github.com/overmindtech/cli/k8s-source/adapters"
 	azureAdapters "github.com/overmindtech/cli/sources/azure/proc"
+	gcpAdapters "github.com/overmindtech/cli/sources/gcp/proc"
 	log "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
@@ -385,7 +385,7 @@ func mapResourceToQuery(itemDiff *sdp.ItemDiff, terraformResource *Resource, map
 // isJSONPlanFile checks if the supplied bytes are valid JSON that could be a plan file.
 // This is used to determine if we need to convert a binary plan or if it's already JSON.
 func isJSONPlanFile(bytes []byte) bool {
-	var jsonValue interface{}
+	var jsonValue any
 
 	err := json.Unmarshal(bytes, &jsonValue)
 	if err != nil {
@@ -400,7 +400,7 @@ func isJSONPlanFile(bytes []byte) bool {
 // pass a state file to Overmind rather than a plan file since the commands to
 // create them are similar
 func isStateFile(bytes []byte) bool {
-	fields := make(map[string]interface{})
+	fields := make(map[string]any)
 
 	err := json.Unmarshal(bytes, &fields)
 	if err != nil {
@@ -651,7 +651,7 @@ func maskSensitiveData(attributes, sensitive any) any {
 // Finds fields from the `before` and `after` attributes that are known after
 // apply and replaces the "after" value with the string "(known after apply)"
 func handleKnownAfterApply(before, after *sdp.ItemAttributes, afterUnknown json.RawMessage) error {
-	var afterUnknownInterface interface{}
+	var afterUnknownInterface any
 	err := json.Unmarshal(afterUnknown, &afterUnknownInterface)
 	if err != nil {
 		return fmt.Errorf("could not unmarshal `after_unknown` from plan: %w", err)
@@ -684,9 +684,9 @@ func handleKnownAfterApply(before, after *sdp.ItemAttributes, afterUnknown json.
 // "after" values for fields that are known after apply. By default these are
 // `null` which produces a bad diff, so we replace them with (known after apply)
 // to more accurately mirror what Terraform does in the CLI
-func insertKnownAfterApply(before, after *structpb.Value, afterUnknown interface{}) error {
+func insertKnownAfterApply(before, after *structpb.Value, afterUnknown any) error {
 	switch afterUnknown := afterUnknown.(type) {
-	case map[string]interface{}:
+	case map[string]any:
 		for k, v := range afterUnknown {
 			if v == true {
 				if afterFields := after.GetStructValue().GetFields(); afterFields != nil {
@@ -711,7 +711,7 @@ func insertKnownAfterApply(before, after *structpb.Value, afterUnknown interface
 				}
 			}
 		}
-	case []interface{}:
+	case []any:
 		for i, v := range afterUnknown {
 			if v == true {
 				// If this value in a slice is true, set the corresponding value

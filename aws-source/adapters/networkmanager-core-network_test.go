@@ -13,21 +13,21 @@ import (
 func (n NetworkManagerTestClient) GetCoreNetwork(ctx context.Context, params *networkmanager.GetCoreNetworkInput, optFns ...func(*networkmanager.Options)) (*networkmanager.GetCoreNetworkOutput, error) {
 	return &networkmanager.GetCoreNetworkOutput{
 		CoreNetwork: &types.CoreNetwork{
-			CoreNetworkArn:  PtrString("arn:aws:networkmanager:us-west-2:123456789012:core-network/cn-1"),
-			CoreNetworkId:   PtrString("cn-1"),
-			GlobalNetworkId: PtrString("default"),
-			Description:     PtrString("core network description"),
+			CoreNetworkArn:  new("arn:aws:networkmanager:us-west-2:123456789012:core-network/cn-1"),
+			CoreNetworkId:   new("cn-1"),
+			GlobalNetworkId: new("default"),
+			Description:     new("core network description"),
 			State:           types.CoreNetworkStateAvailable,
 			Edges: []types.CoreNetworkEdge{
 				{
-					Asn:          PtrInt64(64512), // link
-					EdgeLocation: PtrString("us-west-2"),
+					Asn:          new(int64(64512)), // link
+					EdgeLocation: new("us-west-2"),
 				},
 			},
 			Segments: []types.CoreNetworkSegment{
 				{
 					EdgeLocations: []string{"us-west-2"},
-					Name:          PtrString("segment-1"),
+					Name:          new("segment-1"),
 				},
 			},
 		},

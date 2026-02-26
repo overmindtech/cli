@@ -10,7 +10,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/api/iterator"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -382,11 +381,11 @@ func TestComputeAddress(t *testing.T) {
 
 func createComputeAddress(addressName string) *computepb.Address {
 	return &computepb.Address{
-		Name:       ptr.To(addressName),
+		Name:       new(addressName),
 		Labels:     map[string]string{"env": "test"},
-		Network:    ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/global/networks/network"),
-		Subnetwork: ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/subnetworks/default"),
-		Address:    ptr.To("192.168.1.3"),
+		Network:    new("https://www.googleapis.com/compute/v1/projects/test-project-id/global/networks/network"),
+		Subnetwork: new("https://www.googleapis.com/compute/v1/projects/test-project-id/regions/us-central1/subnetworks/default"),
+		Address:    new("192.168.1.3"),
 	}
 }
 
@@ -398,6 +397,6 @@ func createComputeAddressWithUsers(addressName string, users []string) *computep
 
 func createComputeAddressWithIPCollection(addressName string, ipCollection string) *computepb.Address {
 	addr := createComputeAddress(addressName)
-	addr.IpCollection = ptr.To(ipCollection)
+	addr.IpCollection = new(ipCollection)
 	return addr
 }

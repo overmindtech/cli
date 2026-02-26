@@ -99,7 +99,7 @@ func (s *RdapASNAdapter) Get(ctx context.Context, scope string, query string, ig
 		return nil, fmt.Errorf("Unexpected response type: %T", response.Object)
 	}
 
-	attributes, err := sdp.ToAttributesCustom(map[string]interface{}{
+	attributes, err := sdp.ToAttributesCustom(map[string]any{
 		"conformance":     asn.Conformance,
 		"objectClassName": asn.ObjectClassName,
 		"notices":         asn.Notices,

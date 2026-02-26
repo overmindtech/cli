@@ -5,9 +5,9 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"slices"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/azcore/to"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dns/armdns"
 	"go.uber.org/mock/gomock"
 
@@ -121,7 +121,7 @@ func TestNetworkZone(t *testing.T) {
 		// Let's test with a zone that has nil name which will cause an error
 		zoneWithNilName := &armdns.Zone{
 			Name:       nil,
-			Location:   to.Ptr("eastus"),
+			Location:   new("eastus"),
 			Properties: &armdns.ZoneProperties{},
 		}
 
@@ -231,9 +231,9 @@ func TestNetworkZone(t *testing.T) {
 		zone1 := createAzureZone("example.com", subscriptionID, resourceGroup)
 		zone2 := &armdns.Zone{
 			Name:     nil, // Zone with nil name should be skipped
-			Location: to.Ptr("eastus"),
+			Location: new("eastus"),
 			Tags: map[string]*string{
-				"env": to.Ptr("test"),
+				"env": new("test"),
 			},
 			Properties: &armdns.ZoneProperties{},
 		}
@@ -339,13 +339,7 @@ func TestNetworkZone(t *testing.T) {
 			t.Error("Expected IAMPermissions to return at least one permission")
 		}
 		expectedPermission := "Microsoft.Network/dnszones/read"
-		found := false
-		for _, perm := range permissions {
-			if perm == expectedPermission {
-				found = true
-				break
-			}
-		}
+		found := slices.Contains(permissions, expectedPermission)
 		if !found {
 			t.Errorf("Expected IAMPermissions to include %s", expectedPermission)
 		}
@@ -405,15 +399,15 @@ func TestNetworkZone(t *testing.T) {
 		// Test zone without virtual networks
 		zoneName := "example.com"
 		zone := &armdns.Zone{
-			Name:     to.Ptr(zoneName),
-			Location: to.Ptr("eastus"),
+			Name:     new(zoneName),
+			Location: new("eastus"),
 			Tags: map[string]*string{
-				"env": to.Ptr("test"),
+				"env": new("test"),
 			},
 			Properties: &armdns.ZoneProperties{
 				NameServers: []*string{
-					to.Ptr("ns1.example.com"),
-					to.Ptr("ns2.example.com"),
+					new("ns1.example.com"),
+					new("ns2.example.com"),
 				},
 			},
 		}
@@ -481,7 +475,7 @@ func (m *MockZonesPager) More() bool {
 
 func (mr *MockZonesPagerMockRecorder) More() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "More", reflect.TypeOf((*MockZonesPager)(nil).More))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "More", reflect.TypeFor[func() bool]())
 }
 
 func (m *MockZonesPager) NextPage(ctx context.Context) (armdns.ZonesClientListByResourceGroupResponse, error) {
@@ -492,9 +486,9 @@ func (m *MockZonesPager) NextPage(ctx context.Context) (armdns.ZonesClientListBy
 	return ret0, ret1
 }
 
-func (mr *MockZonesPagerMockRecorder) NextPage(ctx interface{}) *gomock.Call {
+func (mr *MockZonesPagerMockRecorder) NextPage(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NextPage", reflect.TypeOf((*MockZonesPager)(nil).NextPage), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NextPage", reflect.TypeFor[func(ctx context.Context) (armdns.ZonesClientListByResourceGroupResponse, error)](), ctx)
 }
 
 // createAzureZone creates a mock Azure DNS zone for testing with all linked resources
@@ -503,27 +497,27 @@ func createAzureZone(zoneName, subscriptionID, resourceGroup string) *armdns.Zon
 	resolutionVNetID := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/virtualNetworks/test-res-vnet", subscriptionID, resourceGroup)
 
 	return &armdns.Zone{
-		Name:     to.Ptr(zoneName),
-		Location: to.Ptr("eastus"),
+		Name:     new(zoneName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env":     to.Ptr("test"),
-			"project": to.Ptr("testing"),
+			"env":     new("test"),
+			"project": new("testing"),
 		},
 		Properties: &armdns.ZoneProperties{
-			MaxNumberOfRecordSets: to.Ptr(int64(5000)),
-			NumberOfRecordSets:    to.Ptr(int64(10)),
+			MaxNumberOfRecordSets: new(int64(5000)),
+			NumberOfRecordSets:    new(int64(10)),
 			NameServers: []*string{
-				to.Ptr("ns1.example.com"),
-				to.Ptr("ns2.example.com"),
+				new("ns1.example.com"),
+				new("ns2.example.com"),
 			},
 			RegistrationVirtualNetworks: []*armdns.SubResource{
 				{
-					ID: to.Ptr(registrationVNetID),
+					ID: new(registrationVNetID),
 				},
 			},
 			ResolutionVirtualNetworks: []*armdns.SubResource{
 				{
-					ID: to.Ptr(resolutionVNetID),
+					ID: new(resolutionVNetID),
 				},
 			},
 		},
@@ -535,20 +529,20 @@ func createAzureZoneWithDifferentScopeVNet(zoneName, subscriptionID, resourceGro
 	registrationVNetID := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/virtualNetworks/test-reg-vnet", otherSubscriptionID, otherResourceGroup)
 
 	return &armdns.Zone{
-		Name:     to.Ptr(zoneName),
-		Location: to.Ptr("eastus"),
+		Name:     new(zoneName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env": to.Ptr("test"),
+			"env": new("test"),
 		},
 		Properties: &armdns.ZoneProperties{
-			MaxNumberOfRecordSets: to.Ptr(int64(5000)),
-			NumberOfRecordSets:    to.Ptr(int64(10)),
+			MaxNumberOfRecordSets: new(int64(5000)),
+			NumberOfRecordSets:    new(int64(10)),
 			NameServers: []*string{
-				to.Ptr("ns1.example.com"),
+				new("ns1.example.com"),
 			},
 			RegistrationVirtualNetworks: []*armdns.SubResource{
 				{
-					ID: to.Ptr(registrationVNetID),
+					ID: new(registrationVNetID),
 				},
 			},
 		},

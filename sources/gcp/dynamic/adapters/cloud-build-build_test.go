@@ -114,7 +114,7 @@ func TestCloudBuildBuild(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://cloudbuild.googleapis.com/v1/projects/%s/builds/%s", projectID, buildID): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Build not found"},
+				Body:       map[string]any{"error": "Build not found"},
 			},
 		}
 

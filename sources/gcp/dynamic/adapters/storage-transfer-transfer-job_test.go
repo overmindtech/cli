@@ -234,7 +234,7 @@ func TestStorageTransferTransferJob(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://storagetransfer.googleapis.com/v1/transferJobs/%s?projectId=%s", jobID, projectID): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Transfer job not found"},
+				Body:       map[string]any{"error": "Transfer job not found"},
 			},
 		}
 

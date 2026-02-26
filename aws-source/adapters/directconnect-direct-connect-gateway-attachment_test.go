@@ -15,10 +15,10 @@ func TestDirectConnectGatewayAttachmentOutputMapper_Health_OK(t *testing.T) {
 	output := &directconnect.DescribeDirectConnectGatewayAttachmentsOutput{
 		DirectConnectGatewayAttachments: []types.DirectConnectGatewayAttachment{
 			{
-				VirtualInterfaceOwnerAccount: PtrString("123456789012"),
-				VirtualInterfaceRegion:       PtrString("us-east-2"),
-				VirtualInterfaceId:           PtrString("dxvif-ffhhk74f"),
-				DirectConnectGatewayId:       PtrString("cf68415c-f4ae-48f2-87a7-3b52cexample"),
+				VirtualInterfaceOwnerAccount: new("123456789012"),
+				VirtualInterfaceRegion:       new("us-east-2"),
+				VirtualInterfaceId:           new("dxvif-ffhhk74f"),
+				DirectConnectGatewayId:       new("cf68415c-f4ae-48f2-87a7-3b52cexample"),
 				AttachmentState:              "detaching",
 			},
 		},
@@ -67,12 +67,12 @@ func TestDirectConnectGatewayAttachmentOutputMapper_Health_Error(t *testing.T) {
 	output := &directconnect.DescribeDirectConnectGatewayAttachmentsOutput{
 		DirectConnectGatewayAttachments: []types.DirectConnectGatewayAttachment{
 			{
-				VirtualInterfaceOwnerAccount: PtrString("123456789012"),
-				VirtualInterfaceRegion:       PtrString("us-east-2"),
-				VirtualInterfaceId:           PtrString("dxvif-ffhhk74f"),
-				DirectConnectGatewayId:       PtrString("cf68415c-f4ae-48f2-87a7-3b52cexample"),
+				VirtualInterfaceOwnerAccount: new("123456789012"),
+				VirtualInterfaceRegion:       new("us-east-2"),
+				VirtualInterfaceId:           new("dxvif-ffhhk74f"),
+				DirectConnectGatewayId:       new("cf68415c-f4ae-48f2-87a7-3b52cexample"),
 				AttachmentState:              "detaching",
-				StateChangeError:             PtrString("error"),
+				StateChangeError:             new("error"),
 			},
 		},
 	}

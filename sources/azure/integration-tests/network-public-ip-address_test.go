@@ -13,7 +13,6 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	log "github.com/sirupsen/logrus"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -296,22 +295,22 @@ func createVirtualNetworkForPIP(ctx context.Context, client *armnetwork.VirtualN
 
 	// Create the VNet
 	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroupName, vnetName, armnetwork.VirtualNetwork{
-		Location: ptr.To(location),
+		Location: new(location),
 		Properties: &armnetwork.VirtualNetworkPropertiesFormat{
 			AddressSpace: &armnetwork.AddressSpace{
-				AddressPrefixes: []*string{ptr.To("10.2.0.0/16")},
+				AddressPrefixes: []*string{new("10.2.0.0/16")},
 			},
 			Subnets: []*armnetwork.Subnet{
 				{
-					Name: ptr.To(integrationTestSubnetNameForPIP),
+					Name: new(integrationTestSubnetNameForPIP),
 					Properties: &armnetwork.SubnetPropertiesFormat{
-						AddressPrefix: ptr.To("10.2.0.0/24"),
+						AddressPrefix: new("10.2.0.0/24"),
 					},
 				},
 			},
 		},
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
+			"purpose": new("overmind-integration-tests"),
 		},
 	}, nil)
 	if err != nil {
@@ -359,17 +358,17 @@ func createPublicIPAddress(ctx context.Context, client *armnetwork.PublicIPAddre
 
 	// Create the public IP address
 	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroupName, publicIPName, armnetwork.PublicIPAddress{
-		Location: ptr.To(location),
+		Location: new(location),
 		Properties: &armnetwork.PublicIPAddressPropertiesFormat{
-			PublicIPAddressVersion:   ptr.To(armnetwork.IPVersionIPv4),
-			PublicIPAllocationMethod: ptr.To(armnetwork.IPAllocationMethodStatic),
+			PublicIPAddressVersion:   new(armnetwork.IPVersionIPv4),
+			PublicIPAllocationMethod: new(armnetwork.IPAllocationMethodStatic),
 		},
 		SKU: &armnetwork.PublicIPAddressSKU{
-			Name: ptr.To(armnetwork.PublicIPAddressSKUNameStandard),
+			Name: new(armnetwork.PublicIPAddressSKUNameStandard),
 		},
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
-			"test":    ptr.To("network-public-ip-address"),
+			"purpose": new("overmind-integration-tests"),
+			"test":    new("network-public-ip-address"),
 		},
 	}, nil)
 	if err != nil {
@@ -463,26 +462,26 @@ func createNetworkInterfaceWithPublicIP(ctx context.Context, client *armnetwork.
 
 	// Create the NIC
 	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroupName, nicName, armnetwork.Interface{
-		Location: ptr.To(location),
+		Location: new(location),
 		Properties: &armnetwork.InterfacePropertiesFormat{
 			IPConfigurations: []*armnetwork.InterfaceIPConfiguration{
 				{
-					Name: ptr.To("ipconfig1"),
+					Name: new("ipconfig1"),
 					Properties: &armnetwork.InterfaceIPConfigurationPropertiesFormat{
 						Subnet: &armnetwork.Subnet{
-							ID: ptr.To(subnetID),
+							ID: new(subnetID),
 						},
 						PublicIPAddress: &armnetwork.PublicIPAddress{
-							ID: ptr.To(publicIPID),
+							ID: new(publicIPID),
 						},
-						PrivateIPAllocationMethod: ptr.To(armnetwork.IPAllocationMethodDynamic),
+						PrivateIPAllocationMethod: new(armnetwork.IPAllocationMethodDynamic),
 					},
 				},
 			},
 		},
 		Tags: map[string]*string{
-			"purpose": ptr.To("overmind-integration-tests"),
-			"test":    ptr.To("network-public-ip-address"),
+			"purpose": new("overmind-integration-tests"),
+			"test":    new("network-public-ip-address"),
 		},
 	}, nil)
 	if err != nil {

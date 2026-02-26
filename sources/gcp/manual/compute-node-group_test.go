@@ -10,7 +10,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/api/iterator"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -453,8 +452,8 @@ func TestComputeNodeGroup(t *testing.T) {
 
 func createComputeNodeGroup(name, templateUrl string, status computepb.NodeGroup_Status) *computepb.NodeGroup {
 	return &computepb.NodeGroup{
-		Name:         ptr.To(name),
-		NodeTemplate: ptr.To(templateUrl),
-		Status:       ptr.To(status.String()),
+		Name:         new(name),
+		NodeTemplate: new(templateUrl),
+		Status:       new(status.String()),
 	}
 }

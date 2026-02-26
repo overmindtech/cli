@@ -24,11 +24,11 @@ func TestTransitGatewayConnectPeerAssociationsOutputMapper(t *testing.T) {
 			out: networkmanager.GetTransitGatewayConnectPeerAssociationsOutput{
 				TransitGatewayConnectPeerAssociations: []types.TransitGatewayConnectPeerAssociation{
 					{
-						GlobalNetworkId:              PtrString("default"),
-						TransitGatewayConnectPeerArn: PtrString("arn:aws:ec2:us-west-2:123456789012:transit-gateway-connect-peer-association/tgw-1234"),
+						GlobalNetworkId:              new("default"),
+						TransitGatewayConnectPeerArn: new("arn:aws:ec2:us-west-2:123456789012:transit-gateway-connect-peer-association/tgw-1234"),
 						State:                        types.TransitGatewayConnectPeerAssociationStateAvailable,
-						DeviceId:                     PtrString("device-1"),
-						LinkId:                       PtrString("link-1"),
+						DeviceId:                     new("device-1"),
+						LinkId:                       new("link-1"),
 					},
 				},
 			},

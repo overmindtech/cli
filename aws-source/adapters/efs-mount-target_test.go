@@ -14,16 +14,16 @@ func TestMountTargetOutputMapper(t *testing.T) {
 	output := &efs.DescribeMountTargetsOutput{
 		MountTargets: []types.MountTargetDescription{
 			{
-				FileSystemId:         PtrString("fs-1234567890"),
+				FileSystemId:         new("fs-1234567890"),
 				LifeCycleState:       types.LifeCycleStateAvailable,
-				MountTargetId:        PtrString("fsmt-01e86506d8165e43f"),
-				SubnetId:             PtrString("subnet-1234567"),
-				AvailabilityZoneId:   PtrString("use1-az1"),
-				AvailabilityZoneName: PtrString("us-east-1"),
-				IpAddress:            PtrString("10.230.43.1"),
-				NetworkInterfaceId:   PtrString("eni-2345"),
-				OwnerId:              PtrString("234234"),
-				VpcId:                PtrString("vpc-23452345235"),
+				MountTargetId:        new("fsmt-01e86506d8165e43f"),
+				SubnetId:             new("subnet-1234567"),
+				AvailabilityZoneId:   new("use1-az1"),
+				AvailabilityZoneName: new("us-east-1"),
+				IpAddress:            new("10.230.43.1"),
+				NetworkInterfaceId:   new("eni-2345"),
+				OwnerId:              new("234234"),
+				VpcId:                new("vpc-23452345235"),
 			},
 		},
 	}

@@ -110,7 +110,7 @@ func TestStorageBucket(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://storage.googleapis.com/storage/v1/b/%s", bucketName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Bucket not found"},
+				Body:       map[string]any{"error": "Bucket not found"},
 			},
 		}
 

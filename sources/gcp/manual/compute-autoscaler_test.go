@@ -9,7 +9,6 @@ import (
 	"cloud.google.com/go/compute/apiv1/computepb"
 	"go.uber.org/mock/gomock"
 	"google.golang.org/api/iterator"
-	"k8s.io/utils/ptr"
 
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
@@ -256,15 +255,15 @@ func TestComputeAutoscalerWrapper(t *testing.T) {
 // Create an autoscaler fixture (as returned from GCP API).
 func createAutoscalerApiFixture(autoscalerName string) *computepb.Autoscaler {
 	return &computepb.Autoscaler{
-		Name:   ptr.To(autoscalerName),
-		Target: ptr.To("https://www.googleapis.com/compute/v1/projects/test-project-id/zones/us-central1-a/instanceGroupManagers/test-instance-group"),
+		Name:   new(autoscalerName),
+		Target: new("https://www.googleapis.com/compute/v1/projects/test-project-id/zones/us-central1-a/instanceGroupManagers/test-instance-group"),
 		AutoscalingPolicy: &computepb.AutoscalingPolicy{
-			MinNumReplicas: ptr.To(int32(1)),
-			MaxNumReplicas: ptr.To(int32(5)),
+			MinNumReplicas: new(int32(1)),
+			MaxNumReplicas: new(int32(5)),
 			CpuUtilization: &computepb.AutoscalingPolicyCpuUtilization{
-				UtilizationTarget: ptr.To(float64(0.6)),
+				UtilizationTarget: new(float64(0.6)),
 			},
 		},
-		Zone: ptr.To("us-central1-a"),
+		Zone: new("us-central1-a"),
 	}
 }

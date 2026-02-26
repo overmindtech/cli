@@ -12,11 +12,11 @@ import (
 
 func TestGroupItemMapper(t *testing.T) {
 	zone := types.Group{
-		Path:       PtrString("/"),
-		GroupName:  PtrString("power-users"),
-		GroupId:    PtrString("AGPA3VLV2U27T6SSLJMDS"),
-		Arn:        PtrString("arn:aws:iam::801795385023:group/power-users"),
-		CreateDate: PtrTime(time.Now()),
+		Path:       new("/"),
+		GroupName:  new("power-users"),
+		GroupId:    new("AGPA3VLV2U27T6SSLJMDS"),
+		Arn:        new("arn:aws:iam::801795385023:group/power-users"),
+		CreateDate: new(time.Now()),
 	}
 
 	item, err := groupItemMapper(nil, "foo", &zone)

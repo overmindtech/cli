@@ -15,22 +15,22 @@ type TestLambdaEventSourceMappingClient struct{}
 func (t *TestLambdaEventSourceMappingClient) ListEventSourceMappings(ctx context.Context, params *lambda.ListEventSourceMappingsInput, optFns ...func(*lambda.Options)) (*lambda.ListEventSourceMappingsOutput, error) {
 	allMappings := []types.EventSourceMappingConfiguration{
 		{
-			UUID:           stringPtr("test-uuid-1"),
-			FunctionArn:    stringPtr("arn:aws:lambda:us-east-1:123456789012:function:test-function"),
-			EventSourceArn: stringPtr("arn:aws:sqs:us-east-1:123456789012:test-queue"),
-			State:          stringPtr("Enabled"),
+			UUID:           new("test-uuid-1"),
+			FunctionArn:    new("arn:aws:lambda:us-east-1:123456789012:function:test-function"),
+			EventSourceArn: new("arn:aws:sqs:us-east-1:123456789012:test-queue"),
+			State:          new("Enabled"),
 		},
 		{
-			UUID:           stringPtr("test-uuid-2"),
-			FunctionArn:    stringPtr("arn:aws:lambda:us-east-1:123456789012:function:test-function-2"),
-			EventSourceArn: stringPtr("arn:aws:dynamodb:us-east-1:123456789012:table/test-table"),
-			State:          stringPtr("Creating"),
+			UUID:           new("test-uuid-2"),
+			FunctionArn:    new("arn:aws:lambda:us-east-1:123456789012:function:test-function-2"),
+			EventSourceArn: new("arn:aws:dynamodb:us-east-1:123456789012:table/test-table"),
+			State:          new("Creating"),
 		},
 		{
-			UUID:           stringPtr("test-uuid-3"),
-			FunctionArn:    stringPtr("arn:aws:lambda:us-east-1:123456789012:function:test-function-3"),
-			EventSourceArn: stringPtr("arn:aws:rds:us-east-1:123456789012:cluster:test-docdb-cluster"),
-			State:          stringPtr("Enabled"),
+			UUID:           new("test-uuid-3"),
+			FunctionArn:    new("arn:aws:lambda:us-east-1:123456789012:function:test-function-3"),
+			EventSourceArn: new("arn:aws:rds:us-east-1:123456789012:cluster:test-docdb-cluster"),
+			State:          new("Enabled"),
 		},
 	}
 
@@ -60,32 +60,28 @@ func (t *TestLambdaEventSourceMappingClient) GetEventSourceMapping(ctx context.C
 	switch *params.UUID {
 	case "test-uuid-1":
 		return &lambda.GetEventSourceMappingOutput{
-			UUID:           stringPtr("test-uuid-1"),
-			FunctionArn:    stringPtr("arn:aws:lambda:us-east-1:123456789012:function:test-function"),
-			EventSourceArn: stringPtr("arn:aws:sqs:us-east-1:123456789012:test-queue"),
-			State:          stringPtr("Enabled"),
+			UUID:           new("test-uuid-1"),
+			FunctionArn:    new("arn:aws:lambda:us-east-1:123456789012:function:test-function"),
+			EventSourceArn: new("arn:aws:sqs:us-east-1:123456789012:test-queue"),
+			State:          new("Enabled"),
 		}, nil
 	case "test-uuid-2":
 		return &lambda.GetEventSourceMappingOutput{
-			UUID:           stringPtr("test-uuid-2"),
-			FunctionArn:    stringPtr("arn:aws:lambda:us-east-1:123456789012:function:test-function-2"),
-			EventSourceArn: stringPtr("arn:aws:dynamodb:us-east-1:123456789012:table/test-table"),
-			State:          stringPtr("Creating"),
+			UUID:           new("test-uuid-2"),
+			FunctionArn:    new("arn:aws:lambda:us-east-1:123456789012:function:test-function-2"),
+			EventSourceArn: new("arn:aws:dynamodb:us-east-1:123456789012:table/test-table"),
+			State:          new("Creating"),
 		}, nil
 	case "test-uuid-3":
 		return &lambda.GetEventSourceMappingOutput{
-			UUID:           stringPtr("test-uuid-3"),
-			FunctionArn:    stringPtr("arn:aws:lambda:us-east-1:123456789012:function:test-function-3"),
-			EventSourceArn: stringPtr("arn:aws:rds:us-east-1:123456789012:cluster:test-docdb-cluster"),
-			State:          stringPtr("Enabled"),
+			UUID:           new("test-uuid-3"),
+			FunctionArn:    new("arn:aws:lambda:us-east-1:123456789012:function:test-function-3"),
+			EventSourceArn: new("arn:aws:rds:us-east-1:123456789012:cluster:test-docdb-cluster"),
+			State:          new("Enabled"),
 		}, nil
 	default:
 		return nil, &types.ResourceNotFoundException{}
 	}
-}
-
-func stringPtr(s string) *string {
-	return &s
 }
 
 func TestLambdaEventSourceMappingAdapter(t *testing.T) {
@@ -150,10 +146,10 @@ func TestLambdaEventSourceMappingItemMapper(t *testing.T) {
 
 	// Test mapping with SQS event source
 	awsItem := &types.EventSourceMappingConfiguration{
-		UUID:           stringPtr("test-uuid-1"),
-		FunctionArn:    stringPtr("arn:aws:lambda:us-east-1:123456789012:function:test-function"),
-		EventSourceArn: stringPtr("arn:aws:sqs:us-east-1:123456789012:test-queue"),
-		State:          stringPtr("Enabled"),
+		UUID:           new("test-uuid-1"),
+		FunctionArn:    new("arn:aws:lambda:us-east-1:123456789012:function:test-function"),
+		EventSourceArn: new("arn:aws:sqs:us-east-1:123456789012:test-queue"),
+		State:          new("Enabled"),
 	}
 
 	item, err := adapter.ItemMapper("test-uuid-1", "123456789012.us-east-1", awsItem)
@@ -213,10 +209,10 @@ func TestLambdaEventSourceMappingItemMapperWithDynamoDB(t *testing.T) {
 
 	// Test mapping with DynamoDB event source
 	awsItem := &types.EventSourceMappingConfiguration{
-		UUID:           stringPtr("test-uuid-2"),
-		FunctionArn:    stringPtr("arn:aws:lambda:us-east-1:123456789012:function:test-function-2"),
-		EventSourceArn: stringPtr("arn:aws:dynamodb:us-east-1:123456789012:table/test-table"),
-		State:          stringPtr("Creating"),
+		UUID:           new("test-uuid-2"),
+		FunctionArn:    new("arn:aws:lambda:us-east-1:123456789012:function:test-function-2"),
+		EventSourceArn: new("arn:aws:dynamodb:us-east-1:123456789012:table/test-table"),
+		State:          new("Creating"),
 	}
 
 	item, err := adapter.ItemMapper("test-uuid-2", "123456789012.us-east-1", awsItem)
@@ -246,10 +242,10 @@ func TestLambdaEventSourceMappingItemMapperWithRDS(t *testing.T) {
 
 	// Test mapping with RDS/DocumentDB event source
 	awsItem := &types.EventSourceMappingConfiguration{
-		UUID:           stringPtr("test-uuid-3"),
-		FunctionArn:    stringPtr("arn:aws:lambda:us-east-1:123456789012:function:test-function-3"),
-		EventSourceArn: stringPtr("arn:aws:rds:us-east-1:123456789012:cluster:test-docdb-cluster"),
-		State:          stringPtr("Enabled"),
+		UUID:           new("test-uuid-3"),
+		FunctionArn:    new("arn:aws:lambda:us-east-1:123456789012:function:test-function-3"),
+		EventSourceArn: new("arn:aws:rds:us-east-1:123456789012:cluster:test-docdb-cluster"),
+		State:          new("Enabled"),
 	}
 
 	item, err := adapter.ItemMapper("test-uuid-3", "123456789012.us-east-1", awsItem)

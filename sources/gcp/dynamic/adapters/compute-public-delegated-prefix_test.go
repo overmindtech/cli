@@ -187,7 +187,7 @@ func TestComputePublicDelegatedPrefix(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://compute.googleapis.com/compute/v1/projects/%s/regions/%s/publicDelegatedPrefixes/%s", projectID, region, prefixName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Prefix not found"},
+				Body:       map[string]any{"error": "Prefix not found"},
 			},
 		}
 

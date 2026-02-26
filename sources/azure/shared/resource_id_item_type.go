@@ -9,7 +9,7 @@ import (
 // item types (see models.go). Enables generated linked queries to match existing adapter
 // naming: azure-{api}-{resource} with kebab-case resource.
 var azureProviderToAPI = map[string]string{
-	"microsoft.compute":          "compute",
+	"microsoft.compute":         "compute",
 	"microsoft.network":         "network",
 	"microsoft.storage":         "storage",
 	"microsoft.sql":             "sql",
@@ -17,7 +17,7 @@ var azureProviderToAPI = map[string]string{
 	"microsoft.keyvault":        "keyvault",
 	"microsoft.managedidentity": "managedidentity",
 	"microsoft.batch":           "batch",
-	"microsoft.dbforpostgresql":  "dbforpostgresql",
+	"microsoft.dbforpostgresql": "dbforpostgresql",
 	"microsoft.elasticsan":      "elasticsan",
 	"microsoft.authorization":   "authorization",
 	"microsoft.maintenance":     "maintenance",
@@ -56,15 +56,15 @@ func SingularizeResourceType(kebab string) string {
 		return kebab
 	}
 	// -ies -> -y (e.g. galleries -> gallery, user-assigned-identities -> user-assigned-identity)
-	if strings.HasSuffix(kebab, "ies") {
-		return strings.TrimSuffix(kebab, "ies") + "y"
+	if before, ok := strings.CutSuffix(kebab, "ies"); ok {
+		return before + "y"
 	}
 	// -addresses -> -address (e.g. public-ip-addresses -> public-ip-address)
-	if strings.HasSuffix(kebab, "addresses") {
-		return strings.TrimSuffix(kebab, "addresses") + "address"
+	if before, ok := strings.CutSuffix(kebab, "addresses"); ok {
+		return before + "address"
 	}
-	if strings.HasSuffix(kebab, "s") {
-		return strings.TrimSuffix(kebab, "s")
+	if before, ok := strings.CutSuffix(kebab, "s"); ok {
+		return before
 	}
 	return kebab
 }

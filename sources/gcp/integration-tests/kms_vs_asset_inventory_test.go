@@ -164,7 +164,7 @@ func TestKMSvsAssetInventoryComparison(t *testing.T) {
 		t.Log("")
 
 		// Asset Inventory may have indexing delay - retry with backoff
-		var assetResponse map[string]interface{}
+		var assetResponse map[string]any
 		var assetLatency time.Duration
 		var foundAsset bool
 
@@ -188,10 +188,7 @@ func TestKMSvsAssetInventoryComparison(t *testing.T) {
 			}
 
 			// Exponential backoff: 5s, 10s, 20s, 40s... up to 60s
-			waitTime := time.Duration(5*(1<<(attempt-1))) * time.Second
-			if waitTime > 60*time.Second {
-				waitTime = 60 * time.Second
-			}
+			waitTime := min(time.Duration(5*(1<<(attempt-1)))*time.Second, 60*time.Second)
 			time.Sleep(waitTime)
 		}
 
@@ -332,7 +329,7 @@ func destroyCryptoKeyVersion(ctx context.Context, client *kms.KeyManagementClien
 }
 
 // callKMSDirectAPI calls the Cloud KMS REST API directly to get a CryptoKey.
-func callKMSDirectAPI(ctx context.Context, httpClient *http.Client, cryptoKeyName string) (map[string]interface{}, error) {
+func callKMSDirectAPI(ctx context.Context, httpClient *http.Client, cryptoKeyName string) (map[string]any, error) {
 	apiURL := fmt.Sprintf("https://cloudkms.googleapis.com/v1/%s", cryptoKeyName)
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, apiURL, nil)
@@ -356,7 +353,7 @@ func callKMSDirectAPI(ctx context.Context, httpClient *http.Client, cryptoKeyNam
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	var result map[string]interface{}
+	var result map[string]any
 	if err := json.Unmarshal(body, &result); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
@@ -366,7 +363,7 @@ func callKMSDirectAPI(ctx context.Context, httpClient *http.Client, cryptoKeyNam
 
 // callAssetInventoryAPI calls the Cloud Asset Inventory API to find a specific CryptoKey.
 // Returns the asset if found, nil if not found (may indicate indexing delay).
-func callAssetInventoryAPI(ctx context.Context, httpClient *http.Client, projectID, cryptoKeyName string) (map[string]interface{}, error) {
+func callAssetInventoryAPI(ctx context.Context, httpClient *http.Client, projectID, cryptoKeyName string) (map[string]any, error) {
 	// Build the Asset Inventory ListAssets URL
 	baseURL := fmt.Sprintf("https://cloudasset.googleapis.com/v1/projects/%s/assets", projectID)
 
@@ -401,13 +398,13 @@ func callAssetInventoryAPI(ctx context.Context, httpClient *http.Client, project
 		return nil, fmt.Errorf("failed to read response body: %w", err)
 	}
 
-	var result map[string]interface{}
+	var result map[string]any
 	if err := json.Unmarshal(body, &result); err != nil {
 		return nil, fmt.Errorf("failed to unmarshal response: %w", err)
 	}
 
 	// Find the specific CryptoKey in the assets list
-	assets, ok := result["assets"].([]interface{})
+	assets, ok := result["assets"].([]any)
 	if !ok || len(assets) == 0 {
 		return nil, nil // No assets found - may indicate indexing delay
 	}
@@ -417,7 +414,7 @@ func callAssetInventoryAPI(ctx context.Context, httpClient *http.Client, project
 	expectedAssetName := fmt.Sprintf("//cloudkms.googleapis.com/%s", cryptoKeyName)
 
 	for _, asset := range assets {
-		assetMap, ok := asset.(map[string]interface{})
+		assetMap, ok := asset.(map[string]any)
 		if !ok {
 			continue
 		}

@@ -148,7 +148,7 @@ func parseExpiryKey(key []byte) (time.Time, SSTHash, []byte, error) {
 	}
 
 	expiryNanoUint := binary.BigEndian.Uint64(key[0:8])
-	expiryNano := int64(expiryNanoUint)
+	expiryNano := int64(expiryNanoUint) //nolint:gosec // G115 (overflow): guarded by underflow check on lines 153-155 that clamps to zero
 	// Check for overflow when converting uint64 to int64
 	if expiryNano < 0 && expiryNanoUint > 0 {
 		expiryNano = 0
@@ -157,13 +157,13 @@ func parseExpiryKey(key []byte) (time.Time, SSTHash, []byte, error) {
 
 	// Find the separators
 	rest := key[9:] // skip the first separator
-	sepIdx := bytes.IndexByte(rest, '|')
-	if sepIdx < 0 {
+	before, after, ok := bytes.Cut(rest, []byte{'|'})
+	if !ok {
 		return time.Time{}, "", nil, errors.New("invalid expiry key format")
 	}
 
-	sstHash := SSTHash(rest[:sepIdx])
-	entryKey := rest[sepIdx+1:]
+	sstHash := SSTHash(before)
+	entryKey := after
 
 	return expiry, sstHash, entryKey, nil
 }
@@ -229,7 +229,7 @@ func WithCompactThreshold(bytes int64) BoltCacheOption {
 func NewBoltCache(path string, opts ...BoltCacheOption) (*BoltCache, error) {
 	// Ensure the directory exists
 	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0o755); err != nil {
+	if err := os.MkdirAll(dir, 0o755); err != nil { //nolint:gosec // G301 (path traversal): path comes from application config (NewBoltCache callers), not user HTTP input
 		return nil, fmt.Errorf("failed to create directory: %w", err)
 	}
 
@@ -294,7 +294,7 @@ func (c *BoltCache) loadDeletedBytes() error {
 		data := meta.Get(deletedBytesKey)
 		if len(data) == 8 {
 			deletedBytesUint := binary.BigEndian.Uint64(data)
-			deletedBytes := int64(deletedBytesUint)
+			deletedBytes := int64(deletedBytesUint) //nolint:gosec // G115 (overflow): guarded by underflow check on lines 299-301 that clamps to zero
 			// Check for overflow when converting uint64 to int64
 			if deletedBytes < 0 && deletedBytesUint > 0 {
 				deletedBytes = 0
@@ -402,12 +402,12 @@ func (c *BoltCache) CloseAndDestroy() error {
 
 	// Get the file path before closing
 	path := c.db.Path()
-	
+
 	// Close the database
 	if err := c.db.Close(); err != nil {
 		return err
 	}
-	
+
 	// Delete the cache file
 	return os.Remove(path)
 }

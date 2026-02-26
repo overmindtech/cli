@@ -110,7 +110,7 @@ func TestBigTableAdminInstance(t *testing.T) {
 		errorResponses := map[string]shared.MockResponse{
 			fmt.Sprintf("https://bigtableadmin.googleapis.com/v2/projects/%s/instances/%s", projectID, instanceName): {
 				StatusCode: http.StatusNotFound,
-				Body:       map[string]interface{}{"error": "Instance not found"},
+				Body:       map[string]any{"error": "Instance not found"},
 			},
 		}
 
