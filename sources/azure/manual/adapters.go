@@ -195,6 +195,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create route tables client: %w", err)
 		}
 
+		routesClient, err := armnetwork.NewRoutesClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create routes client: %w", err)
+		}
+
 		applicationGatewaysClient, err := armnetwork.NewApplicationGatewaysClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create application gateways client: %w", err)
@@ -417,6 +422,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 				), cache),
 				sources.WrapperToAdapter(NewNetworkRouteTable(
 					clients.NewRouteTablesClient(routeTablesClient),
+					resourceGroupScopes,
+				), cache),
+				sources.WrapperToAdapter(NewNetworkRoute(
+					clients.NewRoutesClient(routesClient),
 					resourceGroupScopes,
 				), cache),
 				sources.WrapperToAdapter(NewNetworkApplicationGateway(
