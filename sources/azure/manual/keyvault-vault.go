@@ -135,11 +135,19 @@ func (k keyvaultVaultWrapper) azureKeyVaultToSDPItem(vault *armkeyvault.Vault, s
 		Tags:            azureshared.ConvertAzureTags(vault.Tags),
 	}
 
-	// Child resources: list secrets in this vault (Search by vault name)
+	// Child resources: list secrets and keys in this vault (Search by vault name)
 	vaultName := *vault.Name
 	sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 		Query: &sdp.Query{
 			Type:   azureshared.KeyVaultSecret.String(),
+			Method: sdp.QueryMethod_SEARCH,
+			Query:  vaultName,
+			Scope:  scope,
+		},
+	})
+	sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+		Query: &sdp.Query{
+			Type:   azureshared.KeyVaultKey.String(),
 			Method: sdp.QueryMethod_SEARCH,
 			Query:  vaultName,
 			Scope:  scope,
@@ -302,6 +310,7 @@ func (k keyvaultVaultWrapper) TerraformMappings() []*sdp.TerraformMapping {
 func (k keyvaultVaultWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return shared.NewItemTypesSet(
 		azureshared.KeyVaultSecret,
+		azureshared.KeyVaultKey,
 		azureshared.NetworkPrivateEndpoint,
 		azureshared.NetworkSubnet,
 		azureshared.KeyVaultManagedHSM,

@@ -245,6 +245,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create secrets client: %w", err)
 		}
 
+		keysClient, err := armkeyvault.NewKeysClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create keys client: %w", err)
+		}
+
 		userAssignedIdentitiesClient, err := armmsi.NewUserAssignedIdentitiesClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create user assigned identities client: %w", err)
@@ -471,6 +476,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewSecretsClient(secretsClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewKeyVaultKey(
+					clients.NewKeysClient(keysClient),
+					resourceGroupScopes,
+				), cache),
 				sources.WrapperToAdapter(NewManagedIdentityUserAssignedIdentity(
 					clients.NewUserAssignedIdentitiesClient(userAssignedIdentitiesClient),
 					resourceGroupScopes,
@@ -587,6 +596,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewDBforPostgreSQLFlexibleServer(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewDBforPostgreSQLFlexibleServerFirewallRule(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewKeyVaultSecret(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewKeyVaultKey(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewManagedIdentityUserAssignedIdentity(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewAuthorizationRoleAssignment(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeDiskEncryptionSet(nil, placeholderResourceGroupScopes), noOpCache),
