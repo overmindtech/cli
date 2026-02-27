@@ -35,12 +35,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - uses: depot/use-action@v1
+      - uses: depot/use-action@v1.3.1
         with:
           project: xnsnw3m20t
 
       - name: Build and push container
-        uses: depot/build-push-action@v1
+        uses: depot/build-push-action@v1.17.0
         id: build
         with:
           project: xnsnw3m20t
