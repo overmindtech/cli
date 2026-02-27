@@ -155,7 +155,7 @@ func TestStorageEncryptionScope(t *testing.T) {
 
 		testClient := &testEncryptionScopesClient{
 			MockEncryptionScopesClient: mockClient,
-			pager:                     mockPager,
+			pager:                      mockPager,
 		}
 
 		wrapper := manual.NewStorageEncryptionScope(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
@@ -215,7 +215,7 @@ func TestStorageEncryptionScope(t *testing.T) {
 
 		testClient := &testEncryptionScopesClient{
 			MockEncryptionScopesClient: mockClient,
-			pager:                     mockPager,
+			pager:                      mockPager,
 		}
 
 		wrapper := manual.NewStorageEncryptionScope(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
@@ -264,7 +264,7 @@ func TestStorageEncryptionScope(t *testing.T) {
 
 		testClient := &testEncryptionScopesClient{
 			MockEncryptionScopesClient: mockClient,
-			pager:                     errorPager,
+			pager:                      errorPager,
 		}
 
 		wrapper := manual.NewStorageEncryptionScope(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
@@ -284,9 +284,9 @@ func TestStorageEncryptionScope(t *testing.T) {
 
 func createAzureEncryptionScope(scopeName string) *armstorage.EncryptionScope {
 	return &armstorage.EncryptionScope{
-		ID:   to.Ptr("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorageaccount/encryptionScopes/" + scopeName),
-		Name: to.Ptr(scopeName),
-		Type: to.Ptr("Microsoft.Storage/storageAccounts/encryptionScopes"),
+		ID:   new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorageaccount/encryptionScopes/" + scopeName),
+		Name: new(scopeName),
+		Type: new("Microsoft.Storage/storageAccounts/encryptionScopes"),
 		EncryptionScopeProperties: &armstorage.EncryptionScopeProperties{
 			Source: to.Ptr(armstorage.EncryptionScopeSourceMicrosoftStorage),
 			State:  to.Ptr(armstorage.EncryptionScopeStateEnabled),

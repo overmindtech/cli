@@ -213,7 +213,7 @@ func TestNetworkSecurityRule(t *testing.T) {
 				{
 					SecurityRuleListResult: armnetwork.SecurityRuleListResult{
 						Value: []*armnetwork.SecurityRule{
-							{Name: nil, ID: strPtr("/some/id")},
+							{Name: nil, ID: new("/some/id")},
 							validRule,
 						},
 					},

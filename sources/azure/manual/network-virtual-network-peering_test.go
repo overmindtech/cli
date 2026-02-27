@@ -162,7 +162,7 @@ func TestNetworkVirtualNetworkPeering(t *testing.T) {
 
 		testClient := &testVirtualNetworkPeeringsClient{
 			MockVirtualNetworkPeeringsClient: mockClient,
-			pager:                             mockPager,
+			pager:                            mockPager,
 		}
 
 		wrapper := manual.NewNetworkVirtualNetworkPeering(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
@@ -213,7 +213,7 @@ func TestNetworkVirtualNetworkPeering(t *testing.T) {
 				{
 					VirtualNetworkPeeringListResult: armnetwork.VirtualNetworkPeeringListResult{
 						Value: []*armnetwork.VirtualNetworkPeering{
-							{Name: nil, ID: strPtr("/some/id")},
+							{Name: nil, ID: new("/some/id")},
 							validPeering,
 						},
 					},
@@ -223,7 +223,7 @@ func TestNetworkVirtualNetworkPeering(t *testing.T) {
 
 		testClient := &testVirtualNetworkPeeringsClient{
 			MockVirtualNetworkPeeringsClient: mockClient,
-			pager:                             mockPager,
+			pager:                            mockPager,
 		}
 
 		wrapper := manual.NewNetworkVirtualNetworkPeering(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
@@ -265,7 +265,7 @@ func TestNetworkVirtualNetworkPeering(t *testing.T) {
 		mockClient := mocks.NewMockVirtualNetworkPeeringsClient(ctrl)
 		testClient := &testVirtualNetworkPeeringsClient{
 			MockVirtualNetworkPeeringsClient: mockClient,
-			pager:                             &errorVirtualNetworkPeeringsPager{},
+			pager:                            &errorVirtualNetworkPeeringsPager{},
 		}
 
 		wrapper := manual.NewNetworkVirtualNetworkPeering(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
@@ -291,8 +291,4 @@ func createAzureVirtualNetworkPeering(peeringName, vnetName string) *armnetwork.
 			ProvisioningState: &provisioningState,
 		},
 	}
-}
-
-func strPtr(s string) *string {
-	return &s
 }

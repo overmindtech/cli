@@ -72,7 +72,7 @@ func itemAttributeContainsTag(item *sdp.Item, attrKey, tag string) bool {
 	if err != nil {
 		return false
 	}
-	list, ok := val.([]interface{})
+	list, ok := val.([]any)
 	if !ok {
 		return false
 	}
