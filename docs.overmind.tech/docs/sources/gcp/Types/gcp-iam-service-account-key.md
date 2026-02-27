@@ -8,7 +8,7 @@ Official documentation: https://cloud.google.com/iam/docs/creating-managing-serv
 
 **Terrafrom Mappings:**
 
-  * `google_service_account_key.id`
+* `google_service_account_key.id`
 
 ## Supported Methods
 

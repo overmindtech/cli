@@ -8,7 +8,7 @@ Official documentation: https://cloud.google.com/service-directory/docs/referenc
 
 **Terrafrom Mappings:**
 
-  * `google_service_directory_endpoint.id`
+* `google_service_directory_endpoint.id`
 
 ## Supported Methods
 

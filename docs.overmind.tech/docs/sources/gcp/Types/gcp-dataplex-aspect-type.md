@@ -8,7 +8,7 @@ For further details see the official API reference: https://cloud.google.com/dat
 
 **Terrafrom Mappings:**
 
-  * `google_dataplex_aspect_type.id`
+* `google_dataplex_aspect_type.id`
 
 ## Supported Methods
 

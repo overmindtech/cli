@@ -5,7 +5,6 @@ sidebar_label: gcp-ai-platform-model
 
 A GCP AI Platform Model (now part of Vertex AI) is a logical container that holds the metadata and artefacts required to serve machine-learning predictions. A model record points to one or more model versions or container images, the Cloud Storage location of the trained parameters, and optional encryption settings. Models are deployed to Endpoints for online prediction or used directly in batch/streaming inference jobs. Official documentation: https://cloud.google.com/vertex-ai/docs/reference/rest/v1/projects.locations.models
 
-
 ## Supported Methods
 
 * `GET`: Get a gcp-ai-platform-model by its "name"

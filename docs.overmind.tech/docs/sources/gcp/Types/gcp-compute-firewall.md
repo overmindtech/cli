@@ -8,7 +8,7 @@ Official documentation: https://cloud.google.com/vpc/docs/firewalls
 
 **Terrafrom Mappings:**
 
-  * `google_compute_firewall.name`
+* `google_compute_firewall.name`
 
 ## Supported Methods
 

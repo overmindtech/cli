@@ -8,7 +8,7 @@ Official documentation: https://cloud.google.com/dataform/reference/rest
 
 **Terrafrom Mappings:**
 
-  * `google_dataform_repository.id`
+* `google_dataform_repository.id`
 
 ## Supported Methods
 

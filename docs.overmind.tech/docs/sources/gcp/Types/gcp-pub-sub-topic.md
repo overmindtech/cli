@@ -8,10 +8,10 @@ For comprehensive information, see the official documentation: https://cloud.goo
 
 **Terrafrom Mappings:**
 
-  * `google_pubsub_topic.name`
-  * `google_pubsub_topic_iam_binding.topic`
-  * `google_pubsub_topic_iam_member.topic`
-  * `google_pubsub_topic_iam_policy.topic`
+* `google_pubsub_topic.name`
+* `google_pubsub_topic_iam_binding.topic`
+* `google_pubsub_topic_iam_member.topic`
+* `google_pubsub_topic_iam_policy.topic`
 
 ## Supported Methods
 

@@ -6,7 +6,6 @@ sidebar_label: gcp-ai-platform-batch-prediction-job
 A **Batch Prediction Job** in Google Cloud’s AI Platform (now part of Vertex AI) lets you run large-scale, asynchronous inference on a saved Machine Learning model. Instead of serving predictions request-by-request, you supply a dataset stored in Cloud Storage or BigQuery and the service spins up the necessary compute, distributes the workload, writes the predictions to your chosen destination, and then shuts itself down. This is ideal for one-off or periodic scoring of very large datasets.  
 Official documentation: https://cloud.google.com/vertex-ai/docs/predictions/batch-predictions
 
-
 ## Supported Methods
 
 * `GET`: Get a gcp-ai-platform-batch-prediction-job by its "locations|batchPredictionJobs"

@@ -8,7 +8,7 @@ For full details see the official documentation: https://cloud.google.com/secret
 
 **Terrafrom Mappings:**
 
-  * `google_secret_manager_secret.secret_id`
+* `google_secret_manager_secret.secret_id`
 
 ## Supported Methods
 

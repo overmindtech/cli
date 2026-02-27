@@ -8,7 +8,7 @@ For full details, see the official documentation: https://cloud.google.com/vpc/d
 
 **Terrafrom Mappings:**
 
-  * `google_compute_public_delegated_prefix.id`
+* `google_compute_public_delegated_prefix.id`
 
 ## Supported Methods
 

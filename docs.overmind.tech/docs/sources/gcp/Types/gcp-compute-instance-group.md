@@ -8,7 +8,7 @@ For full details see the official Google Cloud documentation: https://cloud.goog
 
 **Terrafrom Mappings:**
 
-  * `google_compute_instance_group.name`
+* `google_compute_instance_group.name`
 
 ## Supported Methods
 

@@ -8,7 +8,7 @@ Official documentation: https://cloud.google.com/filestore/docs/overview
 
 **Terrafrom Mappings:**
 
-  * `google_filestore_instance.id`
+* `google_filestore_instance.id`
 
 ## Supported Methods
 

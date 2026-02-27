@@ -8,7 +8,7 @@ For further details see the official documentation: https://cloud.google.com/com
 
 **Terrafrom Mappings:**
 
-  * `google_compute_http_health_check.name`
+* `google_compute_http_health_check.name`
 
 ## Supported Methods
 

@@ -8,8 +8,8 @@ For full details see the official Google Cloud documentation: https://cloud.goog
 
 **Terrafrom Mappings:**
 
-  * `google_compute_backend_service.name`
-  * `google_compute_region_backend_service.name`
+* `google_compute_backend_service.name`
+* `google_compute_region_backend_service.name`
 
 ## Supported Methods
 

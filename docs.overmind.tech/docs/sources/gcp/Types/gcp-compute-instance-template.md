@@ -8,7 +8,7 @@ Official documentation: https://cloud.google.com/compute/docs/instance-templates
 
 **Terrafrom Mappings:**
 
-  * `google_compute_instance_template.name`
+* `google_compute_instance_template.name`
 
 ## Supported Methods
 

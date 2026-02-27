@@ -7,7 +7,7 @@ A GCP Compute Autoscaler is a zonal or regional resource that automatically adds
 
 **Terrafrom Mappings:**
 
-  * `google_compute_autoscaler.name`
+* `google_compute_autoscaler.name`
 
 ## Supported Methods
 

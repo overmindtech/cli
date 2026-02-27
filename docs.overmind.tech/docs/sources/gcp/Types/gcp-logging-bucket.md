@@ -6,7 +6,6 @@ sidebar_label: gcp-logging-bucket
 A GCP Logging Bucket is a regional or multi-regional storage container managed by Cloud Logging that stores log entries routed from one or more Google Cloud projects, folders or organisations. Buckets provide fine-grained control over where logs are kept, how long they are retained, and which encryption keys protect them. Log buckets behave similarly to Cloud Storage buckets, but are optimised for log data and are accessed through the Cloud Logging API rather than through Cloud Storage.  
 See the official documentation for full details: https://cloud.google.com/logging/docs/storage
 
-
 ## Supported Methods
 
 * `GET`: Get a gcp-logging-bucket by its "locations|buckets"

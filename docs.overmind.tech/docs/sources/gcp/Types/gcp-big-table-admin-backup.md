@@ -6,7 +6,6 @@ sidebar_label: gcp-big-table-admin-backup
 A Cloud Bigtable Admin Backup represents a point-in-time copy of a single Bigtable table that is stored within the same Bigtable cluster for a user-defined retention period. Back-ups allow you to restore data that has been deleted or corrupted without replaying your entire write history, and they can also be copied to other regions for disaster-recovery purposes. The resource is created, managed and deleted through the Cloud Bigtable Admin API.  
 Official documentation: https://cloud.google.com/bigtable/docs/backups
 
-
 ## Supported Methods
 
 * `GET`: Get a gcp-big-table-admin-backup by its "instances|clusters|backups"

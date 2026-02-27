@@ -6,7 +6,6 @@ sidebar_label: gcp-run-revision
 A Cloud Run **Revision** is an immutable snapshot of a Cloud Run Service configuration at a particular point in time. Each time you deploy new code or change configuration, Cloud Run automatically creates a new revision and routes traffic according to your settings. A revision defines the container image to run, environment variables, resource limits, networking options, service account, secret mounts and more. Once created, a revision can never be modified – you can only create a new one.  
 Official documentation: https://cloud.google.com/run/docs/reference/rest/v1/namespaces.revisions
 
-
 ## Supported Methods
 
 * `GET`: Get a gcp-run-revision by its "locations|services|revisions"

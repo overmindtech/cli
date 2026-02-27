@@ -8,8 +8,8 @@ Official documentation: https://cloud.google.com/load-balancing/docs/health-chec
 
 **Terrafrom Mappings:**
 
-  * `google_compute_health_check.name`
-  * `google_compute_region_health_check.name`
+* `google_compute_health_check.name`
+* `google_compute_region_health_check.name`
 
 ## Supported Methods
 

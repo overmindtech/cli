@@ -8,7 +8,7 @@ For a full description of each field and the underlying API, see the official Go
 
 **Terraform Mappings:**
 
-  * `google_dataproc_autoscaling_policy.name`
+* `google_dataproc_autoscaling_policy.name`
 
 ## Supported Methods
 

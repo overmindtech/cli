@@ -8,7 +8,7 @@ For full details see the official documentation: https://cloud.google.com/comput
 
 **Terrafrom Mappings:**
 
-  * `google_compute_image.name`
+* `google_compute_image.name`
 
 ## Supported Methods
 

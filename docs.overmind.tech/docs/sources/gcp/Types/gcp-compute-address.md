@@ -7,7 +7,7 @@ A GCP Compute Address is a reserved, static IP address that can be either region
 
 **Terrafrom Mappings:**
 
-  * `google_compute_address.name`
+* `google_compute_address.name`
 
 ## Supported Methods
 

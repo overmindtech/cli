@@ -7,7 +7,7 @@ A **Google Cloud Monitoring Notification Channel** specifies where and how Cloud
 
 **Terrafrom Mappings:**
 
-  * `google_monitoring_notification_channel.name`
+* `google_monitoring_notification_channel.name`
 
 ## Supported Methods
 

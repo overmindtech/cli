@@ -8,7 +8,7 @@ Official documentation: https://cloud.google.com/dns/docs/zones
 
 **Terrafrom Mappings:**
 
-  * `google_dns_managed_zone.name`
+* `google_dns_managed_zone.name`
 
 ## Supported Methods
 

@@ -8,7 +8,7 @@ For full details, see the official documentation: https://cloud.google.com/monit
 
 **Terrafrom Mappings:**
 
-  * `google_monitoring_dashboard.id`
+* `google_monitoring_dashboard.id`
 
 ## Supported Methods
 

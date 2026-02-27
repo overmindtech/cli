@@ -8,7 +8,7 @@ See the official Google Cloud documentation for full details: https://cloud.goog
 
 **Terrafrom Mappings:**
 
-  * `google_compute_ha_vpn_gateway.name`
+* `google_compute_ha_vpn_gateway.name`
 
 ## Supported Methods
 

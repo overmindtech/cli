@@ -7,7 +7,7 @@ A Google Cloud Dataproc Cluster is a managed group of Compute Engine virtual mac
 
 **Terrafrom Mappings:**
 
-  * `google_dataproc_cluster.name`
+* `google_dataproc_cluster.name`
 
 ## Supported Methods
 

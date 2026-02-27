@@ -10,7 +10,6 @@ A GCP Logging Link is a Cloud Logging resource that continuously streams the log
 and each link specifies the destination BigQuery dataset, IAM writer identity, and lifecycle state.  
 For further details see Google’s official documentation: https://cloud.google.com/logging/docs/reference/v2/rest/v2/projects.locations.buckets.links
 
-
 ## Supported Methods
 
 * `GET`: Get a gcp-logging-link by its "locations|buckets|links"

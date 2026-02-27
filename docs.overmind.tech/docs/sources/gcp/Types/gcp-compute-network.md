@@ -7,7 +7,7 @@ A Google Cloud Platform (GCP) Compute Network—commonly called a Virtual Privat
 
 **Terrafrom Mappings:**
 
-  * `google_compute_network.name`
+* `google_compute_network.name`
 
 ## Supported Methods
 

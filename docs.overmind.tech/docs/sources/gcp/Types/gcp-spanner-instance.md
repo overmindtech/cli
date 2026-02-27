@@ -8,7 +8,7 @@ For full details see the official documentation: https://cloud.google.com/spanne
 
 **Terrafrom Mappings:**
 
-  * `google_spanner_instance.name`
+* `google_spanner_instance.name`
 
 ## Supported Methods
 

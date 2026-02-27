@@ -7,10 +7,10 @@ A Google Cloud Pub/Sub subscription represents a stream of messages delivered fr
 
 **Terrafrom Mappings:**
 
-  * `google_pubsub_subscription.name`
-  * `google_pubsub_subscription_iam_binding.subscription`
-  * `google_pubsub_subscription_iam_member.subscription`
-  * `google_pubsub_subscription_iam_policy.subscription`
+* `google_pubsub_subscription.name`
+* `google_pubsub_subscription_iam_binding.subscription`
+* `google_pubsub_subscription_iam_member.subscription`
+* `google_pubsub_subscription_iam_policy.subscription`
 
 ## Supported Methods
 

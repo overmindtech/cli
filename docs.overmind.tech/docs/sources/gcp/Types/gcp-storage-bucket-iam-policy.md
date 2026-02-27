@@ -7,9 +7,9 @@ A **Storage Bucket IAM policy** defines who (principals) can perform which actio
 
 **Terrafrom Mappings:**
 
-  * `google_storage_bucket_iam_binding.bucket`
-  * `google_storage_bucket_iam_member.bucket`
-  * `google_storage_bucket_iam_policy.bucket`
+* `google_storage_bucket_iam_binding.bucket`
+* `google_storage_bucket_iam_member.bucket`
+* `google_storage_bucket_iam_policy.bucket`
 
 ## Supported Methods
 

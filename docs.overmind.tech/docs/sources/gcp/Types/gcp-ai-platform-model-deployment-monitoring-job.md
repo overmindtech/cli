@@ -6,7 +6,6 @@ sidebar_label: gcp-ai-platform-model-deployment-monitoring-job
 Google Cloud’s Model Deployment Monitoring Job is a managed Vertex AI (formerly AI Platform) service that continuously analyses a deployed model’s predictions to detect data drift, prediction drift and skew between training and online data. A job is attached to one or more deployed models on an Endpoint and periodically samples incoming predictions, calculates statistics, raises alerts and writes monitoring reports to BigQuery or Cloud Storage.  
 Official documentation: https://cloud.google.com/vertex-ai/docs/model-monitoring/overview
 
-
 ## Supported Methods
 
 * `GET`: Get a gcp-ai-platform-model-deployment-monitoring-job by its "locations|modelDeploymentMonitoringJobs"

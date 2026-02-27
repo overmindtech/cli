@@ -8,7 +8,7 @@ Official documentation: https://cloud.google.com/vpc/docs/routes
 
 **Terrafrom Mappings:**
 
-  * `google_compute_route.name`
+* `google_compute_route.name`
 
 ## Supported Methods
 

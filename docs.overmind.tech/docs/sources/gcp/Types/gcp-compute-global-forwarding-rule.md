@@ -7,7 +7,7 @@ A Google Cloud Compute Global Forwarding Rule defines a single anycast virtual I
 
 **Terrafrom Mappings:**
 
-  * `google_compute_global_forwarding_rule.name`
+* `google_compute_global_forwarding_rule.name`
 
 ## Supported Methods
 
