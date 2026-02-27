@@ -235,6 +235,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create postgresql flexible servers client: %w", err)
 		}
 
+		postgresqlFirewallRulesClient, err := armpostgresqlflexibleservers.NewFirewallRulesClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create postgresql firewall rules client: %w", err)
+		}
+
 		secretsClient, err := armkeyvault.NewSecretsClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create secrets client: %w", err)
@@ -458,6 +463,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewPostgreSQLFlexibleServersClient(postgresqlFlexibleServersClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewDBforPostgreSQLFlexibleServerFirewallRule(
+					clients.NewPostgreSQLFlexibleServerFirewallRuleClient(postgresqlFirewallRulesClient),
+					resourceGroupScopes,
+				), cache),
 				sources.WrapperToAdapter(NewKeyVaultSecret(
 					clients.NewSecretsClient(secretsClient),
 					resourceGroupScopes,
@@ -576,6 +585,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewNetworkApplicationGateway(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewSqlServer(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewDBforPostgreSQLFlexibleServer(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewDBforPostgreSQLFlexibleServerFirewallRule(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewKeyVaultSecret(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewManagedIdentityUserAssignedIdentity(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewAuthorizationRoleAssignment(nil, placeholderResourceGroupScopes), noOpCache),
