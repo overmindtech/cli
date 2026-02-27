@@ -314,15 +314,11 @@ func TestDBforPostgreSQLFlexibleServerFirewallRule(t *testing.T) {
 func createAzurePostgreSQLFlexibleServerFirewallRule(serverName, firewallRuleName string) *armpostgresqlflexibleservers.FirewallRule {
 	ruleID := "/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.DBforPostgreSQL/flexibleServers/" + serverName + "/firewallRules/" + firewallRuleName
 	return &armpostgresqlflexibleservers.FirewallRule{
-		Name: stringPtr(firewallRuleName),
-		ID:   stringPtr(ruleID),
+		Name: new(firewallRuleName),
+		ID:   new(ruleID),
 		Properties: &armpostgresqlflexibleservers.FirewallRuleProperties{
-			StartIPAddress: stringPtr("0.0.0.0"),
-			EndIPAddress:   stringPtr("255.255.255.255"),
+			StartIPAddress: new("0.0.0.0"),
+			EndIPAddress:   new("255.255.255.255"),
 		},
 	}
-}
-
-func stringPtr(s string) *string {
-	return &s
 }
