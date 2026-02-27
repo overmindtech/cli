@@ -22,8 +22,6 @@ import (
 	"github.com/overmindtech/cli/sources/stdlib"
 )
 
-func newPtr[T any](v T) *T { return &v }
-
 type mockKeysPager struct {
 	pages []armkeyvault.KeysClientListResponse
 	index int
@@ -236,7 +234,7 @@ func TestKeyVaultKey(t *testing.T) {
 
 		testClient := &testKeysClient{
 			MockKeysClient: mockClient,
-			pager:         mockPager,
+			pager:          mockPager,
 		}
 
 		wrapper := manual.NewKeyVaultKey(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
@@ -310,7 +308,7 @@ func TestKeyVaultKey(t *testing.T) {
 
 		testClient := &testKeysClient{
 			MockKeysClient: mockClient,
-			pager:         mockPager,
+			pager:          mockPager,
 		}
 
 		wrapper := manual.NewKeyVaultKey(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
@@ -361,7 +359,7 @@ func TestKeyVaultKey(t *testing.T) {
 
 		testClient := &testKeysClient{
 			MockKeysClient: mockClient,
-			pager:         errorPager,
+			pager:          errorPager,
 		}
 
 		wrapper := manual.NewKeyVaultKey(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
@@ -477,25 +475,25 @@ func TestKeyVaultKey(t *testing.T) {
 
 func createAzureKey(keyName, subscriptionID, resourceGroup, vaultName string) *armkeyvault.Key {
 	return &armkeyvault.Key{
-		ID:   newPtr(fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.KeyVault/vaults/%s/keys/%s", subscriptionID, resourceGroup, vaultName, keyName)),
-		Name: newPtr(keyName),
-		Type: newPtr("Microsoft.KeyVault/vaults/keys"),
+		ID:   new(fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.KeyVault/vaults/%s/keys/%s", subscriptionID, resourceGroup, vaultName, keyName)),
+		Name: new(keyName),
+		Type: new("Microsoft.KeyVault/vaults/keys"),
 		Tags: map[string]*string{
-			"env":     newPtr("test"),
-			"project": newPtr("testing"),
+			"env":     new("test"),
+			"project": new("testing"),
 		},
 		Properties: &armkeyvault.KeyProperties{
-			KeyURI: newPtr(fmt.Sprintf("https://%s.vault.azure.net/keys/%s", vaultName, keyName)),
+			KeyURI: new(fmt.Sprintf("https://%s.vault.azure.net/keys/%s", vaultName, keyName)),
 		},
 	}
 }
 
 func createAzureKeyMinimal(keyName string) *armkeyvault.Key {
 	return &armkeyvault.Key{
-		Name: newPtr(keyName),
-		Type: newPtr("Microsoft.KeyVault/vaults/keys"),
+		Name: new(keyName),
+		Type: new("Microsoft.KeyVault/vaults/keys"),
 		Tags: map[string]*string{
-			"env": newPtr("test"),
+			"env": new("test"),
 		},
 		Properties: &armkeyvault.KeyProperties{},
 	}
