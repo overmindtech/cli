@@ -142,7 +142,7 @@ Permissions can be applied at any level of the GCP resource hierarchy and are in
 
 **Direct Access:**
 
-```
+```text
 Your GCP Organization/Folder/Project
   └─ Overmind Service Account
       └─ Granted: Viewer roles (+ custom role for project-level)
@@ -151,7 +151,7 @@ Your GCP Organization/Folder/Project
 
 **Service Account Impersonation:**
 
-```
+```text
 Your GCP Organization/Folder/Project
   ├─ Your Service Account
   │   └─ Granted: Viewer roles (+ custom role for project-level)
@@ -267,9 +267,11 @@ Re-run the setup script or check for organization-level policies restricting ser
 
 1. Verify regional configuration matches where your resources exist
 2. For project-level parents, check that required GCP APIs are enabled:
+
    ```bash
    gcloud services list --enabled --project=YOUR_PROJECT_ID
    ```
+
 3. For organization or folder-level parents, verify that you have the necessary permissions to list projects and that child projects have the required APIs enabled
 4. Some resources may require additional permissions at different levels of the hierarchy
 
@@ -434,6 +436,6 @@ Here are all the predefined GCP roles that Overmind requires, plus the custom ro
 | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `projects/{PROJECT_ID}/roles/overmindCustomRole` | Custom role for additional BigQuery and Spanner permissions **Permissions:** `bigquery.transfers.get` - BigQuery transfer configuration discovery, `spanner.databases.get` - Spanner database detail discovery, `spanner.databases.list` - Spanner database enumeration |
 
-All predefined roles provide read-only access and are sourced from Google Cloud's [predefined roles documentation](https://cloud.google.com/iam/docs/understanding-roles#predefined). 
+All predefined roles provide read-only access and are sourced from Google Cloud's [predefined roles documentation](https://cloud.google.com/iam/docs/understanding-roles#predefined).
 
 **Project-Level Restrictions:** Some roles (`roles/iam.roleViewer` and `roles/iam.serviceAccountViewer`) can only be granted at the project level in GCP. When configuring at the organization or folder level, these roles are automatically excluded. The custom role is also only created and assigned when using a project-level parent (e.g., `projects/my-project`).

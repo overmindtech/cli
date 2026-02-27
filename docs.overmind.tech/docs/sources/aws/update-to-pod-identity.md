@@ -62,6 +62,7 @@ Look for a stack named "Overmind" or "OvermindDevelopment" in the region where y
 
 :::info Finding the CloudFormation Template URL
 To get the latest CloudFormation template URL:
+
 1. Go to [Overmind Settings > Sources](https://app.overmind.tech/settings/sources)
 2. Click **Add Source > AWS**
 3. Right-click the "Deploy" button and copy the link - the URL contains the `templateURL` parameter
@@ -133,7 +134,7 @@ Your complete trust policy should look like this:
 }
 ```
 
-4. Click **"Update policy"**
+1. Click **"Update policy"**
 
 #### Step 4: Update the Version Tag (Optional)
 
@@ -149,6 +150,7 @@ To help track the version of your role configuration:
 After updating, your existing AWS sources will continue to work without interruption. The enhanced security features will be automatically enabled within the next few minutes.
 
 You can verify the update was successful by:
+
 1. Checking that your source shows a green status in [Overmind Settings > Sources](https://app.overmind.tech/settings/sources)
 2. Verifying the role's `overmind.version` tag shows `2025-12-01` or later
 
