@@ -9,7 +9,7 @@ Official documentation: https://cloud.google.com/kubernetes-engine/docs/concepts
 
 **Terrafrom Mappings:**
 
-  * `google_container_node_pool.id`
+* `google_container_node_pool.id`
 
 ## Supported Methods
 

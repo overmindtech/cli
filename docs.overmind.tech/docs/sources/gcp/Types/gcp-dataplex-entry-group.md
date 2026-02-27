@@ -8,7 +8,7 @@ Official documentation: https://cloud.google.com/data-catalog/docs/reference/res
 
 **Terrafrom Mappings:**
 
-  * `google_dataplex_entry_group.id`
+* `google_dataplex_entry_group.id`
 
 ## Supported Methods
 

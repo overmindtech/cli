@@ -7,7 +7,7 @@ A GCP Redis Instance is a fully managed, in-memory data store provided by Cloud 
 
 **Terrafrom Mappings:**
 
-  * `google_redis_instance.id`
+* `google_redis_instance.id`
 
 ## Supported Methods
 

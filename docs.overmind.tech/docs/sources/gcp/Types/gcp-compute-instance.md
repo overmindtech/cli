@@ -7,7 +7,7 @@ A Google Cloud Compute Engine instance is a virtual machine (VM) that runs on Go
 
 **Terrafrom Mappings:**
 
-  * `google_compute_instance.name`
+* `google_compute_instance.name`
 
 ## Supported Methods
 

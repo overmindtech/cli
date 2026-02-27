@@ -7,7 +7,7 @@ A **GCP Certificate Manager Certificate** represents an SSL/TLS certificate that
 
 **Terrafrom Mappings:**
 
-  * `google_certificate_manager_certificate.id`
+* `google_certificate_manager_certificate.id`
 
 ## Supported Methods
 

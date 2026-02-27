@@ -7,10 +7,10 @@ Google Cloud Bigtable is a scalable NoSQL database service for large analytical 
 
 **Terrafrom Mappings:**
 
-  * `google_bigtable_table.id`
-  * `google_bigtable_table_iam_binding.instance_name`
-  * `google_bigtable_table_iam_member.instance_name`
-  * `google_bigtable_table_iam_policy.instance_name`
+* `google_bigtable_table.id`
+* `google_bigtable_table_iam_binding.instance_name`
+* `google_bigtable_table_iam_member.instance_name`
+* `google_bigtable_table_iam_policy.instance_name`
 
 ## Supported Methods
 

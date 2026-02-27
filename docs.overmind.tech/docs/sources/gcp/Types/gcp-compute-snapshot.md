@@ -8,7 +8,7 @@ Official documentation: https://cloud.google.com/compute/docs/disks/create-snaps
 
 **Terrafrom Mappings:**
 
-  * `google_compute_snapshot.name`
+* `google_compute_snapshot.name`
 
 ## Supported Methods
 

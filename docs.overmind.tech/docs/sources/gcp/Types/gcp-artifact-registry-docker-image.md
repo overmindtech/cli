@@ -8,7 +8,7 @@ For more information, see the official documentation: https://cloud.google.com/a
 
 **Terrafrom Mappings:**
 
-  * `google_artifact_registry_docker_image.name`
+* `google_artifact_registry_docker_image.name`
 
 ## Supported Methods
 

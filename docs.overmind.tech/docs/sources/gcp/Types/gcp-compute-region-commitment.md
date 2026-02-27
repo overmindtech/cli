@@ -7,7 +7,7 @@ A Compute Region Commitment in Google Cloud Platform (GCP) represents a contract
 
 **Terrafrom Mappings:**
 
-  * `google_compute_region_commitment.name`
+* `google_compute_region_commitment.name`
 
 ## Supported Methods
 

@@ -6,7 +6,6 @@ sidebar_label: gcp-ai-platform-pipeline-job
 A GCP AI Platform Pipeline Job (now part of Vertex AI Pipelines) represents a single execution of a machine-learning workflow defined in a Kubeflow/Vertex AI pipeline. The job orchestrates a directed acyclic graph (DAG) of pipeline components such as data preparation, model training and evaluation, and optionally deployment. Each run is stored as a resource that tracks the DAG definition, runtime parameters, execution state, logs and metadata.  
 Official documentation: https://cloud.google.com/vertex-ai/docs/pipelines/introduction
 
-
 ## Supported Methods
 
 * `GET`: Get a gcp-ai-platform-pipeline-job by its "name"

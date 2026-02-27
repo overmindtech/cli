@@ -8,7 +8,7 @@ For full details, see the official documentation: https://cloud.google.com/kms/d
 
 **Terrafrom Mappings:**
 
-  * `google_kms_key_ring.id`
+* `google_kms_key_ring.id`
 
 ## Supported Methods
 

@@ -8,7 +8,7 @@ For a full description of Tag Values and how they fit into the tagging system, r
 
 **Terrafrom Mappings:**
 
-  * `google_tags_tag_value.name`
+* `google_tags_tag_value.name`
 
 ## Supported Methods
 

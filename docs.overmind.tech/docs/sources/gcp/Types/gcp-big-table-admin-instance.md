@@ -7,10 +7,10 @@ Cloud Bigtable instances are the top-level administrative containers for all tab
 
 **Terrafrom Mappings:**
 
-  * `google_bigtable_instance.name`
-  * `google_bigtable_instance_iam_binding.instance`
-  * `google_bigtable_instance_iam_member.instance`
-  * `google_bigtable_instance_iam_policy.instance`
+* `google_bigtable_instance.name`
+* `google_bigtable_instance_iam_binding.instance`
+* `google_bigtable_instance_iam_member.instance`
+* `google_bigtable_instance_iam_policy.instance`
 
 ## Supported Methods
 

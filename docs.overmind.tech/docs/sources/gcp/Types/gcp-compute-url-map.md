@@ -8,7 +8,7 @@ Official documentation: https://cloud.google.com/load-balancing/docs/url-map-con
 
 **Terrafrom Mappings:**
 
-  * `google_compute_url_map.name`
+* `google_compute_url_map.name`
 
 ## Supported Methods
 

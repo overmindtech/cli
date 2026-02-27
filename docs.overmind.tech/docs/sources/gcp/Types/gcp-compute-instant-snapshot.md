@@ -8,7 +8,7 @@ Official documentation: https://cloud.google.com/compute/docs/disks/instant-snap
 
 **Terrafrom Mappings:**
 
-  * `google_compute_instant_snapshot.name`
+* `google_compute_instant_snapshot.name`
 
 ## Supported Methods
 

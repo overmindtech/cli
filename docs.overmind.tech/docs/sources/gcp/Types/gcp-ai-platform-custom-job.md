@@ -6,7 +6,6 @@ sidebar_label: gcp-ai-platform-custom-job
 A Vertex AI / AI Platform Custom Job represents an ad-hoc machine-learning workload that you want Google Cloud to run on managed infrastructure. By pointing the job at a custom container image or a Python package, you can execute training, hyper-parameter tuning or batch-processing logic with fine-grained control over machine types, accelerators, networking and encryption. The job definition is submitted to the `projects.locations.customJobs` API and Google Cloud provisions the required compute, streams logs, stores artefacts and tears the resources down once the job finishes.  
 Official documentation: https://cloud.google.com/vertex-ai/docs/training/create-custom-job
 
-
 ## Supported Methods
 
 * `GET`: Get a gcp-ai-platform-custom-job by its "name"

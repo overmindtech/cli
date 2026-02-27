@@ -6,7 +6,6 @@ sidebar_label: gcp-big-table-admin-cluster
 A GCP Bigtable Admin Cluster resource represents the configuration of a single cluster that belongs to a Cloud Bigtable instance. The cluster defines the geographic location where data is stored, the number and type of serving nodes, the storage type (HDD or SSD), autoscaling settings, and any customer-managed encryption keys (CMEK) that protect the data. It is managed through the Cloud Bigtable Admin API, which allows you to create, update, or delete clusters programmatically.  
 For further details, see Google’s official documentation: https://cloud.google.com/bigtable/docs/instances-clusters-nodes
 
-
 ## Supported Methods
 
 * `GET`: Get a gcp-big-table-admin-cluster by its "instances|clusters"

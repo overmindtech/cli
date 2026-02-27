@@ -7,7 +7,7 @@ A Google Cloud Compute Router is a fully distributed and managed Border Gateway 
 
 **Terrafrom Mappings:**
 
-  * `google_compute_router.id`
+* `google_compute_router.id`
 
 ## Supported Methods
 

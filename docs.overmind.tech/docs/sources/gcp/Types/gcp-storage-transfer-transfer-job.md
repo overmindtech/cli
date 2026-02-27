@@ -8,7 +8,7 @@ Official documentation: https://cloud.google.com/storage-transfer/docs/create-tr
 
 **Terrafrom Mappings:**
 
-  * `google_storage_transfer_job.name`
+* `google_storage_transfer_job.name`
 
 ## Supported Methods
 

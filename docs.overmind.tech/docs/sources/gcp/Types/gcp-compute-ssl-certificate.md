@@ -7,7 +7,7 @@ A **Google Compute SSL Certificate** represents an SSL certificate resource that
 
 **Terrafrom Mappings:**
 
-  * `google_compute_ssl_certificate.name`
+* `google_compute_ssl_certificate.name`
 
 ## Supported Methods
 

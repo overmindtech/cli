@@ -8,7 +8,7 @@ For full details see the official REST reference: https://cloud.google.com/datap
 
 **Terrafrom Mappings:**
 
-  * `google_dataplex_datascan.id`
+* `google_dataplex_datascan.id`
 
 ## Supported Methods
 

@@ -8,7 +8,7 @@ Official documentation: https://cloud.google.com/kms/docs/object-hierarchy#key
 
 **Terrafrom Mappings:**
 
-  * `google_kms_crypto_key.id`
+* `google_kms_crypto_key.id`
 
 ## Supported Methods
 

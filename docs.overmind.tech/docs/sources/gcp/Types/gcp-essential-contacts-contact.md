@@ -8,7 +8,7 @@ For further details, refer to the official Google Cloud documentation: https://c
 
 **Terrafrom Mappings:**
 
-  * `google_essential_contacts_contact.id`
+* `google_essential_contacts_contact.id`
 
 ## Supported Methods
 

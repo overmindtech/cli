@@ -6,7 +6,6 @@ sidebar_label: gcp-service-usage-service
 A **Service Usage Service** represents an individual Google-managed API or service (e.g. `compute.googleapis.com`, `pubsub.googleapis.com`) and its enablement state inside a single GCP project. By querying this resource you can determine whether a particular service is currently enabled, disabled, or in another transitional state for that project, which is critical for understanding if downstream resources can be created successfully.  
 Official documentation: https://cloud.google.com/service-usage/docs/reference/rest/v1/services
 
-
 ## Supported Methods
 
 * `GET`: Get a gcp-service-usage-service by its "name"

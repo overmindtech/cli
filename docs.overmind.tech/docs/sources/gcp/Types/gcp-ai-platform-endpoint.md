@@ -6,7 +6,6 @@ sidebar_label: gcp-ai-platform-endpoint
 A **Google Cloud AI Platform Endpoint** (now part of Vertex AI) is a regional, fully-managed HTTPS entry point that receives online prediction requests and routes them to one or more deployed models. Endpoints let you perform low-latency, autoscaled inference, apply access controls, add request/response logging and attach monitoring jobs.  
 Official documentation: https://cloud.google.com/vertex-ai/docs/predictions/getting-predictions#deploy_model_to_endpoint
 
-
 ## Supported Methods
 
 * `GET`: Get a gcp-ai-platform-endpoint by its "name"

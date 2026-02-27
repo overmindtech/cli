@@ -8,7 +8,7 @@ For a full specification of the resource, see the official Google Cloud document
 
 **Terrafrom Mappings:**
 
-  * `google_compute_node_template.name`
+* `google_compute_node_template.name`
 
 ## Supported Methods
 

@@ -7,14 +7,14 @@ A Google Cloud Project is the fundamental organisational unit in Google Cloud Pl
 
 **Terrafrom Mappings:**
 
-  * `google_project.project_id`
-  * `google_compute_shared_vpc_host_project.project`
-  * `google_compute_shared_vpc_service_project.service_project`
-  * `google_compute_shared_vpc_service_project.host_project`
-  * `google_project_iam_binding.project`
-  * `google_project_iam_member.project`
-  * `google_project_iam_policy.project`
-  * `google_project_iam_audit_config.project`
+* `google_project.project_id`
+* `google_compute_shared_vpc_host_project.project`
+* `google_compute_shared_vpc_service_project.service_project`
+* `google_compute_shared_vpc_service_project.host_project`
+* `google_project_iam_binding.project`
+* `google_project_iam_member.project`
+* `google_project_iam_policy.project`
+* `google_project_iam_audit_config.project`
 
 ## Supported Methods
 

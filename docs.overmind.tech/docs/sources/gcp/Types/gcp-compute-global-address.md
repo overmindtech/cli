@@ -8,7 +8,7 @@ Official documentation: https://cloud.google.com/compute/docs/ip-addresses/reser
 
 **Terrafrom Mappings:**
 
-  * `google_compute_global_address.name`
+* `google_compute_global_address.name`
 
 ## Supported Methods
 

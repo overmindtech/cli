@@ -7,7 +7,6 @@ The **Security Center Service** resource represents the configuration of Securit
 Each instance of this resource indicates that SCC is running in the specified region and records the service‐wide settings that govern how findings are ingested, stored and surfaced.  
 Official documentation: https://cloud.google.com/security-command-center/docs/reference/security-center-management/rest/v1/projects.locations.securityCenterServices/list
 
-
 ## Supported Methods
 
 * `GET`: Get a gcp-security-center-management-security-center-service by its "locations|securityCenterServices"

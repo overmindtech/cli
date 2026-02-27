@@ -8,7 +8,7 @@ For full details, see the official Google documentation: https://cloud.google.co
 
 **Terrafrom Mappings:**
 
-  * `google_compute_security_policy.name`
+* `google_compute_security_policy.name`
 
 ## Supported Methods
 

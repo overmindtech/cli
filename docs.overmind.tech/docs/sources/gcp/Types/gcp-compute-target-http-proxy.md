@@ -8,7 +8,7 @@ See the official documentation for full details: https://cloud.google.com/load-b
 
 **Terrafrom Mappings:**
 
-  * `google_compute_target_http_proxy.name`
+* `google_compute_target_http_proxy.name`
 
 ## Supported Methods
 

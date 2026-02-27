@@ -8,7 +8,7 @@ Official documentation: https://cloud.google.com/compute/docs/reference/rest/v1/
 
 **Terrafrom Mappings:**
 
-  * `google_compute_vpn_tunnel.name`
+* `google_compute_vpn_tunnel.name`
 
 ## Supported Methods
 

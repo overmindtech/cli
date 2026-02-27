@@ -8,10 +8,10 @@ Official documentation: https://cloud.google.com/bigquery/docs/tables
 
 **Terrafrom Mappings:**
 
-  * `google_bigquery_table.id`
-  * `google_bigquery_table_iam_binding.dataset_id`
-  * `google_bigquery_table_iam_member.dataset_id`
-  * `google_bigquery_table_iam_policy.dataset_id`
+* `google_bigquery_table.id`
+* `google_bigquery_table_iam_binding.dataset_id`
+* `google_bigquery_table_iam_member.dataset_id`
+* `google_bigquery_table_iam_policy.dataset_id`
 
 ## Supported Methods
 

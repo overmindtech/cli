@@ -7,7 +7,7 @@ A **Cloud KMS CryptoKeyVersion** is an immutable representation of a single piec
 
 **Terrafrom Mappings:**
 
-  * `google_kms_crypto_key_version.id`
+* `google_kms_crypto_key_version.id`
 
 ## Supported Methods
 

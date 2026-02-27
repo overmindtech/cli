@@ -3,7 +3,7 @@ title: GCP Cloud Functions Function
 sidebar_label: gcp-cloud-functions-function
 ---
 
-Google Cloud Functions is a server-less execution environment that lets you run event-driven code without provisioning or managing servers. A “Function” is the deployed piece of code together with its configuration (runtime, memory/CPU limits, environment variables, ingress/egress settings, triggers and IAM bindings). Documentation: https://cloud.google.com/functions/docs 
+Google Cloud Functions is a server-less execution environment that lets you run event-driven code without provisioning or managing servers. A “Function” is the deployed piece of code together with its configuration (runtime, memory/CPU limits, environment variables, ingress/egress settings, triggers and IAM bindings). Documentation: https://cloud.google.com/functions/docs
 
 ## Supported Methods
 

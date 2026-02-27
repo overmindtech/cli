@@ -8,7 +8,7 @@ Official documentation: https://cloud.google.com/bigtable/docs/app-profiles
 
 **Terrafrom Mappings:**
 
-  * `google_bigtable_app_profile.id`
+* `google_bigtable_app_profile.id`
 
 ## Supported Methods
 

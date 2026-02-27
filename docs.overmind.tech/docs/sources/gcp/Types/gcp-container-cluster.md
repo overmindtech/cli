@@ -8,7 +8,7 @@ Official documentation: https://cloud.google.com/kubernetes-engine/docs/concepts
 
 **Terrafrom Mappings:**
 
-  * `google_container_cluster.id`
+* `google_container_cluster.id`
 
 ## Supported Methods
 

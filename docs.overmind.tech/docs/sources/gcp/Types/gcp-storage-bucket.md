@@ -8,10 +8,10 @@ For full details see the official documentation: https://cloud.google.com/storag
 
 **Terrafrom Mappings:**
 
-  * `google_storage_bucket.name`
-  * `google_storage_bucket_iam_binding.bucket`
-  * `google_storage_bucket_iam_member.bucket`
-  * `google_storage_bucket_iam_policy.bucket`
+* `google_storage_bucket.name`
+* `google_storage_bucket_iam_binding.bucket`
+* `google_storage_bucket_iam_member.bucket`
+* `google_storage_bucket_iam_policy.bucket`
 
 ## Supported Methods
 

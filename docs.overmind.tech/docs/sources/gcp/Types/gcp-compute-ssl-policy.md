@@ -8,7 +8,7 @@ For detailed information, refer to the official Google Cloud documentation: http
 
 **Terrafrom Mappings:**
 
-  * `google_compute_ssl_policy.name`
+* `google_compute_ssl_policy.name`
 
 ## Supported Methods
 
