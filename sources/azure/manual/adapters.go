@@ -111,6 +111,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create encryption scopes client: %w", err)
 		}
 
+		privateEndpointConnectionsClient, err := armstorage.NewPrivateEndpointConnectionsClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create private endpoint connections client: %w", err)
+		}
+
 		virtualNetworksClient, err := armnetwork.NewVirtualNetworksClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create virtual networks client: %w", err)
@@ -364,6 +369,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewEncryptionScopesClient(encryptionScopesClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewStoragePrivateEndpointConnection(
+					clients.NewStoragePrivateEndpointConnectionsClient(privateEndpointConnectionsClient),
+					resourceGroupScopes,
+				), cache),
 				sources.WrapperToAdapter(NewNetworkVirtualNetwork(
 					clients.NewVirtualNetworksClient(virtualNetworksClient),
 					resourceGroupScopes,
@@ -570,6 +579,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewStorageQueues(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewStorageTable(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewStorageEncryptionScope(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewStoragePrivateEndpointConnection(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkVirtualNetwork(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkSubnet(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkVirtualNetworkPeering(nil, placeholderResourceGroupScopes), noOpCache),
