@@ -29,6 +29,7 @@ func GetResourceIDPathKeys(resourceType string) []string {
 		"azure-dbforpostgresql-database":                  {"flexibleServers", "databases"},          // "/subscriptions/.../Microsoft.DBforPostgreSQL/flexibleServers/{server}/databases/{db}",
 		"azure-dbforpostgresql-flexible-server-firewall-rule": {"flexibleServers", "firewallRules"}, // "/subscriptions/.../Microsoft.DBforPostgreSQL/flexibleServers/{server}/firewallRules/{rule}",
 		"azure-keyvault-secret":                     {"vaults", "secrets"},                     // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.KeyVault/vaults/{vaultName}/secrets/{secretName}",
+		"azure-keyvault-key":                        {"vaults", "keys"},                       // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.KeyVault/vaults/{vaultName}/keys/{keyName}",
 		"azure-authorization-role-assignment":       {"roleAssignments"},                       // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Authorization/roleAssignments/{roleAssignmentName}",
 		"azure-compute-virtual-machine-run-command": {"virtualMachines", "runCommands"},        // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/virtualMachines/{virtualMachineName}/runCommands/{runCommandName}",
 		"azure-compute-virtual-machine-extension":   {"virtualMachines", "extensions"},         // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/virtualMachines/{virtualMachineName}/extensions/{extensionName}",

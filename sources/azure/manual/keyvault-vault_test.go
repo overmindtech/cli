@@ -113,6 +113,12 @@ func TestKeyVaultVault(t *testing.T) {
 					ExpectedQuery:  vaultName,
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
 				}, {
+					// Child resources: keys in this vault (SEARCH by vault name)
+					ExpectedType:   azureshared.KeyVaultKey.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  vaultName,
+					ExpectedScope:  subscriptionID + "." + resourceGroup,
+				}, {
 					// Private Endpoint (GET) - same resource group
 					ExpectedType:   azureshared.NetworkPrivateEndpoint.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
@@ -219,9 +225,9 @@ func TestKeyVaultVault(t *testing.T) {
 			t.Fatalf("Expected no error, got: %v", qErr)
 		}
 
-		// Should only have the child SEARCH link (secrets in vault); no private endpoints, subnets, etc.
-		if len(sdpItem.GetLinkedItemQueries()) != 1 {
-			t.Errorf("Expected 1 linked item query (KeyVaultSecret SEARCH), got %d", len(sdpItem.GetLinkedItemQueries()))
+		// Should only have the child SEARCH links (secrets and keys in vault); no private endpoints, subnets, etc.
+		if len(sdpItem.GetLinkedItemQueries()) != 2 {
+			t.Errorf("Expected 2 linked item queries (KeyVaultSecret and KeyVaultKey SEARCH), got %d", len(sdpItem.GetLinkedItemQueries()))
 		}
 	})
 
@@ -361,6 +367,8 @@ func TestKeyVaultVault(t *testing.T) {
 		}
 
 		expectedLinks := map[shared.ItemType]bool{
+			azureshared.KeyVaultSecret:         true,
+			azureshared.KeyVaultKey:            true,
 			azureshared.NetworkPrivateEndpoint: true,
 			azureshared.NetworkSubnet:          true,
 			azureshared.KeyVaultManagedHSM:     true,
