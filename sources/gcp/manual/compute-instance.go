@@ -122,7 +122,7 @@ func (c computeInstanceWrapper) Search(ctx context.Context, scope string, queryP
 		if err != nil {
 			continue
 		}
-		tagsMap, ok := tagsVal.(map[string]interface{})
+		tagsMap, ok := tagsVal.(map[string]any)
 		if !ok {
 			continue
 		}
@@ -130,7 +130,7 @@ func (c computeInstanceWrapper) Search(ctx context.Context, scope string, queryP
 		if !ok {
 			continue
 		}
-		itemsList, ok := itemsVal.([]interface{})
+		itemsList, ok := itemsVal.([]any)
 		if !ok {
 			continue
 		}

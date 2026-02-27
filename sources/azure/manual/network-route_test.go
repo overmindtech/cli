@@ -220,7 +220,7 @@ func TestNetworkRoute(t *testing.T) {
 				{
 					RouteListResult: armnetwork.RouteListResult{
 						Value: []*armnetwork.Route{
-							{Name: nil, ID: strPtr("/some/id")},
+							{Name: nil, ID: new("/some/id")},
 							validRoute,
 						},
 					},
@@ -299,7 +299,7 @@ func createAzureRoute(routeName, routeTableName string) *armnetwork.Route {
 		Properties: &armnetwork.RoutePropertiesFormat{
 			ProvisioningState: &provisioningState,
 			NextHopIPAddress:  &nextHopIP,
-			AddressPrefix:     strPtr("10.0.0.0/24"),
+			AddressPrefix:     new("10.0.0.0/24"),
 			NextHopType:       &nextHopType,
 		},
 	}

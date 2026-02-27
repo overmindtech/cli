@@ -171,8 +171,8 @@ func TestNetworkPrivateEndpoint(t *testing.T) {
 		pe1 := createAzurePrivateEndpoint("test-pe-1", subscriptionID, resourceGroup)
 		pe2 := &armnetwork.PrivateEndpoint{
 			Name:     nil,
-			Location: to.Ptr("eastus"),
-			Tags:     map[string]*string{"env": to.Ptr("test")},
+			Location: new("eastus"),
+			Tags:     map[string]*string{"env": new("test")},
 			Properties: &armnetwork.PrivateEndpointProperties{
 				ProvisioningState: to.Ptr(armnetwork.ProvisioningStateSucceeded),
 			},
@@ -277,7 +277,7 @@ func (m *MockPrivateEndpointsPager) More() bool {
 
 func (mr *MockPrivateEndpointsPagerMockRecorder) More() *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "More", reflect.TypeOf((*MockPrivateEndpointsPager)(nil).More))
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "More", reflect.TypeFor[func() bool]())
 }
 
 func (m *MockPrivateEndpointsPager) NextPage(ctx context.Context) (armnetwork.PrivateEndpointsClientListResponse, error) {
@@ -288,9 +288,9 @@ func (m *MockPrivateEndpointsPager) NextPage(ctx context.Context) (armnetwork.Pr
 	return ret0, ret1
 }
 
-func (mr *MockPrivateEndpointsPagerMockRecorder) NextPage(ctx interface{}) *gomock.Call {
+func (mr *MockPrivateEndpointsPagerMockRecorder) NextPage(ctx any) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NextPage", reflect.TypeOf((*MockPrivateEndpointsPager)(nil).NextPage), ctx)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "NextPage", reflect.TypeFor[func(ctx context.Context) (armnetwork.PrivateEndpointsClientListResponse, error)](), ctx)
 }
 
 func createAzurePrivateEndpoint(peName, subscriptionID, resourceGroup string) *armnetwork.PrivateEndpoint {
@@ -299,34 +299,34 @@ func createAzurePrivateEndpoint(peName, subscriptionID, resourceGroup string) *a
 	asgID := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/applicationSecurityGroups/test-asg", subscriptionID, resourceGroup)
 
 	return &armnetwork.PrivateEndpoint{
-		Name:     to.Ptr(peName),
-		Location: to.Ptr("eastus"),
+		Name:     new(peName),
+		Location: new("eastus"),
 		Tags: map[string]*string{
-			"env":     to.Ptr("test"),
-			"project": to.Ptr("testing"),
+			"env":     new("test"),
+			"project": new("testing"),
 		},
 		Properties: &armnetwork.PrivateEndpointProperties{
 			ProvisioningState: to.Ptr(armnetwork.ProvisioningStateSucceeded),
 			Subnet: &armnetwork.Subnet{
-				ID: to.Ptr(subnetID),
+				ID: new(subnetID),
 			},
 			NetworkInterfaces: []*armnetwork.Interface{
-				{ID: to.Ptr(nicID)},
+				{ID: new(nicID)},
 			},
 			ApplicationSecurityGroups: []*armnetwork.ApplicationSecurityGroup{
-				{ID: to.Ptr(asgID)},
+				{ID: new(asgID)},
 			},
 			IPConfigurations: []*armnetwork.PrivateEndpointIPConfiguration{
 				{
 					Properties: &armnetwork.PrivateEndpointIPConfigurationProperties{
-						PrivateIPAddress: to.Ptr("10.0.0.10"),
+						PrivateIPAddress: new("10.0.0.10"),
 					},
 				},
 			},
 			CustomDNSConfigs: []*armnetwork.CustomDNSConfigPropertiesFormat{
 				{
-					Fqdn:        to.Ptr("myendpoint.example.com"),
-					IPAddresses: []*string{to.Ptr("10.0.0.5")},
+					Fqdn:        new("myendpoint.example.com"),
+					IPAddresses: []*string{new("10.0.0.5")},
 				},
 			},
 		},
