@@ -22,6 +22,7 @@ import (
 	"github.com/overmindtech/cli/sources/stdlib"
 )
 
+
 type mockKeysPager struct {
 	pages []armkeyvault.KeysClientListResponse
 	index int
