@@ -95,7 +95,7 @@ func (s documentDBPrivateEndpointConnectionWrapper) Search(ctx context.Context, 
 		}
 
 		for _, conn := range page.Value {
-			if conn.Name == nil {
+			if conn == nil || conn.Name == nil {
 				continue
 			}
 
@@ -130,7 +130,7 @@ func (s documentDBPrivateEndpointConnectionWrapper) SearchStream(ctx context.Con
 			return
 		}
 		for _, conn := range page.Value {
-			if conn.Name == nil {
+			if conn == nil || conn.Name == nil {
 				continue
 			}
 			item, sdpErr := s.azurePrivateEndpointConnectionToSDPItem(conn, accountName, *conn.Name, scope)
