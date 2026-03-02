@@ -181,6 +181,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create batch accounts client: %w", err)
 		}
 
+		batchApplicationClient, err := armbatch.NewApplicationClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create batch application client: %w", err)
+		}
+
 		virtualMachineScaleSetsClient, err := armcompute.NewVirtualMachineScaleSetsClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create virtual machine scale sets client: %w", err)
@@ -455,6 +460,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewBatchAccountsClient(batchAccountsClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewBatchBatchApplication(
+					clients.NewBatchApplicationsClient(batchApplicationClient),
+					resourceGroupScopes,
+				), cache),
 				sources.WrapperToAdapter(NewComputeVirtualMachineScaleSet(
 					clients.NewVirtualMachineScaleSetsClient(virtualMachineScaleSetsClient),
 					resourceGroupScopes,
@@ -614,6 +623,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewNetworkLoadBalancer(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkZone(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewBatchAccount(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewBatchBatchApplication(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeVirtualMachineScaleSet(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeAvailabilitySet(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeDisk(nil, placeholderResourceGroupScopes), noOpCache),
