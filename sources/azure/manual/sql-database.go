@@ -93,13 +93,13 @@ func (s sqlDatabaseWrapper) azureSqlDatabaseToSDPItem(database *armsql.Database,
 	}
 
 	if database.Properties != nil && database.Properties.ElasticPoolID != nil {
-		elasticPoolName := azureshared.ExtractSQLElasticPoolNameFromID(*database.Properties.ElasticPoolID)
-		if elasticPoolName != "" {
+		elasticPoolServerName, elasticPoolName := azureshared.ExtractSQLElasticPoolInfoFromResourceID(*database.Properties.ElasticPoolID)
+		if elasticPoolServerName != "" && elasticPoolName != "" {
 			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
 				Query: &sdp.Query{
 					Type:   azureshared.SQLElasticPool.String(),
 					Method: sdp.QueryMethod_GET,
-					Query:  elasticPoolName,
+					Query:  shared.CompositeLookupKey(elasticPoolServerName, elasticPoolName),
 					Scope:  scope,
 				},
 			})
@@ -187,15 +187,18 @@ func (s sqlDatabaseWrapper) azureSqlDatabaseToSDPItem(database *armsql.Database,
 			})
 
 		case azureshared.SourceResourceTypeSQLElasticPool:
+			elasticPoolServerName := params["serverName"]
 			elasticPoolName := params["elasticPoolName"]
-			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-				Query: &sdp.Query{
-					Type:   azureshared.SQLElasticPool.String(),
-					Method: sdp.QueryMethod_GET,
-					Query:  elasticPoolName,
-					Scope:  scope,
-				},
-			})
+			if elasticPoolServerName != "" && elasticPoolName != "" {
+				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+					Query: &sdp.Query{
+						Type:   azureshared.SQLElasticPool.String(),
+						Method: sdp.QueryMethod_GET,
+						Query:  shared.CompositeLookupKey(elasticPoolServerName, elasticPoolName),
+						Scope:  scope,
+					},
+				})
+			}
 
 		case azureshared.SourceResourceTypeUnknown:
 			// Synapse SQL Pool and other resource types not yet supported

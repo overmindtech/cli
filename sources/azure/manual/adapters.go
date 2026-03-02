@@ -235,6 +235,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create sql virtual network rules client: %w", err)
 		}
 
+		sqlElasticPoolsClient, err := armsql.NewElasticPoolsClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create sql elastic pools client: %w", err)
+		}
+
 		postgresqlFlexibleServersClient, err := armpostgresqlflexibleservers.NewServersClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create postgresql flexible servers client: %w", err)
@@ -391,6 +396,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 				), cache),
 				sources.WrapperToAdapter(NewSqlDatabase(
 					clients.NewSqlDatabasesClient(sqlDatabasesClient),
+					resourceGroupScopes,
+				), cache),
+				sources.WrapperToAdapter(NewSqlElasticPool(
+					clients.NewSqlElasticPoolClient(sqlElasticPoolsClient),
 					resourceGroupScopes,
 				), cache),
 				sources.WrapperToAdapter(NewSqlServerFirewallRule(
