@@ -8,7 +8,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v3"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/batch/armbatch/v3"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos/v3"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dns/armdns"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/msi/armmsi"
@@ -144,6 +144,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 		documentDBDatabaseAccountsClient, err := armcosmos.NewDatabaseAccountsClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create document db database accounts client: %w", err)
+		}
+
+		documentDBPrivateEndpointConnectionsClient, err := armcosmos.NewPrivateEndpointConnectionsClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create document db private endpoint connections client: %w", err)
 		}
 
 		keyVaultsClient, err := armkeyvault.NewVaultsClient(subscriptionID, cred, nil)
@@ -414,6 +419,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewDocumentDBDatabaseAccountsClient(documentDBDatabaseAccountsClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewDocumentDBPrivateEndpointConnection(
+					clients.NewDocumentDBPrivateEndpointConnectionsClient(documentDBPrivateEndpointConnectionsClient),
+					resourceGroupScopes,
+				), cache),
 				sources.WrapperToAdapter(NewKeyVaultVault(
 					clients.NewVaultsClient(keyVaultsClient),
 					resourceGroupScopes,
@@ -597,6 +606,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewSqlServerFirewallRule(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewSqlServerVirtualNetworkRule(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewDocumentDBDatabaseAccounts(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewDocumentDBPrivateEndpointConnection(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewKeyVaultVault(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewKeyVaultManagedHSM(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewDBforPostgreSQLDatabase(nil, placeholderResourceGroupScopes), noOpCache),
