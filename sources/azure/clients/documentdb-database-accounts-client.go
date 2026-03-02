@@ -3,7 +3,7 @@ package clients
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos/v3"
 )
 
 //go:generate mockgen -destination=../shared/mocks/mock_documentdb_database_accounts_client.go -package=mocks -source=documentdb-database-accounts-client.go

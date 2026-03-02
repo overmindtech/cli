@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos/v3"
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
 	"github.com/overmindtech/cli/go/sdpcache"
@@ -13,6 +13,7 @@ import (
 	"github.com/overmindtech/cli/sources/azure/clients"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
 	"github.com/overmindtech/cli/sources/shared"
+	"github.com/overmindtech/cli/sources/stdlib"
 )
 
 var DocumentDBDatabaseAccountsLookupByName = shared.NewItemTypeLookup("name", azureshared.DocumentDBDatabaseAccounts)
@@ -289,6 +290,49 @@ func (s documentDBDatabaseAccountsWrapper) azureDocumentDBDatabaseAccountToSDPIt
 		}
 	}
 
+	// Link to stdlib for document endpoint and regional endpoints (DNS/HTTP)
+	linkedDNSHostnames := make(map[string]struct{})
+	seenIPs := make(map[string]struct{})
+	if account.Properties != nil && account.Properties.DocumentEndpoint != nil && *account.Properties.DocumentEndpoint != "" {
+		AppendURILinks(&sdpItem.LinkedItemQueries, *account.Properties.DocumentEndpoint, linkedDNSHostnames, seenIPs)
+	}
+	if account.Properties != nil {
+		for _, loc := range account.Properties.ReadLocations {
+			if loc != nil && loc.DocumentEndpoint != nil && *loc.DocumentEndpoint != "" {
+				AppendURILinks(&sdpItem.LinkedItemQueries, *loc.DocumentEndpoint, linkedDNSHostnames, seenIPs)
+			}
+		}
+		for _, loc := range account.Properties.WriteLocations {
+			if loc != nil && loc.DocumentEndpoint != nil && *loc.DocumentEndpoint != "" {
+				AppendURILinks(&sdpItem.LinkedItemQueries, *loc.DocumentEndpoint, linkedDNSHostnames, seenIPs)
+			}
+		}
+		for _, loc := range account.Properties.Locations {
+			if loc != nil && loc.DocumentEndpoint != nil && *loc.DocumentEndpoint != "" {
+				AppendURILinks(&sdpItem.LinkedItemQueries, *loc.DocumentEndpoint, linkedDNSHostnames, seenIPs)
+			}
+		}
+		// Link to stdlib.NetworkIP for IP rules (single IPv4 or CIDR)
+		if account.Properties.IPRules != nil {
+			for _, rule := range account.Properties.IPRules {
+				if rule != nil && rule.IPAddressOrRange != nil && *rule.IPAddressOrRange != "" {
+					val := *rule.IPAddressOrRange
+					if _, seen := seenIPs[val]; !seen {
+						seenIPs[val] = struct{}{}
+						sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+							Query: &sdp.Query{
+								Type:   stdlib.NetworkIP.String(),
+								Method: sdp.QueryMethod_GET,
+								Query:  val,
+								Scope:  "global",
+							},
+						})
+					}
+				}
+			}
+		}
+	}
+
 	return sdpItem, nil
 }
 
@@ -305,6 +349,9 @@ func (s documentDBDatabaseAccountsWrapper) PotentialLinks() map[shared.ItemType]
 		azureshared.NetworkSubnet,
 		azureshared.KeyVaultVault,
 		azureshared.ManagedIdentityUserAssignedIdentity,
+		stdlib.NetworkIP,
+		stdlib.NetworkDNS,
+		stdlib.NetworkHTTP,
 	)
 }
 

@@ -23,6 +23,7 @@ func GetResourceIDPathKeys(resourceType string) []string {
 		"azure-storage-encryption-scope":             {"storageAccounts", "encryptionScopes"},
 		"azure-storage-file-share":                          {"storageAccounts", "shares"},
 		"azure-storage-storage-account-private-endpoint-connection": {"storageAccounts", "privateEndpointConnections"},
+		"azure-documentdb-private-endpoint-connection":             {"databaseAccounts", "privateEndpointConnections"},
 		"azure-storage-table":                               {"storageAccounts", "tables"},
 		"azure-sql-database":                        {"servers", "databases"},                  // "/subscriptions/00000000-1111-2222-3333-444444444444/resourceGroups/Default-SQL-SouthEastAsia/providers/Microsoft.Sql/servers/testsvr/databases/testdb",
 		"azure-sql-elastic-pool":                    {"servers", "elasticPools"},              // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Sql/servers/{serverName}/elasticPools/{elasticPoolName}",

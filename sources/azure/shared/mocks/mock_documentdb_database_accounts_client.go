@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	armcosmos "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos"
+	armcosmos "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos/v3"
 	clients "github.com/overmindtech/cli/sources/azure/clients"
 	gomock "go.uber.org/mock/gomock"
 )
