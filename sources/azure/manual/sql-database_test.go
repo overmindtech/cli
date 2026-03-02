@@ -161,10 +161,10 @@ func TestSqlDatabase(t *testing.T) {
 					ExpectedQuery:  serverName,
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
 				}, {
-					// SQLElasticPool link
+					// SQLElasticPool link (composite: serverName + elasticPoolName)
 					ExpectedType:   azureshared.SQLElasticPool.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
-					ExpectedQuery:  "test-pool",
+					ExpectedQuery:  shared.CompositeLookupKey("test-server", "test-pool"),
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
 				}, {
 					// SQLDatabaseSchema child resource link

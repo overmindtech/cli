@@ -25,6 +25,7 @@ func GetResourceIDPathKeys(resourceType string) []string {
 		"azure-storage-storage-account-private-endpoint-connection": {"storageAccounts", "privateEndpointConnections"},
 		"azure-storage-table":                               {"storageAccounts", "tables"},
 		"azure-sql-database":                        {"servers", "databases"},                  // "/subscriptions/00000000-1111-2222-3333-444444444444/resourceGroups/Default-SQL-SouthEastAsia/providers/Microsoft.Sql/servers/testsvr/databases/testdb",
+		"azure-sql-elastic-pool":                    {"servers", "elasticPools"},              // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Sql/servers/{serverName}/elasticPools/{elasticPoolName}",
 		"azure-sql-server-firewall-rule":            {"servers", "firewallRules"},             // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Sql/servers/{serverName}/firewallRules/{ruleName}",
 		"azure-sql-server-virtual-network-rule":     {"servers", "virtualNetworkRules"},        // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Sql/servers/{serverName}/virtualNetworkRules/{ruleName}",
 		"azure-dbforpostgresql-database":                  {"flexibleServers", "databases"},          // "/subscriptions/.../Microsoft.DBforPostgreSQL/flexibleServers/{server}/databases/{db}",
