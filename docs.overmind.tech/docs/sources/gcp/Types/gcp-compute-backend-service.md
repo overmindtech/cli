@@ -8,14 +8,14 @@ For full details see the official Google Cloud documentation: https://cloud.goog
 
 **Terrafrom Mappings:**
 
-* `google_compute_backend_service.name`
-* `google_compute_region_backend_service.name`
+- `google_compute_backend_service.name`
+- `google_compute_region_backend_service.name`
 
 ## Supported Methods
 
-* `GET`: Get GCP Compute Backend Service by "gcp-compute-backend-service-name"
-* `LIST`: List all GCP Compute Backend Service items
-* ~~`SEARCH`~~
+- `GET`: Get GCP Compute Backend Service by "gcp-compute-backend-service-name"
+- `LIST`: List all GCP Compute Backend Service items
+- ~~`SEARCH`~~
 
 ## Possible Links
 

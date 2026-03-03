@@ -8,9 +8,9 @@ Official documentation: https://cloud.google.com/vertex-ai/docs/training/create-
 
 ## Supported Methods
 
-* `GET`: Get a gcp-ai-platform-custom-job by its "name"
-* `LIST`: List all gcp-ai-platform-custom-job
-* ~~`SEARCH`~~
+- `GET`: Get a gcp-ai-platform-custom-job by its "name"
+- `LIST`: List all gcp-ai-platform-custom-job
+- ~~`SEARCH`~~
 
 ## Possible Links
 

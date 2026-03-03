@@ -7,13 +7,13 @@ A Google Cloud Compute Engine instance is a virtual machine (VM) that runs on Go
 
 **Terrafrom Mappings:**
 
-* `google_compute_instance.name`
+- `google_compute_instance.name`
 
 ## Supported Methods
 
-* `GET`: Get GCP Compute Instance by "gcp-compute-instance-name"
-* `LIST`: List all GCP Compute Instance items
-* `SEARCH`: Search for GCP Compute Instance by "gcp-compute-instance-networkTag"
+- `GET`: Get GCP Compute Instance by "gcp-compute-instance-name"
+- `LIST`: List all GCP Compute Instance items
+- `SEARCH`: Search for GCP Compute Instance by "gcp-compute-instance-networkTag"
 
 ## Possible Links
 

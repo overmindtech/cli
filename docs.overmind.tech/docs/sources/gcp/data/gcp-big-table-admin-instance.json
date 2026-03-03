@@ -1,9 +1,7 @@
 {
   "type": "gcp-big-table-admin-instance",
   "category": 7,
-  "potentialLinks": [
-    "gcp-big-table-admin-cluster"
-  ],
+  "potentialLinks": ["gcp-big-table-admin-cluster"],
   "descriptiveName": "GCP Big Table Admin Instance",
   "supportedQueryMethods": {
     "get": true,

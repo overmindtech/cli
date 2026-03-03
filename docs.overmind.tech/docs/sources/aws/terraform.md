@@ -111,19 +111,19 @@ module "overmind_staging" {
 
 ## Inputs
 
-| Name | Description | Type | Default | Required |
-| --- | --- | --- | --- | --- |
-| `name` | Descriptive name for the source in Overmind | `string` | n/a | yes |
-| `regions` | AWS regions to discover (defaults to all non-opt-in regions) | `list(string)` | All 17 standard regions | no |
-| `role_name` | Name for the IAM role created in this account | `string` | `"overmind-read-only"` | no |
-| `tags` | Additional tags to apply to IAM resources | `map(string)` | `{}` | no |
+| Name        | Description                                                  | Type           | Default                 | Required |
+| ----------- | ------------------------------------------------------------ | -------------- | ----------------------- | -------- |
+| `name`      | Descriptive name for the source in Overmind                  | `string`       | n/a                     | yes      |
+| `regions`   | AWS regions to discover (defaults to all non-opt-in regions) | `list(string)` | All 17 standard regions | no       |
+| `role_name` | Name for the IAM role created in this account                | `string`       | `"overmind-read-only"`  | no       |
+| `tags`      | Additional tags to apply to IAM resources                    | `map(string)`  | `{}`                    | no       |
 
 ## Outputs
 
-| Name | Description |
-| --- | --- |
-| `role_arn` | ARN of the created IAM role |
-| `source_id` | UUID of the Overmind source |
+| Name          | Description                                  |
+| ------------- | -------------------------------------------- |
+| `role_arn`    | ARN of the created IAM role                  |
+| `source_id`   | UUID of the Overmind source                  |
 | `external_id` | AWS STS external ID used in the trust policy |
 
 ## Importing Existing Sources

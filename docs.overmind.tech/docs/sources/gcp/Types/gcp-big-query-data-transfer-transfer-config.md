@@ -8,13 +8,13 @@ For a full description of the resource see the Google Cloud documentation: https
 
 **Terrafrom Mappings:**
 
-* `google_bigquery_data_transfer_config.id`
+- `google_bigquery_data_transfer_config.id`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-big-query-data-transfer-transfer-config by its "locations|transferConfigs"
-* ~~`LIST`~~
-* `SEARCH`: Search for BigQuery Data Transfer transfer configs in a location. Use the format "location" or "projects/project_id/locations/location/transferConfigs/transfer_config_id" which is supported for terraform mappings.
+- `GET`: Get a gcp-big-query-data-transfer-transfer-config by its "locations|transferConfigs"
+- ~~`LIST`~~
+- `SEARCH`: Search for BigQuery Data Transfer transfer configs in a location. Use the format "location" or "projects/project_id/locations/location/transferConfigs/transfer_config_id" which is supported for terraform mappings.
 
 ## Possible Links
 

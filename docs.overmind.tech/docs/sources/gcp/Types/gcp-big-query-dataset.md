@@ -7,16 +7,16 @@ A Google Cloud BigQuery Dataset is a logical container that holds tables, views,
 
 **Terrafrom Mappings:**
 
-* `google_bigquery_dataset.dataset_id`
-* `google_bigquery_dataset_iam_binding.dataset_id`
-* `google_bigquery_dataset_iam_member.dataset_id`
-* `google_bigquery_dataset_iam_policy.dataset_id`
+- `google_bigquery_dataset.dataset_id`
+- `google_bigquery_dataset_iam_binding.dataset_id`
+- `google_bigquery_dataset_iam_member.dataset_id`
+- `google_bigquery_dataset_iam_policy.dataset_id`
 
 ## Supported Methods
 
-* `GET`: Get GCP Big Query Dataset by "gcp-big-query-dataset-id"
-* `LIST`: List all GCP Big Query Dataset items
-* ~~`SEARCH`~~
+- `GET`: Get GCP Big Query Dataset by "gcp-big-query-dataset-id"
+- `LIST`: List all GCP Big Query Dataset items
+- ~~`SEARCH`~~
 
 ## Possible Links
 

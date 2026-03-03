@@ -1,9 +1,7 @@
 {
   "type": "gcp-monitoring-alert-policy",
   "category": 5,
-  "potentialLinks": [
-    "gcp-monitoring-notification-channel"
-  ],
+  "potentialLinks": ["gcp-monitoring-notification-channel"],
   "descriptiveName": "GCP Monitoring Alert Policy",
   "supportedQueryMethods": {
     "get": true,

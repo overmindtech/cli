@@ -8,13 +8,13 @@ Official documentation: https://cloud.google.com/compute/docs/instance-groups/cr
 
 **Terrafrom Mappings:**
 
-* `google_compute_region_instance_group_manager.name`
+- `google_compute_region_instance_group_manager.name`
 
 ## Supported Methods
 
-* `GET`: Get GCP Compute Regional Instance Group Manager by "gcp-compute-regional-instance-group-manager-name"
-* `LIST`: List all GCP Compute Regional Instance Group Manager items
-* ~~`SEARCH`~~
+- `GET`: Get GCP Compute Regional Instance Group Manager by "gcp-compute-regional-instance-group-manager-name"
+- `LIST`: List all GCP Compute Regional Instance Group Manager items
+- ~~`SEARCH`~~
 
 ## Possible Links
 

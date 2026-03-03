@@ -8,13 +8,13 @@ Official documentation: https://cloud.google.com/bigtable/docs/app-profiles
 
 **Terrafrom Mappings:**
 
-* `google_bigtable_app_profile.id`
+- `google_bigtable_app_profile.id`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-big-table-admin-app-profile by its "instances|appProfiles"
-* ~~`LIST`~~
-* `SEARCH`: Search for BigTable App Profiles in an instance. Use the format "instance" or "projects/[project_id]/instances/[instance_name]/appProfiles/[app_profile_id]" which is supported for terraform mappings.
+- `GET`: Get a gcp-big-table-admin-app-profile by its "instances|appProfiles"
+- ~~`LIST`~~
+- `SEARCH`: Search for BigTable App Profiles in an instance. Use the format "instance" or "projects/[project_id]/instances/[instance_name]/appProfiles/[app_profile_id]" which is supported for terraform mappings.
 
 ## Possible Links
 

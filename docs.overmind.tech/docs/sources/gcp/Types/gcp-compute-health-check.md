@@ -8,11 +8,11 @@ Official documentation: https://cloud.google.com/load-balancing/docs/health-chec
 
 **Terrafrom Mappings:**
 
-* `google_compute_health_check.name`
-* `google_compute_region_health_check.name`
+- `google_compute_health_check.name`
+- `google_compute_region_health_check.name`
 
 ## Supported Methods
 
-* `GET`: Get GCP Compute Health Check by "gcp-compute-health-check-name"
-* `LIST`: List all GCP Compute Health Check items
-* ~~`SEARCH`~~
+- `GET`: Get GCP Compute Health Check by "gcp-compute-health-check-name"
+- `LIST`: List all GCP Compute Health Check items
+- ~~`SEARCH`~~

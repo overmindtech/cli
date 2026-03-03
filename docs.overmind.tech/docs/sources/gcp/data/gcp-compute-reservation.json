@@ -1,9 +1,7 @@
 {
   "type": "gcp-compute-reservation",
   "category": 1,
-  "potentialLinks": [
-    "gcp-compute-region-commitment"
-  ],
+  "potentialLinks": ["gcp-compute-region-commitment"],
   "descriptiveName": "GCP Compute Reservation",
   "supportedQueryMethods": {
     "get": true,

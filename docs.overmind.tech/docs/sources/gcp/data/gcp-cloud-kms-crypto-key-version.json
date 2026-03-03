@@ -1,9 +1,7 @@
 {
   "type": "gcp-cloud-kms-crypto-key-version",
   "category": 4,
-  "potentialLinks": [
-    "gcp-cloud-kms-crypto-key"
-  ],
+  "potentialLinks": ["gcp-cloud-kms-crypto-key"],
   "descriptiveName": "GCP Cloud Kms Crypto Key Version",
   "supportedQueryMethods": {
     "get": true,

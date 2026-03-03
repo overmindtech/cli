@@ -8,9 +8,9 @@ Official documentation: https://cloud.google.com/bigtable/docs/backups
 
 ## Supported Methods
 
-* `GET`: Get a gcp-big-table-admin-backup by its "instances|clusters|backups"
-* ~~`LIST`~~
-* `SEARCH`: Search for gcp-big-table-admin-backup by its "instances|clusters"
+- `GET`: Get a gcp-big-table-admin-backup by its "instances|clusters|backups"
+- ~~`LIST`~~
+- `SEARCH`: Search for gcp-big-table-admin-backup by its "instances|clusters"
 
 ## Possible Links
 

@@ -7,11 +7,11 @@ A GCP Compute Node Group is a managed collection of sole-tenant nodes that are a
 
 **Terrafrom Mappings:**
 
-* `google_compute_node_group.name`
-* `google_compute_node_template.name`
+- `google_compute_node_group.name`
+- `google_compute_node_template.name`
 
 ## Supported Methods
 
-* `GET`: Get GCP Compute Node Group by "gcp-compute-node-group-name"
-* `LIST`: List all GCP Compute Node Group items
-* `SEARCH`: Search for GCP Compute Node Group by "gcp-compute-node-group-nodeTemplateName"
+- `GET`: Get GCP Compute Node Group by "gcp-compute-node-group-name"
+- `LIST`: List all GCP Compute Node Group items
+- `SEARCH`: Search for GCP Compute Node Group by "gcp-compute-node-group-nodeTemplateName"

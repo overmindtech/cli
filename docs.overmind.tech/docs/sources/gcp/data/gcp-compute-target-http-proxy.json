@@ -1,9 +1,7 @@
 {
   "type": "gcp-compute-target-http-proxy",
   "category": 3,
-  "potentialLinks": [
-    "gcp-compute-url-map"
-  ],
+  "potentialLinks": ["gcp-compute-url-map"],
   "descriptiveName": "GCP Compute Target Http Proxy",
   "supportedQueryMethods": {
     "get": true,

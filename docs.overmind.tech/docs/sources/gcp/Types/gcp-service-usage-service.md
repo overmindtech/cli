@@ -8,9 +8,9 @@ Official documentation: https://cloud.google.com/service-usage/docs/reference/re
 
 ## Supported Methods
 
-* `GET`: Get a gcp-service-usage-service by its "name"
-* `LIST`: List all gcp-service-usage-service
-* ~~`SEARCH`~~
+- `GET`: Get a gcp-service-usage-service by its "name"
+- `LIST`: List all gcp-service-usage-service
+- ~~`SEARCH`~~
 
 ## Possible Links
 

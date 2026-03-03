@@ -8,13 +8,13 @@ For full details see the official REST reference: https://cloud.google.com/datap
 
 **Terrafrom Mappings:**
 
-* `google_dataplex_datascan.id`
+- `google_dataplex_datascan.id`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-dataplex-data-scan by its "locations|dataScans"
-* ~~`LIST`~~
-* `SEARCH`: Search for Dataplex data scans in a location. Use the location name e.g., 'us-central1' or the format "projects/[project_id]/locations/[location]/dataScans/[data_scan_id]" which is supported for terraform mappings.
+- `GET`: Get a gcp-dataplex-data-scan by its "locations|dataScans"
+- ~~`LIST`~~
+- `SEARCH`: Search for Dataplex data scans in a location. Use the location name e.g., 'us-central1' or the format "projects/[project_id]/locations/[location]/dataScans/[data_scan_id]" which is supported for terraform mappings.
 
 ## Possible Links
 

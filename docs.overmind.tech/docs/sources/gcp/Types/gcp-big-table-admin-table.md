@@ -7,16 +7,16 @@ Google Cloud Bigtable is a scalable NoSQL database service for large analytical 
 
 **Terrafrom Mappings:**
 
-* `google_bigtable_table.id`
-* `google_bigtable_table_iam_binding.instance_name`
-* `google_bigtable_table_iam_member.instance_name`
-* `google_bigtable_table_iam_policy.instance_name`
+- `google_bigtable_table.id`
+- `google_bigtable_table_iam_binding.instance_name`
+- `google_bigtable_table_iam_member.instance_name`
+- `google_bigtable_table_iam_policy.instance_name`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-big-table-admin-table by its "instances|tables"
-* ~~`LIST`~~
-* `SEARCH`: Search for BigTable tables in an instance. Use the format "instance_name" or "projects/[project_id]/instances/[instance_name]/tables/[table_name]" which is supported for terraform mappings.
+- `GET`: Get a gcp-big-table-admin-table by its "instances|tables"
+- ~~`LIST`~~
+- `SEARCH`: Search for BigTable tables in an instance. Use the format "instance_name" or "projects/[project_id]/instances/[instance_name]/tables/[table_name]" which is supported for terraform mappings.
 
 ## Possible Links
 

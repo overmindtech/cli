@@ -8,14 +8,14 @@ For full details see the official documentation: https://cloud.google.com/iam/do
 
 **Terrafrom Mappings:**
 
-* `google_service_account.email`
-* `google_service_account.unique_id`
+- `google_service_account.email`
+- `google_service_account.unique_id`
 
 ## Supported Methods
 
-* `GET`: Get GCP Iam Service Account by "gcp-iam-service-account-email or unique_id"
-* `LIST`: List all GCP Iam Service Account items
-* ~~`SEARCH`~~
+- `GET`: Get GCP Iam Service Account by "gcp-iam-service-account-email or unique_id"
+- `LIST`: List all GCP Iam Service Account items
+- ~~`SEARCH`~~
 
 ## Possible Links
 

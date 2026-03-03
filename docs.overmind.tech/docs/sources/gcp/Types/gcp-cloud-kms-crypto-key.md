@@ -8,13 +8,13 @@ Official documentation: https://cloud.google.com/kms/docs/object-hierarchy#key
 
 **Terrafrom Mappings:**
 
-* `google_kms_crypto_key.id`
+- `google_kms_crypto_key.id`
 
 ## Supported Methods
 
-* `GET`: Get GCP Cloud Kms Crypto Key by "gcp-cloud-kms-key-ring-location|gcp-cloud-kms-key-ring-name|gcp-cloud-kms-crypto-key-name"
-* ~~`LIST`~~
-* `SEARCH`: Search for GCP Cloud Kms Crypto Key by "gcp-cloud-kms-key-ring-location|gcp-cloud-kms-key-ring-name"
+- `GET`: Get GCP Cloud Kms Crypto Key by "gcp-cloud-kms-key-ring-location|gcp-cloud-kms-key-ring-name|gcp-cloud-kms-crypto-key-name"
+- ~~`LIST`~~
+- `SEARCH`: Search for GCP Cloud Kms Crypto Key by "gcp-cloud-kms-key-ring-location|gcp-cloud-kms-key-ring-name"
 
 ## Possible Links
 

@@ -8,9 +8,9 @@ Official documentation: https://cloud.google.com/logging/docs/export
 
 ## Supported Methods
 
-* `GET`: Get GCP Logging Sink by "gcp-logging-sink-name"
-* `LIST`: List all GCP Logging Sink items
-* ~~`SEARCH`~~
+- `GET`: Get GCP Logging Sink by "gcp-logging-sink-name"
+- `LIST`: List all GCP Logging Sink items
+- ~~`SEARCH`~~
 
 ## Possible Links
 

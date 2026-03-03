@@ -7,6 +7,6 @@ A **Google Cloud IAM Role** is a logical grouping of one or more IAM permissions
 
 ## Supported Methods
 
-* `GET`: Get a gcp-iam-role by its "name"
-* `LIST`: List all gcp-iam-role
-* ~~`SEARCH`~~
+- `GET`: Get a gcp-iam-role by its "name"
+- `LIST`: List all gcp-iam-role
+- ~~`SEARCH`~~

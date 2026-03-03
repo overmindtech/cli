@@ -8,13 +8,13 @@ Official documentation: https://cloud.google.com/dataform/reference/rest
 
 **Terrafrom Mappings:**
 
-* `google_dataform_repository.id`
+- `google_dataform_repository.id`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-dataform-repository by its "locations|repositories"
-* ~~`LIST`~~
-* `SEARCH`: Search for Dataform repositories in a location. Use the format "location" or "projects/[project_id]/locations/[location]/repositories/[repository_name]" which is supported for terraform mappings.
+- `GET`: Get a gcp-dataform-repository by its "locations|repositories"
+- ~~`LIST`~~
+- `SEARCH`: Search for Dataform repositories in a location. Use the format "location" or "projects/[project_id]/locations/[location]/repositories/[repository_name]" which is supported for terraform mappings.
 
 ## Possible Links
 

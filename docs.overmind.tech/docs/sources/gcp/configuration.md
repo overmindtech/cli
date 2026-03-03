@@ -393,7 +393,7 @@ Here are all the predefined GCP roles that Overmind requires, plus the custom ro
 
 | Role                                    | Purpose                                                                                                                                                       |
 | --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `roles/browser`                         | **Required:** List projects and navigate resource hierarchy [GCP Docs](https://cloud.google.com/iam/docs/understanding-roles#browser)                        |
+| `roles/browser`                         | **Required:** List projects and navigate resource hierarchy [GCP Docs](https://cloud.google.com/iam/docs/understanding-roles#browser)                         |
 | `roles/aiplatform.viewer`               | AI Platform resource discovery [GCP Docs](https://cloud.google.com/iam/docs/roles-permissions/aiplatform#aiplatform.viewer)                                   |
 | `roles/artifactregistry.reader`         | Artifact Registry repository discovery [GCP Docs](https://cloud.google.com/iam/docs/roles-permissions/artifactregistry#artifactregistry.reader)               |
 | `roles/bigquery.metadataViewer`         | BigQuery metadata discovery [GCP Docs](https://cloud.google.com/iam/docs/roles-permissions/bigquery#bigquery.metadataViewer)                                  |

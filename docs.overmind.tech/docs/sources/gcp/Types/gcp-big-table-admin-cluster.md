@@ -8,9 +8,9 @@ For further details, see Google’s official documentation: https://cloud.google
 
 ## Supported Methods
 
-* `GET`: Get a gcp-big-table-admin-cluster by its "instances|clusters"
-* ~~`LIST`~~
-* `SEARCH`: Search for gcp-big-table-admin-cluster by its "instances"
+- `GET`: Get a gcp-big-table-admin-cluster by its "instances|clusters"
+- ~~`LIST`~~
+- `SEARCH`: Search for gcp-big-table-admin-cluster by its "instances"
 
 ## Possible Links
 

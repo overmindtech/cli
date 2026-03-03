@@ -7,13 +7,13 @@ A **Cloud KMS CryptoKeyVersion** is an immutable representation of a single piec
 
 **Terrafrom Mappings:**
 
-* `google_kms_crypto_key_version.id`
+- `google_kms_crypto_key_version.id`
 
 ## Supported Methods
 
-* `GET`: Get GCP Cloud Kms Crypto Key Version by "gcp-cloud-kms-key-ring-location|gcp-cloud-kms-key-ring-name|gcp-cloud-kms-crypto-key-name|gcp-cloud-kms-crypto-key-version-version"
-* ~~`LIST`~~
-* `SEARCH`: Search for GCP Cloud Kms Crypto Key Version by "gcp-cloud-kms-key-ring-location|gcp-cloud-kms-key-ring-name|gcp-cloud-kms-crypto-key-name"
+- `GET`: Get GCP Cloud Kms Crypto Key Version by "gcp-cloud-kms-key-ring-location|gcp-cloud-kms-key-ring-name|gcp-cloud-kms-crypto-key-name|gcp-cloud-kms-crypto-key-version-version"
+- ~~`LIST`~~
+- `SEARCH`: Search for GCP Cloud Kms Crypto Key Version by "gcp-cloud-kms-key-ring-location|gcp-cloud-kms-key-ring-name|gcp-cloud-kms-crypto-key-name"
 
 ## Possible Links
 

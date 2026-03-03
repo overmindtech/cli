@@ -1,8 +1,6 @@
 {
   "type": "gcp-compute-region-commitment",
-  "potentialLinks": [
-    "gcp-compute-reservation"
-  ],
+  "potentialLinks": ["gcp-compute-reservation"],
   "descriptiveName": "GCP Compute Region Commitment",
   "supportedQueryMethods": {
     "get": true,

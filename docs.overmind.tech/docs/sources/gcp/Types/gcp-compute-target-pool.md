@@ -7,13 +7,13 @@ A Google Cloud Compute Target Pool is a regional grouping of VM instances that a
 
 **Terrafrom Mappings:**
 
-* `google_compute_target_pool.id`
+- `google_compute_target_pool.id`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-compute-target-pool by its "name"
-* `LIST`: List all gcp-compute-target-pool
-* `SEARCH`: Search with full ID: projects/[project]/regions/[region]/targetPools/[name] (used for terraform mapping).
+- `GET`: Get a gcp-compute-target-pool by its "name"
+- `LIST`: List all gcp-compute-target-pool
+- `SEARCH`: Search with full ID: projects/[project]/regions/[region]/targetPools/[name] (used for terraform mapping).
 
 ## Possible Links
 

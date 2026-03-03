@@ -1,9 +1,7 @@
 {
   "type": "gcp-cloud-kms-key-ring",
   "category": 4,
-  "potentialLinks": [
-    "gcp-cloud-kms-crypto-key"
-  ],
+  "potentialLinks": ["gcp-cloud-kms-crypto-key"],
   "descriptiveName": "GCP Cloud Kms Key Ring",
   "supportedQueryMethods": {
     "get": true,

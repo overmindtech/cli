@@ -8,13 +8,13 @@ Official documentation: https://cloud.google.com/filestore/docs/overview
 
 **Terrafrom Mappings:**
 
-* `google_filestore_instance.id`
+- `google_filestore_instance.id`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-file-instance by its "locations|instances"
-* ~~`LIST`~~
-* `SEARCH`: Search for Filestore instances in a location. Use the location string or the full resource name supported for terraform mappings.
+- `GET`: Get a gcp-file-instance by its "locations|instances"
+- ~~`LIST`~~
+- `SEARCH`: Search for Filestore instances in a location. Use the location string or the full resource name supported for terraform mappings.
 
 ## Possible Links
 

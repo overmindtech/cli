@@ -8,10 +8,10 @@ For more information, see the official documentation: https://cloud.google.com/a
 
 **Terrafrom Mappings:**
 
-* `google_artifact_registry_docker_image.name`
+- `google_artifact_registry_docker_image.name`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-artifact-registry-docker-image by its "locations|repositories|dockerImages"
-* ~~`LIST`~~
-* `SEARCH`: Search for Docker images in Artifact Registry. Use the format "location|repository_id" or "projects/[project]/locations/[location]/repository/[repository_id]/dockerImages/[docker_image]" which is supported for terraform mappings.
+- `GET`: Get a gcp-artifact-registry-docker-image by its "locations|repositories|dockerImages"
+- ~~`LIST`~~
+- `SEARCH`: Search for Docker images in Artifact Registry. Use the format "location|repository_id" or "projects/[project]/locations/[location]/repository/[repository_id]/dockerImages/[docker_image]" which is supported for terraform mappings.

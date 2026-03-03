@@ -1,1 +1,25 @@
-{"type":"ec2-transit-gateway-route-table-association","category":3,"potentialLinks":["ec2-transit-gateway-route-table","ec2-transit-gateway-attachment","ec2-vpc","ec2-vpn-connection","directconnect-direct-connect-gateway"],"descriptiveName":"Transit Gateway Route Table Association","supportedQueryMethods":{"get":true,"getDescription":"Get by TransitGatewayRouteTableId|TransitGatewayAttachmentId","list":true,"listDescription":"List all route table associations","search":true,"searchDescription":"Search by TransitGatewayRouteTableId to list associations for that route table"},"terraformMappings":[{"terraformQueryMap":"aws_ec2_transit_gateway_route_table_association.id"}]}
+{
+  "type": "ec2-transit-gateway-route-table-association",
+  "category": 3,
+  "potentialLinks": [
+    "ec2-transit-gateway-route-table",
+    "ec2-transit-gateway-attachment",
+    "ec2-vpc",
+    "ec2-vpn-connection",
+    "directconnect-direct-connect-gateway"
+  ],
+  "descriptiveName": "Transit Gateway Route Table Association",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get by TransitGatewayRouteTableId|TransitGatewayAttachmentId",
+    "list": true,
+    "listDescription": "List all route table associations",
+    "search": true,
+    "searchDescription": "Search by TransitGatewayRouteTableId to list associations for that route table"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "aws_ec2_transit_gateway_route_table_association.id"
+    }
+  ]
+}

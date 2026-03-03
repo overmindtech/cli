@@ -10,15 +10,15 @@ To be able to analyse and discover your infrastructure, Overmind requires read-o
 
 ## Configure a Managed Source
 
-To create an AWS source, open [settings](https://app.overmind.tech/settings) by clicking your profile picture in the top right of the screen, then clicking Account Settings, then [Sources](https://app.overmind.tech/settings/sources)
+To create an AWS source, open [Settings](https://app.overmind.tech/settings) by clicking your avatar in the sidebar, then navigating to [Sources](https://app.overmind.tech/settings/sources).
 
-![Screenshot of the "User settings" menu, showing the first steps to take: Click "Account Settings"](./account_settings.png)
+![User settings menu in the sidebar](./account_settings.png)
 
-Then click Add Source > AWS.
+Click **Add source** and select **AWS**.
 
-![Screenshot of the sources subsection of the Overmind settings with the Add Source > AWS button highlighted](./aws_source_settings.png)
+![Sources settings page with Add source popover](./aws_source_settings.png)
 
-Then, use "Deploy with AWS CloudFormation" to be taken to the AWS console. You may need to sign in and reload the page. With the results from the CloudFormation deployment, choose a name for your source (e.g. "prod") and fill in "Region" and "AWSTargetRoleARN".
+Use "Deploy with AWS CloudFormation" to be taken to the AWS console. You may need to sign in and reload the page. With the results from the CloudFormation deployment, choose a name for your source (e.g. "prod") and fill in "Region" and "AWSTargetRoleARN".
 
 ![Screenshot of the "Add AWS Source" dialogue, showing tabs for automatic and manual setup. The automatic setup pane is selected. There is explanation text and input fields for Source name, Region and AWSTargetRoleARN.](./configure-aws.png)
 
@@ -111,7 +111,7 @@ At this point the permissions are complete, the last step is to copy the ARN of 
 
 ## Check your sources
 
-After you have configured a source, it'll show up in the [Source Settings](https://app.overmind.tech/changes?settings=1&activeTab=sources). There you can check that the source is healthy.
+After you have configured a source, it'll show up in [Settings › Sources](https://app.overmind.tech/settings/sources). There you can check that the source is healthy.
 
 ## Explore your new data
 

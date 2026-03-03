@@ -1,10 +1,7 @@
 {
   "type": "gcp-logging-link",
   "category": 5,
-  "potentialLinks": [
-    "gcp-big-query-dataset",
-    "gcp-logging-bucket"
-  ],
+  "potentialLinks": ["gcp-big-query-dataset", "gcp-logging-bucket"],
   "descriptiveName": "GCP Logging Link",
   "supportedQueryMethods": {
     "get": true,

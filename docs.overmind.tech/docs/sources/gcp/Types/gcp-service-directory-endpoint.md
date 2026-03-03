@@ -8,13 +8,13 @@ Official documentation: https://cloud.google.com/service-directory/docs/referenc
 
 **Terrafrom Mappings:**
 
-* `google_service_directory_endpoint.id`
+- `google_service_directory_endpoint.id`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-service-directory-endpoint by its "locations|namespaces|services|endpoints"
-* ~~`LIST`~~
-* `SEARCH`: Search for endpoints by "location|namespace_id|service_id" or "projects/[project_id]/locations/[location]/namespaces/[namespace_id]/services/[service_id]/endpoints/[endpoint_id]" which is supported for terraform mappings.
+- `GET`: Get a gcp-service-directory-endpoint by its "locations|namespaces|services|endpoints"
+- ~~`LIST`~~
+- `SEARCH`: Search for endpoints by "location|namespace_id|service_id" or "projects/[project_id]/locations/[location]/namespaces/[namespace_id]/services/[service_id]/endpoints/[endpoint_id]" which is supported for terraform mappings.
 
 ## Possible Links
 

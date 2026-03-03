@@ -1,9 +1,7 @@
 {
   "type": "gcp-compute-url-map",
   "category": 3,
-  "potentialLinks": [
-    "gcp-compute-backend-service"
-  ],
+  "potentialLinks": ["gcp-compute-backend-service"],
   "descriptiveName": "GCP Compute Url Map",
   "supportedQueryMethods": {
     "get": true,

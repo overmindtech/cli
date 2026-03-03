@@ -8,13 +8,13 @@ Official documentation: https://cloud.google.com/compute/docs/disks/create-snaps
 
 **Terrafrom Mappings:**
 
-* `google_compute_snapshot.name`
+- `google_compute_snapshot.name`
 
 ## Supported Methods
 
-* `GET`: Get GCP Compute Snapshot by "gcp-compute-snapshot-name"
-* `LIST`: List all GCP Compute Snapshot items
-* ~~`SEARCH`~~
+- `GET`: Get GCP Compute Snapshot by "gcp-compute-snapshot-name"
+- `LIST`: List all GCP Compute Snapshot items
+- ~~`SEARCH`~~
 
 ## Possible Links
 

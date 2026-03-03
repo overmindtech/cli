@@ -7,9 +7,9 @@ Google Cloud Functions is a server-less execution environment that lets you run 
 
 ## Supported Methods
 
-* `GET`: Get a gcp-cloud-functions-function by its "locations|functions"
-* ~~`LIST`~~
-* `SEARCH`: Search for gcp-cloud-functions-function by its "locations"
+- `GET`: Get a gcp-cloud-functions-function by its "locations|functions"
+- ~~`LIST`~~
+- `SEARCH`: Search for gcp-cloud-functions-function by its "locations"
 
 ## Possible Links
 

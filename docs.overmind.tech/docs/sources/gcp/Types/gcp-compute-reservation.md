@@ -7,13 +7,13 @@ A GCP Compute Reservation is a zonal capacity-planning resource that lets you pr
 
 **Terrafrom Mappings:**
 
-* `google_compute_reservation.name`
+- `google_compute_reservation.name`
 
 ## Supported Methods
 
-* `GET`: Get GCP Compute Reservation by "gcp-compute-reservation-name"
-* `LIST`: List all GCP Compute Reservation items
-* ~~`SEARCH`~~
+- `GET`: Get GCP Compute Reservation by "gcp-compute-reservation-name"
+- `LIST`: List all GCP Compute Reservation items
+- ~~`SEARCH`~~
 
 ## Possible Links
 

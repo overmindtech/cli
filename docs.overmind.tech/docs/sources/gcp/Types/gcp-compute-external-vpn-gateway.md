@@ -8,10 +8,10 @@ For further details, see the official documentation: https://cloud.google.com/co
 
 **Terrafrom Mappings:**
 
-* `google_compute_external_vpn_gateway.name`
+- `google_compute_external_vpn_gateway.name`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-compute-external-vpn-gateway by its "name"
-* `LIST`: List all gcp-compute-external-vpn-gateway
-* ~~`SEARCH`~~
+- `GET`: Get a gcp-compute-external-vpn-gateway by its "name"
+- `LIST`: List all gcp-compute-external-vpn-gateway
+- ~~`SEARCH`~~

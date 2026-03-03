@@ -1,9 +1,7 @@
 {
   "type": "gcp-orgpolicy-policy",
   "category": 7,
-  "potentialLinks": [
-    "gcp-cloud-resource-manager-project"
-  ],
+  "potentialLinks": ["gcp-cloud-resource-manager-project"],
   "descriptiveName": "GCP Orgpolicy Policy",
   "supportedQueryMethods": {
     "get": true,

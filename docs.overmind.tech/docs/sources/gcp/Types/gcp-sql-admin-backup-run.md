@@ -8,9 +8,9 @@ Official documentation: https://cloud.google.com/sql/docs/mysql/admin-api/rest/v
 
 ## Supported Methods
 
-* `GET`: Get a gcp-sql-admin-backup-run by its "instances|backupRuns"
-* ~~`LIST`~~
-* `SEARCH`: Search for gcp-sql-admin-backup-run by its "instances"
+- `GET`: Get a gcp-sql-admin-backup-run by its "instances|backupRuns"
+- ~~`LIST`~~
+- `SEARCH`: Search for gcp-sql-admin-backup-run by its "instances"
 
 ## Possible Links
 

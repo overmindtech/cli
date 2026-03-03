@@ -8,9 +8,9 @@ Official documentation: https://cloud.google.com/vertex-ai/docs/pipelines/introd
 
 ## Supported Methods
 
-* `GET`: Get a gcp-ai-platform-pipeline-job by its "name"
-* `LIST`: List all gcp-ai-platform-pipeline-job
-* ~~`SEARCH`~~
+- `GET`: Get a gcp-ai-platform-pipeline-job by its "name"
+- `LIST`: List all gcp-ai-platform-pipeline-job
+- ~~`SEARCH`~~
 
 ## Possible Links
 

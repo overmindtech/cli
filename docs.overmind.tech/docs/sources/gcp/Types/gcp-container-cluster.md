@@ -8,13 +8,13 @@ Official documentation: https://cloud.google.com/kubernetes-engine/docs/concepts
 
 **Terrafrom Mappings:**
 
-* `google_container_cluster.id`
+- `google_container_cluster.id`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-container-cluster by its "locations|clusters"
-* ~~`LIST`~~
-* `SEARCH`: Search for GKE clusters in a location. Use the format "location" or the full resource name supported for terraform mappings.
+- `GET`: Get a gcp-container-cluster by its "locations|clusters"
+- ~~`LIST`~~
+- `SEARCH`: Search for GKE clusters in a location. Use the format "location" or the full resource name supported for terraform mappings.
 
 ## Possible Links
 

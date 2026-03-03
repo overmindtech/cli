@@ -8,13 +8,13 @@ Official documentation: https://cloud.google.com/compute/docs/disks/instant-snap
 
 **Terrafrom Mappings:**
 
-* `google_compute_instant_snapshot.name`
+- `google_compute_instant_snapshot.name`
 
 ## Supported Methods
 
-* `GET`: Get GCP Compute Instant Snapshot by "gcp-compute-instant-snapshot-name"
-* `LIST`: List all GCP Compute Instant Snapshot items
-* ~~`SEARCH`~~
+- `GET`: Get GCP Compute Instant Snapshot by "gcp-compute-instant-snapshot-name"
+- `LIST`: List all GCP Compute Instant Snapshot items
+- ~~`SEARCH`~~
 
 ## Possible Links
 

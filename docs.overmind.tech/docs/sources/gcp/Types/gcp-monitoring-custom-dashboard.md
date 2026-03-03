@@ -8,10 +8,10 @@ For full details, see the official documentation: https://cloud.google.com/monit
 
 **Terrafrom Mappings:**
 
-* `google_monitoring_dashboard.id`
+- `google_monitoring_dashboard.id`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-monitoring-custom-dashboard by its "name"
-* `LIST`: List all gcp-monitoring-custom-dashboard
-* `SEARCH`: Search for custom dashboards by their ID in the form of "projects/[project_id]/dashboards/[dashboard_id]". This is supported for terraform mappings.
+- `GET`: Get a gcp-monitoring-custom-dashboard by its "name"
+- `LIST`: List all gcp-monitoring-custom-dashboard
+- `SEARCH`: Search for custom dashboards by their ID in the form of "projects/[project_id]/dashboards/[dashboard_id]". This is supported for terraform mappings.

@@ -8,13 +8,13 @@ Official documentation: https://cloud.google.com/vpc/docs/firewalls
 
 **Terrafrom Mappings:**
 
-* `google_compute_firewall.name`
+- `google_compute_firewall.name`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-compute-firewall by its "name"
-* `LIST`: List all gcp-compute-firewall
-* `SEARCH`: Search for firewalls by network tag. The query is a plain network tag name.
+- `GET`: Get a gcp-compute-firewall by its "name"
+- `LIST`: List all gcp-compute-firewall
+- `SEARCH`: Search for firewalls by network tag. The query is a plain network tag name.
 
 ## Possible Links
 

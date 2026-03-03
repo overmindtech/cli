@@ -8,13 +8,13 @@ Official documentation: https://cloud.google.com/run/docs
 
 **Terrafrom Mappings:**
 
-* `google_cloud_run_v2_service.id`
+- `google_cloud_run_v2_service.id`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-run-service by its "locations|services"
-* ~~`LIST`~~
-* `SEARCH`: Search for gcp-run-service by its "locations"
+- `GET`: Get a gcp-run-service by its "locations|services"
+- ~~`LIST`~~
+- `SEARCH`: Search for gcp-run-service by its "locations"
 
 ## Possible Links
 

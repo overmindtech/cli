@@ -7,13 +7,13 @@ A GCP Compute Subnetwork is a regional, layer-3 virtual network segment that bel
 
 **Terrafrom Mappings:**
 
-* `google_compute_subnetwork.name`
+- `google_compute_subnetwork.name`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-compute-subnetwork by its "name"
-* `LIST`: List all gcp-compute-subnetwork
-* ~~`SEARCH`~~
+- `GET`: Get a gcp-compute-subnetwork by its "name"
+- `LIST`: List all gcp-compute-subnetwork
+- ~~`SEARCH`~~
 
 ## Possible Links
 

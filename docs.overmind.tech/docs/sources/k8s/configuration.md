@@ -11,10 +11,10 @@ sidebar_position: 1
 
 ## Installation
 
-Create an API Key with `request:receive` scope in Overmind under Account settings > API Keys
+Create an API Key with `request:receive` scope in Overmind under **Settings › API Keys**.
 
-![account settings](account_settings.png)
-![api key](api_key.png)
+![User settings menu in the sidebar](account_settings.png)
+![API Keys settings page](api_key.png)
 
 Install the source into your Kubernetes cluster using Helm:
 

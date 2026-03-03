@@ -8,13 +8,13 @@ Official documentation: https://cloud.google.com/compute/docs/instance-templates
 
 **Terrafrom Mappings:**
 
-* `google_compute_instance_template.name`
+- `google_compute_instance_template.name`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-compute-instance-template by its "name"
-* `LIST`: List all gcp-compute-instance-template
-* `SEARCH`: Search for instance templates by network tag. The query is a plain network tag name.
+- `GET`: Get a gcp-compute-instance-template by its "name"
+- `LIST`: List all gcp-compute-instance-template
+- `SEARCH`: Search for instance templates by network tag. The query is a plain network tag name.
 
 ## Possible Links
 

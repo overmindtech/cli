@@ -7,13 +7,13 @@ A Google Cloud Monitoring Alert Policy is a configuration object that defines th
 
 **Terrafrom Mappings:**
 
-* `google_monitoring_alert_policy.id`
+- `google_monitoring_alert_policy.id`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-monitoring-alert-policy by its "name"
-* `LIST`: List all gcp-monitoring-alert-policy
-* `SEARCH`: Search by full resource name: projects/[project]/alertPolicies/[alert_policy_id] (used for terraform mapping).
+- `GET`: Get a gcp-monitoring-alert-policy by its "name"
+- `LIST`: List all gcp-monitoring-alert-policy
+- `SEARCH`: Search by full resource name: projects/[project]/alertPolicies/[alert_policy_id] (used for terraform mapping).
 
 ## Possible Links
 

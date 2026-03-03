@@ -3,18 +3,18 @@ title: GCP Compute Global Address
 sidebar_label: gcp-compute-global-address
 ---
 
-A **Compute Global Address** in Google Cloud Platform is a statically-reserved IP address that is reachable from, or usable across, all regions.  It can be external (used, for example, by a global HTTP(S) load balancer) or internal (used by regional resources that require a routable, private global IP). Reserving the address ensures it does not change while it is in use, and allows it to be assigned to resources at creation time or later.  
+A **Compute Global Address** in Google Cloud Platform is a statically-reserved IP address that is reachable from, or usable across, all regions. It can be external (used, for example, by a global HTTP(S) load balancer) or internal (used by regional resources that require a routable, private global IP). Reserving the address ensures it does not change while it is in use, and allows it to be assigned to resources at creation time or later.  
 Official documentation: https://cloud.google.com/compute/docs/ip-addresses/reserve-static-external-ip-address
 
 **Terrafrom Mappings:**
 
-* `google_compute_global_address.name`
+- `google_compute_global_address.name`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-compute-global-address by its "name"
-* `LIST`: List all gcp-compute-global-address
-* ~~`SEARCH`~~
+- `GET`: Get a gcp-compute-global-address by its "name"
+- `LIST`: List all gcp-compute-global-address
+- ~~`SEARCH`~~
 
 ## Possible Links
 

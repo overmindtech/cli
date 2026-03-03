@@ -26,11 +26,11 @@ You can check if your IAM role needs updating by looking at the version tag:
 3. Click on the role and go to the **Tags** tab
 4. Look for the `overmind.version` tag
 
-| Version Tag | Status |
-|-------------|--------|
-| `2025-12-01` or later | ✅ Up to date |
+| Version Tag             | Status             |
+| ----------------------- | ------------------ |
+| `2025-12-01` or later   | ✅ Up to date      |
 | `2023-03-14` or earlier | ⚠️ Update required |
-| No tag | ⚠️ Update required |
+| No tag                  | ⚠️ Update required |
 
 ## Update Instructions
 
@@ -97,11 +97,11 @@ Search for and select your Overmind role (usually named "Overmind" or the name y
 
 ```json
 {
-    "Effect": "Allow",
-    "Principal": {
-        "AWS": "arn:aws:iam::944651592624:root"
-    },
-    "Action": "sts:TagSession"
+  "Effect": "Allow",
+  "Principal": {
+    "AWS": "arn:aws:iam::944651592624:root"
+  },
+  "Action": "sts:TagSession"
 }
 ```
 
@@ -109,28 +109,28 @@ Your complete trust policy should look like this:
 
 ```json
 {
-    "Version": "2012-10-17",
-    "Statement": [
-        {
-            "Effect": "Allow",
-            "Principal": {
-                "AWS": "arn:aws:iam::944651592624:root"
-            },
-            "Action": "sts:AssumeRole",
-            "Condition": {
-                "StringEquals": {
-                    "sts:ExternalId": "YOUR-EXTERNAL-ID-HERE"
-                }
-            }
-        },
-        {
-            "Effect": "Allow",
-            "Principal": {
-                "AWS": "arn:aws:iam::944651592624:root"
-            },
-            "Action": "sts:TagSession"
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::944651592624:root"
+      },
+      "Action": "sts:AssumeRole",
+      "Condition": {
+        "StringEquals": {
+          "sts:ExternalId": "YOUR-EXTERNAL-ID-HERE"
         }
-    ]
+      }
+    },
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "AWS": "arn:aws:iam::944651592624:root"
+      },
+      "Action": "sts:TagSession"
+    }
+  ]
 }
 ```
 

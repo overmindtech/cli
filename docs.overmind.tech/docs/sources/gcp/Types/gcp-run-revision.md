@@ -8,9 +8,9 @@ Official documentation: https://cloud.google.com/run/docs/reference/rest/v1/name
 
 ## Supported Methods
 
-* `GET`: Get a gcp-run-revision by its "locations|services|revisions"
-* ~~`LIST`~~
-* `SEARCH`: Search for gcp-run-revision by its "locations|services"
+- `GET`: Get a gcp-run-revision by its "locations|services|revisions"
+- ~~`LIST`~~
+- `SEARCH`: Search for gcp-run-revision by its "locations|services"
 
 ## Possible Links
 
