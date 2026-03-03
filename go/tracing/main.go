@@ -298,10 +298,6 @@ func NewOvermindSampler() *OvermindSampler {
 			SampleRate:   200,
 			ShouldSample: UserAgentMatcher("ELB-HealthChecker/2.0", "kube-probe/1.27+"),
 		},
-		{
-			SampleRate:   10,
-			ShouldSample: SpanNameMatcher("pool.acquire"),
-		},
 	}
 
 	// Pre-allocate samplers for each rule
@@ -335,13 +331,6 @@ func UserAgentMatcher(userAgents ...string) func(sdktrace.SamplingParameters) bo
 			}
 		}
 		return false
-	}
-}
-
-// SpanNameMatcher returns a function that matches specific span names
-func SpanNameMatcher(spanNames ...string) func(sdktrace.SamplingParameters) bool {
-	return func(parameters sdktrace.SamplingParameters) bool {
-		return slices.Contains(spanNames, parameters.Name)
 	}
 }
 

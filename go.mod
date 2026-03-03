@@ -102,7 +102,6 @@ require (
 	github.com/charmbracelet/lipgloss/v2 v2.0.0-beta.3
 	github.com/coder/websocket v1.8.14
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
-	github.com/exaring/otelpgx v0.10.0
 	github.com/getsentry/sentry-go v0.43.0
 	github.com/go-jose/go-jose/v4 v4.1.3
 	github.com/gocarina/gocsv v0.0.0-20240520201108-78e41c74b4b1
@@ -141,6 +140,7 @@ require (
 	github.com/onsi/gomega v1.39.1
 	github.com/openai/openai-go/v3 v3.24.0
 	github.com/openrdap/rdap v0.9.2-0.20240517203139-eb57b3a8dedd
+	github.com/overmindtech/otelpgx v0.10.1-0.20260303210427-65bf1016045e
 	github.com/overmindtech/pterm v0.0.0-20240919144758-04d94ccb2297
 	github.com/pborman/ansi v1.0.0
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
