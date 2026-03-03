@@ -8,9 +8,9 @@ See the official documentation for full details: https://cloud.google.com/loggin
 
 ## Supported Methods
 
-* `GET`: Get a gcp-logging-bucket by its "locations|buckets"
-* ~~`LIST`~~
-* `SEARCH`: Search for gcp-logging-bucket by its "locations"
+- `GET`: Get a gcp-logging-bucket by its "locations|buckets"
+- ~~`LIST`~~
+- `SEARCH`: Search for gcp-logging-bucket by its "locations"
 
 ## Possible Links
 

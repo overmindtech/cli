@@ -8,10 +8,10 @@ For a full description of each field and the underlying API, see the official Go
 
 **Terraform Mappings:**
 
-* `google_dataproc_autoscaling_policy.name`
+- `google_dataproc_autoscaling_policy.name`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-dataproc-autoscaling-policy by its "name"
-* `LIST`: List all gcp-dataproc-autoscaling-policy
-* ~~`SEARCH`~~
+- `GET`: Get a gcp-dataproc-autoscaling-policy by its "name"
+- `LIST`: List all gcp-dataproc-autoscaling-policy
+- ~~`SEARCH`~~

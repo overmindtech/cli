@@ -8,9 +8,9 @@ See the official documentation for details: https://cloud.google.com/sql/docs/my
 
 ## Supported Methods
 
-* `GET`: Get a gcp-sql-admin-backup by its "name"
-* `LIST`: List all gcp-sql-admin-backup
-* ~~`SEARCH`~~
+- `GET`: Get a gcp-sql-admin-backup by its "name"
+- `LIST`: List all gcp-sql-admin-backup
+- ~~`SEARCH`~~
 
 ## Possible Links
 

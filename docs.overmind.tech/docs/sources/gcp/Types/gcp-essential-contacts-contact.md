@@ -8,10 +8,10 @@ For further details, refer to the official Google Cloud documentation: https://c
 
 **Terrafrom Mappings:**
 
-* `google_essential_contacts_contact.id`
+- `google_essential_contacts_contact.id`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-essential-contacts-contact by its "name"
-* `LIST`: List all gcp-essential-contacts-contact
-* `SEARCH`: Search for contacts by their ID in the form of "projects/[project_id]/contacts/[contact_id]".
+- `GET`: Get a gcp-essential-contacts-contact by its "name"
+- `LIST`: List all gcp-essential-contacts-contact
+- `SEARCH`: Search for contacts by their ID in the form of "projects/[project_id]/contacts/[contact_id]".

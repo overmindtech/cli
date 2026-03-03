@@ -9,9 +9,9 @@ Official documentation: https://cloud.google.com/security-command-center/docs/re
 
 ## Supported Methods
 
-* `GET`: Get a gcp-security-center-management-security-center-service by its "locations|securityCenterServices"
-* ~~`LIST`~~
-* `SEARCH`: Search Security Center services in a location. Use the format "location".
+- `GET`: Get a gcp-security-center-management-security-center-service by its "locations|securityCenterServices"
+- ~~`LIST`~~
+- `SEARCH`: Search Security Center services in a location. Use the format "location".
 
 ## Possible Links
 

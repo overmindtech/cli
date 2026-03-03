@@ -8,13 +8,13 @@ Official documentation: https://cloud.google.com/storage-transfer/docs/create-tr
 
 **Terrafrom Mappings:**
 
-* `google_storage_transfer_job.name`
+- `google_storage_transfer_job.name`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-storage-transfer-transfer-job by its "name"
-* `LIST`: List all gcp-storage-transfer-transfer-job
-* ~~`SEARCH`~~
+- `GET`: Get a gcp-storage-transfer-transfer-job by its "name"
+- `LIST`: List all gcp-storage-transfer-transfer-job
+- ~~`SEARCH`~~
 
 ## Possible Links
 

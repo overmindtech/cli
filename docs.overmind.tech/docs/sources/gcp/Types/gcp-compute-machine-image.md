@@ -7,13 +7,13 @@ A Google Cloud Compute Machine Image is a first-class resource that captures the
 
 **Terrafrom Mappings:**
 
-* `google_compute_machine_image.name`
+- `google_compute_machine_image.name`
 
 ## Supported Methods
 
-* `GET`: Get GCP Compute Machine Image by "gcp-compute-machine-image-name"
-* `LIST`: List all GCP Compute Machine Image items
-* ~~`SEARCH`~~
+- `GET`: Get GCP Compute Machine Image by "gcp-compute-machine-image-name"
+- `LIST`: List all GCP Compute Machine Image items
+- ~~`SEARCH`~~
 
 ## Possible Links
 

@@ -1,9 +1,7 @@
 {
   "type": "gcp-monitoring-notification-channel",
   "category": 5,
-  "potentialLinks": [
-    "gcp-pub-sub-topic"
-  ],
+  "potentialLinks": ["gcp-pub-sub-topic"],
   "descriptiveName": "GCP Monitoring Notification Channel",
   "supportedQueryMethods": {
     "get": true,

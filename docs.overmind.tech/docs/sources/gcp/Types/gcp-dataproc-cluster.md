@@ -7,13 +7,13 @@ A Google Cloud Dataproc Cluster is a managed group of Compute Engine virtual mac
 
 **Terrafrom Mappings:**
 
-* `google_dataproc_cluster.name`
+- `google_dataproc_cluster.name`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-dataproc-cluster by its "name"
-* `LIST`: List all gcp-dataproc-cluster
-* ~~`SEARCH`~~
+- `GET`: Get a gcp-dataproc-cluster by its "name"
+- `LIST`: List all gcp-dataproc-cluster
+- ~~`SEARCH`~~
 
 ## Possible Links
 

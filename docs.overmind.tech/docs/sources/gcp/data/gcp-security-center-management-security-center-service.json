@@ -1,9 +1,7 @@
 {
   "type": "gcp-security-center-management-security-center-service",
   "category": 4,
-  "potentialLinks": [
-    "gcp-cloud-resource-manager-project"
-  ],
+  "potentialLinks": ["gcp-cloud-resource-manager-project"],
   "descriptiveName": "GCP Security Center Management Security Center Service",
   "supportedQueryMethods": {
     "get": true,

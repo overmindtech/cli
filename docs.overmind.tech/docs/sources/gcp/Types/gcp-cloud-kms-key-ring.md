@@ -8,13 +8,13 @@ For full details, see the official documentation: https://cloud.google.com/kms/d
 
 **Terrafrom Mappings:**
 
-* `google_kms_key_ring.id`
+- `google_kms_key_ring.id`
 
 ## Supported Methods
 
-* `GET`: Get GCP Cloud Kms Key Ring by "gcp-cloud-kms-key-ring-location|gcp-cloud-kms-key-ring-name"
-* `LIST`: List all GCP Cloud Kms Key Ring items
-* `SEARCH`: Search for GCP Cloud Kms Key Ring by "gcp-cloud-kms-key-ring-location"
+- `GET`: Get GCP Cloud Kms Key Ring by "gcp-cloud-kms-key-ring-location|gcp-cloud-kms-key-ring-name"
+- `LIST`: List all GCP Cloud Kms Key Ring items
+- `SEARCH`: Search for GCP Cloud Kms Key Ring by "gcp-cloud-kms-key-ring-location"
 
 ## Possible Links
 

@@ -8,6 +8,6 @@ Official documentation: https://cloud.google.com/logging/docs/view/building-quer
 
 ## Supported Methods
 
-* `GET`: Get a gcp-logging-saved-query by its "locations|savedQueries"
-* ~~`LIST`~~
-* `SEARCH`: Search for gcp-logging-saved-query by its "locations"
+- `GET`: Get a gcp-logging-saved-query by its "locations|savedQueries"
+- ~~`LIST`~~
+- `SEARCH`: Search for gcp-logging-saved-query by its "locations"

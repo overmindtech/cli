@@ -1,1 +1,26 @@
-{"type":"ec2-transit-gateway-route","category":3,"potentialLinks":["ec2-transit-gateway-route-table","ec2-transit-gateway-route-table-association","ec2-transit-gateway-attachment","ec2-transit-gateway-route-table-announcement","ec2-vpc","ec2-vpn-connection","ec2-managed-prefix-list","directconnect-direct-connect-gateway"],"descriptiveName":"Transit Gateway Route","supportedQueryMethods":{"get":true,"getDescription":"Get by TransitGatewayRouteTableId|Destination (CIDR or pl:PrefixListId)","list":true,"listDescription":"List all transit gateway routes","search":true,"searchDescription":"Search by TransitGatewayRouteTableId to list routes for that route table"},"terraformMappings":[{"terraformQueryMap":"aws_ec2_transit_gateway_route.id"}]}
+{
+  "type": "ec2-transit-gateway-route",
+  "category": 3,
+  "potentialLinks": [
+    "ec2-transit-gateway-route-table",
+    "ec2-transit-gateway-route-table-association",
+    "ec2-transit-gateway-attachment",
+    "ec2-transit-gateway-route-table-announcement",
+    "ec2-vpc",
+    "ec2-vpn-connection",
+    "ec2-managed-prefix-list",
+    "directconnect-direct-connect-gateway"
+  ],
+  "descriptiveName": "Transit Gateway Route",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get by TransitGatewayRouteTableId|Destination (CIDR or pl:PrefixListId)",
+    "list": true,
+    "listDescription": "List all transit gateway routes",
+    "search": true,
+    "searchDescription": "Search by TransitGatewayRouteTableId to list routes for that route table"
+  },
+  "terraformMappings": [
+    { "terraformQueryMap": "aws_ec2_transit_gateway_route.id" }
+  ]
+}

@@ -8,13 +8,13 @@ For full details see the official Google Cloud documentation: https://cloud.goog
 
 **Terrafrom Mappings:**
 
-* `google_compute_instance_group.name`
+- `google_compute_instance_group.name`
 
 ## Supported Methods
 
-* `GET`: Get GCP Compute Instance Group by "gcp-compute-instance-group-name"
-* `LIST`: List all GCP Compute Instance Group items
-* ~~`SEARCH`~~
+- `GET`: Get GCP Compute Instance Group by "gcp-compute-instance-group-name"
+- `LIST`: List all GCP Compute Instance Group items
+- ~~`SEARCH`~~
 
 ## Possible Links
 

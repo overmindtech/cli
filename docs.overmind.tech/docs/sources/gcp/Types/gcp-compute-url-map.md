@@ -8,13 +8,13 @@ Official documentation: https://cloud.google.com/load-balancing/docs/url-map-con
 
 **Terrafrom Mappings:**
 
-* `google_compute_url_map.name`
+- `google_compute_url_map.name`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-compute-url-map by its "name"
-* `LIST`: List all gcp-compute-url-map
-* ~~`SEARCH`~~
+- `GET`: Get a gcp-compute-url-map by its "name"
+- `LIST`: List all gcp-compute-url-map
+- ~~`SEARCH`~~
 
 ## Possible Links
 

@@ -7,13 +7,13 @@ A Google Cloud SQL Admin Instance represents a fully-managed relational database
 
 **Terrafrom Mappings:**
 
-* `google_sql_database_instance.name`
+- `google_sql_database_instance.name`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-sql-admin-instance by its "name"
-* `LIST`: List all gcp-sql-admin-instance
-* ~~`SEARCH`~~
+- `GET`: Get a gcp-sql-admin-instance by its "name"
+- `LIST`: List all gcp-sql-admin-instance
+- ~~`SEARCH`~~
 
 ## Possible Links
 

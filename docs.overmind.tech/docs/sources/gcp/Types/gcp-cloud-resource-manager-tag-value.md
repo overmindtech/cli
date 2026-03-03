@@ -8,10 +8,10 @@ For a full description of Tag Values and how they fit into the tagging system, r
 
 **Terrafrom Mappings:**
 
-* `google_tags_tag_value.name`
+- `google_tags_tag_value.name`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-cloud-resource-manager-tag-value by its "name"
-* ~~`LIST`~~
-* `SEARCH`: Search for TagValues by TagKey.
+- `GET`: Get a gcp-cloud-resource-manager-tag-value by its "name"
+- ~~`LIST`~~
+- `SEARCH`: Search for TagValues by TagKey.

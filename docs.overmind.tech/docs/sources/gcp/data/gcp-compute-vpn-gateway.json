@@ -1,9 +1,7 @@
 {
   "type": "gcp-compute-vpn-gateway",
   "category": 3,
-  "potentialLinks": [
-    "gcp-compute-network"
-  ],
+  "potentialLinks": ["gcp-compute-network"],
   "descriptiveName": "GCP Compute Vpn Gateway",
   "supportedQueryMethods": {
     "get": true,

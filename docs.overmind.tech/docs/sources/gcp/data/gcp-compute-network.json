@@ -1,10 +1,7 @@
 {
   "type": "gcp-compute-network",
   "category": 3,
-  "potentialLinks": [
-    "gcp-compute-network",
-    "gcp-compute-subnetwork"
-  ],
+  "potentialLinks": ["gcp-compute-network", "gcp-compute-subnetwork"],
   "descriptiveName": "GCP Compute Network",
   "supportedQueryMethods": {
     "get": true,

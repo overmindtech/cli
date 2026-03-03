@@ -8,13 +8,13 @@ For full details see the official documentation: https://cloud.google.com/load-b
 
 **Terrafrom Mappings:**
 
-* `google_compute_forwarding_rule.name`
+- `google_compute_forwarding_rule.name`
 
 ## Supported Methods
 
-* `GET`: Get GCP Compute Forwarding Rule by "gcp-compute-forwarding-rule-name"
-* `LIST`: List all GCP Compute Forwarding Rule items
-* ~~`SEARCH`~~
+- `GET`: Get GCP Compute Forwarding Rule by "gcp-compute-forwarding-rule-name"
+- `LIST`: List all GCP Compute Forwarding Rule items
+- ~~`SEARCH`~~
 
 ## Possible Links
 

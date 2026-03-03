@@ -8,16 +8,16 @@ Official documentation: https://cloud.google.com/bigquery/docs/tables
 
 **Terrafrom Mappings:**
 
-* `google_bigquery_table.id`
-* `google_bigquery_table_iam_binding.dataset_id`
-* `google_bigquery_table_iam_member.dataset_id`
-* `google_bigquery_table_iam_policy.dataset_id`
+- `google_bigquery_table.id`
+- `google_bigquery_table_iam_binding.dataset_id`
+- `google_bigquery_table_iam_member.dataset_id`
+- `google_bigquery_table_iam_policy.dataset_id`
 
 ## Supported Methods
 
-* `GET`: Get GCP Big Query Table by "gcp-big-query-dataset-id|gcp-big-query-table-id"
-* ~~`LIST`~~
-* `SEARCH`: Search for GCP Big Query Table by "gcp-big-query-dataset-id"
+- `GET`: Get GCP Big Query Table by "gcp-big-query-dataset-id|gcp-big-query-table-id"
+- ~~`LIST`~~
+- `SEARCH`: Search for GCP Big Query Table by "gcp-big-query-dataset-id"
 
 ## Possible Links
 

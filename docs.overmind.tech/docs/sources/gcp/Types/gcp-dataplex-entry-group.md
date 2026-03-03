@@ -8,10 +8,10 @@ Official documentation: https://cloud.google.com/data-catalog/docs/reference/res
 
 **Terrafrom Mappings:**
 
-* `google_dataplex_entry_group.id`
+- `google_dataplex_entry_group.id`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-dataplex-entry-group by its "locations|entryGroups"
-* ~~`LIST`~~
-* `SEARCH`: Search for Dataplex entry groups in a location. Use the format "location" or "projects/[project_id]/locations/[location]/entryGroups/[entry_group_id]" which is supported for terraform mappings.
+- `GET`: Get a gcp-dataplex-entry-group by its "locations|entryGroups"
+- ~~`LIST`~~
+- `SEARCH`: Search for Dataplex entry groups in a location. Use the format "location" or "projects/[project_id]/locations/[location]/entryGroups/[entry_group_id]" which is supported for terraform mappings.

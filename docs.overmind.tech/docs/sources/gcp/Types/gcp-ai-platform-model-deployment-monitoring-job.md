@@ -8,9 +8,9 @@ Official documentation: https://cloud.google.com/vertex-ai/docs/model-monitoring
 
 ## Supported Methods
 
-* `GET`: Get a gcp-ai-platform-model-deployment-monitoring-job by its "locations|modelDeploymentMonitoringJobs"
-* ~~`LIST`~~
-* `SEARCH`: Search Model Deployment Monitoring Jobs within a location. Use the location name e.g., 'us-central1'
+- `GET`: Get a gcp-ai-platform-model-deployment-monitoring-job by its "locations|modelDeploymentMonitoringJobs"
+- ~~`LIST`~~
+- `SEARCH`: Search Model Deployment Monitoring Jobs within a location. Use the location name e.g., 'us-central1'
 
 ## Possible Links
 

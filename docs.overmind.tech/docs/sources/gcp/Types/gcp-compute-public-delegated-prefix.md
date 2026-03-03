@@ -8,13 +8,13 @@ For full details, see the official documentation: https://cloud.google.com/vpc/d
 
 **Terrafrom Mappings:**
 
-* `google_compute_public_delegated_prefix.id`
+- `google_compute_public_delegated_prefix.id`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-compute-public-delegated-prefix by its "name"
-* `LIST`: List all gcp-compute-public-delegated-prefix
-* `SEARCH`: Search with full ID: projects/[project]/regions/[region]/publicDelegatedPrefixes/[name] (used for terraform mapping).
+- `GET`: Get a gcp-compute-public-delegated-prefix by its "name"
+- `LIST`: List all gcp-compute-public-delegated-prefix
+- `SEARCH`: Search with full ID: projects/[project]/regions/[region]/publicDelegatedPrefixes/[name] (used for terraform mapping).
 
 ## Possible Links
 

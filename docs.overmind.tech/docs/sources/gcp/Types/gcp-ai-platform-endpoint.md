@@ -8,15 +8,15 @@ Official documentation: https://cloud.google.com/vertex-ai/docs/predictions/gett
 
 ## Supported Methods
 
-* `GET`: Get a gcp-ai-platform-endpoint by its "name"
-* `LIST`: List all gcp-ai-platform-endpoint
-* ~~`SEARCH`~~
+- `GET`: Get a gcp-ai-platform-endpoint by its "name"
+- `LIST`: List all gcp-ai-platform-endpoint
+- ~~`SEARCH`~~
 
 ## Possible Links
 
 ### [`gcp-ai-platform-model`](/sources/gcp/Types/gcp-ai-platform-model)
 
-An Endpoint hosts one or more *DeployedModels*, each of which references a standalone AI Platform/Vertex AI Model resource. The link shows which models are currently deployed to, or have traffic routed through, the endpoint.
+An Endpoint hosts one or more _DeployedModels_, each of which references a standalone AI Platform/Vertex AI Model resource. The link shows which models are currently deployed to, or have traffic routed through, the endpoint.
 
 ### [`gcp-ai-platform-model-deployment-monitoring-job`](/sources/gcp/Types/gcp-ai-platform-model-deployment-monitoring-job)
 

@@ -7,13 +7,13 @@ A GCP Compute Disk—formally known as a Persistent Disk—is block-level storag
 
 **Terrafrom Mappings:**
 
-* `google_compute_disk.name`
+- `google_compute_disk.name`
 
 ## Supported Methods
 
-* `GET`: Get GCP Compute Disk by "gcp-compute-disk-name"
-* `LIST`: List all GCP Compute Disk items
-* ~~`SEARCH`~~
+- `GET`: Get GCP Compute Disk by "gcp-compute-disk-name"
+- `LIST`: List all GCP Compute Disk items
+- ~~`SEARCH`~~
 
 ## Possible Links
 

@@ -8,13 +8,13 @@ For a full specification of the resource, see the official Google Cloud document
 
 **Terrafrom Mappings:**
 
-* `google_compute_node_template.name`
+- `google_compute_node_template.name`
 
 ## Supported Methods
 
-* `GET`: Get GCP Compute Node Template by "gcp-compute-node-template-name"
-* `LIST`: List all GCP Compute Node Template items
-* ~~`SEARCH`~~
+- `GET`: Get GCP Compute Node Template by "gcp-compute-node-template-name"
+- `LIST`: List all GCP Compute Node Template items
+- ~~`SEARCH`~~
 
 ## Possible Links
 

@@ -8,13 +8,13 @@ Official documentation: https://cloud.google.com/iam/docs/creating-managing-serv
 
 **Terrafrom Mappings:**
 
-* `google_service_account_key.id`
+- `google_service_account_key.id`
 
 ## Supported Methods
 
-* `GET`: Get GCP Iam Service Account Key by "gcp-iam-service-account-email or unique_id|gcp-iam-service-account-key-name"
-* ~~`LIST`~~
-* `SEARCH`: Search for GCP Iam Service Account Key by "gcp-iam-service-account-email or unique_id"
+- `GET`: Get GCP Iam Service Account Key by "gcp-iam-service-account-email or unique_id|gcp-iam-service-account-key-name"
+- ~~`LIST`~~
+- `SEARCH`: Search for GCP Iam Service Account Key by "gcp-iam-service-account-email or unique_id"
 
 ## Possible Links
 

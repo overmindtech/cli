@@ -7,13 +7,13 @@ A GCP Redis Instance is a fully managed, in-memory data store provided by Cloud 
 
 **Terrafrom Mappings:**
 
-* `google_redis_instance.id`
+- `google_redis_instance.id`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-redis-instance by its "locations|instances"
-* ~~`LIST`~~
-* `SEARCH`: Search Redis instances in a location. Use the format "location" or "projects/[project_id]/locations/[location]/instances/[instance_name]" which is supported for terraform mappings.
+- `GET`: Get a gcp-redis-instance by its "locations|instances"
+- ~~`LIST`~~
+- `SEARCH`: Search Redis instances in a location. Use the format "location" or "projects/[project_id]/locations/[location]/instances/[instance_name]" which is supported for terraform mappings.
 
 ## Possible Links
 

@@ -1,1 +1,22 @@
-{"type":"ec2-transit-gateway-route-table","category":3,"potentialLinks":["ec2-transit-gateway","ec2-transit-gateway-route-table-association","ec2-transit-gateway-route-table-propagation","ec2-transit-gateway-route"],"descriptiveName":"Transit Gateway Route Table","supportedQueryMethods":{"get":true,"getDescription":"Get a transit gateway route table by ID","list":true,"listDescription":"List all transit gateway route tables","search":true,"searchDescription":"Search transit gateway route tables by ARN"},"terraformMappings":[{"terraformQueryMap":"aws_ec2_transit_gateway_route_table.id"}]}
+{
+  "type": "ec2-transit-gateway-route-table",
+  "category": 3,
+  "potentialLinks": [
+    "ec2-transit-gateway",
+    "ec2-transit-gateway-route-table-association",
+    "ec2-transit-gateway-route-table-propagation",
+    "ec2-transit-gateway-route"
+  ],
+  "descriptiveName": "Transit Gateway Route Table",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a transit gateway route table by ID",
+    "list": true,
+    "listDescription": "List all transit gateway route tables",
+    "search": true,
+    "searchDescription": "Search transit gateway route tables by ARN"
+  },
+  "terraformMappings": [
+    { "terraformQueryMap": "aws_ec2_transit_gateway_route_table.id" }
+  ]
+}

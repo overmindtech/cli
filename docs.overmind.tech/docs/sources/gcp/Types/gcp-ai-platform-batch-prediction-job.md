@@ -8,9 +8,9 @@ Official documentation: https://cloud.google.com/vertex-ai/docs/predictions/batc
 
 ## Supported Methods
 
-* `GET`: Get a gcp-ai-platform-batch-prediction-job by its "locations|batchPredictionJobs"
-* ~~`LIST`~~
-* `SEARCH`: Search Batch Prediction Jobs within a location. Use the location name e.g., 'us-central1'
+- `GET`: Get a gcp-ai-platform-batch-prediction-job by its "locations|batchPredictionJobs"
+- ~~`LIST`~~
+- `SEARCH`: Search Batch Prediction Jobs within a location. Use the location name e.g., 'us-central1'
 
 ## Possible Links
 

@@ -7,13 +7,13 @@ A GCP Spanner Database is a logically isolated collection of relational data tha
 
 **Terrafrom Mappings:**
 
-* `google_spanner_database.name`
+- `google_spanner_database.name`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-spanner-database by its "instances|databases"
-* ~~`LIST`~~
-* `SEARCH`: Search for gcp-spanner-database by its "instances"
+- `GET`: Get a gcp-spanner-database by its "instances|databases"
+- ~~`LIST`~~
+- `SEARCH`: Search for gcp-spanner-database by its "instances"
 
 ## Possible Links
 

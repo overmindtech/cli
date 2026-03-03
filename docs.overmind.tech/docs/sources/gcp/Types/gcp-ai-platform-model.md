@@ -7,9 +7,9 @@ A GCP AI Platform Model (now part of Vertex AI) is a logical container that hold
 
 ## Supported Methods
 
-* `GET`: Get a gcp-ai-platform-model by its "name"
-* `LIST`: List all gcp-ai-platform-model
-* ~~`SEARCH`~~
+- `GET`: Get a gcp-ai-platform-model by its "name"
+- `LIST`: List all gcp-ai-platform-model
+- ~~`SEARCH`~~
 
 ## Possible Links
 

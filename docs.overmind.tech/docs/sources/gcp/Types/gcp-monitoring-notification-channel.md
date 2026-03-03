@@ -7,13 +7,13 @@ A **Google Cloud Monitoring Notification Channel** specifies where and how Cloud
 
 **Terrafrom Mappings:**
 
-* `google_monitoring_notification_channel.name`
+- `google_monitoring_notification_channel.name`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-monitoring-notification-channel by its "name"
-* `LIST`: List all gcp-monitoring-notification-channel
-* `SEARCH`: Search by full resource name: projects/[project]/notificationChannels/[notificationChannel] (used for terraform mapping).
+- `GET`: Get a gcp-monitoring-notification-channel by its "name"
+- `LIST`: List all gcp-monitoring-notification-channel
+- `SEARCH`: Search by full resource name: projects/[project]/notificationChannels/[notificationChannel] (used for terraform mapping).
 
 ## Possible Links
 

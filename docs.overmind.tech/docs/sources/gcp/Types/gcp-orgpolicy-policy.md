@@ -8,13 +8,13 @@ For full details see Google’s official documentation: https://cloud.google.com
 
 **Terrafrom Mappings:**
 
-* `google_org_policy_policy.name`
+- `google_org_policy_policy.name`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-orgpolicy-policy by its "name"
-* `LIST`: List all gcp-orgpolicy-policy
-* `SEARCH`: Search with the full policy name: projects/[project]/policies/[constraint] (used for terraform mapping).
+- `GET`: Get a gcp-orgpolicy-policy by its "name"
+- `LIST`: List all gcp-orgpolicy-policy
+- `SEARCH`: Search with the full policy name: projects/[project]/policies/[constraint] (used for terraform mapping).
 
 ## Possible Links
 

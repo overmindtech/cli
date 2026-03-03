@@ -8,16 +8,16 @@ For comprehensive information, see the official documentation: https://cloud.goo
 
 **Terrafrom Mappings:**
 
-* `google_pubsub_topic.name`
-* `google_pubsub_topic_iam_binding.topic`
-* `google_pubsub_topic_iam_member.topic`
-* `google_pubsub_topic_iam_policy.topic`
+- `google_pubsub_topic.name`
+- `google_pubsub_topic_iam_binding.topic`
+- `google_pubsub_topic_iam_member.topic`
+- `google_pubsub_topic_iam_policy.topic`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-pub-sub-topic by its "name"
-* `LIST`: List all gcp-pub-sub-topic
-* ~~`SEARCH`~~
+- `GET`: Get a gcp-pub-sub-topic by its "name"
+- `LIST`: List all gcp-pub-sub-topic
+- ~~`SEARCH`~~
 
 ## Possible Links
 

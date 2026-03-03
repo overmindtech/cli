@@ -14,9 +14,9 @@ Knowing the contents of this object allows Overmind to determine, for example, w
 
 ## Supported Methods
 
-* `GET`: Get a gcp-cloud-billing-billing-info by its "name"
-* ~~`LIST`~~
-* ~~`SEARCH`~~
+- `GET`: Get a gcp-cloud-billing-billing-info by its "name"
+- ~~`LIST`~~
+- ~~`SEARCH`~~
 
 ## Possible Links
 

@@ -8,9 +8,9 @@ See the official documentation for full details: https://cloud.google.com/build/
 
 ## Supported Methods
 
-* `GET`: Get a gcp-cloud-build-build by its "name"
-* `LIST`: List all gcp-cloud-build-build
-* ~~`SEARCH`~~
+- `GET`: Get a gcp-cloud-build-build by its "name"
+- `LIST`: List all gcp-cloud-build-build
+- ~~`SEARCH`~~
 
 ## Possible Links
 

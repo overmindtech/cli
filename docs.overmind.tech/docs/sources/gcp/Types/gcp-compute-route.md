@@ -8,13 +8,13 @@ Official documentation: https://cloud.google.com/vpc/docs/routes
 
 **Terrafrom Mappings:**
 
-* `google_compute_route.name`
+- `google_compute_route.name`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-compute-route by its "name"
-* `LIST`: List all gcp-compute-route
-* `SEARCH`: Search for routes by network tag. The query is a plain network tag name.
+- `GET`: Get a gcp-compute-route by its "name"
+- `LIST`: List all gcp-compute-route
+- `SEARCH`: Search for routes by network tag. The query is a plain network tag name.
 
 ## Possible Links
 

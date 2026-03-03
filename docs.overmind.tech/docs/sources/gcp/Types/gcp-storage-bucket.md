@@ -8,16 +8,16 @@ For full details see the official documentation: https://cloud.google.com/storag
 
 **Terrafrom Mappings:**
 
-* `google_storage_bucket.name`
-* `google_storage_bucket_iam_binding.bucket`
-* `google_storage_bucket_iam_member.bucket`
-* `google_storage_bucket_iam_policy.bucket`
+- `google_storage_bucket.name`
+- `google_storage_bucket_iam_binding.bucket`
+- `google_storage_bucket_iam_member.bucket`
+- `google_storage_bucket_iam_policy.bucket`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-storage-bucket by its "name"
-* `LIST`: List all gcp-storage-bucket
-* ~~`SEARCH`~~
+- `GET`: Get a gcp-storage-bucket by its "name"
+- `LIST`: List all gcp-storage-bucket
+- ~~`SEARCH`~~
 
 ## Possible Links
 

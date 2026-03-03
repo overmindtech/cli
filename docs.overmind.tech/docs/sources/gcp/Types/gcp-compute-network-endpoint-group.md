@@ -7,13 +7,13 @@ A Google Cloud Platform Compute Network Endpoint Group (NEG) is a collection of 
 
 **Terrafrom Mappings:**
 
-* `google_compute_network_endpoint_group.name`
+- `google_compute_network_endpoint_group.name`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-compute-network-endpoint-group by its "name"
-* `LIST`: List all gcp-compute-network-endpoint-group
-* ~~`SEARCH`~~
+- `GET`: Get a gcp-compute-network-endpoint-group by its "name"
+- `LIST`: List all gcp-compute-network-endpoint-group
+- ~~`SEARCH`~~
 
 ## Possible Links
 

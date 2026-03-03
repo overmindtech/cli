@@ -8,13 +8,13 @@ Official documentation: https://cloud.google.com/compute/docs/reference/rest/v1/
 
 **Terrafrom Mappings:**
 
-* `google_compute_vpn_tunnel.name`
+- `google_compute_vpn_tunnel.name`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-compute-vpn-tunnel by its "name"
-* `LIST`: List all gcp-compute-vpn-tunnel
-* ~~`SEARCH`~~
+- `GET`: Get a gcp-compute-vpn-tunnel by its "name"
+- `LIST`: List all gcp-compute-vpn-tunnel
+- ~~`SEARCH`~~
 
 ## Possible Links
 

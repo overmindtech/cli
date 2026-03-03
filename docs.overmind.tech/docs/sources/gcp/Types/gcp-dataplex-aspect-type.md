@@ -8,10 +8,10 @@ For further details see the official API reference: https://cloud.google.com/dat
 
 **Terrafrom Mappings:**
 
-* `google_dataplex_aspect_type.id`
+- `google_dataplex_aspect_type.id`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-dataplex-aspect-type by its "locations|aspectTypes"
-* ~~`LIST`~~
-* `SEARCH`: Search for Dataplex aspect types in a location. Use the format "location" or "projects/[project_id]/locations/[location]/aspectTypes/[aspect_type_id]" which is supported for terraform mappings.
+- `GET`: Get a gcp-dataplex-aspect-type by its "locations|aspectTypes"
+- ~~`LIST`~~
+- `SEARCH`: Search for Dataplex aspect types in a location. Use the format "location" or "projects/[project_id]/locations/[location]/aspectTypes/[aspect_type_id]" which is supported for terraform mappings.

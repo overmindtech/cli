@@ -7,13 +7,13 @@ A Google Cloud Compute Router is a fully distributed and managed Border Gateway 
 
 **Terrafrom Mappings:**
 
-* `google_compute_router.id`
+- `google_compute_router.id`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-compute-router by its "name"
-* `LIST`: List all gcp-compute-router
-* `SEARCH`: Search with full ID: projects/[project]/regions/[region]/routers/[router] (used for terraform mapping).
+- `GET`: Get a gcp-compute-router by its "name"
+- `LIST`: List all gcp-compute-router
+- `SEARCH`: Search with full ID: projects/[project]/regions/[region]/routers/[router] (used for terraform mapping).
 
 ## Possible Links
 

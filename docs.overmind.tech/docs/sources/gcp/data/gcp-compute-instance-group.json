@@ -1,10 +1,7 @@
 {
   "type": "gcp-compute-instance-group",
   "category": 1,
-  "potentialLinks": [
-    "gcp-compute-network",
-    "gcp-compute-subnetwork"
-  ],
+  "potentialLinks": ["gcp-compute-network", "gcp-compute-subnetwork"],
   "descriptiveName": "GCP Compute Instance Group",
   "supportedQueryMethods": {
     "get": true,

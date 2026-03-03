@@ -3,19 +3,19 @@ title: GCP Container Node Pool
 sidebar_label: gcp-container-node-pool
 ---
 
-Google Kubernetes Engine (GKE) runs worker nodes in groups called *node pools*.  
+Google Kubernetes Engine (GKE) runs worker nodes in groups called _node pools_.  
 Each pool defines the machine type, disk configuration, Kubernetes version and other attributes for the virtual machines that will back your workloads, and can be scaled or upgraded independently from the rest of the cluster.  
 Official documentation: https://cloud.google.com/kubernetes-engine/docs/concepts/node-pools
 
 **Terrafrom Mappings:**
 
-* `google_container_node_pool.id`
+- `google_container_node_pool.id`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-container-node-pool by its "locations|clusters|nodePools"
-* ~~`LIST`~~
-* `SEARCH`: Search GKE Node Pools within a cluster. Use "[location]|[cluster]" or the full resource name supported by Terraform mappings: "[project]/[location]/[cluster]/[node_pool_name]"
+- `GET`: Get a gcp-container-node-pool by its "locations|clusters|nodePools"
+- ~~`LIST`~~
+- `SEARCH`: Search GKE Node Pools within a cluster. Use "[location]|[cluster]" or the full resource name supported by Terraform mappings: "[project]/[location]/[cluster]/[node_pool_name]"
 
 ## Possible Links
 

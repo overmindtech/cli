@@ -8,13 +8,13 @@ Official documentation: https://cloud.google.com/bigquery/docs/reference/rest/v2
 
 **Terrafrom Mappings:**
 
-* `google_bigquery_routine.id`
+- `google_bigquery_routine.id`
 
 ## Supported Methods
 
-* `GET`: Get GCP Big Query Routine by "gcp-big-query-dataset-id|gcp-big-query-routine-id"
-* ~~`LIST`~~
-* `SEARCH`: Search for GCP Big Query Routine by "gcp-big-query-routine-id"
+- `GET`: Get GCP Big Query Routine by "gcp-big-query-dataset-id|gcp-big-query-routine-id"
+- ~~`LIST`~~
+- `SEARCH`: Search for GCP Big Query Routine by "gcp-big-query-routine-id"
 
 ## Possible Links
 

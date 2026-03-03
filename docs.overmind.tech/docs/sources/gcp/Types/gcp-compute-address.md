@@ -7,13 +7,13 @@ A GCP Compute Address is a reserved, static IP address that can be either region
 
 **Terrafrom Mappings:**
 
-* `google_compute_address.name`
+- `google_compute_address.name`
 
 ## Supported Methods
 
-* `GET`: Get GCP Compute Address by "gcp-compute-address-name"
-* `LIST`: List all GCP Compute Address items
-* ~~`SEARCH`~~
+- `GET`: Get GCP Compute Address by "gcp-compute-address-name"
+- `LIST`: List all GCP Compute Address items
+- ~~`SEARCH`~~
 
 ## Possible Links
 

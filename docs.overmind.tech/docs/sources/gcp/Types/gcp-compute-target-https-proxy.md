@@ -8,13 +8,13 @@ For full details see the official documentation: https://cloud.google.com/comput
 
 **Terrafrom Mappings:**
 
-* `google_compute_target_https_proxy.name`
+- `google_compute_target_https_proxy.name`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-compute-target-https-proxy by its "name"
-* `LIST`: List all gcp-compute-target-https-proxy
-* ~~`SEARCH`~~
+- `GET`: Get a gcp-compute-target-https-proxy by its "name"
+- `LIST`: List all gcp-compute-target-https-proxy
+- ~~`SEARCH`~~
 
 ## Possible Links
 

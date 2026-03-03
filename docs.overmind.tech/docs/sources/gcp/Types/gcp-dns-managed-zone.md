@@ -8,13 +8,13 @@ Official documentation: https://cloud.google.com/dns/docs/zones
 
 **Terrafrom Mappings:**
 
-* `google_dns_managed_zone.name`
+- `google_dns_managed_zone.name`
 
 ## Supported Methods
 
-* `GET`: Get a gcp-dns-managed-zone by its "name"
-* `LIST`: List all gcp-dns-managed-zone
-* ~~`SEARCH`~~
+- `GET`: Get a gcp-dns-managed-zone by its "name"
+- `LIST`: List all gcp-dns-managed-zone
+- ~~`SEARCH`~~
 
 ## Possible Links
 
