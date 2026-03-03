@@ -255,6 +255,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create sql elastic pools client: %w", err)
 		}
 
+		sqlPrivateEndpointConnectionsClient, err := armsql.NewPrivateEndpointConnectionsClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create sql private endpoint connections client: %w", err)
+		}
+
 		postgresqlFlexibleServersClient, err := armpostgresqlflexibleservers.NewServersClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create postgresql flexible servers client: %w", err)
@@ -433,6 +438,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 				), cache),
 				sources.WrapperToAdapter(NewSqlServerVirtualNetworkRule(
 					clients.NewSqlServerVirtualNetworkRuleClient(sqlVirtualNetworkRulesClient),
+					resourceGroupScopes,
+				), cache),
+				sources.WrapperToAdapter(NewSQLServerPrivateEndpointConnection(
+					clients.NewSQLServerPrivateEndpointConnectionsClient(sqlPrivateEndpointConnectionsClient),
 					resourceGroupScopes,
 				), cache),
 				sources.WrapperToAdapter(NewDocumentDBDatabaseAccounts(
@@ -641,6 +650,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewSqlDatabase(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewSqlServerFirewallRule(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewSqlServerVirtualNetworkRule(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewSQLServerPrivateEndpointConnection(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewDocumentDBDatabaseAccounts(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewDocumentDBPrivateEndpointConnection(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewKeyVaultVault(nil, placeholderResourceGroupScopes), noOpCache),
