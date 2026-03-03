@@ -230,6 +230,14 @@ overmind --version
   changes you make with `overmind terraform apply`, so that you can be sure
   that your changes haven't had any unexpected downstream impact.
 
+- `overmind knowledge list`
+
+  View which knowledge files Overmind would discover from your current location.
+  Knowledge files in `.overmind/knowledge/` teach the AI investigator about your
+  infrastructure context, standards, and approved patterns. This command shows the
+  resolved knowledge directory path, valid files with their metadata, and any
+  validation warnings for invalid files.
+
 ## Cloud Provider Support
 
 The CLI automatically discovers AWS and GCP providers from your Terraform configuration.
