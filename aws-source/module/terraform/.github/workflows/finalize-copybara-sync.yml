@@ -50,6 +50,7 @@ jobs:
           AUTHOR_NAME: ${{ steps.author.outputs.name }}
           AUTHOR_EMAIL: ${{ steps.author.outputs.email }}
           GITHUB_USER: ${{ steps.author.outputs.github_user }}
+          HEAD_BRANCH: ${{ github.ref_name }}
         run: |
           PR_BODY="## Copybara Sync - Release ${VERSION}
 
@@ -69,7 +70,7 @@ jobs:
 
           PR_URL=$(gh pr create \
             --base main \
-            --head "${{ github.ref_name }}" \
+            --head "$HEAD_BRANCH" \
             --title "Release ${VERSION}" \
             --body "$PR_BODY")
 
