@@ -15,6 +15,7 @@ import (
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
+	"github.com/overmindtech/cli/sources/azure/shared/mocks"
 	"github.com/overmindtech/cli/sources/shared"
 	"github.com/overmindtech/cli/sources/stdlib"
 )
@@ -51,7 +52,7 @@ func (e *errorGalleryApplicationsPager) NextPage(ctx context.Context) (armcomput
 
 // testGalleryApplicationsClient wraps the mock and returns a pager from NewListByGalleryPager.
 type testGalleryApplicationsClient struct {
-	*MockGalleryApplicationsClient
+	*mocks.MockGalleryApplicationsClient
 	pager clients.GalleryApplicationsPager
 }
 
@@ -90,7 +91,7 @@ func TestComputeGalleryApplication(t *testing.T) {
 	t.Run("Get", func(t *testing.T) {
 		app := createAzureGalleryApplication(galleryApplicationName)
 
-		mockClient := NewMockGalleryApplicationsClient(ctrl)
+		mockClient := mocks.NewMockGalleryApplicationsClient(ctrl)
 		mockClient.EXPECT().Get(ctx, resourceGroup, galleryName, galleryApplicationName, nil).Return(
 			armcompute.GalleryApplicationsClientGetResponse{
 				GalleryApplication: *app,
@@ -132,7 +133,7 @@ func TestComputeGalleryApplication(t *testing.T) {
 	})
 
 	t.Run("Get_InvalidQueryParts", func(t *testing.T) {
-		mockClient := NewMockGalleryApplicationsClient(ctrl)
+		mockClient := mocks.NewMockGalleryApplicationsClient(ctrl)
 		wrapper := NewComputeGalleryApplication(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
@@ -143,7 +144,7 @@ func TestComputeGalleryApplication(t *testing.T) {
 	})
 
 	t.Run("Get_EmptyGalleryName", func(t *testing.T) {
-		mockClient := NewMockGalleryApplicationsClient(ctrl)
+		mockClient := mocks.NewMockGalleryApplicationsClient(ctrl)
 		wrapper := NewComputeGalleryApplication(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
@@ -155,7 +156,7 @@ func TestComputeGalleryApplication(t *testing.T) {
 	})
 
 	t.Run("Get_EmptyApplicationName", func(t *testing.T) {
-		mockClient := NewMockGalleryApplicationsClient(ctrl)
+		mockClient := mocks.NewMockGalleryApplicationsClient(ctrl)
 		wrapper := NewComputeGalleryApplication(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
@@ -168,7 +169,7 @@ func TestComputeGalleryApplication(t *testing.T) {
 
 	t.Run("Get_ClientError", func(t *testing.T) {
 		expectedErr := errors.New("application not found")
-		mockClient := NewMockGalleryApplicationsClient(ctrl)
+		mockClient := mocks.NewMockGalleryApplicationsClient(ctrl)
 		mockClient.EXPECT().Get(ctx, resourceGroup, galleryName, "nonexistent", nil).Return(
 			armcompute.GalleryApplicationsClientGetResponse{}, expectedErr)
 
@@ -186,7 +187,7 @@ func TestComputeGalleryApplication(t *testing.T) {
 		app1 := createAzureGalleryApplication("app-1")
 		app2 := createAzureGalleryApplication("app-2")
 
-		mockClient := NewMockGalleryApplicationsClient(ctrl)
+		mockClient := mocks.NewMockGalleryApplicationsClient(ctrl)
 		pages := []armcompute.GalleryApplicationsClientListByGalleryResponse{
 			{
 				GalleryApplicationList: armcompute.GalleryApplicationList{
@@ -225,7 +226,7 @@ func TestComputeGalleryApplication(t *testing.T) {
 	})
 
 	t.Run("Search_InvalidQueryParts", func(t *testing.T) {
-		mockClient := NewMockGalleryApplicationsClient(ctrl)
+		mockClient := mocks.NewMockGalleryApplicationsClient(ctrl)
 		wrapper := NewComputeGalleryApplication(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
@@ -242,7 +243,7 @@ func TestComputeGalleryApplication(t *testing.T) {
 	})
 
 	t.Run("Search_EmptyGalleryName", func(t *testing.T) {
-		mockClient := NewMockGalleryApplicationsClient(ctrl)
+		mockClient := mocks.NewMockGalleryApplicationsClient(ctrl)
 		wrapper := NewComputeGalleryApplication(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		_, qErr := wrapper.Search(ctx, scope, "")
@@ -252,7 +253,7 @@ func TestComputeGalleryApplication(t *testing.T) {
 	})
 
 	t.Run("Search_PagerError", func(t *testing.T) {
-		mockClient := NewMockGalleryApplicationsClient(ctrl)
+		mockClient := mocks.NewMockGalleryApplicationsClient(ctrl)
 		errorPager := &errorGalleryApplicationsPager{}
 		testClient := &testGalleryApplicationsClient{
 			MockGalleryApplicationsClient: mockClient,
@@ -274,7 +275,7 @@ func TestComputeGalleryApplication(t *testing.T) {
 	})
 
 	t.Run("PotentialLinks", func(t *testing.T) {
-		mockClient := NewMockGalleryApplicationsClient(ctrl)
+		mockClient := mocks.NewMockGalleryApplicationsClient(ctrl)
 		wrapper := NewComputeGalleryApplication(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		links := wrapper.PotentialLinks()
@@ -293,7 +294,7 @@ func TestComputeGalleryApplication(t *testing.T) {
 	})
 
 	t.Run("ImplementsSearchableAdapter", func(t *testing.T) {
-		mockClient := NewMockGalleryApplicationsClient(ctrl)
+		mockClient := mocks.NewMockGalleryApplicationsClient(ctrl)
 		wrapper := NewComputeGalleryApplication(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
