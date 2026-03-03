@@ -323,6 +323,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create dedicated host groups client: %w", err)
 		}
 
+		dedicatedHostsClient, err := armcompute.NewDedicatedHostsClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create dedicated hosts client: %w", err)
+		}
+
 		capacityReservationGroupsClient, err := armcompute.NewCapacityReservationGroupsClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create capacity reservation groups client: %w", err)
@@ -561,6 +566,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewDedicatedHostGroupsClient(dedicatedHostGroupsClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewComputeDedicatedHost(
+					clients.NewDedicatedHostsClient(dedicatedHostsClient),
+					resourceGroupScopes,
+				), cache),
 				sources.WrapperToAdapter(NewComputeCapacityReservationGroup(
 					clients.NewCapacityReservationGroupsClient(capacityReservationGroupsClient),
 					resourceGroupScopes,
@@ -655,6 +664,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewComputeProximityPlacementGroup(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeDiskAccess(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeDedicatedHostGroup(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewComputeDedicatedHost(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeCapacityReservationGroup(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeGalleryApplicationVersion(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeGalleryApplication(nil, placeholderResourceGroupScopes), noOpCache),
