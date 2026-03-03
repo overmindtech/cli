@@ -235,6 +235,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create managed hsms client: %w", err)
 		}
 
+		mhsmPrivateEndpointConnectionsClient, err := armkeyvault.NewMHSMPrivateEndpointConnectionsClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create MHSM private endpoint connections client: %w", err)
+		}
+
 		sqlServersClient, err := armsql.NewServersClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create sql servers client: %w", err)
@@ -465,6 +470,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewManagedHSMsClient(managedHSMsClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewKeyVaultManagedHSMPrivateEndpointConnection(
+					clients.NewKeyVaultManagedHSMPrivateEndpointConnectionsClient(mhsmPrivateEndpointConnectionsClient),
+					resourceGroupScopes,
+				), cache),
 				sources.WrapperToAdapter(NewDBforPostgreSQLDatabase(
 					clients.NewPostgreSQLDatabasesClient(postgreSQLDatabasesClient),
 					resourceGroupScopes,
@@ -664,6 +673,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewDocumentDBPrivateEndpointConnection(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewKeyVaultVault(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewKeyVaultManagedHSM(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewKeyVaultManagedHSMPrivateEndpointConnection(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewDBforPostgreSQLDatabase(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkPublicIPAddress(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkLoadBalancer(nil, placeholderResourceGroupScopes), noOpCache),
