@@ -3,6 +3,7 @@ package discovery
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/overmindtech/cli/go/sdp-go"
 	"github.com/overmindtech/cli/go/tracing"
@@ -63,9 +64,20 @@ func (qt *QueryTracker) Execute(ctx context.Context) ([]*sdp.Item, []*sdp.Edge, 
 	}(errChan)
 
 	// Process the responses as they come in
+	var natsPublishMaxNs int64
+	var natsPublishTotalNs int64
+	var natsPublishCount int
+
 	for response := range responses {
 		if qt.Query.Subject() != "" && qt.Engine.natsConnection != nil {
+			publishStart := time.Now()
 			err := qt.Engine.natsConnection.Publish(ctx, qt.Query.Subject(), response)
+			publishNs := time.Since(publishStart).Nanoseconds()
+			natsPublishTotalNs += publishNs
+			natsPublishCount++
+			if publishNs > natsPublishMaxNs {
+				natsPublishMaxNs = publishNs
+			}
 			if err != nil {
 				span.RecordError(err)
 				log.WithError(err).Error("Response publishing error")
@@ -81,6 +93,12 @@ func (qt *QueryTracker) Execute(ctx context.Context) ([]*sdp.Item, []*sdp.Edge, 
 			sdpErrs = append(sdpErrs, response.Error)
 		}
 	}
+
+	span.SetAttributes(
+		attribute.Float64("ovm.nats.publishMaxMs", float64(natsPublishMaxNs)/1e6),
+		attribute.Float64("ovm.nats.publishTotalMs", float64(natsPublishTotalNs)/1e6),
+		attribute.Int("ovm.nats.publishCount", natsPublishCount),
+	)
 
 	// Get the result of the execution
 	err := <-errChan

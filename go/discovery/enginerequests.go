@@ -1,9 +1,12 @@
 package discovery
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"runtime"
+	"runtime/pprof"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -154,6 +157,20 @@ func (e *Engine) HandleQuery(ctx context.Context, query *sdp.Query) {
 	}
 }
 
+// captureGoroutineSummary returns an aggregated goroutine profile (pprof
+// debug=1 format) truncated to maxBytes. The debug=1 format groups goroutines
+// by unique stack trace, keeping output compact enough for a Honeycomb string
+// attribute (49 KB limit).
+func captureGoroutineSummary(maxBytes int) string {
+	var buf bytes.Buffer
+	_ = pprof.Lookup("goroutine").WriteTo(&buf, 1)
+	s := buf.String()
+	if len(s) > maxBytes {
+		s = s[:maxBytes-20] + "\n...[truncated]..."
+	}
+	return s
+}
+
 var listExecutionPoolCount atomic.Int32
 var getExecutionPoolCount atomic.Int32
 
@@ -196,6 +213,8 @@ func (e *Engine) ExecuteQuery(ctx context.Context, query *sdp.Query, responses c
 	// Overall MaxParallelExecutions evaluation is handled by e.executionPool
 	wg := sync.WaitGroup{}
 	expandedMutex := sync.RWMutex{}
+	totalQueries := len(expanded)
+	var poolWaitMaxNs atomic.Int64
 	expandedMutex.RLock()
 	for q, adapter := range expanded {
 		wg.Add(1)
@@ -220,8 +239,16 @@ func (e *Engine) ExecuteQuery(ctx context.Context, query *sdp.Query, responses c
 				attribute.Int("ovm.discovery.listExecutionPoolCount", int(listExecutionPoolCount.Load())),
 				attribute.Int("ovm.discovery.getExecutionPoolCount", int(getExecutionPoolCount.Load())),
 			)
+			poolSubmitTime := time.Now()
 			p.Go(func() {
 				defer tracing.LogRecoverToReturn(ctx, "ExecuteQuery inner")
+				waitNs := time.Since(poolSubmitTime).Nanoseconds()
+				for {
+					old := poolWaitMaxNs.Load()
+					if waitNs <= old || poolWaitMaxNs.CompareAndSwap(old, waitNs) {
+						break
+					}
+				}
 				defer func() {
 					// Mark the work as done. This happens before we start
 					// waiting on `expandedMutex` below, to ensure that the
@@ -284,8 +311,21 @@ func (e *Engine) ExecuteQuery(ctx context.Context, query *sdp.Query, responses c
 					return
 				case <-time.After(longRunningAdaptersTimeout):
 					// If we're here, then the wait group didn't finish in time
+					goroutineSummary := captureGoroutineSummary(48_000)
 					expandedMutex.RLock()
+					span.AddEvent("waitgroup.stuck", trace.WithAttributes(
+						attribute.Int("ovm.stuck.goroutineCount", runtime.NumGoroutine()),
+						attribute.String("ovm.stuck.goroutineProfile", goroutineSummary),
+						attribute.Int("ovm.stuck.totalQueries", totalQueries),
+						attribute.Int("ovm.stuck.remainingQueries", len(expanded)),
+					))
 					for q, adapter := range expanded {
+						span.AddEvent("waitgroup.stuck.adapter", trace.WithAttributes(
+							attribute.String("ovm.stuck.adapter", adapter.Name()),
+							attribute.String("ovm.stuck.type", q.GetType()),
+							attribute.String("ovm.stuck.scope", q.GetScope()),
+							attribute.String("ovm.stuck.method", q.GetMethod().String()),
+						))
 						// There is a honeycomb trigger for this message:
 						//
 						// https://ui.honeycomb.io/overmind/environments/prod/datasets/kubernetes-metrics/triggers/saWNAnCAXNb
@@ -309,6 +349,10 @@ func (e *Engine) ExecuteQuery(ctx context.Context, query *sdp.Query, responses c
 			}
 		}()
 	}
+
+	span.SetAttributes(
+		attribute.Float64("ovm.discovery.poolWaitMaxMs", float64(poolWaitMaxNs.Load())/1e6),
+	)
 
 	// If the context is cancelled, return that error
 	if ctx.Err() != nil {
@@ -344,6 +388,7 @@ func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, res
 	// rather run the List first, populate the cache, then have the Get just
 	// grab the value from the cache. To this end we use a GetListMutex to allow
 	// a List to block all subsequent Get queries until it is done
+	mutexWaitStart := time.Now()
 	switch q.GetMethod() {
 	case sdp.QueryMethod_GET:
 		e.gfm.GetLock(q.GetScope(), q.GetType())
@@ -355,6 +400,10 @@ func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, res
 		// We don't need to lock for a search since they are independent and
 		// will only ever have a cache hit if the query is identical
 	}
+	span.SetAttributes(
+		attribute.Float64("ovm.discovery.mutexWaitMs", float64(time.Since(mutexWaitStart).Milliseconds())),
+		attribute.String("ovm.discovery.mutexKey", q.GetScope()+"."+q.GetType()),
+	)
 
 	// Ensure that the span is closed when the context is done. This is based on
 	// the assumption that some adapters may not respect the context deadline and
@@ -377,6 +426,8 @@ func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, res
 	// are passed back to the caller
 	var numItems atomic.Int32
 	var numErrs atomic.Int32
+	var channelSendMaxNs atomic.Int64
+	var channelSendTotalNs atomic.Int64
 	var itemHandler ItemHandler = func(item *sdp.Item) {
 		if item == nil {
 			return
@@ -384,6 +435,7 @@ func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, res
 
 		if err := item.Validate(); err != nil {
 			span.RecordError(err)
+			sendStart := time.Now()
 			responses <- sdp.NewQueryResponseFromError(&sdp.QueryError{
 				UUID:          q.GetUUID(),
 				ErrorType:     sdp.QueryError_OTHER,
@@ -392,6 +444,14 @@ func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, res
 				ResponderName: e.EngineConfig.SourceName,
 				ItemType:      q.GetType(),
 			})
+			sendNs := time.Since(sendStart).Nanoseconds()
+			channelSendTotalNs.Add(sendNs)
+			for {
+				old := channelSendMaxNs.Load()
+				if sendNs <= old || channelSendMaxNs.CompareAndSwap(old, sendNs) {
+					break
+				}
+			}
 			return
 		}
 
@@ -409,7 +469,16 @@ func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, res
 
 		// Send the item back to the caller
 		numItems.Add(1)
+		sendStart := time.Now()
 		responses <- sdp.NewQueryResponseFromItem(item)
+		sendNs := time.Since(sendStart).Nanoseconds()
+		channelSendTotalNs.Add(sendNs)
+		for {
+			old := channelSendMaxNs.Load()
+			if sendNs <= old || channelSendMaxNs.CompareAndSwap(old, sendNs) {
+				break
+			}
+		}
 	}
 	var errHandler ErrHandler = func(err error) {
 		if err == nil {
@@ -423,7 +492,16 @@ func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, res
 
 		// Send the error back to the caller
 		numErrs.Add(1)
+		sendStart := time.Now()
 		responses <- queryResponseFromError(err, q, adapter, e.EngineConfig.SourceName)
+		sendNs := time.Since(sendStart).Nanoseconds()
+		channelSendTotalNs.Add(sendNs)
+		for {
+			old := channelSendMaxNs.Load()
+			if sendNs <= old || channelSendMaxNs.CompareAndSwap(old, sendNs) {
+				break
+			}
+		}
 	}
 	stream := NewQueryResultStream(itemHandler, errHandler)
 
@@ -506,6 +584,8 @@ func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, res
 	span.SetAttributes(
 		attribute.Int("ovm.adapter.numItems", int(numItems.Load())),
 		attribute.Int("ovm.adapter.numErrors", int(numErrs.Load())),
+		attribute.Float64("ovm.discovery.channelSendMaxMs", float64(channelSendMaxNs.Load())/1e6),
+		attribute.Float64("ovm.discovery.channelSendTotalMs", float64(channelSendTotalNs.Load())/1e6),
 	)
 }
 
