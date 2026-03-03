@@ -1,3 +1,4 @@
+//nolint:staticcheck // TODO: migrate from v1.Endpoints to discoveryv1.EndpointSlice
 package adapters
 
 import (
