@@ -270,6 +270,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create postgresql firewall rules client: %w", err)
 		}
 
+		postgresqlPrivateEndpointConnectionsClient, err := armpostgresqlflexibleservers.NewPrivateEndpointConnectionsClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create postgresql flexible server private endpoint connections client: %w", err)
+		}
+
 		secretsClient, err := armkeyvault.NewSecretsClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create secrets client: %w", err)
@@ -536,6 +541,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewPostgreSQLFlexibleServerFirewallRuleClient(postgresqlFirewallRulesClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewDBforPostgreSQLFlexibleServerPrivateEndpointConnection(
+					clients.NewDBforPostgreSQLFlexibleServerPrivateEndpointConnectionsClient(postgresqlPrivateEndpointConnectionsClient),
+					resourceGroupScopes,
+				), cache),
 				sources.WrapperToAdapter(NewKeyVaultSecret(
 					clients.NewSecretsClient(secretsClient),
 					resourceGroupScopes,
@@ -672,6 +681,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewSqlServer(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewDBforPostgreSQLFlexibleServer(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewDBforPostgreSQLFlexibleServerFirewallRule(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewDBforPostgreSQLFlexibleServerPrivateEndpointConnection(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewKeyVaultSecret(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewKeyVaultKey(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewManagedIdentityUserAssignedIdentity(nil, placeholderResourceGroupScopes), noOpCache),

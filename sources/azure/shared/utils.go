@@ -32,6 +32,7 @@ func GetResourceIDPathKeys(resourceType string) []string {
 		"azure-sql-server-private-endpoint-connection": {"servers", "privateEndpointConnections"}, // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Sql/servers/{serverName}/privateEndpointConnections/{connectionName}",
 		"azure-dbforpostgresql-database":                  {"flexibleServers", "databases"},          // "/subscriptions/.../Microsoft.DBforPostgreSQL/flexibleServers/{server}/databases/{db}",
 		"azure-dbforpostgresql-flexible-server-firewall-rule": {"flexibleServers", "firewallRules"}, // "/subscriptions/.../Microsoft.DBforPostgreSQL/flexibleServers/{server}/firewallRules/{rule}",
+		"azure-dbforpostgresql-flexible-server-private-endpoint-connection": {"flexibleServers", "privateEndpointConnections"}, // "/subscriptions/.../Microsoft.DBforPostgreSQL/flexibleServers/{server}/privateEndpointConnections/{connectionName}",
 		"azure-keyvault-secret":                     {"vaults", "secrets"},                     // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.KeyVault/vaults/{vaultName}/secrets/{secretName}",
 		"azure-keyvault-key":                        {"vaults", "keys"},                       // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.KeyVault/vaults/{vaultName}/keys/{keyName}",
 		"azure-authorization-role-assignment":       {"roleAssignments"},                       // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Authorization/roleAssignments/{roleAssignmentName}",
