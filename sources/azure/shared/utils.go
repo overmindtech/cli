@@ -44,6 +44,7 @@ func GetResourceIDPathKeys(resourceType string) []string {
 		"azure-network-route":                         {"routeTables", "routes"},                     // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/routeTables/{routeTableName}/routes/{routeName}",
 		"azure-network-security-rule":                 {"networkSecurityGroups", "securityRules"},   // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/networkSecurityGroups/{nsgName}/securityRules/{ruleName}",
 		"azure-batch-batch-application":                {"batchAccounts", "applications"},            // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Batch/batchAccounts/{accountName}/applications/{applicationName}",
+		"azure-batch-batch-pool":                       {"batchAccounts", "pools"},                  // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Batch/batchAccounts/{accountName}/pools/{poolName}",
 	}
 
 	if keys, ok := pathKeysMap[resourceType]; ok {
