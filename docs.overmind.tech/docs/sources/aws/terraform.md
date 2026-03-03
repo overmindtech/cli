@@ -1,9 +1,9 @@
 ---
-title: Configure with Terraform
+title: Configure with Terraform / OpenTofu
 sidebar_position: 2
 ---
 
-The [Overmind Terraform module](https://registry.terraform.io/modules/overmindtech/aws-source/overmind) configures an AWS account for Overmind infrastructure discovery in a single `terraform apply`. It creates an IAM role with a read-only policy, sets up the trust relationship, and registers the source with Overmind's API. The module is fully compatible with [OpenTofu](https://opentofu.org/).
+The Overmind Terraform module configures an AWS account for Overmind infrastructure discovery in a single `terraform apply` (or `tofu apply`). It creates an IAM role with a read-only policy, sets up the trust relationship, and registers the source with Overmind's API. The module and provider are available on both the [Terraform Registry](https://registry.terraform.io/modules/overmindtech/aws-source/overmind) and the [OpenTofu Registry](https://search.opentofu.org/module/overmindtech/aws-source/overmind).
 
 ## Prerequisites
 
@@ -42,6 +42,15 @@ export OVERMIND_API_KEY="your-api-key"
 terraform init
 terraform plan
 terraform apply
+```
+
+Or with OpenTofu:
+
+```bash
+export OVERMIND_API_KEY="your-api-key"
+tofu init
+tofu plan
+tofu apply
 ```
 
 ## Authentication
@@ -157,7 +166,7 @@ After `terraform apply` completes:
 ## Registry Links
 
 - **Terraform Registry**: [overmindtech/overmind provider](https://registry.terraform.io/providers/overmindtech/overmind/latest) | [overmindtech/aws-source module](https://registry.terraform.io/modules/overmindtech/aws-source/overmind/latest)
-- **OpenTofu Registry**: coming soon
+- **OpenTofu Registry**: [overmindtech/overmind provider](https://search.opentofu.org/provider/overmindtech/overmind) | [overmindtech/aws-source module](https://search.opentofu.org/module/overmindtech/aws-source/overmind)
 
 ## Troubleshooting
 
