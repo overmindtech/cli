@@ -29,6 +29,7 @@ func GetResourceIDPathKeys(resourceType string) []string {
 		"azure-sql-elastic-pool":                    {"servers", "elasticPools"},              // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Sql/servers/{serverName}/elasticPools/{elasticPoolName}",
 		"azure-sql-server-firewall-rule":            {"servers", "firewallRules"},             // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Sql/servers/{serverName}/firewallRules/{ruleName}",
 		"azure-sql-server-virtual-network-rule":     {"servers", "virtualNetworkRules"},        // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Sql/servers/{serverName}/virtualNetworkRules/{ruleName}",
+		"azure-sql-server-private-endpoint-connection": {"servers", "privateEndpointConnections"}, // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Sql/servers/{serverName}/privateEndpointConnections/{connectionName}",
 		"azure-dbforpostgresql-database":                  {"flexibleServers", "databases"},          // "/subscriptions/.../Microsoft.DBforPostgreSQL/flexibleServers/{server}/databases/{db}",
 		"azure-dbforpostgresql-flexible-server-firewall-rule": {"flexibleServers", "firewallRules"}, // "/subscriptions/.../Microsoft.DBforPostgreSQL/flexibleServers/{server}/firewallRules/{rule}",
 		"azure-keyvault-secret":                     {"vaults", "secrets"},                     // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.KeyVault/vaults/{vaultName}/secrets/{secretName}",
