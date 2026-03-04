@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
@@ -9,6 +10,10 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
+
+// ErrInvalidKnowledgeFiles is returned when one or more knowledge files are invalid/skipped.
+// Used so "knowledge list" can exit non-zero in CI when invalid files are found.
+var ErrInvalidKnowledgeFiles = errors.New("invalid knowledge files found")
 
 // knowledgeListCmd represents the knowledge list command
 var knowledgeListCmd = &cobra.Command{
@@ -21,11 +26,10 @@ var knowledgeListCmd = &cobra.Command{
 func KnowledgeList(cmd *cobra.Command, args []string) error {
 	startDir := viper.GetString("dir")
 	output, err := renderKnowledgeList(startDir)
+	fmt.Print(output)
 	if err != nil {
 		return err
 	}
-
-	fmt.Print(output)
 	return nil
 }
 
@@ -85,6 +89,7 @@ func renderKnowledgeList(startDir string) (string, error) {
 			fmt.Fprintf(&output, "    Reason: %s\n", w.Reason)
 		}
 		output.WriteString("\n")
+		return output.String(), fmt.Errorf("%w (%d file(s))", ErrInvalidKnowledgeFiles, len(warnings))
 	}
 
 	return output.String(), nil

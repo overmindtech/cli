@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"errors"
 	"os"
 	"path/filepath"
 	"strings"
@@ -143,8 +144,11 @@ This file is missing frontmatter.
 `)
 
 	output, err := renderKnowledgeList(dir)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if err == nil {
+		t.Fatal("expected error when invalid files present, got nil")
+	}
+	if !errors.Is(err, ErrInvalidKnowledgeFiles) {
+		t.Errorf("expected ErrInvalidKnowledgeFiles, got: %v", err)
 	}
 
 	// Check for valid file
@@ -185,8 +189,11 @@ Content.
 `)
 
 	output, err := renderKnowledgeList(dir)
-	if err != nil {
-		t.Fatalf("unexpected error: %v", err)
+	if err == nil {
+		t.Fatal("expected error when only invalid files present, got nil")
+	}
+	if !errors.Is(err, ErrInvalidKnowledgeFiles) {
+		t.Errorf("expected ErrInvalidKnowledgeFiles, got: %v", err)
 	}
 
 	// Should NOT have valid files section
