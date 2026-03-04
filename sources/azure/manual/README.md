@@ -32,6 +32,10 @@ This directory contains manually implemented Azure adapters that cannot be gener
   - Network Security Groups: Referenced through network interfaces
 - Requires manual parsing and conditional linking based on the resource ID format and provider namespace
 
+**Network Private DNS Zone** (`network-private-dns-zone.go`):
+- Discovers Azure Private DNS Zones via `armprivatedns`; uses `MultiResourceGroupBase` and list-by-resource-group pager
+- Links zone name to stdlib DNS for resolution; health from provisioning state
+
 ## Implementation Guidelines
 
 ### For Detailed Implementation Rules
