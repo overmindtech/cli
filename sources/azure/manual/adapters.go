@@ -231,6 +231,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create application gateways client: %w", err)
 		}
 
+		applicationSecurityGroupsClient, err := armnetwork.NewApplicationSecurityGroupsClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create application security groups client: %w", err)
+		}
+
 		managedHSMsClient, err := armkeyvault.NewManagedHsmsClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create managed hsms client: %w", err)
@@ -539,6 +544,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewNetworkSecurityGroupsClient(networkSecurityGroupsClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewNetworkApplicationSecurityGroup(
+					clients.NewApplicationSecurityGroupsClient(applicationSecurityGroupsClient),
+					resourceGroupScopes,
+				), cache),
 				sources.WrapperToAdapter(NewNetworkRouteTable(
 					clients.NewRouteTablesClient(routeTablesClient),
 					resourceGroupScopes,
@@ -704,6 +713,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewComputeAvailabilitySet(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeDisk(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkNetworkSecurityGroup(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewNetworkApplicationSecurityGroup(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkSecurityRule(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkRouteTable(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkApplicationGateway(nil, placeholderResourceGroupScopes), noOpCache),

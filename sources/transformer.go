@@ -367,6 +367,7 @@ func (s *standardAdapterImpl) Metadata() *sdp.AdapterMetadata {
 	}
 
 	if s.wrapper.PotentialLinks() != nil {
+		a.PotentialLinks = []string{}
 		for link := range s.wrapper.PotentialLinks() {
 			a.PotentialLinks = append(a.PotentialLinks, link.String())
 		}
@@ -539,6 +540,7 @@ func (s *standardListableAdapterImpl) Metadata() *sdp.AdapterMetadata {
 	}
 
 	if s.wrapper.PotentialLinks() != nil {
+		a.PotentialLinks = []string{}
 		for link := range s.wrapper.PotentialLinks() {
 			a.PotentialLinks = append(a.PotentialLinks, link.String())
 		}
@@ -965,6 +967,7 @@ func (s *standardSearchableAdapterImpl) Metadata() *sdp.AdapterMetadata {
 	}
 
 	if s.wrapper.PotentialLinks() != nil {
+		a.PotentialLinks = []string{}
 		for link := range s.wrapper.PotentialLinks() {
 			a.PotentialLinks = append(a.PotentialLinks, link.String())
 		}
@@ -1024,6 +1027,7 @@ func (s *standardSearchableListableAdapterImpl) Metadata() *sdp.AdapterMetadata 
 	}
 
 	if s.wrapper.PotentialLinks() != nil {
+		a.PotentialLinks = []string{}
 		for link := range s.wrapper.PotentialLinks() {
 			a.PotentialLinks = append(a.PotentialLinks, link.String())
 		}
