@@ -5,8 +5,10 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"regexp"
 	"runtime"
 	"runtime/pprof"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -19,6 +21,7 @@ import (
 	"github.com/sourcegraph/conc/pool"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
+	"golang.org/x/sync/singleflight"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -157,18 +160,46 @@ func (e *Engine) HandleQuery(ctx context.Context, query *sdp.Query) {
 	}
 }
 
-// captureGoroutineSummary returns an aggregated goroutine profile (pprof
-// debug=1 format) truncated to maxBytes. The debug=1 format groups goroutines
-// by unique stack trace, keeping output compact enough for a Honeycomb string
-// attribute (49 KB limit).
-func captureGoroutineSummary(maxBytes int) string {
-	var buf bytes.Buffer
-	_ = pprof.Lookup("goroutine").WriteTo(&buf, 1)
-	s := buf.String()
-	if len(s) > maxBytes {
-		s = s[:maxBytes-20] + "\n...[truncated]..."
-	}
+var (
+	goroutineProfileGroup singleflight.Group
+
+	// Compiled once; used by compactGoroutineProfile to strip noise from
+	// pprof debug=1 output while keeping it human-readable.
+	profileAddrList   = regexp.MustCompile(` @ (?:0x[0-9a-f]+ ?)+`)
+	profileHexAddr    = regexp.MustCompile(`#\t0x[0-9a-f]+\t`)
+	profileFuncOffset = regexp.MustCompile(`\+0x[0-9a-f]+`)
+	profileVersion    = regexp.MustCompile(`@v[0-9]+\.[0-9]+\.[0-9]+[-\w.]*`)
+)
+
+// compactGoroutineProfile removes noise from a pprof debug=1 goroutine dump
+// without losing readability. Typical compression is ~50%, effectively doubling
+// how much fits in the Honeycomb 49 KB string attribute limit.
+func compactGoroutineProfile(s string) string {
+	s = strings.ReplaceAll(s, "github.com/overmindtech/workspace/", "g.c/o/w/")
+	s = strings.ReplaceAll(s, "github.com/", "g.c/")
+	s = profileAddrList.ReplaceAllString(s, "")   // "32257 @ 0x9484c ..." → "32257"
+	s = profileHexAddr.ReplaceAllString(s, "#\t") // "#\t0xaeda7b\tfoo" → "#\tfoo"
+	s = profileFuncOffset.ReplaceAllString(s, "") // "Execute+0x4cb" → "Execute"
+	s = profileVersion.ReplaceAllString(s, "")    // "@v1.49.0" → ""
 	return s
+}
+
+// captureGoroutineSummary returns a compacted goroutine profile (pprof debug=1)
+// truncated to maxBytes, deduplicated via singleflight. When many ExecuteQuery
+// goroutines hit the stuck timeout simultaneously, only one runs the
+// (stop-the-world) pprof capture; the rest share its result. The shared return
+// value indicates whether this caller reused another's capture.
+func captureGoroutineSummary(maxBytes int) (profile string, shared bool) {
+	v, _, shared := goroutineProfileGroup.Do("goroutine-profile", func() (any, error) {
+		var buf bytes.Buffer
+		_ = pprof.Lookup("goroutine").WriteTo(&buf, 1)
+		s := compactGoroutineProfile(buf.String())
+		if len(s) > maxBytes {
+			s = s[:maxBytes-20] + "\n...[truncated]..."
+		}
+		return s, nil
+	})
+	return v.(string), shared
 }
 
 var listExecutionPoolCount atomic.Int32
@@ -311,14 +342,17 @@ func (e *Engine) ExecuteQuery(ctx context.Context, query *sdp.Query, responses c
 					return
 				case <-time.After(longRunningAdaptersTimeout):
 					// If we're here, then the wait group didn't finish in time
-					goroutineSummary := captureGoroutineSummary(48_000)
+					goroutineSummary, profileShared := captureGoroutineSummary(48_000)
 					expandedMutex.RLock()
-					span.AddEvent("waitgroup.stuck", trace.WithAttributes(
+					stuckAttrs := []attribute.KeyValue{
 						attribute.Int("ovm.stuck.goroutineCount", runtime.NumGoroutine()),
-						attribute.String("ovm.stuck.goroutineProfile", goroutineSummary),
 						attribute.Int("ovm.stuck.totalQueries", totalQueries),
 						attribute.Int("ovm.stuck.remainingQueries", len(expanded)),
-					))
+					}
+					if !profileShared {
+						stuckAttrs = append(stuckAttrs, attribute.String("ovm.stuck.goroutineProfile", goroutineSummary))
+					}
+					span.AddEvent("waitgroup.stuck", trace.WithAttributes(stuckAttrs...))
 					for q, adapter := range expanded {
 						span.AddEvent("waitgroup.stuck.adapter", trace.WithAttributes(
 							attribute.String("ovm.stuck.adapter", adapter.Name()),
