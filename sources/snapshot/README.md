@@ -4,7 +4,7 @@ A discovery source that serves items from a snapshot file or URL, enabling local
 
 ## Overview
 
-The snapshot source loads a protobuf snapshot (`.pb` file) at startup and responds to NATS discovery queries (GET, LIST, SEARCH) with items from that snapshot. This enables:
+The snapshot source loads a snapshot file (JSON or protobuf format) at startup and responds to NATS discovery queries (GET, LIST, SEARCH) with items from that snapshot. This enables:
 
 - **Local testing**: Run backend services (gateway, api-server, NATS) locally with consistent snapshot data
 - **Deterministic v6 re-runs**: Re-run change analysis and blast radius calculations with the same snapshot data
@@ -12,7 +12,8 @@ The snapshot source loads a protobuf snapshot (`.pb` file) at startup and respon
 
 ## Features
 
-- **Snapshot loading**: Loads snapshots from local files or HTTP(S) URLs
+- **Snapshot loading**: Loads snapshots from local files or HTTP(S) URLs (JSON or protobuf format)
+- **Format detection**: Automatically detects JSON (`.json`) or protobuf (`.pb`) format
 - **Wildcard scope support**: Single adapter handles all types and scopes in the snapshot
 - **Full query support**: Implements GET, LIST, and SEARCH query methods
 - **In-memory indexing**: Fast lookups by type, scope, GUN, or query string
@@ -45,7 +46,7 @@ The snapshot source requires a snapshot file or URL to be specified:
 
 ```bash
 ALLOW_UNAUTHENTICATED=true \
-SNAPSHOT_SOURCE=/workspace/services/api-server/service/changeanalysis/testdata/snapshot.pb \
+SNAPSHOT_SOURCE=/workspace/services/api-server/service/changeanalysis/testdata/snapshot.json \
 NATS_SERVICE_HOST=nats \
 NATS_SERVICE_PORT=4222 \
 go run ./sources/snapshot/main.go --log=debug --json-log=false
@@ -64,7 +65,7 @@ Update the `SNAPSHOT_SOURCE` environment variable in the launch config to point 
 
 ```bash
 ALLOW_UNAUTHENTICATED=true \
-SNAPSHOT_SOURCE=https://gateway-host/area51/snapshots/{uuid}/protobuf \
+SNAPSHOT_SOURCE=https://gateway-host/area51/snapshots/{uuid}/json \
 NATS_SERVICE_HOST=nats \
 NATS_SERVICE_PORT=4222 \
 go run ./sources/snapshot/main.go
@@ -130,7 +131,7 @@ go test -v
 Test snapshot loading:
 ```bash
 cd sources/snapshot
-go run main.go --snapshot-source=/path/to/snapshot.pb --help
+go run main.go --snapshot-source=/path/to/snapshot.json --help
 ```
 
 Verify with real snapshot:
@@ -166,4 +167,6 @@ go test -run TestLoadSnapshotFromFile -v ./adapters
 - **Linear issue**: [ENG-2577](https://linear.app/overmind/issue/ENG-2577)
 - **Snapshot protobuf**: `sdp/snapshots.proto`
 - **Discovery engine**: `go/discovery/`
-- **Test snapshot**: `services/api-server/service/changeanalysis/testdata/snapshot.pb`
+- **Test snapshots**: 
+  - JSON format (recommended): `services/api-server/service/changeanalysis/testdata/snapshot.json`
+  - Protobuf format (legacy): `services/api-server/service/changeanalysis/testdata/snapshot.pb`

@@ -107,7 +107,7 @@ func TestLoadSnapshotFromURL(t *testing.T) {
 }
 
 func TestLoadSnapshotEmptyItems(t *testing.T) {
-	// Create a snapshot with no items
+	// Create a snapshot with no items (e.g. revlink warmup for account with no sources)
 	snapshot := &sdp.Snapshot{
 		Properties: &sdp.SnapshotProperties{
 			Name:  "empty-snapshot",
@@ -128,11 +128,17 @@ func TestLoadSnapshotEmptyItems(t *testing.T) {
 		t.Fatalf("Failed to write test snapshot file: %v", err)
 	}
 
-	// Test loading - should fail validation
+	// Empty snapshots are allowed (e.g. for benchmarking or accounts with no discovered infra)
 	ctx := context.Background()
-	_, err = LoadSnapshot(ctx, tmpFile)
-	if err == nil {
-		t.Error("Expected error for snapshot with no items, got nil")
+	loaded, err := LoadSnapshot(ctx, tmpFile)
+	if err != nil {
+		t.Fatalf("LoadSnapshot with empty items should succeed: %v", err)
+	}
+	if len(loaded.GetProperties().GetItems()) != 0 {
+		t.Errorf("Expected 0 items, got %d", len(loaded.GetProperties().GetItems()))
+	}
+	if loaded.GetProperties().GetName() != "empty-snapshot" {
+		t.Errorf("Expected name 'empty-snapshot', got %q", loaded.GetProperties().GetName())
 	}
 }
 

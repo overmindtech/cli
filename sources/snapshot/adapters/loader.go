@@ -1,6 +1,7 @@
 package adapters
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io"
@@ -10,6 +11,7 @@ import (
 
 	"github.com/overmindtech/cli/go/sdp-go"
 	log "github.com/sirupsen/logrus"
+	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -33,20 +35,32 @@ func LoadSnapshot(ctx context.Context, source string) (*sdp.Snapshot, error) {
 		}
 	}
 
-	// Unmarshal the protobuf data
+	// Unmarshal the data (detect JSON vs protobuf format)
 	snapshot := &sdp.Snapshot{}
-	if err := proto.Unmarshal(data, snapshot); err != nil {
-		return nil, fmt.Errorf("failed to unmarshal snapshot protobuf: %w", err)
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) > 0 && trimmed[0] == '{' {
+		// JSON format
+		if err := protojson.Unmarshal(data, snapshot); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal snapshot JSON: %w", err)
+		}
+		log.Info("Loaded snapshot from JSON format")
+	} else {
+		// Protobuf format
+		if err := proto.Unmarshal(data, snapshot); err != nil {
+			return nil, fmt.Errorf("failed to unmarshal snapshot protobuf: %w", err)
+		}
+		log.Info("Loaded snapshot from protobuf format")
 	}
 
-	// Validate snapshot has items
-	if snapshot.GetProperties() == nil || len(snapshot.GetProperties().GetItems()) == 0 {
-		return nil, fmt.Errorf("snapshot has no items")
+	if snapshot.GetProperties() == nil {
+		return nil, fmt.Errorf("snapshot has no properties")
 	}
 
+	items := len(snapshot.GetProperties().GetItems())
+	edges := len(snapshot.GetProperties().GetEdges())
 	log.WithFields(log.Fields{
-		"items": len(snapshot.GetProperties().GetItems()),
-		"edges": len(snapshot.GetProperties().GetEdges()),
+		"items": items,
+		"edges": edges,
 	}).Info("Snapshot loaded successfully")
 
 	return snapshot, nil
