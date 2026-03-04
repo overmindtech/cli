@@ -612,9 +612,9 @@ func (s *standardSearchableAdapterImpl) Search(ctx context.Context, scope string
 		// This must be a terraform query in Azure resource ID format:
 		// /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Storage/storageAccounts/{account}/queueServices/default/queues/{queue}
 		//
-		// Extract the relevant parts from the resource ID based on the resource type
-		pathKeys := azureshared.GetResourceIDPathKeys(s.wrapper.Type())
-		if pathKeys == nil {
+		// Extract the relevant parts from the resource ID based on the resource type.
+		// Distinguish "unknown type" (no path keys) from "extraction failed" (malformed or unsupported ID format).
+		if azureshared.GetResourceIDPathKeys(s.wrapper.Type()) == nil {
 			return nil, &sdp.QueryError{
 				ErrorType: sdp.QueryError_OTHER,
 				ErrorString: fmt.Sprintf(
@@ -624,8 +624,17 @@ func (s *standardSearchableAdapterImpl) Search(ctx context.Context, scope string
 				),
 			}
 		}
-
-		queryParts = azureshared.ExtractPathParamsFromResourceID(query, pathKeys)
+		queryParts = azureshared.ExtractPathParamsFromResourceIDByType(s.wrapper.Type(), query)
+		if queryParts == nil {
+			return nil, &sdp.QueryError{
+				ErrorType: sdp.QueryError_OTHER,
+				ErrorString: fmt.Sprintf(
+					"failed to extract query parts from resource ID for resource type %s (invalid or unsupported format): %s",
+					s.wrapper.Type(),
+					query,
+				),
+			}
+		}
 		if len(queryParts) != len(s.wrapper.GetLookups()) {
 			return nil, &sdp.QueryError{
 				ErrorType: sdp.QueryError_OTHER,
@@ -816,9 +825,9 @@ func (s *standardSearchableAdapterImpl) SearchStream(ctx context.Context, scope 
 		// This must be a terraform query in Azure resource ID format:
 		// /subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Storage/storageAccounts/{account}/queueServices/default/queues/{queue}
 		//
-		// Extract the relevant parts from the resource ID based on the resource type
-		pathKeys := azureshared.GetResourceIDPathKeys(s.wrapper.Type())
-		if pathKeys == nil {
+		// Extract the relevant parts from the resource ID based on the resource type.
+		// Distinguish "unknown type" (no path keys) from "extraction failed" (malformed or unsupported ID format).
+		if azureshared.GetResourceIDPathKeys(s.wrapper.Type()) == nil {
 			stream.SendError(&sdp.QueryError{
 				ErrorType: sdp.QueryError_OTHER,
 				ErrorString: fmt.Sprintf(
@@ -829,8 +838,18 @@ func (s *standardSearchableAdapterImpl) SearchStream(ctx context.Context, scope 
 			})
 			return
 		}
-
-		queryParts = azureshared.ExtractPathParamsFromResourceID(query, pathKeys)
+		queryParts = azureshared.ExtractPathParamsFromResourceIDByType(s.wrapper.Type(), query)
+		if queryParts == nil {
+			stream.SendError(&sdp.QueryError{
+				ErrorType: sdp.QueryError_OTHER,
+				ErrorString: fmt.Sprintf(
+					"failed to extract query parts from resource ID for resource type %s (invalid or unsupported format): %s",
+					s.wrapper.Type(),
+					query,
+				),
+			})
+			return
+		}
 		if len(queryParts) != len(s.wrapper.GetLookups()) {
 			stream.SendError(&sdp.QueryError{
 				ErrorType: sdp.QueryError_OTHER,
