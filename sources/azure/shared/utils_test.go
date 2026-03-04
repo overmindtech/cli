@@ -247,6 +247,73 @@ func TestExtractPathParamsFromResourceID(t *testing.T) {
 	}
 }
 
+func TestExtractDNSRecordSetParamsFromResourceID(t *testing.T) {
+	tests := []struct {
+		name       string
+		resourceID string
+		expected   []string
+	}{
+		{
+			name:       "valid DNS record set ID",
+			resourceID: "/subscriptions/sub-id/resourceGroups/rg/providers/Microsoft.Network/dnszones/example.com/A/www",
+			expected:   []string{"example.com", "A", "www"},
+		},
+		{
+			name:       "valid DNS record set ID - AAAA",
+			resourceID: "/subscriptions/sub-id/resourceGroups/rg/providers/Microsoft.Network/dnszones/zone.net/AAAA/mail",
+			expected:   []string{"zone.net", "AAAA", "mail"},
+		},
+		{
+			name:       "empty resource ID",
+			resourceID: "",
+			expected:   nil,
+		},
+		{
+			name:       "no dnszones segment",
+			resourceID: "/subscriptions/sub-id/resourceGroups/rg/providers/Microsoft.Network/virtualNetworks/vnet",
+			expected:   nil,
+		},
+		{
+			name:       "dnszones but not enough segments after",
+			resourceID: "/subscriptions/sub-id/resourceGroups/rg/providers/Microsoft.Network/dnszones/example.com",
+			expected:   nil,
+		},
+	}
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			actual := azureshared.ExtractDNSRecordSetParamsFromResourceID(tc.resourceID)
+			if !reflect.DeepEqual(actual, tc.expected) {
+				t.Errorf("ExtractDNSRecordSetParamsFromResourceID(%q) = %v; want %v", tc.resourceID, actual, tc.expected)
+			}
+		})
+	}
+}
+
+func TestExtractPathParamsFromResourceIDByType(t *testing.T) {
+	t.Run("azure-network-dns-record-set uses DNS extractor", func(t *testing.T) {
+		resourceID := "/subscriptions/sub-id/resourceGroups/rg/providers/Microsoft.Network/dnszones/example.com/A/www"
+		actual := azureshared.ExtractPathParamsFromResourceIDByType("azure-network-dns-record-set", resourceID)
+		expected := []string{"example.com", "A", "www"}
+		if !reflect.DeepEqual(actual, expected) {
+			t.Errorf("ExtractPathParamsFromResourceIDByType(azure-network-dns-record-set, ...) = %v; want %v", actual, expected)
+		}
+	})
+	t.Run("other type uses path keys", func(t *testing.T) {
+		resourceID := "/subscriptions/sub-id/resourceGroups/rg/providers/Microsoft.Storage/storageAccounts/myaccount/queueServices/default/queues/myqueue"
+		actual := azureshared.ExtractPathParamsFromResourceIDByType("azure-storage-queue", resourceID)
+		expected := []string{"myaccount", "myqueue"}
+		if !reflect.DeepEqual(actual, expected) {
+			t.Errorf("ExtractPathParamsFromResourceIDByType(azure-storage-queue, ...) = %v; want %v", actual, expected)
+		}
+	})
+	t.Run("unknown type returns nil", func(t *testing.T) {
+		actual := azureshared.ExtractPathParamsFromResourceIDByType("azure-unknown-type", "/some/id")
+		if actual != nil {
+			t.Errorf("ExtractPathParamsFromResourceIDByType(unknown) = %v; want nil", actual)
+		}
+	})
+}
+
 func TestConvertAzureTags(t *testing.T) {
 	tests := []struct {
 		name      string

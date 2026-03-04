@@ -50,6 +50,7 @@ func GetResourceIDPathKeys(resourceType string) []string {
 		"azure-network-security-rule":                 {"networkSecurityGroups", "securityRules"},   // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/networkSecurityGroups/{nsgName}/securityRules/{ruleName}",
 		"azure-batch-batch-application":                {"batchAccounts", "applications"},            // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Batch/batchAccounts/{accountName}/applications/{applicationName}",
 		"azure-batch-batch-pool":                       {"batchAccounts", "pools"},                  // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Batch/batchAccounts/{accountName}/pools/{poolName}",
+		"azure-network-dns-record-set":                 {"dnszones"},                                // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/dnszones/{zoneName}/{recordType}/{relativeRecordSetName}"
 	}
 
 	if keys, ok := pathKeysMap[resourceType]; ok {
@@ -119,6 +120,42 @@ func ExtractPathParamsFromResourceID(resourceID string, keys []string) []string 
 	}
 
 	return results
+}
+
+// ExtractDNSRecordSetParamsFromResourceID extracts zone name, record type, and relative record set name
+// from an Azure DNS record set resource ID. The path format is non-standard: after "dnszones" the next
+// three segments are zoneName, recordType (e.g. "A", "AAAA"), and relativeRecordSetName—recordType is
+// a value, not a path key, so ExtractPathParamsFromResourceID cannot be used.
+//
+// Example: .../dnszones/example.com/A/www returns ["example.com", "A", "www"].
+// Returns nil if the path does not match the expected structure.
+func ExtractDNSRecordSetParamsFromResourceID(resourceID string) []string {
+	if resourceID == "" {
+		return nil
+	}
+	parts := strings.Split(strings.Trim(resourceID, "/"), "/")
+	for i, part := range parts {
+		if i%2 == 0 && strings.EqualFold(part, "dnszones") && i+3 < len(parts) {
+			return []string{parts[i+1], parts[i+2], parts[i+3]}
+		}
+	}
+	return nil
+}
+
+// ExtractPathParamsFromResourceIDByType extracts query parts from an Azure resource ID for the given
+// resource type. For azure-network-dns-record-set it uses ExtractDNSRecordSetParamsFromResourceID
+// because the DNS path format (dnszones/zone/recordType/name) does not follow the usual key/value
+// pattern. For all other types it uses GetResourceIDPathKeys and ExtractPathParamsFromResourceID.
+// Returns nil if the type is unknown or extraction fails.
+func ExtractPathParamsFromResourceIDByType(resourceType string, resourceID string) []string {
+	if resourceType == "azure-network-dns-record-set" {
+		return ExtractDNSRecordSetParamsFromResourceID(resourceID)
+	}
+	pathKeys := GetResourceIDPathKeys(resourceType)
+	if pathKeys == nil {
+		return nil
+	}
+	return ExtractPathParamsFromResourceID(resourceID, pathKeys)
 }
 
 // ExtractSQLServerNameFromDatabaseID extracts the SQL server name from a SQL database resource ID.

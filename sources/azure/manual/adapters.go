@@ -328,6 +328,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 		if err != nil {
 			return nil, fmt.Errorf("failed to create zones client: %w", err)
 		}
+		recordSetsClient, err := armdns.NewRecordSetsClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create record sets client: %w", err)
+		}
 		diskAccessesClient, err := armcompute.NewDiskAccessesClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create disk accesses client: %w", err)
@@ -492,6 +496,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 				), cache),
 				sources.WrapperToAdapter(NewNetworkZone(
 					clients.NewZonesClient(zonesClient),
+					resourceGroupScopes,
+				), cache),
+				sources.WrapperToAdapter(NewNetworkDNSRecordSet(
+					clients.NewRecordSetsClient(recordSetsClient),
 					resourceGroupScopes,
 				), cache),
 				sources.WrapperToAdapter(NewBatchAccount(
@@ -678,6 +686,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewNetworkPublicIPAddress(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkLoadBalancer(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkZone(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewNetworkDNSRecordSet(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewBatchAccount(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewBatchBatchApplication(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewBatchBatchPool(nil, placeholderResourceGroupScopes), noOpCache),
