@@ -10,6 +10,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos/v3"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dns/armdns"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/msi/armmsi"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
@@ -332,6 +333,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 		if err != nil {
 			return nil, fmt.Errorf("failed to create record sets client: %w", err)
 		}
+		privateDNSZonesClient, err := armprivatedns.NewPrivateZonesClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create private DNS zones client: %w", err)
+		}
 		diskAccessesClient, err := armcompute.NewDiskAccessesClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create disk accesses client: %w", err)
@@ -496,6 +501,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 				), cache),
 				sources.WrapperToAdapter(NewNetworkZone(
 					clients.NewZonesClient(zonesClient),
+					resourceGroupScopes,
+				), cache),
+				sources.WrapperToAdapter(NewNetworkPrivateDNSZone(
+					clients.NewPrivateDNSZonesClient(privateDNSZonesClient),
 					resourceGroupScopes,
 				), cache),
 				sources.WrapperToAdapter(NewNetworkDNSRecordSet(
@@ -686,6 +695,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewNetworkPublicIPAddress(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkLoadBalancer(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkZone(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewNetworkPrivateDNSZone(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkDNSRecordSet(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewBatchAccount(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewBatchBatchApplication(nil, placeholderResourceGroupScopes), noOpCache),

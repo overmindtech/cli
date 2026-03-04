@@ -313,6 +313,8 @@ func (n networkDNSRecordSetWrapper) azureRecordSetToSDPItem(rs *armdns.RecordSet
 		// Pass the composite lookup key (extracted query parts) so the target adapter's Get
 		// receives the expected parts when the transformer splits by QuerySeparator; it does
 		// not parse full resource IDs for linked GET queries.
+		// For types in pathKeysMap we use ExtractPathParamsFromResourceIDByType; for simple
+		// single-name resources (e.g. public IP, Traffic Manager) we fall back to ExtractResourceName.
 		if rs.Properties.TargetResource != nil && rs.Properties.TargetResource.ID != nil && *rs.Properties.TargetResource.ID != "" {
 			targetID := *rs.Properties.TargetResource.ID
 			linkScope := azureshared.ExtractScopeFromResourceID(targetID)
@@ -320,16 +322,25 @@ func (n networkDNSRecordSetWrapper) azureRecordSetToSDPItem(rs *armdns.RecordSet
 				linkScope = scope
 			}
 			itemType := azureshared.ItemTypeFromLinkedResourceID(targetID)
-			queryParts := azureshared.ExtractPathParamsFromResourceIDByType(itemType, targetID)
-			if itemType != "" && queryParts != nil {
-				sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-					Query: &sdp.Query{
-						Type:   itemType,
-						Method: sdp.QueryMethod_GET,
-						Query:  shared.CompositeLookupKey(queryParts...),
-						Scope:  linkScope,
-					},
-				})
+			if itemType != "" {
+				queryParts := azureshared.ExtractPathParamsFromResourceIDByType(itemType, targetID)
+				var query string
+				if queryParts != nil {
+					query = shared.CompositeLookupKey(queryParts...)
+				} else {
+					// Simple resource type (no pathKeysMap): use resource name as single query part
+					query = azureshared.ExtractResourceName(targetID)
+				}
+				if query != "" {
+					sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
+						Query: &sdp.Query{
+							Type:   itemType,
+							Method: sdp.QueryMethod_GET,
+							Query:  query,
+							Scope:  linkScope,
+						},
+					})
+				}
 			}
 		}
 	}
