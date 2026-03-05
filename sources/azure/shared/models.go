@@ -125,6 +125,8 @@ const (
 	RouteTable                                     shared.Resource = "route-table"
 	Route                                          shared.Resource = "route"
 	VirtualNetworkGateway                          shared.Resource = "virtual-network-gateway"
+	VirtualNetworkGatewayConnection                shared.Resource = "virtual-network-gateway-connection"
+	LocalNetworkGateway                            shared.Resource = "local-network-gateway"
 	PrivateDNSZone                                 shared.Resource = "private-dns-zone"
 	Zone                                           shared.Resource = "zone"
 	DNSRecordSet                                   shared.Resource = "dns-record-set"

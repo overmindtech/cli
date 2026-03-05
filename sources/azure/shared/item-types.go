@@ -74,6 +74,8 @@ var (
 	NetworkRouteTable                                     = shared.NewItemType(Azure, Network, RouteTable)
 	NetworkRoute                                          = shared.NewItemType(Azure, Network, Route)
 	NetworkVirtualNetworkGateway                          = shared.NewItemType(Azure, Network, VirtualNetworkGateway)
+	NetworkVirtualNetworkGatewayConnection                = shared.NewItemType(Azure, Network, VirtualNetworkGatewayConnection)
+	NetworkLocalNetworkGateway                            = shared.NewItemType(Azure, Network, LocalNetworkGateway)
 	NetworkPrivateDNSZone                                 = shared.NewItemType(Azure, Network, PrivateDNSZone)
 	NetworkZone                                           = shared.NewItemType(Azure, Network, Zone)
 	NetworkDNSRecordSet                                   = shared.NewItemType(Azure, Network, DNSRecordSet)
