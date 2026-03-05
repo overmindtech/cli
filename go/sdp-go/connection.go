@@ -10,7 +10,6 @@ import (
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
-	"google.golang.org/protobuf/encoding/protojson"
 	"google.golang.org/protobuf/proto"
 )
 
@@ -60,8 +59,7 @@ func recordMessage(ctx context.Context, name, subj, typ, msg string) {
 }
 
 func (ec *EncodedConnectionImpl) Publish(ctx context.Context, subj string, m proto.Message) error {
-	// TODO: protojson.Format is pretty expensive, replace with summarized data
-	recordMessage(ctx, "Publish", subj, fmt.Sprint(reflect.TypeOf(m)), protojson.Format(m))
+	recordMessage(ctx, "Publish", subj, fmt.Sprint(reflect.TypeOf(m)), fmt.Sprintf("%d bytes", proto.Size(m)))
 
 	data, err := proto.Marshal(m)
 	if err != nil {
@@ -77,8 +75,7 @@ func (ec *EncodedConnectionImpl) Publish(ctx context.Context, subj string, m pro
 }
 
 func (ec *EncodedConnectionImpl) PublishRequest(ctx context.Context, subj, replyTo string, m proto.Message) error {
-	// TODO: protojson.Format is pretty expensive, replace with summarized data
-	recordMessage(ctx, "Publish", subj, fmt.Sprint(reflect.TypeOf(m)), protojson.Format(m))
+	recordMessage(ctx, "Publish", subj, fmt.Sprint(reflect.TypeOf(m)), fmt.Sprintf("%d bytes", proto.Size(m)))
 
 	data, err := proto.Marshal(m)
 	if err != nil {
@@ -166,7 +163,7 @@ func Unmarshal(ctx context.Context, b []byte, m proto.Message) error {
 		return err
 	}
 
-	recordMessage(ctx, "Unmarshal", "unknown", fmt.Sprint(reflect.TypeOf(m)), protojson.Format(m))
+	recordMessage(ctx, "Unmarshal", "unknown", fmt.Sprint(reflect.TypeOf(m)), fmt.Sprintf("%d bytes", proto.Size(m)))
 	return nil
 }
 
