@@ -34,3 +34,7 @@ When Kubernetes populates cluster DNS (e.g. `my-service.my-namespace.svc.cluster
 ### [`ip`](/sources/aws/Types/networkmanager-network-resource-relationship)
 
 EndpointSlices store one or more IPv4/IPv6 addresses for each endpoint. These addresses are linked so that you can follow a path from a Service to the raw IPs that will be contacted, helping to assess network-level reachability and risk.
+
+### [`Service`](/sources/k8s/Types/Service)
+
+Every EndpointSlice carries a `kubernetes.io/service-name` label identifying the Service it belongs to. Overmind reads this label and links the EndpointSlice back to its parent Service, completing the bidirectional relationship in the infrastructure graph.

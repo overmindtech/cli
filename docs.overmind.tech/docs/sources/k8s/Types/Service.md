@@ -30,3 +30,11 @@ Each Service is assigned one or more IP addresses (ClusterIP, ExternalIP, LoadBa
 ### [`dns`](/sources/stdlib/Types/dns)
 
 Kubernetes automatically registers DNS records for every Service (e.g., `my-service.my-namespace.svc.cluster.local`). Overmind links Services to their corresponding DNS entries so you can trace name resolution to the backing workloads.
+
+### [`Endpoints`](/sources/k8s/Types/Endpoints)
+
+Each Service creates a corresponding Endpoints object with the same name that lists the IP addresses of the backing Pods. Overmind links Services to their Endpoints so you can see which addresses are currently active. This uses the legacy `core/v1` API and works on all Kubernetes versions.
+
+### [`EndpointSlice`](/sources/k8s/Types/EndpointSlice)
+
+Modern Kubernetes clusters create EndpointSlices (labelled with `kubernetes.io/service-name`) as the scalable replacement for Endpoints. Overmind searches for EndpointSlices matching the Service name so you can trace from a Service to the network endpoints that back it on newer clusters.

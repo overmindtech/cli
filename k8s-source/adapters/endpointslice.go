@@ -20,6 +20,17 @@ func endpointSliceExtractor(resource *v1.EndpointSlice, scope string) ([]*sdp.Li
 		return nil, err
 	}
 
+	if serviceName, ok := resource.Labels["kubernetes.io/service-name"]; ok && serviceName != "" {
+		queries = append(queries, &sdp.LinkedItemQuery{
+			Query: &sdp.Query{
+				Type:   "Service",
+				Method: sdp.QueryMethod_GET,
+				Query:  serviceName,
+				Scope:  scope,
+			},
+		})
+	}
+
 	for _, endpoint := range resource.Endpoints {
 		if endpoint.Hostname != nil {
 			queries = append(queries, &sdp.LinkedItemQuery{
@@ -102,7 +113,7 @@ var endpointSliceAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:                  "EndpointSlice",
 	DescriptiveName:       "Endpoint Slice",
 	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
-	PotentialLinks:        []string{"Node", "Pod", "dns", "ip"},
+	PotentialLinks:        []string{"Node", "Pod", "dns", "ip", "Service"},
 	SupportedQueryMethods: DefaultSupportedQueryMethods("EndpointSlice"),
 	TerraformMappings: []*sdp.TerraformMapping{
 		{

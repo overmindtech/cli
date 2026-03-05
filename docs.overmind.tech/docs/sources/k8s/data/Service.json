@@ -1,7 +1,7 @@
 {
   "type": "Service",
   "category": 3,
-  "potentialLinks": ["Pod", "ip", "dns", "Endpoint"],
+  "potentialLinks": ["Pod", "ip", "dns", "Endpoints", "EndpointSlice"],
   "descriptiveName": "Service",
   "supportedQueryMethods": {
     "get": true,

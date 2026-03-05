@@ -1,7 +1,7 @@
 {
   "type": "EndpointSlice",
   "category": 3,
-  "potentialLinks": ["Node", "Pod", "dns", "ip"],
+  "potentialLinks": ["Node", "Pod", "dns", "ip", "Service"],
   "descriptiveName": "Endpoint Slice",
   "supportedQueryMethods": {
     "get": true,

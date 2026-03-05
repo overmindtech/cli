@@ -66,10 +66,16 @@ func TestServiceAdapter(t *testing.T) {
 				ExpectedQueryMatches: regexp.MustCompile(`app=service-test`),
 			},
 			{
-				ExpectedType:   "Endpoint",
+				ExpectedType:   "Endpoints",
 				ExpectedMethod: sdp.QueryMethod_GET,
 				ExpectedQuery:  "service-test-service",
 				ExpectedScope:  sd.String(),
+			},
+			{
+				ExpectedType:         "EndpointSlice",
+				ExpectedMethod:       sdp.QueryMethod_SEARCH,
+				ExpectedScope:        sd.String(),
+				ExpectedQueryMatches: regexp.MustCompile(`kubernetes\.io/service-name=service-test-service`),
 			},
 			{
 				ExpectedType:   "dns",
