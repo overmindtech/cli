@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"math/rand/v2"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -18,8 +19,9 @@ import (
 )
 
 // DefaultResponseInterval is the default period of time within which responses
-// are sent (5 seconds)
-const DefaultResponseInterval = (5 * time.Second)
+// are sent (30 seconds). Jitter of +/-10% is applied per tick to prevent a
+// thundering herd when many concurrent queries start simultaneously.
+const DefaultResponseInterval = (30 * time.Second)
 
 // DefaultStartTimeout is the default period of time to wait for the first
 // response on a query. If no response is received in this time, the query will
@@ -100,19 +102,24 @@ func (rs *ResponseSender) Start(ctx context.Context, ec EncodedConnection, respo
 		if ec == nil {
 			return
 		}
-		tick := time.NewTicker(rs.ResponseInterval)
-		defer tick.Stop()
+
+		// Apply +/-10% uniform random jitter per tick to prevent a thundering
+		// herd when many ResponseSenders start near-simultaneously.
+		tenth := rs.ResponseInterval / 10
+		base := rs.ResponseInterval - tenth
+		jitterRange := 2 * tenth
 
 		for {
-			var err error
+			jitter := time.Duration(rand.Int64N(int64(jitterRange))) //nolint:gosec // jitter does not need cryptographic randomness
+			delay := base + jitter
 
 			select {
 			case <-rs.monitorKill:
 				return
 			case <-ctx.Done():
 				return
-			case <-tick.C:
-				err = rs.connection.Publish(
+			case <-time.After(delay):
+				err := rs.connection.Publish(
 					ctx,
 					rs.ResponseSubject,
 					&QueryResponse{ResponseType: &QueryResponse_Response{Response: &resp}},
