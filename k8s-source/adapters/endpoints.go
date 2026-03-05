@@ -1,4 +1,13 @@
-//nolint:staticcheck // TODO: migrate from v1.Endpoints to discoveryv1.EndpointSlice
+// This adapter uses the deprecated core/v1.Endpoints API intentionally.
+//
+// We use the latest K8s SDK version but balance that against supporting as many
+// Kubernetes versions as possible. Older clusters may not have the
+// discoveryv1.EndpointSlice API, so we retain this adapter for backward
+// compatibility. The staticcheck lint exceptions below are therefore expected
+// and acceptable. When the SDK eventually drops support for v1.Endpoints we
+// will need to split out version-specific builds of the k8s-source.
+
+//nolint:staticcheck // See note at top of file
 package adapters
 
 import (

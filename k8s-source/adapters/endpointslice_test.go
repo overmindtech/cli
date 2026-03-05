@@ -60,6 +60,12 @@ func TestEndpointSliceAdapter(t *testing.T) {
 		SetupYAML:      endpointSliceYAML,
 		GetQueryTests: QueryTests{
 			{
+				ExpectedType:   "Service",
+				ExpectedMethod: sdp.QueryMethod_GET,
+				ExpectedQuery:  "endpointslice-service",
+				ExpectedScope:  sd.String(),
+			},
+			{
 				ExpectedQueryMatches: regexp.MustCompile(`^10\.`),
 				ExpectedType:         "ip",
 				ExpectedMethod:       sdp.QueryMethod_GET,

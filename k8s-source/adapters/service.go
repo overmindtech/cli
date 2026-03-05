@@ -60,13 +60,25 @@ func serviceExtractor(resource *v1.Service, scope string) ([]*sdp.LinkedItemQuer
 		})
 	}
 
-	// Services also generate an endpoint with the same name
+	// Services generate an Endpoints object with the same name (older K8s API)
 	queries = append(queries, &sdp.LinkedItemQuery{
 		Query: &sdp.Query{
-			Type:   "Endpoint",
+			Type:   "Endpoints",
 			Method: sdp.QueryMethod_GET,
 			Query:  resource.Name,
 			Scope:  scope,
+		},
+	})
+
+	// Modern K8s clusters also create EndpointSlices labelled with the service name
+	queries = append(queries, &sdp.LinkedItemQuery{
+		Query: &sdp.Query{
+			Type:   "EndpointSlice",
+			Method: sdp.QueryMethod_SEARCH,
+			Query: ListOptionsToQuery(&metaV1.ListOptions{
+				LabelSelector: "kubernetes.io/service-name=" + resource.Name,
+			}),
+			Scope: scope,
 		},
 	})
 
@@ -124,7 +136,7 @@ var serviceAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
 	Type:                  "Service",
 	DescriptiveName:       "Service",
 	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_NETWORK,
-	PotentialLinks:        []string{"Pod", "ip", "dns", "Endpoint"},
+	PotentialLinks:        []string{"Pod", "ip", "dns", "Endpoints", "EndpointSlice"},
 	SupportedQueryMethods: DefaultSupportedQueryMethods("Service"),
 	TerraformMappings: []*sdp.TerraformMapping{
 		{
