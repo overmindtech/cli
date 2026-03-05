@@ -49,6 +49,7 @@ var (
 	NetworkLoadBalancerOutboundRule                       = shared.NewItemType(Azure, Network, LoadBalancerOutboundRule)
 	NetworkLoadBalancerInboundNatPool                     = shared.NewItemType(Azure, Network, LoadBalancerInboundNatPool)
 	NetworkPublicIPPrefix                                 = shared.NewItemType(Azure, Network, PublicIPPrefix)
+	NetworkCustomIPPrefix                                 = shared.NewItemType(Azure, Network, CustomIPPrefix)
 	NetworkNatGateway                                     = shared.NewItemType(Azure, Network, NatGateway)
 	NetworkDdosProtectionPlan                             = shared.NewItemType(Azure, Network, DdosProtectionPlan)
 	NetworkApplicationGateway                             = shared.NewItemType(Azure, Network, ApplicationGateway)
@@ -84,6 +85,9 @@ var (
 	NetworkNetworkInterfaceTapConfiguration               = shared.NewItemType(Azure, Network, NetworkInterfaceTapConfiguration)
 	NetworkServiceEndpointPolicy                          = shared.NewItemType(Azure, Network, ServiceEndpointPolicy)
 	NetworkIpAllocation                                   = shared.NewItemType(Azure, Network, IpAllocation)
+
+	// ExtendedLocation item types
+	ExtendedLocationCustomLocation = shared.NewItemType(Azure, ExtendedLocation, CustomLocation)
 
 	//Storage item types
 	StorageAccount                   = shared.NewItemType(Azure, Storage, Account)
