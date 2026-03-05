@@ -49,6 +49,9 @@ const (
 
 	// Resources (subscriptions, resource groups)
 	Resources shared.API = "resources" // Microsoft.Resources
+
+	// ExtendedLocation (custom locations, edge zones)
+	ExtendedLocation shared.API = "extendedlocation" // Microsoft.ExtendedLocation
 )
 
 // Resources
@@ -97,6 +100,7 @@ const (
 	LoadBalancerOutboundRule                       shared.Resource = "load-balancer-outbound-rule"
 	LoadBalancerInboundNatPool                     shared.Resource = "load-balancer-inbound-nat-pool"
 	PublicIPPrefix                                 shared.Resource = "public-ip-prefix"
+	CustomIPPrefix                                 shared.Resource = "custom-ip-prefix"
 	NatGateway                                     shared.Resource = "nat-gateway"
 	DdosProtectionPlan                             shared.Resource = "ddos-protection-plan"
 	ApplicationGateway                             shared.Resource = "application-gateway"
@@ -222,4 +226,7 @@ const (
 	// Authorization resources
 	RoleAssignment shared.Resource = "role-assignment"
 	RoleDefinition shared.Resource = "role-definition"
+
+	// ExtendedLocation resources
+	CustomLocation shared.Resource = "custom-location"
 )
