@@ -172,6 +172,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create public ip prefixes client: %w", err)
 		}
 
+		ddosProtectionPlansClient, err := armnetwork.NewDdosProtectionPlansClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create DDoS protection plans client: %w", err)
+		}
+
 		loadBalancersClient, err := armnetwork.NewLoadBalancersClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create load balancers client: %w", err)
@@ -505,6 +510,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewPublicIPPrefixesClient(publicIPPrefixesClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewNetworkDdosProtectionPlan(
+					clients.NewDdosProtectionPlansClient(ddosProtectionPlansClient),
+					resourceGroupScopes,
+				), cache),
 				sources.WrapperToAdapter(NewNetworkLoadBalancer(
 					clients.NewLoadBalancersClient(loadBalancersClient),
 					resourceGroupScopes,
@@ -712,6 +721,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewDBforPostgreSQLDatabase(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkPublicIPAddress(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkPublicIPPrefix(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewNetworkDdosProtectionPlan(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkLoadBalancer(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkZone(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkPrivateDNSZone(nil, placeholderResourceGroupScopes), noOpCache),
