@@ -229,7 +229,7 @@ func WithCompactThreshold(bytes int64) BoltCacheOption {
 func NewBoltCache(path string, opts ...BoltCacheOption) (*BoltCache, error) {
 	// Ensure the directory exists
 	dir := filepath.Dir(path)
-	if err := os.MkdirAll(dir, 0o755); err != nil { //nolint:gosec // G301 (path traversal): path comes from application config (NewBoltCache callers), not user HTTP input
+	if err := os.MkdirAll(dir, 0o755); err != nil {
 		return nil, fmt.Errorf("failed to create directory: %w", err)
 	}
 
@@ -674,7 +674,13 @@ func (c *BoltCache) Lookup(ctx context.Context, srcName string, method sdp.Query
 	return true, ck, items, nil, noopDone
 }
 
-// Search performs a lower-level search using a CacheKey.
+// Search performs a lower-level search using a CacheKey, bypassing pendingWork
+// deduplication. This is used by ShardedCache to do raw reads on individual shards.
+func (c *BoltCache) Search(ctx context.Context, ck CacheKey) ([]*sdp.Item, error) {
+	return c.search(ctx, ck)
+}
+
+// search performs a lower-level search using a CacheKey.
 // If ctx contains a span, detailed timing metrics will be added as span attributes.
 func (c *BoltCache) search(ctx context.Context, ck CacheKey) ([]*sdp.Item, error) {
 	if c == nil {

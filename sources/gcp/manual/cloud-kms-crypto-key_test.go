@@ -344,13 +344,19 @@ func TestCloudKMSCryptoKey(t *testing.T) {
 			t.Fatalf("Expected 2 items with legacy format, got: %d", len(items))
 		}
 
-		// Verify the returned items have the correct unique attributes
-		uniqueAttr1, err := items[0].GetAttributes().Get("uniqueAttr")
-		if err != nil {
-			t.Fatalf("Failed to get uniqueAttr from item 1: %v", err)
+		// Verify both expected items are present (order is not guaranteed)
+		found := make(map[string]bool)
+		for _, item := range items {
+			ua, err := item.GetAttributes().Get("uniqueAttr")
+			if err != nil {
+				t.Fatalf("Failed to get uniqueAttr: %v", err)
+			}
+			found[ua.(string)] = true
 		}
-		if uniqueAttr1 != "us-central1|my-keyring|my-key-1" {
-			t.Fatalf("Expected uniqueAttr 'us-central1|my-keyring|my-key-1', got: %v", uniqueAttr1)
+		for _, expected := range []string{"us-central1|my-keyring|my-key-1", "us-central1|my-keyring|my-key-2"} {
+			if !found[expected] {
+				t.Fatalf("Expected item with uniqueAttr %q not found in results", expected)
+			}
 		}
 	})
 
