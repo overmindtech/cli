@@ -14,13 +14,15 @@ import (
 )
 
 // testSearch is a helper function that calls the internal search method
-// on either MemoryCache or BoltCache implementations for testing purposes
+// on either MemoryCache, BoltCache, or ShardedCache implementations for testing purposes
 func testSearch(ctx context.Context, cache Cache, ck CacheKey) ([]*sdp.Item, error) {
 	switch c := cache.(type) {
 	case *MemoryCache:
 		return c.search(ctx, ck)
 	case *BoltCache:
 		return c.search(ctx, ck)
+	case *ShardedCache:
+		return c.searchByKey(ctx, ck)
 	default:
 		return nil, fmt.Errorf("unsupported cache type for search: %T", cache)
 	}
@@ -41,6 +43,19 @@ func cacheImplementations(tb testing.TB) []struct {
 			c, err := NewBoltCache(filepath.Join(tb.TempDir(), "cache.db"))
 			if err != nil {
 				tb.Fatalf("failed to create BoltCache: %v", err)
+			}
+			tb.Cleanup(func() {
+				_ = c.CloseAndDestroy()
+			})
+			return c
+		}},
+		{"ShardedCache", func() Cache {
+			c, err := NewShardedCache(
+				filepath.Join(tb.TempDir(), "shards"),
+				DefaultShardCount,
+			)
+			if err != nil {
+				tb.Fatalf("failed to create ShardedCache: %v", err)
 			}
 			tb.Cleanup(func() {
 				_ = c.CloseAndDestroy()
