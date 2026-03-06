@@ -251,6 +251,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create virtual network gateways client: %w", err)
 		}
 
+		natGatewaysClient, err := armnetwork.NewNatGatewaysClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create nat gateways client: %w", err)
+		}
+
 		managedHSMsClient, err := armkeyvault.NewManagedHsmsClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create managed hsms client: %w", err)
@@ -591,6 +596,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewVirtualNetworkGatewaysClient(virtualNetworkGatewaysClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewNetworkNatGateway(
+					clients.NewNatGatewaysClient(natGatewaysClient),
+					resourceGroupScopes,
+				), cache),
 				sources.WrapperToAdapter(NewSqlServer(
 					clients.NewSqlServersClient(sqlServersClient),
 					resourceGroupScopes,
@@ -747,6 +756,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewNetworkRouteTable(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkApplicationGateway(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkVirtualNetworkGateway(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewNetworkNatGateway(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewSqlServer(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewDBforPostgreSQLFlexibleServer(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewDBforPostgreSQLFlexibleServerFirewallRule(nil, placeholderResourceGroupScopes), noOpCache),
