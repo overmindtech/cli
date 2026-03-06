@@ -6,7 +6,7 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azidentity"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v3"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/batch/armbatch/v3"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/batch/armbatch/v4"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos/v3"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dns/armdns"
