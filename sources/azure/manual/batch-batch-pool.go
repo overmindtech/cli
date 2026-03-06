@@ -8,7 +8,7 @@ import (
 	"net/url"
 	"strings"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/batch/armbatch/v3"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/batch/armbatch/v4"
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
 	"github.com/overmindtech/cli/go/sdpcache"
@@ -288,27 +288,7 @@ func (b batchBatchPoolWrapper) azurePoolToSDPItem(pool *armbatch.Pool, accountNa
 		}
 	}
 
-	// Link to certificates referenced by the pool (Properties.Certificates)
-	// ID format: .../batchAccounts/{account}/certificates/{thumbprint}
-	if pool.Properties != nil && pool.Properties.Certificates != nil {
-		for _, certRef := range pool.Properties.Certificates {
-			if certRef == nil || certRef.ID == nil || *certRef.ID == "" {
-				continue
-			}
-			params := azureshared.ExtractPathParamsFromResourceID(*certRef.ID, []string{"batchAccounts", "certificates"})
-			if len(params) < 2 {
-				continue
-			}
-			sdpItem.LinkedItemQueries = append(sdpItem.LinkedItemQueries, &sdp.LinkedItemQuery{
-				Query: &sdp.Query{
-					Type:   azureshared.BatchBatchCertificate.String(),
-					Method: sdp.QueryMethod_GET,
-					Query:  shared.CompositeLookupKey(params[0], params[1]),
-					Scope:  scope,
-				},
-			})
-		}
-	}
+	// Note: armbatch v4 removed Certificates from PoolProperties; certificate refs are no longer linked from pools.
 
 	// Link to storage accounts and IP/DNS from MountConfiguration
 	seenIPs := make(map[string]struct{})
@@ -632,7 +612,6 @@ func (b batchBatchPoolWrapper) PotentialLinks() map[shared.ItemType]bool {
 		azureshared.NetworkPublicIPAddress:              true,
 		azureshared.ManagedIdentityUserAssignedIdentity: true,
 		azureshared.BatchBatchApplicationPackage:        true,
-		azureshared.BatchBatchCertificate:               true,
 		azureshared.StorageAccount:                      true,
 		azureshared.StorageBlobContainer:                true,
 		azureshared.ComputeImage:                        true,

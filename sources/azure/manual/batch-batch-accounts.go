@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/batch/armbatch/v3"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/batch/armbatch/v4"
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
 	"github.com/overmindtech/cli/go/sdpcache"

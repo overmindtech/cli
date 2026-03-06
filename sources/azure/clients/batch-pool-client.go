@@ -3,7 +3,7 @@ package clients
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/batch/armbatch/v3"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/batch/armbatch/v4"
 )
 
 //go:generate mockgen -destination=../shared/mocks/mock_batch_pool_client.go -package=mocks -source=batch-pool-client.go
