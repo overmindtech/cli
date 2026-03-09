@@ -187,10 +187,9 @@ func compactGoroutineProfile(s string) string {
 // captureGoroutineSummary returns a compacted goroutine profile (pprof debug=1)
 // truncated to maxBytes, deduplicated via singleflight. When many ExecuteQuery
 // goroutines hit the stuck timeout simultaneously, only one runs the
-// (stop-the-world) pprof capture; the rest share its result. The shared return
-// value indicates whether this caller reused another's capture.
-func captureGoroutineSummary(maxBytes int) (profile string, shared bool) {
-	v, _, shared := goroutineProfileGroup.Do("goroutine-profile", func() (any, error) {
+// (stop-the-world) pprof capture; the rest share its result.
+func captureGoroutineSummary(maxBytes int) string {
+	v, _, _ := goroutineProfileGroup.Do("goroutine-profile", func() (any, error) {
 		var buf bytes.Buffer
 		_ = pprof.Lookup("goroutine").WriteTo(&buf, 1)
 		s := compactGoroutineProfile(buf.String())
@@ -199,11 +198,13 @@ func captureGoroutineSummary(maxBytes int) (profile string, shared bool) {
 		}
 		return s, nil
 	})
-	return v.(string), shared
+	return v.(string)
 }
 
-var listExecutionPoolCount atomic.Int32
-var getExecutionPoolCount atomic.Int32
+var (
+	listExecutionPoolCount atomic.Int32
+	getExecutionPoolCount  atomic.Int32
+)
 
 // ExecuteQuery Executes a single Query and returns the results without any
 // linking. Will return an error if the Query couldn't be run.
@@ -342,17 +343,14 @@ func (e *Engine) ExecuteQuery(ctx context.Context, query *sdp.Query, responses c
 					return
 				case <-time.After(longRunningAdaptersTimeout):
 					// If we're here, then the wait group didn't finish in time
-					goroutineSummary, profileShared := captureGoroutineSummary(48_000)
+					goroutineSummary := captureGoroutineSummary(48_000)
 					expandedMutex.RLock()
-					stuckAttrs := []attribute.KeyValue{
+					span.AddEvent("waitgroup.stuck", trace.WithAttributes(
 						attribute.Int("ovm.stuck.goroutineCount", runtime.NumGoroutine()),
 						attribute.Int("ovm.stuck.totalQueries", totalQueries),
 						attribute.Int("ovm.stuck.remainingQueries", len(expanded)),
-					}
-					if !profileShared {
-						stuckAttrs = append(stuckAttrs, attribute.String("ovm.stuck.goroutineProfile", goroutineSummary))
-					}
-					span.AddEvent("waitgroup.stuck", trace.WithAttributes(stuckAttrs...))
+						attribute.String("ovm.stuck.goroutineProfile", goroutineSummary),
+					))
 					for q, adapter := range expanded {
 						span.AddEvent("waitgroup.stuck.adapter", trace.WithAttributes(
 							attribute.String("ovm.stuck.adapter", adapter.Name()),
