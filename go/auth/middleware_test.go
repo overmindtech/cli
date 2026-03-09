@@ -12,7 +12,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/auth0/go-jwt-middleware/v2/validator"
+	"github.com/auth0/go-jwt-middleware/v3/validator"
 	"github.com/go-jose/go-jose/v4"
 	"github.com/go-jose/go-jose/v4/jwt"
 	log "github.com/sirupsen/logrus"
