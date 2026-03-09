@@ -9,7 +9,7 @@ builds:
       - linux
       - windows
     ldflags:
-      - -s -w -X github.com/overmindtech/cli/tracing.version={{.Version}}
+      - -s -w -X github.com/overmindtech/cli/go/tracing.version={{.Version}}
   - binary: overmind
     id: overmind-macos
     env:
@@ -17,7 +17,7 @@ builds:
     goos:
       - darwin
     ldflags:
-      - -s -w -X github.com/overmindtech/cli/tracing.version={{.Version}}
+      - -s -w -X github.com/overmindtech/cli/go/tracing.version={{.Version}}
 
 # For now we are going to disable signing MacOS packages. This works on Dylan's
 # person laptop, but we haven't worked out a way to get this set up in a github
