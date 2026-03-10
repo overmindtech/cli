@@ -70,6 +70,7 @@ func TestNewSnapshotIndex(t *testing.T) {
 
 	if index == nil {
 		t.Fatal("Expected index to be non-nil")
+		return
 	}
 
 	// Verify all items are indexed

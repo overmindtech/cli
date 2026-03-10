@@ -208,6 +208,7 @@ func TestNewRetryableHTTPClientRespectsProxy(t *testing.T) {
 
 	if httpTransport == nil {
 		t.Fatal("Could not get http.Transport")
+		return
 	}
 
 	// Verify proxy function is set to ProxyFromEnvironment

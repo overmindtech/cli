@@ -223,7 +223,10 @@ const (
 	BatchDetector                  shared.Resource = "batch-detector"
 
 	// ElasticSAN resources
-	VolumeSnapshot shared.Resource = "elastic-san-volume-snapshot"
+	ElasticSanResource  shared.Resource = "elastic-san"
+	VolumeGroup         shared.Resource = "volume-group"
+	Volume              shared.Resource = "volume"
+	VolumeSnapshot      shared.Resource = "elastic-san-volume-snapshot"
 
 	// Authorization resources
 	RoleAssignment shared.Resource = "role-assignment"

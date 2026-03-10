@@ -60,6 +60,7 @@ func TestUnifiedGCPConfigs(t *testing.T) {
 
 			if foundConfig == nil {
 				t.Fatalf("Could not find config for project %s in result", originalConfig.ProjectID)
+				return
 			}
 
 			if !reflect.DeepEqual(foundConfig.Regions, originalConfig.Regions) {
@@ -115,9 +116,11 @@ func TestUnifiedGCPConfigs(t *testing.T) {
 
 		if unifiedConfig == nil {
 			t.Fatal("Could not find unified-project config in result")
+			return
 		}
 		if differentConfig == nil {
 			t.Fatal("Could not find different-project config in result")
+			return
 		}
 
 		// Verify unified config has all regions
@@ -315,9 +318,11 @@ func TestUnifiedAzureConfigs(t *testing.T) {
 
 		if unifiedConfig == nil {
 			t.Fatal("Could not find config for subscription 00000000-0000-0000-0000-000000000001 in result")
+			return
 		}
 		if differentConfig == nil {
 			t.Fatal("Could not find config for subscription 00000000-0000-0000-0000-000000000002 in result")
+			return
 		}
 
 		// Verify the first config was kept (tenant-first, client-first)

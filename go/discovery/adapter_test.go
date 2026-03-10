@@ -708,6 +708,7 @@ func TestNewQueryResultStream(t *testing.T) {
 	// Test Initialization
 	if stream == nil {
 		t.Fatal("Expected stream to be initialized, got nil")
+		return
 	}
 	if stream.itemHandler == nil || stream.errHandler == nil {
 		t.Fatal("Expected handlers to be set")

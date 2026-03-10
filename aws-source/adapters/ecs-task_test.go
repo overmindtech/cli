@@ -124,6 +124,7 @@ func TestTaskGetInputMapper(t *testing.T) {
 
 		if input == nil {
 			t.Fatal("input is nil")
+			return
 		}
 
 		if *input.Cluster != "test-ECSCluster-Bt4SqcM3CURk" {

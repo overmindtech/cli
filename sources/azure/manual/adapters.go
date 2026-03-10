@@ -15,6 +15,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/msi/armmsi"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers/v5"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/elasticsan/armelasticsan"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v3"
@@ -412,6 +413,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create snapshots client: %w", err)
 		}
 
+		elasticSanVolumeSnapshotsClient, err := armelasticsan.NewVolumeSnapshotsClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create elastic san volume snapshots client: %w", err)
+		}
+
 		sharedGalleryImagesClient, err := armcompute.NewSharedGalleryImagesClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create shared gallery images client: %w", err)
@@ -692,6 +698,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewSnapshotsClient(snapshotsClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewElasticSanVolumeSnapshot(
+					clients.NewElasticSanVolumeSnapshotClient(elasticSanVolumeSnapshotsClient),
+					resourceGroupScopes,
+				), cache),
 			)
 		}
 
@@ -780,6 +790,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewComputeGallery(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeGalleryImage(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeSnapshot(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewElasticSanVolumeSnapshot(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeSharedGalleryImage(nil, subscriptionID), noOpCache),
 			sources.WrapperToAdapter(NewNetworkPrivateEndpoint(nil, placeholderResourceGroupScopes), noOpCache),
 		)
