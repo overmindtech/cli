@@ -408,6 +408,7 @@ func TestNewProjectHealthChecker(t *testing.T) {
 
 			if checker == nil {
 				t.Fatal("expected checker to be non-nil")
+				return
 			}
 
 			if len(checker.projectIDs) != len(tt.projectIDs) {

@@ -272,6 +272,7 @@ func TestNewSnapshotAdapter(t *testing.T) {
 	adapter := NewSnapshotAdapter(index, "ec2-instance", []string{"us-east-1", "us-west-2"})
 	if adapter == nil {
 		t.Fatal("Expected adapter, got nil")
+		return
 	}
 	if adapter.index != index {
 		t.Error("Expected adapter to store index reference")

@@ -302,7 +302,25 @@ func (s *standardAdapterCore) Get(ctx context.Context, scope string, query strin
 		return cachedItem[0], nil
 	}
 
-	queryParts := strings.Split(query, shared.QuerySeparator)
+	var queryParts []string
+	if s.sourceType == string(azureshared.Azure) && strings.HasPrefix(query, "/subscriptions/") {
+		// Terraform mapping may pass full Azure resource ID; extract query parts by type.
+		if azureshared.GetResourceIDPathKeys(s.wrapper.Type()) == nil {
+			return nil, &sdp.QueryError{
+				ErrorType:   sdp.QueryError_OTHER,
+				ErrorString: fmt.Sprintf("no path keys defined for resource type %s to extract from query %s", s.wrapper.Type(), query),
+			}
+		}
+		queryParts = azureshared.ExtractPathParamsFromResourceIDByType(s.wrapper.Type(), query)
+		if queryParts == nil {
+			return nil, &sdp.QueryError{
+				ErrorType:   sdp.QueryError_OTHER,
+				ErrorString: fmt.Sprintf("failed to extract query parts from resource ID for resource type %s (invalid or unsupported format): %s", s.wrapper.Type(), query),
+			}
+		}
+	} else {
+		queryParts = strings.Split(query, shared.QuerySeparator)
+	}
 	if len(queryParts) != len(s.wrapper.GetLookups()) {
 		return nil, fmt.Errorf(
 			"invalid query format: %s, expected: %s",

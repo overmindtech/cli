@@ -176,6 +176,9 @@ var (
 	BatchBatchDetector                  = shared.NewItemType(Azure, Batch, BatchDetector)
 
 	// ElasticSAN item types
+	ElasticSan              = shared.NewItemType(Azure, ElasticSAN, ElasticSanResource)
+	ElasticSanVolumeGroup   = shared.NewItemType(Azure, ElasticSAN, VolumeGroup)
+	ElasticSanVolume        = shared.NewItemType(Azure, ElasticSAN, Volume)
 	ElasticSanVolumeSnapshot = shared.NewItemType(Azure, ElasticSAN, VolumeSnapshot)
 
 	// Authorization item types
