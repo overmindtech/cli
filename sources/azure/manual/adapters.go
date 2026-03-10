@@ -671,6 +671,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewDiskAccessesClient(diskAccessesClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewComputeDiskAccessPrivateEndpointConnection(
+					clients.NewComputeDiskAccessPrivateEndpointConnectionsClient(diskAccessesClient),
+					resourceGroupScopes,
+				), cache),
 				sources.WrapperToAdapter(NewComputeDedicatedHostGroup(
 					clients.NewDedicatedHostGroupsClient(dedicatedHostGroupsClient),
 					resourceGroupScopes,
@@ -791,6 +795,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewComputeVirtualMachineExtension(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeProximityPlacementGroup(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeDiskAccess(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewComputeDiskAccessPrivateEndpointConnection(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeDedicatedHostGroup(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeDedicatedHost(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeCapacityReservationGroup(nil, placeholderResourceGroupScopes), noOpCache),
