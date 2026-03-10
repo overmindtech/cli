@@ -237,6 +237,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create security rules client: %w", err)
 		}
 
+		defaultSecurityRulesClient, err := armnetwork.NewDefaultSecurityRulesClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create default security rules client: %w", err)
+		}
+
 		applicationGatewaysClient, err := armnetwork.NewApplicationGatewaysClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create application gateways client: %w", err)
@@ -594,6 +599,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewSecurityRulesClient(securityRulesClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewNetworkDefaultSecurityRule(
+					clients.NewDefaultSecurityRulesClient(defaultSecurityRulesClient),
+					resourceGroupScopes,
+				), cache),
 				sources.WrapperToAdapter(NewNetworkApplicationGateway(
 					clients.NewApplicationGatewaysClient(applicationGatewaysClient),
 					resourceGroupScopes,
@@ -763,6 +772,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewNetworkNetworkSecurityGroup(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkApplicationSecurityGroup(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkSecurityRule(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewNetworkDefaultSecurityRule(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkRouteTable(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkApplicationGateway(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkVirtualNetworkGateway(nil, placeholderResourceGroupScopes), noOpCache),
