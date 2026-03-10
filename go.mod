@@ -108,7 +108,7 @@ require (
 	github.com/go-jose/go-jose/v4 v4.1.3
 	github.com/gocarina/gocsv v0.0.0-20240520201108-78e41c74b4b1
 	github.com/google/btree v1.1.3
-	github.com/google/go-github/v80 v80.0.0
+	github.com/google/go-github/v84 v84.0.0
 	github.com/google/uuid v1.6.0
 	github.com/googleapis/gax-go/v2 v2.17.0
 	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
@@ -325,7 +325,7 @@ require (
 	github.com/google/go-cmp v0.7.0 // indirect
 	github.com/google/go-github/v30 v30.1.0 // indirect
 	github.com/google/go-github/v75 v75.0.0 // indirect
-	github.com/google/go-querystring v1.1.0 // indirect
+	github.com/google/go-querystring v1.2.0 // indirect
 	github.com/google/go-tpm v0.9.8 // indirect
 	github.com/google/jsonschema-go v0.4.2 // indirect
 	github.com/google/pprof v0.0.0-20260115054156-294ebfa9ad83 // indirect
