@@ -31,6 +31,16 @@ var (
 	deletedBytesKey  = []byte("deletedBytes")
 )
 
+// cacheOpenOptions are the bbolt options used for every Open call in this
+// package. Since this is a cache layer, crash durability is unnecessary:
+//   - NoSync skips fdatasync per commit, removing the single-writer bottleneck.
+//   - NoFreelistSync skips persisting the freelist, reducing write amplification.
+var cacheOpenOptions = &bbolt.Options{
+	Timeout:        5 * time.Second,
+	NoSync:         true,
+	NoFreelistSync: true,
+}
+
 // DefaultCompactThreshold is the default threshold for triggering compaction (100MB)
 const DefaultCompactThreshold = 100 * 1024 * 1024
 
@@ -234,9 +244,7 @@ func NewBoltCache(path string, opts ...BoltCacheOption) (*BoltCache, error) {
 	}
 
 	// bbolt.Open will open an existing file if present, or create a new one
-	db, err := bbolt.Open(path, 0o600, &bbolt.Options{
-		Timeout: 5 * time.Second,
-	})
+	db, err := bbolt.Open(path, 0o600, cacheOpenOptions)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open bolt database: %w", err)
 	}
@@ -457,7 +465,7 @@ func (c *BoltCache) deleteCacheFileLocked(ctx context.Context, span trace.Span) 
 	c.resetDeletedBytes()
 
 	// Reopen the database
-	db, err := bbolt.Open(c.path, 0o600, &bbolt.Options{Timeout: 5 * time.Second})
+	db, err := bbolt.Open(c.path, 0o600, cacheOpenOptions)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "failed to reopen database")
@@ -1341,13 +1349,13 @@ func (c *BoltCache) compact(ctx context.Context) error {
 	}
 
 	// Open the destination database
-	dstDB, err := bbolt.Open(tempPath, 0o600, &bbolt.Options{Timeout: 5 * time.Second})
+	dstDB, err := bbolt.Open(tempPath, 0o600, cacheOpenOptions)
 	if err != nil {
 		if isDiskFullError(err) {
 			// Attempt cleanup first - use locked version since we already hold the lock
 			c.purgeLocked(ctx, time.Now())
 			// Try again
-			dstDB, err = bbolt.Open(tempPath, 0o600, &bbolt.Options{Timeout: 5 * time.Second})
+			dstDB, err = bbolt.Open(tempPath, 0o600, cacheOpenOptions)
 			if err != nil {
 				return handleDiskFull(err, "temp database creation")
 			}
@@ -1364,7 +1372,7 @@ func (c *BoltCache) compact(ctx context.Context) error {
 			// Attempt cleanup first - use locked version since we already hold the lock
 			c.purgeLocked(ctx, time.Now())
 			// Try compaction again
-			dstDB2, retryErr := bbolt.Open(tempPath, 0o600, &bbolt.Options{Timeout: 5 * time.Second})
+			dstDB2, retryErr := bbolt.Open(tempPath, 0o600, cacheOpenOptions)
 			if retryErr != nil {
 				return handleDiskFull(retryErr, "temp database creation after cleanup")
 			}
@@ -1395,12 +1403,12 @@ func (c *BoltCache) compact(ctx context.Context) error {
 	// Replace the old file with the compacted one
 	if err := os.Rename(tempPath, c.path); err != nil {
 		// Try to reopen the original database
-		c.db, _ = bbolt.Open(c.path, 0o600, &bbolt.Options{Timeout: 5 * time.Second})
+		c.db, _ = bbolt.Open(c.path, 0o600, cacheOpenOptions)
 		return handleDiskFull(err, "rename")
 	}
 
 	// Reopen the database
-	db, err := bbolt.Open(c.path, 0o600, &bbolt.Options{Timeout: 5 * time.Second})
+	db, err := bbolt.Open(c.path, 0o600, cacheOpenOptions)
 	if err != nil {
 		span.RecordError(err)
 		span.SetStatus(codes.Error, "failed to reopen database")
