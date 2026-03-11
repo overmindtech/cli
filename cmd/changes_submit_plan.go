@@ -14,6 +14,7 @@ import (
 	"github.com/overmindtech/cli/knowledge"
 	"github.com/overmindtech/cli/tfutils"
 	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/tracing"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -311,7 +312,7 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 	}
 
 	app, _ = strings.CutSuffix(app, "/")
-	changeUrl := fmt.Sprintf("%v/changes/%v", app, changeUUID)
+	changeUrl := fmt.Sprintf("%v/changes/%v?utm_source=cli&cli_version=%v", app, changeUUID, tracing.Version())
 	log.WithContext(ctx).WithFields(lf).WithField("change-url", changeUrl).Info("Change ready")
 	fmt.Println(changeUrl)
 

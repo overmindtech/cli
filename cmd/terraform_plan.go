@@ -19,6 +19,7 @@ import (
 	"github.com/overmindtech/cli/knowledge"
 	"github.com/overmindtech/cli/tfutils"
 	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/tracing"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -445,17 +446,70 @@ retryLoop:
 				Bold(true).
 				Render(r.GetTitle())
 
-			bits = append(bits, (fmt.Sprintf("%v%v\n\n%v\n\n",
+			bits = append(bits, fmt.Sprintf("%v%v\n\n%v",
 				title,
 				severity,
-				wordwrap.String(r.GetDescription(), min(160, pterm.GetTerminalWidth()-4)))))
+				wordwrap.String(r.GetDescription(), min(160, pterm.GetTerminalWidth()-4))))
+
+			riskUUID, _ := uuid.FromBytes(r.GetUUID())
+			riskURL := fmt.Sprintf("%v/blast-radius?selectedRisk=%v&utm_source=cli&cli_version=%v", changeUrl.String(), riskUUID.String(), tracing.Version())
+			bits = append(bits, fmt.Sprintf("%v\n\n", osc8Hyperlink(riskURL, "View risk ↗")))
 		}
-		bits = append(bits, fmt.Sprintf("\nCheck the blast radius graph and risks at:\n%v\n\n", changeUrl.String()))
+		changeURLWithUTM := fmt.Sprintf("%v?utm_source=cli&cli_version=%v", changeUrl.String(), tracing.Version())
+		bits = append(bits, fmt.Sprintf("\nView the blast radius graph and risks:\n%v\n\n", osc8Hyperlink(changeURLWithUTM, "Open in Overmind ↗")))
 	}
 
 	pterm.Fprintln(multi.NewWriter(), strings.Join(bits, "\n"))
 
 	return nil
+}
+
+// supportsOSCHyperlinks checks if the terminal likely supports OSC 8 hyperlinks.
+// Combines a TTY check with environment-based heuristics.
+func supportsOSCHyperlinks() bool {
+	if fi, err := os.Stdout.Stat(); err != nil || fi.Mode()&os.ModeCharDevice == 0 {
+		return false
+	}
+	return envSupportsOSCHyperlinks()
+}
+
+// envSupportsOSCHyperlinks checks environment variables to determine if the terminal
+// likely supports OSC 8 hyperlinks. Split out from supportsOSCHyperlinks so that tests
+// can exercise the env heuristics in isolation — go test pipes stdout, so the
+// TTY check in supportsOSCHyperlinks always fails under test.
+func envSupportsOSCHyperlinks() bool {
+	if os.Getenv("CI") != "" {
+		return false
+	}
+	if term := os.Getenv("TERM"); term == "dumb" {
+		return false
+	}
+	if strings.HasPrefix(os.Getenv("TERM"), "screen") && os.Getenv("TMUX") == "" {
+		return false
+	}
+	if os.Getenv("TERM_PROGRAM") != "" {
+		return true
+	}
+	if os.Getenv("VTE_VERSION") != "" {
+		return true
+	}
+	if os.Getenv("TERM") == "xterm-kitty" {
+		return true
+	}
+	if strings.Contains(os.Getenv("TERM"), "256color") {
+		return true
+	}
+	return false
+}
+
+// osc8Hyperlink returns an OSC 8 hyperlink if the terminal supports it, otherwise
+// the raw URL. Supported by iTerm2, GNOME Terminal, Windows Terminal, WezTerm,
+// kitty, Alacritty; degrades gracefully in unsupported terminals.
+func osc8Hyperlink(url, text string) string {
+	if supportsOSCHyperlinks() {
+		return fmt.Sprintf("\033]8;;%s\033\\%s\033]8;;\033\\", url, text)
+	}
+	return url
 }
 
 // getTicketLinkFromPlan reads the plan file to create a unique hash to identify this change
