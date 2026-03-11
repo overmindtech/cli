@@ -52,6 +52,7 @@ func GetResourceIDPathKeys(resourceType string) []string {
 		"azure-batch-batch-application":                {"batchAccounts", "applications"},            // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Batch/batchAccounts/{accountName}/applications/{applicationName}",
 		"azure-batch-batch-pool":                       {"batchAccounts", "pools"},                  // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Batch/batchAccounts/{accountName}/pools/{poolName}",
 		"azure-network-dns-record-set":                 {"dnszones"},                                // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/dnszones/{zoneName}/{recordType}/{relativeRecordSetName}"
+		"azure-elasticsan-elastic-san-volume-group":    {"elasticSans", "volumegroups"},             // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.ElasticSan/elasticSans/{elasticSanName}/volumegroups/{volumeGroupName}"
 		"azure-elasticsan-elastic-san-volume-snapshot": {"elasticSans", "volumegroups", "snapshots"}, // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.ElasticSan/elasticSans/{elasticSanName}/volumegroups/{volumeGroupName}/snapshots/{snapshotName}"
 		"azure-compute-disk-access-private-endpoint-connection": {"diskAccesses", "privateEndpointConnections"}, // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/diskAccesses/{diskAccessName}/privateEndpointConnections/{connectionName}"
 	}
