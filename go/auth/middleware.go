@@ -500,6 +500,48 @@ func ensureValidTokenHandler(config MiddlewareConfig, next http.Handler) http.Ha
 	})
 }
 
+// WithResourceMetadata wraps a handler to include RFC 9728 resource_metadata
+// in the WWW-Authenticate header on 401 responses, enabling MCP clients to
+// discover the authorization server via Protected Resource Metadata.
+func WithResourceMetadata(resourceMetadataURL string, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		next.ServeHTTP(&resourceMetadataWriter{
+			ResponseWriter:      w,
+			resourceMetadataURL: resourceMetadataURL,
+		}, r)
+	})
+}
+
+type resourceMetadataWriter struct {
+	http.ResponseWriter
+	resourceMetadataURL string
+	wroteHeader         bool
+}
+
+func (w *resourceMetadataWriter) WriteHeader(statusCode int) {
+	if !w.wroteHeader {
+		w.wroteHeader = true
+		if statusCode == http.StatusUnauthorized {
+			w.ResponseWriter.Header().Set("WWW-Authenticate",
+				fmt.Sprintf(`Bearer resource_metadata=%q`, w.resourceMetadataURL))
+		}
+	}
+	w.ResponseWriter.WriteHeader(statusCode)
+}
+
+func (w *resourceMetadataWriter) Write(b []byte) (int, error) {
+	if !w.wroteHeader {
+		w.WriteHeader(http.StatusOK)
+	}
+	return w.ResponseWriter.Write(b)
+}
+
+// Unwrap returns the underlying ResponseWriter, enabling http.ResponseController
+// and middleware that check for optional interfaces (Flusher, Hijacker, etc.).
+func (w *resourceMetadataWriter) Unwrap() http.ResponseWriter {
+	return w.ResponseWriter
+}
+
 // CustomClaims contains custom data we want from the token.
 type CustomClaims struct {
 	Scope       string `json:"scope"`
