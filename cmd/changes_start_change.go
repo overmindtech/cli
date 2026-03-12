@@ -1,7 +1,6 @@
 package cmd
 
 import (
-	"fmt"
 	"time"
 
 	"connectrpc.com/connect"
@@ -45,50 +44,8 @@ func StartChange(cmd *cobra.Command, args []string) error {
 
 	// wait for change analysis to complete (poll GetChange by change_analysis_status)
 	client := AuthenticatedChangesClient(ctx, oi)
-fetch:
-	for {
-		changeRes, err := client.GetChange(ctx, &connect.Request[sdp.GetChangeRequest]{
-			Msg: &sdp.GetChangeRequest{
-				UUID: changeUuid[:],
-			},
-		})
-		if err != nil || changeRes.Msg == nil || changeRes.Msg.GetChange() == nil {
-			return loggedError{
-				err:     err,
-				fields:  lf,
-				message: "failed to get change",
-			}
-		}
-		ch := changeRes.Msg.GetChange()
-		md := ch.GetMetadata()
-		if md == nil || md.GetChangeAnalysisStatus() == nil {
-			return loggedError{
-				err:     fmt.Errorf("change metadata or change analysis status is nil"),
-				fields:  lf,
-				message: "failed to get change",
-			}
-		}
-		status := md.GetChangeAnalysisStatus().GetStatus()
-		switch status {
-		case sdp.ChangeAnalysisStatus_STATUS_DONE, sdp.ChangeAnalysisStatus_STATUS_SKIPPED:
-			break fetch
-		case sdp.ChangeAnalysisStatus_STATUS_ERROR:
-			return loggedError{
-				err:     fmt.Errorf("change analysis completed with error status"),
-				fields:  lf,
-				message: "change analysis failed",
-			}
-		case sdp.ChangeAnalysisStatus_STATUS_UNSPECIFIED, sdp.ChangeAnalysisStatus_STATUS_INPROGRESS:
-			log.WithContext(ctx).WithFields(lf).WithField("status", status.String()).Info("Waiting for change analysis to complete")
-		}
-		time.Sleep(3 * time.Second)
-		if ctx.Err() != nil {
-			return loggedError{
-				err:     ctx.Err(),
-				fields:  lf,
-				message: "context cancelled",
-			}
-		}
+	if err := waitForChangeAnalysis(ctx, client, changeUuid, lf); err != nil {
+		return err
 	}
 
 	// Call the simple RPC (enqueues a background job and returns immediately)
