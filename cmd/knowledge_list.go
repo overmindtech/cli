@@ -107,5 +107,5 @@ func init() {
 	knowledgeCmd.AddCommand(knowledgeListCmd)
 
 	knowledgeListCmd.Flags().String("dir", ".", "Directory to start searching from")
-	knowledgeListCmd.Flags().MarkHidden("dir") //nolint:errcheck // not possible to error
+	cobra.CheckErr(knowledgeListCmd.Flags().MarkHidden("dir"))
 }

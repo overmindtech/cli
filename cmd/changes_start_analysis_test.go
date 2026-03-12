@@ -27,6 +27,7 @@ func TestAddAnalysisFlags(t *testing.T) {
 		{"blast-radius-max-time", "blast-radius-max-time", "duration"},
 		{"change-analysis-target-duration", "change-analysis-target-duration", "duration"},
 		{"signal-config", "signal-config", "string"},
+		{"comment", "comment", "bool"},
 	}
 
 	for _, tt := range tests {
@@ -189,6 +190,7 @@ func TestStartAnalysisCmdFlags(t *testing.T) {
 		{"blast-radius-link-depth", "blast-radius-link-depth"},
 		{"blast-radius-max-items", "blast-radius-max-items"},
 		{"signal-config", "signal-config"},
+		{"comment flag", "comment"},
 	}
 
 	for _, tt := range tests {
@@ -202,6 +204,20 @@ func TestStartAnalysisCmdFlags(t *testing.T) {
 				t.Errorf("Expected flag %q to be registered on start-analysis command", tt.flagName)
 			}
 		})
+	}
+}
+
+func TestSubmitPlanCmdHasCommentFlag(t *testing.T) {
+	t.Parallel()
+
+	flag := submitPlanCmd.PersistentFlags().Lookup("comment")
+	if flag == nil {
+		t.Error("Expected comment flag to be registered on submit-plan command")
+		return
+	}
+
+	if flag.DefValue != "false" {
+		t.Errorf("Expected comment flag default value to be 'false', got %q", flag.DefValue)
 	}
 }
 

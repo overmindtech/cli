@@ -57,7 +57,7 @@ func StartAnalysis(cmd *cobra.Command, args []string) error {
 
 	client := AuthenticatedChangesClient(ctx, oi)
 
-	_, err = client.StartChangeAnalysis(ctx, &connect.Request[sdp.StartChangeAnalysisRequest]{
+	resp, err := client.StartChangeAnalysis(ctx, &connect.Request[sdp.StartChangeAnalysisRequest]{
 		Msg: &sdp.StartChangeAnalysisRequest{
 			ChangeUUID:                        changeUUID[:],
 			ChangingItems:                     nil, // uses pre-stored items from AddPlannedChanges
@@ -65,6 +65,7 @@ func StartAnalysis(cmd *cobra.Command, args []string) error {
 			RoutineChangesConfigOverride:      analysisConfig.RoutineChangesConfig,
 			GithubOrganisationProfileOverride: analysisConfig.GithubOrgProfile,
 			Knowledge:                         analysisConfig.KnowledgeFiles,
+			PostGithubComment:                 viper.GetBool("comment"),
 		},
 	})
 	if err != nil {
@@ -78,7 +79,13 @@ func StartAnalysis(cmd *cobra.Command, args []string) error {
 	app, _ = strings.CutSuffix(app, "/")
 	changeUrl := fmt.Sprintf("%v/changes/%v?utm_source=cli&cli_version=%v", app, changeUUID, tracing.Version())
 	log.WithContext(ctx).WithFields(lf).WithField("change-url", changeUrl).Info("Change analysis started")
-	fmt.Println(changeUrl)
+
+	if viper.GetBool("comment") {
+		fmt.Printf("CHANGE_URL='%s'\n", changeUrl)
+		fmt.Printf("GITHUB_APP_ACTIVE='%v'\n", resp.Msg.GetGithubAppActive())
+	} else {
+		fmt.Println(changeUrl)
+	}
 
 	if viper.GetBool("wait") {
 		log.WithContext(ctx).WithFields(lf).Info("Waiting for analysis to complete")

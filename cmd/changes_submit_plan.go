@@ -258,7 +258,12 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 		log.WithContext(ctx).WithFields(lf).Info("Re-using change")
 	}
 
+	var githubAppActive bool
+
 	if viper.GetBool("no-start") {
+		if viper.GetBool("comment") {
+			log.WithContext(ctx).WithFields(lf).Info("--comment has no effect with --no-start; pass --comment to start-analysis instead")
+		}
 		// Store planned changes without starting analysis (multi-plan workflow)
 		_, err = client.AddPlannedChanges(ctx, &connect.Request[sdp.AddPlannedChangesRequest]{
 			Msg: &sdp.AddPlannedChangesRequest{
@@ -281,7 +286,7 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 			return err
 		}
 
-		_, err = client.StartChangeAnalysis(ctx, &connect.Request[sdp.StartChangeAnalysisRequest]{
+		resp, err := client.StartChangeAnalysis(ctx, &connect.Request[sdp.StartChangeAnalysisRequest]{
 			Msg: &sdp.StartChangeAnalysisRequest{
 				ChangeUUID:                        changeUUID[:],
 				ChangingItems:                     plannedChanges,
@@ -289,6 +294,7 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 				RoutineChangesConfigOverride:      analysisConfig.RoutineChangesConfig,
 				GithubOrganisationProfileOverride: analysisConfig.GithubOrgProfile,
 				Knowledge:                         analysisConfig.KnowledgeFiles,
+				PostGithubComment:                 viper.GetBool("comment"),
 			},
 		})
 		if err != nil {
@@ -298,12 +304,19 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 				message: "Failed to start change analysis",
 			}
 		}
+		githubAppActive = resp.Msg.GetGithubAppActive()
 	}
 
 	app, _ = strings.CutSuffix(app, "/")
 	changeUrl := fmt.Sprintf("%v/changes/%v?utm_source=cli&cli_version=%v", app, changeUUID, tracing.Version())
 	log.WithContext(ctx).WithFields(lf).WithField("change-url", changeUrl).Info("Change ready")
-	fmt.Println(changeUrl)
+
+	if viper.GetBool("comment") {
+		fmt.Printf("CHANGE_URL='%s'\n", changeUrl)
+		fmt.Printf("GITHUB_APP_ACTIVE='%v'\n", githubAppActive)
+	} else {
+		fmt.Println(changeUrl)
+	}
 
 	return nil
 }
@@ -385,7 +398,7 @@ func init() {
 	addAnalysisFlags(submitPlanCmd)
 
 	submitPlanCmd.PersistentFlags().String("frontend", "", "The frontend base URL")
-	_ = submitPlanCmd.PersistentFlags().MarkDeprecated("frontend", "This flag is no longer used and will be removed in a future release. Use the '--app' flag instead.") // MarkDeprecated only errors if the flag doesn't exist, we fall back to using app
+	cobra.CheckErr(submitPlanCmd.PersistentFlags().MarkDeprecated("frontend", "This flag is no longer used and will be removed in a future release. Use the '--app' flag instead."))
 
 	submitPlanCmd.PersistentFlags().String("auto-tag-rules", "", "The path to the auto-tag rules file. If not provided, it will check the default location which is '.overmind/auto-tag-rules.yaml'. If no rules are found locally, the rules configured through the UI are used.")
 

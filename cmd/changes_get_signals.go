@@ -98,6 +98,6 @@ func init() {
 	getSignalsCmd.PersistentFlags().String("status", "CHANGE_STATUS_DEFINING", "The expected status of the change. Use this with --ticket-link to get the first change with that status for a given ticket link. Allowed values: CHANGE_STATUS_DEFINING (ready for analysis/analysis in progress), CHANGE_STATUS_HAPPENING (deployment in progress), CHANGE_STATUS_DONE (deployment completed)")
 
 	getSignalsCmd.PersistentFlags().String("frontend", "", "The frontend base URL")
-	_ = getSignalsCmd.PersistentFlags().MarkDeprecated("frontend", "This flag is no longer used and will be removed in a future release. Use the '--app' flag instead.") // MarkDeprecated only errors if the flag doesn't exist, we fall back to using app
+	cobra.CheckErr(getSignalsCmd.PersistentFlags().MarkDeprecated("frontend", "This flag is no longer used and will be removed in a future release. Use the '--app' flag instead."))
 	getSignalsCmd.PersistentFlags().String("format", "json", "How to render the signals. Possible values: json, markdown")
 }
