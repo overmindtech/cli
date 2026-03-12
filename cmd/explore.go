@@ -666,7 +666,7 @@ func init() {
 
 	// hidden flag to enable Azure preview support
 	exploreCmd.PersistentFlags().Bool("enable-azure-preview", false, "Enable Azure source support (preview feature).")
-	exploreCmd.PersistentFlags().MarkHidden("enable-azure-preview") //nolint:errcheck // not possible to error
+	cobra.CheckErr(exploreCmd.PersistentFlags().MarkHidden("enable-azure-preview"))
 }
 
 // unifiedGCPConfigs collates the given GCP configs by project ID.

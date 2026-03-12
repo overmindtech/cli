@@ -7,6 +7,20 @@ import (
 	"github.com/overmindtech/cli/go/sdp-go"
 )
 
+func TestGetChangeCmdHasWaitFlag(t *testing.T) {
+	t.Parallel()
+
+	flag := getChangeCmd.PersistentFlags().Lookup("wait")
+	if flag == nil {
+		t.Error("Expected wait flag to be registered on get-change command")
+		return
+	}
+
+	if flag.DefValue != "true" {
+		t.Errorf("Expected wait flag default value to be 'true', got %q", flag.DefValue)
+	}
+}
+
 func TestValidateChangeStatus(t *testing.T) {
 	tests := []struct {
 		name        string

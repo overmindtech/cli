@@ -71,8 +71,10 @@ func GetChange(cmd *cobra.Command, args []string) error {
 	}
 
 	client := AuthenticatedChangesClient(ctx, oi)
-	if err := waitForChangeAnalysis(ctx, client, changeUuid, lf); err != nil {
-		return err
+	if viper.GetBool("wait") {
+		if err := waitForChangeAnalysis(ctx, client, changeUuid, lf); err != nil {
+			return err
+		}
 	}
 
 	app, _ = strings.CutSuffix(app, "/")
@@ -142,7 +144,8 @@ func init() {
 	getChangeCmd.PersistentFlags().String("status", "CHANGE_STATUS_DEFINING", "The expected status of the change. Use this with --ticket-link to get the first change with that status for a given ticket link. Allowed values: CHANGE_STATUS_DEFINING (ready for analysis/analysis in progress), CHANGE_STATUS_HAPPENING (deployment in progress), CHANGE_STATUS_DONE (deployment completed)")
 
 	getChangeCmd.PersistentFlags().String("frontend", "", "The frontend base URL")
-	_ = submitPlanCmd.PersistentFlags().MarkDeprecated("frontend", "This flag is no longer used and will be removed in a future release. Use the '--app' flag instead.") // MarkDeprecated only errors if the flag doesn't exist, we fall back to using app
+	cobra.CheckErr(getChangeCmd.PersistentFlags().MarkDeprecated("frontend", "This flag is no longer used and will be removed in a future release. Use the '--app' flag instead."))
+	getChangeCmd.PersistentFlags().Bool("wait", true, "Wait for analysis to complete before returning. Set to false to return immediately with the current status.")
 	getChangeCmd.PersistentFlags().String("format", "json", "How to render the change. Possible values: json, markdown")
 	getChangeCmd.PersistentFlags().StringSlice("risk-levels", []string{"high", "medium", "low"}, "Only show changes with the specified risk levels. Allowed values: high, medium, low")
 }
