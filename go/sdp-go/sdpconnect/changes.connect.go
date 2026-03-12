@@ -106,6 +106,9 @@ const (
 	// ChangesServiceGetChangeSignalsProcedure is the fully-qualified name of the ChangesService's
 	// GetChangeSignals RPC.
 	ChangesServiceGetChangeSignalsProcedure = "/changes.ChangesService/GetChangeSignals"
+	// ChangesServiceAddPlannedChangesProcedure is the fully-qualified name of the ChangesService's
+	// AddPlannedChanges RPC.
+	ChangesServiceAddPlannedChangesProcedure = "/changes.ChangesService/AddPlannedChanges"
 	// LabelServiceListLabelRulesProcedure is the fully-qualified name of the LabelService's
 	// ListLabelRules RPC.
 	LabelServiceListLabelRulesProcedure = "/changes.LabelService/ListLabelRules"
@@ -199,6 +202,11 @@ type ChangesServiceClient interface {
 	// - Individual custom signals
 	// This is similar to GetChangeSummary but focused on signals data
 	GetChangeSignals(context.Context, *connect.Request[sdp_go.GetChangeSignalsRequest]) (*connect.Response[sdp_go.GetChangeSignalsResponse], error)
+	// Appends planned changes to an existing change without starting analysis.
+	// The change must be in CHANGE_STATUS_DEFINING. Each call inserts a new batch
+	// of items; call StartChangeAnalysis (with empty changingItems) to trigger
+	// analysis on all accumulated items.
+	AddPlannedChanges(context.Context, *connect.Request[sdp_go.AddPlannedChangesRequest]) (*connect.Response[sdp_go.AddPlannedChangesResponse], error)
 }
 
 // NewChangesServiceClient constructs a client for the changes.ChangesService service. By default,
@@ -356,6 +364,12 @@ func NewChangesServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(changesServiceMethods.ByName("GetChangeSignals")),
 			connect.WithClientOptions(opts...),
 		),
+		addPlannedChanges: connect.NewClient[sdp_go.AddPlannedChangesRequest, sdp_go.AddPlannedChangesResponse](
+			httpClient,
+			baseURL+ChangesServiceAddPlannedChangesProcedure,
+			connect.WithSchema(changesServiceMethods.ByName("AddPlannedChanges")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -385,6 +399,7 @@ type changesServiceClient struct {
 	generateRiskFix           *connect.Client[sdp_go.GenerateRiskFixRequest, sdp_go.GenerateRiskFixResponse]
 	getHypothesesDetails      *connect.Client[sdp_go.GetHypothesesDetailsRequest, sdp_go.GetHypothesesDetailsResponse]
 	getChangeSignals          *connect.Client[sdp_go.GetChangeSignalsRequest, sdp_go.GetChangeSignalsResponse]
+	addPlannedChanges         *connect.Client[sdp_go.AddPlannedChangesRequest, sdp_go.AddPlannedChangesResponse]
 }
 
 // ListChanges calls changes.ChangesService.ListChanges.
@@ -507,6 +522,11 @@ func (c *changesServiceClient) GetChangeSignals(ctx context.Context, req *connec
 	return c.getChangeSignals.CallUnary(ctx, req)
 }
 
+// AddPlannedChanges calls changes.ChangesService.AddPlannedChanges.
+func (c *changesServiceClient) AddPlannedChanges(ctx context.Context, req *connect.Request[sdp_go.AddPlannedChangesRequest]) (*connect.Response[sdp_go.AddPlannedChangesResponse], error) {
+	return c.addPlannedChanges.CallUnary(ctx, req)
+}
+
 // ChangesServiceHandler is an implementation of the changes.ChangesService service.
 type ChangesServiceHandler interface {
 	// Lists all changes
@@ -577,6 +597,11 @@ type ChangesServiceHandler interface {
 	// - Individual custom signals
 	// This is similar to GetChangeSummary but focused on signals data
 	GetChangeSignals(context.Context, *connect.Request[sdp_go.GetChangeSignalsRequest]) (*connect.Response[sdp_go.GetChangeSignalsResponse], error)
+	// Appends planned changes to an existing change without starting analysis.
+	// The change must be in CHANGE_STATUS_DEFINING. Each call inserts a new batch
+	// of items; call StartChangeAnalysis (with empty changingItems) to trigger
+	// analysis on all accumulated items.
+	AddPlannedChanges(context.Context, *connect.Request[sdp_go.AddPlannedChangesRequest]) (*connect.Response[sdp_go.AddPlannedChangesResponse], error)
 }
 
 // NewChangesServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -730,6 +755,12 @@ func NewChangesServiceHandler(svc ChangesServiceHandler, opts ...connect.Handler
 		connect.WithSchema(changesServiceMethods.ByName("GetChangeSignals")),
 		connect.WithHandlerOptions(opts...),
 	)
+	changesServiceAddPlannedChangesHandler := connect.NewUnaryHandler(
+		ChangesServiceAddPlannedChangesProcedure,
+		svc.AddPlannedChanges,
+		connect.WithSchema(changesServiceMethods.ByName("AddPlannedChanges")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/changes.ChangesService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case ChangesServiceListChangesProcedure:
@@ -780,6 +811,8 @@ func NewChangesServiceHandler(svc ChangesServiceHandler, opts ...connect.Handler
 			changesServiceGetHypothesesDetailsHandler.ServeHTTP(w, r)
 		case ChangesServiceGetChangeSignalsProcedure:
 			changesServiceGetChangeSignalsHandler.ServeHTTP(w, r)
+		case ChangesServiceAddPlannedChangesProcedure:
+			changesServiceAddPlannedChangesHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -883,6 +916,10 @@ func (UnimplementedChangesServiceHandler) GetHypothesesDetails(context.Context, 
 
 func (UnimplementedChangesServiceHandler) GetChangeSignals(context.Context, *connect.Request[sdp_go.GetChangeSignalsRequest]) (*connect.Response[sdp_go.GetChangeSignalsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.GetChangeSignals is not implemented"))
+}
+
+func (UnimplementedChangesServiceHandler) AddPlannedChanges(context.Context, *connect.Request[sdp_go.AddPlannedChangesRequest]) (*connect.Response[sdp_go.AddPlannedChangesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.AddPlannedChanges is not implemented"))
 }
 
 // LabelServiceClient is a client for the changes.LabelService service.
