@@ -3176,9 +3176,13 @@ type StartChangeAnalysisRequest struct {
 	// github organisation profile to use for this change
 	GithubOrganisationProfileOverride *GithubOrganisationProfile `protobuf:"bytes,6,opt,name=githubOrganisationProfileOverride,proto3,oneof" json:"githubOrganisationProfileOverride,omitempty"`
 	// Knowledge to be used for change analysis
-	Knowledge     []*Knowledge `protobuf:"bytes,7,rep,name=knowledge,proto3" json:"knowledge,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Knowledge []*Knowledge `protobuf:"bytes,7,rep,name=knowledge,proto3" json:"knowledge,omitempty"`
+	// When true, the backend will attempt to post analysis results as a GitHub
+	// PR comment via the installed GitHub App. Requires the account to have a
+	// GitHub App installation with pull_requests:write permission.
+	PostGithubComment bool `protobuf:"varint,8,opt,name=post_github_comment,json=postGithubComment,proto3" json:"post_github_comment,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *StartChangeAnalysisRequest) Reset() {
@@ -3253,12 +3257,23 @@ func (x *StartChangeAnalysisRequest) GetKnowledge() []*Knowledge {
 	return nil
 }
 
+func (x *StartChangeAnalysisRequest) GetPostGithubComment() bool {
+	if x != nil {
+		return x.PostGithubComment
+	}
+	return false
+}
+
 // StartChangeAnalysisResponse is used to signal that the change analysis has been successfully started
 // we use HTTP response codes to signal errors
 type StartChangeAnalysisResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// True when the account has a GitHub App installation with sufficient
+	// permissions to post PR comments. The CLI/Action can use this to decide
+	// whether it needs to post its own comment.
+	GithubAppActive bool `protobuf:"varint,1,opt,name=github_app_active,json=githubAppActive,proto3" json:"github_app_active,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *StartChangeAnalysisResponse) Reset() {
@@ -3289,6 +3304,13 @@ func (x *StartChangeAnalysisResponse) ProtoReflect() protoreflect.Message {
 // Deprecated: Use StartChangeAnalysisResponse.ProtoReflect.Descriptor instead.
 func (*StartChangeAnalysisResponse) Descriptor() ([]byte, []int) {
 	return file_changes_proto_rawDescGZIP(), []int{43}
+}
+
+func (x *StartChangeAnalysisResponse) GetGithubAppActive() bool {
+	if x != nil {
+		return x.GithubAppActive
+	}
+	return false
 }
 
 // AddPlannedChangesRequest appends a batch of planned changes to an existing
@@ -5349,10 +5371,13 @@ func (x *GetChangeSummaryRequest) GetAppURL() string {
 }
 
 type GetChangeSummaryResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Change        string                 `protobuf:"bytes,1,opt,name=change,proto3" json:"change,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state  protoimpl.MessageState `protogen:"open.v1"`
+	Change string                 `protobuf:"bytes,1,opt,name=change,proto3" json:"change,omitempty"`
+	// True when the GitHub App has successfully posted (or updated) a PR
+	// comment for this change. Allows the CLI/Action to skip its own comment.
+	GithubAppCommentPosted bool `protobuf:"varint,2,opt,name=github_app_comment_posted,json=githubAppCommentPosted,proto3" json:"github_app_comment_posted,omitempty"`
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
 func (x *GetChangeSummaryResponse) Reset() {
@@ -5390,6 +5415,13 @@ func (x *GetChangeSummaryResponse) GetChange() string {
 		return x.Change
 	}
 	return ""
+}
+
+func (x *GetChangeSummaryResponse) GetGithubAppCommentPosted() bool {
+	if x != nil {
+		return x.GithubAppCommentPosted
+	}
+	return false
 }
 
 type GetChangeSignalsRequest struct {
@@ -6800,7 +6832,7 @@ const file_changes_proto_rawDesc = "" +
 	"\x0emapping_status\x18\x04 \x01(\x0e2 .changes.MappedItemMappingStatusH\x02R\rmappingStatus\x88\x01\x01B\x0f\n" +
 	"\r_mappingQueryB\x0f\n" +
 	"\r_mappingErrorB\x11\n" +
-	"\x0f_mapping_status\"\xd3\x04\n" +
+	"\x0f_mapping_status\"\x83\x05\n" +
 	"\x1aStartChangeAnalysisRequest\x12\x1e\n" +
 	"\n" +
 	"changeUUID\x18\x01 \x01(\fR\n" +
@@ -6809,11 +6841,13 @@ const file_changes_proto_rawDesc = "" +
 	"\x19blastRadiusConfigOverride\x18\x03 \x01(\v2\x19.config.BlastRadiusConfigH\x00R\x19blastRadiusConfigOverride\x88\x01\x01\x12e\n" +
 	"\x1croutineChangesConfigOverride\x18\x05 \x01(\v2\x1c.config.RoutineChangesConfigH\x01R\x1croutineChangesConfigOverride\x88\x01\x01\x12t\n" +
 	"!githubOrganisationProfileOverride\x18\x06 \x01(\v2!.config.GithubOrganisationProfileH\x02R!githubOrganisationProfileOverride\x88\x01\x01\x120\n" +
-	"\tknowledge\x18\a \x03(\v2\x12.changes.KnowledgeR\tknowledgeB\x1c\n" +
+	"\tknowledge\x18\a \x03(\v2\x12.changes.KnowledgeR\tknowledge\x12.\n" +
+	"\x13post_github_comment\x18\b \x01(\bR\x11postGithubCommentB\x1c\n" +
 	"\x1a_blastRadiusConfigOverrideB\x1f\n" +
 	"\x1d_routineChangesConfigOverrideB$\n" +
-	"\"_githubOrganisationProfileOverrideJ\x04\b\x04\x10\x05\"\x1d\n" +
-	"\x1bStartChangeAnalysisResponse\"y\n" +
+	"\"_githubOrganisationProfileOverrideJ\x04\b\x04\x10\x05\"I\n" +
+	"\x1bStartChangeAnalysisResponse\x12*\n" +
+	"\x11github_app_active\x18\x01 \x01(\bR\x0fgithubAppActive\"y\n" +
 	"\x18AddPlannedChangesRequest\x12\x1e\n" +
 	"\n" +
 	"changeUUID\x18\x01 \x01(\fR\n" +
@@ -6999,9 +7033,10 @@ const file_changes_proto_rawDesc = "" +
 	"\x04slim\x18\x02 \x01(\bR\x04slim\x12K\n" +
 	"\x12changeOutputFormat\x18\x03 \x01(\x0e2\x1b.changes.ChangeOutputFormatR\x12changeOutputFormat\x12F\n" +
 	"\x12riskSeverityFilter\x18\x04 \x03(\x0e2\x16.changes.Risk.SeverityR\x12riskSeverityFilter\x12\x16\n" +
-	"\x06appURL\x18\x05 \x01(\tR\x06appURL\"2\n" +
+	"\x06appURL\x18\x05 \x01(\tR\x06appURL\"m\n" +
 	"\x18GetChangeSummaryResponse\x12\x16\n" +
-	"\x06change\x18\x01 \x01(\tR\x06change\"z\n" +
+	"\x06change\x18\x01 \x01(\tR\x06change\x129\n" +
+	"\x19github_app_comment_posted\x18\x02 \x01(\bR\x16githubAppCommentPosted\"z\n" +
 	"\x17GetChangeSignalsRequest\x12\x12\n" +
 	"\x04UUID\x18\x01 \x01(\fR\x04UUID\x12K\n" +
 	"\x12changeOutputFormat\x18\x02 \x01(\x0e2\x1b.changes.ChangeOutputFormatR\x12changeOutputFormat\"4\n" +
