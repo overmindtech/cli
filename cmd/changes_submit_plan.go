@@ -11,7 +11,6 @@ import (
 
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
-	"github.com/overmindtech/cli/knowledge"
 	"github.com/overmindtech/cli/tfutils"
 	"github.com/overmindtech/cli/go/sdp-go"
 	"github.com/overmindtech/cli/go/tracing"
@@ -23,7 +22,7 @@ import (
 
 // submitPlanCmd represents the submit-plan command
 var submitPlanCmd = &cobra.Command{
-	Use:   "submit-plan [--title TITLE] [--description DESCRIPTION] [--ticket-link URL] FILE [FILE ...]",
+	Use:   "submit-plan [--no-start] [--title TITLE] [--description DESCRIPTION] [--ticket-link URL] FILE [FILE ...]",
 	Short: "Creates a new Change from a given terraform plan file",
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 {
@@ -259,55 +258,45 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 		log.WithContext(ctx).WithFields(lf).Info("Re-using change")
 	}
 
-	// Set up the blast radius preset if specified
-	maxDepth := viper.GetInt32("blast-radius-link-depth")
-	maxItems := viper.GetInt32("blast-radius-max-items")
-	maxTime := viper.GetDuration("blast-radius-max-time")
-	changeAnalysisTargetDuration := viper.GetDuration("change-analysis-target-duration")
-
-	blastRadiusConfigOverride, err := createBlastRadiusConfig(maxDepth, maxItems, maxTime, changeAnalysisTargetDuration)
-	if err != nil {
-		return err
-	}
-
-	// setup the signal config if specified, or found in the default location
-	// order of precedence: flag > default config file
-	signalConfigPath := viper.GetString("signal-config")
-	signalConfigOverride, err := checkForAndLoadSignalConfigFile(ctx, lf, signalConfigPath)
-	if err != nil {
-		return loggedError{
-			err:     err,
-			fields:  lf,
-			message: "Failed to load signal config",
+	if viper.GetBool("no-start") {
+		// Store planned changes without starting analysis (multi-plan workflow)
+		_, err = client.AddPlannedChanges(ctx, &connect.Request[sdp.AddPlannedChangesRequest]{
+			Msg: &sdp.AddPlannedChangesRequest{
+				ChangeUUID:    changeUUID[:],
+				ChangingItems: plannedChanges,
+			},
+		})
+		if err != nil {
+			return loggedError{
+				err:     err,
+				fields:  lf,
+				message: "Failed to store planned changes",
+			}
 		}
-	}
+		log.WithContext(ctx).WithFields(lf).Info("Stored planned changes without starting analysis")
+	} else {
+		// Build analysis config and start analysis (default behavior)
+		analysisConfig, err := buildAnalysisConfig(ctx, lf)
+		if err != nil {
+			return err
+		}
 
-	var githubOrganisationProfileOverride *sdp.GithubOrganisationProfile
-	var routineChangesConfigOverride *sdp.RoutineChangesConfig
-	if signalConfigOverride != nil {
-		githubOrganisationProfileOverride = signalConfigOverride.GithubOrganisationProfile
-		routineChangesConfigOverride = signalConfigOverride.RoutineChangesConfig
-	}
-
-	// Discover and convert knowledge files
-	knowledgeDir := knowledge.FindKnowledgeDir(".")
-	sdpKnowledge := knowledge.DiscoverAndConvert(ctx, knowledgeDir)
-
-	_, err = client.StartChangeAnalysis(ctx, &connect.Request[sdp.StartChangeAnalysisRequest]{
-		Msg: &sdp.StartChangeAnalysisRequest{
-			ChangeUUID:                        changeUUID[:],
-			ChangingItems:                     plannedChanges,
-			BlastRadiusConfigOverride:         blastRadiusConfigOverride,
-			RoutineChangesConfigOverride:      routineChangesConfigOverride,
-			GithubOrganisationProfileOverride: githubOrganisationProfileOverride,
-			Knowledge:                         sdpKnowledge,
-		},
-	})
-	if err != nil {
-		return loggedError{
-			err:     err,
-			fields:  lf,
-			message: "Failed to start change analysis",
+		_, err = client.StartChangeAnalysis(ctx, &connect.Request[sdp.StartChangeAnalysisRequest]{
+			Msg: &sdp.StartChangeAnalysisRequest{
+				ChangeUUID:                        changeUUID[:],
+				ChangingItems:                     plannedChanges,
+				BlastRadiusConfigOverride:         analysisConfig.BlastRadiusConfig,
+				RoutineChangesConfigOverride:      analysisConfig.RoutineChangesConfig,
+				GithubOrganisationProfileOverride: analysisConfig.GithubOrgProfile,
+				Knowledge:                         analysisConfig.KnowledgeFiles,
+			},
+		})
+		if err != nil {
+			return loggedError{
+				err:     err,
+				fields:  lf,
+				message: "Failed to start change analysis",
+			}
 		}
 	}
 
@@ -393,16 +382,12 @@ func init() {
 
 	addAPIFlags(submitPlanCmd)
 	addChangeCreationFlags(submitPlanCmd)
+	addAnalysisFlags(submitPlanCmd)
 
 	submitPlanCmd.PersistentFlags().String("frontend", "", "The frontend base URL")
 	_ = submitPlanCmd.PersistentFlags().MarkDeprecated("frontend", "This flag is no longer used and will be removed in a future release. Use the '--app' flag instead.") // MarkDeprecated only errors if the flag doesn't exist, we fall back to using app
 
-	submitPlanCmd.PersistentFlags().Int32("blast-radius-link-depth", 0, "Used in combination with '--blast-radius-max-items' to customise how many levels are traversed when calculating the blast radius. Larger numbers will result in a more comprehensive blast radius, but may take longer to calculate. Defaults to the account level settings.")
-	submitPlanCmd.PersistentFlags().Int32("blast-radius-max-items", 0, "Used in combination with '--blast-radius-link-depth' to customise how many items are included in the blast radius. Larger numbers will result in a more comprehensive blast radius, but may take longer to calculate. Defaults to the account level settings.")
-
-	submitPlanCmd.PersistentFlags().Duration("blast-radius-max-time", 0, "Maximum time duration for blast radius calculation (e.g., '5m', '15m', '30m'). When the time limit is reached, the analysis continues with risks identified up to that point. Defaults to the account level settings (QUICK: 10m, DETAILED: 15m, FULL: 30m). Valid range: 1m to 30m.")
-	_ = submitPlanCmd.PersistentFlags().MarkDeprecated("blast-radius-max-time", "This flag is no longer used and will be removed in a future release. Use the '--change-analysis-target-duration' flag instead.")
-	submitPlanCmd.PersistentFlags().Duration("change-analysis-target-duration", 0, "Target duration for change analysis planning (e.g., '5m', '15m', '30m'). This is NOT a hard deadline - the blast radius phase uses 67% of this target to stop gracefully. The job can run slightly past this target and is only hard-stopped at 30 minutes. Defaults to the account level settings (QUICK: 10m, DETAILED: 15m, FULL: 30m). Valid range: 1m to 30m.")
 	submitPlanCmd.PersistentFlags().String("auto-tag-rules", "", "The path to the auto-tag rules file. If not provided, it will check the default location which is '.overmind/auto-tag-rules.yaml'. If no rules are found locally, the rules configured through the UI are used.")
-	submitPlanCmd.PersistentFlags().String("signal-config", "", "The path to the signal config file. If not provided, it will check the default location which is '.overmind/signal-config.yaml'. If no config is found locally, the config configured through the UI is used.")
+
+	submitPlanCmd.PersistentFlags().Bool("no-start", false, "Store the planned changes without starting analysis. Use with 'start-analysis' to trigger analysis later.")
 }

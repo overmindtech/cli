@@ -1,11 +1,18 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"strconv"
 	"strings"
+	"time"
 
+	"connectrpc.com/connect"
+	"github.com/google/uuid"
+	"github.com/overmindtech/cli/knowledge"
 	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdp-go/sdpconnect"
+	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -115,4 +122,126 @@ func addTerraformBaseFlags(cmd *cobra.Command) {
 	cobra.CheckErr(cmd.PersistentFlags().MarkHidden("aws-config"))
 	cobra.CheckErr(cmd.PersistentFlags().MarkHidden("aws-profile"))
 	cmd.PersistentFlags().Bool("only-use-managed-sources", false, "Set this to skip local autoconfiguration and only use the managed sources as configured in Overmind.")
+}
+
+// Adds analysis-related flags (blast radius config, signal config) to a command.
+// These flags are shared between submit-plan and start-analysis commands.
+func addAnalysisFlags(cmd *cobra.Command) {
+	cmd.PersistentFlags().Int32("blast-radius-link-depth", 0, "Used in combination with '--blast-radius-max-items' to customise how many levels are traversed when calculating the blast radius. Larger numbers will result in a more comprehensive blast radius, but may take longer to calculate. Defaults to the account level settings.")
+	cmd.PersistentFlags().Int32("blast-radius-max-items", 0, "Used in combination with '--blast-radius-link-depth' to customise how many items are included in the blast radius. Larger numbers will result in a more comprehensive blast radius, but may take longer to calculate. Defaults to the account level settings.")
+	cmd.PersistentFlags().Duration("blast-radius-max-time", 0, "Maximum time duration for blast radius calculation (e.g., '5m', '15m', '30m'). When the time limit is reached, the analysis continues with risks identified up to that point. Defaults to the account level settings (QUICK: 10m, DETAILED: 15m, FULL: 30m). Valid range: 1m to 30m.")
+	_ = cmd.PersistentFlags().MarkDeprecated("blast-radius-max-time", "This flag is no longer used and will be removed in a future release. Use the '--change-analysis-target-duration' flag instead.")
+	cmd.PersistentFlags().Duration("change-analysis-target-duration", 0, "Target duration for change analysis planning (e.g., '5m', '15m', '30m'). This is NOT a hard deadline - the blast radius phase uses 67% of this target to stop gracefully. The job can run slightly past this target and is only hard-stopped at 30 minutes. Defaults to the account level settings (QUICK: 10m, DETAILED: 15m, FULL: 30m). Valid range: 1m to 30m.")
+	cmd.PersistentFlags().String("signal-config", "", "The path to the signal config file. If not provided, it will check the default location which is '.overmind/signal-config.yaml'. If no config is found locally, the config configured through the UI is used.")
+}
+
+// AnalysisConfig holds all the configuration needed to start change analysis.
+type AnalysisConfig struct {
+	BlastRadiusConfig *sdp.BlastRadiusConfig
+	RoutineChangesConfig *sdp.RoutineChangesConfig
+	GithubOrgProfile *sdp.GithubOrganisationProfile
+	KnowledgeFiles []*sdp.Knowledge
+}
+
+// buildAnalysisConfig reads viper flags and builds the analysis configuration
+// used by StartChangeAnalysis. This includes blast radius config, routine changes
+// config, github org profile, and knowledge files.
+func buildAnalysisConfig(ctx context.Context, lf log.Fields) (*AnalysisConfig, error) {
+	maxDepth := viper.GetInt32("blast-radius-link-depth")
+	maxItems := viper.GetInt32("blast-radius-max-items")
+	maxTime := viper.GetDuration("blast-radius-max-time")
+	changeAnalysisTargetDuration := viper.GetDuration("change-analysis-target-duration")
+
+	blastRadiusConfig, err := createBlastRadiusConfig(maxDepth, maxItems, maxTime, changeAnalysisTargetDuration)
+	if err != nil {
+		return nil, err
+	}
+
+	signalConfigPath := viper.GetString("signal-config")
+	signalConfigOverride, err := checkForAndLoadSignalConfigFile(ctx, lf, signalConfigPath)
+	if err != nil {
+		return nil, loggedError{
+			err:     err,
+			fields:  lf,
+			message: "Failed to load signal config",
+		}
+	}
+
+	var githubOrgProfile *sdp.GithubOrganisationProfile
+	var routineChangesConfig *sdp.RoutineChangesConfig
+	if signalConfigOverride != nil {
+		githubOrgProfile = signalConfigOverride.GithubOrganisationProfile
+		routineChangesConfig = signalConfigOverride.RoutineChangesConfig
+	}
+
+	knowledgeDir := knowledge.FindKnowledgeDir(".")
+	knowledgeFiles := knowledge.DiscoverAndConvert(ctx, knowledgeDir)
+
+	return &AnalysisConfig{
+		BlastRadiusConfig:    blastRadiusConfig,
+		RoutineChangesConfig: routineChangesConfig,
+		GithubOrgProfile:     githubOrgProfile,
+		KnowledgeFiles:       knowledgeFiles,
+	}, nil
+}
+
+// waitForChangeAnalysis polls the change until analysis reaches a terminal status
+// (STATUS_DONE, STATUS_SKIPPED, or STATUS_ERROR). It returns nil on successful
+// completion, or an error if analysis failed or was cancelled.
+func waitForChangeAnalysis(ctx context.Context, client sdpconnect.ChangesServiceClient, changeUUID uuid.UUID, lf log.Fields) error {
+	for {
+		changeRes, err := client.GetChange(ctx, &connect.Request[sdp.GetChangeRequest]{
+			Msg: &sdp.GetChangeRequest{
+				UUID: changeUUID[:],
+			},
+		})
+		if err != nil {
+			return loggedError{
+				err:     err,
+				fields:  lf,
+				message: "failed to get change",
+			}
+		}
+		if changeRes.Msg == nil || changeRes.Msg.GetChange() == nil {
+			return loggedError{
+				err:     fmt.Errorf("unexpected nil response from GetChange"),
+				fields:  lf,
+				message: "failed to get change",
+			}
+		}
+
+		ch := changeRes.Msg.GetChange()
+		md := ch.GetMetadata()
+		if md == nil || md.GetChangeAnalysisStatus() == nil {
+			return loggedError{
+				err:     fmt.Errorf("change metadata or change analysis status is nil"),
+				fields:  lf,
+				message: "failed to get change analysis status",
+			}
+		}
+
+		status := md.GetChangeAnalysisStatus().GetStatus()
+		switch status {
+		case sdp.ChangeAnalysisStatus_STATUS_DONE, sdp.ChangeAnalysisStatus_STATUS_SKIPPED:
+			log.WithContext(ctx).WithFields(lf).WithField("status", status.String()).Info("Change analysis complete")
+			return nil
+		case sdp.ChangeAnalysisStatus_STATUS_ERROR:
+			return loggedError{
+				err:     fmt.Errorf("change analysis completed with error status"),
+				fields:  lf,
+				message: "change analysis failed",
+			}
+		case sdp.ChangeAnalysisStatus_STATUS_UNSPECIFIED, sdp.ChangeAnalysisStatus_STATUS_INPROGRESS:
+			log.WithContext(ctx).WithFields(lf).WithField("status", status.String()).Info("Waiting for change analysis to complete")
+		}
+
+		time.Sleep(3 * time.Second)
+		if ctx.Err() != nil {
+			return loggedError{
+				err:     ctx.Err(),
+				fields:  lf,
+				message: "context cancelled",
+			}
+		}
+	}
 }
