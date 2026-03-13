@@ -154,7 +154,7 @@ func externalCallSingle(ctx context.Context, httpCli *http.Client, url string) (
 		return nil, err
 	}
 
-	resp, err := httpCli.Do(req) //nolint:gosec // G107 (SSRF): URL built from GCP API discovery document endpoints and project config, not user input
+	resp, err := httpCli.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +215,7 @@ func externalCallMulti(ctx context.Context, itemsSelector string, httpCli *http.
 			return err
 		}
 
-		resp, err := httpCli.Do(req) //nolint:gosec // G107 (SSRF): URL built from GCP API discovery document endpoints with pagination token from GCP responses
+		resp, err := httpCli.Do(req)
 		if err != nil {
 			return err
 		}

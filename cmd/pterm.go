@@ -151,7 +151,7 @@ func RunRevlinkWarmup(ctx context.Context, oi sdp.OvermindInstance, postPlanPrin
 }
 
 func RunPlan(ctx context.Context, args []string) error {
-	c := exec.CommandContext(ctx, "terraform", args...) //nolint:gosec // G702: args are CLI arguments from the local user who invoked this command; this tool runs on the user's own machine
+	c := exec.CommandContext(ctx, "terraform", args...)
 
 	// remove go's default process cancel behaviour, so that terraform has a
 	// chance to gracefully shutdown when ^C is pressed. Otherwise the
@@ -180,7 +180,7 @@ func RunPlan(ctx context.Context, args []string) error {
 }
 
 func RunApply(ctx context.Context, args []string) error {
-	c := exec.CommandContext(ctx, "terraform", args...) //nolint:gosec // G702: args are CLI arguments from the local user who invoked this command; this tool runs on the user's own machine
+	c := exec.CommandContext(ctx, "terraform", args...)
 
 	// remove go's default process cancel behaviour, so that terraform has a
 	// chance to gracefully shutdown when ^C is pressed. Otherwise the

@@ -58,7 +58,7 @@ func NewOvermindInstance(ctx context.Context, app string) (OvermindInstance, err
 	}
 
 	req = req.WithContext(ctx)
-	res, err := tracing.HTTPClient().Do(req) //nolint:gosec // G107 (SSRF): URL is built from the app base URL (CLI config) + hardcoded path /api/public/instance-data
+	res, err := tracing.HTTPClient().Do(req)
 	if err != nil {
 		return OvermindInstance{}, fmt.Errorf("could not fetch instance-data: %w", err)
 	}

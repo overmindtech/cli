@@ -52,7 +52,7 @@ func changeTitle(ctx context.Context, arg string) string {
 		return arg
 	}
 
-	describeBytes, err := exec.CommandContext(ctx, "git", "describe", "--long").Output() //nolint:gosec // G702: all arguments are hardcoded string literals; no user input reaches this command
+	describeBytes, err := exec.CommandContext(ctx, "git", "describe", "--long").Output()
 	describe := strings.TrimSpace(string(describeBytes))
 	if err != nil {
 		log.WithError(err).Trace("failed to run 'git describe' for default title")

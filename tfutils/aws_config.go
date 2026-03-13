@@ -57,7 +57,7 @@ type ProviderFile struct {
 type AWSProvider struct {
 	Name                           string   `hcl:"name,label" yaml:"name,omitempty"`
 	Alias                          string   `hcl:"alias,optional" yaml:"alias,omitempty"`
-	AccessKey                      string   `hcl:"access_key,optional" yaml:"access_key,omitempty"` //nolint:gosec // G101: field name, not a hardcoded credential; deserialized from local Terraform HCL config, never marshaled into logs or HTTP responses
+	AccessKey                      string   `hcl:"access_key,optional" yaml:"access_key,omitempty"`
 	SecretKey                      string   `hcl:"secret_key,optional" yaml:"secret_key,omitempty"`
 	Token                          string   `hcl:"token,optional" yaml:"token,omitempty"`
 	Region                         string   `hcl:"region,optional" yaml:"region,omitempty"`
