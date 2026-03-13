@@ -13,7 +13,7 @@ import (
 // 1. A LIST operation is performed and gets a cache miss
 // 2. The caller starts the work
 // 3. The query encounters an error
-// 4. The caller properly calls StoreError to cache the error
+// 4. The caller properly calls StoreUnavailableItem to cache the error
 // 5. Subsequent requests get the cached error immediately (don't block)
 //
 // This test documents the fix for the cache timeout bug.
@@ -36,7 +36,7 @@ func TestListErrorWithProperCleanup(t *testing.T) {
 			var secondCallDuration time.Duration
 
 			// First goroutine: Gets cache miss, simulates work that errors,
-			// and properly calls StoreError to cache the error
+			// and properly calls StoreUnavailableItem to cache the error
 			wg.Go(func() {
 				<-startBarrier
 
@@ -56,8 +56,8 @@ func TestListErrorWithProperCleanup(t *testing.T) {
 					ErrorType:   sdp.QueryError_OTHER,
 					ErrorString: "simulated list error",
 				}
-				cache.StoreError(ctx, err, 1*time.Hour, ck)
-				t.Log("First goroutine: properly called StoreError")
+				cache.StoreUnavailableItem(ctx, err, 1*time.Hour, ck)
+				t.Log("First goroutine: properly called StoreUnavailableItem")
 			})
 
 			// Second goroutine: Should get cached error immediately
@@ -177,12 +177,12 @@ func TestListErrorWithProperDone(t *testing.T) {
 	}
 }
 
-// TestListErrorWithStoreError tests the CORRECT behavior where:
+// TestListErrorWithStoreUnavailableItem tests the CORRECT behavior where:
 // 1. A LIST operation is performed and gets a cache miss
 // 2. The query encounters an error
-// 3. The caller properly calls StoreError
+// 3. The caller properly calls StoreUnavailableItem
 // 4. Subsequent requests should get the cached error immediately
-func TestListErrorWithStoreError(t *testing.T) {
+func TestListErrorWithStoreUnavailableItem(t *testing.T) {
 	implementations := cacheImplementations(t)
 
 	for _, impl := range implementations {
@@ -211,7 +211,7 @@ func TestListErrorWithStoreError(t *testing.T) {
 			var secondCallDuration time.Duration
 
 			// First goroutine: Gets cache miss, simulates work that errors,
-			// and PROPERLY calls StoreError
+			// and PROPERLY calls StoreUnavailableItem
 			wg.Go(func() {
 				<-startBarrier
 
@@ -227,8 +227,8 @@ func TestListErrorWithStoreError(t *testing.T) {
 				time.Sleep(100 * time.Millisecond)
 
 				// CORRECT BEHAVIOR: Store the error so other callers can get it
-				cache.StoreError(ctx, expectedError, 10*time.Second, ck)
-				t.Log("First goroutine: properly called StoreError")
+				cache.StoreUnavailableItem(ctx, expectedError, 10*time.Second, ck)
+				t.Log("First goroutine: properly called StoreUnavailableItem")
 			})
 
 			// Second goroutine: Should receive the cached error

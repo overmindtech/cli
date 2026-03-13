@@ -158,7 +158,7 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 				ErrorString: err.Error(),
 				Scope:       scope,
 			}
-			s.cache.StoreError(ctx, err, httpCacheDuration, ck)
+			s.cache.StoreUnavailableItem(ctx, err, httpCacheDuration, ck)
 			return nil, err
 		}
 	}
@@ -175,7 +175,7 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 		return nil, qErr
 	}
 	if cacheHit {
-		// Get only caches a single item or NOTFOUND (via StoreError). Guard against empty slice for defensive safety (e.g. cache corruption).
+		// Get only caches a single item or NOTFOUND (via StoreUnavailableItem). Guard against empty slice for defensive safety (e.g. cache corruption).
 		if len(cachedItems) > 0 {
 			return cachedItems[0], nil
 		}
@@ -205,7 +205,7 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 			ErrorString: err.Error(),
 			Scope:       scope,
 		}
-		s.cache.StoreError(ctx, err, httpCacheDuration, ck)
+		s.cache.StoreUnavailableItem(ctx, err, httpCacheDuration, ck)
 		return nil, err
 	}
 
@@ -222,7 +222,7 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 			ErrorString: err.Error(),
 			Scope:       scope,
 		}
-		s.cache.StoreError(ctx, err, httpCacheDuration, ck)
+		s.cache.StoreUnavailableItem(ctx, err, httpCacheDuration, ck)
 		return nil, err
 	}
 
@@ -240,7 +240,7 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 			ItemType:      s.Type(),
 			ResponderName: s.Name(),
 		}
-		s.cache.StoreError(ctx, notFoundErr, httpCacheDuration, ck)
+		s.cache.StoreUnavailableItem(ctx, notFoundErr, httpCacheDuration, ck)
 		return nil, notFoundErr
 	}
 
@@ -269,7 +269,7 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 			ErrorString: err.Error(),
 			Scope:       scope,
 		}
-		s.cache.StoreError(ctx, err, httpCacheDuration, ck)
+		s.cache.StoreUnavailableItem(ctx, err, httpCacheDuration, ck)
 		return nil, err
 	}
 

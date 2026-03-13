@@ -848,8 +848,8 @@ func (c *BoltCache) StoreItem(ctx context.Context, item *sdp.Item, duration time
 	c.storeResult(ctx, res)
 }
 
-// StoreError stores an error in the cache with the specified duration.
-func (c *BoltCache) StoreError(ctx context.Context, err error, duration time.Duration, ck CacheKey) {
+// StoreUnavailableItem stores an error in the cache with the specified duration.
+func (c *BoltCache) StoreUnavailableItem(ctx context.Context, err error, duration time.Duration, ck CacheKey) {
 	if c == nil || err == nil {
 		return
 	}
@@ -863,7 +863,7 @@ func (c *BoltCache) StoreError(ctx context.Context, err error, duration time.Dur
 		methodStr = ck.Method.String()
 	}
 
-	ctx, span := tracing.Tracer().Start(ctx, "BoltCache.StoreError",
+	ctx, span := tracing.Tracer().Start(ctx, "BoltCache.StoreUnavailableItem",
 		trace.WithAttributes(
 			attribute.String("ovm.cache.method", methodStr),
 			attribute.String("ovm.cache.scope", ck.SST.Scope),
@@ -994,7 +994,7 @@ func (c *BoltCache) storeResult(ctx context.Context, res CachedResult) {
 	err = performUpdate()
 
 	// Handle disk full errors
-	// Note: storeResult is called from StoreItem/StoreError which already holds compactMutex.RLock()
+	// Note: storeResult is called from StoreItem/StoreUnavailableItem which already holds compactMutex.RLock()
 	// so we use the locked versions to avoid deadlock
 	if err != nil && isDiskFullError(err) {
 		// Attempt cleanup by purging expired items - needs to happen in a

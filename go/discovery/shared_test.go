@@ -167,7 +167,7 @@ func (s *TestAdapter) Get(ctx context.Context, scope string, query string, ignor
 			ErrorString: "no items found",
 			Scope:       scope,
 		}
-		s.cache.StoreError(ctx, err, s.DefaultCacheDuration(), ck)
+		s.cache.StoreUnavailableItem(ctx, err, s.DefaultCacheDuration(), ck)
 		return nil, err
 	case "error":
 		return nil, &sdp.QueryError{
@@ -210,7 +210,7 @@ func (s *TestAdapter) List(ctx context.Context, scope string, ignoreCache bool) 
 			ErrorString: "no items found",
 			Scope:       scope,
 		}
-		s.cache.StoreError(ctx, err, s.DefaultCacheDuration(), ck)
+		s.cache.StoreUnavailableItem(ctx, err, s.DefaultCacheDuration(), ck)
 		return nil, err
 	case "error":
 		return nil, &sdp.QueryError{
@@ -254,7 +254,7 @@ func (s *TestAdapter) Search(ctx context.Context, scope string, query string, ig
 			ErrorString: "no items found",
 			Scope:       scope,
 		}
-		s.cache.StoreError(ctx, err, s.DefaultCacheDuration(), ck)
+		s.cache.StoreUnavailableItem(ctx, err, s.DefaultCacheDuration(), ck)
 		return nil, err
 	case "error":
 		return nil, &sdp.QueryError{

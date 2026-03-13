@@ -159,7 +159,7 @@ func (c iamServiceAccountWrapper) ListStream(ctx context.Context, stream discove
 			ItemType:      c.Type(),
 			ResponderName: c.Name(),
 		}
-		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
+		cache.StoreUnavailableItem(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
 	}
 }
 

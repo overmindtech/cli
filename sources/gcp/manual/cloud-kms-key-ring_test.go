@@ -73,7 +73,7 @@ func TestCloudKMSKeyRing(t *testing.T) {
 			ErrorString: "No resources found in Cloud Asset API",
 		}
 		cacheKey := sdpcache.CacheKeyFromParts("gcp-source", sdp.QueryMethod_GET, projectID, gcpshared.CloudKMSKeyRing.String(), "us|nonexistent")
-		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
+		cache.StoreUnavailableItem(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
 
 		loader := gcpshared.NewCloudKMSAssetLoader(nil, projectID, cache, "gcp-source", []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
@@ -158,7 +158,7 @@ func TestCloudKMSKeyRing(t *testing.T) {
 			ErrorString: "No resources found in Cloud Asset API",
 		}
 		listCacheKey := sdpcache.CacheKeyFromParts("gcp-source", sdp.QueryMethod_LIST, projectID, gcpshared.CloudKMSKeyRing.String(), "")
-		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, listCacheKey)
+		cache.StoreUnavailableItem(ctx, notFoundErr, shared.DefaultCacheDuration, listCacheKey)
 
 		loader := gcpshared.NewCloudKMSAssetLoader(nil, projectID, cache, "gcp-source", []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
@@ -190,7 +190,7 @@ func TestCloudKMSKeyRing(t *testing.T) {
 			ErrorString: "no key rings found for list",
 		}
 		listCacheKey := sdpcache.CacheKeyFromParts("gcp-source", sdp.QueryMethod_LIST, projectID, gcpshared.CloudKMSKeyRing.String(), "")
-		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, listCacheKey)
+		cache.StoreUnavailableItem(ctx, notFoundErr, shared.DefaultCacheDuration, listCacheKey)
 
 		loader := gcpshared.NewCloudKMSAssetLoader(nil, projectID, cache, "gcp-source", []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		wrapper := manual.NewCloudKMSKeyRing(loader, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
@@ -276,7 +276,7 @@ func TestCloudKMSKeyRing(t *testing.T) {
 		}
 		query := "us-central1"
 		searchCacheKey := sdpcache.CacheKeyFromParts("gcp-source", sdp.QueryMethod_SEARCH, projectID, gcpshared.CloudKMSKeyRing.String(), query)
-		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, searchCacheKey)
+		cache.StoreUnavailableItem(ctx, notFoundErr, shared.DefaultCacheDuration, searchCacheKey)
 
 		loader := gcpshared.NewCloudKMSAssetLoader(nil, projectID, cache, "gcp-source", []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		wrapper := manual.NewCloudKMSKeyRing(loader, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})

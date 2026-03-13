@@ -174,7 +174,7 @@ func (c computeForwardingRuleWrapper) ListStream(ctx context.Context, stream dis
 			ItemType:      c.Type(),
 			ResponderName: c.Name(),
 		}
-		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
+		cache.StoreUnavailableItem(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
 	}
 }
 
@@ -249,7 +249,7 @@ func (c computeForwardingRuleWrapper) listAggregatedStream(ctx context.Context, 
 			ItemType:      c.Type(),
 			ResponderName: c.Name(),
 		}
-		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
+		cache.StoreUnavailableItem(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
 	}
 }
 

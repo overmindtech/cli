@@ -233,7 +233,7 @@ func (c computeImageWrapper) ListStream(ctx context.Context, stream discovery.Qu
 			ItemType:      c.Type(),
 			ResponderName: c.Name(),
 		}
-		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
+		cache.StoreUnavailableItem(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
 	}
 }
 

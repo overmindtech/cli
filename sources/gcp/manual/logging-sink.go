@@ -139,7 +139,7 @@ func (l loggingSinkWrapper) ListStream(ctx context.Context, stream discovery.Que
 			ItemType:      l.Type(),
 			ResponderName: l.Name(),
 		}
-		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
+		cache.StoreUnavailableItem(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
 	}
 }
 

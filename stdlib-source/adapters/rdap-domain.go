@@ -235,7 +235,7 @@ func (s *RdapDomainAdapter) Search(ctx context.Context, scope string, query stri
 		ItemType:    s.Type(),
 	}
 
-	s.Cache.StoreError(ctx, err, RdapCacheDuration, ck)
+	s.Cache.StoreUnavailableItem(ctx, err, RdapCacheDuration, ck)
 
 	return nil, err
 }

@@ -170,7 +170,7 @@ func (c computeRegionInstanceGroupManagerWrapper) ListStream(ctx context.Context
 			ItemType:      c.Type(),
 			ResponderName: c.Name(),
 		}
-		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
+		cache.StoreUnavailableItem(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
 	}
 }
 
@@ -225,7 +225,7 @@ func (c computeRegionInstanceGroupManagerWrapper) listAllRegionsStream(ctx conte
 			ItemType:      c.Type(),
 			ResponderName: c.Name(),
 		}
-		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
+		cache.StoreUnavailableItem(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
 	}
 }
 

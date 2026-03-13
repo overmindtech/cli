@@ -432,7 +432,7 @@ func TestShardedCacheErrorRouting(t *testing.T) {
 			ErrorType:   sdp.QueryError_NOTFOUND,
 			ErrorString: "not found",
 		}
-		cache.StoreError(ctx, qErr, 10*time.Second, ck)
+		cache.StoreUnavailableItem(ctx, qErr, 10*time.Second, ck)
 
 		// Lookup should find the error
 		hit, _, _, returnedErr, done := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, uav, false)
@@ -457,7 +457,7 @@ func TestShardedCacheErrorRouting(t *testing.T) {
 			ErrorType:   sdp.QueryError_OTHER,
 			ErrorString: "list failed",
 		}
-		cache.StoreError(ctx, qErr, 10*time.Second, ck)
+		cache.StoreUnavailableItem(ctx, qErr, 10*time.Second, ck)
 
 		// LIST lookup fans out, should find the error on shard 0
 		hit, _, _, returnedErr, done := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, "", false)

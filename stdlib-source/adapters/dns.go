@@ -161,7 +161,7 @@ func (d *DNSAdapter) Get(ctx context.Context, scope string, query string, ignore
 		// makeQueryImpl returns NOTFOUND when no A/AAAA records exist; cache it to avoid repeated lookups
 		var qe *sdp.QueryError
 		if errors.As(err, &qe) && qe.GetErrorType() == sdp.QueryError_NOTFOUND {
-			d.cache.StoreError(ctx, qe, dnsCacheDuration, ck)
+			d.cache.StoreUnavailableItem(ctx, qe, dnsCacheDuration, ck)
 		}
 		return nil, err
 	}
@@ -175,7 +175,7 @@ func (d *DNSAdapter) Get(ctx context.Context, scope string, query string, ignore
 			ItemType:      d.Type(),
 			ResponderName: d.Name(),
 		}
-		d.cache.StoreError(ctx, notFoundErr, dnsCacheDuration, ck)
+		d.cache.StoreUnavailableItem(ctx, notFoundErr, dnsCacheDuration, ck)
 		return nil, notFoundErr
 	}
 	d.cache.StoreItem(ctx, items[0], dnsCacheDuration, ck)
@@ -249,7 +249,7 @@ func (d *DNSAdapter) Search(ctx context.Context, scope string, query string, ign
 				// Only cache NOTFOUND to avoid repeated lookups; do not cache transient errors (e.g. timeouts).
 				var qe *sdp.QueryError
 				if errors.As(err, &qe) && qe.GetErrorType() == sdp.QueryError_NOTFOUND {
-					d.cache.StoreError(ctx, err, dnsCacheDuration, ck)
+					d.cache.StoreUnavailableItem(ctx, err, dnsCacheDuration, ck)
 				}
 				return nil, err
 			}
@@ -264,7 +264,7 @@ func (d *DNSAdapter) Search(ctx context.Context, scope string, query string, ign
 					ItemType:      d.Type(),
 					ResponderName: d.Name(),
 				}
-				d.cache.StoreError(ctx, notFoundErr, dnsCacheDuration, ck)
+				d.cache.StoreUnavailableItem(ctx, notFoundErr, dnsCacheDuration, ck)
 				return nil, notFoundErr
 			}
 
@@ -285,7 +285,7 @@ func (d *DNSAdapter) Search(ctx context.Context, scope string, query string, ign
 		// Only cache NOTFOUND to avoid repeated lookups; return (nil, error) so cache hit returns same as fresh.
 		var qe *sdp.QueryError
 		if errors.As(err, &qe) && qe.GetErrorType() == sdp.QueryError_NOTFOUND {
-			d.cache.StoreError(ctx, err, dnsCacheDuration, ck)
+			d.cache.StoreUnavailableItem(ctx, err, dnsCacheDuration, ck)
 		}
 		return nil, err
 	}

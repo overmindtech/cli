@@ -241,7 +241,7 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) Get(ctx cont
 			ItemType:      s.ItemType,
 			ResponderName: s.Name(),
 		}
-		s.cache.StoreError(ctx, qErr, s.cacheDuration(), ck)
+		s.cache.StoreUnavailableItem(ctx, qErr, s.cacheDuration(), ck)
 
 		return nil, qErr
 	case numItems == 0:
@@ -253,7 +253,7 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) Get(ctx cont
 			ItemType:      s.ItemType,
 			ResponderName: s.Name(),
 		}
-		s.cache.StoreError(ctx, qErr, s.cacheDuration(), ck)
+		s.cache.StoreUnavailableItem(ctx, qErr, s.cacheDuration(), ck)
 		return nil, qErr
 	}
 
@@ -418,7 +418,7 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) processError
 
 		// Only cache the error if is something that won't be fixed by retrying
 		if sdpErr.GetErrorType() == sdp.QueryError_NOTFOUND || sdpErr.GetErrorType() == sdp.QueryError_NOSCOPE {
-			s.cache.StoreError(ctx, sdpErr, s.cacheDuration(), cacheKey)
+			s.cache.StoreUnavailableItem(ctx, sdpErr, s.cacheDuration(), cacheKey)
 		}
 	}
 
@@ -507,7 +507,7 @@ func (s *DescribeOnlyAdapter[Input, Output, ClientStruct, Options]) describe(ctx
 			ItemType:      s.ItemType,
 			ResponderName: s.Name(),
 		}
-		s.cache.StoreError(ctx, notFoundErr, s.cacheDuration(), ck)
+		s.cache.StoreUnavailableItem(ctx, notFoundErr, s.cacheDuration(), ck)
 	}
 }
 

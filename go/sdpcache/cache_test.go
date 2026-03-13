@@ -124,7 +124,7 @@ func TestStoreItem(t *testing.T) {
 	}
 }
 
-func TestStoreError(t *testing.T) {
+func TestStoreUnavailableItem(t *testing.T) {
 	implementations := cacheImplementations(t)
 
 	for _, impl := range implementations {
@@ -140,7 +140,7 @@ func TestStoreError(t *testing.T) {
 
 			uav := "foo"
 
-			cache.StoreError(t.Context(), errors.New("arse"), 10*time.Second, CacheKey{
+			cache.StoreUnavailableItem(t.Context(), errors.New("arse"), 10*time.Second, CacheKey{
 				SST:    sst,
 				Method: sdp.QueryMethod_GET.Enum(),
 				Query:  &uav,
@@ -182,7 +182,7 @@ func TestStoreError(t *testing.T) {
 			}
 
 			// Test with multiple errors
-			cache.StoreError(t.Context(), errors.New("nope"), 10*time.Second, CacheKey{
+			cache.StoreUnavailableItem(t.Context(), errors.New("nope"), 10*time.Second, CacheKey{
 				SST:    sst,
 				Method: sdp.QueryMethod_GET.Enum(),
 				Query:  &uav,
@@ -773,7 +773,7 @@ func TestLookupWithCachedError(t *testing.T) {
 						SourceName:  sst.SourceName,
 						ItemType:    sst.Type,
 					}
-					cache.StoreError(ctx, qErr, 10*time.Second, ck)
+					cache.StoreUnavailableItem(ctx, qErr, 10*time.Second, ck)
 
 					// Lookup should return cached error
 					cacheHit, _, items, returnedErr, done := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, query, false)
@@ -1325,10 +1325,10 @@ func TestUnexpiredOverwriteLogging(t *testing.T) {
 		}
 
 		// Store an error
-		cache.StoreError(ctx, errors.New("test error"), 10*time.Second, ck)
+		cache.StoreUnavailableItem(ctx, errors.New("test error"), 10*time.Second, ck)
 
 		// Store the same error again before it expires (overwrite will be tracked via span attributes)
-		cache.StoreError(ctx, errors.New("another error"), 10*time.Second, ck)
+		cache.StoreUnavailableItem(ctx, errors.New("another error"), 10*time.Second, ck)
 	})
 }
 
@@ -1853,7 +1853,7 @@ func TestBoltCacheLookupDeduplicationError(t *testing.T) {
 		time.Sleep(50 * time.Millisecond)
 
 		// Store the error
-		cache.StoreError(ctx, expectedError, 10*time.Second, ck)
+		cache.StoreUnavailableItem(ctx, expectedError, 10*time.Second, ck)
 	})
 
 	// Waiter goroutines: should receive the error

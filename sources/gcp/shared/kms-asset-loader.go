@@ -171,15 +171,15 @@ func (l *CloudKMSAssetLoader) loadAll(ctx context.Context) error {
 
 	if !hasKeyRings {
 		listCacheKey := sdpcache.CacheKeyFromParts(l.sourceName, sdp.QueryMethod_LIST, scope, CloudKMSKeyRing.String(), "")
-		l.cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, listCacheKey)
+		l.cache.StoreUnavailableItem(ctx, notFoundErr, shared.DefaultCacheDuration, listCacheKey)
 	}
 	if !hasCryptoKeys {
 		listCacheKey := sdpcache.CacheKeyFromParts(l.sourceName, sdp.QueryMethod_LIST, scope, CloudKMSCryptoKey.String(), "")
-		l.cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, listCacheKey)
+		l.cache.StoreUnavailableItem(ctx, notFoundErr, shared.DefaultCacheDuration, listCacheKey)
 	}
 	if !hasKeyVersions {
 		listCacheKey := sdpcache.CacheKeyFromParts(l.sourceName, sdp.QueryMethod_LIST, scope, CloudKMSCryptoKeyVersion.String(), "")
-		l.cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, listCacheKey)
+		l.cache.StoreUnavailableItem(ctx, notFoundErr, shared.DefaultCacheDuration, listCacheKey)
 	}
 
 	return nil

@@ -272,7 +272,7 @@ func (b *BenchmarkListAdapter) List(ctx context.Context, scope string, ignoreCac
 			ErrorString: "no items found",
 			Scope:       scope,
 		}
-		b.cache.StoreError(ctx, err, b.DefaultCacheDuration(), ck)
+		b.cache.StoreUnavailableItem(ctx, err, b.DefaultCacheDuration(), ck)
 		return nil, err
 	case "error":
 		return nil, &sdp.QueryError{

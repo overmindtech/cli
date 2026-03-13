@@ -167,7 +167,7 @@ func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]
 	if err != nil {
 		err := WrapAWSError(err)
 		if !CanRetry(err) {
-			s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
+			s.cache.StoreUnavailableItem(ctx, err, s.cacheDuration(), ck)
 		}
 		return nil, err
 	}
@@ -310,7 +310,7 @@ func (s *GetListAdapterV2[ListInput, ListOutput, AWSItem, ClientStruct, Options]
 			ItemType:      s.ItemType,
 			ResponderName: s.Name(),
 		}
-		s.cache.StoreError(ctx, notFoundErr, s.cacheDuration(), ck)
+		s.cache.StoreUnavailableItem(ctx, notFoundErr, s.cacheDuration(), ck)
 	}
 }
 

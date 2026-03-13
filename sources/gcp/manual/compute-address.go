@@ -169,7 +169,7 @@ func (c computeAddressWrapper) ListStream(ctx context.Context, stream discovery.
 			ItemType:      c.Type(),
 			ResponderName: c.Name(),
 		}
-		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
+		cache.StoreUnavailableItem(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
 	}
 }
 
@@ -244,7 +244,7 @@ func (c computeAddressWrapper) listAggregatedStream(ctx context.Context, stream 
 			ItemType:      c.Type(),
 			ResponderName: c.Name(),
 		}
-		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
+		cache.StoreUnavailableItem(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
 	}
 }
 

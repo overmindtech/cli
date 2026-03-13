@@ -122,7 +122,7 @@ func (s *RdapIPNetworkAdapter) Search(ctx context.Context, scope string, query s
 		if err != nil {
 			err = wrapRdapError(err, scope)
 
-			s.Cache.StoreError(ctx, err, RdapCacheDuration, ck)
+			s.Cache.StoreUnavailableItem(ctx, err, RdapCacheDuration, ck)
 
 			return nil, err
 		}
