@@ -62,7 +62,7 @@ type EngineConfig struct {
 
 	// The 'ovm_*' API key to use to authenticate to the Overmind API.
 	// This and 'SourceAccessToken' are mutually exclusive
-	ApiKey string //nolint:gosec // G101 (hardcoded secret): config field name, not a credential value; populated from CLI flags/env vars
+	ApiKey string
 	// Static token passed to the source to authenticate.
 	SourceAccessToken     string // The access token to use to authenticate to the source
 	SourceAccessTokenType string // The type of token to use to authenticate the source for managed sources

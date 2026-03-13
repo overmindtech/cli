@@ -705,7 +705,7 @@ func TestWithResourceMetadata(t *testing.T) {
 
 		handler := WithResourceMetadata(prmURL, inner)
 		rr := httptest.NewRecorder()
-		req := httptest.NewRequest(http.MethodPost, "/area51/mcp", nil)
+		req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/area51/mcp", nil)
 		handler.ServeHTTP(rr, req)
 
 		if rr.Code != http.StatusUnauthorized {
@@ -727,7 +727,7 @@ func TestWithResourceMetadata(t *testing.T) {
 
 		handler := WithResourceMetadata(prmURL, inner)
 		rr := httptest.NewRecorder()
-		req := httptest.NewRequest(http.MethodPost, "/area51/mcp", nil)
+		req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/area51/mcp", nil)
 		handler.ServeHTTP(rr, req)
 
 		if rr.Code != http.StatusOK {
@@ -747,7 +747,7 @@ func TestWithResourceMetadata(t *testing.T) {
 
 		handler := WithResourceMetadata(prmURL, inner)
 		rr := httptest.NewRecorder()
-		req := httptest.NewRequest(http.MethodPost, "/area51/mcp", nil)
+		req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/area51/mcp", nil)
 		handler.ServeHTTP(rr, req)
 
 		if rr.Code != http.StatusForbidden {
@@ -767,7 +767,7 @@ func TestWithResourceMetadata(t *testing.T) {
 
 		handler := WithResourceMetadata(prmURL, inner)
 		rr := httptest.NewRecorder()
-		req := httptest.NewRequest(http.MethodGet, "/area51/mcp", nil)
+		req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/area51/mcp", nil)
 		handler.ServeHTTP(rr, req)
 
 		if rr.Code != http.StatusOK {

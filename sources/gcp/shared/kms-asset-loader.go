@@ -231,7 +231,7 @@ func (l *CloudKMSAssetLoader) fetchAssetsPage(ctx context.Context, pageToken str
 	// Cloud Asset API requires quota project header
 	req.Header.Set("X-Goog-User-Project", l.projectID)
 
-	resp, err := l.httpClient.Do(req) //nolint:gosec // G107 (SSRF): URL built from hardcoded https://cloudasset.googleapis.com/v1 base with project ID
+	resp, err := l.httpClient.Do(req)
 	if err != nil {
 		return nil, "", fmt.Errorf("failed to execute request: %w", err)
 	}

@@ -70,7 +70,7 @@ type ClientCredentialsConfig struct {
 	// The ClientID of the application that we'll be authenticating as
 	ClientID string
 	// ClientSecret that corresponds to the ClientID
-	ClientSecret string //nolint:gosec // G101 (hardcoded secret): config field name, not a credential value; never JSON-marshaled into logs or responses
+	ClientSecret string
 }
 
 type TokenSourceOptionsFunc func(*clientcredentials.Config)
@@ -128,7 +128,7 @@ func (flowConfig ClientCredentialsConfig) TokenSource(ctx context.Context, oAuth
 type Auth0Config struct {
 	Domain       string
 	ClientID     string
-	ClientSecret string //nolint:gosec // G101 (hardcoded secret): config field name, not a credential value; populated from env vars and only used in OAuth token exchange
+	ClientSecret string
 	Audience     string
 }
 
@@ -298,7 +298,7 @@ func (n *natsTokenClient) Sign(in []byte) ([]byte, error) {
 // tokens
 type APIKeyTokenSource struct {
 	// The API Key to use to authenticate to the Overmind API
-	ApiKey       string //nolint:gosec // G101 (hardcoded secret): config field name, not a credential value; only passed to API key exchange endpoint
+	ApiKey       string
 	token        *oauth2.Token
 	apiKeyClient sdpconnect.ApiKeyServiceClient
 }

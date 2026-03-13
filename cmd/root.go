@@ -522,7 +522,7 @@ func login(ctx context.Context, cmd *cobra.Command, scopes []string, writer io.W
 	}
 
 	// apply a timeout to the main body of processing
-	ctx, _ = context.WithTimeout(ctx, timeout) //nolint:govet // the context will not leak as the command will exit when it is done
+	ctx, _ = context.WithTimeout(ctx, timeout) //nolint:govet,gosec // the context will not leak as the command will exit when it is done
 
 	return ctx, oi, token, nil
 }

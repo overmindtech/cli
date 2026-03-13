@@ -214,7 +214,7 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 
 	var res *http.Response
 
-	res, err = client.Do(req) //nolint:gosec // G107 (SSRF): URL is the SDP query target; hostname validated by validateHostname() which blocks link-local/metadata IPs
+	res, err = client.Do(req)
 
 	if err != nil {
 		err = &sdp.QueryError{

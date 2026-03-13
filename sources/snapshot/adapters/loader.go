@@ -74,7 +74,7 @@ func loadSnapshotFromURL(ctx context.Context, url string) ([]byte, error) {
 	}
 
 	client := &http.Client{}
-	resp, err := client.Do(req) //nolint:gosec // G107 (SSRF): URL comes from operator-supplied snapshot source config, not from untrusted network input
+	resp, err := client.Do(req)
 	if err != nil {
 		return nil, fmt.Errorf("HTTP request failed: %w", err)
 	}

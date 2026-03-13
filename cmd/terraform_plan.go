@@ -116,7 +116,7 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 	// Convert provided plan into JSON for easier parsing
 	///////////////////////////////////////////////////////////////////
 
-	tfPlanJsonCmd := exec.CommandContext(ctx, "terraform", "show", "-json", planFile) //nolint:gosec // G702: "terraform", "show", "-json" are hardcoded; planFile is from the local user's CLI -out flag
+	tfPlanJsonCmd := exec.CommandContext(ctx, "terraform", "show", "-json", planFile)
 
 	tfPlanJsonCmd.Stderr = multi.NewWriter() // send output through PTerm; is usually empty
 
@@ -182,7 +182,7 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 		}
 
 		line := printer.Sprintf("%v (%v)", mapping.TerraformName, mapping.Message)
-		_, err = fmt.Fprintf(resourceExtractionResults, "   %v\n", line) //nolint:gosec // G203: resourceExtractionResults is a pterm.MultiPrinter writer (terminal UI), not an http.ResponseWriter; no XSS vector
+		_, err = fmt.Fprintf(resourceExtractionResults, "   %v\n", line)
 		if err != nil {
 			return fmt.Errorf("error writing to resource extraction results: %w", err)
 		}
@@ -230,7 +230,7 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 	}
 
 	title := changeTitle(ctx, viper.GetString("title"))
-	tfPlanTextCmd := exec.CommandContext(ctx, "terraform", "show", planFile) //nolint:gosec // G702: "terraform" and "show" are hardcoded; planFile is from the local user's CLI -out flag
+	tfPlanTextCmd := exec.CommandContext(ctx, "terraform", "show", planFile)
 
 	tfPlanTextCmd.Stderr = multi.NewWriter() // send output through PTerm; is usually empty
 
@@ -514,7 +514,7 @@ func osc8Hyperlink(url, text string) string {
 
 // getTicketLinkFromPlan reads the plan file to create a unique hash to identify this change
 func getTicketLinkFromPlan(planFile string) (string, error) {
-	plan, err := os.ReadFile(planFile) //nolint:gosec // G703: planFile is from the local user's CLI args; reading their chosen file is the intended behavior of this CLI tool
+	plan, err := os.ReadFile(planFile)
 	if err != nil {
 		return "", fmt.Errorf("failed to read plan file (%v): %w", planFile, err)
 	}
