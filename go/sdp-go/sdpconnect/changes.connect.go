@@ -100,6 +100,9 @@ const (
 	// ChangesServiceGenerateRiskFixProcedure is the fully-qualified name of the ChangesService's
 	// GenerateRiskFix RPC.
 	ChangesServiceGenerateRiskFixProcedure = "/changes.ChangesService/GenerateRiskFix"
+	// ChangesServiceSubmitRiskFeedbackProcedure is the fully-qualified name of the ChangesService's
+	// SubmitRiskFeedback RPC.
+	ChangesServiceSubmitRiskFeedbackProcedure = "/changes.ChangesService/SubmitRiskFeedback"
 	// ChangesServiceGetHypothesesDetailsProcedure is the fully-qualified name of the ChangesService's
 	// GetHypothesesDetails RPC.
 	ChangesServiceGetHypothesesDetailsProcedure = "/changes.ChangesService/GetHypothesesDetails"
@@ -192,6 +195,8 @@ type ChangesServiceClient interface {
 	PopulateChangeFilters(context.Context, *connect.Request[sdp_go.PopulateChangeFiltersRequest]) (*connect.Response[sdp_go.PopulateChangeFiltersResponse], error)
 	// Generates an AI-powered fix suggestion for a specific risk
 	GenerateRiskFix(context.Context, *connect.Request[sdp_go.GenerateRiskFixRequest]) (*connect.Response[sdp_go.GenerateRiskFixResponse], error)
+	// Submit user feedback on a risk
+	SubmitRiskFeedback(context.Context, *connect.Request[sdp_go.SubmitRiskFeedbackRequest]) (*connect.Response[sdp_go.SubmitRiskFeedbackResponse], error)
 	// The full details of all of the hypotheses that were considered or are being
 	// considered as part of this change.
 	GetHypothesesDetails(context.Context, *connect.Request[sdp_go.GetHypothesesDetailsRequest]) (*connect.Response[sdp_go.GetHypothesesDetailsResponse], error)
@@ -352,6 +357,12 @@ func NewChangesServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(changesServiceMethods.ByName("GenerateRiskFix")),
 			connect.WithClientOptions(opts...),
 		),
+		submitRiskFeedback: connect.NewClient[sdp_go.SubmitRiskFeedbackRequest, sdp_go.SubmitRiskFeedbackResponse](
+			httpClient,
+			baseURL+ChangesServiceSubmitRiskFeedbackProcedure,
+			connect.WithSchema(changesServiceMethods.ByName("SubmitRiskFeedback")),
+			connect.WithClientOptions(opts...),
+		),
 		getHypothesesDetails: connect.NewClient[sdp_go.GetHypothesesDetailsRequest, sdp_go.GetHypothesesDetailsResponse](
 			httpClient,
 			baseURL+ChangesServiceGetHypothesesDetailsProcedure,
@@ -397,6 +408,7 @@ type changesServiceClient struct {
 	getDiff                   *connect.Client[sdp_go.GetDiffRequest, sdp_go.GetDiffResponse]
 	populateChangeFilters     *connect.Client[sdp_go.PopulateChangeFiltersRequest, sdp_go.PopulateChangeFiltersResponse]
 	generateRiskFix           *connect.Client[sdp_go.GenerateRiskFixRequest, sdp_go.GenerateRiskFixResponse]
+	submitRiskFeedback        *connect.Client[sdp_go.SubmitRiskFeedbackRequest, sdp_go.SubmitRiskFeedbackResponse]
 	getHypothesesDetails      *connect.Client[sdp_go.GetHypothesesDetailsRequest, sdp_go.GetHypothesesDetailsResponse]
 	getChangeSignals          *connect.Client[sdp_go.GetChangeSignalsRequest, sdp_go.GetChangeSignalsResponse]
 	addPlannedChanges         *connect.Client[sdp_go.AddPlannedChangesRequest, sdp_go.AddPlannedChangesResponse]
@@ -512,6 +524,11 @@ func (c *changesServiceClient) GenerateRiskFix(ctx context.Context, req *connect
 	return c.generateRiskFix.CallUnary(ctx, req)
 }
 
+// SubmitRiskFeedback calls changes.ChangesService.SubmitRiskFeedback.
+func (c *changesServiceClient) SubmitRiskFeedback(ctx context.Context, req *connect.Request[sdp_go.SubmitRiskFeedbackRequest]) (*connect.Response[sdp_go.SubmitRiskFeedbackResponse], error) {
+	return c.submitRiskFeedback.CallUnary(ctx, req)
+}
+
 // GetHypothesesDetails calls changes.ChangesService.GetHypothesesDetails.
 func (c *changesServiceClient) GetHypothesesDetails(ctx context.Context, req *connect.Request[sdp_go.GetHypothesesDetailsRequest]) (*connect.Response[sdp_go.GetHypothesesDetailsResponse], error) {
 	return c.getHypothesesDetails.CallUnary(ctx, req)
@@ -587,6 +604,8 @@ type ChangesServiceHandler interface {
 	PopulateChangeFilters(context.Context, *connect.Request[sdp_go.PopulateChangeFiltersRequest]) (*connect.Response[sdp_go.PopulateChangeFiltersResponse], error)
 	// Generates an AI-powered fix suggestion for a specific risk
 	GenerateRiskFix(context.Context, *connect.Request[sdp_go.GenerateRiskFixRequest]) (*connect.Response[sdp_go.GenerateRiskFixResponse], error)
+	// Submit user feedback on a risk
+	SubmitRiskFeedback(context.Context, *connect.Request[sdp_go.SubmitRiskFeedbackRequest]) (*connect.Response[sdp_go.SubmitRiskFeedbackResponse], error)
 	// The full details of all of the hypotheses that were considered or are being
 	// considered as part of this change.
 	GetHypothesesDetails(context.Context, *connect.Request[sdp_go.GetHypothesesDetailsRequest]) (*connect.Response[sdp_go.GetHypothesesDetailsResponse], error)
@@ -743,6 +762,12 @@ func NewChangesServiceHandler(svc ChangesServiceHandler, opts ...connect.Handler
 		connect.WithSchema(changesServiceMethods.ByName("GenerateRiskFix")),
 		connect.WithHandlerOptions(opts...),
 	)
+	changesServiceSubmitRiskFeedbackHandler := connect.NewUnaryHandler(
+		ChangesServiceSubmitRiskFeedbackProcedure,
+		svc.SubmitRiskFeedback,
+		connect.WithSchema(changesServiceMethods.ByName("SubmitRiskFeedback")),
+		connect.WithHandlerOptions(opts...),
+	)
 	changesServiceGetHypothesesDetailsHandler := connect.NewUnaryHandler(
 		ChangesServiceGetHypothesesDetailsProcedure,
 		svc.GetHypothesesDetails,
@@ -807,6 +832,8 @@ func NewChangesServiceHandler(svc ChangesServiceHandler, opts ...connect.Handler
 			changesServicePopulateChangeFiltersHandler.ServeHTTP(w, r)
 		case ChangesServiceGenerateRiskFixProcedure:
 			changesServiceGenerateRiskFixHandler.ServeHTTP(w, r)
+		case ChangesServiceSubmitRiskFeedbackProcedure:
+			changesServiceSubmitRiskFeedbackHandler.ServeHTTP(w, r)
 		case ChangesServiceGetHypothesesDetailsProcedure:
 			changesServiceGetHypothesesDetailsHandler.ServeHTTP(w, r)
 		case ChangesServiceGetChangeSignalsProcedure:
@@ -908,6 +935,10 @@ func (UnimplementedChangesServiceHandler) PopulateChangeFilters(context.Context,
 
 func (UnimplementedChangesServiceHandler) GenerateRiskFix(context.Context, *connect.Request[sdp_go.GenerateRiskFixRequest]) (*connect.Response[sdp_go.GenerateRiskFixResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.GenerateRiskFix is not implemented"))
+}
+
+func (UnimplementedChangesServiceHandler) SubmitRiskFeedback(context.Context, *connect.Request[sdp_go.SubmitRiskFeedbackRequest]) (*connect.Response[sdp_go.SubmitRiskFeedbackResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("changes.ChangesService.SubmitRiskFeedback is not implemented"))
 }
 
 func (UnimplementedChangesServiceHandler) GetHypothesesDetails(context.Context, *connect.Request[sdp_go.GetHypothesesDetailsRequest]) (*connect.Response[sdp_go.GetHypothesesDetailsResponse], error) {
