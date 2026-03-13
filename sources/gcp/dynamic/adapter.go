@@ -166,7 +166,7 @@ func (g Adapter) Get(ctx context.Context, scope string, query string, ignoreCach
 	if err != nil {
 		enrichNOTFOUNDQueryError(err, scope, g.Name(), g.Type())
 		if sources.IsNotFound(err) {
-			g.cache.StoreError(ctx, err, shared.DefaultCacheDuration, ck)
+			g.cache.StoreUnavailableItem(ctx, err, shared.DefaultCacheDuration, ck)
 		}
 		return nil, err
 	}
@@ -175,7 +175,7 @@ func (g Adapter) Get(ctx context.Context, scope string, query string, ignoreCach
 	if err != nil {
 		enrichNOTFOUNDQueryError(err, scope, g.Name(), g.Type())
 		if sources.IsNotFound(err) {
-			g.cache.StoreError(ctx, err, shared.DefaultCacheDuration, ck)
+			g.cache.StoreUnavailableItem(ctx, err, shared.DefaultCacheDuration, ck)
 		}
 		return nil, err
 	}

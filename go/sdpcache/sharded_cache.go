@@ -342,10 +342,10 @@ func (sc *ShardedCache) StoreItem(ctx context.Context, item *sdp.Item, duration 
 	sc.shards[idx].StoreItem(ctx, item, duration, ck)
 }
 
-// StoreError routes the error based on the CacheKey:
+// StoreUnavailableItem routes the error based on the CacheKey:
 //   - GET errors (UniqueAttributeValue set) go to the same shard a GET Lookup would query.
 //   - LIST/SEARCH errors go to shard 0 as a deterministic default; fan-out reads will find them.
-func (sc *ShardedCache) StoreError(ctx context.Context, err error, duration time.Duration, ck CacheKey) {
+func (sc *ShardedCache) StoreUnavailableItem(ctx context.Context, err error, duration time.Duration, ck CacheKey) {
 	if err == nil {
 		return
 	}
@@ -358,7 +358,7 @@ func (sc *ShardedCache) StoreError(ctx context.Context, err error, duration time
 	span := trace.SpanFromContext(ctx)
 	span.SetAttributes(attribute.Int("ovm.cache.shardIndex", idx))
 
-	sc.shards[idx].StoreError(ctx, err, duration, ck)
+	sc.shards[idx].StoreUnavailableItem(ctx, err, duration, ck)
 }
 
 // Delete fans out to all shards.

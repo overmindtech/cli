@@ -10,8 +10,8 @@ import (
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
 	"github.com/overmindtech/cli/go/sdpcache"
-	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources"
+	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 	"github.com/overmindtech/cli/sources/shared"
 )
 
@@ -116,7 +116,7 @@ func (g SearchableAdapter) Search(ctx context.Context, scope, query string, igno
 	items, err := aggregateSDPItems(ctx, g.Adapter, searchEndpoint, location)
 	if err != nil {
 		if sources.IsNotFound(err) {
-			g.cache.StoreError(ctx, err, shared.DefaultCacheDuration, ck)
+			g.cache.StoreUnavailableItem(ctx, err, shared.DefaultCacheDuration, ck)
 			return []*sdp.Item{}, nil
 		}
 		return nil, err
@@ -132,7 +132,7 @@ func (g SearchableAdapter) Search(ctx context.Context, scope, query string, igno
 			ItemType:      g.Type(),
 			ResponderName: g.Name(),
 		}
-		g.cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, ck)
+		g.cache.StoreUnavailableItem(ctx, notFoundErr, shared.DefaultCacheDuration, ck)
 		return items, nil
 	}
 

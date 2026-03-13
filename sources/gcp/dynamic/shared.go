@@ -445,7 +445,7 @@ func streamSDPItems(ctx context.Context, a Adapter, url string, location gcpshar
 		// so behaviour matches cached path (0 items, no error). When items were already sent,
 		// also don't send NOTFOUND (consistent with aggregateSDPItems returning items, nil).
 		if sources.IsNotFound(err) && itemsSent == 0 {
-			cache.StoreError(ctx, err, shared.DefaultCacheDuration, cacheKey)
+			cache.StoreUnavailableItem(ctx, err, shared.DefaultCacheDuration, cacheKey)
 		}
 		if !sources.IsNotFound(err) {
 			stream.SendError(err)
@@ -461,7 +461,7 @@ func streamSDPItems(ctx context.Context, a Adapter, url string, location gcpshar
 			ItemType:      a.sdpAssetType.String(),
 			ResponderName: a.Name(),
 		}
-		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
+		cache.StoreUnavailableItem(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
 	}
 	// Note: No items found is valid. The caller's defer done() will release pending work.
 }
@@ -486,7 +486,7 @@ func terraformMappingViaSearch(ctx context.Context, a Adapter, query string, loc
 				a.sdpAssetType,
 			),
 		}
-		cache.StoreError(ctx, err, shared.DefaultCacheDuration, cacheKey)
+		cache.StoreUnavailableItem(ctx, err, shared.DefaultCacheDuration, cacheKey)
 		return nil, err
 	}
 
@@ -506,7 +506,7 @@ func terraformMappingViaSearch(ctx context.Context, a Adapter, query string, loc
 				a.Metadata().GetSupportedQueryMethods().GetSearchDescription(),
 			),
 		}
-		cache.StoreError(ctx, err, shared.DefaultCacheDuration, cacheKey)
+		cache.StoreUnavailableItem(ctx, err, shared.DefaultCacheDuration, cacheKey)
 		return nil, err
 	}
 
@@ -514,7 +514,7 @@ func terraformMappingViaSearch(ctx context.Context, a Adapter, query string, loc
 	if err != nil {
 		enrichNOTFOUNDQueryError(err, location.ToScope(), a.Name(), a.Type())
 		if sources.IsNotFound(err) {
-			cache.StoreError(ctx, err, shared.DefaultCacheDuration, cacheKey)
+			cache.StoreUnavailableItem(ctx, err, shared.DefaultCacheDuration, cacheKey)
 			// Return empty result, nil error so behaviour matches cached NOTFOUND (caller converts to [], nil)
 			return []*sdp.Item{}, nil
 		}

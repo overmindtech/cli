@@ -226,7 +226,7 @@ func getImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope s
 		if errors.As(err, &queryErr) {
 			// Cache not-found errors and other non-retryable errors
 			if queryErr.GetErrorType() == sdp.QueryError_NOTFOUND || !CanRetry(queryErr) {
-				cache.StoreError(ctx, err, CacheDuration, ck)
+				cache.StoreUnavailableItem(ctx, err, CacheDuration, ck)
 			}
 		}
 		return nil, err
@@ -400,7 +400,7 @@ func getImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope s
 			ErrorString: err.Error(),
 			Scope:       scope,
 		}
-		cache.StoreError(ctx, err, CacheDuration, ck)
+		cache.StoreUnavailableItem(ctx, err, CacheDuration, ck)
 		return nil, err
 	}
 
@@ -596,7 +596,7 @@ func listImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope 
 
 	if err != nil {
 		err = sdp.NewQueryError(err)
-		cache.StoreError(ctx, err, CacheDuration, ck)
+		cache.StoreUnavailableItem(ctx, err, CacheDuration, ck)
 		return nil, err
 	}
 
@@ -625,7 +625,7 @@ func listImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope 
 			ItemType:      "s3-bucket",
 			ResponderName: "aws-s3-adapter",
 		}
-		cache.StoreError(ctx, notFoundErr, CacheDuration, ck)
+		cache.StoreUnavailableItem(ctx, notFoundErr, CacheDuration, ck)
 		return items, nil
 	}
 

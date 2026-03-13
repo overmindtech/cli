@@ -204,8 +204,8 @@ type Cache interface {
 	// StoreItem stores an item in the cache with the specified duration.
 	StoreItem(ctx context.Context, item *sdp.Item, duration time.Duration, ck CacheKey)
 
-	// StoreError stores an error in the cache with the specified duration.
-	StoreError(ctx context.Context, err error, duration time.Duration, ck CacheKey)
+	// StoreUnavailableItem stores an error in the cache with the specified duration.
+	StoreUnavailableItem(ctx context.Context, err error, duration time.Duration, ck CacheKey)
 
 	// Delete removes all entries matching the given cache key.
 	Delete(ck CacheKey)
@@ -246,8 +246,8 @@ func (n *NoOpCache) StoreItem(ctx context.Context, item *sdp.Item, duration time
 	// No-op
 }
 
-// StoreError does nothing
-func (n *NoOpCache) StoreError(ctx context.Context, err error, duration time.Duration, ck CacheKey) {
+// StoreUnavailableItem does nothing
+func (n *NoOpCache) StoreUnavailableItem(ctx context.Context, err error, duration time.Duration, ck CacheKey) {
 	// No-op
 }
 
@@ -700,8 +700,8 @@ func (c *MemoryCache) StoreItem(ctx context.Context, item *sdp.Item, duration ti
 	c.storeResult(ctx, res)
 }
 
-// StoreError Stores an error for the given duration.
-func (c *MemoryCache) StoreError(ctx context.Context, err error, duration time.Duration, cacheQuery CacheKey) {
+// StoreUnavailableItem Stores an error for the given duration.
+func (c *MemoryCache) StoreUnavailableItem(ctx context.Context, err error, duration time.Duration, cacheQuery CacheKey) {
 	if c == nil || err == nil {
 		return
 	}

@@ -182,7 +182,7 @@ func (s *KubeTypeAdapter[Resource, ResourceList]) Get(ctx context.Context, scope
 			ErrorType:   sdp.QueryError_NOSCOPE,
 			ErrorString: err.Error(),
 		}
-		s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
+		s.cache.StoreUnavailableItem(ctx, err, s.cacheDuration(), ck)
 		return nil, err
 	}
 
@@ -196,13 +196,13 @@ func (s *KubeTypeAdapter[Resource, ResourceList]) Get(ctx context.Context, scope
 				ErrorString: statusErr.ErrStatus.Message,
 			}
 		}
-		s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
+		s.cache.StoreUnavailableItem(ctx, err, s.cacheDuration(), ck)
 		return nil, err
 	}
 
 	item, err := s.resourceToItem(resource)
 	if err != nil {
-		s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
+		s.cache.StoreUnavailableItem(ctx, err, s.cacheDuration(), ck)
 		return nil, err
 	}
 	s.cache.StoreItem(ctx, item, s.cacheDuration(), ck)
@@ -227,7 +227,7 @@ func (s *KubeTypeAdapter[Resource, ResourceList]) List(ctx context.Context, scop
 
 	items, err := s.listWithOptions(ctx, scope, metav1.ListOptions{})
 	if err != nil {
-		s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
+		s.cache.StoreUnavailableItem(ctx, err, s.cacheDuration(), ck)
 		return nil, err
 	}
 
@@ -276,7 +276,7 @@ func (s *KubeTypeAdapter[Resource, ResourceList]) Search(ctx context.Context, sc
 
 	items, err := s.listWithOptions(ctx, scope, opts)
 	if err != nil {
-		s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
+		s.cache.StoreUnavailableItem(ctx, err, s.cacheDuration(), ck)
 		return nil, err
 	}
 

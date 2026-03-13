@@ -78,7 +78,7 @@ func TestCloudKMSCryptoKey(t *testing.T) {
 			ErrorString: "No resources found in Cloud Asset API",
 		}
 		cacheKey := sdpcache.CacheKeyFromParts("gcp-source", sdp.QueryMethod_GET, projectID, gcpshared.CloudKMSCryptoKey.String(), "global|test-keyring|nonexistent")
-		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
+		cache.StoreUnavailableItem(ctx, notFoundErr, shared.DefaultCacheDuration, cacheKey)
 
 		loader := gcpshared.NewCloudKMSAssetLoader(nil, projectID, cache, "gcp-source", []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
@@ -164,7 +164,7 @@ func TestCloudKMSCryptoKey(t *testing.T) {
 			ErrorString: "No resources found in Cloud Asset API",
 		}
 		searchCacheKey := sdpcache.CacheKeyFromParts("gcp-source", sdp.QueryMethod_SEARCH, projectID, gcpshared.CloudKMSCryptoKey.String(), "global|empty-keyring")
-		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, searchCacheKey)
+		cache.StoreUnavailableItem(ctx, notFoundErr, shared.DefaultCacheDuration, searchCacheKey)
 
 		loader := gcpshared.NewCloudKMSAssetLoader(nil, projectID, cache, "gcp-source", []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
@@ -197,7 +197,7 @@ func TestCloudKMSCryptoKey(t *testing.T) {
 		}
 		query := "global|empty-keyring"
 		searchCacheKey := sdpcache.CacheKeyFromParts("gcp-source", sdp.QueryMethod_SEARCH, projectID, gcpshared.CloudKMSCryptoKey.String(), query)
-		cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, searchCacheKey)
+		cache.StoreUnavailableItem(ctx, notFoundErr, shared.DefaultCacheDuration, searchCacheKey)
 
 		loader := gcpshared.NewCloudKMSAssetLoader(nil, projectID, cache, "gcp-source", []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 		wrapper := manual.NewCloudKMSCryptoKey(loader, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})

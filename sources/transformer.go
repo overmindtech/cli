@@ -333,7 +333,7 @@ func (s *standardAdapterCore) Get(ctx context.Context, scope string, query strin
 	if err != nil {
 		// Only cache NOTFOUND so lookup behaviour is unchanged for timeouts/other errors
 		if IsNotFound(err) {
-			s.cache.StoreError(ctx, err, shared.DefaultCacheDuration, ck)
+			s.cache.StoreUnavailableItem(ctx, err, shared.DefaultCacheDuration, ck)
 		}
 		return nil, err
 	}
@@ -348,7 +348,7 @@ func (s *standardAdapterCore) Get(ctx context.Context, scope string, query strin
 			ItemType:      s.Type(),
 			ResponderName: s.Name(),
 		}
-		s.cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, ck)
+		s.cache.StoreUnavailableItem(ctx, notFoundErr, shared.DefaultCacheDuration, ck)
 		return nil, notFoundErr
 	}
 
@@ -458,7 +458,7 @@ func (s *standardListableAdapterImpl) List(ctx context.Context, scope string, ig
 	if err != nil {
 		// Only cache NOTFOUND so lookup behaviour is unchanged for timeouts/other errors
 		if IsNotFound(err) {
-			s.cache.StoreError(ctx, err, shared.DefaultCacheDuration, ck)
+			s.cache.StoreUnavailableItem(ctx, err, shared.DefaultCacheDuration, ck)
 		}
 		return nil, err
 	}
@@ -473,7 +473,7 @@ func (s *standardListableAdapterImpl) List(ctx context.Context, scope string, ig
 			ItemType:      s.Type(),
 			ResponderName: s.Name(),
 		}
-		s.cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, ck)
+		s.cache.StoreUnavailableItem(ctx, notFoundErr, shared.DefaultCacheDuration, ck)
 		return items, nil
 	}
 
@@ -741,7 +741,7 @@ func (s *standardSearchableAdapterImpl) Search(ctx context.Context, scope string
 	if err != nil {
 		// Only cache NOTFOUND so lookup behaviour is unchanged for timeouts/other errors
 		if IsNotFound(err) {
-			s.cache.StoreError(ctx, err, shared.DefaultCacheDuration, ck)
+			s.cache.StoreUnavailableItem(ctx, err, shared.DefaultCacheDuration, ck)
 		}
 		return nil, err
 	}
@@ -756,7 +756,7 @@ func (s *standardSearchableAdapterImpl) Search(ctx context.Context, scope string
 			ItemType:      s.Type(),
 			ResponderName: s.Name(),
 		}
-		s.cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, ck)
+		s.cache.StoreUnavailableItem(ctx, notFoundErr, shared.DefaultCacheDuration, ck)
 		return items, nil
 	}
 
@@ -930,7 +930,7 @@ func (s *standardSearchableAdapterImpl) SearchStream(ctx context.Context, scope 
 		items, qErr := s.searchable.Search(ctx, scope, queryParts...)
 		if qErr != nil {
 			if IsNotFound(qErr) {
-				s.cache.StoreError(ctx, qErr, shared.DefaultCacheDuration, ck)
+				s.cache.StoreUnavailableItem(ctx, qErr, shared.DefaultCacheDuration, ck)
 			}
 			stream.SendError(qErr)
 			return
@@ -944,7 +944,7 @@ func (s *standardSearchableAdapterImpl) SearchStream(ctx context.Context, scope 
 				ItemType:      s.Type(),
 				ResponderName: s.Name(),
 			}
-			s.cache.StoreError(ctx, notFoundErr, shared.DefaultCacheDuration, ck)
+			s.cache.StoreUnavailableItem(ctx, notFoundErr, shared.DefaultCacheDuration, ck)
 			return
 		}
 		for _, item := range items {

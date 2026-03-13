@@ -193,7 +193,7 @@ func TestDnsGet(t *testing.T) {
 			SourceName:  cachedSrc.Name(),
 			ItemType:    cachedSrc.Type(),
 		}
-		cache.StoreError(context.Background(), notFoundErr, dnsCacheDuration, ck)
+		cache.StoreUnavailableItem(context.Background(), notFoundErr, dnsCacheDuration, ck)
 
 		// Get should return cached NOTFOUND without doing a DNS lookup
 		item, err := cachedSrc.Get(context.Background(), "global", query, false)

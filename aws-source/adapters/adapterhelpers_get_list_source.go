@@ -140,7 +140,7 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) Get(ctx context.Context
 	if err != nil {
 		err := WrapAWSError(err)
 		if !CanRetry(err) {
-			s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
+			s.cache.StoreUnavailableItem(ctx, err, s.cacheDuration(), ck)
 		}
 		return nil, err
 	}
@@ -195,7 +195,7 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) List(ctx context.Contex
 	if err != nil {
 		err := WrapAWSError(err)
 		if !CanRetry(err) {
-			s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
+			s.cache.StoreUnavailableItem(ctx, err, s.cacheDuration(), ck)
 		}
 		return nil, err
 	}
@@ -230,7 +230,7 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) List(ctx context.Contex
 			ItemType:      s.ItemType,
 			ResponderName: s.Name(),
 		}
-		s.cache.StoreError(ctx, notFoundErr, s.cacheDuration(), ck)
+		s.cache.StoreUnavailableItem(ctx, notFoundErr, s.cacheDuration(), ck)
 	}
 
 	return items, nil
@@ -319,7 +319,7 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) SearchCustom(ctx contex
 	awsItems, err := s.SearchFunc(ctx, s.Client, scope, query)
 	if err != nil {
 		err = WrapAWSError(err)
-		s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
+		s.cache.StoreUnavailableItem(ctx, err, s.cacheDuration(), ck)
 		return nil, err
 	}
 
@@ -348,7 +348,7 @@ func (s *GetListAdapter[AWSItem, ClientStruct, Options]) SearchCustom(ctx contex
 			ItemType:      s.ItemType,
 			ResponderName: s.Name(),
 		}
-		s.cache.StoreError(ctx, notFoundErr, s.cacheDuration(), ck)
+		s.cache.StoreUnavailableItem(ctx, notFoundErr, s.cacheDuration(), ck)
 	}
 
 	return items, nil

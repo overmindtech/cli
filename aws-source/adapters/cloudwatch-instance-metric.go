@@ -293,7 +293,7 @@ func (a *CloudwatchInstanceMetricAdapter) Get(ctx context.Context, scope string,
 			Scope:       scope,
 		}
 		// Cache the error
-		a.cache.StoreError(ctx, qErr, a.cacheDuration(), ck)
+		a.cache.StoreUnavailableItem(ctx, qErr, a.cacheDuration(), ck)
 		return nil, qErr
 	}
 
@@ -305,7 +305,7 @@ func (a *CloudwatchInstanceMetricAdapter) Get(ctx context.Context, scope string,
 			Scope:       scope,
 		}
 		// Cache the error
-		a.cache.StoreError(ctx, qErr, a.cacheDuration(), ck)
+		a.cache.StoreUnavailableItem(ctx, qErr, a.cacheDuration(), ck)
 		return nil, qErr
 	}
 

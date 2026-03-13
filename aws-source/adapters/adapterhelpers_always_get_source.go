@@ -172,7 +172,7 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 	if err != nil {
 		err := WrapAWSError(err)
 		if !CanRetry(err) {
-			s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
+			s.cache.StoreUnavailableItem(ctx, err, s.cacheDuration(), ck)
 		}
 		return nil, err
 	}
@@ -252,7 +252,7 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 				ItemType:      s.ItemType,
 				ResponderName: s.Name(),
 			}
-			s.cache.StoreError(ctx, notFoundErr, s.cacheDuration(), ck)
+			s.cache.StoreUnavailableItem(ctx, notFoundErr, s.cacheDuration(), ck)
 		}
 	}()
 
@@ -262,7 +262,7 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 			hadError.Store(true)
 			err := WrapAWSError(err)
 			if !CanRetry(err) {
-				s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
+				s.cache.StoreUnavailableItem(ctx, err, s.cacheDuration(), ck)
 			}
 			stream.SendError(err)
 			return
@@ -273,7 +273,7 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 			hadError.Store(true)
 			err := WrapAWSError(err)
 			if !CanRetry(err) {
-				s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
+				s.cache.StoreUnavailableItem(ctx, err, s.cacheDuration(), ck)
 			}
 			stream.SendError(err)
 			return
@@ -375,7 +375,7 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 		if err != nil {
 			err := WrapAWSError(err)
 			if !CanRetry(err) {
-				s.cache.StoreError(ctx, err, s.cacheDuration(), ck)
+				s.cache.StoreUnavailableItem(ctx, err, s.cacheDuration(), ck)
 			}
 			stream.SendError(err)
 			return
@@ -394,7 +394,7 @@ func (s *AlwaysGetAdapter[ListInput, ListOutput, GetInput, GetOutput, ClientStru
 				ItemType:      s.ItemType,
 				ResponderName: s.Name(),
 			}
-			s.cache.StoreError(ctx, notFoundErr, s.cacheDuration(), ck)
+			s.cache.StoreUnavailableItem(ctx, notFoundErr, s.cacheDuration(), ck)
 		}
 	} else {
 		stream.SendError(errors.New("SearchCustom called without SearchInputMapper or SearchGetInputMapper"))
