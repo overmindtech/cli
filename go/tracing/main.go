@@ -27,7 +27,17 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"go.opentelemetry.io/otel/trace"
+	"golang.org/x/sync/errgroup"
 )
+
+// logrusOtelErrorHandler routes OpenTelemetry SDK errors through logrus so they
+// appear in our structured log pipeline (and therefore in Honeycomb) instead of
+// being silently written to Go's default logger.
+type logrusOtelErrorHandler struct{}
+
+func (logrusOtelErrorHandler) Handle(err error) {
+	log.WithError(err).Warn("OpenTelemetry SDK error")
+}
 
 const instrumentationName = "github.com/overmindtech/workspace"
 
@@ -226,19 +236,36 @@ func InitTracerWithUpstreams(component, honeycombApiKey, sentryDSN string, opts 
 	return InitTracer(component, opts...)
 }
 
+// batcherOpts are the shared BatchSpanProcessor options applied to every
+// exporter. A large queue (8192, 4x the default 2048) reduces the chance of
+// silent span drops during burst load. We intentionally avoid WithBlocking()
+// because it causes test suites to hang when no collector is reachable (the
+// common case in CI). The 60s export timeout aligns with the OTLP HTTP
+// exporter's 1-minute retry budget.
+var batcherOpts = []sdktrace.BatchSpanProcessorOption{
+	sdktrace.WithMaxQueueSize(8192),
+	sdktrace.WithExportTimeout(60 * time.Second),
+}
+
 func InitTracer(component string, opts ...otlptracehttp.Option) error {
-	client := otlptracehttp.NewClient(opts...)
-	otlpExp, err := otlptrace.New(context.Background(), client)
+	otel.SetErrorHandler(logrusOtelErrorHandler{})
+
+	otlpExp, err := otlptrace.New(context.Background(), otlptracehttp.NewClient(opts...))
 	if err != nil {
 		return fmt.Errorf("creating OTLP trace exporter: %w", err)
 	}
 
-	// Create unified sampler for health checks and otelpgx spans
+	healthExp, err := otlptrace.New(context.Background(), otlptracehttp.NewClient(opts...))
+	if err != nil {
+		return fmt.Errorf("creating health OTLP trace exporter: %w", err)
+	}
+
 	overmindSampler := NewOvermindSampler()
+	res := tracingResource(component)
 
 	tracerOpts := []sdktrace.TracerProviderOption{
-		sdktrace.WithBatcher(otlpExp),
-		sdktrace.WithResource(tracingResource(component)),
+		sdktrace.WithBatcher(otlpExp, batcherOpts...),
+		sdktrace.WithResource(res),
 		sdktrace.WithSampler(sdktrace.ParentBased(overmindSampler)),
 	}
 	if viper.GetBool("stdout-trace-dump") {
@@ -246,35 +273,63 @@ func InitTracer(component string, opts ...otlptracehttp.Option) error {
 		if err != nil {
 			return err
 		}
-		tracerOpts = append(tracerOpts, sdktrace.WithBatcher(stdoutExp))
+		tracerOpts = append(tracerOpts, sdktrace.WithBatcher(stdoutExp, batcherOpts...))
 	}
 	tp = sdktrace.NewTracerProvider(tracerOpts...)
 
-	// Set the default tracer provider for all the libraries
 	otel.SetTracerProvider(tp)
 
-	tracerOpts = append(tracerOpts, sdktrace.WithSampler(sdktrace.ParentBased(sdktrace.TraceIDRatioBased((0.1)))))
-	healthTp = sdktrace.NewTracerProvider(tracerOpts...)
+	healthTp = sdktrace.NewTracerProvider(
+		sdktrace.WithBatcher(healthExp, batcherOpts...),
+		sdktrace.WithResource(res),
+		sdktrace.WithSampler(sdktrace.ParentBased(sdktrace.TraceIDRatioBased(0.1))),
+	)
 
 	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 	return nil
 }
 
 func ShutdownTracer(ctx context.Context) {
-	// Flush buffered events before the program terminates.
 	defer sentry.Flush(5 * time.Second)
 
-	// detach from the parent's cancellation, and ensure that we do not wait
-	// indefinitely on the trace provider shutdown
-	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 10*time.Second)
 	defer cancel()
+
+	var g errgroup.Group
+
+	// Do not nil healthTp or tp here: concurrent callers (e.g. health check
+	// probes via HealthCheckTracerProvider) would panic on the nil guard.
+	// Calling Shutdown on an already-shutdown provider is a safe no-op.
+	if healthTp != nil {
+		localTp := healthTp
+		g.Go(func() error {
+			if err := localTp.ForceFlush(ctx); err != nil {
+				log.WithContext(ctx).WithError(err).Error("Error flushing health tracer provider")
+			}
+			if err := localTp.Shutdown(ctx); err != nil {
+				log.WithContext(ctx).WithError(err).Error("Error shutting down health tracer provider")
+				return err
+			}
+			return nil
+		})
+	}
+
 	if tp != nil {
-		if err := tp.ForceFlush(ctx); err != nil {
-			log.WithContext(ctx).WithError(err).Error("Error flushing tracer provider")
-		}
-		if err := tp.Shutdown(ctx); err != nil {
-			log.WithContext(ctx).WithError(err).Error("Error shutting down tracer provider")
-		}
+		localTp := tp
+		g.Go(func() error {
+			if err := localTp.ForceFlush(ctx); err != nil {
+				log.WithContext(ctx).WithError(err).Error("Error flushing tracer provider")
+			}
+			if err := localTp.Shutdown(ctx); err != nil {
+				log.WithContext(ctx).WithError(err).Error("Error shutting down tracer provider")
+				return err
+			}
+			return nil
+		})
+	}
+
+	if err := g.Wait(); err != nil {
+		log.WithContext(ctx).WithError(err).Error("Error during tracer shutdown")
 	}
 	log.WithContext(ctx).Trace("tracing has shut down")
 }
