@@ -368,6 +368,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 		if err != nil {
 			return nil, fmt.Errorf("failed to create private DNS zones client: %w", err)
 		}
+		virtualNetworkLinksClient, err := armprivatedns.NewVirtualNetworkLinksClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create virtual network links client: %w", err)
+		}
 		diskAccessesClient, err := armcompute.NewDiskAccessesClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create disk accesses client: %w", err)
@@ -563,6 +567,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 				), cache),
 				sources.WrapperToAdapter(NewNetworkDNSRecordSet(
 					clients.NewRecordSetsClient(recordSetsClient),
+					resourceGroupScopes,
+				), cache),
+				sources.WrapperToAdapter(NewNetworkDNSVirtualNetworkLink(
+					clients.NewVirtualNetworkLinksClient(virtualNetworkLinksClient),
 					resourceGroupScopes,
 				), cache),
 				sources.WrapperToAdapter(NewBatchAccount(
@@ -785,6 +793,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewNetworkZone(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkPrivateDNSZone(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkDNSRecordSet(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewNetworkDNSVirtualNetworkLink(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewBatchAccount(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewBatchBatchApplication(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewBatchBatchPool(nil, placeholderResourceGroupScopes), noOpCache),
