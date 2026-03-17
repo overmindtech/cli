@@ -1,0 +1,31 @@
+{
+  "type": "gcp-dataflow-job",
+  "category": 7,
+  "potentialLinks": [
+    "gcp-big-query-dataset",
+    "gcp-big-query-table",
+    "gcp-big-table-admin-instance",
+    "gcp-cloud-kms-crypto-key",
+    "gcp-compute-network",
+    "gcp-compute-subnetwork",
+    "gcp-iam-service-account",
+    "gcp-pub-sub-subscription",
+    "gcp-pub-sub-topic",
+    "gcp-spanner-instance"
+  ],
+  "descriptiveName": "GCP Dataflow Job",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a gcp-dataflow-job by its \"locations|jobs\"",
+    "search": true,
+    "searchDescription": "Search for gcp-dataflow-job by location"
+  },
+  "terraformMappings": [
+    {
+      "terraformQueryMap": "google_dataflow_job.job_id"
+    },
+    {
+      "terraformQueryMap": "google_dataflow_flex_template_job.job_id"
+    }
+  ]
+}

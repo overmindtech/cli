@@ -50,6 +50,7 @@ const (
 	File                     shared.API = "file"                       // Added for File (file.googleapis.com)
 	CertificateManager       shared.API = "certificate-manager"        // Added for Certificate Manager (certificatemanager.googleapis.com)
 	BinaryAuthorization      shared.API = "binary-authorization"       // Added for Binary Authorization (binaryauthorization.googleapis.com)
+	Dataflow                 shared.API = "dataflow"                   // Added for Dataflow (dataflow.googleapis.com)
 
 )
 
@@ -231,4 +232,5 @@ const (
 	WorkflowInvocation                           shared.Resource = "workflow-invocation"                               // Dataform Workflow Invocation child resource
 	Mesh                                         shared.Resource = "mesh"                                              // Network Services API Mesh
 	BinaryAuthorizationPolicy                    shared.Resource = "binary-authorization-policy"                       // Binary Authorization API Platform Policy
+	Job                                          shared.Resource = "job"                                                // Dataflow Job
 )
