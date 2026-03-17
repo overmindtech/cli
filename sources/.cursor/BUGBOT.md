@@ -8,3 +8,16 @@ There are also a couple of generic types that we should always create links for 
 
 * `ip`: Any attribute that would contain an IP address should create a LinkedItemQueries for an `ip` type. This should always use the scope of global, the method of GET and a query of the IP address itself
 * `dns`: any attribute that contains a DNS name should create a LinkedItemQueries for a DNS type.  The type should be `dns`, scope `global`, method SEARCH with the query being the DNS name itself
+
+## IAMPermissions and PredefinedRole
+
+Every adapter must implement both `IAMPermissions()` and `PredefinedRole()`:
+
+* `IAMPermissions()` must return at least one permission string following the pattern `Microsoft.{Provider}/{resourcePath}/read`. The resource path must match the ARM resource type for the resource being adapted. For child resources, include the full path (e.g., `Microsoft.Batch/batchAccounts/applications/versions/read`, not just `Microsoft.Batch/batchAccounts/read`). The method should have a comment linking to the relevant Azure RBAC resource provider operations page.
+* `PredefinedRole()` must return a non-empty string naming a valid Azure built-in role. If the service area has a specific reader role (e.g., `"Azure Batch Account Reader"` for Batch, `"Storage Blob Data Reader"` for Storage), use that. Otherwise, `"Reader"` is acceptable as the most restrictive general role.
+
+Flag any adapter missing either method, returning empty values, or using an incorrect resource provider path.
+
+## PotentialLinks Completeness
+
+`PotentialLinks()` must include every resource type that appears in any `LinkedItemQuery` returned by the adapter's conversion function. If the adapter creates linked item queries for IP addresses, `PotentialLinks()` must include `stdlib.NetworkIP`. If it creates queries for DNS names, `PotentialLinks()` must include `stdlib.NetworkDNS`. Missing entries in `PotentialLinks()` break the Overmind dependency graph — linked items won't be discovered even though the queries exist in the adapter's output.
