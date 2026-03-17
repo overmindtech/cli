@@ -360,7 +360,7 @@ Overmind requires read-only access to discover and map your GCP infrastructure. 
 
 **Read-only viewer roles** for GCP services including:
 
-- Compute Engine, GKE, Cloud Run, Cloud Functions
+- Compute Engine, GKE, Cloud Run, Cloud Functions, Dataflow
 - Cloud SQL, BigQuery, Spanner, Cloud Storage
 - IAM, networking, monitoring, and logging resources
 - And other GCP services
@@ -408,6 +408,7 @@ Here are all the predefined GCP roles that Overmind requires, plus the custom ro
 | `roles/dataform.viewer`                 | Dataform resource discovery [GCP Docs](https://cloud.google.com/iam/docs/roles-permissions/dataform#dataform.viewer)                                          |
 | `roles/dataplex.catalogViewer`          | Dataplex catalog resource discovery [GCP Docs](https://cloud.google.com/iam/docs/roles-permissions/dataplex#dataplex.catalogViewer)                           |
 | `roles/dataplex.viewer`                 | Dataplex resource discovery [GCP Docs](https://cloud.google.com/iam/docs/roles-permissions/dataplex#dataplex.viewer)                                          |
+| `roles/dataflow.viewer`                 | Dataflow job discovery [GCP Docs](https://cloud.google.com/iam/docs/roles-permissions/dataflow#dataflow.viewer)                                               |
 | `roles/dataproc.viewer`                 | Dataproc cluster discovery [GCP Docs](https://cloud.google.com/iam/docs/roles-permissions/dataproc#dataproc.viewer)                                           |
 | `roles/dns.reader`                      | Cloud DNS resource discovery [GCP Docs](https://cloud.google.com/iam/docs/roles-permissions/dns#dns.reader)                                                   |
 | `roles/essentialcontacts.viewer`        | Essential Contacts discovery [GCP Docs](https://cloud.google.com/iam/docs/roles-permissions/essentialcontacts#essentialcontacts.viewer)                       |

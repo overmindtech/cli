@@ -201,4 +201,5 @@ var (
 	ComputeBgpRoute                                                      = shared.NewItemType(GCP, Compute, BgpRoute)                              // Router BGP Route child resource
 	NetworkServicesMesh                                                  = shared.NewItemType(GCP, NetworkServices, Mesh)                          // https://cloud.google.com/service-mesh/docs/reference/network-services/rest/v1/projects.locations.meshes/get
 	BinaryAuthorizationPlatformPolicy                                    = shared.NewItemType(GCP, BinaryAuthorization, BinaryAuthorizationPolicy) // https://cloud.google.com/binary-authorization/docs/reference/rest/v1/projects.platforms.policies/get
+	DataflowJob                                                          = shared.NewItemType(GCP, Dataflow, Job)                                  // https://cloud.google.com/dataflow/docs/reference/rest/v1b3/projects.locations.jobs/get
 )

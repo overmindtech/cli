@@ -220,6 +220,14 @@ var PredefinedRoles = map[string]role{
 			"container.clusters.list",
 		},
 	},
+	"roles/dataflow.viewer": {
+		Role: "roles/dataflow.viewer",
+		Link: "https://cloud.google.com/iam/docs/roles-permissions/dataflow#dataflow.viewer",
+		IAMPermissions: []string{
+			"dataflow.jobs.get",
+			"dataflow.jobs.list",
+		},
+	},
 	"roles/dataproc.viewer": {
 		Role: "roles/dataproc.viewer",
 		// Provides read-only access to Dataproc resources.

@@ -15,6 +15,7 @@ ROLES=(
     "roles/dataform.viewer"
     "roles/dataplex.catalogViewer"
     "roles/dataplex.viewer"
+    "roles/dataflow.viewer"
     "roles/dataproc.viewer"
     "roles/dns.reader"
     "roles/essentialcontacts.viewer"
