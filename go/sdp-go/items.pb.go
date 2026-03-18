@@ -1264,7 +1264,7 @@ func (x *CancelQuery) GetUUID() []byte {
 type Expand struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// The item that should be expanded
-	Item *Reference `protobuf:"bytes,1,opt,name=item,proto3" json:"item,omitempty"`
+	ItemRef *Reference `protobuf:"bytes,1,opt,name=itemRef,proto3" json:"itemRef,omitempty"`
 	// How many levels of expansion should be run
 	LinkDepth uint32 `protobuf:"varint,2,opt,name=linkDepth,proto3" json:"linkDepth,omitempty"`
 	// A UUID to uniquely identify the request. This should be stored by the
@@ -1308,9 +1308,9 @@ func (*Expand) Descriptor() ([]byte, []int) {
 	return file_items_proto_rawDescGZIP(), []int{13}
 }
 
-func (x *Expand) GetItem() *Reference {
+func (x *Expand) GetItemRef() *Reference {
 	if x != nil {
-		return x.Item
+		return x.ItemRef
 	}
 	return nil
 }
@@ -1624,10 +1624,10 @@ const file_items_proto_rawDesc = "" +
 	"\aNOSCOPE\x10\x02\x12\v\n" +
 	"\aTIMEOUT\x10\x03\"!\n" +
 	"\vCancelQuery\x12\x12\n" +
-	"\x04UUID\x18\x01 \x01(\fR\x04UUID\"\x92\x01\n" +
-	"\x06Expand\x12\x1e\n" +
-	"\x04item\x18\x01 \x01(\v2\n" +
-	".ReferenceR\x04item\x12\x1c\n" +
+	"\x04UUID\x18\x01 \x01(\fR\x04UUID\"\x98\x01\n" +
+	"\x06Expand\x12$\n" +
+	"\aitemRef\x18\x01 \x01(\v2\n" +
+	".ReferenceR\aitemRef\x12\x1c\n" +
 	"\tlinkDepth\x18\x02 \x01(\rR\tlinkDepth\x12\x12\n" +
 	"\x04UUID\x18\x03 \x01(\fR\x04UUID\x126\n" +
 	"\bdeadline\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\bdeadline\"\xbf\x01\n" +
@@ -1722,7 +1722,7 @@ var file_items_proto_depIdxs = []int32{
 	19, // 21: QueryResponse.edge:type_name -> Edge
 	2,  // 22: QueryStatus.status:type_name -> QueryStatus.Status
 	3,  // 23: QueryError.errorType:type_name -> QueryError.ErrorType
-	18, // 24: Expand.item:type_name -> Reference
+	18, // 24: Expand.itemRef:type_name -> Reference
 	23, // 25: Expand.deadline:type_name -> google.protobuf.Timestamp
 	1,  // 26: Reference.method:type_name -> QueryMethod
 	18, // 27: Edge.from:type_name -> Reference

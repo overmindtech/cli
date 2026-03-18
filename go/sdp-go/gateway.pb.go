@@ -233,7 +233,7 @@ type GatewayResponse struct {
 	//	*GatewayResponse_Status
 	//	*GatewayResponse_Error
 	//	*GatewayResponse_QueryError
-	//	*GatewayResponse_DeleteItem
+	//	*GatewayResponse_DeleteItemRef
 	//	*GatewayResponse_DeleteEdge
 	//	*GatewayResponse_UpdateItem
 	//	*GatewayResponse_SnapshotStoreResult
@@ -331,10 +331,10 @@ func (x *GatewayResponse) GetQueryError() *QueryError {
 	return nil
 }
 
-func (x *GatewayResponse) GetDeleteItem() *Reference {
+func (x *GatewayResponse) GetDeleteItemRef() *Reference {
 	if x != nil {
-		if x, ok := x.ResponseType.(*GatewayResponse_DeleteItem); ok {
-			return x.DeleteItem
+		if x, ok := x.ResponseType.(*GatewayResponse_DeleteItemRef); ok {
+			return x.DeleteItemRef
 		}
 	}
 	return nil
@@ -454,8 +454,8 @@ type GatewayResponse_QueryError struct {
 	QueryError *QueryError `protobuf:"bytes,6,opt,name=queryError,proto3,oneof"` // A new error that was encountered as part of a query
 }
 
-type GatewayResponse_DeleteItem struct {
-	DeleteItem *Reference `protobuf:"bytes,7,opt,name=deleteItem,proto3,oneof"` // An item that should be deleted from local state
+type GatewayResponse_DeleteItemRef struct {
+	DeleteItemRef *Reference `protobuf:"bytes,7,opt,name=deleteItemRef,proto3,oneof"` // An item that should be deleted from local state
 }
 
 type GatewayResponse_DeleteEdge struct {
@@ -508,7 +508,7 @@ func (*GatewayResponse_Error) isGatewayResponse_ResponseType() {}
 
 func (*GatewayResponse_QueryError) isGatewayResponse_ResponseType() {}
 
-func (*GatewayResponse_DeleteItem) isGatewayResponse_ResponseType() {}
+func (*GatewayResponse_DeleteItemRef) isGatewayResponse_ResponseType() {}
 
 func (*GatewayResponse_DeleteEdge) isGatewayResponse_ResponseType() {}
 
@@ -2037,7 +2037,7 @@ const file_gateway_proto_rawDesc = "" +
 	"\vchatMessage\x18\x10 \x01(\v2\x14.gateway.ChatMessageH\x00R\vchatMessage\x12L\n" +
 	"\x11minStatusInterval\x18\x02 \x01(\v2\x19.google.protobuf.DurationH\x01R\x11minStatusInterval\x88\x01\x01B\x0e\n" +
 	"\frequest_typeB\x14\n" +
-	"\x12_minStatusInterval\"\x84\a\n" +
+	"\x12_minStatusInterval\"\x8a\a\n" +
 	"\x0fGatewayResponse\x12!\n" +
 	"\anewItem\x18\x02 \x01(\v2\x05.ItemH\x00R\anewItem\x12!\n" +
 	"\anewEdge\x18\x03 \x01(\v2\x05.EdgeH\x00R\anewEdge\x127\n" +
@@ -2045,11 +2045,9 @@ const file_gateway_proto_rawDesc = "" +
 	"\x05error\x18\x05 \x01(\tH\x00R\x05error\x12-\n" +
 	"\n" +
 	"queryError\x18\x06 \x01(\v2\v.QueryErrorH\x00R\n" +
-	"queryError\x12,\n" +
-	"\n" +
-	"deleteItem\x18\a \x01(\v2\n" +
-	".ReferenceH\x00R\n" +
-	"deleteItem\x12'\n" +
+	"queryError\x122\n" +
+	"\rdeleteItemRef\x18\a \x01(\v2\n" +
+	".ReferenceH\x00R\rdeleteItemRef\x12'\n" +
 	"\n" +
 	"deleteEdge\x18\b \x01(\v2\x05.EdgeH\x00R\n" +
 	"deleteEdge\x12'\n" +
@@ -2234,7 +2232,7 @@ var file_gateway_proto_depIdxs = []int32{
 	29, // 10: gateway.GatewayResponse.newEdge:type_name -> Edge
 	2,  // 11: gateway.GatewayResponse.status:type_name -> gateway.GatewayRequestStatus
 	30, // 12: gateway.GatewayResponse.queryError:type_name -> QueryError
-	31, // 13: gateway.GatewayResponse.deleteItem:type_name -> Reference
+	31, // 13: gateway.GatewayResponse.deleteItemRef:type_name -> Reference
 	29, // 14: gateway.GatewayResponse.deleteEdge:type_name -> Edge
 	28, // 15: gateway.GatewayResponse.updateItem:type_name -> Item
 	8,  // 16: gateway.GatewayResponse.snapshotStoreResult:type_name -> gateway.SnapshotStoreResult
@@ -2290,7 +2288,7 @@ func file_gateway_proto_init() {
 		(*GatewayResponse_Status)(nil),
 		(*GatewayResponse_Error)(nil),
 		(*GatewayResponse_QueryError)(nil),
-		(*GatewayResponse_DeleteItem)(nil),
+		(*GatewayResponse_DeleteItemRef)(nil),
 		(*GatewayResponse_DeleteEdge)(nil),
 		(*GatewayResponse_UpdateItem)(nil),
 		(*GatewayResponse_SnapshotStoreResult)(nil),

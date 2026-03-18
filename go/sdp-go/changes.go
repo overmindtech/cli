@@ -147,17 +147,17 @@ func (r *Reference) ToMap() map[string]any {
 
 // ToMap converts a Risk to a map for serialization, including related items.
 func (r *Risk) ToMap() map[string]any {
-	relatedItems := make([]map[string]any, len(r.GetRelatedItems()))
-	for i, ri := range r.GetRelatedItems() {
+	relatedItems := make([]map[string]any, len(r.GetRelatedItemRefs()))
+	for i, ri := range r.GetRelatedItemRefs() {
 		relatedItems[i] = ri.ToMap()
 	}
 
 	return map[string]any{
-		"uuid":         stringFromUuidBytes(r.GetUUID()),
-		"title":        r.GetTitle(),
-		"severity":     r.GetSeverity().String(),
-		"description":  r.GetDescription(),
-		"relatedItems": relatedItems,
+		"uuid":            stringFromUuidBytes(r.GetUUID()),
+		"title":           r.GetTitle(),
+		"severity":        r.GetSeverity().String(),
+		"description":     r.GetDescription(),
+		"relatedItemRefs": relatedItems,
 	}
 }
 
