@@ -7,8 +7,9 @@ import (
 
 // Dataflow Job adapter for Google Cloud Dataflow jobs.
 // Reference: https://cloud.google.com/dataflow/docs/reference/rest/v1b3/projects.locations.jobs#Job
-// GET:  https://dataflow.googleapis.com/v1b3/projects/{project}/locations/{location}/jobs/{jobId}
-// LIST: https://dataflow.googleapis.com/v1b3/projects/{project}/locations/{location}/jobs
+// GET:    https://dataflow.googleapis.com/v1b3/projects/{project}/locations/{location}/jobs/{jobId}
+// LIST:   https://dataflow.googleapis.com/v1b3/projects/{project}/jobs:aggregated
+// SEARCH: https://dataflow.googleapis.com/v1b3/projects/{project}/locations/{location}/jobs
 var _ = registerableAdapter{
 	sdpType: gcpshared.DataflowJob,
 	meta: gcpshared.AdapterMeta{
@@ -19,6 +20,9 @@ var _ = registerableAdapter{
 		),
 		SearchEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery(
 			"https://dataflow.googleapis.com/v1b3/projects/%s/locations/%s/jobs",
+		),
+		ListEndpointFunc: gcpshared.ProjectLevelListFunc(
+			"https://dataflow.googleapis.com/v1b3/projects/%s/jobs:aggregated",
 		),
 		UniqueAttributeKeys: []string{"locations", "jobs"},
 		IAMPermissions:      []string{"dataflow.jobs.get", "dataflow.jobs.list"},

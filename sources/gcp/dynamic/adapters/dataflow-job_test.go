@@ -92,6 +92,10 @@ func TestDataflowJob(t *testing.T) {
 			StatusCode: http.StatusOK,
 			Body:       dataflowJobsList,
 		},
+		fmt.Sprintf("https://dataflow.googleapis.com/v1b3/projects/%s/jobs:aggregated", projectID): {
+			StatusCode: http.StatusOK,
+			Body:       dataflowJobsList,
+		},
 	}
 
 	t.Run("Get", func(t *testing.T) {
@@ -286,6 +290,44 @@ func TestDataflowJob(t *testing.T) {
 		_, err = adapter.Get(ctx, projectID, getQuery, true)
 		if err == nil {
 			t.Error("Expected error when getting non-existent Dataflow Job, but got nil")
+		}
+	})
+
+	t.Run("List", func(t *testing.T) {
+		httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		if err != nil {
+			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
+		}
+
+		listable, ok := adapter.(discovery.ListableAdapter)
+		if !ok {
+			t.Fatalf("Adapter is not a ListableAdapter")
+		}
+
+		sdpItems, err := listable.List(ctx, projectID, true)
+		if err != nil {
+			t.Fatalf("Failed to list Dataflow Jobs: %v", err)
+		}
+
+		if len(sdpItems) != 2 {
+			t.Errorf("Expected 2 Dataflow Jobs, got %d", len(sdpItems))
+		}
+
+		if len(sdpItems) >= 1 {
+			item := sdpItems[0]
+			expectedUniqueAttr := shared.CompositeLookupKey(location, jobID)
+			if item.UniqueAttributeValue() != expectedUniqueAttr {
+				t.Errorf("Expected unique attribute value '%s', got %s", expectedUniqueAttr, item.UniqueAttributeValue())
+			}
+		}
+
+		if len(sdpItems) >= 2 {
+			item := sdpItems[1]
+			expectedUniqueAttr2 := shared.CompositeLookupKey(location, jobID2)
+			if item.UniqueAttributeValue() != expectedUniqueAttr2 {
+				t.Errorf("Expected unique attribute value '%s', got %s", expectedUniqueAttr2, item.UniqueAttributeValue())
+			}
 		}
 	})
 }
