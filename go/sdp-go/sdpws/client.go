@@ -232,8 +232,8 @@ func (c *Client) receive(ctx context.Context) {
 				c.postRequestChan(u, msg)
 			}
 
-		case *sdp.GatewayResponse_DeleteItem:
-			item := msg.GetDeleteItem()
+		case *sdp.GatewayResponse_DeleteItemRef:
+			item := msg.GetDeleteItemRef()
 			if c.handler != nil {
 				c.handler.DeleteItem(ctx, item)
 			}

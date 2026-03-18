@@ -3739,7 +3739,7 @@ func (x *PopulateChangeFiltersResponse) GetAuthors() []string {
 type ItemDiffSummary struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// A reference to the item that this diff is related to
-	Item *Reference `protobuf:"bytes,1,opt,name=item,proto3" json:"item,omitempty"`
+	ItemRef *Reference `protobuf:"bytes,1,opt,name=itemRef,proto3" json:"itemRef,omitempty"`
 	// The status of the item
 	Status ItemDiffStatus `protobuf:"varint,4,opt,name=status,proto3,enum=changes.ItemDiffStatus" json:"status,omitempty"`
 	// The health of the item currently (as opposed to before the change)
@@ -3778,9 +3778,9 @@ func (*ItemDiffSummary) Descriptor() ([]byte, []int) {
 	return file_changes_proto_rawDescGZIP(), []int{51}
 }
 
-func (x *ItemDiffSummary) GetItem() *Reference {
+func (x *ItemDiffSummary) GetItemRef() *Reference {
 	if x != nil {
-		return x.Item
+		return x.ItemRef
 	}
 	return nil
 }
@@ -6423,14 +6423,14 @@ func (x *EndChangeSimpleResponse) GetQueuedAfterStart() bool {
 }
 
 type Risk struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	UUID          []byte                 `protobuf:"bytes,5,opt,name=UUID,proto3" json:"UUID,omitempty"`
-	Title         string                 `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
-	Severity      Risk_Severity          `protobuf:"varint,2,opt,name=severity,proto3,enum=changes.Risk_Severity" json:"severity,omitempty"`
-	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	RelatedItems  []*Reference           `protobuf:"bytes,4,rep,name=relatedItems,proto3" json:"relatedItems,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	UUID            []byte                 `protobuf:"bytes,5,opt,name=UUID,proto3" json:"UUID,omitempty"`
+	Title           string                 `protobuf:"bytes,1,opt,name=title,proto3" json:"title,omitempty"`
+	Severity        Risk_Severity          `protobuf:"varint,2,opt,name=severity,proto3,enum=changes.Risk_Severity" json:"severity,omitempty"`
+	Description     string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	RelatedItemRefs []*Reference           `protobuf:"bytes,4,rep,name=relatedItemRefs,proto3" json:"relatedItemRefs,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *Risk) Reset() {
@@ -6491,9 +6491,9 @@ func (x *Risk) GetDescription() string {
 	return ""
 }
 
-func (x *Risk) GetRelatedItems() []*Reference {
+func (x *Risk) GetRelatedItemRefs() []*Reference {
 	if x != nil {
-		return x.RelatedItems
+		return x.RelatedItemRefs
 	}
 	return nil
 }
@@ -7034,10 +7034,10 @@ const file_changes_proto_rawDesc = "" +
 	"\x1cPopulateChangeFiltersRequest\"O\n" +
 	"\x1dPopulateChangeFiltersResponse\x12\x14\n" +
 	"\x05repos\x18\x01 \x03(\tR\x05repos\x12\x18\n" +
-	"\aauthors\x18\x02 \x03(\tR\aauthors\"\x8d\x01\n" +
-	"\x0fItemDiffSummary\x12\x1e\n" +
-	"\x04item\x18\x01 \x01(\v2\n" +
-	".ReferenceR\x04item\x12/\n" +
+	"\aauthors\x18\x02 \x03(\tR\aauthors\"\x93\x01\n" +
+	"\x0fItemDiffSummary\x12$\n" +
+	"\aitemRef\x18\x01 \x01(\v2\n" +
+	".ReferenceR\aitemRef\x12/\n" +
 	"\x06status\x18\x04 \x01(\x0e2\x17.changes.ItemDiffStatusR\x06status\x12)\n" +
 	"\vhealthAfter\x18\x05 \x01(\x0e2\a.HealthR\vhealthAfter\"\xa0\x02\n" +
 	"\bItemDiff\x12#\n" +
@@ -7258,14 +7258,14 @@ const file_changes_proto_rawDesc = "" +
 	"\x19StartChangeSimpleResponse\"_\n" +
 	"\x17EndChangeSimpleResponse\x12\x16\n" +
 	"\x06queued\x18\x01 \x01(\bR\x06queued\x12,\n" +
-	"\x12queued_after_start\x18\x02 \x01(\bR\x10queuedAfterStart\"\x96\x02\n" +
+	"\x12queued_after_start\x18\x02 \x01(\bR\x10queuedAfterStart\"\x9c\x02\n" +
 	"\x04Risk\x12\x12\n" +
 	"\x04UUID\x18\x05 \x01(\fR\x04UUID\x12\x14\n" +
 	"\x05title\x18\x01 \x01(\tR\x05title\x122\n" +
 	"\bseverity\x18\x02 \x01(\x0e2\x16.changes.Risk.SeverityR\bseverity\x12 \n" +
-	"\vdescription\x18\x03 \x01(\tR\vdescription\x12.\n" +
-	"\frelatedItems\x18\x04 \x03(\v2\n" +
-	".ReferenceR\frelatedItems\"^\n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\x124\n" +
+	"\x0frelatedItemRefs\x18\x04 \x03(\v2\n" +
+	".ReferenceR\x0frelatedItemRefs\"^\n" +
 	"\bSeverity\x12\x18\n" +
 	"\x14SEVERITY_UNSPECIFIED\x10\x00\x12\x10\n" +
 	"\fSEVERITY_LOW\x10\x01\x12\x13\n" +
@@ -7586,7 +7586,7 @@ var file_changes_proto_depIdxs = []int32{
 	125, // 58: changes.ChangeFiltersRequest.sortOrder:type_name -> SortOrder
 	71,  // 59: changes.ListHomeChangesResponse.changes:type_name -> changes.ChangeSummary
 	126, // 60: changes.ListHomeChangesResponse.pagination:type_name -> PaginationResponse
-	127, // 61: changes.ItemDiffSummary.item:type_name -> Reference
+	127, // 61: changes.ItemDiffSummary.itemRef:type_name -> Reference
 	4,   // 62: changes.ItemDiffSummary.status:type_name -> changes.ItemDiffStatus
 	128, // 63: changes.ItemDiffSummary.healthAfter:type_name -> Health
 	127, // 64: changes.ItemDiff.item:type_name -> Reference
@@ -7638,7 +7638,7 @@ var file_changes_proto_depIdxs = []int32{
 	9,   // 110: changes.StartChangeResponse.state:type_name -> changes.StartChangeResponse.State
 	10,  // 111: changes.EndChangeResponse.state:type_name -> changes.EndChangeResponse.State
 	11,  // 112: changes.Risk.severity:type_name -> changes.Risk.Severity
-	127, // 113: changes.Risk.relatedItems:type_name -> Reference
+	127, // 113: changes.Risk.relatedItemRefs:type_name -> Reference
 	12,  // 114: changes.ChangeAnalysisStatus.status:type_name -> changes.ChangeAnalysisStatus.Status
 	8,   // 115: changes.SubmitRiskFeedbackRequest.sentiment:type_name -> changes.RiskFeedbackSentiment
 	116, // 116: changes.SubmitRiskFeedbackRequest.metadata:type_name -> changes.SubmitRiskFeedbackRequest.MetadataEntry

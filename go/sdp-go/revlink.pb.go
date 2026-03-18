@@ -27,7 +27,7 @@ type GetReverseEdgesRequest struct {
 	// The account that the item belongs to
 	Account string `protobuf:"bytes,1,opt,name=account,proto3" json:"account,omitempty"`
 	// The item that you would like to find reverse edges for
-	Item          *Reference `protobuf:"bytes,2,opt,name=item,proto3" json:"item,omitempty"`
+	ItemRef       *Reference `protobuf:"bytes,2,opt,name=itemRef,proto3" json:"itemRef,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -69,9 +69,9 @@ func (x *GetReverseEdgesRequest) GetAccount() string {
 	return ""
 }
 
-func (x *GetReverseEdgesRequest) GetItem() *Reference {
+func (x *GetReverseEdgesRequest) GetItemRef() *Reference {
 	if x != nil {
-		return x.Item
+		return x.ItemRef
 	}
 	return nil
 }
@@ -342,11 +342,11 @@ var File_revlink_proto protoreflect.FileDescriptor
 
 const file_revlink_proto_rawDesc = "" +
 	"\n" +
-	"\rrevlink.proto\x12\arevlink\x1a\vitems.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"t\n" +
+	"\rrevlink.proto\x12\arevlink\x1a\vitems.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"z\n" +
 	"\x16GetReverseEdgesRequest\x12\x18\n" +
-	"\aaccount\x18\x01 \x01(\tR\aaccount\x12\x1e\n" +
-	"\x04item\x18\x02 \x01(\v2\n" +
-	".ReferenceR\x04itemJ\x04\b\x03\x10\x04R\x1afollowOnlyBlastPropagation\"6\n" +
+	"\aaccount\x18\x01 \x01(\tR\aaccount\x12$\n" +
+	"\aitemRef\x18\x02 \x01(\v2\n" +
+	".ReferenceR\aitemRefJ\x04\b\x03\x10\x04R\x1afollowOnlyBlastPropagation\"6\n" +
 	"\x17GetReverseEdgesResponse\x12\x1b\n" +
 	"\x05edges\x18\x01 \x03(\v2\x05.EdgeR\x05edges\"\x8f\x01\n" +
 	"\x1cIngestGatewayResponseRequest\x12\x18\n" +
@@ -390,7 +390,7 @@ var file_revlink_proto_goTypes = []any{
 	(*Item)(nil),                           // 8: Item
 }
 var file_revlink_proto_depIdxs = []int32{
-	6, // 0: revlink.GetReverseEdgesRequest.item:type_name -> Reference
+	6, // 0: revlink.GetReverseEdgesRequest.itemRef:type_name -> Reference
 	7, // 1: revlink.GetReverseEdgesResponse.edges:type_name -> Edge
 	8, // 2: revlink.IngestGatewayResponseRequest.newItem:type_name -> Item
 	7, // 3: revlink.IngestGatewayResponseRequest.newEdge:type_name -> Edge

@@ -725,7 +725,7 @@ type GetItemSignalDetailsRequest struct {
 	// The item for which we want to get the details of the signals.
 	// it is the reference of the terraform item before/after.
 	// NB it is not the lookup item from resolve mapping queries.
-	Item *Reference `protobuf:"bytes,1,opt,name=item,proto3" json:"item,omitempty"`
+	ItemRef *Reference `protobuf:"bytes,1,opt,name=itemRef,proto3" json:"itemRef,omitempty"`
 	// The UUID of the change this item is associated with.
 	ChangeUUID []byte `protobuf:"bytes,2,opt,name=changeUUID,proto3" json:"changeUUID,omitempty"`
 	// The category of the signals we want to get. This is used to filter the signals by category.
@@ -764,9 +764,9 @@ func (*GetItemSignalDetailsRequest) Descriptor() ([]byte, []int) {
 	return file_signal_proto_rawDescGZIP(), []int{14}
 }
 
-func (x *GetItemSignalDetailsRequest) GetItem() *Reference {
+func (x *GetItemSignalDetailsRequest) GetItemRef() *Reference {
 	if x != nil {
-		return x.Item
+		return x.ItemRef
 	}
 	return nil
 }
@@ -1133,10 +1133,10 @@ const file_signal_proto_rawDesc = "" +
 	"changeUUID\x12\x1a\n" +
 	"\bcategory\x18\x02 \x01(\tR\bcategory\"N\n" +
 	"\"GetCustomSignalsByCategoryResponse\x12(\n" +
-	"\asignals\x18\x01 \x03(\v2\x0e.signal.SignalR\asignals\"y\n" +
-	"\x1bGetItemSignalDetailsRequest\x12\x1e\n" +
-	"\x04item\x18\x01 \x01(\v2\n" +
-	".ReferenceR\x04item\x12\x1e\n" +
+	"\asignals\x18\x01 \x03(\v2\x0e.signal.SignalR\asignals\"\x7f\n" +
+	"\x1bGetItemSignalDetailsRequest\x12$\n" +
+	"\aitemRef\x18\x01 \x01(\v2\n" +
+	".ReferenceR\aitemRef\x12\x1e\n" +
 	"\n" +
 	"changeUUID\x18\x02 \x01(\fR\n" +
 	"changeUUID\x12\x1a\n" +
@@ -1227,7 +1227,7 @@ var file_signal_proto_depIdxs = []int32{
 	22, // 9: signal.ItemAggregationV2.status:type_name -> changes.ItemDiffStatus
 	10, // 10: signal.GetItemSignalsResponseV2.itemAggregations:type_name -> signal.ItemAggregationV2
 	18, // 11: signal.GetCustomSignalsByCategoryResponse.signals:type_name -> signal.Signal
-	21, // 12: signal.GetItemSignalDetailsRequest.item:type_name -> Reference
+	21, // 12: signal.GetItemSignalDetailsRequest.itemRef:type_name -> Reference
 	18, // 13: signal.GetItemSignalDetailsResponse.signals:type_name -> signal.Signal
 	21, // 14: signal.SignalProperties.item:type_name -> Reference
 	16, // 15: signal.Signal.metadata:type_name -> signal.SignalMetadata
