@@ -42,6 +42,10 @@ func TestLoggingSavedQuery(t *testing.T) {
 			StatusCode: http.StatusOK,
 			Body:       queryList,
 		},
+		fmt.Sprintf("https://logging.googleapis.com/v2/projects/%s/locations/-/savedQueries", projectID): {
+			StatusCode: http.StatusOK,
+			Body:       queryList,
+		},
 	}
 
 	t.Run("Get", func(t *testing.T) {
@@ -81,6 +85,38 @@ func TestLoggingSavedQuery(t *testing.T) {
 
 		if len(sdpItems) != 1 {
 			t.Errorf("Expected 1 saved query, got %d", len(sdpItems))
+		}
+	})
+
+	t.Run("List", func(t *testing.T) {
+		httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		if err != nil {
+			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
+		}
+
+		listable, ok := adapter.(discovery.ListableAdapter)
+		if !ok {
+			t.Fatalf("Adapter for %s does not implement ListableAdapter", sdpItemType)
+		}
+
+		sdpItems, err := listable.List(ctx, projectID, true)
+		if err != nil {
+			t.Fatalf("Failed to list saved queries: %v", err)
+		}
+
+		if len(sdpItems) != 1 {
+			t.Errorf("Expected 1 saved query, got %d", len(sdpItems))
+		}
+
+		if len(sdpItems) >= 1 {
+			item := sdpItems[0]
+			if item.GetType() != sdpItemType.String() {
+				t.Errorf("Expected type %s, got %s", sdpItemType.String(), item.GetType())
+			}
+			if item.GetScope() != projectID {
+				t.Errorf("Expected scope '%s', got %s", projectID, item.GetScope())
+			}
 		}
 	})
 

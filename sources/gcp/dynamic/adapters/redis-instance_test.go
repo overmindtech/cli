@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 
 	"cloud.google.com/go/redis/apiv1/redispb"
@@ -66,6 +67,10 @@ func TestRedisInstance(t *testing.T) {
 			Body:       instance2,
 		},
 		fmt.Sprintf("https://redis.googleapis.com/v1/projects/%s/locations/%s/instances", projectID, location): {
+			StatusCode: http.StatusOK,
+			Body:       instanceList,
+		},
+		fmt.Sprintf("https://redis.googleapis.com/v1/projects/%s/locations/-/instances", projectID): {
 			StatusCode: http.StatusOK,
 			Body:       instanceList,
 		},
@@ -215,6 +220,92 @@ func TestRedisInstance(t *testing.T) {
 		}
 		if firstItem.GetScope() != projectID {
 			t.Errorf("Expected first item scope '%s', got %s", projectID, firstItem.GetScope())
+		}
+	})
+
+	t.Run("List", func(t *testing.T) {
+		httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		if err != nil {
+			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
+		}
+
+		listable, ok := adapter.(discovery.ListableAdapter)
+		if !ok {
+			t.Fatalf("Adapter for %s does not implement ListableAdapter", sdpItemType)
+		}
+
+		sdpItems, err := listable.List(ctx, projectID, true)
+		if err != nil {
+			t.Fatalf("Failed to list Redis instances: %v", err)
+		}
+
+		if len(sdpItems) != 2 {
+			t.Errorf("Expected 2 Redis instances, got %d", len(sdpItems))
+		}
+
+		if len(sdpItems) >= 1 {
+			item := sdpItems[0]
+			if item.GetType() != sdpItemType.String() {
+				t.Errorf("Expected type %s, got %s", sdpItemType.String(), item.GetType())
+			}
+			if item.GetScope() != projectID {
+				t.Errorf("Expected scope '%s', got %s", projectID, item.GetScope())
+			}
+		}
+	})
+
+	t.Run("List filters out placeholder entries", func(t *testing.T) {
+		placeholder := &redispb.Instance{
+			Name:       fmt.Sprintf("projects/%s/locations/us-west1/instances/-", projectID),
+			LocationId: "us-west1",
+		}
+
+		instanceListWithPlaceholder := &redispb.ListInstancesResponse{
+			Instances: []*redispb.Instance{instance, placeholder, instance2},
+		}
+
+		responsesWithPlaceholder := map[string]shared.MockResponse{
+			fmt.Sprintf("https://redis.googleapis.com/v1/projects/%s/locations/-/instances", projectID): {
+				StatusCode: http.StatusOK,
+				Body:       instanceListWithPlaceholder,
+			},
+		}
+
+		httpCli := shared.NewMockHTTPClientProvider(responsesWithPlaceholder)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		if err != nil {
+			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
+		}
+
+		listable, ok := adapter.(discovery.ListableAdapter)
+		if !ok {
+			t.Fatalf("Adapter for %s does not implement ListableAdapter", sdpItemType)
+		}
+
+		sdpItems, err := listable.List(ctx, projectID, true)
+		if err != nil {
+			t.Fatalf("Failed to list Redis instances: %v", err)
+		}
+
+		if len(sdpItems) != 2 {
+			t.Errorf("Expected 2 Redis instances (placeholder filtered out), got %d", len(sdpItems))
+		}
+
+		for _, item := range sdpItems {
+			name, err := item.GetAttributes().Get("name")
+			if err != nil {
+				t.Errorf("Failed to get name attribute: %v", err)
+				continue
+			}
+			nameStr, ok := name.(string)
+			if !ok {
+				t.Errorf("Name is not a string: %T", name)
+				continue
+			}
+			if strings.HasSuffix(nameStr, "/instances/-") {
+				t.Errorf("Placeholder entry was not filtered out: %s", nameStr)
+			}
 		}
 	})
 

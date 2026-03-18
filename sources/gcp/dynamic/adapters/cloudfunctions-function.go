@@ -18,6 +18,10 @@ var cloudFunctionAdapter = registerableAdapter{ //nolint:unused
 		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries(
 			"https://cloudfunctions.googleapis.com/v2/projects/%s/locations/%s/functions/%s",
 		),
+		// LIST all functions across all locations using wildcard
+		ListEndpointFunc: gcpshared.ProjectLevelListFunc(
+			"https://cloudfunctions.googleapis.com/v2/projects/%s/locations/-/functions",
+		),
 		// Use SearchEndpointFunc since caller supplies a location to enumerate functions
 		SearchEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery(
 			"https://cloudfunctions.googleapis.com/v2/projects/%s/locations/%s/functions",

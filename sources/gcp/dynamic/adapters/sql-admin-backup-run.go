@@ -14,6 +14,8 @@ var _ = registerableAdapter{
 		// Reference: https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1/backupRuns/get
 		// GET https://sqladmin.googleapis.com/v1/projects/{project}/instances/{instance}/backupRuns/{id}
 		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries("https://sqladmin.googleapis.com/v1/projects/%s/instances/%s/backupRuns/%s"),
+		// LIST all backup runs across all instances using wildcard
+		ListEndpointFunc: gcpshared.ProjectLevelListFunc("https://sqladmin.googleapis.com/v1/projects/%s/instances/-/backupRuns"),
 		// Reference: https://cloud.google.com/sql/docs/mysql/admin-api/rest/v1/backupRuns/list
 		// GET https://sqladmin.googleapis.com/v1/projects/{project}/instances/{instance}/backupRuns
 		SearchEndpointFunc:  gcpshared.ProjectLevelEndpointFuncWithSingleQuery("https://sqladmin.googleapis.com/v1/projects/%s/instances/%s/backupRuns"),

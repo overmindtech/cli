@@ -20,6 +20,10 @@ var _ = registerableAdapter{
 		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries(
 			"https://container.googleapis.com/v1/projects/%s/locations/%s/clusters/%s",
 		),
+		// LIST all clusters across all locations using wildcard
+		ListEndpointFunc: gcpshared.ProjectLevelListFunc(
+			"https://container.googleapis.com/v1/projects/%s/locations/-/clusters",
+		),
 		// LIST https://container.googleapis.com/v1/projects/{project}/locations/{location}/clusters
 		SearchEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery(
 			"https://container.googleapis.com/v1/projects/%s/locations/%s/clusters",

@@ -83,10 +83,10 @@ func Test_addAdapter(t *testing.T) {
 			searchableListable: true,
 		},
 		{
-			name:       "Searchable adapter",
-			sdpType:    gcpshared.SQLAdminBackupRun,
-			locations:  projectLocation,
-			searchable: true,
+			name:               "Searchable adapter",
+			sdpType:            gcpshared.SQLAdminBackupRun,
+			locations:          projectLocation,
+			searchableListable: true,
 		},
 		{
 			name:               "SearchableListable adapter",

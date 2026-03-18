@@ -19,6 +19,10 @@ var eventarcTriggerAdapter = registerableAdapter{ //nolint:unused
 		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries(
 			"https://eventarc.googleapis.com/v1/projects/%s/locations/%s/triggers/%s",
 		),
+		// LIST all triggers across all locations using wildcard
+		ListEndpointFunc: gcpshared.ProjectLevelListFunc(
+			"https://eventarc.googleapis.com/v1/projects/%s/locations/-/triggers",
+		),
 		// List requires only the location (region or global) besides project.
 		SearchEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery(
 			"https://eventarc.googleapis.com/v1/projects/%s/locations/%s/triggers",

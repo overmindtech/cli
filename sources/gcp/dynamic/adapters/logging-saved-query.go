@@ -15,6 +15,8 @@ var _ = registerableAdapter{
 		// GET https://logging.googleapis.com/v2/projects/*/locations/*/savedQueries/*
 		// IAM permissions: logging.savedQueries.get
 		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries("https://logging.googleapis.com/v2/projects/%s/locations/%s/savedQueries/%s"),
+		// LIST all saved queries across all locations using wildcard
+		ListEndpointFunc: gcpshared.ProjectLevelListFunc("https://logging.googleapis.com/v2/projects/%s/locations/-/savedQueries"),
 		// Reference: https://cloud.google.com/logging/docs/reference/v2/rest/v2/projects.locations.savedQueries/list
 		// GET https://logging.googleapis.com/v2/projects/*/locations/*/savedQueries
 		// IAM permissions: logging.savedQueries.list
