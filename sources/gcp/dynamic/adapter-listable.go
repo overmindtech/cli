@@ -17,6 +17,7 @@ import (
 // ListableAdapter implements discovery.ListableAdapter for GCP dynamic adapters.
 type ListableAdapter struct {
 	listEndpointFunc gcpshared.ListEndpointFunc
+	listFilterFunc   gcpshared.ListFilterFunc
 	Adapter
 }
 
@@ -24,6 +25,7 @@ type ListableAdapter struct {
 func NewListableAdapter(listEndpointFunc gcpshared.ListEndpointFunc, config *AdapterConfig, cache sdpcache.Cache) discovery.ListableAdapter {
 	return ListableAdapter{
 		listEndpointFunc: listEndpointFunc,
+		listFilterFunc:   config.ListFilterFunc,
 		Adapter: Adapter{
 			locations:            config.Locations,
 			httpCli:              config.HTTPClient,
@@ -111,6 +113,16 @@ func (g ListableAdapter) List(ctx context.Context, scope string, ignoreCache boo
 		return nil, err
 	}
 
+	if g.listFilterFunc != nil {
+		filtered := make([]*sdp.Item, 0, len(items))
+		for _, item := range items {
+			if g.listFilterFunc(item) {
+				filtered = append(filtered, item)
+			}
+		}
+		items = filtered
+	}
+
 	if len(items) == 0 {
 		// Cache not-found when no items were found
 		notFoundErr := &sdp.QueryError{
@@ -133,6 +145,20 @@ func (g ListableAdapter) List(ctx context.Context, scope string, ignoreCache boo
 }
 
 func (g ListableAdapter) ListStream(ctx context.Context, scope string, ignoreCache bool, stream discovery.QueryResultStream) {
+	// When a post-filter is configured, fall back to the non-streaming List
+	// so we can filter before sending items to the stream.
+	if g.listFilterFunc != nil {
+		items, err := g.List(ctx, scope, ignoreCache)
+		if err != nil {
+			stream.SendError(err)
+			return
+		}
+		for _, item := range items {
+			stream.SendItem(item)
+		}
+		return
+	}
+
 	location, err := g.validateScope(scope)
 	if err != nil {
 		stream.SendError(err)

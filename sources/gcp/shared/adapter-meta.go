@@ -13,6 +13,11 @@ import (
 // where the GCP API does not support server-side filtering.
 type SearchFilterFunc func(query string, item *sdp.Item) bool
 
+// ListFilterFunc filters items returned by LIST. Takes an SDP item and returns
+// true to keep the item. Used to filter out placeholder/phantom entries that
+// some GCP APIs return when using wildcard location queries.
+type ListFilterFunc func(item *sdp.Item) bool
+
 // LocationLevel defines at which level of the GCP hierarchy a resource is located.
 type LocationLevel string
 
@@ -57,6 +62,10 @@ type AdapterMeta struct {
 	// to keep only items matching the query. Used for tag-based SEARCH where
 	// the API has no server-side filter.
 	SearchFilterFunc SearchFilterFunc
+	// ListFilterFunc, if set, is applied after fetching items during LIST
+	// to filter out unwanted entries. Used to exclude placeholder/phantom
+	// entries that some GCP APIs return with wildcard location queries.
+	ListFilterFunc ListFilterFunc
 }
 
 // =============================================

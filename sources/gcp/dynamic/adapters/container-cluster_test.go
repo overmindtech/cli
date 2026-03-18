@@ -99,6 +99,10 @@ func TestContainerCluster(t *testing.T) {
 			StatusCode: http.StatusOK,
 			Body:       clusterList,
 		},
+		fmt.Sprintf("https://container.googleapis.com/v1/projects/%s/locations/-/clusters", projectID): {
+			StatusCode: http.StatusOK,
+			Body:       clusterList,
+		},
 	}
 
 	t.Run("Get", func(t *testing.T) {
@@ -307,6 +311,38 @@ func TestContainerCluster(t *testing.T) {
 		}
 		if firstItem.GetScope() != projectID {
 			t.Errorf("Expected first item scope '%s', got %s", projectID, firstItem.GetScope())
+		}
+	})
+
+	t.Run("List", func(t *testing.T) {
+		httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		if err != nil {
+			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
+		}
+
+		listable, ok := adapter.(discovery.ListableAdapter)
+		if !ok {
+			t.Fatalf("Adapter for %s does not implement ListableAdapter", sdpItemType)
+		}
+
+		sdpItems, err := listable.List(ctx, projectID, true)
+		if err != nil {
+			t.Fatalf("Failed to list clusters: %v", err)
+		}
+
+		if len(sdpItems) != 2 {
+			t.Errorf("Expected 2 clusters, got %d", len(sdpItems))
+		}
+
+		if len(sdpItems) >= 1 {
+			item := sdpItems[0]
+			if item.GetType() != sdpItemType.String() {
+				t.Errorf("Expected type %s, got %s", sdpItemType.String(), item.GetType())
+			}
+			if item.GetScope() != projectID {
+				t.Errorf("Expected scope '%s', got %s", projectID, item.GetScope())
+			}
 		}
 	})
 

@@ -36,6 +36,7 @@ func NewSearchableListableAdapter(searchURLFunc gcpshared.EndpointFunc, listEndp
 		searchFilterFunc:              config.SearchFilterFunc,
 		ListableAdapter: ListableAdapter{
 			listEndpointFunc: listEndpointFunc,
+			listFilterFunc:   config.ListFilterFunc,
 			Adapter: Adapter{
 				locations:            config.Locations,
 				httpCli:              config.HTTPClient,

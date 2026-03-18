@@ -24,6 +24,7 @@ require (
 	cloud.google.com/go/container v1.46.0
 	cloud.google.com/go/dataplex v1.28.0
 	cloud.google.com/go/dataproc/v2 v2.16.0
+	cloud.google.com/go/eventarc v1.18.0
 	cloud.google.com/go/filestore v1.10.3
 	cloud.google.com/go/functions v1.19.7
 	cloud.google.com/go/iam v1.5.3

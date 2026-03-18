@@ -120,6 +120,10 @@ func TestCloudFunctionsFunction(t *testing.T) {
 			StatusCode: http.StatusOK,
 			Body:       cloudFunctionsList,
 		},
+		fmt.Sprintf("https://cloudfunctions.googleapis.com/v2/projects/%s/locations/-/functions", projectID): {
+			StatusCode: http.StatusOK,
+			Body:       cloudFunctionsList,
+		},
 	}
 
 	t.Run("Get", func(t *testing.T) {
@@ -307,6 +311,39 @@ func TestCloudFunctionsFunction(t *testing.T) {
 			expectedUniqueAttr2 := shared.CompositeLookupKey(location, functionName2)
 			if item.UniqueAttributeValue() != expectedUniqueAttr2 {
 				t.Errorf("Expected unique attribute value '%s', got %s", expectedUniqueAttr2, item.UniqueAttributeValue())
+			}
+		}
+	})
+
+	t.Run("List", func(t *testing.T) {
+		httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		if err != nil {
+			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
+		}
+
+		listable, ok := adapter.(discovery.ListableAdapter)
+		if !ok {
+			t.Fatalf("Adapter for %s does not implement ListableAdapter", sdpItemType)
+		}
+
+		sdpItems, err := listable.List(ctx, projectID, true)
+		if err != nil {
+			t.Fatalf("Failed to list Cloud Functions: %v", err)
+		}
+
+		if len(sdpItems) != 2 {
+			t.Errorf("Expected 2 Cloud Functions, got %d", len(sdpItems))
+		}
+
+		if len(sdpItems) >= 1 {
+			item := sdpItems[0]
+			if item.GetType() != sdpItemType.String() {
+				t.Errorf("Expected type %s, got %s", sdpItemType.String(), item.GetType())
+			}
+			expectedUniqueAttr := shared.CompositeLookupKey(location, functionName)
+			if item.UniqueAttributeValue() != expectedUniqueAttr {
+				t.Errorf("Expected unique attribute value '%s', got %s", expectedUniqueAttr, item.UniqueAttributeValue())
 			}
 		}
 	})

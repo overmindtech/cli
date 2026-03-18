@@ -1,9 +1,26 @@
 package adapters
 
 import (
+	"strings"
+
 	"github.com/overmindtech/cli/go/sdp-go"
 	gcpshared "github.com/overmindtech/cli/sources/gcp/shared"
 )
+
+// redisInstanceListFilter filters out placeholder entries that GCP returns
+// for unavailable locations when using wildcard location queries.
+// Placeholder entries have names ending in "/instances/-" with error status.
+func redisInstanceListFilter(item *sdp.Item) bool {
+	name, err := item.GetAttributes().Get("name")
+	if err != nil {
+		return true
+	}
+	nameStr, ok := name.(string)
+	if !ok {
+		return true
+	}
+	return !strings.HasSuffix(nameStr, "/instances/-")
+}
 
 // GCP Cloud Memorystore Redis Instance adapter.
 // Cloud Memorystore for Redis provides a fully managed Redis service that is highly available and scalable.
@@ -24,6 +41,14 @@ var _ = registerableAdapter{
 		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries(
 			"https://redis.googleapis.com/v1/projects/%s/locations/%s/instances/%s",
 		),
+		// LIST all instances across all locations using wildcard
+		// Note: wildcard list may include placeholder entries for unavailable locations
+		// (entries with name ending in "/instances/-" and error status)
+		ListEndpointFunc: gcpshared.ProjectLevelListFunc(
+			"https://redis.googleapis.com/v1/projects/%s/locations/-/instances",
+		),
+		// Filter out placeholder entries from LIST results
+		ListFilterFunc: redisInstanceListFilter,
 		// Reference: https://cloud.google.com/memorystore/docs/redis/reference/rest/v1/projects.locations.instances/list
 		// GET https://redis.googleapis.com/v1/projects/{project}/locations/{location}/instances
 		SearchEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery(

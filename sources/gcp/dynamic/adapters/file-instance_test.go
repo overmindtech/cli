@@ -67,6 +67,10 @@ func TestFileInstance(t *testing.T) {
 			StatusCode: http.StatusOK,
 			Body:       instanceList,
 		},
+		fmt.Sprintf("https://file.googleapis.com/v1/projects/%s/locations/-/instances", projectID): {
+			StatusCode: http.StatusOK,
+			Body:       instanceList,
+		},
 	}
 
 	t.Run("Get", func(t *testing.T) {
@@ -198,6 +202,38 @@ func TestFileInstance(t *testing.T) {
 		}
 		if firstItem.GetScope() != projectID {
 			t.Errorf("Expected first item scope '%s', got %s", projectID, firstItem.GetScope())
+		}
+	})
+
+	t.Run("List", func(t *testing.T) {
+		httpCli := shared.NewMockHTTPClientProvider(expectedCallAndResponses)
+		adapter, err := dynamic.MakeAdapter(sdpItemType, linker, httpCli, sdpcache.NewNoOpCache(), []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+		if err != nil {
+			t.Fatalf("Failed to create adapter for %s: %v", sdpItemType, err)
+		}
+
+		listable, ok := adapter.(discovery.ListableAdapter)
+		if !ok {
+			t.Fatalf("Adapter for %s does not implement ListableAdapter", sdpItemType)
+		}
+
+		sdpItems, err := listable.List(ctx, projectID, true)
+		if err != nil {
+			t.Fatalf("Failed to list Filestore instances: %v", err)
+		}
+
+		if len(sdpItems) != 2 {
+			t.Errorf("Expected 2 Filestore instances, got %d", len(sdpItems))
+		}
+
+		if len(sdpItems) >= 1 {
+			item := sdpItems[0]
+			if item.GetType() != sdpItemType.String() {
+				t.Errorf("Expected type %s, got %s", sdpItemType.String(), item.GetType())
+			}
+			if item.GetScope() != projectID {
+				t.Errorf("Expected scope '%s', got %s", projectID, item.GetScope())
+			}
 		}
 	})
 

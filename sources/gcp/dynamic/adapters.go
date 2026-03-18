@@ -136,6 +136,7 @@ func MakeAdapter(sdpItemType shared.ItemType, linker *gcpshared.Linker, httpCli 
 		NameSelector:         meta.NameSelector,
 		ListResponseSelector: meta.ListResponseSelector,
 		SearchFilterFunc:     meta.SearchFilterFunc,
+		ListFilterFunc:       meta.ListFilterFunc,
 	}
 
 	switch adapterType(meta) {

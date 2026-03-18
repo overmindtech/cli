@@ -21,6 +21,10 @@ var _ = registerableAdapter{
 		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries(
 			"https://file.googleapis.com/v1/projects/%s/locations/%s/instances/%s",
 		),
+		// LIST all instances across all locations using wildcard
+		ListEndpointFunc: gcpshared.ProjectLevelListFunc(
+			"https://file.googleapis.com/v1/projects/%s/locations/-/instances",
+		),
 		// Search (per-location) https://file.googleapis.com/v1/projects/{project}/locations/{location}/instances
 		SearchEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithSingleQuery(
 			"https://file.googleapis.com/v1/projects/%s/locations/%s/instances",

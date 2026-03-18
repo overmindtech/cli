@@ -17,6 +17,8 @@ var _ = registerableAdapter{
 		// GET https://logging.googleapis.com/v2/projects/*/locations/*/buckets/*
 		// IAM permissions: logging.buckets.get
 		GetEndpointFunc: gcpshared.ProjectLevelEndpointFuncWithTwoQueries("https://logging.googleapis.com/v2/projects/%s/locations/%s/buckets/%s"),
+		// LIST all buckets across all locations using wildcard
+		ListEndpointFunc: gcpshared.ProjectLevelListFunc("https://logging.googleapis.com/v2/projects/%s/locations/-/buckets"),
 		// Reference: https://cloud.google.com/logging/docs/reference/v2/rest/v2/projects.locations.buckets/list
 		// GET https://logging.googleapis.com/v2/projects/*/locations/*/buckets
 		// IAM permissions: logging.buckets.list
