@@ -82,3 +82,45 @@ For tearing down the infra for the Compute API resources.
 ```bash
 go test ./integration-tests -run "TestCompute.*/Teardown" -v
 ```
+
+## Running Integration Tests via Cloud Agents
+
+Cursor Cloud Agents can run Azure integration tests autonomously when configured with the correct credentials.
+
+### Prerequisites
+
+1. **1Password vault**: Azure credentials are stored in the "cursor" 1Password vault under the item "Azure Integration Tests"
+2. **Cursor Cloud Agent secret**: Configure only `OP_SERVICE_ACCOUNT_TOKEN` in `https://cursor.com/dashboard/cloud-agents`
+3. **Repo env files**: `op.azure-cloud-agent.secret` and `op.azure-cloud-agent.env` exist with required `op://...` references
+
+### How it works
+
+When a Cloud Agent picks up a Linear issue to create an Azure adapter:
+
+1. Cursor injects `OP_SERVICE_ACCOUNT_TOKEN` into the Cloud Agent environment
+2. `inject-secrets` reads `op://...` references from env files using the 1Password SDK
+3. `inject-secrets` writes resolved values to a local env file
+4. The shell sources that file before test execution
+5. The `DefaultAzureCredential` chain picks up `AZURE_CLIENT_ID`, `AZURE_CLIENT_SECRET`, and `AZURE_TENANT_ID` from environment
+6. Integration tests use `AZURE_SUBSCRIPTION_ID` and `RUN_AZURE_INTEGRATION_TESTS=true`
+
+To inject credentials manually (e.g. for debugging), run:
+
+```bash
+go run build/inject-secrets/main.go \
+  --secret-file .github/env/op.azure-cloud-agent.secret \
+  --env-file .github/env/op.azure-cloud-agent.env \
+  --output-file .env.azure-cloud-agent
+
+set -a
+source .env.azure-cloud-agent
+set +a
+```
+
+### Security
+
+- The service principal has **read-write access** scoped to the integration test subscription only
+- Cloud Agent dashboard stores only the bootstrap token (`OP_SERVICE_ACCOUNT_TOKEN`)
+- Azure credentials remain in 1Password and are resolved only at runtime via `inject-secrets`
+- All test resources are created in the `overmind-integration-tests` resource group
+- Teardown steps clean up created resources after each test run
