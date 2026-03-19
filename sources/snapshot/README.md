@@ -37,6 +37,91 @@ The snapshot source requires a snapshot file or URL to be specified:
 --health-check-port <port>        # Health check port (default: 8089)
 ```
 
+### Running with Docker
+
+#### Build the Docker image
+
+Build the snapshot source Docker image:
+
+```bash
+docker buildx bake snapshot
+```
+
+Or build directly with docker build:
+
+```bash
+docker build -f sources/snapshot/build/package/Dockerfile \
+  --build-arg BUILD_VERSION=dev \
+  --build-arg BUILD_COMMIT=$(git rev-parse HEAD) \
+  -t snapshot-source:local .
+```
+
+#### Run the Docker container
+
+Run the container with a mounted snapshot file:
+
+**Local/dev environment (unauthenticated):**
+
+```bash
+docker run --rm \
+  -v /path/to/snapshot.json:/data/snapshot.json:ro \
+  -e SNAPSHOT_SOURCE=/data/snapshot.json \
+  -e OVERMIND_MANAGED_SOURCE=true \
+  -e NATS_SERVICE_HOST=nats \
+  -e NATS_SERVICE_PORT=4222 \
+  -e ALLOW_UNAUTHENTICATED=true \
+  --network=host \
+  ghcr.io/overmindtech/workspace/snapshot-source:dev
+```
+
+> ⚠️ **WARNING**: `ALLOW_UNAUTHENTICATED=true` is for local/dev testing only. Do not use in production.
+
+**Production environment (authenticated):**
+
+```bash
+docker run --rm \
+  -v /path/to/snapshot.json:/data/snapshot.json:ro \
+  -e SNAPSHOT_SOURCE=/data/snapshot.json \
+  -e OVERMIND_MANAGED_SOURCE=true \
+  -e API_KEY=your-api-key \
+  -e NATS_SERVICE_HOST=nats \
+  -e NATS_SERVICE_PORT=4222 \
+  --network=host \
+  ghcr.io/overmindtech/workspace/snapshot-source:dev
+```
+
+Or use with docker-compose (local/dev):
+
+```yaml
+services:
+  snapshot-source:
+    image: ghcr.io/overmindtech/workspace/snapshot-source:dev
+    volumes:
+      - ./snapshot.json:/data/snapshot.json:ro
+    environment:
+      SNAPSHOT_SOURCE: /data/snapshot.json
+      OVERMIND_MANAGED_SOURCE: "true"
+      NATS_SERVICE_HOST: nats
+      NATS_SERVICE_PORT: 4222
+      ALLOW_UNAUTHENTICATED: "true"  # WARNING: local/dev only
+    depends_on:
+      - nats
+```
+
+For production, replace `ALLOW_UNAUTHENTICATED: "true"` with `API_KEY: ${API_KEY}` and set the API key via environment variable or secrets management.
+
+#### Health check
+
+The container exposes health check endpoints on port 8089:
+
+```bash
+# Liveness probe - checks NATS connection
+curl http://localhost:8089/healthz/alive
+
+# Readiness probe - checks adapter initialization
+curl http://localhost:8089/healthz/ready
+```
+
 ### Running Locally
 
 #### Option 1: With backend services (recommended)
