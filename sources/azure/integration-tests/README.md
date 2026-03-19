@@ -108,6 +108,7 @@ To inject credentials manually (e.g. for debugging), run:
 
 ```bash
 go run build/inject-secrets/main.go \
+  --no-ping \
   --secret-file .github/env/op.azure-cloud-agent.secret \
   --env-file .github/env/op.azure-cloud-agent.env \
   --output-file .env.azure-cloud-agent
