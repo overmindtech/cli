@@ -69,8 +69,8 @@ func createAzureBatchApplication(name string) *armbatch.Application {
 		Name: new(name),
 		Type: new("Microsoft.Batch/batchAccounts/applications"),
 		Properties: &armbatch.ApplicationProperties{
-			DisplayName:   new("Test application " + name),
-			AllowUpdates:  &allowUpdates,
+			DisplayName:  new("Test application " + name),
+			AllowUpdates: &allowUpdates,
 		},
 		Tags: map[string]*string{"env": new("test")},
 	}

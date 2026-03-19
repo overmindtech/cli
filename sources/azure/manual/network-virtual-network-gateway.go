@@ -131,12 +131,12 @@ func (n networkVirtualNetworkGatewayWrapper) azureVirtualNetworkGatewayToSDPItem
 	}
 
 	sdpItem := &sdp.Item{
-		Type:               azureshared.NetworkVirtualNetworkGateway.String(),
-		UniqueAttribute:    "name",
-		Attributes:         attributes,
-		Scope:              scope,
-		Tags:               azureshared.ConvertAzureTags(gw.Tags),
-		LinkedItemQueries:  []*sdp.LinkedItemQuery{},
+		Type:              azureshared.NetworkVirtualNetworkGateway.String(),
+		UniqueAttribute:   "name",
+		Attributes:        attributes,
+		Scope:             scope,
+		Tags:              azureshared.ConvertAzureTags(gw.Tags),
+		LinkedItemQueries: []*sdp.LinkedItemQuery{},
 	}
 
 	// Health from provisioning state
@@ -441,15 +441,15 @@ func (n networkVirtualNetworkGatewayWrapper) GetLookups() sources.ItemTypeLookup
 
 func (n networkVirtualNetworkGatewayWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return map[shared.ItemType]bool{
-		azureshared.NetworkSubnet:                           true,
-		azureshared.NetworkPublicIPAddress:                  true,
-		azureshared.NetworkLocalNetworkGateway:              true,
-		azureshared.NetworkVirtualNetworkGatewayConnection:  true,
-		azureshared.ExtendedLocationCustomLocation:          true,
-		azureshared.ManagedIdentityUserAssignedIdentity:     true,
-		azureshared.NetworkVirtualNetwork:                   true,
-		stdlib.NetworkIP:                                    true,
-		stdlib.NetworkDNS:                                   true,
+		azureshared.NetworkSubnet:                          true,
+		azureshared.NetworkPublicIPAddress:                 true,
+		azureshared.NetworkLocalNetworkGateway:             true,
+		azureshared.NetworkVirtualNetworkGatewayConnection: true,
+		azureshared.ExtendedLocationCustomLocation:         true,
+		azureshared.ManagedIdentityUserAssignedIdentity:    true,
+		azureshared.NetworkVirtualNetwork:                  true,
+		stdlib.NetworkIP:                                   true,
+		stdlib.NetworkDNS:                                  true,
 	}
 }
 

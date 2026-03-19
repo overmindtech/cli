@@ -361,7 +361,7 @@ func createDiskEncryptionSet(ctx context.Context, client *armcompute.DiskEncrypt
 		Identity: &armcompute.EncryptionSetIdentity{
 			Type: new(armcompute.DiskEncryptionSetIdentityTypeUserAssigned),
 			UserAssignedIdentities: map[string]*armcompute.UserAssignedIdentitiesValue{
-				userAssignedIdentityResourceID: &armcompute.UserAssignedIdentitiesValue{},
+				userAssignedIdentityResourceID: {},
 			},
 		},
 		Properties: &armcompute.EncryptionSetProperties{

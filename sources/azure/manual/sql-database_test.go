@@ -126,7 +126,8 @@ func TestSqlDatabase(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  shared.CompositeLookupKey(serverName, databaseName),
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-				}}
+				},
+			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
@@ -172,7 +173,8 @@ func TestSqlDatabase(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  shared.CompositeLookupKey(serverName, databaseName),
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-				}}
+				},
+			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})

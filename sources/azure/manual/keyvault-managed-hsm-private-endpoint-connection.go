@@ -154,8 +154,8 @@ func (s keyvaultManagedHSMPrivateEndpointConnectionWrapper) SearchLookups() []so
 
 func (s keyvaultManagedHSMPrivateEndpointConnectionWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return map[shared.ItemType]bool{
-		azureshared.KeyVaultManagedHSM:             true,
-		azureshared.NetworkPrivateEndpoint:         true,
+		azureshared.KeyVaultManagedHSM:                  true,
+		azureshared.NetworkPrivateEndpoint:              true,
 		azureshared.ManagedIdentityUserAssignedIdentity: true,
 	}
 }

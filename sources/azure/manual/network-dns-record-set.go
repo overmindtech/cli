@@ -16,8 +16,10 @@ import (
 	"github.com/overmindtech/cli/sources/stdlib"
 )
 
-var NetworkDNSRecordSetLookupByRecordType = shared.NewItemTypeLookup("recordType", azureshared.NetworkDNSRecordSet)
-var NetworkDNSRecordSetLookupByName = shared.NewItemTypeLookup("name", azureshared.NetworkDNSRecordSet)
+var (
+	NetworkDNSRecordSetLookupByRecordType = shared.NewItemTypeLookup("recordType", azureshared.NetworkDNSRecordSet)
+	NetworkDNSRecordSetLookupByName       = shared.NewItemTypeLookup("name", azureshared.NetworkDNSRecordSet)
+)
 
 type networkDNSRecordSetWrapper struct {
 	client clients.RecordSetsClient
@@ -48,7 +50,7 @@ func recordTypeFromResourceType(resourceType string) string {
 	return ""
 }
 
-//ref: https://learn.microsoft.com/en-us/rest/api/dns/record-sets/get?view=rest-dns-2018-05-01&tabs=HTTP
+// ref: https://learn.microsoft.com/en-us/rest/api/dns/record-sets/get?view=rest-dns-2018-05-01&tabs=HTTP
 func (n networkDNSRecordSetWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if len(queryParts) < 3 {
 		return nil, azureshared.QueryError(errors.New("Get requires 3 query parts: zoneName, recordType, and relativeRecordSetName"), scope, n.Type())

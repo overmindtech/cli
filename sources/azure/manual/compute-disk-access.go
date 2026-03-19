@@ -105,6 +105,7 @@ func (c *computeDiskAccessWrapper) ListStream(ctx context.Context, stream discov
 		}
 	}
 }
+
 func (c *computeDiskAccessWrapper) azureDiskAccessToSDPItem(diskAccess *armcompute.DiskAccess, scope string) (*sdp.Item, *sdp.QueryError) {
 	if diskAccess.Name == nil {
 		return nil, azureshared.QueryError(errors.New("name is nil"), scope, c.Type())

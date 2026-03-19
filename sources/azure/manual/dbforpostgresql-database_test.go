@@ -119,7 +119,8 @@ func TestDBforPostgreSQLDatabase(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  serverName,
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-				}}
+				},
+			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})

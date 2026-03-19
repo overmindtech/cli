@@ -153,7 +153,7 @@ func (s computeDiskAccessPrivateEndpointConnectionWrapper) SearchLookups() []sou
 
 func (s computeDiskAccessPrivateEndpointConnectionWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return map[shared.ItemType]bool{
-		azureshared.ComputeDiskAccess:     true,
+		azureshared.ComputeDiskAccess:      true,
 		azureshared.NetworkPrivateEndpoint: true,
 	}
 }

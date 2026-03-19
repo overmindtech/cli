@@ -121,11 +121,11 @@ func (n networkDdosProtectionPlanWrapper) azureDdosProtectionPlanToSDPItem(plan 
 	}
 
 	sdpItem := &sdp.Item{
-		Type:             azureshared.NetworkDdosProtectionPlan.String(),
-		UniqueAttribute:  "name",
-		Attributes:      attributes,
-		Scope:            scope,
-		Tags:             azureshared.ConvertAzureTags(plan.Tags),
+		Type:              azureshared.NetworkDdosProtectionPlan.String(),
+		UniqueAttribute:   "name",
+		Attributes:        attributes,
+		Scope:             scope,
+		Tags:              azureshared.ConvertAzureTags(plan.Tags),
 		LinkedItemQueries: []*sdp.LinkedItemQuery{},
 	}
 

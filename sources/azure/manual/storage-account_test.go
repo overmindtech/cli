@@ -122,7 +122,8 @@ func TestStorageAccount(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  accountName + ".file.core.windows.net",
 					ExpectedScope:  "global",
-				}}
+				},
+			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})

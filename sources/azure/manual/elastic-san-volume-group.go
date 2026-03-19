@@ -334,14 +334,14 @@ func (e elasticSanVolumeGroupWrapper) azureVolumeGroupToSDPItem(vg *armelasticsa
 
 func (e elasticSanVolumeGroupWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return map[shared.ItemType]bool{
-		azureshared.ElasticSan:                     true,
-		azureshared.ElasticSanVolume:               true,
-		azureshared.ElasticSanVolumeSnapshot:       true,
-		azureshared.NetworkPrivateEndpoint:         true,
-		azureshared.NetworkSubnet:                  true,
-		azureshared.KeyVaultVault:                  true,
+		azureshared.ElasticSan:                          true,
+		azureshared.ElasticSanVolume:                    true,
+		azureshared.ElasticSanVolumeSnapshot:            true,
+		azureshared.NetworkPrivateEndpoint:              true,
+		azureshared.NetworkSubnet:                       true,
+		azureshared.KeyVaultVault:                       true,
 		azureshared.ManagedIdentityUserAssignedIdentity: true,
-		stdlib.NetworkDNS:                          true,
+		stdlib.NetworkDNS:                               true,
 	}
 }
 

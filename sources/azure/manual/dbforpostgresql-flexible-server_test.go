@@ -161,7 +161,8 @@ func TestDBforPostgreSQLFlexibleServer(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  serverName,
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-				}}
+				},
+			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})

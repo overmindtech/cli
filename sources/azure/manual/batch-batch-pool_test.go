@@ -215,7 +215,7 @@ func TestBatchBatchPool(t *testing.T) {
 		errorPager := &errorBatchPoolsPager{}
 		testClient := &testBatchPoolsClient{
 			MockBatchPoolsClient: mockClient,
-			pager:               errorPager,
+			pager:                errorPager,
 		}
 
 		wrapper := manual.NewBatchBatchPool(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})

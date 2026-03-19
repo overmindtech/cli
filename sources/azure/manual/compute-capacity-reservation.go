@@ -262,7 +262,7 @@ func (c *computeCapacityReservationWrapper) SearchLookups() []sources.ItemTypeLo
 func (c *computeCapacityReservationWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return map[shared.ItemType]bool{
 		azureshared.ComputeCapacityReservationGroup: true,
-		azureshared.ComputeVirtualMachine:            true,
+		azureshared.ComputeVirtualMachine:           true,
 	}
 }
 

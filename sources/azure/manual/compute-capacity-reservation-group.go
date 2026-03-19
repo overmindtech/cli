@@ -195,6 +195,7 @@ func (c *computeCapacityReservationGroupWrapper) azureCapacityReservationGroupTo
 
 	return sdpItem, nil
 }
+
 func (c *computeCapacityReservationGroupWrapper) GetLookups() sources.ItemTypeLookups {
 	return sources.ItemTypeLookups{
 		ComputeCapacityReservationGroupLookupByName,

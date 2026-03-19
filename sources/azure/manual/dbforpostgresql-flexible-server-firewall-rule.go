@@ -226,7 +226,7 @@ func (s dbforPostgreSQLFlexibleServerFirewallRuleWrapper) SearchLookups() []sour
 func (s dbforPostgreSQLFlexibleServerFirewallRuleWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return map[shared.ItemType]bool{
 		azureshared.DBforPostgreSQLFlexibleServer: true,
-		stdlib.NetworkIP:                          true,
+		stdlib.NetworkIP: true,
 	}
 }
 

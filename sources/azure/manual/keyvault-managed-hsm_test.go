@@ -179,7 +179,8 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "10.0.0.0/24",
 					ExpectedScope:  "global",
-				}}
+				},
+			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})

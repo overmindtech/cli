@@ -131,7 +131,8 @@ func TestNetworkLoadBalancer(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(lbName, "nat-pool"),
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-				}}
+				},
+			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
@@ -306,7 +307,7 @@ func TestNetworkLoadBalancer(t *testing.T) {
 		wrapper := manual.NewNetworkLoadBalancer(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		// Verify wrapper implements ListableWrapper interface
-		var _ = wrapper
+		_ = wrapper
 
 		// Cast to sources.Wrapper to access interface methods
 		w := wrapper.(sources.Wrapper)

@@ -6,14 +6,15 @@ import (
 	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v3"
+	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
 	"github.com/overmindtech/cli/sources/shared"
-	"github.com/overmindtech/cli/go/sdpcache"
-	"github.com/overmindtech/cli/go/discovery"
 )
+
 var AuthorizationRoleAssignmentLookupByName = shared.NewItemTypeLookup("name", azureshared.AuthorizationRoleAssignment)
 
 type authorizationRoleAssignmentWrapper struct {
@@ -86,6 +87,7 @@ func (a authorizationRoleAssignmentWrapper) ListStream(ctx context.Context, stre
 		}
 	}
 }
+
 func (a authorizationRoleAssignmentWrapper) Get(ctx context.Context, scope string, queryParts ...string) (*sdp.Item, *sdp.QueryError) {
 	if scope == "" {
 		return nil, azureshared.QueryError(errors.New("scope cannot be empty"), scope, a.Type())

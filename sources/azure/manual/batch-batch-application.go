@@ -205,8 +205,8 @@ func (b batchBatchApplicationWrapper) azureApplicationToSDPItem(app *armbatch.Ap
 
 func (b batchBatchApplicationWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return map[shared.ItemType]bool{
-		azureshared.BatchBatchAccount:               true,
-		azureshared.BatchBatchApplicationPackage:    true,
+		azureshared.BatchBatchAccount:            true,
+		azureshared.BatchBatchApplicationPackage: true,
 	}
 }
 

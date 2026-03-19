@@ -99,7 +99,8 @@ func TestComputeDedicatedHostGroup(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey(hostGroupName, "host-2"),
 					ExpectedScope:  scope,
-				}}
+				},
+			}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
 	})

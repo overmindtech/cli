@@ -95,7 +95,8 @@ func TestNetworkPublicIPAddress(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-ddos-plan",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-				}}
+				},
+			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
@@ -373,7 +374,7 @@ func TestNetworkPublicIPAddress(t *testing.T) {
 		wrapper := manual.NewNetworkPublicIPAddress(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		// Verify wrapper implements ListableWrapper interface
-		var _ = wrapper
+		_ = wrapper
 
 		// Cast to sources.Wrapper to access interface methods
 		w := wrapper.(sources.Wrapper)

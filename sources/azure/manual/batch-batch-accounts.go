@@ -91,6 +91,7 @@ func (b batchAccountWrapper) ListStream(ctx context.Context, stream discovery.Qu
 		}
 	}
 }
+
 func (b batchAccountWrapper) azureBatchAccountToSDPItem(account *armbatch.Account, scope string) (*sdp.Item, *sdp.QueryError) {
 	if account.Name == nil {
 		return nil, azureshared.QueryError(errors.New("name is nil"), scope, b.Type())

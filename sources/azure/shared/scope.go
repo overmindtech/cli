@@ -11,14 +11,14 @@ import (
 // It is used by multi-scope adapters to handle multiple resource groups.
 type ResourceGroupScope struct {
 	SubscriptionID string
-	ResourceGroup   string
+	ResourceGroup  string
 }
 
 // NewResourceGroupScope creates a ResourceGroupScope for the given subscription and resource group.
 func NewResourceGroupScope(subscriptionID, resourceGroup string) ResourceGroupScope {
 	return ResourceGroupScope{
 		SubscriptionID: subscriptionID,
-		ResourceGroup:   resourceGroup,
+		ResourceGroup:  resourceGroup,
 	}
 }
 

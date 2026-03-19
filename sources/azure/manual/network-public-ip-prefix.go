@@ -128,7 +128,7 @@ func (n networkPublicIPPrefixWrapper) azurePublicIPPrefixToSDPItem(prefix *armne
 		Attributes:        attributes,
 		Scope:             scope,
 		Tags:              azureshared.ConvertAzureTags(prefix.Tags),
-		LinkedItemQueries:  []*sdp.LinkedItemQuery{},
+		LinkedItemQueries: []*sdp.LinkedItemQuery{},
 	}
 
 	// Link to Custom Location when ExtendedLocation.Name is a custom location resource ID (Microsoft.ExtendedLocation/customLocations)

@@ -16,9 +16,7 @@ import (
 	"github.com/overmindtech/cli/sources/stdlib"
 )
 
-var (
-	ComputeGalleryApplicationVersionLookupByName = shared.NewItemTypeLookup("name", azureshared.ComputeGalleryApplicationVersion)
-)
+var ComputeGalleryApplicationVersionLookupByName = shared.NewItemTypeLookup("name", azureshared.ComputeGalleryApplicationVersion)
 
 type computeGalleryApplicationVersionWrapper struct {
 	client clients.GalleryApplicationVersionsClient
@@ -370,7 +368,7 @@ func (c computeGalleryApplicationVersionWrapper) TerraformMappings() []*sdp.Terr
 	return []*sdp.TerraformMapping{
 		{
 			TerraformMethod: sdp.QueryMethod_SEARCH,
-			//example id: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/group1/providers/Microsoft.Compute/galleries/gallery1/applications/galleryApplication1/versions/galleryApplicationVersion1
+			// example id: /subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/group1/providers/Microsoft.Compute/galleries/gallery1/applications/galleryApplication1/versions/galleryApplicationVersion1
 			TerraformQueryMap: "azurerm_gallery_application_version.id",
 		},
 	}

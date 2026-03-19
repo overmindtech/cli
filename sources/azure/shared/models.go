@@ -50,6 +50,9 @@ const (
 	// Resources (subscriptions, resource groups)
 	Resources shared.API = "resources" // Microsoft.Resources
 
+	// OperationalInsights
+	OperationalInsights shared.API = "operationalinsights" // Microsoft.OperationalInsights
+
 	// ExtendedLocation (custom locations, edge zones)
 	ExtendedLocation shared.API = "extendedlocation" // Microsoft.ExtendedLocation
 )
@@ -138,6 +141,7 @@ const (
 	NetworkInterfaceTapConfiguration               shared.Resource = "network-interface-tap-configuration"
 	ServiceEndpointPolicy                          shared.Resource = "service-endpoint-policy"
 	IpAllocation                                   shared.Resource = "ip-allocation"
+	NetworkWatcher                                 shared.Resource = "network-watcher"
 
 	// Storage resources
 	Account                                 shared.Resource = "account"
@@ -223,14 +227,17 @@ const (
 	BatchDetector                  shared.Resource = "batch-detector"
 
 	// ElasticSAN resources
-	ElasticSanResource  shared.Resource = "elastic-san"
-	VolumeGroup         shared.Resource = "volume-group"
-	Volume              shared.Resource = "volume"
-	VolumeSnapshot      shared.Resource = "elastic-san-volume-snapshot"
+	ElasticSanResource shared.Resource = "elastic-san"
+	VolumeGroup        shared.Resource = "volume-group"
+	Volume             shared.Resource = "volume"
+	VolumeSnapshot     shared.Resource = "elastic-san-volume-snapshot"
 
 	// Authorization resources
 	RoleAssignment shared.Resource = "role-assignment"
 	RoleDefinition shared.Resource = "role-definition"
+
+	// OperationalInsights resources
+	Workspace shared.Resource = "workspace"
 
 	// ExtendedLocation resources
 	CustomLocation shared.Resource = "custom-location"

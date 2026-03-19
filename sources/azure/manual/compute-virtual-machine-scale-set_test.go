@@ -206,7 +206,8 @@ func TestComputeVirtualMachineScaleSet(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-keyvault-ext",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-				}}
+				},
+			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})

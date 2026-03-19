@@ -245,9 +245,9 @@ func (s elasticSanVolumeSnapshotWrapper) azureSnapshotToSDPItem(snapshot *armela
 
 func (s elasticSanVolumeSnapshotWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return map[shared.ItemType]bool{
-		azureshared.ElasticSan:             true,
-		azureshared.ElasticSanVolumeGroup:  true,
-		azureshared.ElasticSanVolume:       true,
+		azureshared.ElasticSan:            true,
+		azureshared.ElasticSanVolumeGroup: true,
+		azureshared.ElasticSanVolume:      true,
 	}
 }
 

@@ -249,9 +249,9 @@ func TestSQLServerIntegration(t *testing.T) {
 				}
 			}
 
-		log.Printf("Verified %d linked item queries for SQL server %s", len(linkedQueries), sqlServerName)
+			log.Printf("Verified %d linked item queries for SQL server %s", len(linkedQueries), sqlServerName)
+		})
 	})
-})
 
 	t.Run("Teardown", func(t *testing.T) {
 		ctx := t.Context()

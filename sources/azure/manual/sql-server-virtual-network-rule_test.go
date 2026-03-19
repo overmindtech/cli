@@ -203,7 +203,7 @@ func TestSqlServerVirtualNetworkRule(t *testing.T) {
 
 		testClient := &testSqlServerVirtualNetworkRuleClient{
 			MockSqlServerVirtualNetworkRuleClient: mockClient,
-			pager:                                  pager,
+			pager:                                 pager,
 		}
 		wrapper := manual.NewSqlServerVirtualNetworkRule(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
@@ -238,7 +238,7 @@ func TestSqlServerVirtualNetworkRule(t *testing.T) {
 
 		testClient := &testSqlServerVirtualNetworkRuleClient{
 			MockSqlServerVirtualNetworkRuleClient: mockClient,
-			pager:                                  pager,
+			pager:                                 pager,
 		}
 		wrapper := manual.NewSqlServerVirtualNetworkRule(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
@@ -292,7 +292,7 @@ func TestSqlServerVirtualNetworkRule(t *testing.T) {
 		errorPager := &errorSqlServerVirtualNetworkRulePager{}
 		testClient := &testSqlServerVirtualNetworkRuleClient{
 			MockSqlServerVirtualNetworkRuleClient: mockClient,
-			pager:                                  errorPager,
+			pager:                                 errorPager,
 		}
 
 		wrapper := manual.NewSqlServerVirtualNetworkRule(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
@@ -348,8 +348,8 @@ func TestSqlServerVirtualNetworkRule(t *testing.T) {
 func createAzureSqlServerVirtualNetworkRule(serverName, ruleName, subnetID string) *armsql.VirtualNetworkRule {
 	ruleID := "/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Sql/servers/" + serverName + "/virtualNetworkRules/" + ruleName
 	rule := &armsql.VirtualNetworkRule{
-		Name: &ruleName,
-		ID:   &ruleID,
+		Name:       &ruleName,
+		ID:         &ruleID,
 		Properties: &armsql.VirtualNetworkRuleProperties{},
 	}
 	if subnetID != "" {

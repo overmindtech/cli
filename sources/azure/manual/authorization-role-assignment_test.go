@@ -73,7 +73,8 @@ func TestAuthorizationRoleAssignment(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "b24988ac-6180-42a0-ab88-20f7382dd24c",
 					ExpectedScope:  subscriptionID,
-				}}
+				},
+			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
@@ -503,7 +504,8 @@ func TestAuthorizationRoleAssignment(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-identity",
 					ExpectedScope:  scope,
-				}}
+				},
+			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
