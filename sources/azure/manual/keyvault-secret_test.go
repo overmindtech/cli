@@ -135,7 +135,8 @@ func TestKeyVaultSecret(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  fmt.Sprintf("https://%s.vault.azure.net/secrets/%s", vaultName, secretName),
 					ExpectedScope:  "global",
-				}}
+				},
+			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})

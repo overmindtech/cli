@@ -69,7 +69,8 @@ func TestComputeVirtualMachineExtension(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  vmName,
 					ExpectedScope:  scope,
-				}}
+				},
+			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})

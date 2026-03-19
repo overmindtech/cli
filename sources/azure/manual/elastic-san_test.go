@@ -31,9 +31,9 @@ func createAzureElasticSan(name string) *armelasticsan.ElasticSan {
 		Tags:     map[string]*string{"env": new("test")},
 		Properties: &armelasticsan.Properties{
 			BaseSizeTiB:             &baseSize,
-			ExtendedCapacitySizeTiB:  &extendedSize,
-			ProvisioningState:        &provisioningState,
-			VolumeGroupCount:         new(int64(0)),
+			ExtendedCapacitySizeTiB: &extendedSize,
+			ProvisioningState:       &provisioningState,
+			VolumeGroupCount:        new(int64(0)),
 		},
 	}
 }

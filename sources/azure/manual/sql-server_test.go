@@ -254,7 +254,8 @@ func TestSqlServer(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  serverName + ".database.windows.net",
 					ExpectedScope:  "global",
-				}}
+				},
+			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})

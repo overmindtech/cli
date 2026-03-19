@@ -106,7 +106,7 @@ func (n networkApplicationSecurityGroupWrapper) azureApplicationSecurityGroupToS
 		LinkedItemQueries: []*sdp.LinkedItemQuery{},
 	}
 
-	//no links - https://learn.microsoft.com/en-us/rest/api/virtualnetwork/application-security-groups/get?view=rest-virtualnetwork-2025-05-01&tabs=HTTP
+	// no links - https://learn.microsoft.com/en-us/rest/api/virtualnetwork/application-security-groups/get?view=rest-virtualnetwork-2025-05-01&tabs=HTTP
 
 	// Health from provisioning state
 	if asg.Properties != nil && asg.Properties.ProvisioningState != nil {

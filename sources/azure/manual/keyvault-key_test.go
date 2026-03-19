@@ -22,7 +22,6 @@ import (
 	"github.com/overmindtech/cli/sources/stdlib"
 )
 
-
 type mockKeysPager struct {
 	pages []armkeyvault.KeysClientListResponse
 	index int
@@ -125,7 +124,8 @@ func TestKeyVaultKey(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  fmt.Sprintf("https://%s.vault.azure.net/keys/%s", vaultName, keyName),
 					ExpectedScope:  "global",
-				}}
+				},
+			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})

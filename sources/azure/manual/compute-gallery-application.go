@@ -15,9 +15,7 @@ import (
 	"github.com/overmindtech/cli/sources/stdlib"
 )
 
-var (
-	ComputeGalleryApplicationLookupByName = shared.NewItemTypeLookup("name", azureshared.ComputeGalleryApplication)
-)
+var ComputeGalleryApplicationLookupByName = shared.NewItemTypeLookup("name", azureshared.ComputeGalleryApplication)
 
 type computeGalleryApplicationWrapper struct {
 	client clients.GalleryApplicationsClient

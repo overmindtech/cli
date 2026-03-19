@@ -30,9 +30,9 @@ func createAzureVirtualNetworkLink(name, privateZoneName, subscriptionID, resour
 		Location: new("global"),
 		Tags:     map[string]*string{"env": new("test")},
 		Properties: &armprivatedns.VirtualNetworkLinkProperties{
-			ProvisioningState:   &provisioningState,
+			ProvisioningState:       &provisioningState,
 			VirtualNetworkLinkState: &linkState,
-			RegistrationEnabled: &registrationEnabled,
+			RegistrationEnabled:     &registrationEnabled,
 			VirtualNetwork: &armprivatedns.SubResource{
 				ID: new("/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.Network/virtualNetworks/test-vnet"),
 			},

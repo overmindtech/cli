@@ -87,11 +87,12 @@ var (
 	NetworkNetworkInterfaceTapConfiguration               = shared.NewItemType(Azure, Network, NetworkInterfaceTapConfiguration)
 	NetworkServiceEndpointPolicy                          = shared.NewItemType(Azure, Network, ServiceEndpointPolicy)
 	NetworkIpAllocation                                   = shared.NewItemType(Azure, Network, IpAllocation)
+	NetworkNetworkWatcher                                 = shared.NewItemType(Azure, Network, NetworkWatcher)
 
 	// ExtendedLocation item types
 	ExtendedLocationCustomLocation = shared.NewItemType(Azure, ExtendedLocation, CustomLocation)
 
-	//Storage item types
+	// Storage item types
 	StorageAccount                   = shared.NewItemType(Azure, Storage, Account)
 	StorageBlobContainer             = shared.NewItemType(Azure, Storage, BlobContainer)
 	StorageEncryptionScope           = shared.NewItemType(Azure, Storage, EncryptionScope)
@@ -176,10 +177,13 @@ var (
 	BatchBatchDetector                  = shared.NewItemType(Azure, Batch, BatchDetector)
 
 	// ElasticSAN item types
-	ElasticSan              = shared.NewItemType(Azure, ElasticSAN, ElasticSanResource)
-	ElasticSanVolumeGroup   = shared.NewItemType(Azure, ElasticSAN, VolumeGroup)
-	ElasticSanVolume        = shared.NewItemType(Azure, ElasticSAN, Volume)
+	ElasticSan               = shared.NewItemType(Azure, ElasticSAN, ElasticSanResource)
+	ElasticSanVolumeGroup    = shared.NewItemType(Azure, ElasticSAN, VolumeGroup)
+	ElasticSanVolume         = shared.NewItemType(Azure, ElasticSAN, Volume)
 	ElasticSanVolumeSnapshot = shared.NewItemType(Azure, ElasticSAN, VolumeSnapshot)
+
+	// OperationalInsights item types
+	OperationalInsightsWorkspace = shared.NewItemType(Azure, OperationalInsights, Workspace)
 
 	// Authorization item types
 	AuthorizationRoleAssignment = shared.NewItemType(Azure, Authorization, RoleAssignment)

@@ -149,15 +149,15 @@ func (n networkSubnetWrapper) SearchLookups() []sources.ItemTypeLookups {
 
 func (n networkSubnetWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return map[shared.ItemType]bool{
-		azureshared.NetworkVirtualNetwork:          true,
-		azureshared.NetworkNetworkSecurityGroup:    true,
-		azureshared.NetworkRouteTable:              true,
-		azureshared.NetworkNatGateway:              true,
-		azureshared.NetworkPrivateEndpoint:         true,
-		azureshared.NetworkServiceEndpointPolicy:   true,
-		azureshared.NetworkIpAllocation:            true,
-		azureshared.NetworkNetworkInterface:       true,
-		azureshared.NetworkApplicationGateway:     true,
+		azureshared.NetworkVirtualNetwork:        true,
+		azureshared.NetworkNetworkSecurityGroup:  true,
+		azureshared.NetworkRouteTable:            true,
+		azureshared.NetworkNatGateway:            true,
+		azureshared.NetworkPrivateEndpoint:       true,
+		azureshared.NetworkServiceEndpointPolicy: true,
+		azureshared.NetworkIpAllocation:          true,
+		azureshared.NetworkNetworkInterface:      true,
+		azureshared.NetworkApplicationGateway:    true,
 	}
 }
 

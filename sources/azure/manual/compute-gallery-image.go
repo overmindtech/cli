@@ -6,8 +6,8 @@ import (
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	"github.com/overmindtech/cli/go/discovery"
-	"github.com/overmindtech/cli/go/sdpcache"
 	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
@@ -15,9 +15,7 @@ import (
 	"github.com/overmindtech/cli/sources/stdlib"
 )
 
-var (
-	ComputeGalleryImageLookupByName = shared.NewItemTypeLookup("name", azureshared.ComputeGalleryImage)
-)
+var ComputeGalleryImageLookupByName = shared.NewItemTypeLookup("name", azureshared.ComputeGalleryImage)
 
 type computeGalleryImageWrapper struct {
 	client clients.GalleryImagesClient

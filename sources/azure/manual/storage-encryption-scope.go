@@ -156,8 +156,8 @@ func (s storageEncryptionScopeWrapper) PotentialLinks() map[shared.ItemType]bool
 	return map[shared.ItemType]bool{
 		azureshared.StorageAccount: true,
 		azureshared.KeyVaultVault:  true,
-		azureshared.KeyVaultKey:     true,
-		stdlib.NetworkDNS:           true,
+		azureshared.KeyVaultKey:    true,
+		stdlib.NetworkDNS:          true,
 	}
 }
 

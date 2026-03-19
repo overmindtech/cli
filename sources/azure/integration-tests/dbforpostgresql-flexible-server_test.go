@@ -247,10 +247,10 @@ func TestDBforPostgreSQLFlexibleServerIntegration(t *testing.T) {
 				}
 			}
 
-		log.Printf("Verified %d linked item queries for PostgreSQL Flexible Server %s (hasSubnet: %v, hasVNet: %v, hasDNS: %v)",
-			len(linkedQueries), postgreSQLServerName, hasSubnetLink, hasVirtualNetworkLink, hasDNSLink)
+			log.Printf("Verified %d linked item queries for PostgreSQL Flexible Server %s (hasSubnet: %v, hasVNet: %v, hasDNS: %v)",
+				len(linkedQueries), postgreSQLServerName, hasSubnetLink, hasVirtualNetworkLink, hasDNSLink)
+		})
 	})
-})
 
 	t.Run("Teardown", func(t *testing.T) {
 		ctx := t.Context()

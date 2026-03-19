@@ -155,7 +155,7 @@ func (s dbforpostgresqlFlexibleServerPrivateEndpointConnectionWrapper) SearchLoo
 func (s dbforpostgresqlFlexibleServerPrivateEndpointConnectionWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return map[shared.ItemType]bool{
 		azureshared.DBforPostgreSQLFlexibleServer: true,
-		azureshared.NetworkPrivateEndpoint:       true,
+		azureshared.NetworkPrivateEndpoint:        true,
 	}
 }
 

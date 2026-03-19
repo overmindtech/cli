@@ -153,7 +153,8 @@ func TestDocumentDBDatabaseAccounts(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  "identity-rg",
 					ExpectedScope:  subscriptionID + ".identity-rg",
-				}}
+				},
+			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})

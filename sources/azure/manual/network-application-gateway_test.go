@@ -209,7 +209,8 @@ func TestNetworkApplicationGateway(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-identity",
 					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-				}}
+				},
+			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})

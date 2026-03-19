@@ -154,7 +154,7 @@ func (s sqlServerPrivateEndpointConnectionWrapper) SearchLookups() []sources.Ite
 
 func (s sqlServerPrivateEndpointConnectionWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return map[shared.ItemType]bool{
-		azureshared.SQLServer:             true,
+		azureshared.SQLServer:              true,
 		azureshared.NetworkPrivateEndpoint: true,
 	}
 }

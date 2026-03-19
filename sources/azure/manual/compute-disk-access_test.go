@@ -71,7 +71,8 @@ func TestComputeDiskAccess(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  diskAccessName,
 					ExpectedScope:  scope,
-				}}
+				},
+			}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
 	})
@@ -113,7 +114,8 @@ func TestComputeDiskAccess(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-private-endpoint-other-rg",
 					ExpectedScope:  subscriptionID + ".other-rg",
-				}}
+				},
+			}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
 	})

@@ -248,7 +248,7 @@ func TestComputeDedicatedHost(t *testing.T) {
 		}
 		testClient := &testDedicatedHostsClient{
 			MockDedicatedHostsClient: mockClient,
-			pager:                     pager,
+			pager:                    pager,
 		}
 
 		wrapper := NewComputeDedicatedHost(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})

@@ -162,7 +162,8 @@ func TestComputeImage(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-source-vm",
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-				}}
+				},
+			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
@@ -623,8 +624,7 @@ func (m *mockImagesPager) NextPage(ctx context.Context) (armcompute.ImagesClient
 }
 
 // errorImagesPager is a mock pager that always returns an error
-type errorImagesPager struct {
-}
+type errorImagesPager struct{}
 
 func newErrorImagesPager(ctrl *gomock.Controller) clients.ImagesPager {
 	return &errorImagesPager{}

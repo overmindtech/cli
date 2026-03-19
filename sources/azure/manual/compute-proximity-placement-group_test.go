@@ -79,7 +79,8 @@ func TestComputeProximityPlacementGroup(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-vmss",
 					ExpectedScope:  scope,
-				}}
+				},
+			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
@@ -251,7 +252,6 @@ func TestComputeProximityPlacementGroup(t *testing.T) {
 			t.Error("Expected error when getting proximity placement group with empty name, but got nil")
 		}
 	})
-
 }
 
 func createAzureProximityPlacementGroup(ppgName, subscriptionID, resourceGroup string) *armcompute.ProximityPlacementGroup {

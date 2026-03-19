@@ -74,19 +74,22 @@ func TestComputeSnapshot(t *testing.T) {
 					ExpectedType:   azureshared.ComputeDiskAccess.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-disk-access",
-					ExpectedScope:  subscriptionID + "." + resourceGroup},
+					ExpectedScope:  subscriptionID + "." + resourceGroup,
+				},
 				{
 					// Properties.Encryption.DiskEncryptionSetID
 					ExpectedType:   azureshared.ComputeDiskEncryptionSet.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "test-des",
-					ExpectedScope:  subscriptionID + "." + resourceGroup},
+					ExpectedScope:  subscriptionID + "." + resourceGroup,
+				},
 				{
 					// Properties.CreationData.SourceResourceID (disk)
 					ExpectedType:   azureshared.ComputeDisk.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "source-disk",
-					ExpectedScope:  subscriptionID + "." + resourceGroup},
+					ExpectedScope:  subscriptionID + "." + resourceGroup,
+				},
 			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
@@ -118,7 +121,8 @@ func TestComputeSnapshot(t *testing.T) {
 					ExpectedType:   azureshared.ComputeSnapshot.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "source-snapshot",
-					ExpectedScope:  subscriptionID + "." + resourceGroup},
+					ExpectedScope:  subscriptionID + "." + resourceGroup,
+				},
 			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
@@ -150,25 +154,29 @@ func TestComputeSnapshot(t *testing.T) {
 					ExpectedType:   azureshared.StorageAccount.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "teststorageaccount",
-					ExpectedScope:  subscriptionID + "." + resourceGroup},
+					ExpectedScope:  subscriptionID + "." + resourceGroup,
+				},
 				{
 					// Properties.CreationData.SourceURI → Blob Container
 					ExpectedType:   azureshared.StorageBlobContainer.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  shared.CompositeLookupKey("teststorageaccount", "vhds"),
-					ExpectedScope:  subscriptionID + "." + resourceGroup},
+					ExpectedScope:  subscriptionID + "." + resourceGroup,
+				},
 				{
 					// Properties.CreationData.SourceURI → HTTP
 					ExpectedType:   stdlib.NetworkHTTP.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  "https://teststorageaccount.blob.core.windows.net/vhds/my-disk.vhd",
-					ExpectedScope:  "global"},
+					ExpectedScope:  "global",
+				},
 				{
 					// Properties.CreationData.SourceURI → DNS
 					ExpectedType:   stdlib.NetworkDNS.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  "teststorageaccount.blob.core.windows.net",
-					ExpectedScope:  "global"},
+					ExpectedScope:  "global",
+				},
 			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
@@ -200,13 +208,15 @@ func TestComputeSnapshot(t *testing.T) {
 					ExpectedType:   stdlib.NetworkHTTP.String(),
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  "https://10.0.0.1/vhds/my-disk.vhd",
-					ExpectedScope:  "global"},
+					ExpectedScope:  "global",
+				},
 				{
 					// Properties.CreationData.SourceURI → IP (host is IP address)
 					ExpectedType:   stdlib.NetworkIP.String(),
 					ExpectedMethod: sdp.QueryMethod_GET,
 					ExpectedQuery:  "10.0.0.1",
-					ExpectedScope:  "global"},
+					ExpectedScope:  "global",
+				},
 			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)

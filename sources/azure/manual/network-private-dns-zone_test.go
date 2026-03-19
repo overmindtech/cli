@@ -365,7 +365,7 @@ func createAzurePrivateZone(zoneName string) *armprivatedns.PrivateZone {
 			"project": new("testing"),
 		},
 		Properties: &armprivatedns.PrivateZoneProperties{
-			ProvisioningState: &state,
+			ProvisioningState:     &state,
 			MaxNumberOfRecordSets: new(int64(5000)),
 			NumberOfRecordSets:    new(int64(0)),
 		},

@@ -89,7 +89,8 @@ func TestNetworkNetworkInterface(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  nicName,
 					ExpectedScope:  subscriptionID + "." + resourceGroup,
-				}}
+				},
+			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
@@ -142,7 +143,8 @@ func TestNetworkNetworkInterface(t *testing.T) {
 					ExpectedMethod: sdp.QueryMethod_SEARCH,
 					ExpectedQuery:  "dns.internal",
 					ExpectedScope:  "global",
-				}}
+				},
+			}
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
 	})
@@ -321,7 +323,7 @@ func TestNetworkNetworkInterface(t *testing.T) {
 		wrapper := manual.NewNetworkNetworkInterface(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
 
 		// Verify wrapper implements ListableWrapper interface
-		var _ = wrapper
+		_ = wrapper
 
 		// Cast to sources.Wrapper to access interface methods
 		w := wrapper.(sources.Wrapper)
@@ -361,7 +363,6 @@ func TestNetworkNetworkInterface(t *testing.T) {
 		if !foundMapping {
 			t.Error("Expected TerraformMappings to include 'azurerm_network_interface.name' mapping")
 		}
-
 	})
 }
 

@@ -128,8 +128,8 @@ func (n networkNatGatewayWrapper) azureNatGatewayToSDPItem(ng *armnetwork.NatGat
 
 	sdpItem := &sdp.Item{
 		Type:              azureshared.NetworkNatGateway.String(),
-		UniqueAttribute:    "name",
-		Attributes:         attributes,
+		UniqueAttribute:   "name",
+		Attributes:        attributes,
 		Scope:             scope,
 		Tags:              azureshared.ConvertAzureTags(ng.Tags),
 		LinkedItemQueries: []*sdp.LinkedItemQuery{},
@@ -256,10 +256,10 @@ func (n networkNatGatewayWrapper) GetLookups() sources.ItemTypeLookups {
 
 func (n networkNatGatewayWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return map[shared.ItemType]bool{
-		azureshared.NetworkPublicIPAddress:   true,
-		azureshared.NetworkPublicIPPrefix:   true,
-		azureshared.NetworkSubnet:            true,
-		azureshared.NetworkVirtualNetwork:    true,
+		azureshared.NetworkPublicIPAddress: true,
+		azureshared.NetworkPublicIPPrefix:  true,
+		azureshared.NetworkSubnet:          true,
+		azureshared.NetworkVirtualNetwork:  true,
 	}
 }
 

@@ -235,7 +235,7 @@ func (s sqlElasticPoolWrapper) SearchLookups() []sources.ItemTypeLookups {
 func (s sqlElasticPoolWrapper) PotentialLinks() map[shared.ItemType]bool {
 	return map[shared.ItemType]bool{
 		azureshared.SQLServer:                           true,
-		azureshared.SQLDatabase:                        true,
+		azureshared.SQLDatabase:                         true,
 		azureshared.MaintenanceMaintenanceConfiguration: true,
 	}
 }

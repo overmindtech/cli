@@ -53,8 +53,8 @@ func createAzureCapacityReservationWithVMs(reservationName, groupName, subscript
 			Capacity: new(int64(1)),
 		},
 		Properties: &armcompute.CapacityReservationProperties{
-			ProvisioningState:            new("Succeeded"),
-			VirtualMachinesAssociated:   vms,
+			ProvisioningState:         new("Succeeded"),
+			VirtualMachinesAssociated: vms,
 		},
 	}
 }
@@ -248,7 +248,7 @@ func TestComputeCapacityReservation(t *testing.T) {
 		}
 		testClient := &testCapacityReservationsClient{
 			MockCapacityReservationsClient: mockClient,
-			pager:                           pager,
+			pager:                          pager,
 		}
 
 		wrapper := NewComputeCapacityReservation(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
@@ -300,7 +300,7 @@ func TestComputeCapacityReservation(t *testing.T) {
 		errorPager := &errorCapacityReservationsPager{}
 		testClient := &testCapacityReservationsClient{
 			MockCapacityReservationsClient: mockClient,
-			pager:                           errorPager,
+			pager:                          errorPager,
 		}
 
 		wrapper := NewComputeCapacityReservation(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
@@ -324,7 +324,7 @@ func TestComputeCapacityReservation(t *testing.T) {
 		links := wrapper.PotentialLinks()
 		expected := map[shared.ItemType]bool{
 			azureshared.ComputeCapacityReservationGroup: true,
-			azureshared.ComputeVirtualMachine:            true,
+			azureshared.ComputeVirtualMachine:           true,
 		}
 		for itemType, want := range expected {
 			if got := links[itemType]; got != want {

@@ -5,15 +5,16 @@ import (
 	"fmt"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v3"
+	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdpcache"
 	"github.com/overmindtech/cli/sources"
 	"github.com/overmindtech/cli/sources/azure/clients"
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
 	"github.com/overmindtech/cli/sources/shared"
 	"github.com/overmindtech/cli/sources/stdlib"
-	"github.com/overmindtech/cli/go/discovery"
-	"github.com/overmindtech/cli/go/sdpcache"
 )
+
 var StorageAccountLookupByName = shared.NewItemTypeLookup("name", azureshared.StorageAccount)
 
 type storageAccountWrapper struct {
