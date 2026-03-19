@@ -183,6 +183,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create load balancers client: %w", err)
 		}
 
+		loadBalancerFrontendIPConfigurationsClient, err := armnetwork.NewLoadBalancerFrontendIPConfigurationsClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create load balancer frontend IP configurations client: %w", err)
+		}
+
 		privateEndpointsClient, err := armnetwork.NewPrivateEndpointsClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create private endpoints client: %w", err)
@@ -568,6 +573,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewLoadBalancersClient(loadBalancersClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewNetworkLoadBalancerFrontendIPConfiguration(
+					clients.NewLoadBalancerFrontendIPConfigurationsClient(loadBalancerFrontendIPConfigurationsClient),
+					resourceGroupScopes,
+				), cache),
 				sources.WrapperToAdapter(NewNetworkPrivateEndpoint(
 					clients.NewPrivateEndpointsClient(privateEndpointsClient),
 					resourceGroupScopes,
@@ -817,6 +826,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewNetworkPublicIPPrefix(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkDdosProtectionPlan(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkLoadBalancer(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewNetworkLoadBalancerFrontendIPConfiguration(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkZone(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkPrivateDNSZone(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkDNSRecordSet(nil, placeholderResourceGroupScopes), noOpCache),

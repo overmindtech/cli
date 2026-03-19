@@ -58,6 +58,7 @@ func GetResourceIDPathKeys(resourceType string) []string {
 		"azure-elasticsan-elastic-san-volume-snapshot":                      {"elasticSans", "volumegroups", "snapshots"},          // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.ElasticSan/elasticSans/{elasticSanName}/volumegroups/{volumeGroupName}/snapshots/{snapshotName}"
 		"azure-compute-disk-access-private-endpoint-connection":             {"diskAccesses", "privateEndpointConnections"},        // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Compute/diskAccesses/{diskAccessName}/privateEndpointConnections/{connectionName}"
 		"azure-network-dns-virtual-network-link":                            {"privateDnsZones", "virtualNetworkLinks"},            // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/privateDnsZones/{zoneName}/virtualNetworkLinks/{linkName}"
+		"azure-network-load-balancer-frontend-ip-configuration":             {"loadBalancers", "frontendIPConfigurations"},         // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/loadBalancers/{lbName}/frontendIPConfigurations/{frontendIPConfigName}"
 		"azure-network-flow-log":                                            {"networkWatchers", "flowLogs"},                       // "/subscriptions/{sub}/resourceGroups/{rg}/providers/Microsoft.Network/networkWatchers/{networkWatcherName}/flowLogs/{flowLogName}"
 	}
 
