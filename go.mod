@@ -194,7 +194,7 @@ require (
 	gonum.org/v1/gonum v0.17.0
 	google.golang.org/api v0.271.0
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260311181403-84a4fc48630c
-	google.golang.org/grpc v1.79.2
+	google.golang.org/grpc v1.79.3
 	google.golang.org/protobuf v1.36.11
 	gopkg.in/ini.v1 v1.67.1
 	gopkg.in/yaml.v3 v3.0.1
