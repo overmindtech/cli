@@ -60,16 +60,16 @@ func (p *pendingWork) Wait(ctx context.Context, entry *workEntry) (ok bool) {
 	// Calculate safety timeout based on when work started
 	deadline := entry.startTime.Add(maxPendingWorkAge)
 	timeUntilDeadline := time.Until(deadline)
-	
+
 	// If we're already past the deadline, return immediately
 	if timeUntilDeadline <= 0 {
 		return false
 	}
-	
+
 	// Create a timer for the safety timeout
 	timer := time.NewTimer(timeUntilDeadline)
 	defer timer.Stop()
-	
+
 	select {
 	case <-entry.done:
 		// Work completed normally

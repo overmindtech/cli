@@ -158,7 +158,7 @@ func parseExpiryKey(key []byte) (time.Time, SSTHash, []byte, error) {
 	}
 
 	expiryNanoUint := binary.BigEndian.Uint64(key[0:8])
-	expiryNano := int64(expiryNanoUint) //nolint:gosec // G115 (overflow): guarded by underflow check on lines 153-155 that clamps to zero
+	expiryNano := int64(expiryNanoUint) //nolint:gosec // G115 (overflow): guarded by underflow check that clamps to zero
 	// Check for overflow when converting uint64 to int64
 	if expiryNano < 0 && expiryNanoUint > 0 {
 		expiryNano = 0
@@ -178,26 +178,15 @@ func parseExpiryKey(key []byte) (time.Time, SSTHash, []byte, error) {
 	return expiry, sstHash, entryKey, nil
 }
 
-// BoltCache implements the Cache interface using bbolt for persistent storage
-type BoltCache struct {
+// boltStore holds the bbolt-backed storage implementation reused by both
+// BoltCache and ShardedCache. It handles storage and purge execution only;
+// purge scheduling (timer, goroutine) is owned by the Cache-level wrapper.
+type boltStore struct {
 	db   *bbolt.DB
 	path string
 
-	// Minimum amount of time to wait between cache purges
-	MinWaitTime time.Duration
-
 	// CompactThreshold is the number of deleted bytes before triggering compaction
 	CompactThreshold int64
-
-	// The timer that is used to trigger the next purge
-	purgeTimer *time.Timer
-
-	// The time that the purger will run next
-	nextPurge time.Time
-
-	// Ensures that purge stats like `purgeTimer` and `nextPurge` aren't being
-	// modified concurrently
-	purgeMutex sync.Mutex
 
 	// Track deleted bytes for compaction
 	deletedBytes int64
@@ -206,37 +195,19 @@ type BoltCache struct {
 	// Ensures that compaction operations aren't running concurrently
 	// Read operations use RLock, write operations and compaction use Lock
 	compactMutex sync.RWMutex
-
-	// Tracks in-flight lookups to prevent duplicate work when multiple
-	// goroutines request the same cache key simultaneously
-	pending *pendingWork
 }
 
-// assert interface
-var _ Cache = (*BoltCache)(nil)
-
-// BoltCacheOption is a functional option for configuring BoltCache
-type BoltCacheOption func(*BoltCache)
-
-// WithMinWaitTime sets the minimum wait time between purges
-func WithMinWaitTime(d time.Duration) BoltCacheOption {
-	return func(c *BoltCache) {
-		c.MinWaitTime = d
-	}
-}
+// BoltCacheOption is a functional option for configuring bolt-backed storage.
+type BoltCacheOption func(*boltStore)
 
 // WithCompactThreshold sets the threshold for triggering compaction
 func WithCompactThreshold(bytes int64) BoltCacheOption {
-	return func(c *BoltCache) {
+	return func(c *boltStore) {
 		c.CompactThreshold = bytes
 	}
 }
 
-// NewBoltCache creates a new BoltCache at the specified path.
-// If a cache file already exists at the path, it will be opened and used.
-// The existing file will be automatically handled by the purge process,
-// which removes expired items. No explicit cleanup is needed on startup.
-func NewBoltCache(path string, opts ...BoltCacheOption) (*BoltCache, error) {
+func newBoltCacheStore(path string, opts ...BoltCacheOption) (*boltStore, error) {
 	// Ensure the directory exists
 	dir := filepath.Dir(path)
 	if err := os.MkdirAll(dir, 0o755); err != nil {
@@ -249,11 +220,10 @@ func NewBoltCache(path string, opts ...BoltCacheOption) (*BoltCache, error) {
 		return nil, fmt.Errorf("failed to open bolt database: %w", err)
 	}
 
-	c := &BoltCache{
+	c := &boltStore{
 		db:               db,
 		path:             path,
 		CompactThreshold: DefaultCompactThreshold,
-		pending:          newPendingWork(),
 	}
 
 	for _, opt := range opts {
@@ -276,7 +246,7 @@ func NewBoltCache(path string, opts ...BoltCacheOption) (*BoltCache, error) {
 }
 
 // initBuckets creates the required buckets if they don't exist
-func (c *BoltCache) initBuckets() error {
+func (c *boltStore) initBuckets() error {
 	return c.db.Update(func(tx *bbolt.Tx) error {
 		if _, err := tx.CreateBucketIfNotExists(itemsBucketName); err != nil {
 			return fmt.Errorf("failed to create items bucket: %w", err)
@@ -292,7 +262,7 @@ func (c *BoltCache) initBuckets() error {
 }
 
 // loadDeletedBytes loads the deleted bytes counter from the meta bucket
-func (c *BoltCache) loadDeletedBytes() error {
+func (c *boltStore) loadDeletedBytes() error {
 	return c.db.View(func(tx *bbolt.Tx) error {
 		meta := tx.Bucket(metaBucketName)
 		if meta == nil {
@@ -302,7 +272,7 @@ func (c *BoltCache) loadDeletedBytes() error {
 		data := meta.Get(deletedBytesKey)
 		if len(data) == 8 {
 			deletedBytesUint := binary.BigEndian.Uint64(data)
-			deletedBytes := int64(deletedBytesUint) //nolint:gosec // G115 (overflow): guarded by underflow check on lines 299-301 that clamps to zero
+			deletedBytes := int64(deletedBytesUint) //nolint:gosec // G115 (overflow): guarded by underflow check that clamps to zero
 			// Check for overflow when converting uint64 to int64
 			if deletedBytes < 0 && deletedBytesUint > 0 {
 				deletedBytes = 0
@@ -314,7 +284,7 @@ func (c *BoltCache) loadDeletedBytes() error {
 }
 
 // saveDeletedBytes saves the deleted bytes counter to the meta bucket
-func (c *BoltCache) saveDeletedBytes(tx *bbolt.Tx) error {
+func (c *boltStore) saveDeletedBytes(tx *bbolt.Tx) error {
 	meta := tx.Bucket(metaBucketName)
 	if meta == nil {
 		return errors.New("meta bucket not found")
@@ -333,28 +303,28 @@ func (c *BoltCache) saveDeletedBytes(tx *bbolt.Tx) error {
 }
 
 // addDeletedBytes adds to the deleted bytes counter (thread-safe)
-func (c *BoltCache) addDeletedBytes(n int64) {
+func (c *boltStore) addDeletedBytes(n int64) {
 	c.deletedMu.Lock()
 	c.deletedBytes += n
 	c.deletedMu.Unlock()
 }
 
 // getDeletedBytes returns the current deleted bytes count (thread-safe)
-func (c *BoltCache) getDeletedBytes() int64 {
+func (c *boltStore) getDeletedBytes() int64 {
 	c.deletedMu.Lock()
 	defer c.deletedMu.Unlock()
 	return c.deletedBytes
 }
 
 // resetDeletedBytes resets the deleted bytes counter (thread-safe)
-func (c *BoltCache) resetDeletedBytes() {
+func (c *boltStore) resetDeletedBytes() {
 	c.deletedMu.Lock()
 	c.deletedBytes = 0
 	c.deletedMu.Unlock()
 }
 
 // getFileSize returns the size of the BoltDB file, logging any errors
-func (c *BoltCache) getFileSize() int64 {
+func (c *boltStore) getFileSize() int64 {
 	if c == nil || c.path == "" {
 		return 0
 	}
@@ -372,25 +342,14 @@ func (c *BoltCache) getFileSize() int64 {
 	return stat.Size()
 }
 
-// getDiskUsageMetrics returns disk usage metrics for the BoltDB file
-func (c *BoltCache) getDiskUsageMetrics() (fileSize int64, deletedBytes int64) {
-	if c == nil || c.path == "" {
-		return 0, 0
-	}
-
-	fileSize = c.getFileSize()
-	deletedBytes = c.getDeletedBytes()
-
-	return fileSize, deletedBytes
-}
-
 // setDiskUsageAttributes sets disk usage attributes on a span
-func (c *BoltCache) setDiskUsageAttributes(span trace.Span) {
+func (c *boltStore) setDiskUsageAttributes(span trace.Span) {
 	if c == nil {
 		return
 	}
 
-	fileSize, deletedBytes := c.getDiskUsageMetrics()
+	fileSize := c.getFileSize()
+	deletedBytes := c.getDeletedBytes()
 	span.SetAttributes(
 		attribute.Int64("ovm.boltdb.fileSizeBytes", fileSize),
 		attribute.Int64("ovm.boltdb.deletedBytes", deletedBytes),
@@ -400,7 +359,7 @@ func (c *BoltCache) setDiskUsageAttributes(span trace.Span) {
 
 // CloseAndDestroy closes the database and deletes the cache file.
 // This method makes the destructive behavior explicit.
-func (c *BoltCache) CloseAndDestroy() error {
+func (c *boltStore) CloseAndDestroy() error {
 	if c == nil {
 		return nil
 	}
@@ -423,7 +382,7 @@ func (c *BoltCache) CloseAndDestroy() error {
 // deleteCacheFile removes the cache file entirely. This is used as a last resort
 // when the disk is full and cleanup doesn't help. It closes the database,
 // removes the file, and resets internal state.
-func (c *BoltCache) deleteCacheFile(ctx context.Context) error {
+func (c *boltStore) deleteCacheFile(ctx context.Context) error {
 	if c == nil {
 		return nil
 	}
@@ -442,7 +401,7 @@ func (c *BoltCache) deleteCacheFile(ctx context.Context) error {
 }
 
 // deleteCacheFileLocked is the internal version that assumes the caller already holds compactMutex.Lock()
-func (c *BoltCache) deleteCacheFileLocked(ctx context.Context, span trace.Span) error {
+func (c *boltStore) deleteCacheFileLocked(ctx context.Context, span trace.Span) error {
 	// Close the database if it's open
 	if err := c.db.Close(); err != nil {
 		span.RecordError(err)
@@ -483,214 +442,10 @@ func (c *BoltCache) deleteCacheFileLocked(ctx context.Context, span trace.Span) 
 	return nil
 }
 
-// createDoneFunc returns a done function that calls pending.Complete for the given cache key.
-// The done function releases resources and unblocks waiting goroutines.
-// The done function is safe to call multiple times (idempotent via sync.Once).
-func (c *BoltCache) createDoneFunc(ck CacheKey) func() {
-	if c == nil || c.pending == nil {
-		return noopDone
-	}
-	key := ck.String()
-	var once sync.Once
-	return func() {
-		once.Do(func() {
-			c.pending.Complete(key)
-		})
-	}
-}
-
-// Lookup performs a cache lookup for the given query parameters.
-func (c *BoltCache) Lookup(ctx context.Context, srcName string, method sdp.QueryMethod, scope string, typ string, query string, ignoreCache bool) (bool, CacheKey, []*sdp.Item, *sdp.QueryError, func()) {
-	ctx, span := tracing.Tracer().Start(ctx, "BoltCache.Lookup",
-		trace.WithAttributes(
-			attribute.String("ovm.cache.sourceName", srcName),
-			attribute.String("ovm.cache.method", method.String()),
-			attribute.String("ovm.cache.scope", scope),
-			attribute.String("ovm.cache.type", typ),
-			attribute.String("ovm.cache.query", query),
-			attribute.Bool("ovm.cache.ignoreCache", ignoreCache),
-		),
-	)
-	defer span.End()
-
-	ck := CacheKeyFromParts(srcName, method, scope, typ, query)
-
-	// Set disk usage metrics
-	c.setDiskUsageAttributes(span)
-
-	if c == nil {
-		span.SetAttributes(
-			attribute.String("ovm.cache.result", "cache not initialised"),
-			attribute.Bool("ovm.cache.hit", false),
-		)
-		return false, ck, nil, &sdp.QueryError{
-			ErrorType:   sdp.QueryError_OTHER,
-			ErrorString: "cache has not been initialised",
-			Scope:       scope,
-			SourceName:  srcName,
-			ItemType:    typ,
-		}, noopDone
-	}
-
-	if ignoreCache {
-		span.SetAttributes(
-			attribute.String("ovm.cache.result", "ignore cache"),
-			attribute.Bool("ovm.cache.hit", false),
-		)
-		return false, ck, nil, nil, noopDone
-	}
-
-	// Search already has RLock, so we don't need to add another one here
-	initialSearchStart := time.Now()
-	items, err := c.search(ctx, ck)
-	initialSearchDuration := time.Since(initialSearchStart)
-	span.SetAttributes(
-		attribute.Float64("ovm.cache.initialSearchDuration_ms", float64(initialSearchDuration.Milliseconds())),
-	)
-
-	if err != nil {
-		var qErr *sdp.QueryError
-		if errors.Is(err, ErrCacheNotFound) {
-			// Cache miss - check if another goroutine is already fetching this data
-			shouldWork, entry := c.pending.StartWork(ck.String())
-			if shouldWork {
-				// We're the first caller, return miss so caller does the work
-				span.SetAttributes(
-					attribute.String("ovm.cache.result", "cache miss"),
-					attribute.Bool("ovm.cache.hit", false),
-					attribute.Bool("ovm.cache.workPending", false),
-				)
-				return false, ck, nil, nil, c.createDoneFunc(ck)
-			}
-
-			// Another goroutine is fetching this data, wait for it to complete
-			pendingWaitStart := time.Now()
-			ok := c.pending.Wait(ctx, entry)
-			pendingWaitDuration := time.Since(pendingWaitStart)
-
-			span.SetAttributes(
-				attribute.Float64("ovm.cache.pendingWaitDuration_ms", float64(pendingWaitDuration.Milliseconds())),
-				attribute.Bool("ovm.cache.pendingWaitSuccess", ok),
-			)
-
-			if !ok {
-				// Context was cancelled or work was cancelled, return miss
-				span.SetAttributes(
-					attribute.String("ovm.cache.result", "pending work cancelled or timeout"),
-					attribute.Bool("ovm.cache.hit", false),
-				)
-				return false, ck, nil, nil, noopDone
-			}
-
-			// Work is complete, re-check the cache for results
-			recheckSearchStart := time.Now()
-			items, recheckErr := c.search(ctx, ck)
-			recheckSearchDuration := time.Since(recheckSearchStart)
-			span.SetAttributes(
-				attribute.Float64("ovm.cache.recheckSearchDuration_ms", float64(recheckSearchDuration.Milliseconds())),
-			)
-			if recheckErr != nil {
-				if errors.Is(recheckErr, ErrCacheNotFound) {
-					// Cache still empty after pending work completed
-					// This is valid - worker may have found nothing or cancelled
-					span.SetAttributes(
-						attribute.String("ovm.cache.result", "pending work completed but cache still empty"),
-						attribute.Bool("ovm.cache.hit", false),
-					)
-					return false, ck, nil, nil, noopDone
-				}
-				var recheckQErr *sdp.QueryError
-				if errors.As(recheckErr, &recheckQErr) {
-					span.SetAttributes(
-						attribute.String("ovm.cache.result", "cache hit from pending work: error"),
-						attribute.Bool("ovm.cache.hit", true),
-					)
-					return true, ck, nil, recheckQErr, noopDone
-				}
-				// Truly unexpected error - return miss
-				span.SetAttributes(
-					attribute.String("ovm.cache.result", "unexpected error on re-check"),
-					attribute.Bool("ovm.cache.hit", false),
-				)
-				return false, ck, nil, nil, noopDone
-			}
-
-			span.SetAttributes(
-				attribute.String("ovm.cache.result", "cache hit from pending work"),
-				attribute.Int("ovm.cache.numItems", len(items)),
-				attribute.Bool("ovm.cache.hit", true),
-			)
-			return true, ck, items, nil, noopDone
-		} else if errors.As(err, &qErr) {
-			if qErr.GetErrorType() == sdp.QueryError_NOTFOUND {
-				span.SetAttributes(attribute.String("ovm.cache.result", "cache hit: item not found"))
-			} else {
-				span.SetAttributes(
-					attribute.String("ovm.cache.result", "cache hit: QueryError"),
-					attribute.String("ovm.cache.error", err.Error()),
-				)
-			}
-
-			span.SetAttributes(attribute.Bool("ovm.cache.hit", true))
-			return true, ck, nil, qErr, noopDone
-		} else {
-			qErr = &sdp.QueryError{
-				ErrorType:   sdp.QueryError_OTHER,
-				ErrorString: err.Error(),
-				Scope:       scope,
-				SourceName:  srcName,
-				ItemType:    typ,
-			}
-
-			span.SetAttributes(
-				attribute.String("ovm.cache.error", err.Error()),
-				attribute.String("ovm.cache.result", "cache hit: unknown QueryError"),
-				attribute.Bool("ovm.cache.hit", true),
-			)
-
-			return true, ck, nil, qErr, noopDone
-		}
-	}
-
-	if method == sdp.QueryMethod_GET {
-		if len(items) < 2 {
-			span.SetAttributes(
-				attribute.String("ovm.cache.result", "cache hit: 1 item"),
-				attribute.Int("ovm.cache.numItems", len(items)),
-				attribute.Bool("ovm.cache.hit", true),
-			)
-			return true, ck, items, nil, noopDone
-		} else {
-			span.SetAttributes(
-				attribute.String("ovm.cache.result", "cache returned >1 value, purging and continuing"),
-				attribute.Int("ovm.cache.numItems", len(items)),
-				attribute.Bool("ovm.cache.hit", false),
-			)
-			// Delete already has Lock(), so we can call it directly
-			c.Delete(ck)
-			return false, ck, nil, nil, noopDone
-		}
-	}
-
-	span.SetAttributes(
-		attribute.String("ovm.cache.result", "cache hit: multiple items"),
-		attribute.Int("ovm.cache.numItems", len(items)),
-		attribute.Bool("ovm.cache.hit", true),
-	)
-
-	// RLock already released above
-	return true, ck, items, nil, noopDone
-}
-
 // Search performs a lower-level search using a CacheKey, bypassing pendingWork
-// deduplication. This is used by ShardedCache to do raw reads on individual shards.
-func (c *BoltCache) Search(ctx context.Context, ck CacheKey) ([]*sdp.Item, error) {
-	return c.search(ctx, ck)
-}
-
-// search performs a lower-level search using a CacheKey.
+// deduplication. This is used by ShardedCache and lookupCoordinator.
 // If ctx contains a span, detailed timing metrics will be added as span attributes.
-func (c *BoltCache) search(ctx context.Context, ck CacheKey) ([]*sdp.Item, error) {
+func (c *boltStore) Search(ctx context.Context, ck CacheKey) ([]*sdp.Item, error) {
 	if c == nil {
 		return nil, nil
 	}
@@ -790,7 +545,7 @@ func (c *BoltCache) search(ctx context.Context, ck CacheKey) ([]*sdp.Item, error
 }
 
 // StoreItem stores an item in the cache with the specified duration.
-func (c *BoltCache) StoreItem(ctx context.Context, item *sdp.Item, duration time.Duration, ck CacheKey) {
+func (c *boltStore) StoreItem(ctx context.Context, item *sdp.Item, duration time.Duration, ck CacheKey) {
 	if item == nil || c == nil {
 		return
 	}
@@ -820,13 +575,6 @@ func (c *BoltCache) StoreItem(ctx context.Context, item *sdp.Item, duration time
 	// Set disk usage metrics
 	c.setDiskUsageAttributes(span)
 
-	// Ensure minimum duration to avoid items expiring immediately
-	// This handles cases where time.Until() returns 0 or negative due to timing
-	// Use 100ms to account for race detector overhead and slow CI environments
-	if duration <= 100*time.Millisecond {
-		duration = 100 * time.Millisecond
-	}
-
 	res := CachedResult{
 		Item:   item,
 		Error:  nil,
@@ -849,7 +597,7 @@ func (c *BoltCache) StoreItem(ctx context.Context, item *sdp.Item, duration time
 }
 
 // StoreUnavailableItem stores an error in the cache with the specified duration.
-func (c *BoltCache) StoreUnavailableItem(ctx context.Context, err error, duration time.Duration, ck CacheKey) {
+func (c *boltStore) StoreUnavailableItem(ctx context.Context, err error, duration time.Duration, ck CacheKey) {
 	if c == nil || err == nil {
 		return
 	}
@@ -878,12 +626,6 @@ func (c *BoltCache) StoreUnavailableItem(ctx context.Context, err error, duratio
 	// Set disk usage metrics
 	c.setDiskUsageAttributes(span)
 
-	// Ensure minimum duration to avoid items expiring immediately
-	// Use 100ms to account for race detector overhead and slow CI environments
-	if duration <= 100*time.Millisecond {
-		duration = 100 * time.Millisecond
-	}
-
 	res := CachedResult{
 		Item:        nil,
 		Error:       err,
@@ -895,7 +637,7 @@ func (c *BoltCache) StoreUnavailableItem(ctx context.Context, err error, duratio
 }
 
 // storeResult stores a CachedResult in the database
-func (c *BoltCache) storeResult(ctx context.Context, res CachedResult) {
+func (c *boltStore) storeResult(ctx context.Context, res CachedResult) {
 	span := trace.SpanFromContext(ctx)
 
 	entry, err := fromCachedResult(&res)
@@ -1046,13 +788,10 @@ func (c *BoltCache) storeResult(ctx context.Context, res CachedResult) {
 		attribute.Int64("ovm.boltdb.entrySizeBytes", entrySize),
 	)
 	c.setDiskUsageAttributes(span)
-
-	// Update the purge time if required
-	c.setNextPurgeIfEarlier(res.Expiry)
 }
 
 // Delete removes all entries matching the given cache key.
-func (c *BoltCache) Delete(ck CacheKey) {
+func (c *boltStore) Delete(ck CacheKey) {
 	if c == nil {
 		return
 	}
@@ -1119,7 +858,7 @@ func (c *BoltCache) Delete(ck CacheKey) {
 }
 
 // Clear removes all entries from the cache.
-func (c *BoltCache) Clear() {
+func (c *boltStore) Clear() {
 	if c == nil {
 		return
 	}
@@ -1150,7 +889,7 @@ func (c *BoltCache) Clear() {
 }
 
 // Purge removes all expired items from the cache.
-func (c *BoltCache) Purge(ctx context.Context, before time.Time) PurgeStats {
+func (c *boltStore) Purge(ctx context.Context, before time.Time) PurgeStats {
 	if c == nil {
 		return PurgeStats{}
 	}
@@ -1194,7 +933,7 @@ func (c *BoltCache) Purge(ctx context.Context, before time.Time) PurgeStats {
 
 // purgeLocked is the internal version that assumes the caller already holds compactMutex.Lock()
 // It performs the actual purging work and returns the stats, but does not handle compaction.
-func (c *BoltCache) purgeLocked(ctx context.Context, before time.Time) PurgeStats {
+func (c *boltStore) purgeLocked(ctx context.Context, before time.Time) PurgeStats {
 	span := trace.SpanFromContext(ctx)
 
 	// Set initial disk usage metrics
@@ -1312,7 +1051,7 @@ func (c *BoltCache) purgeLocked(ctx context.Context, before time.Time) PurgeStat
 }
 
 // compact performs database compaction to reclaim disk space
-func (c *BoltCache) compact(ctx context.Context) error {
+func (c *boltStore) compact(ctx context.Context) error {
 	// Acquire global lock to prevent any concurrent bbolt operations
 	c.compactMutex.Lock()
 	defer c.compactMutex.Unlock()
@@ -1434,86 +1173,4 @@ func (c *BoltCache) compact(ctx context.Context) error {
 	})
 
 	return nil
-}
-
-// GetMinWaitTime returns the minimum time between purge operations
-func (c *BoltCache) GetMinWaitTime() time.Duration {
-	if c == nil {
-		return 0
-	}
-
-	if c.MinWaitTime == 0 {
-		return MinWaitDefault
-	}
-
-	return c.MinWaitTime
-}
-
-// StartPurger starts a background goroutine that automatically purges expired items.
-func (c *BoltCache) StartPurger(ctx context.Context) {
-	if c == nil {
-		return
-	}
-
-	c.purgeMutex.Lock()
-	if c.purgeTimer == nil {
-		c.purgeTimer = time.NewTimer(0)
-		c.purgeMutex.Unlock()
-	} else {
-		c.purgeMutex.Unlock()
-		log.WithContext(ctx).Info("Purger already running")
-		return // the purger is already running, so we don't need to start it again
-	}
-
-	go func(ctx context.Context) {
-		for {
-			select {
-			case <-c.purgeTimer.C:
-				stats := c.Purge(ctx, time.Now())
-				c.setNextPurgeFromStats(stats)
-			case <-ctx.Done():
-				c.purgeMutex.Lock()
-				defer c.purgeMutex.Unlock()
-
-				c.purgeTimer.Stop()
-				c.purgeTimer = nil
-				return
-			}
-		}
-	}(ctx)
-}
-
-// setNextPurgeFromStats sets when the next purge should run based on the stats
-func (c *BoltCache) setNextPurgeFromStats(stats PurgeStats) {
-	c.purgeMutex.Lock()
-	defer c.purgeMutex.Unlock()
-
-	if stats.NextExpiry == nil {
-		c.purgeTimer.Reset(1000 * time.Hour)
-		c.nextPurge = time.Now().Add(1000 * time.Hour)
-	} else {
-		if time.Until(*stats.NextExpiry) < c.GetMinWaitTime() {
-			c.purgeTimer.Reset(c.GetMinWaitTime())
-			c.nextPurge = time.Now().Add(c.GetMinWaitTime())
-		} else {
-			c.purgeTimer.Reset(time.Until(*stats.NextExpiry))
-			c.nextPurge = *stats.NextExpiry
-		}
-	}
-}
-
-// setNextPurgeIfEarlier sets the next purge time if the provided time is sooner
-func (c *BoltCache) setNextPurgeIfEarlier(t time.Time) {
-	c.purgeMutex.Lock()
-	defer c.purgeMutex.Unlock()
-
-	if t.Before(c.nextPurge) {
-		if c.purgeTimer == nil {
-			return
-		}
-
-		c.purgeTimer.Stop()
-		c.nextPurge = t
-		c.purgeTimer.Reset(time.Until(t))
-	}
 }

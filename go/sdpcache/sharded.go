@@ -32,12 +32,15 @@ const DefaultShardCount = 17
 // shards in parallel and merge results. pendingWork deduplication lives at the
 // ShardedCache level to prevent duplicate API calls across the fan-out.
 type ShardedCache struct {
-	shards []*BoltCache
+	purger
+
+	shards []*boltStore
 	dir    string
 
 	// pendingWork lives at the ShardedCache level so that deduplication spans
 	// the entire cache, not individual shards.
 	pending *pendingWork
+	lookup  *lookupCoordinator
 }
 
 var _ Cache = (*ShardedCache)(nil)
@@ -53,22 +56,20 @@ func NewShardedCache(dir string, shardCount int, opts ...BoltCacheOption) (*Shar
 		return nil, fmt.Errorf("failed to create shard directory: %w", err)
 	}
 
-	shards := make([]*BoltCache, shardCount)
+	shards := make([]*boltStore, shardCount)
 	errs := make([]error, shardCount)
 
 	var wg sync.WaitGroup
 	for i := range shardCount {
-		wg.Add(1)
-		go func(idx int) {
-			defer wg.Done()
-			path := filepath.Join(dir, fmt.Sprintf("shard-%02d.db", idx))
-			c, err := NewBoltCache(path, opts...)
+		wg.Go(func() {
+			path := filepath.Join(dir, fmt.Sprintf("shard-%02d.db", i))
+			c, err := newBoltCacheStore(path, opts...)
 			if err != nil {
-				errs[idx] = fmt.Errorf("shard %d: %w", idx, err)
+				errs[i] = fmt.Errorf("shard %d: %w", i, err)
 				return
 			}
-			shards[idx] = c
-		}(i)
+			shards[i] = c
+		})
 	}
 	wg.Wait()
 
@@ -84,11 +85,15 @@ func NewShardedCache(dir string, shardCount int, opts ...BoltCacheOption) (*Shar
 		}
 	}
 
-	return &ShardedCache{
+	pending := newPendingWork()
+	sc := &ShardedCache{
 		shards:  shards,
 		dir:     dir,
-		pending: newPendingWork(),
-	}, nil
+		pending: pending,
+		lookup:  newLookupCoordinator(pending),
+	}
+	sc.purgeFunc = sc.Purge
+	return sc, nil
 }
 
 // shardFor returns the shard index for a given item identity.
@@ -125,124 +130,23 @@ func (sc *ShardedCache) Lookup(ctx context.Context, srcName string, method sdp.Q
 		return false, ck, nil, nil, noopDone
 	}
 
-	items, err := sc.searchByKey(ctx, ck)
-
-	if err != nil {
-		var qErr *sdp.QueryError
-		if errors.Is(err, ErrCacheNotFound) {
-			shouldWork, entry := sc.pending.StartWork(ck.String())
-			if shouldWork {
-				span.SetAttributes(
-					attribute.String("ovm.cache.result", "cache miss"),
-					attribute.Bool("ovm.cache.hit", false),
-					attribute.Bool("ovm.cache.workPending", false),
-				)
-				return false, ck, nil, nil, sc.createDoneFunc(ck)
-			}
-
-			pendingWaitStart := time.Now()
-			ok := sc.pending.Wait(ctx, entry)
-			pendingWaitDuration := time.Since(pendingWaitStart)
-			span.SetAttributes(
-				attribute.Float64("ovm.cache.pendingWaitDuration_ms", float64(pendingWaitDuration.Milliseconds())),
-				attribute.Bool("ovm.cache.pendingWaitSuccess", ok),
-			)
-
-			if !ok {
-				span.SetAttributes(
-					attribute.String("ovm.cache.result", "pending work cancelled or timeout"),
-					attribute.Bool("ovm.cache.hit", false),
-				)
-				return false, ck, nil, nil, noopDone
-			}
-
-			items, recheckErr := sc.searchByKey(ctx, ck)
-			if recheckErr != nil {
-				if errors.Is(recheckErr, ErrCacheNotFound) {
-					span.SetAttributes(
-						attribute.String("ovm.cache.result", "pending work completed but cache still empty"),
-						attribute.Bool("ovm.cache.hit", false),
-					)
-					return false, ck, nil, nil, noopDone
-				}
-				var recheckQErr *sdp.QueryError
-				if errors.As(recheckErr, &recheckQErr) {
-					span.SetAttributes(
-						attribute.String("ovm.cache.result", "cache hit from pending work: error"),
-						attribute.Bool("ovm.cache.hit", true),
-					)
-					return true, ck, nil, recheckQErr, noopDone
-				}
-				span.SetAttributes(
-					attribute.String("ovm.cache.result", "unexpected error on re-check"),
-					attribute.Bool("ovm.cache.hit", false),
-				)
-				return false, ck, nil, nil, noopDone
-			}
-
-			span.SetAttributes(
-				attribute.String("ovm.cache.result", "cache hit from pending work"),
-				attribute.Int("ovm.cache.numItems", len(items)),
-				attribute.Bool("ovm.cache.hit", true),
-			)
-			return true, ck, items, nil, noopDone
-		} else if errors.As(err, &qErr) {
-			if qErr.GetErrorType() == sdp.QueryError_NOTFOUND {
-				span.SetAttributes(attribute.String("ovm.cache.result", "cache hit: item not found"))
-			} else {
-				span.SetAttributes(
-					attribute.String("ovm.cache.result", "cache hit: QueryError"),
-					attribute.String("ovm.cache.error", err.Error()),
-				)
-			}
-			span.SetAttributes(attribute.Bool("ovm.cache.hit", true))
-			return true, ck, nil, qErr, noopDone
-		} else {
-			qErr = &sdp.QueryError{
-				ErrorType:   sdp.QueryError_OTHER,
-				ErrorString: err.Error(),
-				Scope:       scope,
-				SourceName:  srcName,
-				ItemType:    typ,
-			}
-			span.SetAttributes(
-				attribute.String("ovm.cache.error", err.Error()),
-				attribute.String("ovm.cache.result", "cache hit: unknown QueryError"),
-				attribute.Bool("ovm.cache.hit", true),
-			)
-			return true, ck, nil, qErr, noopDone
-		}
+	lookup := sc.lookup
+	if lookup == nil {
+		lookup = newLookupCoordinator(sc.pending)
 	}
 
-	if method == sdp.QueryMethod_GET {
-		if len(items) < 2 {
-			span.SetAttributes(
-				attribute.String("ovm.cache.result", "cache hit: 1 item"),
-				attribute.Int("ovm.cache.numItems", len(items)),
-				attribute.Bool("ovm.cache.hit", true),
-			)
-			return true, ck, items, nil, noopDone
-		}
-		span.SetAttributes(
-			attribute.String("ovm.cache.result", "cache returned >1 value, purging and continuing"),
-			attribute.Int("ovm.cache.numItems", len(items)),
-			attribute.Bool("ovm.cache.hit", false),
-		)
-		sc.Delete(ck)
-		return false, ck, nil, nil, noopDone
-	}
-
-	span.SetAttributes(
-		attribute.String("ovm.cache.result", "cache hit: multiple items"),
-		attribute.Int("ovm.cache.numItems", len(items)),
-		attribute.Bool("ovm.cache.hit", true),
+	hit, items, qErr, done := lookup.Lookup(
+		ctx,
+		sc,
+		ck,
+		method,
 	)
-	return true, ck, items, nil, noopDone
+	return hit, ck, items, qErr, done
 }
 
-// searchByKey routes GET queries to a single shard and LIST/SEARCH/unspecified
-// queries to all shards via fan-out.
-func (sc *ShardedCache) searchByKey(ctx context.Context, ck CacheKey) ([]*sdp.Item, error) {
+// Search performs a lower-level search using a CacheKey.
+// This bypasses pending-work deduplication and is used by lookupCoordinator.
+func (sc *ShardedCache) Search(ctx context.Context, ck CacheKey) ([]*sdp.Item, error) {
 	span := trace.SpanFromContext(ctx)
 
 	if ck.UniqueAttributeValue != nil {
@@ -271,13 +175,11 @@ func (sc *ShardedCache) searchAll(ctx context.Context, ck CacheKey) ([]*sdp.Item
 
 	var wg sync.WaitGroup
 	for i, shard := range sc.shards {
-		wg.Add(1)
-		go func(i int, shard *BoltCache) {
-			defer wg.Done()
+		wg.Go(func() {
 			start := time.Now()
 			items, err := shard.Search(ctx, ck)
 			results[i] = result{items: items, err: err, dur: time.Since(start)}
-		}(i, shard)
+		})
 	}
 	wg.Wait()
 
@@ -340,6 +242,7 @@ func (sc *ShardedCache) StoreItem(ctx context.Context, item *sdp.Item, duration 
 	span.SetAttributes(attribute.Int("ovm.cache.shardIndex", idx))
 
 	sc.shards[idx].StoreItem(ctx, item, duration, ck)
+	sc.setNextPurgeIfEarlier(time.Now().Add(duration))
 }
 
 // StoreUnavailableItem routes the error based on the CacheKey:
@@ -359,17 +262,16 @@ func (sc *ShardedCache) StoreUnavailableItem(ctx context.Context, err error, dur
 	span.SetAttributes(attribute.Int("ovm.cache.shardIndex", idx))
 
 	sc.shards[idx].StoreUnavailableItem(ctx, err, duration, ck)
+	sc.setNextPurgeIfEarlier(time.Now().Add(duration))
 }
 
 // Delete fans out to all shards.
 func (sc *ShardedCache) Delete(ck CacheKey) {
 	var wg sync.WaitGroup
-	for _, shard := range sc.shards {
-		wg.Add(1)
-		go func(s *BoltCache) {
-			defer wg.Done()
+	for _, s := range sc.shards {
+		wg.Go(func() {
 			s.Delete(ck)
-		}(shard)
+		})
 	}
 	wg.Wait()
 }
@@ -377,12 +279,10 @@ func (sc *ShardedCache) Delete(ck CacheKey) {
 // Clear fans out to all shards.
 func (sc *ShardedCache) Clear() {
 	var wg sync.WaitGroup
-	for _, shard := range sc.shards {
-		wg.Add(1)
-		go func(s *BoltCache) {
-			defer wg.Done()
+	for _, s := range sc.shards {
+		wg.Go(func() {
 			s.Clear()
-		}(shard)
+		})
 	}
 	wg.Wait()
 }
@@ -391,6 +291,13 @@ func (sc *ShardedCache) Clear() {
 // TimeTaken reflects wall-clock time of the parallel fan-out, not the sum of
 // per-shard durations.
 func (sc *ShardedCache) Purge(ctx context.Context, before time.Time) PurgeStats {
+	ctx, span := tracing.Tracer().Start(ctx, "ShardedCache.Purge",
+		trace.WithAttributes(
+			attribute.Int("ovm.cache.shardCount", len(sc.shards)),
+		),
+	)
+	defer span.End()
+
 	type result struct {
 		stats PurgeStats
 	}
@@ -399,12 +306,10 @@ func (sc *ShardedCache) Purge(ctx context.Context, before time.Time) PurgeStats 
 	start := time.Now()
 
 	var wg sync.WaitGroup
-	for i, shard := range sc.shards {
-		wg.Add(1)
-		go func(i int, s *BoltCache) {
-			defer wg.Done()
+	for i, s := range sc.shards {
+		wg.Go(func() {
 			results[i] = result{stats: s.Purge(ctx, before)}
-		}(i, shard)
+		})
 	}
 	wg.Wait()
 
@@ -419,22 +324,13 @@ func (sc *ShardedCache) Purge(ctx context.Context, before time.Time) PurgeStats 
 			}
 		}
 	}
+
+	span.SetAttributes(
+		attribute.Int("ovm.cache.numPurged", combined.NumPurged),
+		attribute.Float64("ovm.cache.purgeDurationMs", float64(combined.TimeTaken.Milliseconds())),
+	)
+
 	return combined
-}
-
-// GetMinWaitTime returns the minimum wait time from the first shard.
-func (sc *ShardedCache) GetMinWaitTime() time.Duration {
-	if len(sc.shards) == 0 {
-		return 0
-	}
-	return sc.shards[0].GetMinWaitTime()
-}
-
-// StartPurger starts a purger on each shard independently.
-func (sc *ShardedCache) StartPurger(ctx context.Context) {
-	for _, shard := range sc.shards {
-		shard.StartPurger(ctx)
-	}
 }
 
 // CloseAndDestroy closes and destroys all shard files in parallel, then removes
@@ -443,12 +339,10 @@ func (sc *ShardedCache) CloseAndDestroy() error {
 	errs := make([]error, len(sc.shards))
 
 	var wg sync.WaitGroup
-	for i, shard := range sc.shards {
-		wg.Add(1)
-		go func(i int, s *BoltCache) {
-			defer wg.Done()
+	for i, s := range sc.shards {
+		wg.Go(func() {
 			errs[i] = s.CloseAndDestroy()
-		}(i, shard)
+		})
 	}
 	wg.Wait()
 
@@ -459,21 +353,6 @@ func (sc *ShardedCache) CloseAndDestroy() error {
 	}
 
 	return os.RemoveAll(sc.dir)
-}
-
-// createDoneFunc returns a done function that calls pending.Complete for the
-// given cache key. Safe to call multiple times (idempotent via sync.Once).
-func (sc *ShardedCache) createDoneFunc(ck CacheKey) func() {
-	if sc == nil || sc.pending == nil {
-		return noopDone
-	}
-	key := ck.String()
-	var once sync.Once
-	return func() {
-		once.Do(func() {
-			sc.pending.Complete(key)
-		})
-	}
 }
 
 // newShardedCacheForProduction is used by NewCache to create a production
@@ -494,7 +373,6 @@ func newShardedCacheForProduction(ctx context.Context) Cache {
 	cache, err := NewShardedCache(
 		dir,
 		DefaultShardCount,
-		WithMinWaitTime(30*time.Second),
 		WithCompactThreshold(perShardThreshold),
 	)
 	if err != nil {
@@ -506,6 +384,7 @@ func newShardedCacheForProduction(ctx context.Context) Cache {
 		return memCache
 	}
 
+	cache.minWaitTime = 30 * time.Second
 	cache.StartPurger(ctx)
 	return cache
 }

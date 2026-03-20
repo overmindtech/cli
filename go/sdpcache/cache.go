@@ -6,15 +6,9 @@ import (
 	"errors"
 	"fmt"
 	"strings"
-	"sync"
 	"time"
 
-	"github.com/google/btree"
 	"github.com/overmindtech/cli/go/sdp-go"
-	log "github.com/sirupsen/logrus"
-	"go.opentelemetry.io/otel/attribute"
-	"go.opentelemetry.io/otel/trace"
-	"google.golang.org/protobuf/proto"
 )
 
 // noopDone is a reusable no-op done function returned when no cleanup is needed
@@ -177,57 +171,100 @@ type CachedResult struct {
 // SSTHash Represents the hash of `SourceName`, `Scope` and `Type`
 type SSTHash string
 
-// Cache provides operations for caching SDP items and errors
+// Cache provides operations for caching SDP query results (items and errors).
+//
+// # Lookup state matrix
+//
+// Lookup returns (hit bool, ck CacheKey, items []*sdp.Item, qErr *sdp.QueryError, done func()).
+// The return values follow one of three states:
+//
+//   - Miss:      hit=false, items=nil,    qErr=nil    — no cached data
+//   - Item hit:  hit=true,  len(items)>0, qErr=nil    — cached items found
+//   - Error hit: hit=true,  items=nil,    qErr!=nil   — cached error found
+//
+// # done() contract
+//
+// On a cache miss the returned done function MUST be called after storing
+// results (or deciding to store nothing). It releases the pending-work slot
+// so that waiting goroutines can proceed. The done function is idempotent
+// (safe to call multiple times). On a cache hit or for goroutines that were
+// waiting, done is a no-op.
+//
+// # ignoreCache
+//
+// When ignoreCache=true, Lookup always returns a miss without checking the
+// cache or registering pending work. The returned done is a no-op.
+//
+// # GET cardinality
+//
+// If a GET lookup finds more than one cached item for the same key, the
+// cache treats the data as inconsistent, purges the key, and returns a miss.
+//
+// # Item ordering
+//
+// The order of items returned from Lookup or any fan-out search is
+// implementation-defined and must not be relied upon by callers.
+//
+// # Error precedence
+//
+// If both items and an error are cached under the same CacheKey, the error
+// takes precedence: Lookup returns an error hit with nil items.
+//
+// # TTL handling
+//
+// There is no minimum TTL floor. A zero or negative duration stores the
+// entry with an expiry at (or before) the current time. The entry will
+// not survive a Purge(ctx, time.Now()) call and will be skipped by
+// subsequent searches once the clock advances past the stored expiry.
+//
+// # Copy semantics
+//
+// Stored items are copied; mutating an item after StoreItem will not alter
+// the cached copy.
 type Cache interface {
 	// Lookup performs a cache lookup for the given query parameters.
-	// Returns: (cache hit, cache key, items, query error, done function)
-	//
-	// If hit=false, you MUST call the returned done function when finished, after storing all
-	// items/errors. The done function releases resources and unblocks waiting goroutines.
-	// You should defer the done function immediately after calling Lookup to ensure it's called.
-	//
-	// Example usage for cache miss:
-	//   hit, ck, _, _, done := cache.Lookup(...)
-	//   defer done()  // MUST be called when finished
-	//   if !hit {
-	//       // Store all items first
-	//       for _, item := range items {
-	//           cache.StoreItem(ctx, item, duration, ck)
-	//       }
-	//       // done() is called via defer, releasing waiters
-	//   }
-	//
-	// The done function is safe to call multiple times (idempotent).
-	// For cache hits or waiting goroutines, the done function is a no-op.
+	// See the Cache-level doc for the state matrix, done() obligations,
+	// ignoreCache semantics, and GET cardinality rules.
 	Lookup(ctx context.Context, srcName string, method sdp.QueryMethod, scope string, typ string, query string, ignoreCache bool) (bool, CacheKey, []*sdp.Item, *sdp.QueryError, func())
 
-	// StoreItem stores an item in the cache with the specified duration.
+	// StoreItem stores an item in the cache with the specified TTL.
+	// The item is deep-copied before storage; the caller retains ownership
+	// of the original. Storing under the same CacheKey overwrites any
+	// previous entry with matching IndexValues.
 	StoreItem(ctx context.Context, item *sdp.Item, duration time.Duration, ck CacheKey)
 
-	// StoreUnavailableItem stores an error in the cache with the specified duration.
+	// StoreUnavailableItem stores an error in the cache with the specified TTL.
+	// A subsequent Lookup for the same key returns an error hit.
 	StoreUnavailableItem(ctx context.Context, err error, duration time.Duration, ck CacheKey)
 
-	// Delete removes all entries matching the given cache key.
+	// Delete removes all entries whose IndexValues match the supplied
+	// CacheKey. Because CacheKey fields are optional, omitting Method or
+	// UniqueAttributeValue acts as a wildcard across those dimensions.
 	Delete(ck CacheKey)
 
-	// Clear removes all entries from the cache.
+	// Clear removes every entry from the cache.
 	Clear()
 
-	// Purge removes all expired items from the cache.
-	// Returns statistics about the purge operation.
+	// Purge removes entries that expired before the given time.
+	// Returns PurgeStats with the count of purged entries and the next
+	// expiry time (nil when the cache is empty after purging).
 	Purge(ctx context.Context, before time.Time) PurgeStats
 
-	// GetMinWaitTime returns the minimum time between purge operations
+	// GetMinWaitTime returns the minimum interval between automatic purge
+	// cycles. Stateful implementations return a positive duration;
+	// NoOpCache returns 0.
 	GetMinWaitTime() time.Duration
 
-	// StartPurger starts a background goroutine that automatically purges expired items.
-	// The purger will stop when the context is cancelled.
+	// StartPurger starts a background goroutine that periodically calls
+	// Purge. The goroutine exits when ctx is cancelled.
 	StartPurger(ctx context.Context)
 }
 
 // NoOpCache is a cache implementation that does nothing.
 // It can be used in tests or when caching is not desired, avoiding nil checks.
 type NoOpCache struct{}
+
+var _ Cache = (*NoOpCache)(nil)
 
 // NewNoOpCache creates a new no-op cache that implements the Cache interface
 // but performs no operations. Useful for testing or when caching is disabled.
@@ -275,706 +312,9 @@ func (n *NoOpCache) GetMinWaitTime() time.Duration {
 func (n *NoOpCache) StartPurger(ctx context.Context) {
 }
 
-type MemoryCache struct {
-	// Minimum amount of time to wait between cache purges
-	MinWaitTime time.Duration
-
-	// The timer that is used to trigger the next purge
-	purgeTimer *time.Timer
-
-	// The time that the purger will run next
-	nextPurge time.Time
-
-	indexes map[SSTHash]*indexSet
-
-	// This index is used to track item expiries, since items can have different
-	// expiry durations we need to use a btree here rather than just appending
-	// to a slice or something. The purge process uses this to determine what
-	// needs deleting, then calls into each specific index to delete as required
-	expiryIndex *btree.BTreeG[*CachedResult]
-
-	// Mutex for reading caches
-	indexMutex sync.RWMutex
-
-	// Ensures that purge stats like `purgeTimer` and `nextPurge` aren't being
-	// modified concurrently
-	purgeMutex sync.Mutex
-
-	// Tracks in-flight lookups to prevent duplicate work when multiple
-	// goroutines request the same cache key simultaneously
-	pending *pendingWork
-}
-
-// NewMemoryCache creates a new in-memory cache implementation
-func NewMemoryCache() *MemoryCache {
-	return &MemoryCache{
-		indexes:     make(map[SSTHash]*indexSet),
-		expiryIndex: newExpiryIndex(),
-		pending:     newPendingWork(),
-	}
-}
-
 // NewCache creates a new cache. This function returns a Cache interface backed
 // by a ShardedCache (N independent BoltDB files) for write concurrency.
 // The passed context will be used to start the purger.
 func NewCache(ctx context.Context) Cache {
 	return newShardedCacheForProduction(ctx)
-}
-
-func newExpiryIndex() *btree.BTreeG[*CachedResult] {
-	return btree.NewG(2, func(a, b *CachedResult) bool {
-		return a.Expiry.Before(b.Expiry)
-	})
-}
-
-type indexSet struct {
-	uniqueAttributeValueIndex *btree.BTreeG[*CachedResult]
-	methodIndex               *btree.BTreeG[*CachedResult]
-	queryIndex                *btree.BTreeG[*CachedResult]
-}
-
-func newIndexSet() *indexSet {
-	return &indexSet{
-		uniqueAttributeValueIndex: btree.NewG(2, func(a, b *CachedResult) bool {
-			return sortString(a.IndexValues.UniqueAttributeValue, a.Item) < sortString(b.IndexValues.UniqueAttributeValue, b.Item)
-		}),
-		methodIndex: btree.NewG(2, func(a, b *CachedResult) bool {
-			return sortString(a.IndexValues.Method.String(), a.Item) < sortString(b.IndexValues.Method.String(), b.Item)
-		}),
-		queryIndex: btree.NewG(2, func(a, b *CachedResult) bool {
-			return sortString(a.IndexValues.Query, a.Item) < sortString(b.IndexValues.Query, b.Item)
-		}),
-	}
-}
-
-// createDoneFunc returns a done function that calls pending.Complete for the given cache key.
-// The done function releases resources and unblocks waiting goroutines.
-// The done function is safe to call multiple times (idempotent via sync.Once).
-func (c *MemoryCache) createDoneFunc(ck CacheKey) func() {
-	if c == nil || c.pending == nil {
-		return noopDone
-	}
-	key := ck.String()
-	var once sync.Once
-	return func() {
-		once.Do(func() {
-			c.pending.Complete(key)
-		})
-	}
-}
-
-// Lookup returns true/false whether or not the cache has a result for the given
-// query. If there are results, they will be returned as slice of `sdp.Item`s or
-// an `*sdp.QueryError`.
-// The CacheKey is always returned, even if the lookup otherwise fails or errors
-func (c *MemoryCache) Lookup(ctx context.Context, srcName string, method sdp.QueryMethod, scope string, typ string, query string, ignoreCache bool) (bool, CacheKey, []*sdp.Item, *sdp.QueryError, func()) {
-	span := trace.SpanFromContext(ctx)
-	ck := CacheKeyFromParts(srcName, method, scope, typ, query)
-
-	if c == nil {
-		span.SetAttributes(
-			attribute.String("ovm.cache.result", "cache not initialised"),
-			attribute.Bool("ovm.cache.hit", false),
-		)
-		return false, ck, nil, &sdp.QueryError{
-			ErrorType:   sdp.QueryError_OTHER,
-			ErrorString: "cache has not been initialised",
-			Scope:       scope,
-			SourceName:  srcName,
-			ItemType:    typ,
-		}, noopDone
-	}
-
-	if ignoreCache {
-		span.SetAttributes(
-			attribute.String("ovm.cache.result", "ignore cache"),
-			attribute.Bool("ovm.cache.hit", false),
-		)
-		return false, ck, nil, nil, noopDone
-	}
-
-	items, err := c.search(ctx, ck)
-	if err != nil {
-		var qErr *sdp.QueryError
-		if errors.Is(err, ErrCacheNotFound) {
-			// Cache miss - check if another goroutine is already fetching this data
-			shouldWork, entry := c.pending.StartWork(ck.String())
-			if shouldWork {
-				// We're the first caller, return miss so caller does the work
-				span.SetAttributes(
-					attribute.String("ovm.cache.result", "cache miss"),
-					attribute.Bool("ovm.cache.hit", false),
-					attribute.Bool("ovm.cache.workPending", false),
-				)
-				return false, ck, nil, nil, c.createDoneFunc(ck)
-			}
-
-			// Another goroutine is fetching this data, wait for it to complete
-			ok := c.pending.Wait(ctx, entry)
-			if !ok {
-				// Context was cancelled or work was cancelled, return miss
-				span.SetAttributes(
-					attribute.String("ovm.cache.result", "pending work cancelled or timeout"),
-					attribute.Bool("ovm.cache.hit", false),
-				)
-				return false, ck, nil, nil, noopDone
-			}
-
-			// Work is complete, re-check the cache for results
-			items, recheckErr := c.search(ctx, ck)
-			if recheckErr != nil {
-				if errors.Is(recheckErr, ErrCacheNotFound) {
-					// Cache still empty after pending work completed
-					// This is valid - worker may have found nothing or cancelled
-					span.SetAttributes(
-						attribute.String("ovm.cache.result", "pending work completed but cache still empty"),
-						attribute.Bool("ovm.cache.hit", false),
-					)
-					return false, ck, nil, nil, noopDone
-				}
-				var recheckQErr *sdp.QueryError
-				if errors.As(recheckErr, &recheckQErr) {
-					span.SetAttributes(
-						attribute.String("ovm.cache.result", "cache hit from pending work: error"),
-						attribute.Bool("ovm.cache.hit", true),
-					)
-					return true, ck, nil, recheckQErr, noopDone
-				}
-				// Truly unexpected error - return miss
-				span.SetAttributes(
-					attribute.String("ovm.cache.result", "unexpected error on re-check"),
-					attribute.Bool("ovm.cache.hit", false),
-				)
-				return false, ck, nil, nil, noopDone
-			}
-
-			span.SetAttributes(
-				attribute.String("ovm.cache.result", "cache hit from pending work"),
-				attribute.Int("ovm.cache.numItems", len(items)),
-				attribute.Bool("ovm.cache.hit", true),
-			)
-			return true, ck, items, nil, noopDone
-		} else if errors.As(err, &qErr) {
-			if qErr.GetErrorType() == sdp.QueryError_NOTFOUND {
-				span.SetAttributes(attribute.String("ovm.cache.result", "cache hit: item not found"))
-			} else {
-				span.SetAttributes(
-					attribute.String("ovm.cache.result", "cache hit: QueryError"),
-					attribute.String("ovm.cache.error", err.Error()),
-				)
-			}
-
-			span.SetAttributes(attribute.Bool("ovm.cache.hit", true))
-			return true, ck, nil, qErr, noopDone
-		} else {
-			// If it's an unknown error, convert it to SDP and skip this source
-			qErr = &sdp.QueryError{
-				ErrorType:   sdp.QueryError_OTHER,
-				ErrorString: err.Error(),
-				Scope:       scope,
-				SourceName:  srcName,
-				ItemType:    typ,
-			}
-
-			span.SetAttributes(
-				attribute.String("ovm.cache.error", err.Error()),
-				attribute.String("ovm.cache.result", "cache hit: unknown QueryError"),
-				attribute.Bool("ovm.cache.hit", true),
-			)
-
-			return true, ck, nil, qErr, noopDone
-		}
-	}
-
-	if method == sdp.QueryMethod_GET {
-		// If the method was Get we should validate that we have
-		// only pulled one thing from the cache
-
-		if len(items) < 2 {
-			span.SetAttributes(
-				attribute.String("ovm.cache.result", "cache hit: 1 item"),
-				attribute.Int("ovm.cache.numItems", len(items)),
-				attribute.Bool("ovm.cache.hit", true),
-			)
-			return true, ck, items, nil, noopDone
-		} else {
-			span.SetAttributes(
-				attribute.String("ovm.cache.result", "cache returned >1 value, purging and continuing"),
-				attribute.Int("ovm.cache.numItems", len(items)),
-				attribute.Bool("ovm.cache.hit", false),
-			)
-			c.Delete(ck)
-			return false, ck, nil, nil, noopDone
-		}
-	}
-
-	span.SetAttributes(
-		attribute.String("ovm.cache.result", "cache hit: multiple items"),
-		attribute.Int("ovm.cache.numItems", len(items)),
-		attribute.Bool("ovm.cache.hit", true),
-	)
-
-	return true, ck, items, nil, noopDone
-}
-
-// Search Runs a given query against the cache. If a cached error is found it
-// will be returned immediately, if nothing is found a ErrCacheNotFound will
-// be returned. Otherwise this will return items that match ALL of the given
-// query parameters. Context is accepted for tracing but not currently used
-// by MemoryCache (no I/O operations).
-func (c *MemoryCache) search(ctx context.Context, ck CacheKey) ([]*sdp.Item, error) {
-	if c == nil {
-		return nil, nil
-	}
-
-	items := make([]*sdp.Item, 0)
-
-	results := c.getResults(ck)
-
-	if len(results) == 0 {
-		return nil, ErrCacheNotFound
-	}
-
-	now := time.Now()
-
-	// If there is an error we want to return that, so we need to range over the
-	// results and separate items and errors. This is computationally less
-	// efficient than extracting errors inside of `getResults()` but logically
-	// it's a lot less complicated since `Delete()` uses the same method but
-	// applies different logic
-	for _, res := range results {
-		// Check if the cached result has expired
-		if res.Expiry.Before(now) {
-			// Skip expired results
-			continue
-		}
-
-		if res.Error != nil {
-			return nil, res.Error
-		}
-
-		// Return a copy of the item so the user can do whatever they want with
-		// it
-		itemCopy := proto.Clone(res.Item).(*sdp.Item)
-
-		items = append(items, itemCopy)
-	}
-
-	// If all results were expired, return cache not found
-	if len(items) == 0 {
-		return nil, ErrCacheNotFound
-	}
-
-	return items, nil
-}
-
-// Delete Deletes anything that matches the given cache query
-func (c *MemoryCache) Delete(ck CacheKey) {
-	if c == nil {
-		return
-	}
-
-	c.deleteResults(c.getResults(ck))
-}
-
-// getResults Searches indexes for cached results, doing no other logic. If
-// nothing is found an empty slice will be returned.
-func (c *MemoryCache) getResults(ck CacheKey) []*CachedResult {
-	c.indexMutex.RLock()
-	defer c.indexMutex.RUnlock()
-
-	results := make([]*CachedResult, 0)
-
-	// Get the relevant set of indexes based on the SST Hash
-	sstHash := ck.SST.Hash()
-	indexes, exists := c.indexes[sstHash]
-	pivot := CachedResult{
-		IndexValues: IndexValues{
-			SSTHash: sstHash,
-		},
-	}
-
-	if !exists {
-		// If we don't have a set of indexes then it definitely doesn't exist
-		return results
-	}
-
-	// Start with the most specific index and fall back to the least specific.
-	// Checking all matching items and returning. These is no need to check all
-	// indexes since they all have the same content
-	if ck.UniqueAttributeValue != nil {
-		pivot.IndexValues.UniqueAttributeValue = *ck.UniqueAttributeValue
-
-		indexes.uniqueAttributeValueIndex.AscendGreaterOrEqual(&pivot, func(result *CachedResult) bool {
-			if *ck.UniqueAttributeValue == result.IndexValues.UniqueAttributeValue {
-				if ck.Matches(result.IndexValues) {
-					results = append(results, result)
-				}
-
-				// Always return true so that we continue to iterate
-				return true
-			}
-
-			return false
-		})
-
-		return results
-	}
-
-	if ck.Query != nil {
-		pivot.IndexValues.Query = *ck.Query
-
-		indexes.queryIndex.AscendGreaterOrEqual(&pivot, func(result *CachedResult) bool {
-			if *ck.Query == result.IndexValues.Query {
-				if ck.Matches(result.IndexValues) {
-					results = append(results, result)
-				}
-
-				// Always return true so that we continue to iterate
-				return true
-			}
-
-			return false
-		})
-
-		return results
-	}
-
-	if ck.Method != nil {
-		pivot.IndexValues.Method = *ck.Method
-
-		indexes.methodIndex.AscendGreaterOrEqual(&pivot, func(result *CachedResult) bool {
-			if *ck.Method == result.IndexValues.Method {
-				// If the methods match, check the rest
-				if ck.Matches(result.IndexValues) {
-					results = append(results, result)
-				}
-
-				// Always return true so that we continue to iterate
-				return true
-			}
-
-			return false
-		})
-
-		return results
-	}
-
-	// If nothing other than SST has been set then return everything
-	indexes.methodIndex.Ascend(func(result *CachedResult) bool {
-		results = append(results, result)
-
-		return true
-	})
-
-	return results
-}
-
-// StoreItem Stores an item in the cache. Note that this item must be fully
-// populated (including metadata) for indexing to work correctly
-func (c *MemoryCache) StoreItem(ctx context.Context, item *sdp.Item, duration time.Duration, ck CacheKey) {
-	if item == nil || c == nil {
-		return
-	}
-
-	itemCopy := proto.Clone(item).(*sdp.Item)
-
-	res := CachedResult{
-		Item:   itemCopy,
-		Error:  nil,
-		Expiry: time.Now().Add(duration),
-		IndexValues: IndexValues{
-			UniqueAttributeValue: itemCopy.UniqueAttributeValue(),
-		},
-	}
-
-	if ck.Method != nil {
-		res.IndexValues.Method = *ck.Method
-	}
-	if ck.Query != nil {
-		res.IndexValues.Query = *ck.Query
-	}
-
-	res.IndexValues.SSTHash = ck.SST.Hash()
-
-	c.storeResult(ctx, res)
-}
-
-// StoreUnavailableItem Stores an error for the given duration.
-func (c *MemoryCache) StoreUnavailableItem(ctx context.Context, err error, duration time.Duration, cacheQuery CacheKey) {
-	if c == nil || err == nil {
-		return
-	}
-
-	res := CachedResult{
-		Item:        nil,
-		Error:       err,
-		Expiry:      time.Now().Add(duration),
-		IndexValues: cacheQuery.ToIndexValues(),
-	}
-
-	c.storeResult(ctx, res)
-}
-
-// Clear Delete all data in cache
-func (c *MemoryCache) Clear() {
-	if c == nil {
-		return
-	}
-
-	c.indexMutex.Lock()
-	defer c.indexMutex.Unlock()
-
-	c.indexes = make(map[SSTHash]*indexSet)
-	c.expiryIndex = newExpiryIndex()
-}
-
-func (c *MemoryCache) storeResult(ctx context.Context, res CachedResult) {
-	c.indexMutex.Lock()
-	defer c.indexMutex.Unlock()
-
-	// Create the index if it doesn't exist
-	indexes, ok := c.indexes[res.IndexValues.SSTHash]
-
-	if !ok {
-		indexes = newIndexSet()
-		c.indexes[res.IndexValues.SSTHash] = indexes
-	}
-
-	// Add the item to the indexes and check if we're overwriting an unexpired entry
-	// We only need to check one index since they all reference the same CachedResult
-	oldResult, replaced := indexes.methodIndex.ReplaceOrInsert(&res)
-	indexes.queryIndex.ReplaceOrInsert(&res)
-	indexes.uniqueAttributeValueIndex.ReplaceOrInsert(&res)
-
-	// Get the current span to add attributes
-	span := trace.SpanFromContext(ctx)
-
-	// Check if we overwrote an entry that hasn't expired yet
-	// This indicates potential thundering-herd issues where multiple identical
-	// queries are executed concurrently instead of waiting for the first result
-	overwritten := false
-	if replaced && oldResult != nil {
-		now := time.Now()
-		if oldResult.Expiry.After(now) {
-			overwritten = true
-			timeUntilExpiry := oldResult.Expiry.Sub(now)
-
-			// Build attributes for the overwrite event
-			attrs := []attribute.KeyValue{
-				attribute.Bool("ovm.cache.unexpired_overwrite", true),
-				attribute.String("ovm.cache.time_until_expiry", timeUntilExpiry.String()),
-				attribute.String("ovm.cache.sst_hash", string(res.IndexValues.SSTHash)),
-				attribute.String("ovm.cache.query_method", res.IndexValues.Method.String()),
-			}
-
-			if res.Item != nil {
-				attrs = append(attrs,
-					attribute.String("ovm.cache.item_type", res.Item.GetType()),
-					attribute.String("ovm.cache.item_scope", res.Item.GetScope()),
-				)
-			}
-
-			if res.IndexValues.Query != "" {
-				attrs = append(attrs, attribute.String("ovm.cache.query", res.IndexValues.Query))
-			}
-
-			if res.IndexValues.UniqueAttributeValue != "" {
-				attrs = append(attrs, attribute.String("ovm.cache.unique_attribute", res.IndexValues.UniqueAttributeValue))
-			}
-
-			span.SetAttributes(attrs...)
-		}
-	}
-
-	// Always set the overwrite attribute, even if false, for consistent tracking
-	if !overwritten {
-		span.SetAttributes(attribute.Bool("ovm.cache.unexpired_overwrite", false))
-	}
-
-	// Add the item to the expiry index
-	c.expiryIndex.ReplaceOrInsert(&res)
-
-	// Update the purge time if required
-	c.setNextPurgeIfEarlier(res.Expiry)
-}
-
-// sortString Returns the string that the cached result should be sorted on.
-// This has a prefix of the index value and suffix of the GloballyUniqueName if
-// relevant
-func sortString(indexValue string, item *sdp.Item) string {
-	if item == nil {
-		return indexValue
-	} else {
-		return indexValue + item.GloballyUniqueName()
-	}
-}
-
-// PurgeStats Stats about the Purge
-type PurgeStats struct {
-	// How many items were timed out of the cache
-	NumPurged int
-	// How long purging took overall
-	TimeTaken time.Duration
-	// The expiry time of the next item to expire. If there are no more items in
-	// the cache, this will be nil
-	NextExpiry *time.Time
-}
-
-// deleteResults Deletes many cached results at once
-func (c *MemoryCache) deleteResults(results []*CachedResult) {
-	c.indexMutex.Lock()
-	defer c.indexMutex.Unlock()
-
-	for _, res := range results {
-		if indexSet, ok := c.indexes[res.IndexValues.SSTHash]; ok {
-			// For each expired item, delete it from all of the indexes that it will be in
-			if indexSet.methodIndex != nil {
-				indexSet.methodIndex.Delete(res)
-			}
-			if indexSet.queryIndex != nil {
-				indexSet.queryIndex.Delete(res)
-			}
-			if indexSet.uniqueAttributeValueIndex != nil {
-				indexSet.uniqueAttributeValueIndex.Delete(res)
-			}
-		}
-
-		c.expiryIndex.Delete(res)
-	}
-}
-
-// Purge Purges all expired items from the cache. The user must pass in the
-// `before` time. All items that expired before this will be purged. Usually
-// this would be just `time.Now()` however it could be overridden for testing
-func (c *MemoryCache) Purge(ctx context.Context, before time.Time) PurgeStats {
-	if c == nil {
-		return PurgeStats{}
-	}
-
-	// Store the current time rather than calling it a million times
-	start := time.Now()
-
-	var nextExpiry *time.Time
-
-	expired := make([]*CachedResult, 0)
-
-	// Look through the expiry cache and work out what has expired
-	c.indexMutex.RLock()
-	c.expiryIndex.Ascend(func(res *CachedResult) bool {
-		if res.Expiry.Before(before) {
-			expired = append(expired, res)
-
-			return true
-		}
-
-		// Take note of the next expiry so we can schedule the next run
-		nextExpiry = &res.Expiry
-
-		// As soon as hit this we'll stop ascending
-		return false
-	})
-	c.indexMutex.RUnlock()
-
-	c.deleteResults(expired)
-
-	return PurgeStats{
-		NumPurged:  len(expired),
-		TimeTaken:  time.Since(start),
-		NextExpiry: nextExpiry,
-	}
-}
-
-// MinWaitDefault The default minimum wait time
-const MinWaitDefault = (5 * time.Second)
-
-// GetMinWaitTime Returns the minimum wait time or the default if not set
-func (c *MemoryCache) GetMinWaitTime() time.Duration {
-	if c == nil {
-		return 0
-	}
-
-	if c.MinWaitTime == 0 {
-		return MinWaitDefault
-	}
-
-	return c.MinWaitTime
-}
-
-// StartPurger Starts the purge process in the background, it will be cancelled
-// when the context is cancelled. The cache will be purged initially, at which
-// point the process will sleep until the next time an item expires
-func (c *MemoryCache) StartPurger(ctx context.Context) {
-	if c == nil {
-		return
-	}
-
-	c.purgeMutex.Lock()
-	if c.purgeTimer == nil {
-		c.purgeTimer = time.NewTimer(0)
-		c.purgeMutex.Unlock()
-	} else {
-		c.purgeMutex.Unlock()
-		log.WithContext(ctx).Info("Purger already running")
-		return // the purger is already running, so we don't need to start it again
-	}
-
-	go func(ctx context.Context) {
-		for {
-			select {
-			case <-c.purgeTimer.C:
-				stats := c.Purge(ctx, time.Now())
-
-				c.setNextPurgeFromStats(stats)
-			case <-ctx.Done():
-				c.purgeMutex.Lock()
-				defer c.purgeMutex.Unlock()
-
-				c.purgeTimer.Stop()
-				c.purgeTimer = nil
-				return
-			}
-		}
-	}(ctx)
-}
-
-// setNextPurgeFromStats Sets when the next purge should run based on the stats of the
-// previous purge
-func (c *MemoryCache) setNextPurgeFromStats(stats PurgeStats) {
-	c.purgeMutex.Lock()
-	defer c.purgeMutex.Unlock()
-
-	if stats.NextExpiry == nil {
-		// If there is nothing else in the cache, wait basically
-		// forever
-		c.purgeTimer.Reset(1000 * time.Hour)
-		c.nextPurge = time.Now().Add(1000 * time.Hour)
-	} else {
-		if time.Until(*stats.NextExpiry) < c.GetMinWaitTime() {
-			c.purgeTimer.Reset(c.GetMinWaitTime())
-			c.nextPurge = time.Now().Add(c.GetMinWaitTime())
-		} else {
-			c.purgeTimer.Reset(time.Until(*stats.NextExpiry))
-			c.nextPurge = *stats.NextExpiry
-		}
-	}
-}
-
-// setNextPurgeIfEarlier Sets the next time the purger will run, if the provided
-// time is sooner than the current scheduled purge time. While the purger is
-// active this will be constantly updated, however if the purger is sleeping and
-// new items are added this method ensures that the purger is woken up
-func (c *MemoryCache) setNextPurgeIfEarlier(t time.Time) {
-	c.purgeMutex.Lock()
-	defer c.purgeMutex.Unlock()
-
-	if t.Before(c.nextPurge) {
-		if c.purgeTimer == nil {
-			return
-		}
-
-		c.purgeTimer.Stop()
-		c.nextPurge = t
-		c.purgeTimer.Reset(time.Until(t))
-	}
 }

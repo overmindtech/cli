@@ -1,5 +1,14 @@
 package sdpcache
 
+// ──────────────────────────────────────────────────────────────────────
+// "Stuck" scenario tests for the done() / pending-work lifecycle.
+//
+// These tests verify that proper use of done() and StoreUnavailableItem prevents
+// goroutines from blocking indefinitely. They exercise the public Cache
+// API and complement the contract suite with real-world error-recovery
+// patterns.
+// ──────────────────────────────────────────────────────────────────────
+
 import (
 	"context"
 	"sync"

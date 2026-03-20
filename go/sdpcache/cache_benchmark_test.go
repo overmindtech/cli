@@ -81,11 +81,11 @@ func NewPopulatedCacheWithMultipleBuckets(cache Cache, itemsPerBucket, numBucket
 
 		for i := range itemsPerBucket {
 			item := GenerateRandomItem()
-				item.Scope = sst.Scope
-				item.Type = sst.Type
-				item.Metadata.SourceName = sst.SourceName
-				uniqueValue := fmt.Sprintf("bucket-%d-item-%d", bucketIdx, i)
-				item.GetAttributes().Set("name", uniqueValue)
+			item.Scope = sst.Scope
+			item.Type = sst.Type
+			item.Metadata.SourceName = sst.SourceName
+			uniqueValue := fmt.Sprintf("bucket-%d-item-%d", bucketIdx, i)
+			item.GetAttributes().Set("name", uniqueValue)
 
 			cache.StoreItem(context.Background(), item, CacheDuration, keys[bucketIdx])
 		}
@@ -104,7 +104,6 @@ func BenchmarkCache1SingleItem(b *testing.B) {
 	for range b.N {
 		// Search for a single item
 		_, err = testSearch(context.Background(), c, query)
-
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -121,7 +120,6 @@ func BenchmarkCache10SingleItem(b *testing.B) {
 	for range b.N {
 		// Search for a single item
 		_, err = testSearch(context.Background(), c, query)
-
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -138,7 +136,6 @@ func BenchmarkCache100SingleItem(b *testing.B) {
 	for range b.N {
 		// Search for a single item
 		_, err = testSearch(context.Background(), c, query)
-
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -155,7 +152,6 @@ func BenchmarkCache1000SingleItem(b *testing.B) {
 	for range b.N {
 		// Search for a single item
 		_, err = testSearch(context.Background(), c, query)
-
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -172,7 +168,6 @@ func BenchmarkCache10_000SingleItem(b *testing.B) {
 	for range b.N {
 		// Search for a single item
 		_, err = testSearch(context.Background(), c, query)
-
 		if err != nil {
 			b.Fatal(err)
 		}
@@ -202,28 +197,28 @@ func BenchmarkListQueryLookup(b *testing.B) {
 					b.ResetTimer()
 					b.ReportAllocs()
 
-				// Benchmark
-				for range b.N {
-					hit, _, items, qErr, done := cache.Lookup(
-						b.Context(),
-						sst.SourceName,
-						sdp.QueryMethod_LIST,
-						sst.Scope,
-						sst.Type,
-						"",
-						false, // ignoreCache
-					)
-					done() // Clean up immediately
-					if qErr != nil {
-						b.Fatalf("unexpected query error: %v", qErr)
+					// Benchmark
+					for range b.N {
+						hit, _, items, qErr, done := cache.Lookup(
+							b.Context(),
+							sst.SourceName,
+							sdp.QueryMethod_LIST,
+							sst.Scope,
+							sst.Type,
+							"",
+							false, // ignoreCache
+						)
+						done() // Clean up immediately
+						if qErr != nil {
+							b.Fatalf("unexpected query error: %v", qErr)
+						}
+						if !hit {
+							b.Fatal("expected cache hit, got miss")
+						}
+						if len(items) != size {
+							b.Fatalf("expected %d items, got %d", size, len(items))
+						}
 					}
-					if !hit {
-						b.Fatal("expected cache hit, got miss")
-					}
-					if len(items) != size {
-						b.Fatalf("expected %d items, got %d", size, len(items))
-					}
-				}
 				})
 			}
 		})
@@ -260,17 +255,17 @@ func BenchmarkListQueryConcurrent(b *testing.B) {
 							bucketIdx := rand.Intn(numBuckets)
 							ck := cacheKeys[bucketIdx]
 
-						// Use Lookup() to match production behavior
-						hit, _, items, qErr, done := cache.Lookup(
-							b.Context(),
-							ck.SST.SourceName,
-							sdp.QueryMethod_LIST,
-							ck.SST.Scope,
-							ck.SST.Type,
-							"",
-							false, // ignoreCache
-						)
-						done() // Clean up immediately
+							// Use Lookup() to match production behavior
+							hit, _, items, qErr, done := cache.Lookup(
+								b.Context(),
+								ck.SST.SourceName,
+								sdp.QueryMethod_LIST,
+								ck.SST.Scope,
+								ck.SST.Type,
+								"",
+								false, // ignoreCache
+							)
+							done() // Clean up immediately
 							if qErr != nil {
 								b.Errorf("unexpected query error: %v", qErr)
 								return
@@ -320,19 +315,19 @@ func BenchmarkListQueryConcurrentSameKey(b *testing.B) {
 					// Benchmark: All goroutines hit the same key
 					b.RunParallel(func(pb *testing.PB) {
 						for pb.Next() {
-						// Use Lookup() to match production behavior
-						hit, _, items, qErr, done := cache.Lookup(
-							b.Context(),
-							sst.SourceName,
-							sdp.QueryMethod_LIST,
-							sst.Scope,
-							sst.Type,
-							"",
-							false, // ignoreCache
-						)
-						done() // Clean up immediately
-						if qErr != nil {
-							b.Errorf("unexpected query error: %v", qErr)
+							// Use Lookup() to match production behavior
+							hit, _, items, qErr, done := cache.Lookup(
+								b.Context(),
+								sst.SourceName,
+								sdp.QueryMethod_LIST,
+								sst.Scope,
+								sst.Type,
+								"",
+								false, // ignoreCache
+							)
+							done() // Clean up immediately
+							if qErr != nil {
+								b.Errorf("unexpected query error: %v", qErr)
 								return
 							}
 							if !hit {
@@ -416,7 +411,7 @@ func benchmarkPendingWorkContentionScenario(
 
 	// Track timing metrics across all goroutines
 	var (
-		firstStartTime   time.Time
+		firstStartTime    time.Time
 		firstCompleteTime time.Time
 		lastCompleteTime  time.Time
 		timingMutex       sync.Mutex
@@ -441,87 +436,84 @@ func benchmarkPendingWorkContentionScenario(
 		lastCompleteTime = time.Time{}
 
 		var wg sync.WaitGroup
-		wg.Add(concurrency)
 
 		// Spawn all goroutines
 		for range concurrency {
-			go func() {
-				defer wg.Done()
-
+			wg.Go(func() {
 				// Wait for start signal to ensure simultaneous execution
 				<-startBarrier
 
 				startTime := time.Now()
 
-			// Call Lookup - this is where the contention happens
-			hit, _, items, qErr, done := cache.Lookup(
-				b.Context(),
-				sst.SourceName,
-				sdp.QueryMethod_LIST,
-				sst.Scope,
-				sst.Type,
-				"",
-				false, // ignoreCache
-			)
+				// Call Lookup - this is where the contention happens
+				hit, _, items, qErr, done := cache.Lookup(
+					b.Context(),
+					sst.SourceName,
+					sdp.QueryMethod_LIST,
+					sst.Scope,
+					sst.Type,
+					"",
+					false, // ignoreCache
+				)
 
-			endTime := time.Now()
+				endTime := time.Now()
 
-			// Check if this goroutine was the first one (the worker)
-			isFirst := firstGoroutine.CompareAndSwap(false, true)
+				// Check if this goroutine was the first one (the worker)
+				isFirst := firstGoroutine.CompareAndSwap(false, true)
 
-			if isFirst {
-				// This goroutine got the cache miss and needs to do the work
-				if hit {
-					b.Errorf("First goroutine should get cache miss, got hit")
+				if isFirst {
+					// This goroutine got the cache miss and needs to do the work
+					if hit {
+						b.Errorf("First goroutine should get cache miss, got hit")
+						done()
+						return
+					}
+
+					// Record when work started
+					timingMutex.Lock()
+					firstStartTime = startTime
+					timingMutex.Unlock()
+
+					// Simulate slow fetch operation (like aggregatedList)
+					time.Sleep(fetchDuration)
+
+					// Store items in cache (simulating results from aggregatedList)
+					for itemIdx := range resultSize {
+						item := GenerateRandomItem()
+						item.Scope = sst.Scope
+						item.Type = sst.Type
+						item.Metadata.SourceName = sst.SourceName
+						item.GetAttributes().Set("name", fmt.Sprintf("item-%d", itemIdx))
+
+						cache.StoreItem(b.Context(), item, CacheDuration, sharedCacheKey)
+					}
+
+					// Record when work completed
+					timingMutex.Lock()
+					firstCompleteTime = time.Now()
+					timingMutex.Unlock()
+
+					// Call done() to complete pending work and release waiting goroutines
 					done()
-					return
+				} else {
+					// This goroutine should have waited in pending.Wait() and then got a cache hit
+					// Note: It might get partial results if it wakes up while the first goroutine
+					// is still storing items (released when the first goroutine calls done())
+					done() // No-op for waiters, but good practice
+					if !hit {
+						b.Errorf("Waiting goroutine should get cache hit after pending work completes, got miss")
+						return
+					}
+					if qErr != nil {
+						b.Errorf("Waiting goroutine got error: %v", qErr)
+						return
+					}
+					if len(items) == 0 {
+						b.Errorf("Waiting goroutine got cache hit but no items")
+						return
+					}
+					// Don't check exact count - waiters may get partial results
 				}
-
-				// Record when work started
-				timingMutex.Lock()
-				firstStartTime = startTime
-				timingMutex.Unlock()
-
-			// Simulate slow fetch operation (like aggregatedList)
-			time.Sleep(fetchDuration)
-
-			// Store items in cache (simulating results from aggregatedList)
-			for itemIdx := range resultSize {
-				item := GenerateRandomItem()
-				item.Scope = sst.Scope
-				item.Type = sst.Type
-				item.Metadata.SourceName = sst.SourceName
-				item.GetAttributes().Set("name", fmt.Sprintf("item-%d", itemIdx))
-
-				cache.StoreItem(b.Context(), item, CacheDuration, sharedCacheKey)
-			}
-
-			// Record when work completed
-			timingMutex.Lock()
-			firstCompleteTime = time.Now()
-			timingMutex.Unlock()
-
-			// Call done() to complete pending work and release waiting goroutines
-			done()
-		} else {
-			// This goroutine should have waited in pending.Wait() and then got a cache hit
-			// Note: It might get partial results if it wakes up while the first goroutine
-			// is still storing items (released when the first goroutine calls done())
-			done() // No-op for waiters, but good practice
-				if !hit {
-					b.Errorf("Waiting goroutine should get cache hit after pending work completes, got miss")
-					return
-				}
-				if qErr != nil {
-					b.Errorf("Waiting goroutine got error: %v", qErr)
-					return
-				}
-				if len(items) == 0 {
-					b.Errorf("Waiting goroutine got cache hit but no items")
-					return
-				}
-				// Don't check exact count - waiters may get partial results
-			}
 
 				// Track when each goroutine completes
 				timingMutex.Lock()
@@ -529,7 +521,7 @@ func benchmarkPendingWorkContentionScenario(
 					lastCompleteTime = endTime
 				}
 				timingMutex.Unlock()
-			}()
+			})
 		}
 
 		// Release all goroutines simultaneously
@@ -633,10 +625,10 @@ func benchmarkConcurrentMultiKeyWritesScenario(
 
 	// Track timing metrics
 	var (
-		goroutineStartTimes   []time.Time
-		goroutineEndTimes     []time.Time
-		timesMutex            sync.Mutex
-		totalStoreItemCalls   atomic.Int64
+		goroutineStartTimes []time.Time
+		goroutineEndTimes   []time.Time
+		timesMutex          sync.Mutex
+		totalStoreItemCalls atomic.Int64
 	)
 
 	// Use a start barrier to ensure all goroutines begin simultaneously
@@ -672,53 +664,53 @@ func benchmarkConcurrentMultiKeyWritesScenario(
 				goroutineStartTimes = append(goroutineStartTimes, startTime)
 				timesMutex.Unlock()
 
-			// Call Lookup with unique cache key - should be a cache miss
-			myCacheKey := cacheKeys[goroutineIdx]
-			hit, _, _, qErr, done := cache.Lookup(
-				b.Context(),
-				myCacheKey.SST.SourceName,
-				sdp.QueryMethod_LIST,
-				myCacheKey.SST.Scope,
-				myCacheKey.SST.Type,
-				"",
-				false, // ignoreCache
-			)
+				// Call Lookup with unique cache key - should be a cache miss
+				myCacheKey := cacheKeys[goroutineIdx]
+				hit, _, _, qErr, done := cache.Lookup(
+					b.Context(),
+					myCacheKey.SST.SourceName,
+					sdp.QueryMethod_LIST,
+					myCacheKey.SST.Scope,
+					myCacheKey.SST.Type,
+					"",
+					false, // ignoreCache
+				)
 
-			if hit {
-				b.Errorf("Expected cache miss for goroutine %d, got hit", goroutineIdx)
+				if hit {
+					b.Errorf("Expected cache miss for goroutine %d, got hit", goroutineIdx)
+					done()
+					return
+				}
+				if qErr != nil {
+					b.Errorf("Unexpected error for goroutine %d: %v", goroutineIdx, qErr)
+					done()
+					return
+				}
+
+				// Simulate slow fetch operation (like aggregatedList API call)
+				time.Sleep(fetchDuration)
+
+				// Store multiple items (simulating API results)
+				for itemIdx := range itemsPerGoroutine {
+					item := GenerateRandomItem()
+					item.Scope = myCacheKey.SST.Scope
+					item.Type = myCacheKey.SST.Type
+					item.Metadata.SourceName = myCacheKey.SST.SourceName
+					item.GetAttributes().Set("name", fmt.Sprintf("goroutine-%d-item-%d", goroutineIdx, itemIdx))
+
+					cache.StoreItem(b.Context(), item, CacheDuration, myCacheKey)
+					totalStoreItemCalls.Add(1)
+				}
+
+				// Call done() to complete pending work
 				done()
-				return
-			}
-			if qErr != nil {
-				b.Errorf("Unexpected error for goroutine %d: %v", goroutineIdx, qErr)
-				done()
-				return
-			}
 
-		// Simulate slow fetch operation (like aggregatedList API call)
-		time.Sleep(fetchDuration)
+				endTime := time.Now()
 
-		// Store multiple items (simulating API results)
-		for itemIdx := range itemsPerGoroutine {
-			item := GenerateRandomItem()
-			item.Scope = myCacheKey.SST.Scope
-			item.Type = myCacheKey.SST.Type
-			item.Metadata.SourceName = myCacheKey.SST.SourceName
-			item.GetAttributes().Set("name", fmt.Sprintf("goroutine-%d-item-%d", goroutineIdx, itemIdx))
-
-			cache.StoreItem(b.Context(), item, CacheDuration, myCacheKey)
-			totalStoreItemCalls.Add(1)
-		}
-
-		// Call done() to complete pending work
-		done()
-
-			endTime := time.Now()
-
-			// Track end time
-			timesMutex.Lock()
-			goroutineEndTimes = append(goroutineEndTimes, endTime)
-			timesMutex.Unlock()
+				// Track end time
+				timesMutex.Lock()
+				goroutineEndTimes = append(goroutineEndTimes, endTime)
+				timesMutex.Unlock()
 			}()
 		}
 
