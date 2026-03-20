@@ -28,12 +28,14 @@ var Types = []string{
 	"lemur",
 }
 
-const MaxAttributes = 30
-const MaxTags = 10
-const MaxTagKeyLength = 10
-const MaxTagValueLength = 10
-const MaxAttributeKeyLength = 20
-const MaxAttributeValueLength = 50
+const (
+	MaxAttributes           = 30
+	MaxTags                 = 10
+	MaxTagKeyLength         = 10
+	MaxTagValueLength       = 10
+	MaxAttributeKeyLength   = 20
+	MaxAttributeValueLength = 50
+)
 
 // TODO(LIQs): rewrite this to `MaxEdges`
 const MaxLinkedItems = 10

@@ -250,10 +250,8 @@ func TestShardedCachePendingWorkDeduplication(t *testing.T) {
 
 	startBarrier := make(chan struct{})
 
-	for i := range numGoroutines {
-		wg.Add(1)
-		go func(idx int) {
-			defer wg.Done()
+	for idx := range numGoroutines {
+		wg.Go(func() {
 			<-startBarrier
 
 			hit, ck, items, _, done := cache.Lookup(ctx, sst.SourceName, method, sst.Scope, sst.Type, "", false)
@@ -280,7 +278,7 @@ func TestShardedCachePendingWorkDeduplication(t *testing.T) {
 				hit   bool
 				items []*sdp.Item
 			}{hit, items}
-		}(i)
+		})
 	}
 
 	close(startBarrier)
@@ -564,8 +562,7 @@ func TestShardedCacheConcurrentWriteThroughput(t *testing.T) {
 	var wg sync.WaitGroup
 	numParallel := 100
 
-	for i := range numParallel {
-		idx := i
+	for idx := range numParallel {
 		wg.Go(func() {
 			item := GenerateRandomItem()
 			item.Scope = sst.Scope
