@@ -133,6 +133,16 @@ func TestNetworkApplicationGatewayIntegration(t *testing.T) {
 	})
 
 	t.Run("Run", func(t *testing.T) {
+		ctx := t.Context()
+		_, checkErr := agClient.Get(ctx, integrationTestResourceGroup, integrationTestAGName, nil)
+		if checkErr != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(checkErr, &respErr) && respErr.StatusCode == http.StatusNotFound {
+				t.Skipf("Application Gateway %s does not exist (Setup may have been skipped). Skipping Run tests.", integrationTestAGName)
+			}
+			t.Fatalf("Failed preflight check for application gateway %s: %v", integrationTestAGName, checkErr)
+		}
+
 		t.Run("GetApplicationGateway", func(t *testing.T) {
 			ctx := t.Context()
 

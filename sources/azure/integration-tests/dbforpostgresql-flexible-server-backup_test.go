@@ -65,7 +65,7 @@ func TestDBforPostgreSQLFlexibleServerBackupIntegration(t *testing.T) {
 			t.Fatalf("Failed to create resource group: %v", err)
 		}
 
-		err = createPostgreSQLFlexibleServer(ctx, postgreSQLServerClient, integrationTestResourceGroup, pgServerName, integrationTestLocation)
+		err = createPostgreSQLFlexibleServerForBackup(ctx, postgreSQLServerClient, integrationTestResourceGroup, pgServerName, integrationTestLocation)
 		if err != nil {
 			t.Fatalf("Failed to create PostgreSQL Flexible Server: %v", err)
 		}
@@ -274,6 +274,61 @@ func TestDBforPostgreSQLFlexibleServerBackupIntegration(t *testing.T) {
 			t.Fatalf("Failed to delete PostgreSQL Flexible Server: %v", err)
 		}
 	})
+}
+
+// createPostgreSQLFlexibleServerForBackup creates a GeneralPurpose-tier server
+// because Azure does not allow on-demand backups on Burstable-tier servers.
+func createPostgreSQLFlexibleServerForBackup(ctx context.Context, client *armpostgresqlflexibleservers.ServersClient, resourceGroupName, serverName, location string) error {
+	_, err := client.Get(ctx, resourceGroupName, serverName, nil)
+	if err == nil {
+		log.Printf("PostgreSQL Flexible Server %s already exists, skipping creation", serverName)
+		return nil
+	}
+
+	adminLogin := os.Getenv("AZURE_POSTGRESQL_SERVER_ADMIN_LOGIN")
+	adminPassword := os.Getenv("AZURE_POSTGRESQL_SERVER_ADMIN_PASSWORD")
+	if adminLogin == "" || adminPassword == "" {
+		return fmt.Errorf("AZURE_POSTGRESQL_SERVER_ADMIN_LOGIN and AZURE_POSTGRESQL_SERVER_ADMIN_PASSWORD must be set")
+	}
+
+	opCtx, cancel := context.WithTimeout(ctx, 25*time.Minute)
+	defer cancel()
+
+	poller, err := client.BeginCreateOrUpdate(opCtx, resourceGroupName, serverName, armpostgresqlflexibleservers.Server{
+		Location: new(location),
+		Properties: &armpostgresqlflexibleservers.ServerProperties{
+			AdministratorLogin:         new(adminLogin),
+			AdministratorLoginPassword: new(adminPassword),
+			Version:                    new(armpostgresqlflexibleservers.PostgresMajorVersion("14")),
+			Storage:                    &armpostgresqlflexibleservers.Storage{StorageSizeGB: new(int32(32))},
+			Backup:                     &armpostgresqlflexibleservers.Backup{BackupRetentionDays: new(int32(7)), GeoRedundantBackup: new(armpostgresqlflexibleservers.GeographicallyRedundantBackupDisabled)},
+			Network:                    &armpostgresqlflexibleservers.Network{PublicNetworkAccess: new(armpostgresqlflexibleservers.ServerPublicNetworkAccessStateEnabled)},
+		},
+		SKU: &armpostgresqlflexibleservers.SKU{
+			Name: new("Standard_D2s_v3"),
+			Tier: new(armpostgresqlflexibleservers.SKUTierGeneralPurpose),
+		},
+		Tags: map[string]*string{
+			"purpose": new("overmind-integration-tests"),
+			"test":    new("dbforpostgresql-backup"),
+		},
+	}, nil)
+	if err != nil {
+		var respErr *azcore.ResponseError
+		if errors.As(err, &respErr) && respErr.StatusCode == http.StatusConflict {
+			log.Printf("PostgreSQL Flexible Server %s already exists, skipping creation", serverName)
+			return nil
+		}
+		return fmt.Errorf("failed to begin creating PostgreSQL Flexible Server: %w", err)
+	}
+
+	_, err = poller.PollUntilDone(opCtx, nil)
+	if err != nil {
+		return fmt.Errorf("failed to create PostgreSQL Flexible Server: %w", err)
+	}
+
+	log.Printf("PostgreSQL Flexible Server %s (GeneralPurpose) created successfully", serverName)
+	return nil
 }
 
 func createOnDemandBackup(ctx context.Context, client *armpostgresqlflexibleservers.BackupsAutomaticAndOnDemandClient, resourceGroupName, serverName, backupName string) error {

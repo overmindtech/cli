@@ -315,10 +315,7 @@ func TestComputeCapacityReservationGroup(t *testing.T) {
 }
 
 func capacityReservationGroupGetOptions() *armcompute.CapacityReservationGroupsClientGetOptions {
-	expand := armcompute.CapacityReservationGroupInstanceViewTypes(armcompute.ExpandTypesForGetCapacityReservationGroupsVirtualMachinesRef)
-	return &armcompute.CapacityReservationGroupsClientGetOptions{
-		Expand: &expand,
-	}
+	return nil
 }
 
 func capacityReservationGroupListOptions() *armcompute.CapacityReservationGroupsClientListByResourceGroupOptions {

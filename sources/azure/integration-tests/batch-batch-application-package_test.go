@@ -70,6 +70,7 @@ func TestBatchApplicationPackageIntegration(t *testing.T) {
 
 	storageAccountName := generateStorageAccountName(integrationTestBatchAppPkgAccountName)
 	batchAccountName := generateBatchAccountName(integrationTestBatchAppPkgBatchName)
+	setupCompleted := false
 
 	t.Run("Setup", func(t *testing.T) {
 		ctx := t.Context()
@@ -97,6 +98,9 @@ func TestBatchApplicationPackageIntegration(t *testing.T) {
 
 		err = createBatchAccount(ctx, batchAccountClient, integrationTestResourceGroup, batchAccountName, integrationTestLocation, storageAccountID)
 		if err != nil {
+			if errors.Is(err, errBatchQuotaExceeded) {
+				t.Skipf("Skipping Batch application package integration test due to Azure subscription quota: %v", err)
+			}
 			t.Fatalf("Failed to create batch account: %v", err)
 		}
 
@@ -114,9 +118,14 @@ func TestBatchApplicationPackageIntegration(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to create batch application package: %v", err)
 		}
+		setupCompleted = true
 	})
 
 	t.Run("Run", func(t *testing.T) {
+		if !setupCompleted {
+			t.Skip("Skipping Run: Setup did not complete successfully")
+		}
+
 		t.Run("GetApplicationPackage", func(t *testing.T) {
 			ctx := t.Context()
 

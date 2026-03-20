@@ -23,7 +23,7 @@ import (
 )
 
 const (
-	integrationTestTableName = "ovm-integ-test-table"
+	integrationTestTableName = "ovmintegtesttable"
 )
 
 func TestStorageTableIntegration(t *testing.T) {
@@ -199,8 +199,8 @@ func TestStorageTableIntegration(t *testing.T) {
 			}
 
 			// Verify unique attribute
-			if sdpItem.GetUniqueAttribute() != "id" {
-				t.Errorf("Expected unique attribute 'id', got %s", sdpItem.GetUniqueAttribute())
+			if sdpItem.GetUniqueAttribute() != "uniqueAttr" {
+				t.Errorf("Expected unique attribute 'uniqueAttr', got %s", sdpItem.GetUniqueAttribute())
 			}
 
 			// Verify item validation

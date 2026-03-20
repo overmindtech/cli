@@ -18,6 +18,10 @@ Every adapter must implement both `IAMPermissions()` and `PredefinedRole()`:
 
 Flag any adapter missing either method, returning empty values, or using an incorrect resource provider path.
 
+## Azure ARM Get/List options
+
+For Azure adapters, only pass `*Options` fields (for example `$expand`) that the REST API for that resource and API version documents. Unsupported or mistyped query parameters can surface as `400 Bad Request` from malformed URLs. When in doubt, prefer `nil` options or cross-check the official REST reference for the operation.
+
 ## PotentialLinks Completeness
 
 `PotentialLinks()` must include every resource type that appears in any `LinkedItemQuery` returned by the adapter's conversion function. If the adapter creates linked item queries for IP addresses, `PotentialLinks()` must include `stdlib.NetworkIP`. If it creates queries for DNS names, `PotentialLinks()` must include `stdlib.NetworkDNS`. Missing entries in `PotentialLinks()` break the Overmind dependency graph — linked items won't be discovered even though the queries exist in the adapter's output.

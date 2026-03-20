@@ -9,6 +9,7 @@ import (
 	"os/exec"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v3"
@@ -25,6 +26,8 @@ import (
 	azureshared "github.com/overmindtech/cli/sources/azure/shared"
 	"github.com/overmindtech/cli/sources/shared"
 )
+
+var errRoleAssignmentConflictWithoutResource = errors.New("role assignment create returned conflict but role assignment could not be retrieved")
 
 func TestAuthorizationRoleAssignmentIntegration(t *testing.T) {
 	subscriptionID := os.Getenv("AZURE_SUBSCRIPTION_ID")
@@ -70,6 +73,7 @@ func TestAuthorizationRoleAssignmentIntegration(t *testing.T) {
 	// Generate unique role assignment name (GUID)
 	roleAssignmentName := uuid.New().String()
 	azureScope := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s", subscriptionID, integrationTestResourceGroup)
+	setupCompleted := false
 
 	t.Run("Setup", func(t *testing.T) {
 		ctx := t.Context()
@@ -83,13 +87,25 @@ func TestAuthorizationRoleAssignmentIntegration(t *testing.T) {
 		// Create role assignment at resource group scope
 		err = createRoleAssignment(ctx, roleAssignmentsClient, azureScope, roleAssignmentName, principalID, readerRoleDefinitionID)
 		if err != nil {
+			if errors.Is(err, errRoleAssignmentConflictWithoutResource) {
+				t.Skipf("Skipping due to transient Azure role-assignment control-plane conflict: %v", err)
+			}
 			t.Fatalf("Failed to create role assignment: %v", err)
 		}
+		err = waitForRoleAssignmentAvailable(ctx, roleAssignmentsClient, azureScope, roleAssignmentName)
+		if err != nil {
+			t.Fatalf("Failed waiting for role assignment to be available: %v", err)
+		}
+		setupCompleted = true
 
 		log.Printf("Created role assignment %s at scope %s", roleAssignmentName, azureScope)
 	})
 
 	t.Run("Run", func(t *testing.T) {
+		if !setupCompleted {
+			t.Skip("Skipping Run: Setup did not complete successfully")
+		}
+
 		t.Run("GetRoleAssignment", func(t *testing.T) {
 			ctx := t.Context()
 
@@ -387,8 +403,16 @@ func createRoleAssignment(ctx context.Context, client *armauthorization.RoleAssi
 		var respErr *azcore.ResponseError
 		if errors.As(err, &respErr) {
 			if respErr.StatusCode == http.StatusConflict {
-				log.Printf("Role assignment %s already exists (conflict), skipping creation", roleAssignmentName)
-				return nil
+				existing, getErr := client.Get(ctx, scope, roleAssignmentName, nil)
+				if getErr == nil && existing.RoleAssignment.ID != nil && *existing.RoleAssignment.ID != "" {
+					log.Printf("Role assignment %s already exists (conflict), verified readable, skipping creation", roleAssignmentName)
+					return nil
+				}
+				var getRespErr *azcore.ResponseError
+				if errors.As(getErr, &getRespErr) && getRespErr.StatusCode == http.StatusNotFound {
+					return fmt.Errorf("%w: scope=%s roleAssignmentName=%s", errRoleAssignmentConflictWithoutResource, scope, roleAssignmentName)
+				}
+				return fmt.Errorf("role assignment conflict for %s and failed to verify existing role assignment: %w", roleAssignmentName, getErr)
 			}
 			if respErr.StatusCode == http.StatusForbidden {
 				return fmt.Errorf("insufficient permissions to create role assignment: %w", err)
@@ -420,4 +444,24 @@ func deleteRoleAssignment(ctx context.Context, client *armauthorization.RoleAssi
 
 	log.Printf("Role assignment %s deleted successfully", roleAssignmentName)
 	return nil
+}
+
+func waitForRoleAssignmentAvailable(ctx context.Context, client *armauthorization.RoleAssignmentsClient, scope, roleAssignmentName string) error {
+	maxAttempts := 20
+	pollInterval := 5 * time.Second
+
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		_, err := client.Get(ctx, scope, roleAssignmentName, nil)
+		if err == nil {
+			return nil
+		}
+		var respErr *azcore.ResponseError
+		if errors.As(err, &respErr) && respErr.StatusCode == http.StatusNotFound {
+			time.Sleep(pollInterval)
+			continue
+		}
+		return fmt.Errorf("error checking role assignment availability: %w", err)
+	}
+
+	return fmt.Errorf("timeout waiting for role assignment %s to be available", roleAssignmentName)
 }

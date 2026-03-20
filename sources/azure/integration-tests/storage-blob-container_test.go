@@ -120,8 +120,9 @@ func TestStorageBlobContainerIntegration(t *testing.T) {
 				t.Fatalf("Failed to get unique attribute: %v", err)
 			}
 
-			if uniqueAttrValue != integrationTestContainerName {
-				t.Fatalf("Expected unique attribute value to be %s, got %s", integrationTestContainerName, uniqueAttrValue)
+			expectedUniqueValue := shared.CompositeLookupKey(storageAccountName, integrationTestContainerName)
+			if uniqueAttrValue != expectedUniqueValue {
+				t.Fatalf("Expected unique attribute value to be %s, got %s", expectedUniqueValue, uniqueAttrValue)
 			}
 
 			log.Printf("Successfully retrieved blob container %s", integrationTestContainerName)
@@ -155,10 +156,11 @@ func TestStorageBlobContainerIntegration(t *testing.T) {
 				t.Fatalf("Expected at least one blob container, got %d", len(sdpItems))
 			}
 
+			expectedUniqueValue := shared.CompositeLookupKey(storageAccountName, integrationTestContainerName)
 			var found bool
 			for _, item := range sdpItems {
 				uniqueAttrKey := item.GetUniqueAttribute()
-				if v, err := item.GetAttributes().Get(uniqueAttrKey); err == nil && v == integrationTestContainerName {
+				if v, err := item.GetAttributes().Get(uniqueAttrKey); err == nil && v == expectedUniqueValue {
 					found = true
 					break
 				}

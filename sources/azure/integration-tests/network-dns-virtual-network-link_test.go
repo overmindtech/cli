@@ -258,6 +258,9 @@ func TestNetworkDNSVirtualNetworkLinkIntegration(t *testing.T) {
 			t.Fatalf("Failed to delete virtual network link: %v", err)
 		}
 
+		log.Printf("Waiting 30 seconds for VNet link deletion to propagate before deleting DNS zone...")
+		time.Sleep(30 * time.Second)
+
 		err = deletePrivateDNSZoneForLink(ctx, privateDNSZonesClient, integrationTestResourceGroup, integrationTestPrivateZoneName)
 		if err != nil {
 			t.Fatalf("Failed to delete private DNS zone: %v", err)

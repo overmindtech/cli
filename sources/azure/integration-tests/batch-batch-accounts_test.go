@@ -31,6 +31,8 @@ const (
 	integrationTestSANameForBatch   = "ovm-integ-test-sa-batch"
 )
 
+var errBatchQuotaExceeded = errors.New("azure batch quota exceeded")
+
 func TestBatchAccountIntegration(t *testing.T) {
 	subscriptionID := os.Getenv("AZURE_SUBSCRIPTION_ID")
 	if subscriptionID == "" {
@@ -62,6 +64,7 @@ func TestBatchAccountIntegration(t *testing.T) {
 	// Generate unique names (batch account names must be globally unique, 3-24 chars, lowercase alphanumeric)
 	batchAccountName := generateBatchAccountName(integrationTestBatchAccountName)
 	storageAccountName := generateStorageAccountName(integrationTestSANameForBatch)
+	setupCompleted := false
 
 	var storageAccountID string
 
@@ -96,6 +99,9 @@ func TestBatchAccountIntegration(t *testing.T) {
 		// Create batch account
 		err = createBatchAccount(ctx, batchClient, integrationTestResourceGroup, batchAccountName, integrationTestLocation, storageAccountID)
 		if err != nil {
+			if errors.Is(err, errBatchQuotaExceeded) {
+				t.Skipf("Skipping Batch account integration test due to Azure subscription quota: %v", err)
+			}
 			t.Fatalf("Failed to create batch account: %v", err)
 		}
 
@@ -104,9 +110,14 @@ func TestBatchAccountIntegration(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed waiting for batch account to be available: %v", err)
 		}
+		setupCompleted = true
 	})
 
 	t.Run("Run", func(t *testing.T) {
+		if !setupCompleted {
+			t.Skip("Skipping Run: Setup did not complete successfully")
+		}
+
 		t.Run("GetBatchAccount", func(t *testing.T) {
 			ctx := t.Context()
 
@@ -334,15 +345,24 @@ func createBatchAccount(ctx context.Context, client *armbatch.AccountClient, res
 	if err != nil {
 		// Check if batch account already exists (conflict)
 		var respErr *azcore.ResponseError
-		if errors.As(err, &respErr) && respErr.StatusCode == http.StatusConflict {
-			log.Printf("Batch account %s already exists (conflict), skipping creation", accountName)
-			return nil
+		if errors.As(err, &respErr) {
+			if respErr.StatusCode == http.StatusConflict {
+				log.Printf("Batch account %s already exists (conflict), skipping creation", accountName)
+				return nil
+			}
+			if respErr.ErrorCode == "SubscriptionQuotaExceeded" {
+				return fmt.Errorf("%w: %s", errBatchQuotaExceeded, respErr.Error())
+			}
 		}
 		return fmt.Errorf("failed to begin creating batch account: %w", err)
 	}
 
 	resp, err := poller.PollUntilDone(ctx, nil)
 	if err != nil {
+		var respErr *azcore.ResponseError
+		if errors.As(err, &respErr) && respErr.ErrorCode == "SubscriptionQuotaExceeded" {
+			return fmt.Errorf("%w: %s", errBatchQuotaExceeded, respErr.Error())
+		}
 		return fmt.Errorf("failed to create batch account: %w", err)
 	}
 
