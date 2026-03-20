@@ -7,7 +7,9 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault/v2"
@@ -58,6 +60,7 @@ func TestKeyVaultSecretIntegration(t *testing.T) {
 	// Use the same Key Vault name as the vault integration test
 	// Note: integrationTestKeyVaultName is defined in keyvault-vault_test.go
 	vaultName := integrationTestKeyVaultName
+	setupCompleted := false
 
 	t.Run("Setup", func(t *testing.T) {
 		ctx := t.Context()
@@ -108,9 +111,20 @@ func TestKeyVaultSecretIntegration(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed to create Key Vault secret: %v", err)
 		}
+
+		// After create/recover, ARM control plane can lag briefly before GET is consistent.
+		err = waitForKeyVaultSecretAvailable(ctx, secretsClient, integrationTestResourceGroup, vaultName, integrationTestSecretName)
+		if err != nil {
+			t.Fatalf("Failed waiting for Key Vault secret to be available: %v", err)
+		}
+		setupCompleted = true
 	})
 
 	t.Run("Run", func(t *testing.T) {
+		if !setupCompleted {
+			t.Skip("Skipping Run: Setup did not complete successfully")
+		}
+
 		t.Run("GetSecret", func(t *testing.T) {
 			ctx := t.Context()
 
@@ -320,6 +334,19 @@ func createKeyVaultSecret(ctx context.Context, vaultName, secretName string) err
 		"--value", "test-secret-value")
 	output, err := cmd.CombinedOutput()
 	if err != nil {
+		if strings.Contains(string(output), "ObjectIsDeletedButRecoverable") {
+			log.Printf("Secret %s is deleted but recoverable, attempting recovery", secretName)
+			recoverCmd := exec.CommandContext(ctx, "az", "keyvault", "secret", "recover",
+				"--vault-name", vaultName,
+				"--name", secretName)
+			recoverOutput, recoverErr := recoverCmd.CombinedOutput()
+			if recoverErr != nil {
+				return fmt.Errorf("failed to recover deleted secret: %w, output: %s", recoverErr, string(recoverOutput))
+			}
+			log.Printf("Secret %s recovered successfully", secretName)
+			return nil
+		}
+
 		// If the command failed, it might be because the secret already exists
 		// Try to show it to confirm
 		showCmd := exec.CommandContext(ctx, "az", "keyvault", "secret", "show",
@@ -361,4 +388,26 @@ func deleteKeyVaultSecret(ctx context.Context, vaultName, secretName string) err
 
 	log.Printf("Secret %s deleted successfully", secretName)
 	return nil
+}
+
+func waitForKeyVaultSecretAvailable(ctx context.Context, client *armkeyvault.SecretsClient, resourceGroupName, vaultName, secretName string) error {
+	maxAttempts := 20
+	pollInterval := 3 * time.Second
+
+	for attempt := 1; attempt <= maxAttempts; attempt++ {
+		_, err := client.Get(ctx, resourceGroupName, vaultName, secretName, nil)
+		if err == nil {
+			return nil
+		}
+
+		var respErr *azcore.ResponseError
+		if errors.As(err, &respErr) && respErr.StatusCode == http.StatusNotFound {
+			time.Sleep(pollInterval)
+			continue
+		}
+
+		return fmt.Errorf("error checking secret availability: %w", err)
+	}
+
+	return fmt.Errorf("timeout waiting for secret %s in vault %s to be available", secretName, vaultName)
 }

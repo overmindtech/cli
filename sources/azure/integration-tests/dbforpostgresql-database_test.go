@@ -307,7 +307,10 @@ func createPostgreSQLFlexibleServer(ctx context.Context, client *armpostgresqlfl
 
 	// Create the PostgreSQL Flexible Server
 	// Using Burstable tier for cost-effective testing
-	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroupName, serverName, armpostgresqlflexibleservers.Server{
+	opCtx, cancel := context.WithTimeout(ctx, 25*time.Minute)
+	defer cancel()
+
+	poller, err := client.BeginCreateOrUpdate(opCtx, resourceGroupName, serverName, armpostgresqlflexibleservers.Server{
 		Location: new(location),
 		Properties: &armpostgresqlflexibleservers.ServerProperties{
 			AdministratorLogin:         new(adminLogin),
@@ -337,7 +340,7 @@ func createPostgreSQLFlexibleServer(ctx context.Context, client *armpostgresqlfl
 		return fmt.Errorf("failed to begin creating PostgreSQL Flexible Server: %w", err)
 	}
 
-	resp, err := poller.PollUntilDone(ctx, nil)
+	resp, err := poller.PollUntilDone(opCtx, nil)
 	if err != nil {
 		return fmt.Errorf("failed to create PostgreSQL Flexible Server: %w", err)
 	}
@@ -353,8 +356,8 @@ func createPostgreSQLFlexibleServer(ctx context.Context, client *armpostgresqlfl
 
 // waitForPostgreSQLServerAvailable waits for a PostgreSQL Flexible Server to be fully available
 func waitForPostgreSQLServerAvailable(ctx context.Context, client *armpostgresqlflexibleservers.ServersClient, resourceGroupName, serverName string) error {
-	maxAttempts := 20
-	pollInterval := 10 * time.Second
+	maxAttempts := 120
+	pollInterval := 15 * time.Second
 
 	log.Printf("Waiting for PostgreSQL Flexible Server %s to be available via API...", serverName)
 
@@ -431,8 +434,8 @@ func createPostgreSQLDatabase(ctx context.Context, client *armpostgresqlflexible
 
 // waitForPostgreSQLDatabaseAvailable waits for a PostgreSQL Database to be fully available
 func waitForPostgreSQLDatabaseAvailable(ctx context.Context, client *armpostgresqlflexibleservers.DatabasesClient, resourceGroupName, serverName, databaseName string) error {
-	maxAttempts := 20
-	pollInterval := 5 * time.Second
+	maxAttempts := 60
+	pollInterval := 10 * time.Second
 
 	log.Printf("Waiting for PostgreSQL database %s to be available via API...", databaseName)
 

@@ -9,6 +9,8 @@ import (
 	"testing"
 	"time"
 
+	"strings"
+
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
@@ -98,6 +100,9 @@ func TestNetworkFlowLogIntegration(t *testing.T) {
 
 		err = createFlowLog(ctx, flowLogsSDKClient, integrationTestNetworkWatcherRG, integrationTestNetworkWatcherName, integrationTestFlowLogName, nsgID, storageID, integrationTestLocation)
 		if err != nil {
+			if strings.Contains(err.Error(), "NsgFlowLogCreationBlocked") {
+				t.Skipf("Skipping: Azure has retired new NSG flow log creation: %v", err)
+			}
 			t.Fatalf("Failed to create flow log: %v", err)
 		}
 
@@ -108,6 +113,16 @@ func TestNetworkFlowLogIntegration(t *testing.T) {
 	})
 
 	t.Run("Run", func(t *testing.T) {
+		ctx := t.Context()
+		_, checkErr := flowLogsSDKClient.Get(ctx, integrationTestNetworkWatcherRG, integrationTestNetworkWatcherName, integrationTestFlowLogName, nil)
+		if checkErr != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(checkErr, &respErr) && respErr.StatusCode == http.StatusNotFound {
+				t.Skipf("Flow log %s does not exist (Setup may have been skipped). Skipping Run tests.", integrationTestFlowLogName)
+			}
+			t.Fatalf("Failed preflight check for flow log %s: %v", integrationTestFlowLogName, checkErr)
+		}
+
 		t.Run("GetFlowLog", func(t *testing.T) {
 			ctx := t.Context()
 

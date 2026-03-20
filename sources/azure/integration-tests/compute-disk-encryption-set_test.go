@@ -66,6 +66,7 @@ func TestComputeDiskEncryptionSetIntegration(t *testing.T) {
 	var keyURL string
 	var identityResourceID string
 	var identityPrincipalID string
+	var setupCompleted bool
 
 	t.Run("Setup", func(t *testing.T) {
 		ctx := t.Context()
@@ -88,6 +89,14 @@ func TestComputeDiskEncryptionSetIntegration(t *testing.T) {
 		}
 		if vault.ID == nil || *vault.ID == "" {
 			t.Fatalf("Key Vault ID is nil/empty")
+		}
+		if vault.Properties == nil || vault.Properties.EnablePurgeProtection == nil || !*vault.Properties.EnablePurgeProtection {
+			t.Skipf(
+				"Disk Encryption Set integration requires Key Vault purge protection enabled on %s; enable it once with: az keyvault update --name %s --resource-group %s --enable-purge-protection true",
+				integrationTestKeyVaultName,
+				integrationTestKeyVaultName,
+				integrationTestResourceGroup,
+			)
 		}
 		vaultID = *vault.ID
 
@@ -131,9 +140,15 @@ func TestComputeDiskEncryptionSetIntegration(t *testing.T) {
 		if err := waitForDiskEncryptionSetAvailable(ctx, desClient, integrationTestResourceGroup, integrationTestDiskEncryptionSetName); err != nil {
 			t.Fatalf("Failed waiting for Disk Encryption Set to be available: %v", err)
 		}
+
+		setupCompleted = true
 	})
 
 	t.Run("Run", func(t *testing.T) {
+		if !setupCompleted {
+			t.Skip("Skipping Run: Setup did not complete successfully")
+		}
+
 		t.Run("GetDiskEncryptionSet", func(t *testing.T) {
 			ctx := t.Context()
 

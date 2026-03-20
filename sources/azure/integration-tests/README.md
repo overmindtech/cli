@@ -63,6 +63,21 @@ The `Setup` and `Teardown` methods are idempotent, meaning they can be run multi
 
 We can easily run all `Setup` tests to create resources, then run all `Run` tests to execute the actual tests, and finally run all `Teardown` tests to clean up resources.
 
+**Run after Setup:** `Run` subtests skip with a clear message when `Setup` did not complete successfully (for example Setup was skipped, failed, or you ran only `Run` without a prior successful Setup). That avoids noisy failures that are not adapter bugs.
+
+### Skips, quotas, and slow Azure operations
+
+Some tests intentionally call `t.Skip` for Azure conditions that are external to adapter correctness, for example:
+
+- Batch account quota exhaustion (`SubscriptionQuotaExceeded`)
+- Transient VM/VMSS control-plane conflicts where create returns `409` but `Get` still cannot retrieve the resource
+- **Gallery application version** (`compute-gallery-application-version_test.go`): requires env vars `AZURE_TEST_GALLERY_NAME`, `AZURE_TEST_GALLERY_APPLICATION_NAME`, and `AZURE_TEST_GALLERY_APPLICATION_VERSION` pointing at an existing gallery application version; if the version is missing (`404`), the test skips after preflight
+- **Role assignments** (`authorization-role-assignment_test.go`): may wait for RBAC eventual consistency before asserting adapter behaviour
+
+This keeps integration runs stable without hiding adapter bugs.
+
+Also note that PostgreSQL Flexible Server creation and Key Vault purge/recreate can take many minutes. If a run times out, increase `go test -timeout` (for example `-timeout 30m`) before assuming the test is stuck.
+
 From the `sources/azure/integration-tests` directory:
 
 For building up the infra for the Compute API resources.

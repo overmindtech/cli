@@ -76,6 +76,7 @@ func TestComputeVirtualMachineExtensionIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create Network Interfaces client: %v", err)
 	}
+	setupCompleted := false
 
 	t.Run("Setup", func(t *testing.T) {
 		ctx := t.Context()
@@ -113,6 +114,9 @@ func TestComputeVirtualMachineExtensionIntegration(t *testing.T) {
 		// Create virtual machine
 		err = createVirtualMachineForExtension(ctx, vmClient, integrationTestResourceGroup, integrationTestExtensionVMName, integrationTestLocation, *nicResp.ID)
 		if err != nil {
+			if errors.Is(err, errVMConflictWithoutResource) {
+				t.Skipf("Skipping due to transient Azure VM control-plane conflict: %v", err)
+			}
 			t.Fatalf("Failed to create virtual machine: %v", err)
 		}
 
@@ -133,9 +137,14 @@ func TestComputeVirtualMachineExtensionIntegration(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed waiting for extension to be available: %v", err)
 		}
+		setupCompleted = true
 	})
 
 	t.Run("Run", func(t *testing.T) {
+		if !setupCompleted {
+			t.Skip("Skipping Run: Setup did not complete successfully")
+		}
+
 		t.Run("GetVirtualMachineExtension", func(t *testing.T) {
 			ctx := t.Context()
 
@@ -482,8 +491,20 @@ func createVirtualMachineForExtension(ctx context.Context, client *armcompute.Vi
 		// Check if VM already exists (conflict)
 		var respErr *azcore.ResponseError
 		if errors.As(err, &respErr) && respErr.StatusCode == http.StatusConflict {
-			log.Printf("Virtual machine %s already exists (conflict), skipping creation", vmName)
-			return nil
+			existing, getErr := client.Get(ctx, resourceGroupName, vmName, nil)
+			if getErr == nil {
+				if existing.Properties != nil && existing.Properties.ProvisioningState != nil {
+					log.Printf("Virtual machine %s already exists (conflict) with state %s, skipping creation", vmName, *existing.Properties.ProvisioningState)
+				} else {
+					log.Printf("Virtual machine %s already exists (conflict), skipping creation", vmName)
+				}
+				return nil
+			}
+			var getRespErr *azcore.ResponseError
+			if errors.As(getErr, &getRespErr) && getRespErr.StatusCode == http.StatusNotFound {
+				return fmt.Errorf("%w: vm=%s resourceGroup=%s", errVMConflictWithoutResource, vmName, resourceGroupName)
+			}
+			return fmt.Errorf("vm creation conflict for %s and failed to verify existing VM: %w", vmName, getErr)
 		}
 		return fmt.Errorf("failed to begin creating virtual machine: %w", err)
 	}
@@ -511,20 +532,27 @@ func createVirtualMachineForExtension(ctx context.Context, client *armcompute.Vi
 func waitForVMAvailableForExtension(ctx context.Context, client *armcompute.VirtualMachinesClient, resourceGroupName, vmName string) error {
 	maxAttempts := defaultMaxPollAttempts
 	pollInterval := defaultPollInterval
+	maxNotFoundAttempts := 5
 
 	log.Printf("Waiting for VM %s to be available via API...", vmName)
 
+	notFoundCount := 0
 	for attempt := 1; attempt <= maxAttempts; attempt++ {
 		resp, err := client.Get(ctx, resourceGroupName, vmName, nil)
 		if err != nil {
 			var respErr *azcore.ResponseError
 			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusNotFound {
+				notFoundCount++
+				if notFoundCount >= maxNotFoundAttempts {
+					return fmt.Errorf("VM %s not found after %d attempts (possible stale conflict or failed creation)", vmName, notFoundCount)
+				}
 				log.Printf("VM %s not yet available (attempt %d/%d), waiting %v...", vmName, attempt, maxAttempts, pollInterval)
 				time.Sleep(pollInterval)
 				continue
 			}
 			return fmt.Errorf("error checking VM availability: %w", err)
 		}
+		notFoundCount = 0
 
 		// Check provisioning state
 		if resp.Properties != nil && resp.Properties.ProvisioningState != nil {

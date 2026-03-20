@@ -1,10 +1,13 @@
 package integrationtests
 
 import (
+	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"testing"
 
+	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	log "github.com/sirupsen/logrus"
@@ -76,6 +79,15 @@ func TestComputeGalleryApplicationVersionIntegration(t *testing.T) {
 		err := createResourceGroup(ctx, rgClient, resourceGroup, integrationTestLocation)
 		if err != nil {
 			t.Fatalf("Failed to create/verify resource group: %v", err)
+		}
+
+		_, getErr := galleryApplicationVersionsClient.Get(ctx, resourceGroup, galleryName, applicationName, versionName, nil)
+		if getErr != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(getErr, &respErr) && respErr.StatusCode == http.StatusNotFound {
+				t.Skipf("Skipping gallery application version integration test: resource %s/%s/%s not found in %s", galleryName, applicationName, versionName, resourceGroup)
+			}
+			t.Fatalf("Failed to verify gallery application version %s/%s/%s existence: %v", galleryName, applicationName, versionName, getErr)
 		}
 
 		t.Run("GetGalleryApplicationVersion", func(t *testing.T) {

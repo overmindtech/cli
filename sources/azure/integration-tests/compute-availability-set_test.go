@@ -74,6 +74,7 @@ func TestComputeAvailabilitySetIntegration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Failed to create Network Interfaces client: %v", err)
 	}
+	setupCompleted := false
 
 	t.Run("Setup", func(t *testing.T) {
 		ctx := t.Context()
@@ -128,6 +129,9 @@ func TestComputeAvailabilitySetIntegration(t *testing.T) {
 		// Create virtual machine with availability set
 		err = createVirtualMachineWithAvailabilitySet(ctx, vmClient, integrationTestResourceGroup, integrationTestVMForAVSetName, integrationTestLocation, *nicResp.ID, *avSetResp.ID)
 		if err != nil {
+			if errors.Is(err, errVMConflictWithoutResource) {
+				t.Skipf("Skipping due to transient Azure VM control-plane conflict: %v", err)
+			}
 			t.Fatalf("Failed to create virtual machine: %v", err)
 		}
 
@@ -139,9 +143,14 @@ func TestComputeAvailabilitySetIntegration(t *testing.T) {
 
 		// Wait a bit for the availability set to reflect the VM association
 		time.Sleep(10 * time.Second)
+		setupCompleted = true
 	})
 
 	t.Run("Run", func(t *testing.T) {
+		if !setupCompleted {
+			t.Skip("Skipping Run: Setup did not complete successfully")
+		}
+
 		// Check if availability set exists - if Setup failed, skip Run tests
 		ctx := t.Context()
 		_, err := avSetClient.Get(ctx, integrationTestResourceGroup, integrationTestAvailabilitySetName, nil)
@@ -620,8 +629,20 @@ func createVirtualMachineWithAvailabilitySet(ctx context.Context, client *armcom
 		// Check if VM already exists (conflict)
 		var respErr *azcore.ResponseError
 		if errors.As(err, &respErr) && respErr.StatusCode == http.StatusConflict {
-			log.Printf("Virtual machine %s already exists (conflict), skipping creation", vmName)
-			return nil
+			existing, getErr := client.Get(ctx, resourceGroupName, vmName, nil)
+			if getErr == nil {
+				if existing.Properties != nil && existing.Properties.ProvisioningState != nil {
+					log.Printf("Virtual machine %s already exists (conflict) with state %s, skipping creation", vmName, *existing.Properties.ProvisioningState)
+				} else {
+					log.Printf("Virtual machine %s already exists (conflict), skipping creation", vmName)
+				}
+				return nil
+			}
+			var getRespErr *azcore.ResponseError
+			if errors.As(getErr, &getRespErr) && getRespErr.StatusCode == http.StatusNotFound {
+				return fmt.Errorf("%w: vm=%s resourceGroup=%s", errVMConflictWithoutResource, vmName, resourceGroupName)
+			}
+			return fmt.Errorf("vm creation conflict for %s and failed to verify existing VM: %w", vmName, getErr)
 		}
 		return fmt.Errorf("failed to begin creating virtual machine: %w", err)
 	}

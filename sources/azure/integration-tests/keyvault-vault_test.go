@@ -202,9 +202,10 @@ func createKeyVault(ctx context.Context, client *armkeyvault.VaultsClient, resou
 		return fmt.Errorf("AZURE_TENANT_ID environment variable not set, required for Key Vault creation")
 	}
 
-	// Create a context with timeout for the entire Key Vault creation operation
+	// Create a context with timeout for the entire Key Vault creation operation.
+	// Purging soft-deleted vaults can take several minutes in Azure.
 	// Key Vault creation can hang if the Microsoft.KeyVault resource provider is not registered
-	createCtx, cancel := context.WithTimeout(ctx, 5*time.Minute)
+	createCtx, cancel := context.WithTimeout(ctx, 15*time.Minute)
 	defer cancel()
 
 	// Create the Key Vault.
