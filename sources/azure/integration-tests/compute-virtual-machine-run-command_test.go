@@ -114,9 +114,6 @@ func TestComputeVirtualMachineRunCommandIntegration(t *testing.T) {
 		// Create virtual machine
 		err = createVirtualMachineForRunCommand(ctx, vmClient, integrationTestResourceGroup, integrationTestRunCommandVMName, integrationTestLocation, *nicResp.ID)
 		if err != nil {
-			if errors.Is(err, errVMConflictWithoutResource) {
-				t.Skipf("Skipping due to transient Azure VM control-plane conflict: %v", err)
-			}
 			t.Fatalf("Failed to create virtual machine: %v", err)
 		}
 
@@ -421,6 +418,10 @@ func createNetworkInterfaceForRunCommand(ctx context.Context, client *armnetwork
 
 // createVirtualMachineForRunCommand creates an Azure virtual machine (idempotent)
 func createVirtualMachineForRunCommand(ctx context.Context, client *armcompute.VirtualMachinesClient, resourceGroupName, vmName, location, nicID string) error {
+	return createVirtualMachineForRunCommandWithRemediation(ctx, client, resourceGroupName, vmName, location, nicID, 0)
+}
+
+func createVirtualMachineForRunCommandWithRemediation(ctx context.Context, client *armcompute.VirtualMachinesClient, resourceGroupName, vmName, location, nicID string, remediationAttempt int) error {
 	// Check if VM already exists
 	existingVM, err := client.Get(ctx, resourceGroupName, vmName, nil)
 	if err == nil {
@@ -502,7 +503,15 @@ func createVirtualMachineForRunCommand(ctx context.Context, client *armcompute.V
 			}
 			var getRespErr *azcore.ResponseError
 			if errors.As(getErr, &getRespErr) && getRespErr.StatusCode == http.StatusNotFound {
-				return fmt.Errorf("%w: vm=%s resourceGroup=%s", errVMConflictWithoutResource, vmName, resourceGroupName)
+				if remediationAttempt >= 1 {
+					return fmt.Errorf("vm %s still in ghost conflict state after remediation (resourceGroup=%s): %w", vmName, resourceGroupName, err)
+				}
+				log.Printf("Detected ghost VM conflict for run-command test VM %s in %s, attempting automatic remediation", vmName, resourceGroupName)
+				if deleteErr := deleteVirtualMachineForRunCommand(ctx, client, resourceGroupName, vmName); deleteErr != nil {
+					return fmt.Errorf("failed to remediate ghost VM %s before retry: %w", vmName, deleteErr)
+				}
+				time.Sleep(20 * time.Second)
+				return createVirtualMachineForRunCommandWithRemediation(ctx, client, resourceGroupName, vmName, location, nicID, remediationAttempt+1)
 			}
 			return fmt.Errorf("vm creation conflict for %s and failed to verify existing VM: %w", vmName, getErr)
 		}

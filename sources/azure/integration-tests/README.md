@@ -20,7 +20,8 @@ For example, `TestComputeVirtualMachineIntegration` tests the Compute API's Virt
             "RUN_AZURE_INTEGRATION_TESTS": "true",
             "AZURE_SUBSCRIPTION_ID": "your-subscription-id",
             "AZURE_TENANT_ID": "your-tenant-id",
-            "AZURE_CLIENT_ID": "your-client-id"
+            "AZURE_CLIENT_ID": "your-client-id",
+            "AZURE_INTEGRATION_TEST_RUN_ID": "local-dev-1"
         }
     }
     ```
@@ -35,6 +36,7 @@ For example, `TestComputeVirtualMachineIntegration` tests the Compute API's Virt
     export AZURE_TENANT_ID="your-tenant-id"              # your Azure AD tenant ID
     export AZURE_CLIENT_ID="your-client-id"             # your Azure application/client ID
     export AZURE_REGIONS="eastus,westus2"                # optional: comma-separated list of regions
+    export AZURE_INTEGRATION_TEST_RUN_ID="local-dev-1"   # optional: isolate this run's resource group
     # For SQL Database integration tests
     export AZURE_SQL_SERVER_ADMIN_LOGIN="sqladmin"       # SQL server administrator login
     export AZURE_SQL_SERVER_ADMIN_PASSWORD="your-secure-password"  # SQL server administrator password
@@ -70,11 +72,10 @@ We can easily run all `Setup` tests to create resources, then run all `Run` test
 Some tests intentionally call `t.Skip` for Azure conditions that are external to adapter correctness, for example:
 
 - Batch account quota exhaustion (`SubscriptionQuotaExceeded`)
-- Transient VM/VMSS control-plane conflicts where create returns `409` but `Get` still cannot retrieve the resource
 - **Gallery application version** (`compute-gallery-application-version_test.go`): requires env vars `AZURE_TEST_GALLERY_NAME`, `AZURE_TEST_GALLERY_APPLICATION_NAME`, and `AZURE_TEST_GALLERY_APPLICATION_VERSION` pointing at an existing gallery application version; if the version is missing (`404`), the test skips after preflight
 - **Role assignments** (`authorization-role-assignment_test.go`): may wait for RBAC eventual consistency before asserting adapter behaviour
 
-This keeps integration runs stable without hiding adapter bugs.
+VM/VMSS/role-assignment ghost `409 Conflict` states are now handled with "auto-remediate then fail": tests attempt cleanup and a retry, and fail loudly if the resource is still unrecoverable.
 
 Also note that PostgreSQL Flexible Server creation and Key Vault purge/recreate can take many minutes. If a run times out, increase `go test -timeout` (for example `-timeout 30m`) before assuming the test is stuck.
 
@@ -138,5 +139,5 @@ set +a
 - The service principal has **read-write access** scoped to the integration test subscription only
 - Cloud Agent dashboard stores only the bootstrap token (`OP_SERVICE_ACCOUNT_TOKEN`)
 - Azure credentials remain in 1Password and are resolved only at runtime via `inject-secrets`
-- All test resources are created in the `overmind-integration-tests` resource group
+- By default test resources are created in `overmind-integration-tests`; set `AZURE_INTEGRATION_TEST_RUN_ID` to isolate parallel runs into per-run resource groups (for example `overmind-integration-tests-agent-42`)
 - Teardown steps clean up created resources after each test run

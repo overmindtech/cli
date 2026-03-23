@@ -31,8 +31,6 @@ const (
 	integrationTestVMSSSubnetName = "default"
 )
 
-var errVMSSConflictWithoutResource = errors.New("vmss conflict persisted without readable vmss resource")
-
 func TestComputeVirtualMachineScaleSetIntegration(t *testing.T) {
 	subscriptionID := os.Getenv("AZURE_SUBSCRIPTION_ID")
 	if subscriptionID == "" {
@@ -90,9 +88,6 @@ func TestComputeVirtualMachineScaleSetIntegration(t *testing.T) {
 		// Create virtual machine scale set
 		err = createVirtualMachineScaleSet(ctx, vmssClient, integrationTestResourceGroup, integrationTestVMSSName, integrationTestLocation, *subnetResp.ID)
 		if err != nil {
-			if errors.Is(err, errVMSSConflictWithoutResource) {
-				t.Skipf("Skipping due to transient Azure VMSS control-plane conflict: %v", err)
-			}
 			t.Fatalf("Failed to create virtual machine scale set: %v", err)
 		}
 
@@ -482,9 +477,12 @@ func createVirtualMachineScaleSet(ctx context.Context, client *armcompute.Virtua
 				// Verify the VMSS actually exists
 				_, getErr := client.Get(ctx, resourceGroupName, vmssName, nil)
 				if getErr != nil {
-					// If we get a conflict but VMSS doesn't exist, it might be in a transient state (deleting)
-					// Wait longer and retry creation once
-					log.Printf("VMSS %s not found after conflict, waiting 30s and retrying creation", vmssName)
+					// If we get a conflict but VMSS doesn't exist, treat it as a ghost/stale control-plane record.
+					// Try to remediate once by forcing a delete, then retry creation.
+					log.Printf("VMSS %s not found after conflict, attempting remediation delete before retry", vmssName)
+					if deleteErr := deleteVirtualMachineScaleSet(ctx, client, resourceGroupName, vmssName); deleteErr != nil {
+						return fmt.Errorf("failed to remediate VMSS ghost state for %s: %w", vmssName, deleteErr)
+					}
 					time.Sleep(30 * time.Second)
 
 					// Retry creation
@@ -556,7 +554,7 @@ func createVirtualMachineScaleSet(ctx context.Context, client *armcompute.Virtua
 							// Still conflict - check if it exists now
 							_, finalCheckErr := client.Get(ctx, resourceGroupName, vmssName, nil)
 							if finalCheckErr != nil {
-								return fmt.Errorf("%w: vmss=%s resourceGroup=%s", errVMSSConflictWithoutResource, vmssName, resourceGroupName)
+								return fmt.Errorf("vmss %s still in ghost conflict state after remediation retry (resourceGroup=%s): %w", vmssName, resourceGroupName, retryErr)
 							}
 							log.Printf("VMSS %s exists after retry conflict", vmssName)
 							return nil

@@ -1,9 +1,0 @@
-{
-  "label": "AWS",
-  "position": 2,
-  "collapsed": true,
-  "link": {
-    "type": "generated-index",
-    "description": "How to integrate your AWS"
-  }
-}

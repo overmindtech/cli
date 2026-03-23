@@ -3,6 +3,9 @@ package integrationtests
 import (
 	"context"
 	"fmt"
+	"os"
+	"regexp"
+	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
 	log "github.com/sirupsen/logrus"
@@ -10,9 +13,46 @@ import (
 
 // Shared constants for integration tests
 const (
-	integrationTestResourceGroup = "overmind-integration-tests"
-	integrationTestLocation      = "westus2"
+	integrationTestResourceGroupBase = "overmind-integration-tests"
+	integrationTestLocation          = "westus2"
 )
+
+var integrationTestResourceGroup = resolveIntegrationTestResourceGroup()
+
+var invalidRunIDSanitizer = regexp.MustCompile(`[^a-z0-9-]+`)
+
+// resolveIntegrationTestResourceGroup returns the default integration test resource group,
+// optionally scoped by AZURE_INTEGRATION_TEST_RUN_ID for parallel runs.
+//
+// Example:
+//   AZURE_INTEGRATION_TEST_RUN_ID=agent-42
+//   => overmind-integration-tests-agent-42
+func resolveIntegrationTestResourceGroup() string {
+	runID := normalizeIntegrationTestRunID(os.Getenv("AZURE_INTEGRATION_TEST_RUN_ID"))
+	if runID == "" {
+		return integrationTestResourceGroupBase
+	}
+
+	// Azure resource group names can be up to 90 characters.
+	name := integrationTestResourceGroupBase + "-" + runID
+	if len(name) > 90 {
+		return name[:90]
+	}
+	return name
+}
+
+func normalizeIntegrationTestRunID(runID string) string {
+	normalized := strings.ToLower(strings.TrimSpace(runID))
+	if normalized == "" {
+		return ""
+	}
+	normalized = invalidRunIDSanitizer.ReplaceAllString(normalized, "-")
+	normalized = strings.Trim(normalized, "-")
+	if len(normalized) > 30 {
+		normalized = normalized[:30]
+	}
+	return normalized
+}
 
 // createResourceGroup creates an Azure resource group if it doesn't already exist (idempotent)
 func createResourceGroup(ctx context.Context, client *armresources.ResourceGroupsClient, resourceGroupName, location string) error {

@@ -114,9 +114,6 @@ func TestComputeVirtualMachineExtensionIntegration(t *testing.T) {
 		// Create virtual machine
 		err = createVirtualMachineForExtension(ctx, vmClient, integrationTestResourceGroup, integrationTestExtensionVMName, integrationTestLocation, *nicResp.ID)
 		if err != nil {
-			if errors.Is(err, errVMConflictWithoutResource) {
-				t.Skipf("Skipping due to transient Azure VM control-plane conflict: %v", err)
-			}
 			t.Fatalf("Failed to create virtual machine: %v", err)
 		}
 
@@ -421,6 +418,10 @@ func createNetworkInterfaceForExtension(ctx context.Context, client *armnetwork.
 
 // createVirtualMachineForExtension creates an Azure virtual machine (idempotent)
 func createVirtualMachineForExtension(ctx context.Context, client *armcompute.VirtualMachinesClient, resourceGroupName, vmName, location, nicID string) error {
+	return createVirtualMachineForExtensionWithRemediation(ctx, client, resourceGroupName, vmName, location, nicID, 0)
+}
+
+func createVirtualMachineForExtensionWithRemediation(ctx context.Context, client *armcompute.VirtualMachinesClient, resourceGroupName, vmName, location, nicID string, remediationAttempt int) error {
 	// Check if VM already exists
 	existingVM, err := client.Get(ctx, resourceGroupName, vmName, nil)
 	if err == nil {
@@ -502,7 +503,15 @@ func createVirtualMachineForExtension(ctx context.Context, client *armcompute.Vi
 			}
 			var getRespErr *azcore.ResponseError
 			if errors.As(getErr, &getRespErr) && getRespErr.StatusCode == http.StatusNotFound {
-				return fmt.Errorf("%w: vm=%s resourceGroup=%s", errVMConflictWithoutResource, vmName, resourceGroupName)
+				if remediationAttempt >= 1 {
+					return fmt.Errorf("vm %s still in ghost conflict state after remediation (resourceGroup=%s): %w", vmName, resourceGroupName, err)
+				}
+				log.Printf("Detected ghost VM conflict for extension test VM %s in %s, attempting automatic remediation", vmName, resourceGroupName)
+				if deleteErr := deleteVirtualMachineForExtension(ctx, client, resourceGroupName, vmName); deleteErr != nil {
+					return fmt.Errorf("failed to remediate ghost VM %s before retry: %w", vmName, deleteErr)
+				}
+				time.Sleep(20 * time.Second)
+				return createVirtualMachineForExtensionWithRemediation(ctx, client, resourceGroupName, vmName, location, nicID, remediationAttempt+1)
 			}
 			return fmt.Errorf("vm creation conflict for %s and failed to verify existing VM: %w", vmName, getErr)
 		}
