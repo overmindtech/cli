@@ -188,6 +188,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create load balancer frontend IP configurations client: %w", err)
 		}
 
+		loadBalancerBackendAddressPoolsClient, err := armnetwork.NewLoadBalancerBackendAddressPoolsClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create load balancer backend address pools client: %w", err)
+		}
+
 		privateEndpointsClient, err := armnetwork.NewPrivateEndpointsClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create private endpoints client: %w", err)
@@ -577,6 +582,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewLoadBalancerFrontendIPConfigurationsClient(loadBalancerFrontendIPConfigurationsClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewNetworkLoadBalancerBackendAddressPool(
+					clients.NewLoadBalancerBackendAddressPoolsClient(loadBalancerBackendAddressPoolsClient),
+					resourceGroupScopes,
+				), cache),
 				sources.WrapperToAdapter(NewNetworkPrivateEndpoint(
 					clients.NewPrivateEndpointsClient(privateEndpointsClient),
 					resourceGroupScopes,
@@ -827,6 +836,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewNetworkDdosProtectionPlan(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkLoadBalancer(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkLoadBalancerFrontendIPConfiguration(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewNetworkLoadBalancerBackendAddressPool(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkZone(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkPrivateDNSZone(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkDNSRecordSet(nil, placeholderResourceGroupScopes), noOpCache),

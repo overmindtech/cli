@@ -409,7 +409,7 @@ func createVirtualMachineScaleSet(ctx context.Context, client *armcompute.Virtua
 	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroupName, vmssName, armcompute.VirtualMachineScaleSet{
 		Location: new(location),
 		SKU: &armcompute.SKU{
-			Name:     new("Standard_B1s"), // Burstable B-series VM - cheaper and more widely available
+			Name:     new("Standard_D2s_v3"),
 			Tier:     new("Standard"),
 			Capacity: new(int64(1)), // Start with 1 instance for testing
 		},
@@ -489,7 +489,7 @@ func createVirtualMachineScaleSet(ctx context.Context, client *armcompute.Virtua
 					retryPoller, retryErr := client.BeginCreateOrUpdate(ctx, resourceGroupName, vmssName, armcompute.VirtualMachineScaleSet{
 						Location: new(location),
 						SKU: &armcompute.SKU{
-							Name:     new("Standard_B1s"),
+							Name:     new("Standard_D2s_v3"),
 							Tier:     new("Standard"),
 							Capacity: new(int64(1)),
 						},

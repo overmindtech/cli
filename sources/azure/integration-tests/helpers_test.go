@@ -25,8 +25,9 @@ var invalidRunIDSanitizer = regexp.MustCompile(`[^a-z0-9-]+`)
 // optionally scoped by AZURE_INTEGRATION_TEST_RUN_ID for parallel runs.
 //
 // Example:
-//   AZURE_INTEGRATION_TEST_RUN_ID=agent-42
-//   => overmind-integration-tests-agent-42
+//
+//	AZURE_INTEGRATION_TEST_RUN_ID=agent-42
+//	=> overmind-integration-tests-agent-42
 func resolveIntegrationTestResourceGroup() string {
 	runID := normalizeIntegrationTestRunID(os.Getenv("AZURE_INTEGRATION_TEST_RUN_ID"))
 	if runID == "" {

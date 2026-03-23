@@ -413,14 +413,13 @@ func createVirtualMachineWithRemediation(ctx context.Context, client *armcompute
 		Location: new(location),
 		Properties: &armcompute.VirtualMachineProperties{
 			HardwareProfile: &armcompute.HardwareProfile{
-				// Use Standard_D2ps_v5 - ARM-based VM with good availability in westus2
-				VMSize: new(armcompute.VirtualMachineSizeTypes("Standard_D2ps_v5")),
+				VMSize: new(armcompute.VirtualMachineSizeTypes("Standard_D2s_v3")),
 			},
 			StorageProfile: &armcompute.StorageProfile{
 				ImageReference: &armcompute.ImageReference{
 					Publisher: new("Canonical"),
 					Offer:     new("0001-com-ubuntu-server-jammy"),
-					SKU:       new("22_04-lts-arm64"), // ARM64 image for ARM-based VM
+					SKU:       new("22_04-lts"),
 					Version:   new("latest"),
 				},
 				OSDisk: &armcompute.OSDisk{
