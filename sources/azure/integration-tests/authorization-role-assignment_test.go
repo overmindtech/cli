@@ -27,8 +27,6 @@ import (
 	"github.com/overmindtech/cli/sources/shared"
 )
 
-var errRoleAssignmentConflictWithoutResource = errors.New("role assignment create returned conflict but role assignment could not be retrieved")
-
 func TestAuthorizationRoleAssignmentIntegration(t *testing.T) {
 	subscriptionID := os.Getenv("AZURE_SUBSCRIPTION_ID")
 	if subscriptionID == "" {
@@ -87,9 +85,6 @@ func TestAuthorizationRoleAssignmentIntegration(t *testing.T) {
 		// Create role assignment at resource group scope
 		err = createRoleAssignment(ctx, roleAssignmentsClient, azureScope, roleAssignmentName, principalID, readerRoleDefinitionID)
 		if err != nil {
-			if errors.Is(err, errRoleAssignmentConflictWithoutResource) {
-				t.Skipf("Skipping due to transient Azure role-assignment control-plane conflict: %v", err)
-			}
 			t.Fatalf("Failed to create role assignment: %v", err)
 		}
 		err = waitForRoleAssignmentAvailable(ctx, roleAssignmentsClient, azureScope, roleAssignmentName)
@@ -372,6 +367,10 @@ func getReaderRoleDefinitionID(ctx context.Context, client *armauthorization.Rol
 
 // createRoleAssignment creates an Azure role assignment (idempotent)
 func createRoleAssignment(ctx context.Context, client *armauthorization.RoleAssignmentsClient, scope, roleAssignmentName, principalID, roleDefinitionID string) error {
+	return createRoleAssignmentWithRemediation(ctx, client, scope, roleAssignmentName, principalID, roleDefinitionID, 0)
+}
+
+func createRoleAssignmentWithRemediation(ctx context.Context, client *armauthorization.RoleAssignmentsClient, scope, roleAssignmentName, principalID, roleDefinitionID string, remediationAttempt int) error {
 	// Check if role assignment already exists
 	_, err := client.Get(ctx, scope, roleAssignmentName, nil)
 	if err == nil {
@@ -410,7 +409,15 @@ func createRoleAssignment(ctx context.Context, client *armauthorization.RoleAssi
 				}
 				var getRespErr *azcore.ResponseError
 				if errors.As(getErr, &getRespErr) && getRespErr.StatusCode == http.StatusNotFound {
-					return fmt.Errorf("%w: scope=%s roleAssignmentName=%s", errRoleAssignmentConflictWithoutResource, scope, roleAssignmentName)
+					if remediationAttempt >= 1 {
+						return fmt.Errorf("role assignment %s still in ghost conflict state after remediation (scope=%s): %w", roleAssignmentName, scope, err)
+					}
+					log.Printf("Detected ghost role-assignment conflict for %s at %s, attempting automatic remediation", roleAssignmentName, scope)
+					if deleteErr := deleteRoleAssignment(ctx, client, scope, roleAssignmentName); deleteErr != nil {
+						return fmt.Errorf("failed to remediate ghost role assignment %s before retry: %w", roleAssignmentName, deleteErr)
+					}
+					time.Sleep(5 * time.Second)
+					return createRoleAssignmentWithRemediation(ctx, client, scope, roleAssignmentName, principalID, roleDefinitionID, remediationAttempt+1)
 				}
 				return fmt.Errorf("role assignment conflict for %s and failed to verify existing role assignment: %w", roleAssignmentName, getErr)
 			}
