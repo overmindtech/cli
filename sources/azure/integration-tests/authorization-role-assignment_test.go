@@ -68,8 +68,9 @@ func TestAuthorizationRoleAssignmentIntegration(t *testing.T) {
 		t.Fatalf("Failed to get Reader role definition ID: %v", err)
 	}
 
-	// Generate unique role assignment name (GUID)
-	roleAssignmentName := uuid.New().String()
+	// Deterministic role assignment name so re-runs reuse the same assignment ID
+	// instead of conflicting with a prior run's different UUID for the same principal+role combo
+	roleAssignmentName := uuid.NewSHA1(uuid.NameSpaceURL, []byte(principalID+readerRoleDefinitionID+integrationTestResourceGroup)).String()
 	azureScope := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s", subscriptionID, integrationTestResourceGroup)
 	setupCompleted := false
 
@@ -83,10 +84,11 @@ func TestAuthorizationRoleAssignmentIntegration(t *testing.T) {
 		}
 
 		// Create role assignment at resource group scope
-		err = createRoleAssignment(ctx, roleAssignmentsClient, azureScope, roleAssignmentName, principalID, readerRoleDefinitionID)
-		if err != nil {
-			t.Fatalf("Failed to create role assignment: %v", err)
+		actualName, createErr := createRoleAssignment(ctx, roleAssignmentsClient, azureScope, roleAssignmentName, principalID, readerRoleDefinitionID)
+		if createErr != nil {
+			t.Fatalf("Failed to create role assignment: %v", createErr)
 		}
+		roleAssignmentName = actualName
 		err = waitForRoleAssignmentAvailable(ctx, roleAssignmentsClient, azureScope, roleAssignmentName)
 		if err != nil {
 			t.Fatalf("Failed waiting for role assignment to be available: %v", err)
@@ -365,29 +367,22 @@ func getReaderRoleDefinitionID(ctx context.Context, client *armauthorization.Rol
 	return "", fmt.Errorf("Reader role definition not found")
 }
 
-// createRoleAssignment creates an Azure role assignment (idempotent)
-func createRoleAssignment(ctx context.Context, client *armauthorization.RoleAssignmentsClient, scope, roleAssignmentName, principalID, roleDefinitionID string) error {
+// createRoleAssignment creates an Azure role assignment (idempotent).
+// Returns the actual assignment name used (may differ from input if a prior run
+// created the same principal+role combo under a different UUID).
+func createRoleAssignment(ctx context.Context, client *armauthorization.RoleAssignmentsClient, scope, roleAssignmentName, principalID, roleDefinitionID string) (string, error) {
 	return createRoleAssignmentWithRemediation(ctx, client, scope, roleAssignmentName, principalID, roleDefinitionID, 0)
 }
 
-func createRoleAssignmentWithRemediation(ctx context.Context, client *armauthorization.RoleAssignmentsClient, scope, roleAssignmentName, principalID, roleDefinitionID string, remediationAttempt int) error {
-	// Check if role assignment already exists
+func createRoleAssignmentWithRemediation(ctx context.Context, client *armauthorization.RoleAssignmentsClient, scope, roleAssignmentName, principalID, roleDefinitionID string, remediationAttempt int) (string, error) {
 	_, err := client.Get(ctx, scope, roleAssignmentName, nil)
 	if err == nil {
 		log.Printf("Role assignment %s already exists, skipping creation", roleAssignmentName)
-		return nil
+		return roleAssignmentName, nil
 	}
 
-	// Create the role assignment
-	// Note: We need to get the principal ID from the current user or a service principal
-	// For integration tests, we'll use Azure CLI to get the current user's object ID
-	// This requires running: az ad signed-in-user show --query id -o tsv
-	// Or using Graph API
-
-	// For now, let's try to create it and handle the error if principal ID is needed
-	// Actually, we should get the principal ID before calling this function
 	if principalID == "" {
-		return fmt.Errorf("principal ID is required to create role assignment")
+		return "", fmt.Errorf("principal ID is required to create role assignment")
 	}
 
 	parameters := armauthorization.RoleAssignmentCreateParameters{
@@ -402,39 +397,68 @@ func createRoleAssignmentWithRemediation(ctx context.Context, client *armauthori
 		var respErr *azcore.ResponseError
 		if errors.As(err, &respErr) {
 			if respErr.StatusCode == http.StatusConflict {
+				if strings.Contains(respErr.Error(), "RoleAssignmentExists") {
+					existingID := extractExistingRoleAssignmentID(respErr.Error())
+					if existingID != "" {
+						log.Printf("Role assignment for this principal+role already exists at scope %s with ID %s, reusing", scope, existingID)
+						return existingID, nil
+					}
+					log.Printf("Role assignment for this principal+role already exists at scope %s, treating as success", scope)
+					return roleAssignmentName, nil
+				}
 				existing, getErr := client.Get(ctx, scope, roleAssignmentName, nil)
 				if getErr == nil && existing.RoleAssignment.ID != nil && *existing.RoleAssignment.ID != "" {
 					log.Printf("Role assignment %s already exists (conflict), verified readable, skipping creation", roleAssignmentName)
-					return nil
+					return roleAssignmentName, nil
 				}
 				var getRespErr *azcore.ResponseError
 				if errors.As(getErr, &getRespErr) && getRespErr.StatusCode == http.StatusNotFound {
 					if remediationAttempt >= 1 {
-						return fmt.Errorf("role assignment %s still in ghost conflict state after remediation (scope=%s): %w", roleAssignmentName, scope, err)
+						return "", fmt.Errorf("role assignment %s still in ghost conflict state after remediation (scope=%s): %w", roleAssignmentName, scope, err)
 					}
 					log.Printf("Detected ghost role-assignment conflict for %s at %s, attempting automatic remediation", roleAssignmentName, scope)
 					if deleteErr := deleteRoleAssignment(ctx, client, scope, roleAssignmentName); deleteErr != nil {
-						return fmt.Errorf("failed to remediate ghost role assignment %s before retry: %w", roleAssignmentName, deleteErr)
+						return "", fmt.Errorf("failed to remediate ghost role assignment %s before retry: %w", roleAssignmentName, deleteErr)
 					}
 					time.Sleep(5 * time.Second)
 					return createRoleAssignmentWithRemediation(ctx, client, scope, roleAssignmentName, principalID, roleDefinitionID, remediationAttempt+1)
 				}
-				return fmt.Errorf("role assignment conflict for %s and failed to verify existing role assignment: %w", roleAssignmentName, getErr)
+				return "", fmt.Errorf("role assignment conflict for %s and failed to verify existing role assignment: %w", roleAssignmentName, getErr)
 			}
 			if respErr.StatusCode == http.StatusForbidden {
-				return fmt.Errorf("insufficient permissions to create role assignment: %w", err)
+				return "", fmt.Errorf("insufficient permissions to create role assignment: %w", err)
 			}
 		}
-		return fmt.Errorf("failed to create role assignment: %w", err)
+		return "", fmt.Errorf("failed to create role assignment: %w", err)
 	}
 
-	// Verify the role assignment was created successfully
 	if resp.RoleAssignment.ID == nil {
-		return fmt.Errorf("role assignment created but ID is unknown")
+		return "", fmt.Errorf("role assignment created but ID is unknown")
 	}
 
 	log.Printf("Role assignment %s created successfully at scope %s", roleAssignmentName, scope)
-	return nil
+	return roleAssignmentName, nil
+}
+
+// extractExistingRoleAssignmentID parses the existing assignment ID from the
+// RoleAssignmentExists error message (format: "...The ID of the existing role
+// assignment is <hex-id-no-dashes>.").
+func extractExistingRoleAssignmentID(errMsg string) string {
+	const marker = "The ID of the existing role assignment is "
+	_, after, ok := strings.Cut(errMsg, marker)
+	if !ok {
+		return ""
+	}
+	rest := after
+	if dotIdx := strings.Index(rest, "."); dotIdx > 0 {
+		rest = rest[:dotIdx]
+	}
+	rest = strings.TrimSpace(rest)
+	if len(rest) != 32 {
+		return rest
+	}
+	// Convert 32-char hex to UUID format (8-4-4-4-12)
+	return rest[:8] + "-" + rest[8:12] + "-" + rest[12:16] + "-" + rest[16:20] + "-" + rest[20:]
 }
 
 // deleteRoleAssignment deletes an Azure role assignment

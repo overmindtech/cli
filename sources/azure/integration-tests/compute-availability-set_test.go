@@ -385,11 +385,12 @@ func createAvailabilitySet(ctx context.Context, client *armcompute.AvailabilityS
 	// Create the availability set
 	resp, err := client.CreateOrUpdate(ctx, resourceGroupName, avSetName, armcompute.AvailabilitySet{
 		Location: new(location),
+		SKU: &armcompute.SKU{
+			Name: new("Aligned"),
+		},
 		Properties: &armcompute.AvailabilitySetProperties{
 			PlatformFaultDomainCount:  new(int32(2)),
 			PlatformUpdateDomainCount: new(int32(2)),
-			ProximityPlacementGroup:   nil, // Optional - not setting for this test
-			VirtualMachines:           nil, // Will be populated when VMs are added
 		},
 		Tags: map[string]*string{
 			"purpose": new("overmind-integration-tests"),
@@ -579,14 +580,13 @@ func createVirtualMachineWithAvailabilitySetWithRemediation(ctx context.Context,
 		Location: new(location),
 		Properties: &armcompute.VirtualMachineProperties{
 			HardwareProfile: &armcompute.HardwareProfile{
-				// Use Standard_D2ps_v5 - ARM-based VM with good availability in westus2
-				VMSize: new(armcompute.VirtualMachineSizeTypes("Standard_D2ps_v5")),
+				VMSize: new(armcompute.VirtualMachineSizeTypes("Standard_D2s_v3")),
 			},
 			StorageProfile: &armcompute.StorageProfile{
 				ImageReference: &armcompute.ImageReference{
 					Publisher: new("Canonical"),
 					Offer:     new("0001-com-ubuntu-server-jammy"),
-					SKU:       new("22_04-lts-arm64"), // ARM64 image for ARM-based VM
+					SKU:       new("22_04-lts"),
 					Version:   new("latest"),
 				},
 				OSDisk: &armcompute.OSDisk{
