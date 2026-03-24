@@ -193,6 +193,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create load balancer backend address pools client: %w", err)
 		}
 
+		loadBalancerProbesClient, err := armnetwork.NewLoadBalancerProbesClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create load balancer probes client: %w", err)
+		}
+
 		privateEndpointsClient, err := armnetwork.NewPrivateEndpointsClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create private endpoints client: %w", err)
@@ -586,6 +591,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewLoadBalancerBackendAddressPoolsClient(loadBalancerBackendAddressPoolsClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewNetworkLoadBalancerProbe(
+					clients.NewLoadBalancerProbesClient(loadBalancerProbesClient),
+					resourceGroupScopes,
+				), cache),
 				sources.WrapperToAdapter(NewNetworkPrivateEndpoint(
 					clients.NewPrivateEndpointsClient(privateEndpointsClient),
 					resourceGroupScopes,
@@ -837,6 +846,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewNetworkLoadBalancer(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkLoadBalancerFrontendIPConfiguration(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkLoadBalancerBackendAddressPool(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewNetworkLoadBalancerProbe(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkZone(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkPrivateDNSZone(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkDNSRecordSet(nil, placeholderResourceGroupScopes), noOpCache),
