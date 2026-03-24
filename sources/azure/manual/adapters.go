@@ -143,6 +143,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create sql databases client: %w", err)
 		}
 
+		sqlDatabaseSchemasClient, err := armsql.NewDatabaseSchemasClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create sql database schemas client: %w", err)
+		}
+
 		documentDBDatabaseAccountsClient, err := armcosmos.NewDatabaseAccountsClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create document db database accounts client: %w", err)
@@ -532,6 +537,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewSqlDatabasesClient(sqlDatabasesClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewSqlDatabaseSchema(
+					clients.NewSqlDatabaseSchemasClient(sqlDatabaseSchemasClient),
+					resourceGroupScopes,
+				), cache),
 				sources.WrapperToAdapter(NewSqlElasticPool(
 					clients.NewSqlElasticPoolClient(sqlElasticPoolsClient),
 					resourceGroupScopes,
@@ -840,6 +849,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewNetworkVirtualNetworkPeering(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkNetworkInterface(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewSqlDatabase(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewSqlDatabaseSchema(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewSqlServerFirewallRule(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewSqlServerVirtualNetworkRule(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewSQLServerPrivateEndpointConnection(nil, placeholderResourceGroupScopes), noOpCache),
