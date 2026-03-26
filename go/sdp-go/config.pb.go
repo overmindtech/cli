@@ -1401,8 +1401,10 @@ type GithubAppInformation struct {
 	RequestedOrgName *string                `protobuf:"bytes,10,opt,name=requestedOrgName,proto3,oneof" json:"requestedOrgName,omitempty"`
 	RequestedAt      *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=requestedAt,proto3,oneof" json:"requestedAt,omitempty"`
 	RequestedBy      *string                `protobuf:"bytes,12,opt,name=requestedBy,proto3,oneof" json:"requestedBy,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	// Suspended status (true when GitHub org admin has suspended the installation)
+	Suspended     *bool `protobuf:"varint,13,opt,name=suspended,proto3,oneof" json:"suspended,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *GithubAppInformation) Reset() {
@@ -1517,6 +1519,13 @@ func (x *GithubAppInformation) GetRequestedBy() string {
 		return *x.RequestedBy
 	}
 	return ""
+}
+
+func (x *GithubAppInformation) GetSuspended() bool {
+	if x != nil && x.Suspended != nil {
+		return *x.Suspended
+	}
+	return false
 }
 
 // this is all the information required to display the github app information
@@ -1937,7 +1946,7 @@ const file_config_proto_rawDesc = "" +
 	"\x05WEEKS\x10\x01\x12\n" +
 	"\n" +
 	"\x06MONTHS\x10\x02\" \n" +
-	"\x1eGetGithubAppInformationRequest\"\x9a\x05\n" +
+	"\x1eGetGithubAppInformationRequest\"\xcb\x05\n" +
 	"\x14GithubAppInformation\x12&\n" +
 	"\x0einstallationID\x18\x01 \x01(\x03R\x0einstallationID\x12 \n" +
 	"\vinstalledBy\x18\x02 \x01(\tR\vinstalledBy\x12<\n" +
@@ -1951,10 +1960,13 @@ const file_config_proto_rawDesc = "" +
 	"\x10requestedOrgName\x18\n" +
 	" \x01(\tH\x00R\x10requestedOrgName\x88\x01\x01\x12A\n" +
 	"\vrequestedAt\x18\v \x01(\v2\x1a.google.protobuf.TimestampH\x01R\vrequestedAt\x88\x01\x01\x12%\n" +
-	"\vrequestedBy\x18\f \x01(\tH\x02R\vrequestedBy\x88\x01\x01B\x13\n" +
+	"\vrequestedBy\x18\f \x01(\tH\x02R\vrequestedBy\x88\x01\x01\x12!\n" +
+	"\tsuspended\x18\r \x01(\bH\x03R\tsuspended\x88\x01\x01B\x13\n" +
 	"\x11_requestedOrgNameB\x0e\n" +
 	"\f_requestedAtB\x0e\n" +
-	"\f_requestedBy\"s\n" +
+	"\f_requestedByB\f\n" +
+	"\n" +
+	"_suspended\"s\n" +
 	"\x1fGetGithubAppInformationResponse\x12P\n" +
 	"\x14githubAppInformation\x18\x01 \x01(\v2\x1c.config.GithubAppInformationR\x14githubAppInformation\"#\n" +
 	"!RegenerateGithubAppProfileRequest\"\x8f\x01\n" +
