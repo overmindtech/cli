@@ -2,8 +2,6 @@ package cmd
 
 import (
 	"context"
-	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -286,64 +284,3 @@ func heartbeatOptions(oi sdp.OvermindInstance, token *oauth2.Token) *discovery.H
 	}
 }
 
-func HasScopesFlexible(token *oauth2.Token, requiredScopes []string) (bool, string, error) {
-	if token == nil {
-		return false, "", errors.New("HasScopesFlexible: token is nil")
-	}
-
-	claims, err := extractClaims(token.AccessToken)
-	if err != nil {
-		return false, "", fmt.Errorf("error extracting claims from token: %w", err)
-	}
-
-	for _, scope := range requiredScopes {
-		if !claims.HasScope(scope) {
-			// If they don't have the *exact* scope, check to see if they have
-			// write access to the same service
-			sections := strings.Split(scope, ":")
-			var hasWriteInstead bool
-
-			if len(sections) == 2 {
-				service, action := sections[0], sections[1]
-
-				if action == "read" {
-					hasWriteInstead = claims.HasScope(fmt.Sprintf("%v:write", service))
-				}
-			}
-
-			if !hasWriteInstead {
-				return false, scope, nil
-			}
-		}
-	}
-
-	return true, "", nil
-}
-
-// extracts custom claims from a JWT token. Note that this does not verify the
-// signature of the token, it just extracts the claims from the payload
-func extractClaims(token string) (*auth.CustomClaims, error) {
-	// We aren't interested in checking the signature of the token since
-	// the server will do that. All we need to do is make sure it
-	// contains the right scopes. Therefore we just parse the payload
-	// directly
-	sections := strings.Split(token, ".")
-	if len(sections) != 3 {
-		return nil, errors.New("token is not a JWT")
-	}
-
-	// Decode the payload
-	decodedPayload, err := base64.RawURLEncoding.DecodeString(sections[1])
-	if err != nil {
-		return nil, fmt.Errorf("error decoding token payload: %w", err)
-	}
-
-	// Parse the payload
-	claims := new(auth.CustomClaims)
-	err = json.Unmarshal(decodedPayload, claims)
-	if err != nil {
-		return nil, fmt.Errorf("error parsing token payload: %w", err)
-	}
-
-	return claims, nil
-}
