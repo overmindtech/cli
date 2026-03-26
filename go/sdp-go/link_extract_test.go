@@ -3,7 +3,7 @@ package sdp
 import (
 	"testing"
 
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 // Create a very large set of attributes for the benchmark
