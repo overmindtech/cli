@@ -12,7 +12,7 @@ import (
 
 	"github.com/overmindtech/cli/go/sdp-go"
 	log "github.com/sirupsen/logrus"
-	"gopkg.in/yaml.v3"
+	"go.yaml.in/yaml/v3"
 )
 
 // KnowledgeFile represents a discovered and validated knowledge file
@@ -122,7 +122,6 @@ func Discover(knowledgeDir string) ([]KnowledgeFile, []Warning) {
 
 		return nil
 	})
-
 	if err != nil {
 		warnings = append(warnings, Warning{
 			Path:   "",
