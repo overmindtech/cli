@@ -3,7 +3,6 @@ package cmd
 import (
 	"context"
 	_ "embed"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -11,7 +10,6 @@ import (
 	"os"
 	"os/signal"
 	"path"
-	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
@@ -23,9 +21,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/overmindtech/pterm"
 	"github.com/overmindtech/cli/go/auth"
+	"github.com/overmindtech/cli/go/cliauth"
 	"github.com/overmindtech/cli/go/sdp-go"
 	"github.com/overmindtech/cli/go/tracing"
-	"github.com/pkg/browser"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
@@ -186,17 +184,32 @@ func Execute() {
 	}
 }
 
-const beginAuthMessage string = `# Authenticate with a browser
+// ptermLogger adapts pterm output to the cliauth.Logger interface
+type ptermLogger struct{}
 
-Attempting to automatically open the SSO authorization page in your default browser.
-If the browser does not open or you wish to use a different device to authorize this request, open the following URL:
+func (p *ptermLogger) Info(msg string, keysAndValues ...any) {
+	if len(keysAndValues) > 0 {
+		kvs := make([]string, 0, len(keysAndValues)/2)
+		for i := 0; i+1 < len(keysAndValues); i += 2 {
+			kvs = append(kvs, fmt.Sprintf("%v: %v", keysAndValues[i], keysAndValues[i+1]))
+		}
+		pterm.Info.Println(fmt.Sprintf("%s (%s)", msg, strings.Join(kvs, ", ")))
+	} else {
+		pterm.Info.Println(msg)
+	}
+}
 
-	%v
-
-Then enter the code:
-
-	%v
-`
+func (p *ptermLogger) Error(msg string, keysAndValues ...any) {
+	if len(keysAndValues) > 0 {
+		kvs := make([]string, 0, len(keysAndValues)/2)
+		for i := 0; i+1 < len(keysAndValues); i += 2 {
+			kvs = append(kvs, fmt.Sprintf("%v: %v", keysAndValues[i], keysAndValues[i+1]))
+		}
+		pterm.Error.Println(fmt.Sprintf("%s (%s)", msg, strings.Join(kvs, ", ")))
+	} else {
+		pterm.Error.Println(msg)
+	}
+}
 
 // getChangeUUIDAndCheckStatus returns the UUID of a change, as selected by --uuid or --change, or a change with the specified status and having --ticket-link
 func getChangeUUIDAndCheckStatus(ctx context.Context, oi sdp.OvermindInstance, expectedStatus sdp.ChangeStatus, ticketLink string, errorOnNotFound bool) (uuid.UUID, error) {
@@ -528,24 +541,18 @@ func login(ctx context.Context, cmd *cobra.Command, scopes []string, writer io.W
 }
 
 func ensureToken(ctx context.Context, oi sdp.OvermindInstance, requiredScopes []string) (context.Context, *oauth2.Token, error) {
-	var token *oauth2.Token
-	var err error
+	apiKey := viper.GetString("api-key")
+	app := viper.GetString("app")
 
-	// get a token from the api key if present
-	if apiKey := viper.GetString("api-key"); apiKey != "" {
-		token, err = getAPIKeyToken(ctx, oi, apiKey, requiredScopes)
-	} else {
-		token, err = getOauthToken(ctx, oi, requiredScopes)
-	}
+	token, err := cliauth.GetToken(ctx, oi, app, apiKey, requiredScopes, &ptermLogger{})
 	if err != nil {
 		return ctx, nil, fmt.Errorf("error getting token: %w", err)
 	}
 	if token == nil {
-		// this should never happen, but just in case
 		return ctx, nil, fmt.Errorf("error token: nil")
 	}
 
-	// let's add account/auth info to the span for traceability
+	// Add account/auth info to the span for traceability
 	tok, err := josejwt.ParseSigned(token.AccessToken, []jose.SignatureAlgorithm{jose.RS256})
 	if err != nil {
 		return ctx, nil, fmt.Errorf("Error running program: received invalid token: %w", err)
@@ -560,14 +567,11 @@ func ensureToken(ctx context.Context, oi sdp.OvermindInstance, requiredScopes []
 		attribute.Bool("ovm.auth.authenticated", true),
 		attribute.String("ovm.auth.accountName", customClaims.AccountName),
 		attribute.String("ovm.auth.scopes", customClaims.Scope),
-		// subject is the auth0 client id or the user id
 		attribute.String("ovm.auth.subject", out.Subject),
 		attribute.String("ovm.auth.expiry", out.Expiry.Time().String()),
 	)
 
-	// Check that we actually got the claims we asked for. If you don't have
-	// permission auth0 will just not assign those scopes rather than fail
-	ok, missing, err := HasScopesFlexible(token, requiredScopes)
+	ok, missing, err := cliauth.HasScopesFlexible(token, requiredScopes)
 	if err != nil {
 		return ctx, nil, fmt.Errorf("error checking token scopes: %w", err)
 	}
@@ -575,255 +579,13 @@ func ensureToken(ctx context.Context, oi sdp.OvermindInstance, requiredScopes []
 		return ctx, nil, fmt.Errorf("authenticated successfully, but you don't have the required permission: '%v'", missing)
 	}
 
-	// store the token for later use by sdp-go's auth client. Note that this
+	// Store the token for later use by sdp-go's auth client. Note that this
 	// loses access to the RefreshToken and could be done better by using an
 	// oauth2.TokenSource, but this would require more work on updating sdp-go
-	// that is currently not scheduled
+	// that is currently not scheduled.
 	ctx = context.WithValue(ctx, auth.UserTokenContextKey{}, token.AccessToken)
 
 	return ctx, token, nil
-}
-
-// Gets a token from Oauth with the required scopes. This method will also cache
-// that token locally for use later, and will use the cached token if possible
-func getOauthToken(ctx context.Context, oi sdp.OvermindInstance, requiredScopes []string) (*oauth2.Token, error) {
-	var localScopes []string
-	var localToken *oauth2.Token
-	home, err := os.UserHomeDir()
-	if err == nil {
-		// Check for a locally saved token in ~/.overmind
-		localToken, localScopes, err = readLocalTokenFile(home, viper.GetString("app"), requiredScopes)
-		if err != nil {
-			if !os.IsNotExist(err) {
-				pterm.Info.Println(fmt.Sprintf("Skipping using local token: %v. Re-authenticating.", err))
-			}
-		} else {
-			// If we already have the right scopes, return the token
-			return localToken, nil
-		}
-	}
-	// If we need to get a new token, request the required scopes on top of
-	// whatever ones the current local, valid token has so that we don't
-	// keep replacing it
-	requestScopes := append(requiredScopes, localScopes...)
-
-	// Authenticate using the oauth device authorization flow
-	config := oauth2.Config{
-		ClientID: oi.CLIClientID,
-		Endpoint: oauth2.Endpoint{
-			AuthURL:       fmt.Sprintf("https://%v/authorize", oi.Auth0Domain),
-			TokenURL:      fmt.Sprintf("https://%v/oauth/token", oi.Auth0Domain),
-			DeviceAuthURL: fmt.Sprintf("https://%v/oauth/device/code", oi.Auth0Domain),
-		},
-		Scopes: requestScopes,
-	}
-
-	deviceCode, err := config.DeviceAuth(ctx,
-		oauth2.SetAuthURLParam("audience", oi.Audience),
-		oauth2.AccessTypeOffline,
-	)
-	if err != nil {
-		return nil, fmt.Errorf("error getting device code: %w", err)
-	}
-
-	var token *oauth2.Token
-	var urlToOpen string
-	if deviceCode.VerificationURIComplete != "" {
-		urlToOpen = deviceCode.VerificationURIComplete
-	} else {
-		urlToOpen = deviceCode.VerificationURI
-	}
-
-	_ = browser.OpenURL(urlToOpen)
-	pterm.Print(
-		markdownToString(MAX_TERMINAL_WIDTH, fmt.Sprintf(
-			beginAuthMessage,
-			deviceCode.VerificationURI,
-			deviceCode.UserCode,
-		)))
-
-	multi := pterm.DefaultMultiPrinter
-	_, _ = multi.Start()
-
-	authSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Waiting for browser authentication")
-
-	token, err = config.DeviceAccessToken(ctx, deviceCode)
-	if err != nil {
-		authSpinner.Fail("Unable to authenticate. Please try again.")
-		_, _ = multi.Stop()
-		return nil, fmt.Errorf("error getting device code: %w", err)
-	}
-	if token == nil {
-		authSpinner.Fail("Error running program: no token received")
-		_, _ = multi.Stop()
-		return nil, errors.New("no token received")
-	}
-
-	authSpinner.Success("Authenticated successfully")
-	_, _ = multi.Stop()
-
-	// Save the token to the local file, if the home directory is available
-	if home != "" {
-		err = saveLocalTokenFile(home, viper.GetString("app"), token)
-		if err != nil {
-			// we don't worry if we cannot save the token, it will just be requested again
-			log.WithContext(ctx).WithError(err).Error("Error saving token")
-		}
-	}
-
-	return token, nil
-}
-
-// Gets a token using an API key
-func getAPIKeyToken(ctx context.Context, oi sdp.OvermindInstance, apiKey string, requiredScopes []string) (*oauth2.Token, error) {
-	var token *oauth2.Token
-	app := viper.GetString("app")
-	if !strings.HasPrefix(apiKey, "ovm_api_") {
-		return nil, errors.New("--api-key or OVM_API_KEY or API_KEY does not match pattern 'ovm_api_*'")
-	}
-
-	// exchange api token for JWT
-	client := UnauthenticatedApiKeyClient(ctx, oi)
-	resp, err := client.ExchangeKeyForToken(ctx, &connect.Request[sdp.ExchangeKeyForTokenRequest]{
-		Msg: &sdp.ExchangeKeyForTokenRequest{
-			ApiKey: apiKey,
-		},
-	})
-	if err != nil {
-		return nil, fmt.Errorf("error authenticating the API token for %s: %w", app, err)
-	}
-
-	token = &oauth2.Token{
-		AccessToken: resp.Msg.GetAccessToken(),
-		TokenType:   "Bearer",
-	}
-
-	// Check that we actually got the claims we asked for. If you don't have
-	// permission auth0 will just not assign those scopes rather than fail
-	ok, missing, err := HasScopesFlexible(token, requiredScopes)
-	if err != nil {
-		return nil, fmt.Errorf("error checking token scopes for %s: %w", app, err)
-	}
-	if !ok {
-		return nil, fmt.Errorf("authenticated successfully against %s, but your API key is missing this permission: '%v'", app, missing)
-	}
-	log.WithField("app", app).Info("Using Overmind API key")
-	return token, nil
-}
-
-type TokenFile struct {
-	AuthEntries map[string]*TokenEntry `json:"auth_entries"`
-}
-
-type TokenEntry struct {
-	Token     *oauth2.Token `json:"token"`
-	AddedDate time.Time     `json:"added_date"`
-}
-
-// readLocalTokenFile is also used in the gateway assistant cli tool. It is copied over, so if you change it here, you should also change it there.
-func readLocalTokenFile(homeDir, app string, requiredScopes []string) (*oauth2.Token, []string, error) {
-	// Read in the token JSON file
-	path := filepath.Join(homeDir, ".overmind", "token.json")
-
-	tokenFile := new(TokenFile)
-
-	// Check that the file exists
-	if _, err := os.Stat(path); err != nil {
-		return nil, nil, err
-	}
-
-	// Read the file
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, nil, fmt.Errorf("error opening token file at %q: %w", path, err)
-	}
-	defer file.Close()
-
-	// Decode the file
-	err = json.NewDecoder(file).Decode(tokenFile)
-	if err != nil {
-		return nil, nil, fmt.Errorf("error decoding token file at %q: %w", path, err)
-	}
-
-	authEntry, ok := tokenFile.AuthEntries[app]
-	if !ok {
-		return nil, nil, fmt.Errorf("no token found for app %s in %q", app, path)
-	}
-
-	// Check to see if the token is still valid
-	if !authEntry.Token.Valid() {
-		return nil, nil, errors.New("token is no longer valid")
-	}
-
-	claims, err := extractClaims(authEntry.Token.AccessToken)
-	if err != nil {
-		return nil, nil, fmt.Errorf("error extracting claims from token: %s in %q: %w", app, path, err)
-	}
-	if claims.Scope == "" {
-		return nil, nil, errors.New("token does not have any scopes")
-	}
-
-	currentScopes := strings.Split(claims.Scope, " ")
-
-	// Check that we actually got the claims we asked for.
-	ok, missing, err := HasScopesFlexible(authEntry.Token, requiredScopes)
-	if err != nil {
-		return nil, currentScopes, fmt.Errorf("error checking token scopes: %s in %q: %w", app, path, err)
-	}
-	if !ok {
-		return nil, currentScopes, fmt.Errorf("local token is missing this permission: '%v'. %s in %q", missing, app, path)
-	}
-
-	pterm.Info.Println(fmt.Sprintf("Using local token for %s in %q", app, path))
-	return authEntry.Token, currentScopes, nil
-}
-
-func saveLocalTokenFile(homeDir, app string, token *oauth2.Token) error {
-	// Read in the existing token file if it exists
-	path := filepath.Join(homeDir, ".overmind", "token.json")
-
-	tokenFile := &TokenFile{
-		AuthEntries: make(map[string]*TokenEntry),
-	}
-
-	if _, err := os.Stat(path); err == nil {
-		file, err := os.Open(path)
-		if err == nil {
-			// file exists, read it
-			defer file.Close()
-
-			err = json.NewDecoder(file).Decode(tokenFile)
-			if err != nil {
-				return fmt.Errorf("error decoding token file at %q: %w", path, err)
-			}
-		}
-	} else {
-		err = os.MkdirAll(filepath.Dir(path), 0755)
-		if err != nil {
-			return fmt.Errorf("unexpected fail creating directories: %w", err)
-		}
-	}
-
-	// Update the token for the given app
-	tokenFile.AuthEntries[app] = &TokenEntry{
-		Token:     token,
-		AddedDate: time.Now(),
-	}
-
-	// Write the updated token file
-	file, err := os.Create(path)
-	if err != nil {
-		return fmt.Errorf("error creating token file at %q: %w", path, err)
-	}
-	defer file.Close()
-
-	err = json.NewEncoder(file).Encode(tokenFile)
-	if err != nil {
-		return fmt.Errorf("error encoding token file at %q: %w", path, err)
-	}
-
-	pterm.Info.Println(fmt.Sprintf("Saving token locally for %s at %q", app, path))
-	return nil
 }
 
 func getAppUrl(frontend, app string) string {

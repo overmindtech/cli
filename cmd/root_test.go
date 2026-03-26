@@ -9,8 +9,14 @@ import (
 	"time"
 
 	"github.com/overmindtech/cli/go/auth"
+	"github.com/overmindtech/cli/go/cliauth"
 	"golang.org/x/oauth2"
 )
+
+type mockLogger struct{}
+
+func (m *mockLogger) Info(msg string, keysAndValues ...any)  {}
+func (m *mockLogger) Error(msg string, keysAndValues ...any) {}
 
 func TestParseChangeUrl(t *testing.T) {
 	tests := []struct {
@@ -79,7 +85,7 @@ func TestHasScopesFlexible(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.Name, func(t *testing.T) {
-			if pass, _, _ := HasScopesFlexible(token, tc.RequiredScopes); pass != tc.ShouldPass {
+			if pass, _, _ := cliauth.HasScopesFlexible(token, tc.RequiredScopes); pass != tc.ShouldPass {
 				t.Fatalf("expected: %v, got: %v", tc.ShouldPass, !tc.ShouldPass)
 			}
 		})
@@ -113,9 +119,9 @@ func Test_getAppUrl(t *testing.T) {
 }
 
 func TestSaveTokenFile(t *testing.T) {
-	// Setup temporary directory for testing
 	tempDir := t.TempDir()
 	app := "https://localhost.df.overmind-demo.com:3000"
+	log := &mockLogger{}
 
 	claims := auth.CustomClaims{
 		Scope:       "scope1 scope2",
@@ -132,13 +138,12 @@ func TestSaveTokenFile(t *testing.T) {
 		Expiry:      time.Now().Add(1 * time.Hour),
 	}
 
-	// Test saving the token file
-	err = saveLocalTokenFile(tempDir, app, token)
+	err = cliauth.SaveLocalToken(tempDir, app, token, log)
 	if err != nil {
 		t.Fatalf("unexpected fail saving token file: %v", err)
 	}
-	// Test reading the token file
-	readAppToken, readClaims, err := readLocalTokenFile(tempDir, app, nil)
+
+	readAppToken, readClaims, err := cliauth.ReadLocalToken(tempDir, app, nil, log)
 	if err != nil {
 		t.Fatalf("unexpected fail reading token file: %v", err)
 	}
@@ -152,8 +157,7 @@ func TestSaveTokenFile(t *testing.T) {
 		t.Fatalf("expected: %v, got: %v", "scope2", readClaims[1])
 	}
 
-	// lets read a token from a non existent app
-	nonExistentToken, _, err := readLocalTokenFile(tempDir, "otherApp", nil)
+	nonExistentToken, _, err := cliauth.ReadLocalToken(tempDir, "otherApp", nil, log)
 	if err == nil {
 		t.Fatalf("expected error, got nil")
 	}
@@ -161,13 +165,12 @@ func TestSaveTokenFile(t *testing.T) {
 		t.Fatalf("expected different tokens, got the same")
 	}
 
-	// lets write the token to a different app
 	otherApp := "otherApp"
-	err = saveLocalTokenFile(tempDir, otherApp, token)
+	err = cliauth.SaveLocalToken(tempDir, otherApp, token, log)
 	if err != nil {
 		t.Fatalf("unexpected fail saving token file: %v", err)
 	}
-	readAppToken, _, err = readLocalTokenFile(tempDir, otherApp, nil)
+	readAppToken, _, err = cliauth.ReadLocalToken(tempDir, otherApp, nil, log)
 	if err != nil {
 		t.Fatalf("unexpected fail reading token file: %v", err)
 	}
@@ -175,7 +178,6 @@ func TestSaveTokenFile(t *testing.T) {
 		t.Fatalf("expected: %v, got: %v", token.AccessToken, readAppToken.AccessToken)
 	}
 
-	// lets update the first app token
 	claims = auth.CustomClaims{
 		Scope:       "scope3 scope4",
 		AccountName: "test",
@@ -190,11 +192,11 @@ func TestSaveTokenFile(t *testing.T) {
 		AccessToken: accessToken,
 		Expiry:      time.Now().Add(1 * time.Hour),
 	}
-	err = saveLocalTokenFile(tempDir, app, newToken)
+	err = cliauth.SaveLocalToken(tempDir, app, newToken, log)
 	if err != nil {
 		t.Fatalf("unexpected fail saving token file: %v", err)
 	}
-	_, lastClaims, err := readLocalTokenFile(tempDir, app, nil)
+	_, lastClaims, err := cliauth.ReadLocalToken(tempDir, app, nil, log)
 	if err != nil {
 		t.Fatalf("unexpected fail reading token file: %v", err)
 	}
