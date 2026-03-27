@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -455,6 +456,116 @@ func TestNoSliceMutationInScopeMerge(t *testing.T) {
 	}
 	if len(requestScopes) != 3 {
 		t.Errorf("Expected 3 scopes in combined slice, got %d", len(requestScopes))
+	}
+}
+
+func TestConfirmUntrustedHost_TrustedSkipsPrompt(t *testing.T) {
+	trustedURLs := []string{
+		"https://app.overmind.tech",
+		"https://df.overmind-demo.com",
+		"http://localhost:3000",
+		"http://127.0.0.1:8080",
+	}
+
+	for _, u := range trustedURLs {
+		t.Run(u, func(t *testing.T) {
+			err := ConfirmUntrustedHost(u, false, strings.NewReader(""), io.Discard)
+			if err != nil {
+				t.Errorf("Expected no prompt for trusted URL %q, got error: %v", u, err)
+			}
+		})
+	}
+}
+
+func TestConfirmUntrustedHost_UntrustedPrompts(t *testing.T) {
+	tests := []struct {
+		name      string
+		url       string
+		input     string
+		wantError bool
+		errMsg    string
+	}{
+		{
+			name:  "user confirms with y",
+			url:   "https://custom.example.com",
+			input: "y\n",
+		},
+		{
+			name:  "user confirms with yes",
+			url:   "https://custom.example.com",
+			input: "yes\n",
+		},
+		{
+			name:  "user confirms with YES (case insensitive)",
+			url:   "https://custom.example.com",
+			input: "YES\n",
+		},
+		{
+			name:      "user declines with n",
+			url:       "https://custom.example.com",
+			input:     "n\n",
+			wantError: true,
+			errMsg:    "aborted",
+		},
+		{
+			name:      "user declines with empty (default N)",
+			url:       "https://custom.example.com",
+			input:     "\n",
+			wantError: true,
+			errMsg:    "aborted",
+		},
+		{
+			name:      "user types something else",
+			url:       "https://custom.example.com",
+			input:     "maybe\n",
+			wantError: true,
+			errMsg:    "aborted",
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			err := ConfirmUntrustedHost(tt.url, false, strings.NewReader(tt.input), io.Discard)
+			if tt.wantError {
+				if err == nil {
+					t.Fatal("Expected error, got nil")
+				}
+				if tt.errMsg != "" && !strings.Contains(err.Error(), tt.errMsg) {
+					t.Errorf("Expected error containing %q, got: %v", tt.errMsg, err)
+				}
+			} else {
+				if err != nil {
+					t.Fatalf("Unexpected error: %v", err)
+				}
+			}
+		})
+	}
+}
+
+func TestConfirmUntrustedHost_PipedInputWithoutNewline(t *testing.T) {
+	// Simulates: echo -n y | area51 export-archive --change https://custom.example.com/changes/UUID
+	err := ConfirmUntrustedHost("https://custom.example.com", false, strings.NewReader("y"), io.Discard)
+	if err != nil {
+		t.Fatalf("Expected piped 'y' without newline to be accepted, got error: %v", err)
+	}
+
+	err = ConfirmUntrustedHost("https://custom.example.com", false, strings.NewReader("n"), io.Discard)
+	if err == nil {
+		t.Fatal("Expected piped 'n' without newline to be rejected")
+	}
+
+	err = ConfirmUntrustedHost("https://custom.example.com", false, strings.NewReader(""), io.Discard)
+	if err == nil {
+		t.Fatal("Expected empty piped input to be rejected")
+	}
+}
+
+func TestConfirmUntrustedHost_WarningMentionsAPIKey(t *testing.T) {
+	var buf strings.Builder
+	_ = ConfirmUntrustedHost("https://custom.example.com", true, strings.NewReader("n\n"), &buf)
+	output := buf.String()
+	if !strings.Contains(output, "API key") {
+		t.Errorf("Expected warning to mention API key when hasAPIKey=true, got: %s", output)
 	}
 }
 

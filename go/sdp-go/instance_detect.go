@@ -41,13 +41,17 @@ type instanceData struct {
 // NewOvermindInstance creates a new OvermindInstance from the given app URL
 // with all URLs filled in, or an error. The app URL should be the URL of the
 // frontend of the Overmind instance. e.g. https://app.overmind.tech
+//
+// HTTPS is enforced for all non-localhost hosts. Callers should use
+// [IsTrustedHost] before calling this function and prompt for user
+// confirmation when the host is not a known Overmind domain.
 func NewOvermindInstance(ctx context.Context, app string) (OvermindInstance, error) {
 	var instance OvermindInstance
 	var err error
 
-	instance.FrontendUrl, err = url.Parse(app)
+	instance.FrontendUrl, err = ValidateAppURL(app)
 	if err != nil {
-		return instance, fmt.Errorf("invalid app value '%v', error: %w", app, err)
+		return instance, err
 	}
 
 	// Get the instance data

@@ -508,9 +508,15 @@ func login(ctx context.Context, cmd *cobra.Command, scopes []string, writer io.W
 		multi = pterm.DefaultMultiPrinter.WithWriter(writer)
 	}
 
+	app := viper.GetString("app")
+	if err := cliauth.ConfirmUntrustedHost(app, viper.GetString("api-key") != "", os.Stdin, os.Stderr); err != nil {
+		_, _ = multi.Stop()
+		return ctx, sdp.OvermindInstance{}, nil, err
+	}
+
 	connectSpinner, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Connecting to Overmind")
 
-	oi, err := sdp.NewOvermindInstance(ctx, viper.GetString("app"))
+	oi, err := sdp.NewOvermindInstance(ctx, app)
 	if err != nil {
 		connectSpinner.Fail("Failed to get instance data from app")
 		_, _ = multi.Stop()
@@ -600,3 +606,4 @@ func getAppUrl(frontend, app string) string {
 	}
 	return app
 }
+

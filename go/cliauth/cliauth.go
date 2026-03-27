@@ -6,11 +6,14 @@
 package cliauth
 
 import (
+	"bufio"
 	"context"
 	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/url"
 	"os"
 	"path/filepath"
 	"strings"
@@ -30,6 +33,47 @@ import (
 type Logger interface {
 	Info(msg string, keysAndValues ...any)
 	Error(msg string, keysAndValues ...any)
+}
+
+// ConfirmUntrustedHost checks whether appURL points to a trusted Overmind host
+// (see [sdp.IsTrustedHost]). If not, it writes a warning to w and reads a
+// [y/N] confirmation from stdin. Returns nil when the host is trusted or the
+// user confirms; returns an error otherwise.
+//
+// Set hasAPIKey to true when an API key is configured so the warning can
+// mention that the key will be sent to the untrusted host.
+func ConfirmUntrustedHost(appURL string, hasAPIKey bool, stdin io.Reader, w io.Writer) error {
+	parsed, err := url.Parse(appURL)
+	if err != nil {
+		return fmt.Errorf("invalid app URL %q: %w", appURL, err)
+	}
+
+	if sdp.IsTrustedHost(parsed.Hostname()) {
+		return nil
+	}
+
+	credentialDetail := "OAuth tokens" //nolint:gosec // G101 false positive: this is a user-facing label, not a credential
+	if hasAPIKey {
+		credentialDetail = "your API key and OAuth tokens"
+	}
+
+	fmt.Fprintf(w, "\n  WARNING: The target host %q is not a known Overmind domain.\n", parsed.Hostname())
+	fmt.Fprintf(w, "  Credentials (%s) will be sent to this host.\n", credentialDetail)
+	fmt.Fprintf(w, "\n  Only continue if you trust this host.\n\n")
+	fmt.Fprintf(w, "  Continue? [y/N]: ")
+
+	reader := bufio.NewReader(stdin)
+	line, err := reader.ReadString('\n')
+	if err != nil && (!errors.Is(err, io.EOF) || len(line) == 0) {
+		return fmt.Errorf("failed to read confirmation: %w", err)
+	}
+
+	answer := strings.TrimSpace(strings.ToLower(line))
+	if answer != "y" && answer != "yes" {
+		return errors.New("aborted: untrusted host not confirmed")
+	}
+
+	return nil
 }
 
 // TokenFile represents the ~/.overmind/token.json file structure.
