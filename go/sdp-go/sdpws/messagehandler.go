@@ -40,7 +40,14 @@ type LoggingGatewayMessageHandler struct {
 var _ GatewayMessageHandler = (*LoggingGatewayMessageHandler)(nil)
 
 func (l *LoggingGatewayMessageHandler) NewItem(ctx context.Context, item *sdp.Item) {
-	log.WithContext(ctx).WithField("item", item).Log(l.Level, "received new item")
+	entry := log.WithContext(ctx)
+	if item != nil {
+		entry = entry.WithField("item.globallyUniqueName", item.GloballyUniqueName())
+	}
+	if l.Level >= log.DebugLevel {
+		entry = entry.WithField("item", item)
+	}
+	entry.Log(l.Level, "received new item")
 }
 
 func (l *LoggingGatewayMessageHandler) NewEdge(ctx context.Context, edge *sdp.Edge) {
@@ -68,7 +75,14 @@ func (l *LoggingGatewayMessageHandler) DeleteEdge(ctx context.Context, edge *sdp
 }
 
 func (l *LoggingGatewayMessageHandler) UpdateItem(ctx context.Context, item *sdp.Item) {
-	log.WithContext(ctx).WithField("item", item).Log(l.Level, "received updated item")
+	entry := log.WithContext(ctx)
+	if item != nil {
+		entry = entry.WithField("item.globallyUniqueName", item.GloballyUniqueName())
+	}
+	if l.Level >= log.DebugLevel {
+		entry = entry.WithField("item", item)
+	}
+	entry.Log(l.Level, "received updated item")
 }
 
 func (l *LoggingGatewayMessageHandler) SnapshotStoreResult(ctx context.Context, result *sdp.SnapshotStoreResult) {
