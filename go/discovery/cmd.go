@@ -234,7 +234,7 @@ func (ec *EngineConfig) CreateClients() error {
 	if ec.Unauthenticated {
 		log.Warn("Using unauthenticated NATS as ALLOW_UNAUTHENTICATED is set")
 		if ec.NATSOptions != nil {
-			log.WithFields(MapFromEngineConfig(ec)).Info("Engine config")
+			log.WithField("config", fmt.Sprintf("%v", MapFromEngineConfig(ec))).Info("Engine config")
 		}
 		return nil
 	}
@@ -277,7 +277,7 @@ func (ec *EngineConfig) CreateClients() error {
 		}
 
 		if ec.NATSOptions != nil {
-			log.WithFields(MapFromEngineConfig(ec)).Info("Engine config")
+			log.WithField("config", fmt.Sprintf("%v", MapFromEngineConfig(ec))).Info("Engine config")
 		}
 		return nil
 	case sdp.SourceManaged_MANAGED:
@@ -316,7 +316,7 @@ func (ec *EngineConfig) CreateClients() error {
 		}
 
 		if ec.NATSOptions != nil {
-			log.WithFields(MapFromEngineConfig(ec)).Info("Engine config")
+			log.WithField("config", fmt.Sprintf("%v", MapFromEngineConfig(ec))).Info("Engine config")
 		}
 		return nil
 	}
