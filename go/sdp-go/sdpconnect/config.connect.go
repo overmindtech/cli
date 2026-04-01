@@ -63,9 +63,6 @@ const (
 	// ConfigurationServiceRegenerateGithubAppProfileProcedure is the fully-qualified name of the
 	// ConfigurationService's RegenerateGithubAppProfile RPC.
 	ConfigurationServiceRegenerateGithubAppProfileProcedure = "/config.ConfigurationService/RegenerateGithubAppProfile"
-	// ConfigurationServiceDeleteGithubAppProfileAndGithubInstallationIDProcedure is the fully-qualified
-	// name of the ConfigurationService's DeleteGithubAppProfileAndGithubInstallationID RPC.
-	ConfigurationServiceDeleteGithubAppProfileAndGithubInstallationIDProcedure = "/config.ConfigurationService/DeleteGithubAppProfileAndGithubInstallationID"
 	// ConfigurationServiceCreateGithubInstallURLProcedure is the fully-qualified name of the
 	// ConfigurationService's CreateGithubInstallURL RPC.
 	ConfigurationServiceCreateGithubInstallURLProcedure = "/config.ConfigurationService/CreateGithubInstallURL"
@@ -98,9 +95,6 @@ type ConfigurationServiceClient interface {
 	GetGithubAppInformation(context.Context, *connect.Request[sdp_go.GetGithubAppInformationRequest]) (*connect.Response[sdp_go.GetGithubAppInformationResponse], error)
 	// regenerate the github app profile, this information is used for signal processing
 	RegenerateGithubAppProfile(context.Context, *connect.Request[sdp_go.RegenerateGithubAppProfileRequest]) (*connect.Response[sdp_go.RegenerateGithubAppProfileResponse], error)
-	// remove the github app installation id and github organisation profile from the signal config
-	// this will not uninstall the app from github, that must be done manually by the user
-	DeleteGithubAppProfileAndGithubInstallationID(context.Context, *connect.Request[sdp_go.DeleteGithubAppProfileAndGithubInstallationIDRequest]) (*connect.Response[sdp_go.DeleteGithubAppProfileAndGithubInstallationIDResponse], error)
 	// Create a GitHub App install URL with a DB-backed state parameter for CSRF
 	// protection. The frontend calls this RPC, then redirects the user to the
 	// returned URL. GitHub will redirect back with the state UUID, which the
@@ -179,12 +173,6 @@ func NewConfigurationServiceClient(httpClient connect.HTTPClient, baseURL string
 			connect.WithSchema(configurationServiceMethods.ByName("RegenerateGithubAppProfile")),
 			connect.WithClientOptions(opts...),
 		),
-		deleteGithubAppProfileAndGithubInstallationID: connect.NewClient[sdp_go.DeleteGithubAppProfileAndGithubInstallationIDRequest, sdp_go.DeleteGithubAppProfileAndGithubInstallationIDResponse](
-			httpClient,
-			baseURL+ConfigurationServiceDeleteGithubAppProfileAndGithubInstallationIDProcedure,
-			connect.WithSchema(configurationServiceMethods.ByName("DeleteGithubAppProfileAndGithubInstallationID")),
-			connect.WithClientOptions(opts...),
-		),
 		createGithubInstallURL: connect.NewClient[sdp_go.CreateGithubInstallURLRequest, sdp_go.CreateGithubInstallURLResponse](
 			httpClient,
 			baseURL+ConfigurationServiceCreateGithubInstallURLProcedure,
@@ -196,18 +184,17 @@ func NewConfigurationServiceClient(httpClient connect.HTTPClient, baseURL string
 
 // configurationServiceClient implements ConfigurationServiceClient.
 type configurationServiceClient struct {
-	getAccountConfig                              *connect.Client[sdp_go.GetAccountConfigRequest, sdp_go.GetAccountConfigResponse]
-	updateAccountConfig                           *connect.Client[sdp_go.UpdateAccountConfigRequest, sdp_go.UpdateAccountConfigResponse]
-	createHcpConfig                               *connect.Client[sdp_go.CreateHcpConfigRequest, sdp_go.CreateHcpConfigResponse]
-	getHcpConfig                                  *connect.Client[sdp_go.GetHcpConfigRequest, sdp_go.GetHcpConfigResponse]
-	deleteHcpConfig                               *connect.Client[sdp_go.DeleteHcpConfigRequest, sdp_go.DeleteHcpConfigResponse]
-	replaceHcpApiKey                              *connect.Client[sdp_go.ReplaceHcpApiKeyRequest, sdp_go.ReplaceHcpApiKeyResponse]
-	getSignalConfig                               *connect.Client[sdp_go.GetSignalConfigRequest, sdp_go.GetSignalConfigResponse]
-	updateSignalConfig                            *connect.Client[sdp_go.UpdateSignalConfigRequest, sdp_go.UpdateSignalConfigResponse]
-	getGithubAppInformation                       *connect.Client[sdp_go.GetGithubAppInformationRequest, sdp_go.GetGithubAppInformationResponse]
-	regenerateGithubAppProfile                    *connect.Client[sdp_go.RegenerateGithubAppProfileRequest, sdp_go.RegenerateGithubAppProfileResponse]
-	deleteGithubAppProfileAndGithubInstallationID *connect.Client[sdp_go.DeleteGithubAppProfileAndGithubInstallationIDRequest, sdp_go.DeleteGithubAppProfileAndGithubInstallationIDResponse]
-	createGithubInstallURL                        *connect.Client[sdp_go.CreateGithubInstallURLRequest, sdp_go.CreateGithubInstallURLResponse]
+	getAccountConfig           *connect.Client[sdp_go.GetAccountConfigRequest, sdp_go.GetAccountConfigResponse]
+	updateAccountConfig        *connect.Client[sdp_go.UpdateAccountConfigRequest, sdp_go.UpdateAccountConfigResponse]
+	createHcpConfig            *connect.Client[sdp_go.CreateHcpConfigRequest, sdp_go.CreateHcpConfigResponse]
+	getHcpConfig               *connect.Client[sdp_go.GetHcpConfigRequest, sdp_go.GetHcpConfigResponse]
+	deleteHcpConfig            *connect.Client[sdp_go.DeleteHcpConfigRequest, sdp_go.DeleteHcpConfigResponse]
+	replaceHcpApiKey           *connect.Client[sdp_go.ReplaceHcpApiKeyRequest, sdp_go.ReplaceHcpApiKeyResponse]
+	getSignalConfig            *connect.Client[sdp_go.GetSignalConfigRequest, sdp_go.GetSignalConfigResponse]
+	updateSignalConfig         *connect.Client[sdp_go.UpdateSignalConfigRequest, sdp_go.UpdateSignalConfigResponse]
+	getGithubAppInformation    *connect.Client[sdp_go.GetGithubAppInformationRequest, sdp_go.GetGithubAppInformationResponse]
+	regenerateGithubAppProfile *connect.Client[sdp_go.RegenerateGithubAppProfileRequest, sdp_go.RegenerateGithubAppProfileResponse]
+	createGithubInstallURL     *connect.Client[sdp_go.CreateGithubInstallURLRequest, sdp_go.CreateGithubInstallURLResponse]
 }
 
 // GetAccountConfig calls config.ConfigurationService.GetAccountConfig.
@@ -260,12 +247,6 @@ func (c *configurationServiceClient) RegenerateGithubAppProfile(ctx context.Cont
 	return c.regenerateGithubAppProfile.CallUnary(ctx, req)
 }
 
-// DeleteGithubAppProfileAndGithubInstallationID calls
-// config.ConfigurationService.DeleteGithubAppProfileAndGithubInstallationID.
-func (c *configurationServiceClient) DeleteGithubAppProfileAndGithubInstallationID(ctx context.Context, req *connect.Request[sdp_go.DeleteGithubAppProfileAndGithubInstallationIDRequest]) (*connect.Response[sdp_go.DeleteGithubAppProfileAndGithubInstallationIDResponse], error) {
-	return c.deleteGithubAppProfileAndGithubInstallationID.CallUnary(ctx, req)
-}
-
 // CreateGithubInstallURL calls config.ConfigurationService.CreateGithubInstallURL.
 func (c *configurationServiceClient) CreateGithubInstallURL(ctx context.Context, req *connect.Request[sdp_go.CreateGithubInstallURLRequest]) (*connect.Response[sdp_go.CreateGithubInstallURLResponse], error) {
 	return c.createGithubInstallURL.CallUnary(ctx, req)
@@ -298,9 +279,6 @@ type ConfigurationServiceHandler interface {
 	GetGithubAppInformation(context.Context, *connect.Request[sdp_go.GetGithubAppInformationRequest]) (*connect.Response[sdp_go.GetGithubAppInformationResponse], error)
 	// regenerate the github app profile, this information is used for signal processing
 	RegenerateGithubAppProfile(context.Context, *connect.Request[sdp_go.RegenerateGithubAppProfileRequest]) (*connect.Response[sdp_go.RegenerateGithubAppProfileResponse], error)
-	// remove the github app installation id and github organisation profile from the signal config
-	// this will not uninstall the app from github, that must be done manually by the user
-	DeleteGithubAppProfileAndGithubInstallationID(context.Context, *connect.Request[sdp_go.DeleteGithubAppProfileAndGithubInstallationIDRequest]) (*connect.Response[sdp_go.DeleteGithubAppProfileAndGithubInstallationIDResponse], error)
 	// Create a GitHub App install URL with a DB-backed state parameter for CSRF
 	// protection. The frontend calls this RPC, then redirects the user to the
 	// returned URL. GitHub will redirect back with the state UUID, which the
@@ -375,12 +353,6 @@ func NewConfigurationServiceHandler(svc ConfigurationServiceHandler, opts ...con
 		connect.WithSchema(configurationServiceMethods.ByName("RegenerateGithubAppProfile")),
 		connect.WithHandlerOptions(opts...),
 	)
-	configurationServiceDeleteGithubAppProfileAndGithubInstallationIDHandler := connect.NewUnaryHandler(
-		ConfigurationServiceDeleteGithubAppProfileAndGithubInstallationIDProcedure,
-		svc.DeleteGithubAppProfileAndGithubInstallationID,
-		connect.WithSchema(configurationServiceMethods.ByName("DeleteGithubAppProfileAndGithubInstallationID")),
-		connect.WithHandlerOptions(opts...),
-	)
 	configurationServiceCreateGithubInstallURLHandler := connect.NewUnaryHandler(
 		ConfigurationServiceCreateGithubInstallURLProcedure,
 		svc.CreateGithubInstallURL,
@@ -409,8 +381,6 @@ func NewConfigurationServiceHandler(svc ConfigurationServiceHandler, opts ...con
 			configurationServiceGetGithubAppInformationHandler.ServeHTTP(w, r)
 		case ConfigurationServiceRegenerateGithubAppProfileProcedure:
 			configurationServiceRegenerateGithubAppProfileHandler.ServeHTTP(w, r)
-		case ConfigurationServiceDeleteGithubAppProfileAndGithubInstallationIDProcedure:
-			configurationServiceDeleteGithubAppProfileAndGithubInstallationIDHandler.ServeHTTP(w, r)
 		case ConfigurationServiceCreateGithubInstallURLProcedure:
 			configurationServiceCreateGithubInstallURLHandler.ServeHTTP(w, r)
 		default:
@@ -460,10 +430,6 @@ func (UnimplementedConfigurationServiceHandler) GetGithubAppInformation(context.
 
 func (UnimplementedConfigurationServiceHandler) RegenerateGithubAppProfile(context.Context, *connect.Request[sdp_go.RegenerateGithubAppProfileRequest]) (*connect.Response[sdp_go.RegenerateGithubAppProfileResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.ConfigurationService.RegenerateGithubAppProfile is not implemented"))
-}
-
-func (UnimplementedConfigurationServiceHandler) DeleteGithubAppProfileAndGithubInstallationID(context.Context, *connect.Request[sdp_go.DeleteGithubAppProfileAndGithubInstallationIDRequest]) (*connect.Response[sdp_go.DeleteGithubAppProfileAndGithubInstallationIDResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("config.ConfigurationService.DeleteGithubAppProfileAndGithubInstallationID is not implemented"))
 }
 
 func (UnimplementedConfigurationServiceHandler) CreateGithubInstallURL(context.Context, *connect.Request[sdp_go.CreateGithubInstallURLRequest]) (*connect.Response[sdp_go.CreateGithubInstallURLResponse], error) {
