@@ -130,6 +130,10 @@ type Auth0Config struct {
 	ClientID     string
 	ClientSecret string
 	Audience     string
+	// ManagementAudience is the Auth0 tenant hostname for the Management API.
+	// Token endpoint: https://{ManagementAudience}/oauth/token
+	// API audience:   https://{ManagementAudience}/api/v2/
+	ManagementAudience string
 }
 
 // ImpersonationHTTPClient creates an HTTP client that can impersonate the specified account.
