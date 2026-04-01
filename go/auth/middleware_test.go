@@ -448,6 +448,124 @@ func TestNewAuthMiddleware(t *testing.T) {
 	}
 }
 
+// TestBypassAuthInjectsSubject verifies the BypassAuth code path (local/dev
+// environments only — never runs in production where real JWTs provide the
+// subject). It ensures a synthetic "auth-bypass" subject is injected into
+// CurrentSubjectContextKey so handlers like Area51 job scheduling and feature
+// flags work without a JWT.
+func TestBypassAuthInjectsSubject(t *testing.T) {
+	t.Parallel()
+
+	bypassConfig := MiddlewareConfig{
+		BypassAuth: true,
+	}
+
+	var capturedSubject string
+	handler := NewAuthMiddleware(bypassConfig, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if subj, ok := r.Context().Value(CurrentSubjectContextKey{}).(string); ok {
+			capturedSubject = subj
+		}
+		w.WriteHeader(http.StatusOK)
+	}))
+
+	t.Run("injects default subject", func(t *testing.T) {
+		capturedSubject = ""
+		rr := httptest.NewRecorder()
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+		handler.ServeHTTP(rr, req)
+
+		if rr.Code != http.StatusOK {
+			t.Errorf("expected 200, got %d", rr.Code)
+		}
+		if capturedSubject != "auth-bypass" {
+			t.Errorf("expected subject %q, got %q", "auth-bypass", capturedSubject)
+		}
+	})
+
+	t.Run("scope check is bypassed", func(t *testing.T) {
+		rr := httptest.NewRecorder()
+		req, err := http.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil)
+		if err != nil {
+			t.Fatal(err)
+		}
+
+		scopeHandler := NewAuthMiddleware(bypassConfig, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if !HasAllScopes(r.Context(), "any:scope") {
+				w.WriteHeader(http.StatusForbidden)
+				return
+			}
+			w.WriteHeader(http.StatusOK)
+		}))
+		scopeHandler.ServeHTTP(rr, req)
+
+		if rr.Code != http.StatusOK {
+			t.Errorf("expected 200 (scope check bypassed), got %d", rr.Code)
+		}
+	})
+}
+
+func TestWithSubject(t *testing.T) {
+	t.Parallel()
+
+	t.Run("sets subject in context", func(t *testing.T) {
+		ctx := OverrideAuth(context.Background(), WithSubject("auth0|user-123"))
+
+		subject, ok := ctx.Value(CurrentSubjectContextKey{}).(string)
+		if !ok {
+			t.Fatal("expected CurrentSubjectContextKey to be set")
+		}
+		if subject != "auth0|user-123" {
+			t.Errorf("expected subject %q, got %q", "auth0|user-123", subject)
+		}
+	})
+
+	t.Run("last WithSubject wins", func(t *testing.T) {
+		ctx := OverrideAuth(context.Background(),
+			WithSubject("first"),
+			WithSubject("second"),
+		)
+
+		subject, ok := ctx.Value(CurrentSubjectContextKey{}).(string)
+		if !ok {
+			t.Fatal("expected CurrentSubjectContextKey to be set")
+		}
+		if subject != "second" {
+			t.Errorf("expected subject %q, got %q", "second", subject)
+		}
+	})
+
+	t.Run("composes with other options", func(t *testing.T) {
+		ctx := OverrideAuth(context.Background(),
+			WithScope("api:read"),
+			WithAccount("test-account"),
+			WithSubject("auth0|user-456"),
+		)
+
+		subject, ok := ctx.Value(CurrentSubjectContextKey{}).(string)
+		if !ok {
+			t.Fatal("expected CurrentSubjectContextKey to be set")
+		}
+		if subject != "auth0|user-456" {
+			t.Errorf("expected subject %q, got %q", "auth0|user-456", subject)
+		}
+
+		accountName, err := ExtractAccount(ctx)
+		if err != nil {
+			t.Fatal(err)
+		}
+		if accountName != "test-account" {
+			t.Errorf("expected account %q, got %q", "test-account", accountName)
+		}
+
+		if !HasAllScopes(ctx, "api:read") {
+			t.Error("expected api:read scope to be present")
+		}
+	})
+}
+
 func TestOverrideAuth(t *testing.T) {
 	tests := []struct {
 		Name           string
