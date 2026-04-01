@@ -15,6 +15,7 @@ import (
 	"github.com/auth0/go-jwt-middleware/v3/jwks"
 	"github.com/auth0/go-jwt-middleware/v3/validator"
 	"github.com/getsentry/sentry-go"
+	"github.com/overmindtech/workspace/go/audit"
 	log "github.com/sirupsen/logrus"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -190,6 +191,18 @@ func NewAuthMiddleware(config MiddlewareConfig, next http.Handler) http.Handler 
 		ctx := r.Context()
 		if len(options) > 0 {
 			ctx = OverrideAuth(r.Context(), options...)
+		}
+
+		if ad := audit.AuditDataFromContext(ctx); ad != nil {
+			if sub, ok := ctx.Value(CurrentSubjectContextKey{}).(string); ok {
+				ad.Subject = sub
+			}
+			if account, ok := ctx.Value(AccountNameContextKey{}).(string); ok {
+				ad.AccountName = account
+			}
+			if claims, ok := ctx.Value(CustomClaimsContextKey{}).(*CustomClaims); ok {
+				ad.Scopes = claims.Scope
+			}
 		}
 
 		r = r.Clone(ctx)
