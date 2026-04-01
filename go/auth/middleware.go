@@ -218,6 +218,14 @@ func WithAccount(account string) OverrideAuthOptionFunc {
 	})
 }
 
+// Sets the subject (typically the Auth0 user_id from the token's sub claim)
+// in the context.
+func WithSubject(subject string) OverrideAuthOptionFunc {
+	return func(ctx context.Context) context.Context {
+		return context.WithValue(ctx, CurrentSubjectContextKey{}, subject)
+	}
+}
+
 // Sets the auth info in the context directly from the validated claims produced
 // by the `github.com/auth0/go-jwt-middleware/v3/validator` package. This is
 // essentially what the middleware already does when receiving a request, and
@@ -296,7 +304,7 @@ func ensureValidTokenHandler(config MiddlewareConfig, next http.Handler) http.Ha
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			span := trace.SpanFromContext(r.Context())
 			span.SetAttributes(attribute.Bool("ovm.auth.bypass", true))
-			ctx := OverrideAuth(r.Context(), WithBypassScopeCheck())
+			ctx := OverrideAuth(r.Context(), WithBypassScopeCheck(), WithSubject("auth-bypass"))
 			next.ServeHTTP(w, r.Clone(ctx))
 		})
 	}
@@ -487,7 +495,7 @@ func ensureValidTokenHandler(config MiddlewareConfig, next http.Handler) http.Ha
 		span.SetAttributes(attribute.Bool("ovm.auth.bypass", shouldBypass))
 
 		if shouldBypass {
-			ctx = OverrideAuth(ctx, WithBypassScopeCheck())
+			ctx = OverrideAuth(ctx, WithBypassScopeCheck(), WithSubject("auth-bypass"))
 
 			r = r.Clone(ctx)
 
