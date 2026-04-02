@@ -194,4 +194,8 @@ var (
 	// Authorization item types
 	AuthorizationRoleAssignment = shared.NewItemType(Azure, Authorization, RoleAssignment)
 	AuthorizationRoleDefinition = shared.NewItemType(Azure, Authorization, RoleDefinition)
+
+	// Resources item types
+	ResourcesSubscription  = shared.NewItemType(Azure, Resources, Subscription)
+	ResourcesResourceGroup = shared.NewItemType(Azure, Resources, ResourceGroup)
 )
