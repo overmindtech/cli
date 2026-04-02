@@ -228,6 +228,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create batch application package client: %w", err)
 		}
 
+		batchPrivateEndpointConnectionClient, err := armbatch.NewPrivateEndpointConnectionClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create batch private endpoint connection client: %w", err)
+		}
+
 		virtualMachineScaleSetsClient, err := armcompute.NewVirtualMachineScaleSetsClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create virtual machine scale sets client: %w", err)
@@ -665,6 +670,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewBatchApplicationPackagesClient(batchApplicationPackageClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewBatchPrivateEndpointConnection(
+					clients.NewBatchPrivateEndpointConnectionClient(batchPrivateEndpointConnectionClient),
+					resourceGroupScopes,
+				), cache),
 				sources.WrapperToAdapter(NewComputeVirtualMachineScaleSet(
 					clients.NewVirtualMachineScaleSetsClient(virtualMachineScaleSetsClient),
 					resourceGroupScopes,
@@ -910,6 +919,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewBatchBatchApplication(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewBatchBatchPool(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewBatchBatchApplicationPackage(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewBatchPrivateEndpointConnection(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeVirtualMachineScaleSet(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeAvailabilitySet(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeDisk(nil, placeholderResourceGroupScopes), noOpCache),
