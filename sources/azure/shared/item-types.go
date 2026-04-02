@@ -71,6 +71,8 @@ var (
 	NetworkSecurityRule                                   = shared.NewItemType(Azure, Network, SecurityRule)
 	NetworkDefaultSecurityRule                            = shared.NewItemType(Azure, Network, DefaultSecurityRule)
 	NetworkIPGroup                                        = shared.NewItemType(Azure, Network, IPGroup)
+	NetworkFirewall                                       = shared.NewItemType(Azure, Network, Firewall)
+	NetworkFirewallPolicy                                 = shared.NewItemType(Azure, Network, FirewallPolicy)
 	NetworkRouteTable                                     = shared.NewItemType(Azure, Network, RouteTable)
 	NetworkRoute                                          = shared.NewItemType(Azure, Network, Route)
 	NetworkVirtualNetworkGateway                          = shared.NewItemType(Azure, Network, VirtualNetworkGateway)
