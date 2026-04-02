@@ -1154,9 +1154,12 @@ type SignalConfig struct {
 	// Config for Github app profile, such as primary branch name
 	GithubOrganisationProfile *GithubOrganisationProfile `protobuf:"bytes,3,opt,name=githubOrganisationProfile,proto3,oneof" json:"githubOrganisationProfile,omitempty"`
 	// Controls the GitHub Check Run pass/fail conclusion criteria
-	CheckRunMode  CheckRunMode `protobuf:"varint,4,opt,name=check_run_mode,json=checkRunMode,proto3,enum=config.CheckRunMode" json:"check_run_mode,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	CheckRunMode CheckRunMode `protobuf:"varint,4,opt,name=check_run_mode,json=checkRunMode,proto3,enum=config.CheckRunMode" json:"check_run_mode,omitempty"`
+	// Whether GitHub Check Runs are enabled for this account.
+	// Defaults to false (disabled). Customer must explicitly enable via settings.
+	CheckRunsEnabled bool `protobuf:"varint,5,opt,name=check_runs_enabled,json=checkRunsEnabled,proto3" json:"check_runs_enabled,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
 func (x *SignalConfig) Reset() {
@@ -1215,6 +1218,13 @@ func (x *SignalConfig) GetCheckRunMode() CheckRunMode {
 		return x.CheckRunMode
 	}
 	return CheckRunMode_CHECK_RUN_MODE_REPORT_ONLY
+}
+
+func (x *SignalConfig) GetCheckRunsEnabled() bool {
+	if x != nil {
+		return x.CheckRunsEnabled
+	}
+	return false
 }
 
 type AggregationConfig struct {
@@ -1402,9 +1412,13 @@ type GithubAppInformation struct {
 	RequestedAt      *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=requestedAt,proto3,oneof" json:"requestedAt,omitempty"`
 	RequestedBy      *string                `protobuf:"bytes,12,opt,name=requestedBy,proto3,oneof" json:"requestedBy,omitempty"`
 	// Suspended status (true when GitHub org admin has suspended the installation)
-	Suspended     *bool `protobuf:"varint,13,opt,name=suspended,proto3,oneof" json:"suspended,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Suspended *bool `protobuf:"varint,13,opt,name=suspended,proto3,oneof" json:"suspended,omitempty"`
+	// Whether the installation has checks:write permission.
+	// Set by GetGithubAppInformation; used by the frontend to show
+	// the check runs section vs a permission prompt.
+	CanCreateChecks *bool `protobuf:"varint,14,opt,name=can_create_checks,json=canCreateChecks,proto3,oneof" json:"can_create_checks,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
 }
 
 func (x *GithubAppInformation) Reset() {
@@ -1524,6 +1538,13 @@ func (x *GithubAppInformation) GetRequestedBy() string {
 func (x *GithubAppInformation) GetSuspended() bool {
 	if x != nil && x.Suspended != nil {
 		return *x.Suspended
+	}
+	return false
+}
+
+func (x *GithubAppInformation) GetCanCreateChecks() bool {
+	if x != nil && x.CanCreateChecks != nil {
+		return *x.CanCreateChecks
 	}
 	return false
 }
@@ -1850,12 +1871,13 @@ const file_config_proto_rawDesc = "" +
 	"\x19UpdateSignalConfigRequest\x12,\n" +
 	"\x06config\x18\x01 \x01(\v2\x14.config.SignalConfigR\x06config\"J\n" +
 	"\x1aUpdateSignalConfigResponse\x12,\n" +
-	"\x06config\x18\x01 \x01(\v2\x14.config.SignalConfigR\x06config\"\xe9\x02\n" +
+	"\x06config\x18\x01 \x01(\v2\x14.config.SignalConfigR\x06config\"\x97\x03\n" +
 	"\fSignalConfig\x12G\n" +
 	"\x11aggregationConfig\x18\x01 \x01(\v2\x19.config.AggregationConfigR\x11aggregationConfig\x12P\n" +
 	"\x14routineChangesConfig\x18\x02 \x01(\v2\x1c.config.RoutineChangesConfigR\x14routineChangesConfig\x12d\n" +
 	"\x19githubOrganisationProfile\x18\x03 \x01(\v2!.config.GithubOrganisationProfileH\x00R\x19githubOrganisationProfile\x88\x01\x01\x12:\n" +
-	"\x0echeck_run_mode\x18\x04 \x01(\x0e2\x14.config.CheckRunModeR\fcheckRunModeB\x1c\n" +
+	"\x0echeck_run_mode\x18\x04 \x01(\x0e2\x14.config.CheckRunModeR\fcheckRunMode\x12,\n" +
+	"\x12check_runs_enabled\x18\x05 \x01(\bR\x10checkRunsEnabledB\x1c\n" +
 	"\x1a_githubOrganisationProfile\"5\n" +
 	"\x11AggregationConfig\x12 \n" +
 	"\x05alpha\x18\x01 \x01(\x02B\n" +
@@ -1872,7 +1894,7 @@ const file_config_proto_rawDesc = "" +
 	"\x05WEEKS\x10\x01\x12\n" +
 	"\n" +
 	"\x06MONTHS\x10\x02\" \n" +
-	"\x1eGetGithubAppInformationRequest\"\xcb\x05\n" +
+	"\x1eGetGithubAppInformationRequest\"\x92\x06\n" +
 	"\x14GithubAppInformation\x12&\n" +
 	"\x0einstallationID\x18\x01 \x01(\x03R\x0einstallationID\x12 \n" +
 	"\vinstalledBy\x18\x02 \x01(\tR\vinstalledBy\x12<\n" +
@@ -1887,12 +1909,14 @@ const file_config_proto_rawDesc = "" +
 	" \x01(\tH\x00R\x10requestedOrgName\x88\x01\x01\x12A\n" +
 	"\vrequestedAt\x18\v \x01(\v2\x1a.google.protobuf.TimestampH\x01R\vrequestedAt\x88\x01\x01\x12%\n" +
 	"\vrequestedBy\x18\f \x01(\tH\x02R\vrequestedBy\x88\x01\x01\x12!\n" +
-	"\tsuspended\x18\r \x01(\bH\x03R\tsuspended\x88\x01\x01B\x13\n" +
+	"\tsuspended\x18\r \x01(\bH\x03R\tsuspended\x88\x01\x01\x12/\n" +
+	"\x11can_create_checks\x18\x0e \x01(\bH\x04R\x0fcanCreateChecks\x88\x01\x01B\x13\n" +
 	"\x11_requestedOrgNameB\x0e\n" +
 	"\f_requestedAtB\x0e\n" +
 	"\f_requestedByB\f\n" +
 	"\n" +
-	"_suspended\"s\n" +
+	"_suspendedB\x14\n" +
+	"\x12_can_create_checks\"s\n" +
 	"\x1fGetGithubAppInformationResponse\x12P\n" +
 	"\x14githubAppInformation\x18\x01 \x01(\v2\x1c.config.GithubAppInformationR\x14githubAppInformation\"#\n" +
 	"!RegenerateGithubAppProfileRequest\"\x8f\x01\n" +
