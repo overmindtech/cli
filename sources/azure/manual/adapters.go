@@ -367,6 +367,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create postgresql flexible server configurations client: %w", err)
 		}
 
+		postgresqlVirtualEndpointsClient, err := armpostgresqlflexibleservers.NewVirtualEndpointsClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create postgresql flexible server virtual endpoints client: %w", err)
+		}
+
 		secretsClient, err := armkeyvault.NewSecretsClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create secrets client: %w", err)
@@ -748,6 +753,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewPostgreSQLConfigurationsClient(postgresqlConfigurationsClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewDBforPostgreSQLFlexibleServerVirtualEndpoint(
+					clients.NewDBforPostgreSQLFlexibleServerVirtualEndpointClient(postgresqlVirtualEndpointsClient),
+					resourceGroupScopes,
+				), cache),
 				sources.WrapperToAdapter(NewKeyVaultSecret(
 					clients.NewSecretsClient(secretsClient),
 					resourceGroupScopes,
@@ -922,6 +931,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewDBforPostgreSQLFlexibleServerBackup(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewDBforPostgreSQLFlexibleServerReplica(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewDBforPostgreSQLFlexibleServerConfiguration(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewDBforPostgreSQLFlexibleServerVirtualEndpoint(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewKeyVaultSecret(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewKeyVaultKey(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewManagedIdentityUserAssignedIdentity(nil, placeholderResourceGroupScopes), noOpCache),
