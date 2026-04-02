@@ -363,6 +363,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create sql failover groups client: %w", err)
 		}
 
+		sqlServerKeysClient, err := armsql.NewServerKeysClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create sql server keys client: %w", err)
+		}
+
 		postgresqlFlexibleServersClient, err := armpostgresqlflexibleservers.NewServersClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create postgresql flexible servers client: %w", err)
@@ -629,6 +634,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 				), cache),
 				sources.WrapperToAdapter(NewSqlServerFailoverGroup(
 					clients.NewSqlFailoverGroupsClient(sqlFailoverGroupsClient),
+					resourceGroupScopes,
+				), cache),
+				sources.WrapperToAdapter(NewSqlServerKey(
+					clients.NewSqlServerKeysClient(sqlServerKeysClient),
 					resourceGroupScopes,
 				), cache),
 				sources.WrapperToAdapter(NewDocumentDBDatabaseAccounts(
@@ -973,6 +982,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewSqlServerVirtualNetworkRule(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewSQLServerPrivateEndpointConnection(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewSqlServerFailoverGroup(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewSqlServerKey(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewDocumentDBDatabaseAccounts(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewDocumentDBPrivateEndpointConnection(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewKeyVaultVault(nil, placeholderResourceGroupScopes), noOpCache),
