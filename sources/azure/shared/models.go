@@ -241,6 +241,10 @@ const (
 	RoleAssignment shared.Resource = "role-assignment"
 	RoleDefinition shared.Resource = "role-definition"
 
+	// Resources (subscriptions, resource groups)
+	Subscription  shared.Resource = "subscription"
+	ResourceGroup shared.Resource = "resource-group"
+
 	// OperationalInsights resources
 	Workspace shared.Resource = "workspace"
 	Cluster   shared.Resource = "cluster"

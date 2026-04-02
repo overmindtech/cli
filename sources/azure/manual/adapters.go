@@ -433,6 +433,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create role assignments client: %w", err)
 		}
 
+		roleDefinitionsClient, err := armauthorization.NewRoleDefinitionsClient(cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create role definitions client: %w", err)
+		}
+
 		diskEncryptionSetsClient, err := armcompute.NewDiskEncryptionSetsClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create disk encryption sets client: %w", err)
@@ -949,6 +954,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 				clients.NewSharedGalleryImagesClient(sharedGalleryImagesClient),
 				subscriptionID,
 			), cache),
+			sources.WrapperToAdapter(NewAuthorizationRoleDefinition(
+				clients.NewRoleDefinitionsClient(roleDefinitionsClient),
+				subscriptionID,
+			), cache),
 		)
 
 		log.WithFields(log.Fields{
@@ -1055,6 +1064,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewElasticSanVolumeGroup(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewElasticSanVolume(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeSharedGalleryImage(nil, subscriptionID), noOpCache),
+			sources.WrapperToAdapter(NewAuthorizationRoleDefinition(nil, subscriptionID), noOpCache),
 			sources.WrapperToAdapter(NewNetworkPrivateEndpoint(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkPrivateLinkService(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewOperationalInsightsWorkspace(nil, placeholderResourceGroupScopes), noOpCache),

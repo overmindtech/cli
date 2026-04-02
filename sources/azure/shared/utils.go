@@ -420,6 +420,25 @@ func ExtractSubscriptionIDFromResourceID(resourceID string) string {
 	return ""
 }
 
+// ExtractResourceGroupFromResourceID extracts the resource group name from an Azure resource ID
+// Azure resource IDs follow the format:
+// /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/...
+// Returns empty string if the resource ID doesn't contain a resource group
+func ExtractResourceGroupFromResourceID(resourceID string) string {
+	if resourceID == "" {
+		return ""
+	}
+
+	parts := strings.Split(strings.Trim(resourceID, "/"), "/")
+	for i, part := range parts {
+		if strings.EqualFold(part, "resourceGroups") && i+1 < len(parts) {
+			return parts[i+1]
+		}
+	}
+
+	return ""
+}
+
 // ExtractScopeFromResourceID extracts the scope (subscription.resourceGroup) from an Azure resource ID
 // Azure resource IDs follow the format:
 // /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/...
