@@ -186,6 +186,10 @@ var (
 
 	// OperationalInsights item types
 	OperationalInsightsWorkspace = shared.NewItemType(Azure, OperationalInsights, Workspace)
+	OperationalInsightsCluster   = shared.NewItemType(Azure, OperationalInsights, Cluster)
+
+	// Insights (Azure Monitor) item types
+	InsightsPrivateLinkScopeScopedResource = shared.NewItemType(Azure, Insights, PrivateLinkScopeScopedResource)
 
 	// Authorization item types
 	AuthorizationRoleAssignment = shared.NewItemType(Azure, Authorization, RoleAssignment)

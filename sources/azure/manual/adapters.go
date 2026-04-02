@@ -14,6 +14,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault/v2"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/msi/armmsi"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers/v5"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
@@ -542,6 +543,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create shared gallery images client: %w", err)
 		}
 
+		operationalInsightsWorkspacesClient, err := armoperationalinsights.NewWorkspacesClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create operational insights workspaces client: %w", err)
+		}
+
 		// Multi-scope resource group adapters (one adapter per type handling all resource groups)
 		if len(resourceGroupScopes) > 0 {
 			adapters = append(adapters,
@@ -921,6 +927,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewElasticSanVolumeClient(elasticSanVolumesClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewOperationalInsightsWorkspace(
+					clients.NewOperationalInsightsWorkspaceClient(operationalInsightsWorkspacesClient),
+					resourceGroupScopes,
+				), cache),
 			)
 		}
 
@@ -1037,6 +1047,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewComputeSharedGalleryImage(nil, subscriptionID), noOpCache),
 			sources.WrapperToAdapter(NewNetworkPrivateEndpoint(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkPrivateLinkService(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewOperationalInsightsWorkspace(nil, placeholderResourceGroupScopes), noOpCache),
 		)
 
 		_ = regions

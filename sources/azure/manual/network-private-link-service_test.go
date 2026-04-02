@@ -121,21 +121,21 @@ func TestNetworkPrivateLinkService(t *testing.T) {
 					ExpectedQuery:  "10.0.0.200",
 					ExpectedScope:  "global",
 				},
-			{
-				ExpectedType:   stdlib.NetworkDNS.String(),
-				ExpectedMethod: sdp.QueryMethod_SEARCH,
-				ExpectedQuery:  "test-pls.abc123.westus2.azure.privatelinkservice",
-				ExpectedScope:  "global",
-			},
-			{
-				ExpectedType:   azureshared.ExtendedLocationCustomLocation.String(),
-				ExpectedMethod: sdp.QueryMethod_GET,
-				ExpectedQuery:  "test-custom-location",
-				ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
-			},
-		}
+				{
+					ExpectedType:   stdlib.NetworkDNS.String(),
+					ExpectedMethod: sdp.QueryMethod_SEARCH,
+					ExpectedQuery:  "test-pls.abc123.westus2.azure.privatelinkservice",
+					ExpectedScope:  "global",
+				},
+				{
+					ExpectedType:   azureshared.ExtendedLocationCustomLocation.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "test-custom-location",
+					ExpectedScope:  fmt.Sprintf("%s.%s", subscriptionID, resourceGroup),
+				},
+			}
 
-		shared.RunStaticTests(t, adapter, sdpItem, queryTests)
+			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
 	})
 
