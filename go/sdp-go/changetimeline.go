@@ -67,11 +67,6 @@ var (
 		Label: "calculated_labels",
 		Name:  "Apply auto labels",
 	}
-	// Tracks the application of auto tags for a change
-	ChangeTimelineEntryV2IDAutoTagging = ChangeTimelineEntryV2ID{
-		Label: "auto_tagging",
-		Name:  "Auto Tagging",
-	}
 	// Tracks the validation of a change. This happens after the change is
 	// complete and at time of writing is not generally available
 	ChangeTimelineEntryV2IDChangeValidation = ChangeTimelineEntryV2ID{
@@ -124,7 +119,6 @@ var allChangeTimelineEntryV2IDs = []ChangeTimelineEntryV2ID{
 	ChangeTimelineEntryV2IDAnalyzedSignals,
 	ChangeTimelineEntryV2IDCalculatedRisks,
 	ChangeTimelineEntryV2IDCalculatedLabels,
-	ChangeTimelineEntryV2IDAutoTagging,
 	ChangeTimelineEntryV2IDChangeValidation,
 	ChangeTimelineEntryV2IDRecordObservations,
 	ChangeTimelineEntryV2IDFormHypotheses,
