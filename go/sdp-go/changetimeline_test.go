@@ -53,11 +53,6 @@ func TestChangeTimelineEntryNameConversion(t *testing.T) {
 			hasInProgressVariant: false,
 		},
 		{
-			name:                 "Auto Tagging (no in-progress variant)",
-			entryID:              ChangeTimelineEntryV2IDAutoTagging,
-			hasInProgressVariant: false,
-		},
-		{
 			name:                 "Change Validation (no in-progress variant)",
 			entryID:              ChangeTimelineEntryV2IDChangeValidation,
 			hasInProgressVariant: false,
