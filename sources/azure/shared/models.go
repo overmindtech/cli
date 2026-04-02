@@ -125,6 +125,8 @@ const (
 	SecurityRule                                   shared.Resource = "security-rule"
 	DefaultSecurityRule                            shared.Resource = "default-security-rule"
 	IPGroup                                        shared.Resource = "ip-group"
+	Firewall                                       shared.Resource = "firewall"
+	FirewallPolicy                                 shared.Resource = "firewall-policy"
 	RouteTable                                     shared.Resource = "route-table"
 	Route                                          shared.Resource = "route"
 	VirtualNetworkGateway                          shared.Resource = "virtual-network-gateway"

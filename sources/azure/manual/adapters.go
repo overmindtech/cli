@@ -282,6 +282,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create application security groups client: %w", err)
 		}
 
+		ipGroupsClient, err := armnetwork.NewIPGroupsClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create IP groups client: %w", err)
+		}
+
 		virtualNetworkGatewaysClient, err := armnetwork.NewVirtualNetworkGatewaysClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create virtual network gateways client: %w", err)
@@ -704,6 +709,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewApplicationSecurityGroupsClient(applicationSecurityGroupsClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewNetworkIPGroup(
+					clients.NewIPGroupsClient(ipGroupsClient),
+					resourceGroupScopes,
+				), cache),
 				sources.WrapperToAdapter(NewNetworkRouteTable(
 					clients.NewRouteTablesClient(routeTablesClient),
 					resourceGroupScopes,
@@ -943,6 +952,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewComputeDisk(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkNetworkSecurityGroup(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkApplicationSecurityGroup(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewNetworkIPGroup(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkSecurityRule(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkDefaultSecurityRule(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkRouteTable(nil, placeholderResourceGroupScopes), noOpCache),
