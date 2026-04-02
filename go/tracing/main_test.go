@@ -21,26 +21,21 @@ func TestTracingResource(t *testing.T) {
 	}
 }
 
-func TestShutdownBothProviders(t *testing.T) {
+func TestShutdownProvider(t *testing.T) {
 	exp := tracetest.NewInMemoryExporter()
 
 	tp = sdktrace.NewTracerProvider(sdktrace.WithBatcher(exp))
-	healthTp = sdktrace.NewTracerProvider(sdktrace.WithBatcher(exp))
 
-	if tp == nil || healthTp == nil {
-		t.Fatal("expected both tp and healthTp to be non-nil after init")
+	if tp == nil {
+		t.Fatal("expected tp to be non-nil after init")
 	}
 
 	ShutdownTracer(context.Background())
 
-	// After shutdown, calling Shutdown again on the providers should be a
-	// safe no-op (the SDK guards with stopOnce). We do NOT nil the package
-	// vars because concurrent callers (e.g. health probes) would panic.
+	// After shutdown, calling Shutdown again should be a safe no-op
+	// (the SDK guards with stopOnce).
 	if err := tp.Shutdown(context.Background()); err != nil {
 		t.Errorf("second tp.Shutdown should be a no-op, got: %v", err)
-	}
-	if err := healthTp.Shutdown(context.Background()); err != nil {
-		t.Errorf("second healthTp.Shutdown should be a no-op, got: %v", err)
 	}
 }
 
@@ -48,7 +43,6 @@ func TestShutdownIdempotent(t *testing.T) {
 	exp := tracetest.NewInMemoryExporter()
 
 	tp = sdktrace.NewTracerProvider(sdktrace.WithBatcher(exp))
-	healthTp = sdktrace.NewTracerProvider(sdktrace.WithBatcher(exp))
 
 	ShutdownTracer(context.Background())
 	ShutdownTracer(context.Background()) // must not panic
