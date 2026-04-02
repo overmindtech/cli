@@ -854,7 +854,7 @@ func (e *Engine) InitialiseAdapters(ctx context.Context, initFn func(ctx context
 // This checks only engine initialization (NATS connection, heartbeats) and does NOT check adapter-specific health.
 func (e *Engine) LivenessProbeHandlerFunc() func(http.ResponseWriter, *http.Request) {
 	return func(rw http.ResponseWriter, r *http.Request) {
-		ctx, span := tracing.HealthCheckTracer().Start(r.Context(), "healthcheck.liveness")
+		ctx, span := tracing.Tracer().Start(r.Context(), "healthcheck.liveness")
 		defer span.End()
 
 		err := e.LivenessHealthCheck(ctx)
@@ -880,7 +880,7 @@ func (e *Engine) SetReadinessCheck(check func(context.Context) error) {
 // This checks adapter-specific health only (not engine/liveness).
 func (e *Engine) ReadinessProbeHandlerFunc() func(http.ResponseWriter, *http.Request) {
 	return func(rw http.ResponseWriter, r *http.Request) {
-		ctx, span := tracing.HealthCheckTracer().Start(r.Context(), "healthcheck.readiness")
+		ctx, span := tracing.Tracer().Start(r.Context(), "healthcheck.readiness")
 		defer span.End()
 
 		err := e.ReadinessHealthCheck(ctx)
