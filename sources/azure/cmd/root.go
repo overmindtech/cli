@@ -16,8 +16,8 @@ import (
 	"github.com/spf13/viper"
 
 	"github.com/overmindtech/cli/go/discovery"
-	"github.com/overmindtech/cli/sources/azure/proc"
 	"github.com/overmindtech/cli/go/tracing"
+	"github.com/overmindtech/cli/sources/azure/proc"
 )
 
 var cfgFile string
