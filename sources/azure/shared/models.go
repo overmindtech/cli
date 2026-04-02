@@ -53,6 +53,9 @@ const (
 	// OperationalInsights
 	OperationalInsights shared.API = "operationalinsights" // Microsoft.OperationalInsights
 
+	// Insights (Azure Monitor)
+	Insights shared.API = "insights" // microsoft.insights
+
 	// ExtendedLocation (custom locations, edge zones)
 	ExtendedLocation shared.API = "extendedlocation" // Microsoft.ExtendedLocation
 )
@@ -240,6 +243,10 @@ const (
 
 	// OperationalInsights resources
 	Workspace shared.Resource = "workspace"
+	Cluster   shared.Resource = "cluster"
+
+	// Insights (Azure Monitor) resources
+	PrivateLinkScopeScopedResource shared.Resource = "private-link-scope-scoped-resource"
 
 	// ExtendedLocation resources
 	CustomLocation shared.Resource = "custom-location"
