@@ -507,6 +507,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create elastic san volume groups client: %w", err)
 		}
 
+		elasticSanVolumesClient, err := armelasticsan.NewVolumesClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create elastic san volumes client: %w", err)
+		}
+
 		sharedGalleryImagesClient, err := armcompute.NewSharedGalleryImagesClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create shared gallery images client: %w", err)
@@ -867,6 +872,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewElasticSanVolumeGroupClient(elasticSanVolumeGroupsClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewElasticSanVolume(
+					clients.NewElasticSanVolumeClient(elasticSanVolumesClient),
+					resourceGroupScopes,
+				), cache),
 			)
 		}
 
@@ -975,6 +984,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewElasticSan(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewElasticSanVolumeSnapshot(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewElasticSanVolumeGroup(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewElasticSanVolume(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeSharedGalleryImage(nil, subscriptionID), noOpCache),
 			sources.WrapperToAdapter(NewNetworkPrivateEndpoint(nil, placeholderResourceGroupScopes), noOpCache),
 		)
