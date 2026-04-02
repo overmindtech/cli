@@ -417,6 +417,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create user assigned identities client: %w", err)
 		}
 
+		federatedIdentityCredentialsClient, err := armmsi.NewFederatedIdentityCredentialsClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create federated identity credentials client: %w", err)
+		}
+
 		roleAssignmentsClient, err := armauthorization.NewRoleAssignmentsClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create role assignments client: %w", err)
@@ -828,6 +833,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewUserAssignedIdentitiesClient(userAssignedIdentitiesClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewManagedIdentityFederatedIdentityCredential(
+					clients.NewFederatedIdentityCredentialsClient(federatedIdentityCredentialsClient),
+					resourceGroupScopes,
+				), cache),
 				sources.WrapperToAdapter(NewAuthorizationRoleAssignment(
 					clients.NewRoleAssignmentsClient(roleAssignmentsClient),
 					resourceGroupScopes,
@@ -1003,6 +1012,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewKeyVaultSecret(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewKeyVaultKey(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewManagedIdentityUserAssignedIdentity(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewManagedIdentityFederatedIdentityCredential(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewAuthorizationRoleAssignment(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeDiskEncryptionSet(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeImage(nil, placeholderResourceGroupScopes), noOpCache),
