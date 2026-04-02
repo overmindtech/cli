@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	"slices"
 	"time"
 
 	_ "embed"
@@ -27,7 +26,6 @@ import (
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	semconv "go.opentelemetry.io/otel/semconv/v1.26.0"
 	"go.opentelemetry.io/otel/trace"
-	"golang.org/x/sync/errgroup"
 )
 
 // logrusOtelErrorHandler routes OpenTelemetry SDK errors through logrus so they
@@ -162,27 +160,6 @@ func tracingResource(component string) *resource.Resource {
 }
 
 var tp *sdktrace.TracerProvider
-var healthTp *sdktrace.TracerProvider
-
-// HealthCheckTracerProvider returns the tracer provider used for health checks. This has a built-in 1:100 sampler for health checks that are not captured by the default UserAgentSampler for ELB and kube-probe requests.
-func HealthCheckTracerProvider() *sdktrace.TracerProvider {
-	if healthTp == nil {
-		panic("tracer providers not initialised")
-	}
-	return healthTp
-}
-
-// healthCheckTracer is the tracer used for health checks. This is heavily sampled to avoid getting spammed by k8s or ELBs
-func HealthCheckTracer() trace.Tracer {
-	return HealthCheckTracerProvider().Tracer(
-		instrumentationName,
-		trace.WithInstrumentationVersion(version),
-		trace.WithSchemaURL(semconv.SchemaURL),
-		trace.WithInstrumentationAttributes(
-			attribute.Bool("ovm.healthCheck", true),
-		),
-	)
-}
 
 // InitTracerWithUpstreams initialises the tracer with uploading directly to Honeycomb and sentry if `honeycombApiKey` and `sentryDSN` is set respectively. `component` is used as the service name.
 func InitTracerWithUpstreams(component, honeycombApiKey, sentryDSN string, opts ...otlptracehttp.Option) error {
@@ -255,18 +232,11 @@ func InitTracer(component string, opts ...otlptracehttp.Option) error {
 		return fmt.Errorf("creating OTLP trace exporter: %w", err)
 	}
 
-	healthExp, err := otlptrace.New(context.Background(), otlptracehttp.NewClient(opts...))
-	if err != nil {
-		return fmt.Errorf("creating health OTLP trace exporter: %w", err)
-	}
-
-	overmindSampler := NewOvermindSampler()
 	res := tracingResource(component)
 
 	tracerOpts := []sdktrace.TracerProviderOption{
 		sdktrace.WithBatcher(otlpExp, batcherOpts...),
 		sdktrace.WithResource(res),
-		sdktrace.WithSampler(sdktrace.ParentBased(overmindSampler)),
 	}
 	if viper.GetBool("stdout-trace-dump") {
 		stdoutExp, err := stdouttrace.New(stdouttrace.WithPrettyPrint())
@@ -279,12 +249,6 @@ func InitTracer(component string, opts ...otlptracehttp.Option) error {
 
 	otel.SetTracerProvider(tp)
 
-	healthTp = sdktrace.NewTracerProvider(
-		sdktrace.WithBatcher(healthExp, batcherOpts...),
-		sdktrace.WithResource(res),
-		sdktrace.WithSampler(sdktrace.ParentBased(sdktrace.TraceIDRatioBased(0.1))),
-	)
-
 	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 	return nil
 }
@@ -295,121 +259,16 @@ func ShutdownTracer(ctx context.Context) {
 	ctx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 10*time.Second)
 	defer cancel()
 
-	var g errgroup.Group
-
-	// Do not nil healthTp or tp here: concurrent callers (e.g. health check
-	// probes via HealthCheckTracerProvider) would panic on the nil guard.
-	// Calling Shutdown on an already-shutdown provider is a safe no-op.
-	if healthTp != nil {
-		localTp := healthTp
-		g.Go(func() error {
-			if err := localTp.ForceFlush(ctx); err != nil {
-				log.WithContext(ctx).WithError(err).Error("Error flushing health tracer provider")
-			}
-			if err := localTp.Shutdown(ctx); err != nil {
-				log.WithContext(ctx).WithError(err).Error("Error shutting down health tracer provider")
-				return err
-			}
-			return nil
-		})
-	}
-
 	if tp != nil {
-		localTp := tp
-		g.Go(func() error {
-			if err := localTp.ForceFlush(ctx); err != nil {
-				log.WithContext(ctx).WithError(err).Error("Error flushing tracer provider")
-			}
-			if err := localTp.Shutdown(ctx); err != nil {
-				log.WithContext(ctx).WithError(err).Error("Error shutting down tracer provider")
-				return err
-			}
-			return nil
-		})
+		if err := tp.ForceFlush(ctx); err != nil {
+			log.WithContext(ctx).WithError(err).Error("Error flushing tracer provider")
+		}
+		if err := tp.Shutdown(ctx); err != nil {
+			log.WithContext(ctx).WithError(err).Error("Error shutting down tracer provider")
+		}
 	}
 
-	if err := g.Wait(); err != nil {
-		log.WithContext(ctx).WithError(err).Error("Error during tracer shutdown")
-	}
 	log.WithContext(ctx).Trace("tracing has shut down")
-}
-
-// SamplingRule defines a single sampling rule with a rate and matching function
-type SamplingRule struct {
-	SampleRate   int
-	ShouldSample func(sdktrace.SamplingParameters) bool
-}
-
-// OvermindSampler is a unified sampler that evaluates multiple sampling rules in order
-type OvermindSampler struct {
-	rules        []SamplingRule
-	ruleSamplers []sdktrace.Sampler
-}
-
-// NewOvermindSampler creates a new unified sampler with the default rules
-func NewOvermindSampler() *OvermindSampler {
-	rules := []SamplingRule{
-		{
-			SampleRate:   200,
-			ShouldSample: UserAgentMatcher("ELB-HealthChecker/2.0", "kube-probe/1.27+"),
-		},
-	}
-
-	// Pre-allocate samplers for each rule
-	ruleSamplers := make([]sdktrace.Sampler, 0, len(rules))
-	for _, rule := range rules {
-		var sampler sdktrace.Sampler
-		switch {
-		case rule.SampleRate <= 0:
-			sampler = sdktrace.NeverSample()
-		case rule.SampleRate == 1:
-			sampler = sdktrace.AlwaysSample()
-		default:
-			sampler = sdktrace.TraceIDRatioBased(1.0 / float64(rule.SampleRate))
-		}
-		ruleSamplers = append(ruleSamplers, sampler)
-	}
-
-	return &OvermindSampler{
-		rules:        rules,
-		ruleSamplers: ruleSamplers,
-	}
-}
-
-// UserAgentMatcher returns a function that matches specific user agents
-func UserAgentMatcher(userAgents ...string) func(sdktrace.SamplingParameters) bool {
-	return func(parameters sdktrace.SamplingParameters) bool {
-		for _, attr := range parameters.Attributes {
-			if (attr.Key == "http.user_agent" || attr.Key == "user_agent.original") &&
-				slices.Contains(userAgents, attr.Value.AsString()) {
-				return true
-			}
-		}
-		return false
-	}
-}
-
-// ShouldSample evaluates rules in order and returns the first matching decision
-func (o *OvermindSampler) ShouldSample(parameters sdktrace.SamplingParameters) sdktrace.SamplingResult {
-	for i, rule := range o.rules {
-		if rule.ShouldSample(parameters) {
-			// Use the pre-allocated sampler for this rule
-			result := o.ruleSamplers[i].ShouldSample(parameters)
-			if result.Decision == sdktrace.RecordAndSample {
-				result.Attributes = append(result.Attributes,
-					attribute.Int("SampleRate", rule.SampleRate))
-			}
-			return result
-		}
-	}
-
-	// Default to AlwaysSample if no rules match
-	return sdktrace.AlwaysSample().ShouldSample(parameters)
-}
-
-// Description returns information describing the Sampler
-func (o *OvermindSampler) Description() string {
-	return "Unified Overmind sampler combining multiple sampling strategies"
 }
 
 // Version returns the version baked into the binary at build time.
