@@ -297,6 +297,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create flow logs client: %w", err)
 		}
 
+		networkWatchersClient, err := armnetwork.NewWatchersClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create network watchers client: %w", err)
+		}
+
 		managedHSMsClient, err := armkeyvault.NewManagedHsmsClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create managed hsms client: %w", err)
@@ -711,6 +716,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewFlowLogsClient(flowLogsClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewNetworkNetworkWatcher(
+					clients.NewNetworkWatchersClient(networkWatchersClient),
+					resourceGroupScopes,
+				), cache),
 				sources.WrapperToAdapter(NewSqlServer(
 					clients.NewSqlServersClient(sqlServersClient),
 					resourceGroupScopes,
@@ -905,6 +914,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewNetworkLocalNetworkGateway(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkNatGateway(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkFlowLog(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewNetworkNetworkWatcher(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewSqlServer(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewDBforPostgreSQLFlexibleServer(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewDBforPostgreSQLFlexibleServerFirewallRule(nil, placeholderResourceGroupScopes), noOpCache),
