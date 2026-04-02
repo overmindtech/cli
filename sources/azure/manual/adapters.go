@@ -208,6 +208,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create private endpoints client: %w", err)
 		}
 
+		privateLinkServicesClient, err := armnetwork.NewPrivateLinkServicesClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create private link services client: %w", err)
+		}
+
 		batchAccountsClient, err := armbatch.NewAccountClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create batch accounts client: %w", err)
@@ -662,6 +667,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewPrivateEndpointsClient(privateEndpointsClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewNetworkPrivateLinkService(
+					clients.NewPrivateLinkServicesClient(privateLinkServicesClient),
+					resourceGroupScopes,
+				), cache),
 				sources.WrapperToAdapter(NewNetworkZone(
 					clients.NewZonesClient(zonesClient),
 					resourceGroupScopes,
@@ -1007,6 +1016,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewElasticSanVolume(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeSharedGalleryImage(nil, subscriptionID), noOpCache),
 			sources.WrapperToAdapter(NewNetworkPrivateEndpoint(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewNetworkPrivateLinkService(nil, placeholderResourceGroupScopes), noOpCache),
 		)
 
 		_ = regions
