@@ -10,8 +10,12 @@ RUN apk upgrade --no-cache && apk add --no-cache git
 
 WORKDIR /workspace
 
-# Copy the go source
-COPY . .
+COPY go.mod go.sum ./
+RUN --mount=type=cache,target=/go/pkg \
+    go mod download
+
+COPY go/ go/
+COPY aws-source/ aws-source/
 
 # Build
 RUN --mount=type=cache,target=/go/pkg \
