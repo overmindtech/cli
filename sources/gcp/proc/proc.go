@@ -22,6 +22,7 @@ import (
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
 	"github.com/overmindtech/cli/go/sdpcache"
+	"github.com/overmindtech/cli/go/tracing"
 	"github.com/overmindtech/cli/sources/gcp/dynamic"
 	_ "github.com/overmindtech/cli/sources/gcp/dynamic/adapters" // Import all adapters to register them
 	"github.com/overmindtech/cli/sources/gcp/manual"
@@ -512,7 +513,9 @@ func InitializeAdapters(ctx context.Context, engine *discovery.Engine, cfg *GCPC
 	// Run initial permission check before starting the source to fail fast if
 	// we don't have the required permissions. This validates that we can access
 	// the Cloud Resource Manager API for all configured projects.
-	result, err := healthChecker.Check(ctx)
+	checkCtx, checkSpan := tracing.Tracer().Start(ctx, "InitializeAdapters.HealthCheck")
+	result, err := healthChecker.Check(checkCtx)
+	checkSpan.End()
 	if err != nil {
 		log.WithContext(ctx).WithError(err).WithFields(log.Fields{
 			"ovm.source.type":          "gcp",
