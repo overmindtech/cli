@@ -522,6 +522,8 @@ func (c *boltStore) Search(ctx context.Context, ck CacheKey) ([]*sdp.Item, error
 	}
 
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "cache search failed")
 		return nil, fmt.Errorf("search failed: %w", err)
 	}
 
@@ -642,11 +644,15 @@ func (c *boltStore) storeResult(ctx context.Context, res CachedResult) {
 
 	entry, err := fromCachedResult(&res)
 	if err != nil {
-		return // Silently fail on serialization errors
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to serialize cache result")
+		return
 	}
 
 	entryBytes, err := encodeCachedEntry(entry)
 	if err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "failed to encode cache entry")
 		return
 	}
 
@@ -922,6 +928,7 @@ func (c *boltStore) Purge(ctx context.Context, before time.Time) PurgeStats {
 			span.SetAttributes(attribute.Bool("ovm.boltdb.compactionSuccess", true))
 		} else {
 			span.RecordError(err)
+			span.SetStatus(codes.Error, "compaction failed")
 			span.SetAttributes(attribute.Bool("ovm.boltdb.compactionSuccess", false))
 		}
 	} else {
@@ -952,7 +959,7 @@ func (c *boltStore) purgeLocked(ctx context.Context, before time.Time) PurgeStat
 	}
 	expired := make([]expiredEntry, 0)
 
-	_ = c.db.View(func(tx *bbolt.Tx) error {
+	if err := c.db.View(func(tx *bbolt.Tx) error {
 		expiry := tx.Bucket(expiryBucketName)
 		if expiry == nil {
 			return nil
@@ -990,11 +997,14 @@ func (c *boltStore) purgeLocked(ctx context.Context, before time.Time) PurgeStat
 		}
 
 		return nil
-	})
+	}); err != nil {
+		span.RecordError(err)
+		span.SetStatus(codes.Error, "purge scan failed")
+	}
 
 	// Delete expired entries
 	if len(expired) > 0 {
-		_ = c.db.Update(func(tx *bbolt.Tx) error {
+		if err := c.db.Update(func(tx *bbolt.Tx) error {
 			items := tx.Bucket(itemsBucketName)
 			expiry := tx.Bucket(expiryBucketName)
 
@@ -1029,7 +1039,10 @@ func (c *boltStore) purgeLocked(ctx context.Context, before time.Time) PurgeStat
 			// Save deleted bytes
 			c.addDeletedBytes(totalDeleted)
 			return c.saveDeletedBytes(tx)
-		})
+		}); err != nil {
+			span.RecordError(err)
+			span.SetStatus(codes.Error, "purge delete failed")
+		}
 	}
 
 	// Update final disk usage metrics
