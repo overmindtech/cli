@@ -6,12 +6,16 @@ ARG BUILD_VERSION
 ARG BUILD_COMMIT
 
 # required for accessing the private dependencies and generating version descriptor
-RUN apk upgrade --no-cache && apk add --no-cache git curl
+RUN apk upgrade --no-cache && apk add --no-cache git
 
 WORKDIR /workspace
 
-# Copy the go source
-COPY . .
+COPY go.mod go.sum ./
+RUN --mount=type=cache,target=/go/pkg \
+    go mod download
+
+COPY go/ go/
+COPY k8s-source/ k8s-source/
 
 # Build
 RUN --mount=type=cache,target=/go/pkg \
