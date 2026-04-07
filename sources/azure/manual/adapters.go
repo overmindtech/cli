@@ -309,6 +309,11 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create local network gateways client: %w", err)
 		}
 
+		virtualNetworkGatewayConnectionsClient, err := armnetwork.NewVirtualNetworkGatewayConnectionsClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create virtual network gateway connections client: %w", err)
+		}
+
 		natGatewaysClient, err := armnetwork.NewNatGatewaysClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create nat gateways client: %w", err)
@@ -804,6 +809,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewLocalNetworkGatewaysClient(localNetworkGatewaysClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewNetworkVirtualNetworkGatewayConnection(
+					clients.NewVirtualNetworkGatewayConnectionsClient(virtualNetworkGatewayConnectionsClient),
+					resourceGroupScopes,
+				), cache),
 				sources.WrapperToAdapter(NewNetworkNatGateway(
 					clients.NewNatGatewaysClient(natGatewaysClient),
 					resourceGroupScopes,
@@ -1041,6 +1050,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewNetworkApplicationGateway(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkVirtualNetworkGateway(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkLocalNetworkGateway(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewNetworkVirtualNetworkGatewayConnection(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkNatGateway(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkFlowLog(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewNetworkNetworkWatcher(nil, placeholderResourceGroupScopes), noOpCache),
