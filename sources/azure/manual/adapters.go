@@ -12,6 +12,7 @@ import (
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/dns/armdns"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/elasticsan/armelasticsan"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault/v2"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/maintenance/armmaintenance"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/msi/armmsi"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights"
@@ -553,6 +554,16 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			return nil, fmt.Errorf("failed to create shared gallery images client: %w", err)
 		}
 
+		maintenanceConfigurationsClient, err := armmaintenance.NewConfigurationsClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create maintenance configurations client: %w", err)
+		}
+
+		maintenanceConfigurationsForResourceGroupClient, err := armmaintenance.NewConfigurationsForResourceGroupClient(subscriptionID, cred, nil)
+		if err != nil {
+			return nil, fmt.Errorf("failed to create maintenance configurations for resource group client: %w", err)
+		}
+
 		operationalInsightsWorkspacesClient, err := armoperationalinsights.NewWorkspacesClient(subscriptionID, cred, nil)
 		if err != nil {
 			return nil, fmt.Errorf("failed to create operational insights workspaces client: %w", err)
@@ -941,6 +952,10 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 					clients.NewElasticSanVolumeClient(elasticSanVolumesClient),
 					resourceGroupScopes,
 				), cache),
+				sources.WrapperToAdapter(NewMaintenanceMaintenanceConfiguration(
+					clients.NewMaintenanceConfigurationClient(maintenanceConfigurationsClient, maintenanceConfigurationsForResourceGroupClient),
+					resourceGroupScopes,
+				), cache),
 				sources.WrapperToAdapter(NewOperationalInsightsWorkspace(
 					clients.NewOperationalInsightsWorkspaceClient(operationalInsightsWorkspacesClient),
 					resourceGroupScopes,
@@ -1063,6 +1078,7 @@ func Adapters(ctx context.Context, subscriptionID string, regions []string, cred
 			sources.WrapperToAdapter(NewElasticSanVolumeSnapshot(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewElasticSanVolumeGroup(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewElasticSanVolume(nil, placeholderResourceGroupScopes), noOpCache),
+			sources.WrapperToAdapter(NewMaintenanceMaintenanceConfiguration(nil, placeholderResourceGroupScopes), noOpCache),
 			sources.WrapperToAdapter(NewComputeSharedGalleryImage(nil, subscriptionID), noOpCache),
 			sources.WrapperToAdapter(NewAuthorizationRoleDefinition(nil, subscriptionID), noOpCache),
 			sources.WrapperToAdapter(NewNetworkPrivateEndpoint(nil, placeholderResourceGroupScopes), noOpCache),
