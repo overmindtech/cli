@@ -52,6 +52,42 @@ func NewAuthenticatedClient(ctx context.Context, from *http.Client) *http.Client
 	}
 }
 
+// ContextAwareAuthTransport is an http.RoundTripper that extracts the user JWT
+// from each request's context at call time (not at client-creation time). This
+// enables a single persistent http.Client to pass through per-request JWTs,
+// which is needed when the client is created once at startup but serves
+// requests from different users.
+type ContextAwareAuthTransport struct {
+	from http.RoundTripper
+}
+
+// RoundTrip extracts the JWT from the request's context and adds it as a
+// Bearer token in the Authorization header.
+func (t *ContextAwareAuthTransport) RoundTrip(req *http.Request) (*http.Response, error) {
+	req.Header.Set("X-Overmind-Interactive", "false")
+
+	if token, ok := req.Context().Value(UserTokenContextKey{}).(string); ok && token != "" {
+		req.Header.Set("Authorization", fmt.Sprintf("Bearer %v", token))
+	}
+
+	return t.from.RoundTrip(req)
+}
+
+// NewContextAwareAuthClient creates an http.Client whose transport extracts the
+// JWT from each outgoing request's context. Unlike NewAuthenticatedClient (which
+// captures the token once), this client re-reads the token on every call —
+// making it safe to reuse across requests from different users.
+func NewContextAwareAuthClient(from *http.Client) *http.Client {
+	return &http.Client{
+		Transport: &ContextAwareAuthTransport{
+			from: from.Transport,
+		},
+		CheckRedirect: from.CheckRedirect,
+		Jar:           from.Jar,
+		Timeout:       from.Timeout,
+	}
+}
+
 // AuthenticatedAdminClient Returns a bookmark client that uses the auth
 // embedded in the context and otel instrumentation
 func AuthenticatedAdminClient(ctx context.Context, apiUrl string) sdpconnect.AdminServiceClient {
