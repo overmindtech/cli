@@ -196,7 +196,7 @@ require (
 	golang.org/x/text v0.35.0
 	gonum.org/v1/gonum v0.17.0
 	google.golang.org/api v0.274.0
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260401024825-9d38bb4040a9
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260406210006-6f92a3bedf2d
 	google.golang.org/grpc v1.80.0
 	google.golang.org/protobuf v1.36.11
 	gopkg.in/ini.v1 v1.67.1
