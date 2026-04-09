@@ -779,7 +779,7 @@ func (s *TestJWTServer) Start(ctx context.Context) string {
 			// issued by our server
 			w.WriteHeader(http.StatusOK)
 			w.Header().Set("Content-Type", "application/json")
-			_, err := fmt.Fprintf(w, `{"jwks_uri": "%s/.well-known/jwks.json"}`, s.server.URL)
+			_, err := fmt.Fprintf(w, `{"issuer": %q, "jwks_uri": "%s/.well-known/jwks.json"}`, s.server.URL, s.server.URL)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 			}
