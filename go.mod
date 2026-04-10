@@ -13,34 +13,34 @@ require (
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.11-20260209202127-80ab13bee0bf.1
 	buf.build/go/protovalidate v1.1.3
 	charm.land/lipgloss/v2 v2.0.2
-	cloud.google.com/go/aiplatform v1.122.0
+	cloud.google.com/go/aiplatform v1.123.0
 	cloud.google.com/go/auth v0.20.0
 	cloud.google.com/go/auth/oauth2adapt v0.2.8
 	cloud.google.com/go/bigquery v1.75.0
-	cloud.google.com/go/bigtable v1.45.0
-	cloud.google.com/go/certificatemanager v1.10.0
+	cloud.google.com/go/bigtable v1.46.0
+	cloud.google.com/go/certificatemanager v1.11.0
 	cloud.google.com/go/compute v1.59.0
 	cloud.google.com/go/compute/metadata v0.9.0
-	cloud.google.com/go/container v1.47.0
-	cloud.google.com/go/dataplex v1.30.0
-	cloud.google.com/go/dataproc/v2 v2.17.0
-	cloud.google.com/go/eventarc v1.19.0
-	cloud.google.com/go/filestore v1.11.0
-	cloud.google.com/go/functions v1.20.0
-	cloud.google.com/go/iam v1.7.0
-	cloud.google.com/go/kms v1.27.0
-	cloud.google.com/go/logging v1.14.0
-	cloud.google.com/go/monitoring v1.25.0
-	cloud.google.com/go/networksecurity v0.12.0
-	cloud.google.com/go/orgpolicy v1.16.0
-	cloud.google.com/go/redis v1.19.0
-	cloud.google.com/go/resourcemanager v1.11.0
-	cloud.google.com/go/run v1.17.0
+	cloud.google.com/go/container v1.48.0
+	cloud.google.com/go/dataplex v1.31.0
+	cloud.google.com/go/dataproc/v2 v2.18.0
+	cloud.google.com/go/eventarc v1.20.0
+	cloud.google.com/go/filestore v1.12.0
+	cloud.google.com/go/functions v1.21.0
+	cloud.google.com/go/iam v1.8.0
+	cloud.google.com/go/kms v1.28.0
+	cloud.google.com/go/logging v1.15.0
+	cloud.google.com/go/monitoring v1.26.0
+	cloud.google.com/go/networksecurity v0.13.0
+	cloud.google.com/go/orgpolicy v1.17.0
+	cloud.google.com/go/redis v1.20.0
+	cloud.google.com/go/resourcemanager v1.12.0
+	cloud.google.com/go/run v1.18.0
 	cloud.google.com/go/secretmanager v1.18.0
-	cloud.google.com/go/securitycentermanagement v1.2.0
+	cloud.google.com/go/securitycentermanagement v1.3.0
 	cloud.google.com/go/spanner v1.89.0
 	cloud.google.com/go/storage v1.62.0
-	cloud.google.com/go/storagetransfer v1.14.0
+	cloud.google.com/go/storagetransfer v1.15.0
 	connectrpc.com/connect v1.18.1 // v1.19.0 was faulty, wait until it is above this version
 	connectrpc.com/otelconnect v0.9.0
 	github.com/1password/onepassword-sdk-go v0.4.0
@@ -190,7 +190,7 @@ require (
 	go.uber.org/goleak v1.3.0
 	go.uber.org/mock v0.6.0
 	go.yaml.in/yaml/v3 v3.0.4
-	golang.org/x/net v0.52.0
+	golang.org/x/net v0.53.0
 	golang.org/x/oauth2 v0.36.0
 	golang.org/x/sync v0.20.0
 	golang.org/x/text v0.36.0
@@ -204,7 +204,7 @@ require (
 	k8s.io/apimachinery v0.35.3
 	k8s.io/client-go v0.35.3
 	k8s.io/component-base v0.35.3
-	modernc.org/sqlite v1.48.1
+	modernc.org/sqlite v1.48.2
 	riverqueue.com/riverui v0.15.0
 	sigs.k8s.io/controller-runtime v0.23.3
 	sigs.k8s.io/kind v0.31.0
@@ -218,7 +218,7 @@ require (
 	atomicgo.dev/schedule v0.1.0 // indirect
 	cel.dev/expr v0.25.1 // indirect
 	cloud.google.com/go v0.123.0 // indirect
-	cloud.google.com/go/longrunning v0.8.0 // indirect
+	cloud.google.com/go/longrunning v0.9.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.11.2 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/internal/v3 v3.1.1 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v3 v3.0.1 // indirect
@@ -294,7 +294,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/dylibso/observe-sdk/go v0.0.0-20240828172851-9145d8ad07e1 // indirect
 	github.com/emicklei/go-restful/v3 v3.12.2 // indirect
-	github.com/envoyproxy/go-control-plane/envoy v1.36.0 // indirect
+	github.com/envoyproxy/go-control-plane/envoy v1.37.0 // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.3.0 // indirect
 	github.com/evanphx/json-patch/v5 v5.9.11 // indirect
 	github.com/extism/go-sdk v1.7.1 // indirect
@@ -506,12 +506,12 @@ require (
 	go.uber.org/zap v1.27.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	go4.org v0.0.0-20230225012048-214862532bf5 // indirect
-	golang.org/x/crypto v0.49.0 // indirect
+	golang.org/x/crypto v0.50.0 // indirect
 	golang.org/x/exp v0.0.0-20251023183803-a4bb9ffd2546 // indirect
 	golang.org/x/mod v0.34.0 // indirect
-	golang.org/x/sys v0.42.0 // indirect
+	golang.org/x/sys v0.43.0 // indirect
 	golang.org/x/telemetry v0.0.0-20260311193753-579e4da9a98c // indirect
-	golang.org/x/term v0.41.0 // indirect
+	golang.org/x/term v0.42.0 // indirect
 	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/tools v0.43.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
