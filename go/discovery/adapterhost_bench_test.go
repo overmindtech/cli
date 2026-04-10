@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/cli/go/sdpcache"
 	"github.com/sourcegraph/conc/pool"
 )
 
@@ -245,6 +246,9 @@ type BenchmarkListAdapter struct {
 
 // List returns exactly 10 items (or itemsPerList if set) for each LIST query
 func (b *BenchmarkListAdapter) List(ctx context.Context, scope string, ignoreCache bool) ([]*sdp.Item, error) {
+	if b.cache == nil {
+		b.cache = sdpcache.NewNoOpCache()
+	}
 	// Use the embedded TestAdapter's List method logic but return multiple items
 	// We'll call the parent's cache lookup, but then generate multiple items
 	itemsPerList := b.itemsPerList

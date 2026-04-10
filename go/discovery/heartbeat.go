@@ -25,7 +25,7 @@ var ErrNoHealthcheckDefined = errors.New("no healthcheck defined")
 // to indicate that the engine is in an error state, this will be sent to the
 // management API and will be displayed in the UI.
 func (e *Engine) SendHeartbeat(ctx context.Context, customErr error) error {
-	ctx, span := tracer.Start(ctx, "SendHeartbeat")
+	ctx, span := getTracer().Start(ctx, "SendHeartbeat")
 	defer span.End()
 
 	// Read memory stats and add them to the span

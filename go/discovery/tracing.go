@@ -11,10 +11,13 @@ const (
 	instrumentationVersion = "0.0.1"
 )
 
-var (
-	tracer = otel.GetTracerProvider().Tracer(
+// getTracer returns the discovery tracer from the current global TracerProvider.
+// Call this at span creation time (not once at init) so tests can install an
+// in-memory TracerProvider before running discovery code.
+func getTracer() trace.Tracer {
+	return otel.GetTracerProvider().Tracer(
 		instrumentationName,
 		trace.WithInstrumentationVersion(instrumentationVersion),
 		trace.WithSchemaURL(semconv.SchemaURL),
 	)
-)
+}

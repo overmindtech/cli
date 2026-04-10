@@ -98,7 +98,7 @@ func (e *Engine) HandleQuery(ctx context.Context, query *sdp.Query) {
 	u, uuidErr := uuid.FromBytes(query.GetUUID())
 
 	// Only start the span if we actually have something that will respond
-	ctx, span := tracer.Start(ctx, "HandleQuery", trace.WithAttributes(
+	ctx, span := getTracer().Start(ctx, "HandleQuery", trace.WithAttributes(
 		attribute.Int("ovm.discovery.numExpandedQueries", numExpandedQueries),
 		attribute.Bool("ovm.sdp.deadlineOverridden", deadlineOverride),
 		attribute.String("ovm.sdp.source_name", e.EngineConfig.SourceName),
@@ -400,7 +400,7 @@ func (e *Engine) ExecuteQuery(ctx context.Context, query *sdp.Query, responses c
 // closed by this function, the caller should do that as this will likely be
 // called in parallel with other queries and the results should be merged
 func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, responses chan<- *sdp.QueryResponse) {
-	ctx, span := tracer.Start(ctx, "Execute", trace.WithAttributes(
+	ctx, span := getTracer().Start(ctx, "Execute", trace.WithAttributes(
 		attribute.String("ovm.adapter.name", adapter.Name()),
 		attribute.String("ovm.engine.type", e.EngineConfig.EngineType),
 		attribute.String("ovm.engine.version", e.EngineConfig.Version),
@@ -458,6 +458,11 @@ func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, res
 	// are passed back to the caller
 	var numItems atomic.Int32
 	var numErrs atomic.Int32
+	// Per-Execute *sdp.QueryError telemetry: fold the first into span aggregates only
+	// (no RecordError) to reduce Honeycomb exception-event volume; record 2+ as
+	// exception events so rare multi-error tails keep detail.
+	var numSDPQueryErrors atomic.Int32
+	var numSDPQueryErrorRecordErrors atomic.Int32
 	var channelSendMaxNs atomic.Int64
 	var channelSendTotalNs atomic.Int64
 	var itemHandler ItemHandler = func(item *sdp.Item) {
@@ -519,8 +524,20 @@ func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, res
 		// add a recover to prevent panic from stream error handler.
 		defer tracing.LogRecoverToReturn(ctx, "StreamErrorHandler")
 
-		// Record the error in the trace
-		span.RecordError(err, trace.WithStackTrace(true))
+		var sdpErr *sdp.QueryError
+		if errors.As(err, &sdpErr) && sdpErr != nil {
+			n := numSDPQueryErrors.Add(1)
+			if n == 1 {
+				// Fold first QueryError: do not emit a per-error exception event.
+			} else {
+				// Rare multi-error Execute: keep per-error exception rows without stacks
+				// (stacks are expensive and the first error is the high-volume case).
+				span.RecordError(sdpErr, trace.WithStackTrace(false))
+				numSDPQueryErrorRecordErrors.Add(1)
+			}
+		} else {
+			span.RecordError(err, trace.WithStackTrace(true))
+		}
 
 		// Send the error back to the caller
 		numErrs.Add(1)
@@ -616,6 +633,8 @@ func (e *Engine) Execute(ctx context.Context, q *sdp.Query, adapter Adapter, res
 	span.SetAttributes(
 		attribute.Int("ovm.adapter.numItems", int(numItems.Load())),
 		attribute.Int("ovm.adapter.numErrors", int(numErrs.Load())),
+		attribute.Int("ovm.adapter.sdpQueryErrorCount", int(numSDPQueryErrors.Load())),
+		attribute.Int("ovm.adapter.sdpQueryErrorRecordErrorCount", int(numSDPQueryErrorRecordErrors.Load())),
 		attribute.Float64("ovm.discovery.channelSendMaxMs", float64(channelSendMaxNs.Load())/1e6),
 		attribute.Float64("ovm.discovery.channelSendTotalMs", float64(channelSendTotalNs.Load())/1e6),
 	)
