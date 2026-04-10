@@ -78,7 +78,7 @@ func SubmitSignal(cmd *cobra.Command, args []string) error {
 	b, err := json.MarshalIndent(returnedSignal.Msg, "", "  ")
 	if err != nil {
 		fmt.Printf("Successfully created signal for change %s\n", changeUUID.String())
-		log.Infof("Error rendering Signal: %v", err)
+		log.WithError(err).Warn("failed to render signal")
 	} else {
 		fmt.Printf("Successfully created signal for change %s\n", changeUUID.String())
 		fmt.Println(string(b))

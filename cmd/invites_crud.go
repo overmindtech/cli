@@ -53,7 +53,6 @@ func InvitesRevoke(cmd *cobra.Command, args []string) error {
 
 	client := AuthenticatedInviteClient(ctx, oi)
 
-	// Create the invite
 	_, err = client.RevokeInvite(ctx, &connect.Request[sdp.RevokeInviteRequest]{
 		Msg: &sdp.RevokeInviteRequest{
 			Email: email,

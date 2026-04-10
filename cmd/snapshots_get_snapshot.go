@@ -64,7 +64,7 @@ func GetSnapshot(cmd *cobra.Command, args []string) error {
 
 	b, err := json.MarshalIndent(response.Msg.GetSnapshot().ToMap(), "", "  ")
 	if err != nil {
-		log.Infof("Error rendering snapshot: %v", err)
+		log.WithError(err).Warn("failed to render snapshot")
 	} else {
 		fmt.Println(string(b))
 	}

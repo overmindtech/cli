@@ -14,7 +14,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-// createBookmarkCmd represents the get-bookmark command
+// createBookmarkCmd represents the create-bookmark command
 var createBookmarkCmd = &cobra.Command{
 	Use:    "create-bookmark [--file FILE]",
 	Short:  "Creates a bookmark from JSON.",
@@ -71,7 +71,7 @@ func CreateBookmark(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return loggedError{
 			err:     err,
-			message: "failed to get bookmark",
+			message: "failed to create bookmark",
 		}
 	}
 	log.WithContext(ctx).WithFields(log.Fields{
@@ -88,7 +88,7 @@ func CreateBookmark(cmd *cobra.Command, args []string) error {
 
 	b, err := json.MarshalIndent(response.Msg.GetBookmark().GetProperties(), "", "  ")
 	if err != nil {
-		log.Infof("Error rendering bookmark: %v", err)
+		log.WithError(err).Warn("failed to render bookmark")
 	} else {
 		fmt.Println(string(b))
 	}

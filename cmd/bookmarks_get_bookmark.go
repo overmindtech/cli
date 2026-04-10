@@ -56,7 +56,7 @@ func GetBookmark(cmd *cobra.Command, args []string) error {
 
 	b, err := json.MarshalIndent(response.Msg.GetBookmark().ToMap(), "", "  ")
 	if err != nil {
-		log.Infof("Error rendering bookmark: %v", err)
+		log.WithError(err).Warn("failed to render bookmark")
 	} else {
 		fmt.Println(string(b))
 	}

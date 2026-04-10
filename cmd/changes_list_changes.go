@@ -14,7 +14,7 @@ import (
 	"github.com/spf13/viper"
 )
 
-// listChangesCmd represents the get-change command
+// listChangesCmd represents the list-changes command
 var listChangesCmd = &cobra.Command{
 	Use:    "list-changes --dir ./output",
 	Short:  "Displays the contents of a change.",
