@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"testing"
 
@@ -100,5 +102,57 @@ func TestInitTracerSetsErrorHandler(t *testing.T) {
 
 	if !bytes.Contains(buf.Bytes(), []byte("OpenTelemetry SDK error")) {
 		t.Errorf("after InitTracer, OTel errors should be routed to logrus; got: %s", buf.String())
+	}
+}
+
+func TestHTTPClient_ProducesSpans(t *testing.T) {
+	server := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprint(w, "ok")
+	}))
+	defer server.Close()
+
+	exp := tracetest.NewInMemoryExporter()
+	testTP := sdktrace.NewTracerProvider(sdktrace.WithSyncer(exp))
+	t.Cleanup(func() { _ = testTP.Shutdown(context.Background()) })
+
+	origTP := otel.GetTracerProvider()
+	otel.SetTracerProvider(testTP)
+	t.Cleanup(func() { otel.SetTracerProvider(origTP) })
+
+	client := HTTPClient()
+
+	ctx := context.Background()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, server.URL+"/test-path", nil)
+	if err != nil {
+		t.Fatalf("creating request: %v", err)
+	}
+
+	resp, err := client.Do(req)
+	if err != nil {
+		t.Fatalf("HTTP request failed: %v", err)
+	}
+	resp.Body.Close()
+
+	_ = testTP.ForceFlush(ctx)
+	spans := exp.GetSpans()
+
+	if len(spans) == 0 {
+		t.Fatal("expected at least one span from HTTPClient(), got 0")
+	}
+
+	var found bool
+	for _, s := range spans {
+		if s.SpanKind.String() == "client" {
+			found = true
+			break
+		}
+	}
+	if !found {
+		names := make([]string, len(spans))
+		for i, s := range spans {
+			names[i] = fmt.Sprintf("%s (kind=%s)", s.Name, s.SpanKind)
+		}
+		t.Fatalf("no client span found; spans: %v", names)
 	}
 }
