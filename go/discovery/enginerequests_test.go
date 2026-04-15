@@ -2,7 +2,9 @@ package discovery
 
 import (
 	"context"
+	"errors"
 	"reflect"
+	"sync"
 	"testing"
 	"time"
 
@@ -39,6 +41,198 @@ func (e *Engine) executeQuerySync(ctx context.Context, q *sdp.Query) ([]*sdp.Ite
 	}
 
 	return items, edges, errs, err
+}
+
+// cancelBlockingGetAdapter blocks in Get until the query context is cancelled.
+// Used to exercise ExecuteQuery returning after the stuck-timeout path while
+// a worker may still send on responses (must not close the channel until
+// wg.Done).
+type cancelBlockingGetAdapter struct {
+	ready sync.Once
+	// started is closed the first time Get begins waiting on ctx.Done().
+	started chan struct{}
+}
+
+func newCancelBlockingGetAdapter() *cancelBlockingGetAdapter {
+	return &cancelBlockingGetAdapter{
+		started: make(chan struct{}),
+	}
+}
+
+func (a *cancelBlockingGetAdapter) Type() string {
+	return "blockingcancel"
+}
+
+func (a *cancelBlockingGetAdapter) Name() string {
+	return "cancelBlockingGetAdapter"
+}
+
+func (a *cancelBlockingGetAdapter) Scopes() []string {
+	return []string{"test"}
+}
+
+func (a *cancelBlockingGetAdapter) Metadata() *sdp.AdapterMetadata {
+	return &sdp.AdapterMetadata{
+		Type:            a.Type(),
+		DescriptiveName: "Blocking cancel test",
+	}
+}
+
+func (a *cancelBlockingGetAdapter) Get(ctx context.Context, scope, query string, _ bool) (*sdp.Item, error) {
+	a.ready.Do(func() { close(a.started) })
+	<-ctx.Done()
+	return nil, ctx.Err()
+}
+
+func TestExecuteQuery_CancelledContextDoesNotPanicOnChannelClose(t *testing.T) {
+	natsURL := startEmbeddedNATSServer(t)
+
+	prev := executeQueryLongRunningAdaptersTimeout
+	executeQueryLongRunningAdaptersTimeout = 50 * time.Millisecond
+	t.Cleanup(func() { executeQueryLongRunningAdaptersTimeout = prev })
+
+	adapter := newCancelBlockingGetAdapter()
+	e := newStartedEngine(t, "TestExecuteQueryCancelClose",
+		&auth.NATSOptions{
+			Servers:           []string{natsURL},
+			ConnectionName:    "test-connection",
+			ConnectionTimeout: time.Second,
+			MaxReconnects:     5,
+		},
+		nil,
+		adapter,
+	)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	u := uuid.New()
+	q := &sdp.Query{
+		UUID:     u[:],
+		Type:     adapter.Type(),
+		Method:   sdp.QueryMethod_GET,
+		Query:    "q",
+		Scope:    "test",
+		Deadline: timestamppb.New(time.Now().Add(10 * time.Minute)),
+		RecursionBehaviour: &sdp.Query_RecursionBehaviour{
+			LinkDepth: 0,
+		},
+	}
+
+	responses := make(chan *sdp.QueryResponse, 10)
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- e.ExecuteQuery(ctx, q, responses)
+	}()
+
+	<-adapter.started
+	cancel()
+
+	err := <-errCh
+	if !errors.Is(err, context.Canceled) {
+		t.Fatalf("ExecuteQuery() err = %v, want %v", err, context.Canceled)
+	}
+
+	for range responses {
+	}
+}
+
+// foreverBlockingGetAdapter ignores context cancellation and blocks in Get
+// until an external signal. Used to exercise the safety timeout path.
+type foreverBlockingGetAdapter struct {
+	ready sync.Once
+	// started is closed when Get begins blocking.
+	started chan struct{}
+	// release is closed by the test to let Get return.
+	release chan struct{}
+}
+
+func newForeverBlockingGetAdapter() *foreverBlockingGetAdapter {
+	return &foreverBlockingGetAdapter{
+		started: make(chan struct{}),
+		release: make(chan struct{}),
+	}
+}
+
+func (a *foreverBlockingGetAdapter) Type() string            { return "foreverblocking" }
+func (a *foreverBlockingGetAdapter) Name() string            { return "foreverBlockingGetAdapter" }
+func (a *foreverBlockingGetAdapter) Scopes() []string        { return []string{"test"} }
+func (a *foreverBlockingGetAdapter) Metadata() *sdp.AdapterMetadata {
+	return &sdp.AdapterMetadata{
+		Type:            a.Type(),
+		DescriptiveName: "Forever blocking test",
+	}
+}
+
+func (a *foreverBlockingGetAdapter) Get(_ context.Context, _, _ string, _ bool) (*sdp.Item, error) {
+	a.ready.Do(func() { close(a.started) })
+	<-a.release
+	return nil, errors.New("released")
+}
+
+func TestExecuteQuery_SafetyTimeoutClosesResponsesWithoutPanic(t *testing.T) {
+	natsURL := startEmbeddedNATSServer(t)
+
+	prevLong := executeQueryLongRunningAdaptersTimeout
+	executeQueryLongRunningAdaptersTimeout = 10 * time.Millisecond
+	prevSafety := executeQuerySafetyTimeout
+	executeQuerySafetyTimeout = 100 * time.Millisecond
+	t.Cleanup(func() {
+		executeQueryLongRunningAdaptersTimeout = prevLong
+		executeQuerySafetyTimeout = prevSafety
+	})
+
+	adapter := newForeverBlockingGetAdapter()
+	t.Cleanup(func() { close(adapter.release) })
+
+	e := newStartedEngine(t, "TestExecuteQuerySafetyTimeout",
+		&auth.NATSOptions{
+			Servers:           []string{natsURL},
+			ConnectionName:    "test-connection",
+			ConnectionTimeout: time.Second,
+			MaxReconnects:     5,
+		},
+		nil,
+		adapter,
+	)
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	u := uuid.New()
+	q := &sdp.Query{
+		UUID:     u[:],
+		Type:     adapter.Type(),
+		Method:   sdp.QueryMethod_GET,
+		Query:    "q",
+		Scope:    "test",
+		Deadline: timestamppb.New(time.Now().Add(10 * time.Minute)),
+		RecursionBehaviour: &sdp.Query_RecursionBehaviour{
+			LinkDepth: 0,
+		},
+	}
+
+	responses := make(chan *sdp.QueryResponse, 10)
+	errCh := make(chan error, 1)
+	go func() {
+		errCh <- e.ExecuteQuery(ctx, q, responses)
+	}()
+
+	<-adapter.started
+	cancel()
+
+	// Drain responses — the safety timeout should close the channel without
+	// panicking, even though the worker is still blocked in Get.
+	for range responses {
+	}
+
+	// ExecuteQuery should have returned after the stuck-timeout path.
+	select {
+	case err := <-errCh:
+		if !errors.Is(err, context.Canceled) {
+			t.Fatalf("ExecuteQuery() err = %v, want %v", err, context.Canceled)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("timed out waiting for ExecuteQuery to return")
+	}
 }
 
 func TestExecuteQuery(t *testing.T) {
