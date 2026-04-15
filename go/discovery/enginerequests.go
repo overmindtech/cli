@@ -204,6 +204,18 @@ func captureGoroutineSummary(maxBytes int) string {
 var (
 	listExecutionPoolCount atomic.Int32
 	getExecutionPoolCount  atomic.Int32
+
+	// executeQueryLongRunningAdaptersTimeout is how long ExecuteQuery waits after
+	// ctx cancellation before giving up on the per-query WaitGroup. It is a
+	// package-level variable so tests can set a shorter duration without
+	// waiting two minutes. Production uses the default.
+	executeQueryLongRunningAdaptersTimeout = 2 * time.Minute
+
+	// executeQuerySafetyTimeout is the absolute upper bound on how long
+	// ExecuteQuery waits for all workers before closing the responses
+	// channel. It is a package-level variable so tests can override it
+	// without waiting 10 minutes.
+	executeQuerySafetyTimeout = 10 * time.Minute
 )
 
 // ExecuteQuery Executes a single Query and returns the results without any
@@ -216,12 +228,14 @@ var (
 func (e *Engine) ExecuteQuery(ctx context.Context, query *sdp.Query, responses chan<- *sdp.QueryResponse) error {
 	span := trace.SpanFromContext(ctx)
 
-	// Make sure we close channels once we're done
-	if responses != nil {
-		defer close(responses)
-	}
+	// responses is closed after all pool workers finish (see waitGroupDone below),
+	// not when this function returns. Deferring close here races with workers that
+	// are still running after the stuck-timeout path returns.
 
 	if ctx.Err() != nil {
+		if responses != nil {
+			close(responses)
+		}
 		return ctx.Err()
 	}
 
@@ -232,11 +246,14 @@ func (e *Engine) ExecuteQuery(ctx context.Context, query *sdp.Query, responses c
 	)
 
 	if len(expanded) == 0 {
-		responses <- sdp.NewQueryResponseFromError(&sdp.QueryError{
-			ErrorType:   sdp.QueryError_NOSCOPE,
-			ErrorString: "no matching adapters found",
-			Scope:       query.GetScope(),
-		})
+		if responses != nil {
+			responses <- sdp.NewQueryResponseFromError(&sdp.QueryError{
+				ErrorType:   sdp.QueryError_NOSCOPE,
+				ErrorString: "no matching adapters found",
+				Scope:       query.GetScope(),
+			})
+			close(responses)
+		}
 
 		return errors.New("no matching adapters found")
 	}
@@ -247,6 +264,40 @@ func (e *Engine) ExecuteQuery(ctx context.Context, query *sdp.Query, responses c
 	expandedMutex := sync.RWMutex{}
 	totalQueries := len(expanded)
 	var poolWaitMaxNs atomic.Int64
+
+	// Workers send to workerCh (never closed by safety timeout). A forwarder
+	// goroutine copies workerCh → responses, and is the sole closer of
+	// responses. This eliminates send-on-closed-channel races: when the
+	// safety timeout fires we close responses (unblocking the reader) and
+	// then drain workerCh so late-finishing workers can still call wg.Done()
+	// instead of blocking on a full/unread channel.
+	var workerCh chan<- *sdp.QueryResponse
+	if responses != nil {
+		proxy := make(chan *sdp.QueryResponse, cap(responses))
+		workerCh = proxy
+
+		go func() {
+			timer := time.NewTimer(executeQuerySafetyTimeout)
+			defer timer.Stop()
+
+			for {
+				select {
+				case r, ok := <-proxy:
+					if !ok {
+						close(responses)
+						return
+					}
+					responses <- r
+				case <-timer.C:
+					close(responses)
+					for range proxy {
+					}
+					return
+				}
+			}
+		}()
+	}
+
 	expandedMutex.RLock()
 	for q, adapter := range expanded {
 		wg.Add(1)
@@ -311,7 +362,7 @@ func (e *Engine) ExecuteQuery(ctx context.Context, query *sdp.Query, responses c
 				}
 
 				// Execute the query against the adapter
-				e.Execute(ctx, localQ, localAdapter, responses)
+				e.Execute(ctx, localQ, localAdapter, workerCh)
 			})
 		}()
 	}
@@ -320,6 +371,9 @@ func (e *Engine) ExecuteQuery(ctx context.Context, query *sdp.Query, responses c
 	waitGroupDone := make(chan struct{})
 	go func() {
 		wg.Wait()
+		if workerCh != nil {
+			close(workerCh)
+		}
 		close(waitGroupDone)
 	}()
 
@@ -332,7 +386,7 @@ func (e *Engine) ExecuteQuery(ctx context.Context, query *sdp.Query, responses c
 		// quickly now. We will check this though to make sure. This will wait
 		// until we reach Change Analysis SLO violation territory. If this is
 		// too quick, we are only spamming logs for nothing.
-		longRunningAdaptersTimeout := 2 * time.Minute
+		longRunningAdaptersTimeout := executeQueryLongRunningAdaptersTimeout
 
 		// Wait for the wait group, but ping the logs if it's taking
 		// too long
