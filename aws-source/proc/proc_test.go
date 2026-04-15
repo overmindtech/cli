@@ -176,6 +176,16 @@ func TestIsOptInRegionError(t *testing.T) {
 			err:            errors.New("No OpenIDConnect provider found"),
 			expectedResult: false,
 		},
+		{
+			name:           "context.DeadlineExceeded returns false",
+			err:            context.DeadlineExceeded,
+			expectedResult: false,
+		},
+		{
+			name:           "context.Canceled returns false",
+			err:            context.Canceled,
+			expectedResult: false,
+		},
 	}
 
 	for _, tt := range tests {
@@ -183,6 +193,105 @@ func TestIsOptInRegionError(t *testing.T) {
 			result := isOptInRegionError(tt.err)
 			if result != tt.expectedResult {
 				t.Errorf("isOptInRegionError() = %v, want %v for error: %v", result, tt.expectedResult, tt.err)
+			}
+		})
+	}
+}
+
+func TestIsTimeoutError(t *testing.T) {
+	tests := []struct {
+		name           string
+		err            error
+		expectedResult bool
+	}{
+		{
+			name:           "nil error returns false",
+			err:            nil,
+			expectedResult: false,
+		},
+		{
+			name:           "context.DeadlineExceeded returns true",
+			err:            context.DeadlineExceeded,
+			expectedResult: true,
+		},
+		{
+			name:           "wrapped context.DeadlineExceeded returns true",
+			err:            fmt.Errorf("operation error STS: GetCallerIdentity: %w", context.DeadlineExceeded),
+			expectedResult: true,
+		},
+		{
+			name:           "context.Canceled returns false",
+			err:            context.Canceled,
+			expectedResult: false,
+		},
+		{
+			name:           "wrapped context.Canceled returns false",
+			err:            fmt.Errorf("operation error STS: GetCallerIdentity: %w", context.Canceled),
+			expectedResult: false,
+		},
+		{
+			name:           "non-timeout error returns false",
+			err:            errors.New("some random error"),
+			expectedResult: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := isTimeoutError(tt.err)
+			if result != tt.expectedResult {
+				t.Errorf("isTimeoutError() = %v, want %v for error: %v", result, tt.expectedResult, tt.err)
+			}
+		})
+	}
+}
+
+func TestIsSkippableRegionError(t *testing.T) {
+	tests := []struct {
+		name           string
+		err            error
+		expectedResult bool
+	}{
+		{
+			name:           "nil error returns false",
+			err:            nil,
+			expectedResult: false,
+		},
+		{
+			name:           "context.DeadlineExceeded returns true (ENG-3665)",
+			err:            context.DeadlineExceeded,
+			expectedResult: true,
+		},
+		{
+			name:           "wrapped context.DeadlineExceeded returns true (ENG-3665)",
+			err:            fmt.Errorf("operation error STS: GetCallerIdentity: %w", context.DeadlineExceeded),
+			expectedResult: true,
+		},
+		{
+			name:           "context.Canceled returns false (parent cancellation, not region timeout)",
+			err:            context.Canceled,
+			expectedResult: false,
+		},
+		{
+			name: "opt-in region error returns true",
+			err: &mockAPIError{
+				code:    "InvalidIdentityToken",
+				message: "No OpenIDConnect provider found in your account",
+			},
+			expectedResult: true,
+		},
+		{
+			name:           "non-skippable error returns false",
+			err:            errors.New("some random error"),
+			expectedResult: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := isSkippableRegionError(tt.err)
+			if result != tt.expectedResult {
+				t.Errorf("isSkippableRegionError() = %v, want %v for error: %v", result, tt.expectedResult, tt.err)
 			}
 		})
 	}
@@ -237,6 +346,27 @@ func TestWrapRegionError(t *testing.T) {
 			name:         "unrelated error not wrapped",
 			err:          errors.New("some other AWS error"),
 			region:       "us-west-2",
+			shouldWrap:   false,
+			expectedText: "",
+		},
+		{
+			name:         "timeout error gets timeout-specific message",
+			err:          context.DeadlineExceeded,
+			region:       "me-south-1",
+			shouldWrap:   true,
+			expectedText: "unreachable (timeout)",
+		},
+		{
+			name:         "wrapped timeout error gets timeout-specific message",
+			err:          fmt.Errorf("operation error STS: GetCallerIdentity: %w", context.DeadlineExceeded),
+			region:       "me-south-1",
+			shouldWrap:   true,
+			expectedText: "unreachable (timeout)",
+		},
+		{
+			name:         "canceled error is not wrapped (parent cancellation, not region timeout)",
+			err:          context.Canceled,
+			region:       "me-south-1",
 			shouldWrap:   false,
 			expectedText: "",
 		},

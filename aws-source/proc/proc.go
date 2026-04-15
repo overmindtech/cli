@@ -46,6 +46,8 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+	"go.opentelemetry.io/otel/attribute"
+	"go.opentelemetry.io/otel/trace"
 )
 
 // This package contains a few functions needed by the CLI to load this in-proc.
@@ -82,20 +84,23 @@ func ConfigFromViper() ([]aws.Config, error) {
 	return CreateAWSConfigs(authConfig)
 }
 
-// isOptInRegionError checks if an error indicates an opt-in region that is not enabled.
-// This typically occurs when trying to authenticate with IRSA in a region that hasn't
-// been enabled in the AWS account. These errors should not cause source initialization
-// to fail - the region should simply be skipped.
+// isTimeoutError checks if an error is a context deadline exceeded.
+// A single unresponsive region (e.g. me-south-1 being decommissioned) must
+// not take down the whole source — see ENG-3665.
+func isTimeoutError(err error) bool {
+	return err != nil && errors.Is(err, context.DeadlineExceeded)
+}
+
+// isOptInRegionError checks if an error indicates an opt-in region that is not
+// enabled in the AWS account (InvalidIdentityToken + OIDC).
 func isOptInRegionError(err error) bool {
 	if err == nil {
 		return false
 	}
 
-	// Check for the InvalidIdentityToken error code from STS AssumeRoleWithWebIdentity
 	var apiErr smithy.APIError
 	if errors.As(err, &apiErr) {
 		if apiErr.ErrorCode() == "InvalidIdentityToken" {
-			// Additional validation: check if it's specifically about OIDC provider
 			errMsg := err.Error()
 			if strings.Contains(errMsg, "No OpenIDConnect provider found") {
 				return true
@@ -106,13 +111,22 @@ func isOptInRegionError(err error) bool {
 	return false
 }
 
+// isSkippableRegionError checks if an error indicates a region that cannot be
+// reached and should be skipped rather than failing the entire source.
+func isSkippableRegionError(err error) bool {
+	return isTimeoutError(err) || isOptInRegionError(err)
+}
+
 // wrapRegionError wraps misleading AWS errors with more helpful context
 func wrapRegionError(err error, region string) error {
 	if err == nil {
 		return nil
 	}
 
-	// Check for opt-in region errors and provide helpful context
+	if isTimeoutError(err) {
+		return fmt.Errorf("%w. Region '%s' is unreachable (timeout); it may be decommissioned or experiencing an outage", err, region)
+	}
+
 	if isOptInRegionError(err) {
 		return fmt.Errorf("%w. This error often occurs when region '%s' is not enabled in the target AWS account", err, region)
 	}
@@ -322,9 +336,8 @@ func InitializeAwsSourceAdapters(ctx context.Context, e *discovery.Engine, confi
 					"region": cfg.Region,
 				}
 
-				// Check if this is an opt-in region error
-				if isOptInRegionError(err) {
-					// This region is not enabled in the account - skip it but don't fail
+				// Check if this is a skippable region error (timeout or opt-in)
+				if isSkippableRegionError(err) {
 					wrappedErr := wrapRegionError(err, cfg.Region)
 					skippedRegionsMu.Lock()
 					skippedRegions = append(skippedRegions, skippedRegion{
@@ -332,8 +345,23 @@ func InitializeAwsSourceAdapters(ctx context.Context, e *discovery.Engine, confi
 						err:    wrappedErr,
 					})
 					skippedRegionsMu.Unlock()
-					log.WithError(wrappedErr).WithFields(lf).Warn("Skipping region - not enabled in account")
-					return nil // Don't fail the pool for opt-in regions
+
+					reason := "opt-in region not enabled"
+					if isTimeoutError(err) {
+						reason = "timeout"
+						log.WithError(wrappedErr).WithFields(lf).Warn("Skipping region - unreachable (timeout)")
+					} else {
+						log.WithError(wrappedErr).WithFields(lf).Warn("Skipping region - not enabled in account")
+					}
+
+					span := trace.SpanFromContext(ctx)
+					span.AddEvent("ovm.adapter.regionSkipped", trace.WithAttributes(
+						attribute.String("ovm.adapter.region", cfg.Region),
+						attribute.String("ovm.adapter.skipReason", reason),
+						attribute.String("ovm.adapter.error", wrappedErr.Error()),
+					))
+
+					return nil // Don't fail the pool for skippable regions
 				}
 
 				// Wrap misleading OIDC errors with helpful region enablement context
@@ -645,7 +673,7 @@ func InitializeAwsSourceAdapters(ctx context.Context, e *discovery.Engine, confi
 		log.WithFields(log.Fields{
 			"skipped_regions": skippedRegionNames,
 			"count":           len(skippedRegions),
-		}).Warn("Some regions were skipped because they are not enabled in the AWS account. The source will operate normally with the remaining regions.")
+		}).Warn("Some regions were skipped because they are unreachable or not enabled in the AWS account. The source will operate normally with the remaining regions.")
 	}
 
 	log.Debug("Sources initialized")
