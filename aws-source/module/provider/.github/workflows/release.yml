@@ -46,7 +46,7 @@ jobs:
         uses: goreleaser/goreleaser-action@v7
         with:
           # renovate: datasource=github-releases depName=goreleaser/goreleaser
-          version: "v2.15.2"
+          version: "v2.15.3"
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
