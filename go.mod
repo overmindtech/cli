@@ -13,34 +13,34 @@ require (
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.11-20260415201107-50325440f8f2.1
 	buf.build/go/protovalidate v1.1.3
 	charm.land/lipgloss/v2 v2.0.3
-	cloud.google.com/go/aiplatform v1.123.0
+	cloud.google.com/go/aiplatform v1.124.0
 	cloud.google.com/go/auth v0.20.0
 	cloud.google.com/go/auth/oauth2adapt v0.2.8
-	cloud.google.com/go/bigquery v1.75.0
+	cloud.google.com/go/bigquery v1.76.0
 	cloud.google.com/go/bigtable v1.46.0
-	cloud.google.com/go/certificatemanager v1.11.0
-	cloud.google.com/go/compute v1.59.0
+	cloud.google.com/go/certificatemanager v1.12.0
+	cloud.google.com/go/compute v1.60.0
 	cloud.google.com/go/compute/metadata v0.9.0
-	cloud.google.com/go/container v1.48.0
-	cloud.google.com/go/dataplex v1.31.0
-	cloud.google.com/go/dataproc/v2 v2.18.0
-	cloud.google.com/go/eventarc v1.20.0
-	cloud.google.com/go/filestore v1.12.0
-	cloud.google.com/go/functions v1.21.0
-	cloud.google.com/go/iam v1.8.0
-	cloud.google.com/go/kms v1.28.0
-	cloud.google.com/go/logging v1.15.0
-	cloud.google.com/go/monitoring v1.26.0
-	cloud.google.com/go/networksecurity v0.13.0
-	cloud.google.com/go/orgpolicy v1.17.0
-	cloud.google.com/go/redis v1.20.0
-	cloud.google.com/go/resourcemanager v1.12.0
-	cloud.google.com/go/run v1.18.0
-	cloud.google.com/go/secretmanager v1.18.0
-	cloud.google.com/go/securitycentermanagement v1.3.0
-	cloud.google.com/go/spanner v1.89.0
-	cloud.google.com/go/storage v1.62.0
-	cloud.google.com/go/storagetransfer v1.15.0
+	cloud.google.com/go/container v1.49.0
+	cloud.google.com/go/dataplex v1.32.0
+	cloud.google.com/go/dataproc/v2 v2.19.0
+	cloud.google.com/go/eventarc v1.21.0
+	cloud.google.com/go/filestore v1.13.0
+	cloud.google.com/go/functions v1.22.0
+	cloud.google.com/go/iam v1.9.0
+	cloud.google.com/go/kms v1.29.0
+	cloud.google.com/go/logging v1.16.0
+	cloud.google.com/go/monitoring v1.27.0
+	cloud.google.com/go/networksecurity v0.14.0
+	cloud.google.com/go/orgpolicy v1.18.0
+	cloud.google.com/go/redis v1.21.0
+	cloud.google.com/go/resourcemanager v1.13.0
+	cloud.google.com/go/run v1.19.0
+	cloud.google.com/go/secretmanager v1.19.0
+	cloud.google.com/go/securitycentermanagement v1.4.0
+	cloud.google.com/go/spanner v1.90.0
+	cloud.google.com/go/storage v1.62.1
+	cloud.google.com/go/storagetransfer v1.16.0
 	connectrpc.com/connect v1.18.1 // v1.19.0 was faulty, wait until it is above this version
 	connectrpc.com/otelconnect v0.9.0
 	github.com/1password/onepassword-sdk-go v0.4.0
@@ -193,8 +193,8 @@ require (
 	golang.org/x/sync v0.20.0
 	golang.org/x/text v0.36.0
 	gonum.org/v1/gonum v0.17.0
-	google.golang.org/api v0.275.0
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260406210006-6f92a3bedf2d
+	google.golang.org/api v0.276.0
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260414002931-afd174a4e478
 	google.golang.org/grpc v1.80.0
 	google.golang.org/protobuf v1.36.11
 	gopkg.in/ini.v1 v1.67.1
