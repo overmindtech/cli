@@ -10,9 +10,9 @@ replace github.com/google/cel-go => github.com/google/cel-go v0.22.1
 
 require (
 	atomicgo.dev/keyboard v0.2.9
-	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.11-20260209202127-80ab13bee0bf.1
+	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.11-20260415201107-50325440f8f2.1
 	buf.build/go/protovalidate v1.1.3
-	charm.land/lipgloss/v2 v2.0.2
+	charm.land/lipgloss/v2 v2.0.3
 	cloud.google.com/go/aiplatform v1.123.0
 	cloud.google.com/go/auth v0.20.0
 	cloud.google.com/go/auth/oauth2adapt v0.2.8
@@ -100,7 +100,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.25
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.68.4
 	github.com/aws/aws-sdk-go-v2/service/sts v1.41.10
-	github.com/aws/smithy-go v1.24.3
+	github.com/aws/smithy-go v1.25.0
 	github.com/bombsimon/logrusr/v4 v4.1.0
 	github.com/bradleyfalzon/ghinstallation/v2 v2.18.0
 	github.com/brianvoe/gofakeit/v7 v7.14.1
@@ -114,10 +114,10 @@ require (
 	github.com/google/btree v1.1.3
 	github.com/google/go-github/v84 v84.0.0
 	github.com/google/uuid v1.6.0
-	github.com/googleapis/gax-go/v2 v2.21.0
+	github.com/googleapis/gax-go/v2 v2.22.0
 	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
 	github.com/gorilla/mux v1.8.1
-	github.com/harness/harness-go-sdk v0.7.18
+	github.com/harness/harness-go-sdk v0.7.19
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/hashicorp/hcl/v2 v2.24.0
 	github.com/hashicorp/terraform-config-inspect v0.0.0-20260224005459-813a97530220
@@ -146,15 +146,15 @@ require (
 	github.com/neo4j/neo4j-go-driver/v6 v6.0.0
 	github.com/onsi/ginkgo/v2 v2.28.1
 	github.com/onsi/gomega v1.39.1
-	github.com/openai/openai-go/v3 v3.31.0
+	github.com/openai/openai-go/v3 v3.32.0
 	github.com/openrdap/rdap v0.9.2-0.20240517203139-eb57b3a8dedd
 	github.com/overmindtech/otelpgx v0.10.1-0.20260303210427-65bf1016045e
 	github.com/overmindtech/pterm v0.0.0-20240919144758-04d94ccb2297
-	github.com/pborman/ansi v1.0.0
+	github.com/pborman/ansi v1.1.0
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
-	github.com/posthog/posthog-go v1.11.2
+	github.com/posthog/posthog-go v1.11.3
 	github.com/qhenkart/anthropic-tokenizer-go v0.0.0-20231011194518-5519949e0faf
-	github.com/resend/resend-go/v3 v3.3.0
+	github.com/resend/resend-go/v3 v3.5.0
 	github.com/riverqueue/river v0.34.0
 	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.34.0
 	github.com/riverqueue/river/rivertype v0.34.0
@@ -174,7 +174,7 @@ require (
 	github.com/uptrace/opentelemetry-go-extra/otellogrus v0.3.2
 	github.com/wk8/go-ordered-map/v2 v2.1.8
 	github.com/xiam/dig v0.0.0-20191116195832-893b5fb5093b
-	github.com/zclconf/go-cty v1.18.0
+	github.com/zclconf/go-cty v1.18.1
 	go.etcd.io/bbolt v1.4.3
 	go.opentelemetry.io/contrib/detectors/aws/ec2/v2 v2.0.0-20250901115419-474a7992e57c
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.68.0
@@ -253,10 +253,10 @@ require (
 	github.com/buger/jsonparser v1.1.2 // indirect
 	github.com/cenkalti/backoff/v4 v4.3.0 // indirect
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
-	github.com/charmbracelet/colorprofile v0.4.2 // indirect
+	github.com/charmbracelet/colorprofile v0.4.3 // indirect
 	github.com/charmbracelet/lipgloss v1.1.1-0.20250404203927-76690c660834 // indirect; being pulled by glamour, this will be resolved in https://github.com/charmbracelet/glamour/pull/408
 	github.com/charmbracelet/ultraviolet v0.0.0-20251205161215-1948445e3318 // indirect
-	github.com/charmbracelet/x/ansi v0.11.6 // indirect
+	github.com/charmbracelet/x/ansi v0.11.7 // indirect
 	github.com/charmbracelet/x/cellbuf v0.0.15 // indirect
 	github.com/charmbracelet/x/exp/slice v0.0.0-20250417172821-98fd948af1b1 // indirect
 	github.com/charmbracelet/x/term v0.2.2 // indirect
@@ -355,11 +355,11 @@ require (
 	github.com/lestrrat-go/jwx/v3 v3.0.13 // indirect
 	github.com/lestrrat-go/option v1.0.1 // indirect
 	github.com/lestrrat-go/option/v2 v2.0.0 // indirect
-	github.com/lucasb-eyer/go-colorful v1.3.0 // indirect
+	github.com/lucasb-eyer/go-colorful v1.4.0 // indirect
 	github.com/mailru/easyjson v0.9.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/mattn/go-runewidth v0.0.19 // indirect
+	github.com/mattn/go-runewidth v0.0.23 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.27 // indirect
 	github.com/minio/highwayhash v1.0.4-0.20251030100505-070ab1a87a76 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
