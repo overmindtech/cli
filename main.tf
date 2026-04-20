@@ -38,7 +38,7 @@ provider "google" {
 }
 
 provider "google" {
-  alias = "dogfood"
+  alias   = "dogfood"
   project = "ovm-dogfood"
   region  = "europe-west2"
   zone    = "europe-west2-a"
@@ -52,7 +52,7 @@ variable "bucket_postfix" {
 
 module "bucket" {
   source  = "terraform-aws-modules/s3-bucket/aws"
-  version = "~> 4.0"
+  version = "~> 5.0"
 
   bucket_prefix = "cli-test${var.bucket_postfix}"
 
