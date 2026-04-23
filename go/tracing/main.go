@@ -219,9 +219,17 @@ func InitTracerWithUpstreams(component, honeycombApiKey, sentryDSN string, opts 
 // because it causes test suites to hang when no collector is reachable (the
 // common case in CI). The 60s export timeout aligns with the OTLP HTTP
 // exporter's 1-minute retry budget.
+//
+// MaxExportBatchSize is lowered from the SDK default of 512 to 128 so that a
+// batch containing a handful of large LLM-payload spans stays well under the
+// otelcol-node HTTP receiver's body-size limit. api-server attaches full
+// prompts/responses/tool outputs to spans which can each run to hundreds of
+// KB, and 512-span batches routinely tripped the collector's 20 MiB default
+// cap with "400 Bad Request: http: request body too large" (ENG-3936).
 var batcherOpts = []sdktrace.BatchSpanProcessorOption{
 	sdktrace.WithMaxQueueSize(8192),
 	sdktrace.WithExportTimeout(60 * time.Second),
+	sdktrace.WithMaxExportBatchSize(128),
 }
 
 func InitTracer(component string, opts ...otlptracehttp.Option) error {

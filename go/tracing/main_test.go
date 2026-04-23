@@ -67,18 +67,19 @@ func TestErrorHandlerRegistered(t *testing.T) {
 	}
 }
 
-func TestBatcherOptsQueueSize(t *testing.T) {
-	found := false
+func TestBatcherOpts(t *testing.T) {
+	var o sdktrace.BatchSpanProcessorOptions
 	for _, opt := range batcherOpts {
-		// Apply each option to a zero-value struct and check the result.
-		var o sdktrace.BatchSpanProcessorOptions
 		opt(&o)
-		if o.MaxQueueSize == 8192 {
-			found = true
-		}
 	}
-	if !found {
-		t.Error("batcherOpts should set MaxQueueSize to 8192")
+
+	if o.MaxQueueSize != 8192 {
+		t.Errorf("batcherOpts should set MaxQueueSize to 8192, got %d", o.MaxQueueSize)
+	}
+	// Keep this in lock-step with the collector's max_request_body_size; see
+	// ENG-3936 and the comment on batcherOpts in main.go.
+	if o.MaxExportBatchSize != 128 {
+		t.Errorf("batcherOpts should set MaxExportBatchSize to 128, got %d", o.MaxExportBatchSize)
 	}
 }
 
