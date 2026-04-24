@@ -214,7 +214,8 @@ func transitGatewayRouteTableAssociationItemMapper(query, scope string, awsItem 
 			})
 		case types.TransitGatewayAttachmentResourceTypeVpnConcentrator,
 			types.TransitGatewayAttachmentResourceTypeConnect,
-			types.TransitGatewayAttachmentResourceTypeNetworkFunction:
+			types.TransitGatewayAttachmentResourceTypeNetworkFunction,
+			types.TransitGatewayAttachmentResourceTypeClientVpn:
 			// No Overmind adapter for these resource types; attachment link above is sufficient.
 		}
 	}
