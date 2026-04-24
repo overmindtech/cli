@@ -62,6 +62,8 @@ func TestDBforPostgreSQLDatabaseIntegration(t *testing.T) {
 	// Generate unique PostgreSQL server name (must be globally unique, lowercase, no special chars)
 	postgreSQLServerName := generatePostgreSQLServerName(integrationTestPostgreSQLServerName)
 
+	setupCompleted := false
+
 	t.Run("Setup", func(t *testing.T) {
 		ctx := t.Context()
 
@@ -94,9 +96,15 @@ func TestDBforPostgreSQLDatabaseIntegration(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed waiting for PostgreSQL database to be available: %v", err)
 		}
+
+		setupCompleted = true
 	})
 
 	t.Run("Run", func(t *testing.T) {
+		if !setupCompleted {
+			t.Skip("Skipping Run: Setup did not complete successfully")
+		}
+
 		t.Run("GetPostgreSQLDatabase", func(t *testing.T) {
 			ctx := t.Context()
 

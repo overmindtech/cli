@@ -64,6 +64,8 @@ func TestNetworkFlowLogIntegration(t *testing.T) {
 		t.Fatalf("Failed to create Flow Logs client: %v", err)
 	}
 
+	setupCompleted := false
+
 	t.Run("Setup", func(t *testing.T) {
 		ctx := t.Context()
 
@@ -109,17 +111,13 @@ func TestNetworkFlowLogIntegration(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed waiting for flow log: %v", err)
 		}
+
+		setupCompleted = true
 	})
 
 	t.Run("Run", func(t *testing.T) {
-		ctx := t.Context()
-		_, checkErr := flowLogsSDKClient.Get(ctx, integrationTestNetworkWatcherRG, integrationTestNetworkWatcherName, integrationTestFlowLogName, nil)
-		if checkErr != nil {
-			var respErr *azcore.ResponseError
-			if errors.As(checkErr, &respErr) && respErr.StatusCode == http.StatusNotFound {
-				t.Skipf("Flow log %s does not exist (Setup may have been skipped). Skipping Run tests.", integrationTestFlowLogName)
-			}
-			t.Fatalf("Failed preflight check for flow log %s: %v", integrationTestFlowLogName, checkErr)
+		if !setupCompleted {
+			t.Skip("Skipping Run: Setup did not complete successfully")
 		}
 
 		t.Run("GetFlowLog", func(t *testing.T) {
