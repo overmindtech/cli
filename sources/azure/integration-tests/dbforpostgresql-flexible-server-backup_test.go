@@ -57,6 +57,8 @@ func TestDBforPostgreSQLFlexibleServerBackupIntegration(t *testing.T) {
 
 	pgServerName := generatePostgreSQLServerName(integrationTestPGBackupServerName)
 
+	setupCompleted := false
+
 	t.Run("Setup", func(t *testing.T) {
 		ctx := t.Context()
 
@@ -84,9 +86,15 @@ func TestDBforPostgreSQLFlexibleServerBackupIntegration(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed waiting for backup to be available: %v", err)
 		}
+
+		setupCompleted = true
 	})
 
 	t.Run("Run", func(t *testing.T) {
+		if !setupCompleted {
+			t.Skip("Skipping Run: Setup did not complete successfully")
+		}
+
 		t.Run("GetPostgreSQLFlexibleServerBackup", func(t *testing.T) {
 			ctx := t.Context()
 
