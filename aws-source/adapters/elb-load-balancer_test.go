@@ -2,6 +2,7 @@ package adapters
 
 import (
 	"context"
+	"fmt"
 	"testing"
 	"time"
 
@@ -14,23 +15,52 @@ import (
 type mockElbClient struct{}
 
 func (m mockElbClient) DescribeTags(ctx context.Context, params *elb.DescribeTagsInput, optFns ...func(*elb.Options)) (*elb.DescribeTagsOutput, error) {
-	return &elb.DescribeTagsOutput{
-		TagDescriptions: []types.TagDescription{
-			{
-				LoadBalancerName: new("a8c3c8851f0df43fda89797c8e941a91"),
-				Tags: []types.Tag{
-					{
-						Key:   new("foo"),
-						Value: new("bar"),
-					},
+	if len(params.LoadBalancerNames) > elbDescribeTagsMaxItems {
+		return nil, fmt.Errorf("cannot have more than %v resources described", elbDescribeTagsMaxItems)
+	}
+
+	tagDescriptions := make([]types.TagDescription, 0, len(params.LoadBalancerNames))
+	for _, name := range params.LoadBalancerNames {
+		tagDescriptions = append(tagDescriptions, types.TagDescription{
+			LoadBalancerName: &name,
+			Tags: []types.Tag{
+				{
+					Key:   new("foo"),
+					Value: new("bar"),
 				},
 			},
-		},
+		})
+	}
+
+	return &elb.DescribeTagsOutput{
+		TagDescriptions: tagDescriptions,
 	}, nil
 }
 
 func (m mockElbClient) DescribeLoadBalancers(ctx context.Context, params *elb.DescribeLoadBalancersInput, optFns ...func(*elb.Options)) (*elb.DescribeLoadBalancersOutput, error) {
 	return nil, nil
+}
+
+func TestElbGetTagsMapBatching(t *testing.T) {
+	t.Parallel()
+
+	names := make([]string, 0, 25)
+	for i := range 25 {
+		names = append(names, fmt.Sprintf("load-balancer-%02d", i))
+	}
+
+	tagsMap := elbGetTagsMap(context.Background(), mockElbClient{}, names)
+
+	if len(tagsMap) != 25 {
+		t.Fatalf("expected 25 tag entries, got %v", len(tagsMap))
+	}
+
+	for _, name := range names {
+		tags := elbTagsToMap(tagsMap[name])
+		if tags["foo"] != "bar" {
+			t.Errorf("expected tag foo for %v to be bar, got %q", name, tags["foo"])
+		}
+	}
 }
 
 func TestELBv2LoadBalancerOutputMapper(t *testing.T) {
@@ -128,7 +158,6 @@ func TestELBv2LoadBalancerOutputMapper(t *testing.T) {
 	}
 
 	items, err := elbLoadBalancerOutputMapper(context.Background(), mockElbClient{}, "foo", nil, output)
-
 	if err != nil {
 		t.Error(err)
 	}
