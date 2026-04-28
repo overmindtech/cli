@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/url"
+	"sync"
 
 	elbv2 "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2/types"
@@ -30,32 +31,53 @@ func elbv2TagsToMap(tags []types.Tag) map[string]string {
 	return m
 }
 
+// AWS DescribeTags API limits requests to 20 resources per call.
+// See: https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_DescribeTags.html
+const elbv2DescribeTagsMaxItems = 20
+
 // Gets a map of ARN to tags (in map[string]string format) for the given ARNs
 func elbv2GetTagsMap(ctx context.Context, client elbv2Client, arns []string) map[string]map[string]string {
 	tagsMap := make(map[string]map[string]string)
 
-	if len(arns) > 0 {
-		tagsOut, err := client.DescribeTags(ctx, &elbv2.DescribeTagsInput{
-			ResourceArns: arns,
-		})
-		if err != nil {
-			tags := HandleTagsError(ctx, err)
-
-			// Set these tags for all ARNs
-			for _, arn := range arns {
-				tagsMap[arn] = tags
-			}
-
-			return tagsMap
-		}
-
-		for _, tagDescription := range tagsOut.TagDescriptions {
-			if tagDescription.ResourceArn != nil {
-				tagsMap[*tagDescription.ResourceArn] = elbv2TagsToMap(tagDescription.Tags)
-			}
-		}
+	if len(arns) == 0 {
+		return tagsMap
 	}
 
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+
+	for i := 0; i < len(arns); i += elbv2DescribeTagsMaxItems {
+		end := min(i+elbv2DescribeTagsMaxItems, len(arns))
+		chunk := arns[i:end]
+
+		wg.Add(1)
+		go func(chunk []string) {
+			defer wg.Done()
+
+			tagsOut, err := client.DescribeTags(ctx, &elbv2.DescribeTagsInput{
+				ResourceArns: chunk,
+			})
+
+			mu.Lock()
+			defer mu.Unlock()
+
+			if err != nil {
+				tags := HandleTagsError(ctx, err)
+				for _, arn := range chunk {
+					tagsMap[arn] = tags
+				}
+				return
+			}
+
+			for _, tagDescription := range tagsOut.TagDescriptions {
+				if tagDescription.ResourceArn != nil {
+					tagsMap[*tagDescription.ResourceArn] = elbv2TagsToMap(tagDescription.Tags)
+				}
+			}
+		}(chunk)
+	}
+
+	wg.Wait()
 	return tagsMap
 }
 

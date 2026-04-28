@@ -2,6 +2,7 @@ package adapters
 
 import (
 	"context"
+	"sync"
 
 	elb "github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing"
 	"github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing/types"
@@ -27,6 +28,65 @@ func elbTagsToMap(tags []types.Tag) map[string]string {
 	return m
 }
 
+// AWS DescribeTags API limits requests to 20 load balancers per call.
+// See: https://docs.aws.amazon.com/elasticloadbalancing/latest/APIReference/API_DescribeTags.html
+const elbDescribeTagsMaxItems = 20
+
+func elbGetTagsMap(ctx context.Context, client elbClient, loadBalancerNames []string) map[string][]types.Tag {
+	tagsMap := make(map[string][]types.Tag)
+	if len(loadBalancerNames) == 0 {
+		return tagsMap
+	}
+
+	var mu sync.Mutex
+	var wg sync.WaitGroup
+
+	for i := 0; i < len(loadBalancerNames); i += elbDescribeTagsMaxItems {
+		end := min(i+elbDescribeTagsMaxItems, len(loadBalancerNames))
+		chunk := loadBalancerNames[i:end]
+
+		wg.Add(1)
+		go func(chunk []string) {
+			defer wg.Done()
+
+			tagsOut, err := client.DescribeTags(ctx, &elb.DescribeTagsInput{
+				LoadBalancerNames: chunk,
+			})
+
+			mu.Lock()
+			defer mu.Unlock()
+
+			if err != nil {
+				tags := HandleTagsError(ctx, err)
+				for _, loadBalancerName := range chunk {
+					tagsMap[loadBalancerName] = tagsToELBTags(tags)
+				}
+				return
+			}
+
+			for _, tagDesc := range tagsOut.TagDescriptions {
+				if tagDesc.LoadBalancerName != nil {
+					tagsMap[*tagDesc.LoadBalancerName] = tagDesc.Tags
+				}
+			}
+		}(chunk)
+	}
+
+	wg.Wait()
+	return tagsMap
+}
+
+func tagsToELBTags(tags map[string]string) []types.Tag {
+	elbTags := make([]types.Tag, 0, len(tags))
+	for key, value := range tags {
+		elbTags = append(elbTags, types.Tag{
+			Key:   &key,
+			Value: &value,
+		})
+	}
+	return elbTags
+}
+
 func elbLoadBalancerOutputMapper(ctx context.Context, client elbClient, scope string, _ *elb.DescribeLoadBalancersInput, output *elb.DescribeLoadBalancersOutput) ([]*sdp.Item, error) {
 	items := make([]*sdp.Item, 0)
 
@@ -38,25 +98,10 @@ func elbLoadBalancerOutputMapper(ctx context.Context, client elbClient, scope st
 	}
 
 	// Map of load balancer name to tags
-	tagsMap := make(map[string][]types.Tag)
-	if len(loadBalancerNames) > 0 {
-		// Get all tags for all load balancers in this output
-		tagsOut, err := client.DescribeTags(ctx, &elb.DescribeTagsInput{
-			LoadBalancerNames: loadBalancerNames,
-		})
-
-		if err == nil {
-			for _, tagDesc := range tagsOut.TagDescriptions {
-				if tagDesc.LoadBalancerName != nil {
-					tagsMap[*tagDesc.LoadBalancerName] = tagDesc.Tags
-				}
-			}
-		}
-	}
+	tagsMap := elbGetTagsMap(ctx, client, loadBalancerNames)
 
 	for _, desc := range output.LoadBalancerDescriptions {
 		attrs, err := ToAttributesWithExclude(desc)
-
 		if err != nil {
 			return nil, err
 		}
@@ -184,7 +229,7 @@ func NewELBLoadBalancerAdapter(client elbClient, accountID string, region string
 		AccountID:       accountID,
 		ItemType:        "elb-load-balancer",
 		AdapterMetadata: elbLoadBalancerAdapterMetadata,
-		cache:        cache,
+		cache:           cache,
 		DescribeFunc: func(ctx context.Context, client elbClient, input *elb.DescribeLoadBalancersInput) (*elb.DescribeLoadBalancersOutput, error) {
 			return client.DescribeLoadBalancers(ctx, input)
 		},
