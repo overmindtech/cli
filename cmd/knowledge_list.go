@@ -25,7 +25,8 @@ var knowledgeListCmd = &cobra.Command{
 
 func KnowledgeList(cmd *cobra.Command, args []string) error {
 	startDir := viper.GetString("dir")
-	output, err := renderKnowledgeList(startDir)
+	explicitDirs := viper.GetStringSlice("knowledge-dir")
+	output, err := renderKnowledgeList(startDir, explicitDirs)
 	fmt.Print(output)
 	if err != nil {
 		return err
@@ -35,12 +36,13 @@ func KnowledgeList(cmd *cobra.Command, args []string) error {
 
 // renderKnowledgeList handles the knowledge list logic and returns formatted output.
 // This is separated from the command for testability.
-func renderKnowledgeList(startDir string) (string, error) {
+// If explicitDirs is provided, uses those directories; otherwise falls back to auto-discovery.
+func renderKnowledgeList(startDir string, explicitDirs []string) (string, error) {
 	var output strings.Builder
 
-	knowledgeDir := knowledge.FindKnowledgeDir(startDir)
+	knowledgeDirs := knowledge.ResolveKnowledgeDirs(startDir, explicitDirs)
 
-	if knowledgeDir == "" {
+	if len(knowledgeDirs) == 0 {
 		output.WriteString(pterm.Info.Sprint("No .overmind/knowledge/ directory found from current location\n\n"))
 		output.WriteString("Knowledge files help Overmind understand your infrastructure context.\n")
 		output.WriteString("Create a .overmind/knowledge/ directory to add knowledge files.\n")
@@ -48,26 +50,50 @@ func renderKnowledgeList(startDir string) (string, error) {
 		return output.String(), nil
 	}
 
-	files, warnings := knowledge.Discover(knowledgeDir)
+	files, warnings := knowledge.Discover(knowledgeDirs...)
 
-	// Show resolved directory
-	output.WriteString(pterm.Info.Sprintf("Knowledge directory: %s\n\n", knowledgeDir))
+	// Show resolved directories
+	if len(knowledgeDirs) == 1 {
+		output.WriteString(pterm.Info.Sprintf("Knowledge directory: %s\n\n", knowledgeDirs[0]))
+	} else {
+		output.WriteString(pterm.Info.Sprint("Knowledge directories (later overrides earlier):\n"))
+		for i, dir := range knowledgeDirs {
+			output.WriteString(pterm.Info.Sprintf("  %d. %s\n", i+1, dir))
+		}
+		output.WriteString("\n")
+	}
 
 	// Show valid files
 	if len(files) > 0 {
 		output.WriteString(pterm.DefaultHeader.Sprint("Valid Knowledge Files") + "\n\n")
 
-		// Create table data
-		tableData := pterm.TableData{
-			{"Name", "Description", "File Path"},
+		// Create table data with Source Dir column when multiple directories
+		var tableData pterm.TableData
+		if len(knowledgeDirs) > 1 {
+			tableData = pterm.TableData{
+				{"Name", "Description", "File Path", "Source Dir"},
+			}
+		} else {
+			tableData = pterm.TableData{
+				{"Name", "Description", "File Path"},
+			}
 		}
 
 		for _, f := range files {
-			tableData = append(tableData, []string{
-				f.Name,
-				truncateDescription(f.Description, 60),
-				f.FileName,
-			})
+			if len(knowledgeDirs) > 1 {
+				tableData = append(tableData, []string{
+					f.Name,
+					truncateDescription(f.Description, 60),
+					f.FileName,
+					f.SourceDir,
+				})
+			} else {
+				tableData = append(tableData, []string{
+					f.Name,
+					truncateDescription(f.Description, 60),
+					f.FileName,
+				})
+			}
 		}
 
 		table, err := pterm.DefaultTable.WithHasHeader().WithData(tableData).Srender()
@@ -108,4 +134,5 @@ func init() {
 
 	knowledgeListCmd.Flags().String("dir", ".", "Directory to start searching from")
 	cobra.CheckErr(knowledgeListCmd.Flags().MarkHidden("dir"))
+	knowledgeListCmd.Flags().StringSlice("knowledge-dir", []string{}, "Knowledge directory paths to load. Can be specified multiple times or comma-separated. If not specified, auto-discovers .overmind/knowledge/ by walking up from the current directory.")
 }
