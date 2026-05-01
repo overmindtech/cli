@@ -31,7 +31,7 @@ const (
 	integrationTestPrimaryServerName   = "ovm-integ-test-primary-server"
 	integrationTestSecondaryServerName = "ovm-integ-test-secondary-server"
 	integrationTestPrimaryLocation     = "westus2"
-	integrationTestSecondaryLocation   = "eastus"
+	integrationTestSecondaryLocation   = "centralus"
 	integrationTestFailoverGroupDBName = "ovm-integ-test-fg-database"
 )
 

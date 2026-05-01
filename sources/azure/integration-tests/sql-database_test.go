@@ -61,6 +61,7 @@ func TestSQLDatabaseIntegration(t *testing.T) {
 
 	// Generate unique SQL server name (must be globally unique, lowercase, no special chars)
 	sqlServerName := generateSQLServerName(integrationTestSQLServerName)
+	setupCompleted := false
 
 	t.Run("Setup", func(t *testing.T) {
 		ctx := t.Context()
@@ -94,9 +95,14 @@ func TestSQLDatabaseIntegration(t *testing.T) {
 		if err != nil {
 			t.Fatalf("Failed waiting for SQL database to be available: %v", err)
 		}
+		setupCompleted = true
 	})
 
 	t.Run("Run", func(t *testing.T) {
+		if !setupCompleted {
+			t.Skip("Skipping Run: Setup did not complete successfully")
+		}
+
 		t.Run("GetSQLDatabase", func(t *testing.T) {
 			ctx := t.Context()
 
