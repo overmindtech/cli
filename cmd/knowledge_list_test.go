@@ -11,7 +11,7 @@ import (
 func TestRenderKnowledgeList_NoKnowledgeDir(t *testing.T) {
 	dir := t.TempDir()
 
-	output, err := renderKnowledgeList(dir)
+	output, err := renderKnowledgeList(dir, []string{})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -30,12 +30,12 @@ func TestRenderKnowledgeList_NoKnowledgeDir(t *testing.T) {
 func TestRenderKnowledgeList_EmptyKnowledgeDir(t *testing.T) {
 	dir := t.TempDir()
 	knowledgeDir := filepath.Join(dir, ".overmind", "knowledge")
-	err := os.MkdirAll(knowledgeDir, 0755)
+	err := os.MkdirAll(knowledgeDir, 0o755)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	output, err := renderKnowledgeList(dir)
+	output, err := renderKnowledgeList(dir, []string{})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -54,7 +54,7 @@ func TestRenderKnowledgeList_EmptyKnowledgeDir(t *testing.T) {
 func TestRenderKnowledgeList_ValidFiles(t *testing.T) {
 	dir := t.TempDir()
 	knowledgeDir := filepath.Join(dir, ".overmind", "knowledge")
-	err := os.MkdirAll(knowledgeDir, 0755)
+	err := os.MkdirAll(knowledgeDir, 0o755)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -69,7 +69,7 @@ Content here.
 `)
 
 	subdir := filepath.Join(knowledgeDir, "cloud")
-	err = os.Mkdir(subdir, 0755)
+	err = os.Mkdir(subdir, 0o755)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -81,7 +81,7 @@ description: GCP Compute Engine guidelines
 Content here.
 `)
 
-	output, err := renderKnowledgeList(dir)
+	output, err := renderKnowledgeList(dir, []string{})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -125,7 +125,7 @@ Content here.
 func TestRenderKnowledgeList_InvalidFiles(t *testing.T) {
 	dir := t.TempDir()
 	knowledgeDir := filepath.Join(dir, ".overmind", "knowledge")
-	err := os.MkdirAll(knowledgeDir, 0755)
+	err := os.MkdirAll(knowledgeDir, 0o755)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -143,7 +143,7 @@ Content here.
 This file is missing frontmatter.
 `)
 
-	output, err := renderKnowledgeList(dir)
+	output, err := renderKnowledgeList(dir, []string{})
 	if err == nil {
 		t.Fatal("expected error when invalid files present, got nil")
 	}
@@ -174,7 +174,7 @@ This file is missing frontmatter.
 func TestRenderKnowledgeList_OnlyInvalidFiles(t *testing.T) {
 	dir := t.TempDir()
 	knowledgeDir := filepath.Join(dir, ".overmind", "knowledge")
-	err := os.MkdirAll(knowledgeDir, 0755)
+	err := os.MkdirAll(knowledgeDir, 0o755)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -188,7 +188,7 @@ description: This has an invalid name
 Content.
 `)
 
-	output, err := renderKnowledgeList(dir)
+	output, err := renderKnowledgeList(dir, []string{})
 	if err == nil {
 		t.Fatal("expected error when only invalid files present, got nil")
 	}
@@ -218,7 +218,7 @@ func TestRenderKnowledgeList_SubdirectoryUsesLocal(t *testing.T) {
 
 	// Create parent knowledge dir
 	parentKnowledgeDir := filepath.Join(dir, ".overmind", "knowledge")
-	err := os.MkdirAll(parentKnowledgeDir, 0755)
+	err := os.MkdirAll(parentKnowledgeDir, 0o755)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -232,7 +232,7 @@ Content.
 	// Create subdirectory with its own knowledge dir
 	childDir := filepath.Join(dir, "child")
 	childKnowledgeDir := filepath.Join(childDir, ".overmind", "knowledge")
-	err = os.MkdirAll(childKnowledgeDir, 0755)
+	err = os.MkdirAll(childKnowledgeDir, 0o755)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -243,7 +243,7 @@ description: Child knowledge file
 Content.
 `)
 
-	output, err := renderKnowledgeList(childDir)
+	output, err := renderKnowledgeList(childDir, []string{})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -270,7 +270,7 @@ func TestRenderKnowledgeList_SubdirectoryUsesParent(t *testing.T) {
 
 	// Create parent knowledge dir
 	parentKnowledgeDir := filepath.Join(dir, ".overmind", "knowledge")
-	err := os.MkdirAll(parentKnowledgeDir, 0755)
+	err := os.MkdirAll(parentKnowledgeDir, 0o755)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -283,12 +283,12 @@ Content.
 
 	// Create subdirectory WITHOUT its own knowledge dir
 	childDir := filepath.Join(dir, "child")
-	err = os.Mkdir(childDir, 0755)
+	err = os.Mkdir(childDir, 0o755)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	output, err := renderKnowledgeList(childDir)
+	output, err := renderKnowledgeList(childDir, []string{})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -309,7 +309,7 @@ func TestRenderKnowledgeList_StopsAtGitBoundary(t *testing.T) {
 
 	// Create outer directory with knowledge (outside git repo)
 	outerKnowledgeDir := filepath.Join(dir, ".overmind", "knowledge")
-	err := os.MkdirAll(outerKnowledgeDir, 0755)
+	err := os.MkdirAll(outerKnowledgeDir, 0o755)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -323,19 +323,19 @@ Content.
 	// Create a git repo subdirectory
 	repoDir := filepath.Join(dir, "my-repo")
 	repoGitDir := filepath.Join(repoDir, ".git")
-	err = os.MkdirAll(repoGitDir, 0755)
+	err = os.MkdirAll(repoGitDir, 0o755)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	// Create a workspace dir inside the repo (without its own knowledge)
 	workspaceDir := filepath.Join(repoDir, "workspace")
-	err = os.Mkdir(workspaceDir, 0755)
+	err = os.Mkdir(workspaceDir, 0o755)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	output, err := renderKnowledgeList(workspaceDir)
+	output, err := renderKnowledgeList(workspaceDir, []string{})
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -389,10 +389,114 @@ func TestTruncateDescription(t *testing.T) {
 	}
 }
 
+// Multi-directory tests
+
+func TestRenderKnowledgeList_ExplicitSingleDir(t *testing.T) {
+	dir := t.TempDir()
+	knowledgeDir := filepath.Join(dir, ".overmind", "knowledge")
+	err := os.MkdirAll(knowledgeDir, 0o755)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	writeTestFile(t, filepath.Join(knowledgeDir, "test.md"), `---
+name: test-file
+description: Test file
+---
+Content.
+`)
+
+	output, err := renderKnowledgeList(dir, []string{knowledgeDir})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if !strings.Contains(output, "Knowledge directory:") {
+		t.Errorf("expected single directory message, got: %s", output)
+	}
+	if !strings.Contains(output, "test-file") {
+		t.Errorf("expected test file, got: %s", output)
+	}
+}
+
+func TestRenderKnowledgeList_ExplicitMultipleDirs(t *testing.T) {
+	dir := t.TempDir()
+
+	// Create global directory
+	globalDir := filepath.Join(dir, "global")
+	err := os.Mkdir(globalDir, 0o755)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeTestFile(t, filepath.Join(globalDir, "global.md"), `---
+name: global-file
+description: Global file
+---
+Global.
+`)
+
+	// Create local directory
+	localDir := filepath.Join(dir, "local")
+	err = os.Mkdir(localDir, 0o755)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeTestFile(t, filepath.Join(localDir, "local.md"), `---
+name: local-file
+description: Local file
+---
+Local.
+`)
+
+	output, err := renderKnowledgeList(dir, []string{globalDir, localDir})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	// Should show multiple directories header
+	if !strings.Contains(output, "Knowledge directories (later overrides earlier)") {
+		t.Errorf("expected multiple directories header, got: %s", output)
+	}
+	if !strings.Contains(output, globalDir) {
+		t.Errorf("expected global directory in list, got: %s", output)
+	}
+	if !strings.Contains(output, localDir) {
+		t.Errorf("expected local directory in list, got: %s", output)
+	}
+
+	// Should show both files
+	if !strings.Contains(output, "global-file") {
+		t.Errorf("expected global file, got: %s", output)
+	}
+	if !strings.Contains(output, "local-file") {
+		t.Errorf("expected local file, got: %s", output)
+	}
+
+	// Should show Source Dir column when multiple directories
+	if !strings.Contains(output, "Source Dir") {
+		t.Errorf("expected Source Dir column for multiple directories, got: %s", output)
+	}
+}
+
+func TestRenderKnowledgeList_ExplicitMissingDir(t *testing.T) {
+	dir := t.TempDir()
+	missingDir := filepath.Join(dir, "missing")
+
+	// Should handle missing directory gracefully
+	output, err := renderKnowledgeList(dir, []string{missingDir})
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if !strings.Contains(output, "No .overmind/knowledge/ directory found") {
+		t.Errorf("expected no directory message, got: %s", output)
+	}
+}
+
 // Helper function for tests
 func writeTestFile(t *testing.T, path, content string) {
 	t.Helper()
-	err := os.WriteFile(path, []byte(content), 0644)
+	err := os.WriteFile(path, []byte(content), 0o644)
 	if err != nil {
 		t.Fatalf("failed to write file %s: %v", path, err)
 	}

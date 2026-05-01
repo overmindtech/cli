@@ -237,6 +237,19 @@ overmind --version
   infrastructure context, standards, and approved patterns. This command shows the
   resolved knowledge directory path, valid files with their metadata, and any
   validation warnings for invalid files.
+  
+  You can specify multiple knowledge directories to layer organizational and 
+  stack-specific knowledge:
+  
+  ```bash
+  overmind knowledge list \
+    --knowledge-dir .overmind/knowledge \
+    --knowledge-dir ./stacks/prod/.overmind/knowledge
+  ```
+  
+  When the same knowledge file name appears in multiple directories, later directories 
+  override earlier ones. For more details, see the 
+  [Knowledge Files documentation](https://docs.overmind.tech/docs/knowledge/knowledge).
 
 ## Cloud Provider Support
 

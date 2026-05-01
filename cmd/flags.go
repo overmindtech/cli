@@ -133,15 +133,16 @@ func addAnalysisFlags(cmd *cobra.Command) {
 	cobra.CheckErr(cmd.PersistentFlags().MarkDeprecated("blast-radius-max-time", "This flag is no longer used and will be removed in a future release. Use the '--change-analysis-target-duration' flag instead."))
 	cmd.PersistentFlags().Duration("change-analysis-target-duration", 0, "Target duration for change analysis planning (e.g., '5m', '15m', '30m'). This is NOT a hard deadline - the blast radius phase uses 67% of this target to stop gracefully. The job can run slightly past this target and is only hard-stopped at 30 minutes. Defaults to the account level settings (QUICK: 10m, DETAILED: 15m, FULL: 30m). Valid range: 1m to 30m.")
 	cmd.PersistentFlags().String("signal-config", "", "The path to the signal config file. If not provided, it will check the default location which is '.overmind/signal-config.yaml'. If no config is found locally, the config configured through the UI is used.")
+	cmd.PersistentFlags().StringSlice("knowledge-dir", []string{}, "Knowledge directory paths to load. Can be specified multiple times (--knowledge-dir global --knowledge-dir local) or comma-separated (--knowledge-dir global,local). Later directories override earlier ones when the same knowledge file name appears. If not specified, auto-discovers .overmind/knowledge/ by walking up from the current directory. Example: --knowledge-dir .overmind/knowledge --knowledge-dir ./stacks/prod/.overmind/knowledge")
 	cmd.PersistentFlags().Bool("comment", false, "Request the GitHub App to post analysis results as a PR comment. Requires the account to have the Overmind GitHub App installed with pull_requests:write.")
 }
 
 // AnalysisConfig holds all the configuration needed to start change analysis.
 type AnalysisConfig struct {
-	BlastRadiusConfig *sdp.BlastRadiusConfig
+	BlastRadiusConfig    *sdp.BlastRadiusConfig
 	RoutineChangesConfig *sdp.RoutineChangesConfig
-	GithubOrgProfile *sdp.GithubOrganisationProfile
-	KnowledgeFiles []*sdp.Knowledge
+	GithubOrgProfile     *sdp.GithubOrganisationProfile
+	KnowledgeFiles       []*sdp.Knowledge
 }
 
 // buildAnalysisConfig reads viper flags and builds the analysis configuration
@@ -175,8 +176,9 @@ func buildAnalysisConfig(ctx context.Context, lf log.Fields) (*AnalysisConfig, e
 		routineChangesConfig = signalConfigOverride.RoutineChangesConfig
 	}
 
-	knowledgeDir := knowledge.FindKnowledgeDir(".")
-	knowledgeFiles := knowledge.DiscoverAndConvert(ctx, knowledgeDir)
+	explicitDirs := viper.GetStringSlice("knowledge-dir")
+	knowledgeDirs := knowledge.ResolveKnowledgeDirs(".", explicitDirs)
+	knowledgeFiles := knowledge.DiscoverAndConvert(ctx, knowledgeDirs...)
 
 	return &AnalysisConfig{
 		BlastRadiusConfig:    blastRadiusConfig,

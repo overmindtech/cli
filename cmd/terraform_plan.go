@@ -11,12 +11,11 @@ import (
 	"sync/atomic"
 	"time"
 
-	"connectrpc.com/connect"
 	lipgloss "charm.land/lipgloss/v2"
+	"connectrpc.com/connect"
 	"github.com/google/uuid"
 	"github.com/muesli/reflow/wordwrap"
 	"github.com/overmindtech/pterm"
-	"github.com/overmindtech/cli/knowledge"
 	"github.com/overmindtech/cli/tfutils"
 	"github.com/overmindtech/cli/go/sdp-go"
 	"github.com/overmindtech/cli/go/tracing"
@@ -316,15 +315,18 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 	uploadPlannedChange, _ := pterm.DefaultSpinner.WithWriter(multi.NewWriter()).Start("Uploading planned changes")
 	log.WithField("change", changeUuid).Debug("Uploading planned changes")
 
-	// Discover and convert knowledge files
-	knowledgeDir := knowledge.FindKnowledgeDir(".")
-	sdpKnowledge := knowledge.DiscoverAndConvert(ctx, knowledgeDir)
+	// Build analysis configuration (includes knowledge files)
+	analysisConfig, err := buildAnalysisConfig(ctx, log.Fields{"change": changeUuid})
+	if err != nil {
+		uploadPlannedChange.Fail(fmt.Sprintf("Uploading planned changes: failed to build analysis config: %v", err))
+		return nil
+	}
 
 	_, err = client.StartChangeAnalysis(ctx, &connect.Request[sdp.StartChangeAnalysisRequest]{
 		Msg: &sdp.StartChangeAnalysisRequest{
 			ChangeUUID:    changeUuid[:],
 			ChangingItems: mappingResponse.GetItemDiffs(),
-			Knowledge:     sdpKnowledge,
+			Knowledge:     analysisConfig.KnowledgeFiles,
 		},
 	})
 	if err != nil {
@@ -529,4 +531,5 @@ func init() {
 	addAPIFlags(terraformPlanCmd)
 	addChangeUuidFlags(terraformPlanCmd)
 	addTerraformBaseFlags(terraformPlanCmd)
+	addAnalysisFlags(terraformPlanCmd)
 }

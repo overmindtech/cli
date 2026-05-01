@@ -10,7 +10,7 @@ import (
 func TestDiscover_EmptyDirectory(t *testing.T) {
 	dir := t.TempDir()
 	knowledgeDir := filepath.Join(dir, "knowledge")
-	err := os.Mkdir(knowledgeDir, 0755)
+	err := os.Mkdir(knowledgeDir, 0o755)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -42,7 +42,7 @@ func TestDiscover_DirectoryDoesNotExist(t *testing.T) {
 func TestDiscover_ValidFiles(t *testing.T) {
 	dir := t.TempDir()
 	knowledgeDir := filepath.Join(dir, "knowledge")
-	err := os.Mkdir(knowledgeDir, 0755)
+	err := os.Mkdir(knowledgeDir, 0o755)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -58,7 +58,7 @@ Content here.
 
 	// Create valid file in subfolder
 	subdir := filepath.Join(knowledgeDir, "cloud")
-	err = os.Mkdir(subdir, 0755)
+	err = os.Mkdir(subdir, 0o755)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -105,7 +105,7 @@ Content here.
 func TestDiscover_NonMarkdownFilesSkipped(t *testing.T) {
 	dir := t.TempDir()
 	knowledgeDir := filepath.Join(dir, "knowledge")
-	err := os.Mkdir(knowledgeDir, 0755)
+	err := os.Mkdir(knowledgeDir, 0o755)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -136,10 +136,10 @@ Content
 func TestDiscover_NestedSubfolders(t *testing.T) {
 	dir := t.TempDir()
 	knowledgeDir := filepath.Join(dir, "knowledge")
-	
+
 	// Create nested directory structure
 	deepDir := filepath.Join(knowledgeDir, "cloud", "aws", "services")
-	err := os.MkdirAll(deepDir, 0755)
+	err := os.MkdirAll(deepDir, 0o755)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -175,7 +175,6 @@ Here is some content.
 `
 
 	name, desc, body, err := parseFrontmatter(content)
-
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -195,7 +194,6 @@ func TestParseFrontmatter_CRLF(t *testing.T) {
 	content := "---\r\nname: windows-file\r\ndescription: File with CRLF endings\r\n---\r\n# Windows content\r\nWith CRLF.\r\n"
 
 	name, desc, body, err := parseFrontmatter(content)
-
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -216,7 +214,6 @@ func TestParseFrontmatter_CRLFAtEOF(t *testing.T) {
 	content := "---\r\nname: eof-test\r\ndescription: Frontmatter at EOF\r\n---"
 
 	name, desc, _, err := parseFrontmatter(content)
-
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -233,7 +230,6 @@ func TestParseFrontmatter_MixedLineEndings(t *testing.T) {
 	content := "---\nname: mixed-file\ndescription: Mixed line endings\n---\r\n# Content\nHere.\n"
 
 	name, desc, body, err := parseFrontmatter(content)
-
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -258,7 +254,6 @@ Content
 `
 
 	name, desc, _, err := parseFrontmatter(content)
-
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
@@ -289,7 +284,6 @@ Content
 `
 
 	name, desc, _, err := parseFrontmatter(content)
-
 	// Empty frontmatter parses successfully but will fail validation
 	if err != nil {
 		t.Fatalf("unexpected parse error: %v", err)
@@ -430,7 +424,7 @@ func TestValidateDescription_Invalid(t *testing.T) {
 func TestDiscover_Deduplication(t *testing.T) {
 	dir := t.TempDir()
 	knowledgeDir := filepath.Join(dir, "knowledge")
-	err := os.Mkdir(knowledgeDir, 0755)
+	err := os.Mkdir(knowledgeDir, 0o755)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -476,9 +470,9 @@ Second
 func TestDiscover_DuplicateInSubfolder(t *testing.T) {
 	dir := t.TempDir()
 	knowledgeDir := filepath.Join(dir, "knowledge")
-	
+
 	subdir := filepath.Join(knowledgeDir, "cloud")
-	err := os.MkdirAll(subdir, 0755)
+	err := os.MkdirAll(subdir, 0o755)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -511,7 +505,7 @@ Subfolder
 func TestDiscover_InvalidFilesProduceWarnings(t *testing.T) {
 	dir := t.TempDir()
 	knowledgeDir := filepath.Join(dir, "knowledge")
-	err := os.Mkdir(knowledgeDir, 0755)
+	err := os.Mkdir(knowledgeDir, 0o755)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -566,7 +560,7 @@ Content
 func TestDiscover_FileSizeLimit(t *testing.T) {
 	dir := t.TempDir()
 	knowledgeDir := filepath.Join(dir, "knowledge")
-	err := os.Mkdir(knowledgeDir, 0755)
+	err := os.Mkdir(knowledgeDir, 0o755)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -575,7 +569,7 @@ func TestDiscover_FileSizeLimit(t *testing.T) {
 	// Generate content larger than 10MB
 	largeContent := "---\nname: large-file\ndescription: Too large\n---\n"
 	largeContent += strings.Repeat("x", 11*1024*1024) // 11MB of content
-	
+
 	writeFile(t, filepath.Join(knowledgeDir, "large.md"), largeContent)
 
 	// Create a valid small file
@@ -594,7 +588,7 @@ Content
 	if len(warnings) != 1 {
 		t.Fatalf("expected 1 warning for large file, got %d", len(warnings))
 	}
-	
+
 	if !strings.Contains(warnings[0].Reason, "exceeds maximum") {
 		t.Errorf("expected warning about file size, got: %q", warnings[0].Reason)
 	}
@@ -603,7 +597,7 @@ Content
 func TestDiscover_LexicographicOrdering(t *testing.T) {
 	dir := t.TempDir()
 	knowledgeDir := filepath.Join(dir, "knowledge")
-	err := os.Mkdir(knowledgeDir, 0755)
+	err := os.Mkdir(knowledgeDir, 0o755)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -656,7 +650,7 @@ M
 func TestFindKnowledgeDir_InCWD(t *testing.T) {
 	root := t.TempDir()
 	knowledgeDir := filepath.Join(root, ".overmind", "knowledge")
-	if err := os.MkdirAll(knowledgeDir, 0755); err != nil {
+	if err := os.MkdirAll(knowledgeDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -670,11 +664,11 @@ func TestFindKnowledgeDir_InCWD(t *testing.T) {
 func TestFindKnowledgeDir_InParent(t *testing.T) {
 	root := t.TempDir()
 	knowledgeDir := filepath.Join(root, ".overmind", "knowledge")
-	if err := os.MkdirAll(knowledgeDir, 0755); err != nil {
+	if err := os.MkdirAll(knowledgeDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 	childDir := filepath.Join(root, "environments", "prod")
-	if err := os.MkdirAll(childDir, 0755); err != nil {
+	if err := os.MkdirAll(childDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -688,11 +682,11 @@ func TestFindKnowledgeDir_InParent(t *testing.T) {
 func TestFindKnowledgeDir_InGrandparent(t *testing.T) {
 	root := t.TempDir()
 	knowledgeDir := filepath.Join(root, ".overmind", "knowledge")
-	if err := os.MkdirAll(knowledgeDir, 0755); err != nil {
+	if err := os.MkdirAll(knowledgeDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 	deepDir := filepath.Join(root, "a", "b", "c")
-	if err := os.MkdirAll(deepDir, 0755); err != nil {
+	if err := os.MkdirAll(deepDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -707,16 +701,16 @@ func TestFindKnowledgeDir_StopsAtGitBoundary(t *testing.T) {
 	root := t.TempDir()
 	// Knowledge above the git boundary -- should NOT be found
 	knowledgeDir := filepath.Join(root, ".overmind", "knowledge")
-	if err := os.MkdirAll(knowledgeDir, 0755); err != nil {
+	if err := os.MkdirAll(knowledgeDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 	// Git repo is a subdirectory
 	repoDir := filepath.Join(root, "my-repo")
-	if err := os.MkdirAll(filepath.Join(repoDir, ".git"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(repoDir, ".git"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	workDir := filepath.Join(repoDir, "environments", "prod")
-	if err := os.MkdirAll(workDir, 0755); err != nil {
+	if err := os.MkdirAll(workDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -731,13 +725,13 @@ func TestFindKnowledgeDir_CWDTakesPriority(t *testing.T) {
 	root := t.TempDir()
 	// Knowledge at root
 	rootKnowledge := filepath.Join(root, ".overmind", "knowledge")
-	if err := os.MkdirAll(rootKnowledge, 0755); err != nil {
+	if err := os.MkdirAll(rootKnowledge, 0o755); err != nil {
 		t.Fatal(err)
 	}
 	// Knowledge also in subdirectory
 	childDir := filepath.Join(root, "sub")
 	childKnowledge := filepath.Join(childDir, ".overmind", "knowledge")
-	if err := os.MkdirAll(childKnowledge, 0755); err != nil {
+	if err := os.MkdirAll(childKnowledge, 0o755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -751,11 +745,11 @@ func TestFindKnowledgeDir_CWDTakesPriority(t *testing.T) {
 func TestFindKnowledgeDir_NotFoundAnywhere(t *testing.T) {
 	root := t.TempDir()
 	workDir := filepath.Join(root, "some", "dir")
-	if err := os.MkdirAll(workDir, 0755); err != nil {
+	if err := os.MkdirAll(workDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 	// Place .git at root to create a boundary
-	if err := os.MkdirAll(filepath.Join(root, ".git"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(root, ".git"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -769,15 +763,15 @@ func TestFindKnowledgeDir_NotFoundAnywhere(t *testing.T) {
 func TestFindKnowledgeDir_GitBoundaryWithKnowledge(t *testing.T) {
 	root := t.TempDir()
 	// .git and .overmind/knowledge at the same level
-	if err := os.MkdirAll(filepath.Join(root, ".git"), 0755); err != nil {
+	if err := os.MkdirAll(filepath.Join(root, ".git"), 0o755); err != nil {
 		t.Fatal(err)
 	}
 	knowledgeDir := filepath.Join(root, ".overmind", "knowledge")
-	if err := os.MkdirAll(knowledgeDir, 0755); err != nil {
+	if err := os.MkdirAll(knowledgeDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 	workDir := filepath.Join(root, "environments", "prod")
-	if err := os.MkdirAll(workDir, 0755); err != nil {
+	if err := os.MkdirAll(workDir, 0o755); err != nil {
 		t.Fatal(err)
 	}
 
@@ -789,11 +783,303 @@ func TestFindKnowledgeDir_GitBoundaryWithKnowledge(t *testing.T) {
 	}
 }
 
+// Multi-directory tests
+
+func TestResolveKnowledgeDirs_EmptyExplicit(t *testing.T) {
+	dir := t.TempDir()
+	knowledgeDir := filepath.Join(dir, ".overmind", "knowledge")
+	err := os.MkdirAll(knowledgeDir, 0o755)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Empty explicit dirs should fall back to auto-discovery
+	result := ResolveKnowledgeDirs(dir, []string{})
+
+	if len(result) != 1 {
+		t.Fatalf("expected 1 directory, got %d", len(result))
+	}
+	if result[0] != knowledgeDir {
+		t.Errorf("expected %q, got %q", knowledgeDir, result[0])
+	}
+}
+
+func TestResolveKnowledgeDirs_ExplicitDirs(t *testing.T) {
+	dir := t.TempDir()
+	dir1 := filepath.Join(dir, "global", ".overmind", "knowledge")
+	dir2 := filepath.Join(dir, "local", ".overmind", "knowledge")
+	err := os.MkdirAll(dir1, 0o755)
+	if err != nil {
+		t.Fatal(err)
+	}
+	err = os.MkdirAll(dir2, 0o755)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	result := ResolveKnowledgeDirs(".", []string{dir1, dir2})
+
+	if len(result) != 2 {
+		t.Fatalf("expected 2 directories, got %d", len(result))
+	}
+}
+
+func TestResolveKnowledgeDirs_MissingDirTolerated(t *testing.T) {
+	dir := t.TempDir()
+	existingDir := filepath.Join(dir, "existing")
+	missingDir := filepath.Join(dir, "missing")
+	err := os.Mkdir(existingDir, 0o755)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	result := ResolveKnowledgeDirs(".", []string{existingDir, missingDir})
+
+	if len(result) != 1 {
+		t.Fatalf("expected 1 directory (missing should be skipped), got %d", len(result))
+	}
+	absExisting, _ := filepath.Abs(existingDir)
+	if result[0] != absExisting {
+		t.Errorf("expected %q, got %q", absExisting, result[0])
+	}
+}
+
+func TestResolveKnowledgeDirs_AllMissing(t *testing.T) {
+	dir := t.TempDir()
+	missing1 := filepath.Join(dir, "missing1")
+	missing2 := filepath.Join(dir, "missing2")
+
+	result := ResolveKnowledgeDirs(".", []string{missing1, missing2})
+
+	if len(result) != 0 {
+		t.Errorf("expected 0 directories, got %d", len(result))
+	}
+}
+
+func TestDiscover_MultipleDirectories(t *testing.T) {
+	dir := t.TempDir()
+
+	// Create global directory with one file
+	globalDir := filepath.Join(dir, "global", ".overmind", "knowledge")
+	err := os.MkdirAll(globalDir, 0o755)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, filepath.Join(globalDir, "global.md"), `---
+name: global-file
+description: Global knowledge file
+---
+Global content
+`)
+
+	// Create local directory with another file
+	localDir := filepath.Join(dir, "local", ".overmind", "knowledge")
+	err = os.MkdirAll(localDir, 0o755)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, filepath.Join(localDir, "local.md"), `---
+name: local-file
+description: Local knowledge file
+---
+Local content
+`)
+
+	files, warnings := Discover(globalDir, localDir)
+
+	if len(warnings) != 0 {
+		t.Errorf("expected 0 warnings, got %d: %v", len(warnings), warnings)
+	}
+	if len(files) != 2 {
+		t.Fatalf("expected 2 files, got %d", len(files))
+	}
+
+	// Check both files are present
+	names := make(map[string]bool)
+	for _, f := range files {
+		names[f.Name] = true
+	}
+	if !names["global-file"] {
+		t.Error("expected global-file")
+	}
+	if !names["local-file"] {
+		t.Error("expected local-file")
+	}
+}
+
+func TestDiscover_CrossDirOverride(t *testing.T) {
+	dir := t.TempDir()
+
+	// Create global directory with a file
+	globalDir := filepath.Join(dir, "global", ".overmind", "knowledge")
+	err := os.MkdirAll(globalDir, 0o755)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, filepath.Join(globalDir, "shared.md"), `---
+name: shared-config
+description: Global version
+---
+Global content
+`)
+
+	// Create local directory with file of same name
+	localDir := filepath.Join(dir, "local", ".overmind", "knowledge")
+	err = os.MkdirAll(localDir, 0o755)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, filepath.Join(localDir, "shared.md"), `---
+name: shared-config
+description: Local override
+---
+Local content
+`)
+
+	files, warnings := Discover(globalDir, localDir)
+
+	// Should have exactly 1 file (local overrides global)
+	if len(files) != 1 {
+		t.Fatalf("expected 1 file (local should override global), got %d", len(files))
+	}
+
+	// Cross-directory override is logged but not added to warnings
+	if len(warnings) != 0 {
+		t.Errorf("expected 0 warnings (cross-dir override is logged only), got %d", len(warnings))
+	}
+
+	// The local version should win
+	if files[0].Description != "Local override" {
+		t.Errorf("expected local version to win, got description: %q", files[0].Description)
+	}
+	if files[0].Content != "Local content\n" {
+		t.Errorf("expected local content, got: %q", files[0].Content)
+	}
+
+	// Check SourceDir is set correctly
+	absLocalDir, _ := filepath.Abs(localDir)
+	if files[0].SourceDir != absLocalDir {
+		t.Errorf("expected SourceDir %q, got %q", absLocalDir, files[0].SourceDir)
+	}
+}
+
+func TestDiscover_WithinDirDuplicateStillWarns(t *testing.T) {
+	dir := t.TempDir()
+	knowledgeDir := filepath.Join(dir, ".overmind", "knowledge")
+	err := os.MkdirAll(knowledgeDir, 0o755)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	// Create two files with same name in the same directory
+	writeFile(t, filepath.Join(knowledgeDir, "file1.md"), `---
+name: duplicate-name
+description: First
+---
+First
+`)
+	writeFile(t, filepath.Join(knowledgeDir, "file2.md"), `---
+name: duplicate-name
+description: Second
+---
+Second
+`)
+
+	files, warnings := Discover(knowledgeDir)
+
+	if len(files) != 1 {
+		t.Errorf("expected 1 file, got %d", len(files))
+	}
+	if len(warnings) != 1 {
+		t.Errorf("expected 1 warning for within-dir duplicate, got %d", len(warnings))
+	}
+}
+
+func TestDiscover_MixedExistingAndMissing(t *testing.T) {
+	dir := t.TempDir()
+
+	existingDir := filepath.Join(dir, "existing")
+	err := os.Mkdir(existingDir, 0o755)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, filepath.Join(existingDir, "test.md"), `---
+name: test-file
+description: Test
+---
+Content
+`)
+
+	missingDir := filepath.Join(dir, "missing")
+
+	// Should silently skip missing directory
+	files, warnings := Discover(existingDir, missingDir)
+
+	if len(files) != 1 {
+		t.Errorf("expected 1 file, got %d", len(files))
+	}
+	if len(warnings) != 0 {
+		t.Errorf("expected 0 warnings (missing dir skipped), got %d", len(warnings))
+	}
+}
+
+func TestDiscover_DeterministicOrdering(t *testing.T) {
+	dir := t.TempDir()
+
+	dir1 := filepath.Join(dir, "dir1")
+	err := os.Mkdir(dir1, 0o755)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, filepath.Join(dir1, "a.md"), `---
+name: file-a
+description: A
+---
+A
+`)
+
+	dir2 := filepath.Join(dir, "dir2")
+	err = os.Mkdir(dir2, 0o755)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writeFile(t, filepath.Join(dir2, "b.md"), `---
+name: file-b
+description: B
+---
+B
+`)
+
+	// Run multiple times to ensure deterministic ordering
+	for i := range 3 {
+		files, _ := Discover(dir1, dir2)
+		if len(files) != 2 {
+			t.Fatalf("iteration %d: expected 2 files, got %d", i, len(files))
+		}
+		// Files from each directory are sorted lexicographically, then combined
+		// Since both files are in different directories, they should appear in order
+		if files[0].Name != "file-a" || files[1].Name != "file-b" {
+			t.Errorf("iteration %d: unexpected order: %s, %s", i, files[0].Name, files[1].Name)
+		}
+	}
+}
+
+func TestDiscover_EmptyList(t *testing.T) {
+	files, warnings := Discover()
+
+	if len(files) != 0 {
+		t.Errorf("expected 0 files, got %d", len(files))
+	}
+	if len(warnings) != 0 {
+		t.Errorf("expected 0 warnings, got %d", len(warnings))
+	}
+}
+
 // Helper functions
 
 func writeFile(t *testing.T, path, content string) {
 	t.Helper()
-	err := os.WriteFile(path, []byte(content), 0644)
+	err := os.WriteFile(path, []byte(content), 0o644)
 	if err != nil {
 		t.Fatalf("failed to write file %s: %v", path, err)
 	}
