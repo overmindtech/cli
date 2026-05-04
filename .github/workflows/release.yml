@@ -35,6 +35,10 @@ jobs:
     permissions:
       contents: write
       packages: write
+      # id-token + attestations are required for Sigstore OIDC + the GitHub
+      # Artifact Attestations API used by attest-build-provenance.
+      id-token: write
+      attestations: write
 
     steps:
       - name: Checkout
@@ -49,6 +53,12 @@ jobs:
           check-latest: true
           cache: true
 
+      # Syft is the SBOM generator GoReleaser shells out to (see the `sboms:`
+      # block in .goreleaser.yaml). It is not preinstalled on GitHub-hosted
+      # runners, so download it before goreleaser runs.
+      - name: Install Syft
+        uses: anchore/sbom-action/download-syft@v0.24.0
+
       - name: Run GoReleaser (publish)
         uses: goreleaser/goreleaser-action@v7
         with:
@@ -59,6 +69,21 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Used to create PRs on the Winget repo
           WINGET_TOKEN: ${{ secrets.WINGET_TOKEN }}
+
+      # Generate SLSA Level 3 build provenance attestations for the release
+      # archives and the checksums file. Each attestation is signed via Sigstore
+      # using the workflow's GitHub OIDC identity, recorded in the public Rekor
+      # transparency log, and surfaced on the repo's Attestations tab. Customers
+      # verify with `gh attestation verify --repo overmindtech/cli` or
+      # `cosign verify-blob-attestation`. See
+      # docs.overmind.tech/docs/cli/verifying-releases.md.
+      - name: Attest build provenance for release archives
+        uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: |
+            dist/overmind_cli_*.tar.gz
+            dist/overmind_cli_*.zip
+            dist/checksums.txt
 
       - name: Install cloudsmith CLI
         run: |
