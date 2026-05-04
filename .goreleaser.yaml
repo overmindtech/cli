@@ -136,6 +136,16 @@ winget:
 checksum:
   name_template: "checksums.txt"
 
+# Generate one SPDX-format SBOM per release archive using Syft (the GoReleaser
+# default). Each SBOM is uploaded as a sibling release asset. See
+# docs.overmind.tech/docs/cli/verifying-releases.md for the customer-facing
+# verification commands.
+sboms:
+  - id: archive-sbom
+    artifacts: archive
+    documents:
+      - "{{ .ArtifactName }}.spdx.json"
+
 snapshot:
   version_template: "{{ if .Version }}{{ $cleanVersion := replace .Version \"kargo/\" \"\" }}{{ incpatch $cleanVersion }}{{ else }}0.0.1{{ end }}-next"
 
