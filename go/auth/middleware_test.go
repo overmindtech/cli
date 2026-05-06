@@ -1133,3 +1133,85 @@ func TestAuthMiddleware_PopulatesAuditData(t *testing.T) {
 		}
 	})
 }
+
+// TestWithAnyScope verifies the WithAnyScope middleware delegates to the wrapped
+// handler when the request context carries any of the required scopes, and
+// returns 403 Forbidden otherwise.
+func TestWithAnyScope(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name           string
+		ctxScope       string
+		injectClaims   bool
+		requiredScopes []string
+		expectedCode   int
+	}{
+		{
+			name:           "user has the required scope",
+			ctxScope:       "admin:read",
+			injectClaims:   true,
+			requiredScopes: []string{"admin:read"},
+			expectedCode:   http.StatusOK,
+		},
+		{
+			name:           "user has one of multiple required scopes",
+			ctxScope:       "admin:read",
+			injectClaims:   true,
+			requiredScopes: []string{"admin:write", "admin:read"},
+			expectedCode:   http.StatusOK,
+		},
+		{
+			name:           "user has none of the required scopes",
+			ctxScope:       "read:items",
+			injectClaims:   true,
+			requiredScopes: []string{"admin:write"},
+			expectedCode:   http.StatusForbidden,
+		},
+		{
+			name:           "user has empty scope claim",
+			ctxScope:       "",
+			injectClaims:   true,
+			requiredScopes: []string{"admin:read"},
+			expectedCode:   http.StatusForbidden,
+		},
+		{
+			name:           "no claims in context",
+			injectClaims:   false,
+			requiredScopes: []string{"admin:read"},
+			expectedCode:   http.StatusForbidden,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			t.Parallel()
+
+			nextCalled := false
+			next := http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				nextCalled = true
+				w.WriteHeader(http.StatusOK)
+			})
+
+			handler := WithAnyScope(tc.requiredScopes, next)
+
+			ctx := context.Background()
+			if tc.injectClaims {
+				ctx = OverrideAuth(ctx, WithScope(tc.ctxScope), WithAccount("test-account"))
+			}
+			req := httptest.NewRequestWithContext(ctx, http.MethodGet, "/", nil)
+			rr := httptest.NewRecorder()
+
+			handler.ServeHTTP(rr, req)
+
+			if rr.Code != tc.expectedCode {
+				t.Errorf("expected status %d, got %d", tc.expectedCode, rr.Code)
+			}
+
+			expectNextCalled := tc.expectedCode == http.StatusOK
+			if nextCalled != expectNextCalled {
+				t.Errorf("expected next-called=%v, got %v", expectNextCalled, nextCalled)
+			}
+		})
+	}
+}
