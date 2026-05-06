@@ -153,6 +153,20 @@ func HasAnyScopes(ctx context.Context, requiredScopes ...string) bool {
 	return false
 }
 
+// WithAnyScope wraps an HTTP handler with scope enforcement. Returns 403 Forbidden
+// if the request context does not have at least one of the specified scopes.
+// This middleware should be used after NewAuthMiddleware which populates the
+// context with auth claims.
+func WithAnyScope(scopes []string, next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if HasAnyScopes(r.Context(), scopes...) {
+			next.ServeHTTP(w, r)
+			return
+		}
+		w.WriteHeader(http.StatusForbidden)
+	})
+}
+
 var ErrNoClaims = errors.New("error extracting claims from token")
 
 // ExtractAccount Extracts the account name from a context
