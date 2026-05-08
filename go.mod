@@ -81,11 +81,11 @@ require (
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.23
 	github.com/aws/aws-sdk-go-v2/service/apigateway v1.39.3
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.66.2
-	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.62.0
+	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.63.0
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.57.0
 	github.com/aws/aws-sdk-go-v2/service/directconnect v1.38.17
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.57.3
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.299.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.301.0
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.79.1
 	github.com/aws/aws-sdk-go-v2/service/efs v1.41.16
 	github.com/aws/aws-sdk-go-v2/service/eks v1.83.0
@@ -98,7 +98,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.41.10
 	github.com/aws/aws-sdk-go-v2/service/rds v1.118.2
 	github.com/aws/aws-sdk-go-v2/service/route53 v1.62.7
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.100.1
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.101.0
 	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.60.4
 	github.com/aws/aws-sdk-go-v2/service/sns v1.39.17
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.27
