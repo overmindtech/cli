@@ -10,7 +10,7 @@ replace github.com/google/cel-go => github.com/google/cel-go v0.22.1
 
 // Carry the pool.acquire/prepare span removal patch on our fork while exaring/otelpgx#76 is in review.
 // Drop this once upstream merges and tags a release.
-replace github.com/exaring/otelpgx => github.com/overmindtech/otelpgx v0.0.0-20260504161753-15213562b61f
+replace github.com/exaring/otelpgx => github.com/overmindtech/otelpgx v0.10.0
 
 require (
 	atomicgo.dev/keyboard v0.2.10
