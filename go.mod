@@ -10,7 +10,14 @@ replace github.com/google/cel-go => github.com/google/cel-go v0.22.1
 
 // Carry the pool.acquire/prepare span removal patch on our fork while exaring/otelpgx#76 is in review.
 // Drop this once upstream merges and tags a release.
-replace github.com/exaring/otelpgx => github.com/overmindtech/otelpgx v0.10.0
+//
+// Pinned to a pseudo-version on the `remove-acquire-prepare-spans-upstream` branch — DO NOT bump
+// to a tag. Tags on the fork mirror upstream `main` and do NOT contain the patch. See the
+// Renovate `enabled: false` rule for this module in .github/renovate.json.
+replace github.com/exaring/otelpgx => github.com/overmindtech/otelpgx v0.0.0-20260518092812-9a74fcacfd49
+
+// Fix security issue; force upgrade even though the terraform libraries have not been updated yet.
+replace github.com/go-git/go-git/v5 => github.com/go-git/go-git/v5 v5.19.0
 
 require (
 	atomicgo.dev/keyboard v0.2.10
@@ -188,9 +195,9 @@ require (
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.68.0
 	go.opentelemetry.io/otel v1.43.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.43.0
-	go.opentelemetry.io/otel/metric v1.43.0
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.43.0
 	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.43.0
+	go.opentelemetry.io/otel/metric v1.43.0
 	go.opentelemetry.io/otel/sdk v1.43.0
 	go.opentelemetry.io/otel/trace v1.43.0
 	go.uber.org/automaxprocs v1.6.0

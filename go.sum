@@ -423,8 +423,8 @@ github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376 h1:+zs/tPmkDkHx3U66D
 github.com/go-git/gcfg v1.5.1-0.20230307220236-3a3c6141e376/go.mod h1:an3vInlBmSxCcxctByoQdvwPiA7DTK7jaaFDBTtu0ic=
 github.com/go-git/go-billy/v5 v5.8.0 h1:I8hjc3LbBlXTtVuFNJuwYuMiHvQJDq1AT6u4DwDzZG0=
 github.com/go-git/go-billy/v5 v5.8.0/go.mod h1:RpvI/rw4Vr5QA+Z60c6d6LXH0rYJo0uD5SqfmrrheCY=
-github.com/go-git/go-git/v5 v5.18.0 h1:O831KI+0PR51hM2kep6T8k+w0/LIAD490gvqMCvL5hM=
-github.com/go-git/go-git/v5 v5.18.0/go.mod h1:pW/VmeqkanRFqR6AljLcs7EA7FbZaN5MQqO7oZADXpo=
+github.com/go-git/go-git/v5 v5.19.0 h1:+WkVUQZSy/F1Gb13udrMKjIM2PrzsNfDKFSfo5tkMtc=
+github.com/go-git/go-git/v5 v5.19.0/go.mod h1:Pb1v0c7/g8aGQJwx9Us09W85yGoyvSwuhEGMH7zjDKQ=
 github.com/go-jose/go-jose/v4 v4.1.4 h1:moDMcTHmvE6Groj34emNPLs/qtYXRVcd6S7NHbHz3kA=
 github.com/go-jose/go-jose/v4 v4.1.4/go.mod h1:x4oUasVrzR7071A4TnHLGSPpNOm2a21K9Kf04k1rs08=
 github.com/go-json-experiment/json v0.0.0-20260504200034-64a0a05799db h1:EWTZKWQtY8ZehowJ8hV1E0GJEBiL2a0eJ7Zd/CU448w=
@@ -751,8 +751,8 @@ github.com/openai/openai-go/v3 v3.35.0 h1:109x3epXMSE423KW2euR506GGFezcEt0s87MoW
 github.com/openai/openai-go/v3 v3.35.0/go.mod h1:cdufnVK14cWcT9qA1rRtrXx4FTRsgbDPW7Ia7SS5cZo=
 github.com/openrdap/rdap v0.9.2-0.20240517203139-eb57b3a8dedd h1:UuQycBx6K0lB0/IfHePshOYjlrptkF4FoApFP2Y4s3k=
 github.com/openrdap/rdap v0.9.2-0.20240517203139-eb57b3a8dedd/go.mod h1:391Ww1JbjG4FHOlvQqCd6n25CCCPE64JzC5cCYPxhyM=
-github.com/overmindtech/otelpgx v0.10.0 h1:V8laPhwZMEb0U5e8b3HayWGXAvZ58RxvllT/bak1IL4=
-github.com/overmindtech/otelpgx v0.10.0/go.mod h1:R5/M5LWsPPBZc1SrRE5e0DiU48bI78C1/GPTWs6I66U=
+github.com/overmindtech/otelpgx v0.0.0-20260518092812-9a74fcacfd49 h1:THDCq6kD417YIlex+sBmoRbGODL9fGcJ2y+ld8EkWLk=
+github.com/overmindtech/otelpgx v0.0.0-20260518092812-9a74fcacfd49/go.mod h1:J0I5A8R34EkvIcsbSOKrZExJE8uDxX2cwNIPRLR12iA=
 github.com/overmindtech/pterm v0.0.0-20240919144758-04d94ccb2297 h1:ih4bqBMHTCtg3lMwJszNkMGO9n7Uoe0WX5be1/x+s+g=
 github.com/overmindtech/pterm v0.0.0-20240919144758-04d94ccb2297/go.mod h1:bRQZYnvLrW1S5wYT6tbQnun8NpO5X6zP5cY3VKuDc4U=
 github.com/pb33f/ordered-map/v2 v2.3.1 h1:5319HDO0aw4DA4gzi+zv4FXU9UlSs3xGZ40wcP1nBjY=
