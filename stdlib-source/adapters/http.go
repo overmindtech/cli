@@ -19,62 +19,17 @@ import (
 
 const USER_AGENT_VERSION = "0.1"
 
-// linkLocalRange represents the IPv4 link-local address range (169.254.0.0/16)
-// This includes the EC2 metadata service IP (169.254.169.254) and is blocked
-// to prevent DNS rebinding attacks and unauthorized metadata service access.
-var linkLocalRange = &net.IPNet{
-	IP:   net.IPv4(169, 254, 0, 0),
-	Mask: net.CIDRMask(16, 32),
-}
-
-// isLinkLocalIP checks if an IP address is in the link-local range (169.254.0.0/16)
-func isLinkLocalIP(ip net.IP) bool {
-	if ip == nil {
-		return false
-	}
-	// Convert IPv4-mapped IPv6 addresses to IPv4
-	ip = ip.To4()
-	if ip == nil {
-		return false
-	}
-	return linkLocalRange.Contains(ip)
-}
-
-// validateHostname checks if a hostname resolves to a link-local IP address.
-// This prevents DNS rebinding attacks where a hostname resolves to the EC2
-// metadata service or other link-local addresses.
-func validateHostname(ctx context.Context, hostname string) error {
-	// First check if the hostname is already an IP address
-	if ip := net.ParseIP(hostname); ip != nil {
-		if isLinkLocalIP(ip) {
-			return fmt.Errorf("access to link-local address range (169.254.0.0/16) is blocked for security reasons")
-		}
-		return nil
-	}
-
-	// Resolve the hostname to check if it resolves to a link-local IP
-	resolver := net.DefaultResolver
-	ips, err := resolver.LookupIPAddr(ctx, hostname)
-	if err != nil {
-		// If DNS resolution fails, we can't validate, but we should still
-		// allow the request to proceed (it will fail later if needed)
-		// This prevents blocking legitimate requests due to transient DNS issues
-		//nolint:nilerr // Intentionally allowing request to proceed if DNS resolution fails
-		return nil
-	}
-
-	// Check all resolved IPs
-	for _, ipAddr := range ips {
-		if isLinkLocalIP(ipAddr.IP) {
-			return fmt.Errorf("hostname %s resolves to link-local address %s (169.254.0.0/16), which is blocked for security reasons", hostname, ipAddr.IP)
-		}
-	}
-
-	return nil
-}
-
 type HTTPAdapter struct {
-	cache sdpcache.Cache // This is mandatory
+	cache    sdpcache.Cache // This is mandatory
+	ipPolicy IPPolicy       // nil → defaultIPPolicy (production); tests inject allowLoopbackPolicy
+	resolver *net.Resolver  // nil → net.DefaultResolver; tests inject a stub
+}
+
+func (s *HTTPAdapter) policy() IPPolicy {
+	if s.ipPolicy == nil {
+		return defaultIPPolicy{}
+	}
+	return s.ipPolicy
 }
 
 const httpCacheDuration = 5 * time.Minute
@@ -148,18 +103,20 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 		}
 	}
 
-	// Validate hostname to prevent access to link-local addresses (including EC2 metadata service)
+	// Pre-validate hostname against the SSRF policy. DialContext is the
+	// authoritative enforcement point; this early check lets us return a
+	// clean error without opening a socket.
 	hostname := parsedURL.Hostname()
 	if hostname != "" {
-		if err := validateHostname(ctx, hostname); err != nil {
+		if err := validateHost(ctx, hostname, s.policy(), s.resolver); err != nil {
 			ck := sdpcache.CacheKeyFromParts(s.Name(), sdp.QueryMethod_GET, scope, s.Type(), query)
-			err = &sdp.QueryError{
+			qe := &sdp.QueryError{
 				ErrorType:   sdp.QueryError_OTHER,
 				ErrorString: err.Error(),
 				Scope:       scope,
 			}
-			s.cache.StoreUnavailableItem(ctx, err, httpCacheDuration, ck)
-			return nil, err
+			s.cache.StoreUnavailableItem(ctx, qe, httpCacheDuration, ck)
+			return nil, qe
 		}
 	}
 
@@ -182,16 +139,8 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 		return nil, nil
 	}
 
-	// Create a client that skips TLS verification since we will want to get the
-	// details of the TLS connection rather than stop if it's not trusted. Since
-	// we are only running a HEAD request this is unlikely to be a problem
-	tr := &http.Transport{
-		TLSClientConfig: &tls.Config{
-			InsecureSkipVerify: true, //nolint:gosec // G402 (TLS skip verify): intentional—adapter inspects TLS certificate details via HEAD request, not trusting the content
-		},
-	}
 	client := &http.Client{
-		Transport: tr,
+		Transport: newSecureTransport(s.policy(), s.resolver),
 		// Don't follow redirects, just return the status code directly
 		CheckRedirect: func(req *http.Request, via []*http.Request) error {
 			return http.ErrUseLastResponse
@@ -215,7 +164,6 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 	var res *http.Response
 
 	res, err = client.Do(req)
-
 	if err != nil {
 		err = &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
@@ -262,7 +210,6 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 		"headers":          headersMap,
 		"transferEncoding": res.Request.TransferEncoding,
 	})
-
 	if err != nil {
 		err = &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
@@ -367,20 +314,15 @@ func (s *HTTPAdapter) Get(ctx context.Context, scope string, query string, ignor
 				// Resolve relative URLs against the original request URL
 				resolvedURL := parsedURL.ResolveReference(locURL)
 
-				// Validate redirect target to prevent redirects to link-local addresses
 				redirectHostname := resolvedURL.Hostname()
 				if redirectHostname != "" {
-					if err := validateHostname(ctx, redirectHostname); err != nil {
-						// Don't fail the entire request, but mark the redirect as invalid
+					if err := validateHost(ctx, redirectHostname, s.policy(), s.resolver); err != nil {
 						item.Attributes.AttrStruct.Fields["location-error"] = &structpb.Value{
 							Kind: &structpb.Value_StringValue{
 								StringValue: fmt.Sprintf("redirect blocked: %v", err),
 							},
 						}
 					} else {
-						// Don't include query string and fragment in the linked item.
-						// This leads to too many items, like auth redirect errors, that
-						// do not provide value.
 						resolvedURL.Fragment = ""
 						resolvedURL.RawQuery = ""
 						item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
