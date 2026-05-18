@@ -188,17 +188,75 @@ func (s *StoreEverythingHandler) NewEdge(ctx context.Context, edge *sdp.Edge) {
 	s.Edges = append(s.Edges, edge)
 }
 
+// StoreItemsOnlyHandler stores items but discards edges. Use when only the
+// candidate item list is consumed after the wait; this avoids retaining the
+// edge slice, which can be tens of MB at ThousandEyes-shaped loads.
+//
+// Items-only by design — if you need edges, add a callback or pick
+// StoreEverythingHandler.
+type StoreItemsOnlyHandler struct {
+	Items []*sdp.Item
+
+	NoopGatewayMessageHandler
+}
+
+var _ GatewayMessageHandler = (*StoreItemsOnlyHandler)(nil)
+
+func (s *StoreItemsOnlyHandler) NewItem(ctx context.Context, item *sdp.Item) {
+	s.Items = append(s.Items, item)
+}
+
+// WaitForAllQueriesHandler signals completion when all queries are done but
+// retains no items or edges. Use this when the caller observes items and edges
+// via callbacks (e.g. an atomic counter or a per-event override). This is the
+// safe default; pick a storing variant deliberately when you need the slices.
+type WaitForAllQueriesHandler struct {
+	// A callback that will be called when all queries are done.
+	DoneCallback func()
+
+	NoopGatewayMessageHandler
+}
+
 var _ GatewayMessageHandler = (*WaitForAllQueriesHandler)(nil)
 
-// A Handler that waits for all queries to be done then calls a callback
-type WaitForAllQueriesHandler struct {
-	// A callback that will be called when all queries are done
+func (w *WaitForAllQueriesHandler) Status(ctx context.Context, status *sdp.GatewayRequestStatus) {
+	if status.Done() {
+		w.DoneCallback()
+	}
+}
+
+// WaitForAllQueriesItemsOnlyHandler signals completion when all queries are
+// done and stores the items the gateway sends, but discards edges.
+type WaitForAllQueriesItemsOnlyHandler struct {
+	// A callback that will be called when all queries are done.
+	DoneCallback func()
+
+	StoreItemsOnlyHandler
+}
+
+var _ GatewayMessageHandler = (*WaitForAllQueriesItemsOnlyHandler)(nil)
+
+func (w *WaitForAllQueriesItemsOnlyHandler) Status(ctx context.Context, status *sdp.GatewayRequestStatus) {
+	if status.Done() {
+		w.DoneCallback()
+	}
+}
+
+// WaitForAllQueriesStoreEverythingHandler signals completion when all queries
+// are done and retains every item and edge until the caller reads them after
+// the wait. Memory cost is O(items + edges) per client; at ThousandEyes-shaped
+// loads this is tens of MB per change-analysis job. Use only when the caller
+// actually consumes the full slices.
+type WaitForAllQueriesStoreEverythingHandler struct {
+	// A callback that will be called when all queries are done.
 	DoneCallback func()
 
 	StoreEverythingHandler
 }
 
-func (w *WaitForAllQueriesHandler) Status(ctx context.Context, status *sdp.GatewayRequestStatus) {
+var _ GatewayMessageHandler = (*WaitForAllQueriesStoreEverythingHandler)(nil)
+
+func (w *WaitForAllQueriesStoreEverythingHandler) Status(ctx context.Context, status *sdp.GatewayRequestStatus) {
 	if status.Done() {
 		w.DoneCallback()
 	}
