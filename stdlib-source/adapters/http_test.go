@@ -18,6 +18,10 @@ import (
 
 const TestHTTPTimeout = 3 * time.Second
 
+func newTestAdapter(cache sdpcache.Cache) HTTPAdapter {
+	return HTTPAdapter{cache: cache, ipPolicy: allowLoopbackPolicy{}}
+}
+
 type TestHTTPServer struct {
 	TLSServer               *httptest.Server
 	HTTPServer              *httptest.Server
@@ -116,9 +120,7 @@ func (t *TestHTTPServer) Close() {
 }
 
 func TestHTTPGet(t *testing.T) {
-	src := HTTPAdapter{
-		cache: sdpcache.NewNoOpCache(),
-	}
+	src := newTestAdapter(sdpcache.NewNoOpCache())
 	server, err := NewTestServer()
 	if err != nil {
 		t.Fatal(err)
@@ -204,7 +206,7 @@ func TestHTTPGet(t *testing.T) {
 		srv := httptest.NewTLSServer(mux)
 		defer srv.Close()
 
-		cachedSrc := HTTPAdapter{cache: sdpcache.NewMemoryCache()}
+		cachedSrc := newTestAdapter(sdpcache.NewMemoryCache())
 		url404 := srv.URL + "/404"
 
 		// First call: 404 is cached as NOTFOUND
@@ -253,7 +255,7 @@ func TestHTTPGet(t *testing.T) {
 		srv := httptest.NewTLSServer(mux)
 		defer srv.Close()
 
-		cachedSrc := HTTPAdapter{cache: sdpcache.NewMemoryCache()}
+		cachedSrc := newTestAdapter(sdpcache.NewMemoryCache())
 		url404 := srv.URL + "/404"
 
 		first, err1 := cachedSrc.Search(context.Background(), "global", url404, false)
@@ -449,7 +451,6 @@ func TestHTTPGet(t *testing.T) {
 	})
 
 	t.Run("With link-local IP address should be blocked", func(t *testing.T) {
-		// Test direct access to EC2 metadata service IP
 		metadataURL := "http://169.254.169.254/latest/meta-data/"
 
 		_, err := src.Get(context.Background(), "global", metadataURL, false)
@@ -458,27 +459,20 @@ func TestHTTPGet(t *testing.T) {
 			t.Error("Expected error for link-local IP address, got nil")
 		}
 
-		// Verify the error message mentions link-local blocking
-		if err != nil {
-			errStr := err.Error()
-			if errStr == "" {
-				t.Error("Expected error message, got empty string")
+		var qErr *sdp.QueryError
+		if errors.As(err, &qErr) {
+			if qErr.GetErrorType() != sdp.QueryError_OTHER {
+				t.Errorf("expected error type OTHER, got %v", qErr.GetErrorType())
 			}
-			// Check that it's a QueryError with the right error type
-			var qErr *sdp.QueryError
-			if errors.As(err, &qErr) {
-				if qErr.GetErrorType() != sdp.QueryError_OTHER {
-					t.Errorf("Expected error type OTHER, got %v", qErr.GetErrorType())
-				}
-				if !strings.Contains(qErr.GetErrorString(), "link-local") {
-					t.Errorf("Expected error message to mention 'link-local', got: %s", qErr.GetErrorString())
-				}
+			if !strings.Contains(qErr.GetErrorString(), "link-local") {
+				t.Errorf("expected error message to mention 'link-local', got: %s", qErr.GetErrorString())
 			}
+		} else {
+			t.Errorf("expected QueryError, got: %v", err)
 		}
 	})
 
 	t.Run("With other link-local IP addresses should be blocked", func(t *testing.T) {
-		// Test other IPs in the 169.254.0.0/16 range
 		testIPs := []string{
 			"http://169.254.0.1/",
 			"http://169.254.1.1/",
@@ -487,21 +481,95 @@ func TestHTTPGet(t *testing.T) {
 
 		for _, testIP := range testIPs {
 			_, err := src.Get(context.Background(), "global", testIP, false)
-
 			if err == nil {
-				t.Errorf("Expected error for link-local IP %s, got nil", testIP)
+				t.Errorf("expected error for link-local IP %s, got nil", testIP)
+			}
+		}
+	})
+
+	t.Run("With private IP address should be blocked", func(t *testing.T) {
+		privateURLs := []string{
+			"http://10.0.0.1/",
+			"http://172.16.0.1/",
+			"http://192.168.1.1/",
+		}
+
+		for _, u := range privateURLs {
+			_, err := src.Get(context.Background(), "global", u, false)
+			if err == nil {
+				t.Errorf("expected error for private IP %s, got nil", u)
+			}
+			var qErr *sdp.QueryError
+			if errors.As(err, &qErr) {
+				if !strings.Contains(qErr.GetErrorString(), "private") {
+					t.Errorf("expected error for %s to mention 'private', got: %s", u, qErr.GetErrorString())
+				}
+			}
+		}
+	})
+
+	t.Run("With unspecified address 0.0.0.0 should be blocked", func(t *testing.T) {
+		_, err := src.Get(context.Background(), "global", "http://0.0.0.0/", false)
+		if err == nil {
+			t.Error("expected error for unspecified address 0.0.0.0, got nil")
+		}
+		var qErr *sdp.QueryError
+		if errors.As(err, &qErr) {
+			if !strings.Contains(qErr.GetErrorString(), "unspecified") {
+				t.Errorf("expected error to mention 'unspecified', got: %s", qErr.GetErrorString())
+			}
+		}
+	})
+
+	t.Run("With CGNAT IP address should be blocked", func(t *testing.T) {
+		_, err := src.Get(context.Background(), "global", "http://100.64.0.1/", false)
+		if err == nil {
+			t.Error("expected error for CGNAT IP, got nil")
+		}
+		var qErr *sdp.QueryError
+		if errors.As(err, &qErr) {
+			if !strings.Contains(qErr.GetErrorString(), "carrier-grade NAT") {
+				t.Errorf("expected error to mention 'carrier-grade NAT', got: %s", qErr.GetErrorString())
+			}
+		}
+	})
+
+	t.Run("With IPv6 loopback should be blocked", func(t *testing.T) {
+		strictSrc := HTTPAdapter{
+			cache:    sdpcache.NewNoOpCache(),
+			ipPolicy: defaultIPPolicy{},
+		}
+		_, err := strictSrc.Get(context.Background(), "global", "http://[::1]/", false)
+		if err == nil {
+			t.Error("expected error for IPv6 loopback, got nil")
+		}
+		var qErr *sdp.QueryError
+		if errors.As(err, &qErr) {
+			if !strings.Contains(qErr.GetErrorString(), "loopback") {
+				t.Errorf("expected error to mention 'loopback', got: %s", qErr.GetErrorString())
+			}
+		}
+	})
+
+	t.Run("With IPv6 ULA address should be blocked", func(t *testing.T) {
+		_, err := src.Get(context.Background(), "global", "http://[fd00::1]/", false)
+		if err == nil {
+			t.Error("expected error for IPv6 ULA, got nil")
+		}
+		var qErr *sdp.QueryError
+		if errors.As(err, &qErr) {
+			if !strings.Contains(qErr.GetErrorString(), "private") {
+				t.Errorf("expected error to mention 'private', got: %s", qErr.GetErrorString())
 			}
 		}
 	})
 
 	t.Run("With redirect to link-local address should be blocked", func(t *testing.T) {
-		// Test that redirects to link-local addresses are blocked
 		item, err := src.Get(context.Background(), "global", server.RedirectPageLinkLocal, false)
 		if err != nil {
 			t.Fatal(err)
 		}
 
-		// The request should succeed, but the redirect should be marked as blocked
 		var locationError any
 		locationError, err = item.GetAttributes().Get("location-error")
 		if err != nil {
@@ -510,28 +578,176 @@ func TestHTTPGet(t *testing.T) {
 
 		locationErrorStr := locationError.(string)
 		if !strings.Contains(locationErrorStr, "redirect blocked") {
-			t.Errorf("Expected location-error to contain 'redirect blocked', got: %s", locationErrorStr)
+			t.Errorf("expected location-error to contain 'redirect blocked', got: %s", locationErrorStr)
 		}
 		if !strings.Contains(locationErrorStr, "link-local") {
-			t.Errorf("Expected location-error to mention 'link-local', got: %s", locationErrorStr)
+			t.Errorf("expected location-error to mention 'link-local', got: %s", locationErrorStr)
 		}
 
-		// Verify that no linked item query was created for the blocked redirect
 		liqs := item.GetLinkedItemQueries()
 		for _, liq := range liqs {
 			if liq.GetQuery().GetType() == "http" {
 				if strings.Contains(liq.GetQuery().GetQuery(), "169.254") {
-					t.Errorf("Expected no linked item query for blocked link-local redirect, got: %s", liq.GetQuery().GetQuery())
+					t.Errorf("expected no linked item query for blocked link-local redirect, got: %s", liq.GetQuery().GetQuery())
 				}
+			}
+		}
+	})
+
+	t.Run("With IPv6 link-local should be blocked", func(t *testing.T) {
+		strictSrc := HTTPAdapter{
+			cache:    sdpcache.NewNoOpCache(),
+			ipPolicy: defaultIPPolicy{},
+		}
+		_, err := strictSrc.Get(context.Background(), "global", "http://[fe80::1]/", false)
+		if err == nil {
+			t.Error("expected error for IPv6 link-local, got nil")
+		}
+		var qErr *sdp.QueryError
+		if errors.As(err, &qErr) {
+			if !strings.Contains(qErr.GetErrorString(), "link-local") {
+				t.Errorf("expected error to mention 'link-local', got: %s", qErr.GetErrorString())
+			}
+		}
+	})
+
+	t.Run("With IPv4-mapped IPv6 should be blocked", func(t *testing.T) {
+		_, err := src.Get(context.Background(), "global", "http://[::ffff:10.0.0.1]/", false)
+		if err == nil {
+			t.Error("expected error for IPv4-mapped IPv6 private address, got nil")
+		}
+		var qErr *sdp.QueryError
+		if errors.As(err, &qErr) {
+			if !strings.Contains(qErr.GetErrorString(), "private") {
+				t.Errorf("expected error to mention 'private', got: %s", qErr.GetErrorString())
+			}
+		}
+	})
+
+	t.Run("defaultIPPolicy blocks loopback at dial time", func(t *testing.T) {
+		strictSrc := HTTPAdapter{
+			cache:    sdpcache.NewNoOpCache(),
+			ipPolicy: defaultIPPolicy{},
+		}
+		_, err := strictSrc.Get(context.Background(), "global", server.OKPage, false)
+		if err == nil {
+			t.Error("expected defaultIPPolicy to block loopback test server, got nil")
+		}
+		var qErr *sdp.QueryError
+		if errors.As(err, &qErr) {
+			if !strings.Contains(qErr.GetErrorString(), "loopback") {
+				t.Errorf("expected error to mention 'loopback', got: %s", qErr.GetErrorString())
+			}
+		}
+	})
+
+	t.Run("DNS rebinding to private IP is blocked at dial time", func(t *testing.T) {
+		// Start a minimal UDP DNS server that always responds with 10.0.0.1,
+		// simulating a DNS rebinding attack.
+		stubAddr := newStubDNSServer(t, net.IPv4(10, 0, 0, 1))
+
+		rebindResolver := &net.Resolver{
+			PreferGo: true,
+			Dial: func(ctx context.Context, network, address string) (net.Conn, error) {
+				d := net.Dialer{}
+				return d.DialContext(ctx, "udp", stubAddr)
+			},
+		}
+
+		rebindSrc := HTTPAdapter{
+			cache:    sdpcache.NewNoOpCache(),
+			ipPolicy: defaultIPPolicy{},
+			resolver: rebindResolver,
+		}
+
+		_, err := rebindSrc.Get(context.Background(), "global", "http://attacker.test/", false)
+		if err == nil {
+			t.Error("expected DNS-rebinding to private IP to be blocked, got nil")
+		}
+		var qErr *sdp.QueryError
+		if errors.As(err, &qErr) {
+			if !strings.Contains(qErr.GetErrorString(), "private") {
+				t.Errorf("expected error to mention 'private', got: %s", qErr.GetErrorString())
 			}
 		}
 	})
 }
 
-func TestHTTPSearch(t *testing.T) {
-	src := HTTPAdapter{
-		cache: sdpcache.NewNoOpCache(),
+// newStubDNSServer starts a UDP DNS server on localhost that responds to all
+// A queries with the given IPv4 address. It returns the listen address and
+// registers cleanup with t.Cleanup.
+func newStubDNSServer(t *testing.T, ip net.IP) string {
+	t.Helper()
+	v4 := ip.To4()
+	if v4 == nil {
+		t.Fatal("newStubDNSServer only supports IPv4")
 	}
+
+	lc := net.ListenConfig{}
+	conn, err := lc.ListenPacket(context.Background(), "udp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("failed to start stub DNS server: %v", err)
+	}
+	t.Cleanup(func() { conn.Close() })
+
+	go func() {
+		buf := make([]byte, 512)
+		for {
+			n, addr, err := conn.ReadFrom(buf)
+			if err != nil {
+				return
+			}
+			if n < 12 {
+				continue
+			}
+			query := buf[:n]
+
+			// Walk past the QNAME labels to find QTYPE.
+			off := 12
+			for off < n {
+				labelLen := int(query[off])
+				if labelLen == 0 {
+					off++ // skip the zero-length root label
+					break
+				}
+				off += 1 + labelLen
+			}
+			if off+4 > n {
+				continue
+			}
+			qtype := uint16(query[off])<<8 | uint16(query[off+1])
+			qEnd := off + 4 // end of question section (QTYPE + QCLASS)
+
+			var resp []byte
+			resp = append(resp, query[:2]...) // transaction ID
+			resp = append(resp, 0x81, 0x80)   // flags: response, recursion available
+			resp = append(resp, 0x00, 0x01)   // QDCOUNT = 1
+			if qtype == 1 {                   // A record query
+				resp = append(resp, 0x00, 0x01) // ANCOUNT = 1
+			} else {
+				resp = append(resp, 0x00, 0x00) // ANCOUNT = 0
+			}
+			resp = append(resp, 0x00, 0x00, 0x00, 0x00) // NSCOUNT, ARCOUNT = 0
+			resp = append(resp, query[12:qEnd]...)      // question section only
+
+			if qtype == 1 {
+				resp = append(resp, 0xc0, 0x0c)             // name pointer
+				resp = append(resp, 0x00, 0x01)             // TYPE A
+				resp = append(resp, 0x00, 0x01)             // CLASS IN
+				resp = append(resp, 0x00, 0x00, 0x00, 0x3c) // TTL 60
+				resp = append(resp, 0x00, 0x04)             // RDLENGTH 4
+				resp = append(resp, v4...)
+			}
+
+			_, _ = conn.WriteTo(resp, addr)
+		}
+	}()
+
+	return conn.LocalAddr().String()
+}
+
+func TestHTTPSearch(t *testing.T) {
+	src := newTestAdapter(sdpcache.NewNoOpCache())
 	server, err := NewTestServer()
 	if err != nil {
 		t.Fatal(err)
