@@ -4,10 +4,6 @@ go 1.26.2
 
 replace github.com/anthropics/anthropic-sdk-go => github.com/anthropics/anthropic-sdk-go v0.2.0-alpha.4
 
-// Address an incompatibility between buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go and the kubernetes modules.
-// See https://github.com/overmindtech/workspace/pull/1124 and https://github.com/kubernetes/apiserver/issues/116
-replace github.com/google/cel-go => github.com/google/cel-go v0.22.1
-
 // Carry the pool.acquire/prepare span removal patch on our fork while exaring/otelpgx#76 is in review.
 // Drop this once upstream merges and tags a release.
 //
@@ -125,7 +121,7 @@ require (
 	github.com/go-jose/go-jose/v4 v4.1.4
 	github.com/gocarina/gocsv v0.0.0-20240520201108-78e41c74b4b1
 	github.com/google/btree v1.1.3
-	github.com/google/cel-go v0.28.0
+	github.com/google/cel-go v0.28.1
 	github.com/google/go-github/v84 v84.0.0
 	github.com/google/uuid v1.6.0
 	github.com/googleapis/gax-go/v2 v2.22.0
@@ -412,7 +408,6 @@ require (
 	github.com/spf13/afero v1.15.0 // indirect
 	github.com/spf13/cast v1.10.0 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.6.0 // indirect
-	github.com/stoewer/go-strcase v1.3.1 // indirect
 	github.com/subosito/gotenv v1.6.0 // indirect
 	github.com/t-tomalak/logrus-easy-formatter v0.0.0-20190827215021-c074f06c5816 // indirect
 	github.com/tetratelabs/wabin v0.0.0-20230304001439-f6f874872834 // indirect
