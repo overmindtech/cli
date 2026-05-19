@@ -167,9 +167,17 @@ func WithAnyScope(scopes []string, next http.Handler) http.Handler {
 	})
 }
 
-var ErrNoClaims = errors.New("error extracting claims from token")
+var (
+	ErrNoClaims         = errors.New("error extracting claims from token")
+	ErrEmptyAccountName = errors.New("account_name custom claim is empty")
+)
 
-// ExtractAccount Extracts the account name from a context
+// ExtractAccount Extracts the account name from a context. Returns
+// ErrNoClaims if the context has no custom claims attached, and
+// ErrEmptyAccountName if the claim is present but blank. An empty
+// account_name is a valid SQL value and would silently land tenant data in a
+// "no-tenant" bucket, so callers must treat it as an authentication failure
+// rather than a usable identifier.
 func ExtractAccount(ctx context.Context) (string, error) {
 	claims := ctx.Value(CustomClaimsContextKey{})
 
@@ -177,7 +185,12 @@ func ExtractAccount(ctx context.Context) (string, error) {
 		return "", ErrNoClaims
 	}
 
-	return claims.(*CustomClaims).AccountName, nil
+	accountName := claims.(*CustomClaims).AccountName
+	if accountName == "" {
+		return "", ErrEmptyAccountName
+	}
+
+	return accountName, nil
 }
 
 // NewAuthMiddleware Creates new auth middleware. The options allow you to
