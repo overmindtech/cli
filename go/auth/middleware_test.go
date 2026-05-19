@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -564,6 +565,56 @@ func TestWithSubject(t *testing.T) {
 
 		if !HasAllScopes(ctx, "api:read") {
 			t.Error("expected api:read scope to be present")
+		}
+	})
+}
+
+func TestExtractAccount(t *testing.T) {
+	t.Parallel()
+
+	t.Run("returns ErrNoClaims when no claims on context", func(t *testing.T) {
+		t.Parallel()
+
+		accountName, err := ExtractAccount(context.Background())
+		if !errors.Is(err, ErrNoClaims) {
+			t.Errorf("expected ErrNoClaims, got %v", err)
+		}
+		if accountName != "" {
+			t.Errorf("expected empty account name, got %q", accountName)
+		}
+	})
+
+	t.Run("returns ErrEmptyAccountName when claim is present but blank", func(t *testing.T) {
+		t.Parallel()
+
+		ctx := context.WithValue(context.Background(), CustomClaimsContextKey{}, &CustomClaims{
+			Scope:       "api:read",
+			AccountName: "",
+		})
+
+		accountName, err := ExtractAccount(ctx)
+		if !errors.Is(err, ErrEmptyAccountName) {
+			t.Errorf("expected ErrEmptyAccountName, got %v", err)
+		}
+		if accountName != "" {
+			t.Errorf("expected empty account name, got %q", accountName)
+		}
+	})
+
+	t.Run("returns account_name when claim is populated", func(t *testing.T) {
+		t.Parallel()
+
+		ctx := context.WithValue(context.Background(), CustomClaimsContextKey{}, &CustomClaims{
+			Scope:       "api:read",
+			AccountName: "tenant-a",
+		})
+
+		accountName, err := ExtractAccount(ctx)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if accountName != "tenant-a" {
+			t.Errorf("expected %q, got %q", "tenant-a", accountName)
 		}
 	})
 }
