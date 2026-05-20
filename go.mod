@@ -48,7 +48,7 @@ require (
 	cloud.google.com/go/spanner v1.91.0
 	cloud.google.com/go/storage v1.62.1
 	cloud.google.com/go/storagetransfer v1.18.0
-	connectrpc.com/connect v1.18.1 // v1.19.0 was faulty, wait until it is above this version
+	connectrpc.com/connect v1.19.2 // v1.19.0 was faulty, wait until it is above this version
 	connectrpc.com/otelconnect v0.9.0
 	github.com/1password/onepassword-sdk-go v0.4.0
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.21.1
@@ -225,6 +225,8 @@ require (
 	al.essio.dev/pkg/shellescape v1.5.1 // indirect
 	atomicgo.dev/cursor v0.2.0 // indirect
 	atomicgo.dev/schedule v0.1.0 // indirect
+	buf.build/gen/go/depot/api/connectrpc/go v1.19.2-20260430091712-6fbfdf526256.1 // indirect
+	buf.build/gen/go/depot/api/protocolbuffers/go v1.36.11-20260430091712-6fbfdf526256.1 // indirect
 	cel.dev/expr v0.25.1 // indirect
 	cloud.google.com/go v0.123.0 // indirect
 	cloud.google.com/go/longrunning v0.9.0 // indirect
