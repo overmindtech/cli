@@ -26,11 +26,11 @@ require (
 	cloud.google.com/go/bigquery v1.77.0
 	cloud.google.com/go/bigtable v1.47.0
 	cloud.google.com/go/certificatemanager v1.14.0
-	cloud.google.com/go/compute v1.62.0
+	cloud.google.com/go/compute v1.63.0
 	cloud.google.com/go/compute/metadata v0.9.0
-	cloud.google.com/go/container v1.51.0
+	cloud.google.com/go/container v1.52.0
 	cloud.google.com/go/dataplex v1.34.0
-	cloud.google.com/go/dataproc/v2 v2.21.0
+	cloud.google.com/go/dataproc/v2 v2.22.0
 	cloud.google.com/go/eventarc v1.23.0
 	cloud.google.com/go/filestore v1.15.0
 	cloud.google.com/go/functions v1.24.0
@@ -46,7 +46,7 @@ require (
 	cloud.google.com/go/secretmanager v1.20.0
 	cloud.google.com/go/securitycentermanagement v1.6.0
 	cloud.google.com/go/spanner v1.91.0
-	cloud.google.com/go/storage v1.62.1
+	cloud.google.com/go/storage v1.62.2
 	cloud.google.com/go/storagetransfer v1.18.0
 	connectrpc.com/connect v1.19.2 // v1.19.0 was faulty, wait until it is above this version
 	connectrpc.com/otelconnect v0.9.0
@@ -205,8 +205,8 @@ require (
 	golang.org/x/sync v0.20.0
 	golang.org/x/text v0.37.0
 	gonum.org/v1/gonum v0.17.0
-	google.golang.org/api v0.278.0
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260504160031-60b97b32f348
+	google.golang.org/api v0.280.0
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260519071638-aa98bba5eb94
 	google.golang.org/grpc v1.81.1
 	google.golang.org/protobuf v1.36.11
 	gopkg.in/ini.v1 v1.67.2
