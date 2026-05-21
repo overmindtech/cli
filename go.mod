@@ -82,20 +82,20 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.32.17
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.16
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.23
-	github.com/aws/aws-sdk-go-v2/service/apigateway v1.39.3
+	github.com/aws/aws-sdk-go-v2/service/apigateway v1.39.4
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.66.2
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.64.0
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.57.0
 	github.com/aws/aws-sdk-go-v2/service/directconnect v1.38.17
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.57.3
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.302.0
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.79.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.303.0
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.80.0
 	github.com/aws/aws-sdk-go-v2/service/efs v1.41.16
 	github.com/aws/aws-sdk-go-v2/service/eks v1.83.0
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.33.25
 	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.54.12
 	github.com/aws/aws-sdk-go-v2/service/iam v1.53.10
-	github.com/aws/aws-sdk-go-v2/service/kms v1.51.1
+	github.com/aws/aws-sdk-go-v2/service/kms v1.52.0
 	github.com/aws/aws-sdk-go-v2/service/lambda v1.90.1
 	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.60.1
 	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.41.10
@@ -225,8 +225,8 @@ require (
 	al.essio.dev/pkg/shellescape v1.5.1 // indirect
 	atomicgo.dev/cursor v0.2.0 // indirect
 	atomicgo.dev/schedule v0.1.0 // indirect
-	buf.build/gen/go/depot/api/connectrpc/go v1.19.2-20260430091712-6fbfdf526256.1 // indirect
-	buf.build/gen/go/depot/api/protocolbuffers/go v1.36.11-20260430091712-6fbfdf526256.1 // indirect
+	buf.build/gen/go/depot/api/connectrpc/go v1.19.2-20260430091712-6fbfdf526256.1
+	buf.build/gen/go/depot/api/protocolbuffers/go v1.36.11-20260430091712-6fbfdf526256.1
 	cel.dev/expr v0.25.1 // indirect
 	cloud.google.com/go v0.123.0 // indirect
 	cloud.google.com/go/longrunning v0.9.0 // indirect
