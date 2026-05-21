@@ -151,7 +151,7 @@ require (
 	github.com/modelcontextprotocol/go-sdk v1.6.0
 	github.com/muesli/reflow v0.3.0
 	github.com/nats-io/jwt/v2 v2.8.1
-	github.com/nats-io/nats-server/v2 v2.14.0
+	github.com/nats-io/nats-server/v2 v2.14.1
 	github.com/nats-io/nats.go v1.52.0
 	github.com/nats-io/nkeys v0.4.15
 	github.com/neo4j/neo4j-go-driver/v6 v6.0.0
@@ -353,7 +353,7 @@ require (
 	github.com/jackc/puddle/v2 v2.2.2 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.18.5 // indirect
+	github.com/klauspost/compress v1.18.6 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
