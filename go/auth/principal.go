@@ -50,9 +50,8 @@ var (
 //
 // In-process system callers (workflow-agent tool wrappers, etc.) must seed
 // a real principal_identities row for their synthetic subject (e.g. the
-// brent agent's `'brent-agent'` subject is seeded by
-// services/brent-backend/build/seed_team_principals.sh in production and
-// by test helpers in integration tests).
+// brent agent's `'brent-agent'` subject is created during onboarding in
+// production and by test helpers in integration tests).
 func ResolvePrincipalID(ctx context.Context, r PrincipalResolver) (uuid.UUID, error) {
 	ctx, span := tracing.Tracer().Start(ctx, "auth.resolve_principal_id")
 	defer span.End()
