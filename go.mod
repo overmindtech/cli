@@ -1,6 +1,6 @@
 module github.com/overmindtech/cli
 
-go 1.26.2
+go 1.26.3
 
 replace github.com/anthropics/anthropic-sdk-go => github.com/anthropics/anthropic-sdk-go v0.2.0-alpha.4
 
@@ -13,7 +13,7 @@ replace github.com/anthropics/anthropic-sdk-go => github.com/anthropics/anthropi
 replace github.com/exaring/otelpgx => github.com/overmindtech/otelpgx v0.0.0-20260518092812-9a74fcacfd49
 
 // Fix security issue; force upgrade even though the terraform libraries have not been updated yet.
-replace github.com/go-git/go-git/v5 => github.com/go-git/go-git/v5 v5.19.0
+replace github.com/go-git/go-git/v5 => github.com/go-git/go-git/v5 v5.19.1
 
 require (
 	atomicgo.dev/keyboard v0.2.10
@@ -48,7 +48,7 @@ require (
 	cloud.google.com/go/spanner v1.91.0
 	cloud.google.com/go/storage v1.62.2
 	cloud.google.com/go/storagetransfer v1.18.0
-	connectrpc.com/connect v1.19.2 // v1.19.0 was faulty, wait until it is above this version
+	connectrpc.com/connect v1.20.0 // v1.19.0 was faulty, wait until it is above this version
 	connectrpc.com/otelconnect v0.9.0
 	github.com/1password/onepassword-sdk-go v0.4.0
 	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.21.1
@@ -77,7 +77,7 @@ require (
 	github.com/anthropics/anthropic-sdk-go v0.2.0-alpha.4
 	github.com/antihax/optional v1.0.0
 	github.com/auth0/go-auth0/v2 v2.11.0
-	github.com/auth0/go-jwt-middleware/v3 v3.1.0
+	github.com/auth0/go-jwt-middleware/v3 v3.2.0
 	github.com/aws/aws-sdk-go-v2 v1.41.7
 	github.com/aws/aws-sdk-go-v2/config v1.32.17
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.16
@@ -110,13 +110,13 @@ require (
 	github.com/aws/smithy-go v1.25.1
 	github.com/bombsimon/logrusr/v4 v4.1.0
 	github.com/bradleyfalzon/ghinstallation/v2 v2.18.0
-	github.com/brianvoe/gofakeit/v7 v7.14.1
+	github.com/brianvoe/gofakeit/v7 v7.15.0
 	github.com/cenkalti/backoff/v5 v5.0.3
 	github.com/charmbracelet/glamour v0.10.0
 	github.com/coder/websocket v1.8.14
 	github.com/coreos/go-oidc/v3 v3.18.0
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
-	github.com/exaring/otelpgx v0.10.0
+	github.com/exaring/otelpgx v0.11.1
 	github.com/getsentry/sentry-go v0.46.2
 	github.com/go-jose/go-jose/v4 v4.1.4
 	github.com/gocarina/gocsv v0.0.0-20240520201108-78e41c74b4b1
@@ -139,7 +139,7 @@ require (
 	github.com/jackc/pgx/v5 v5.9.2
 	github.com/jedib0t/go-pretty/v6 v6.7.10
 	github.com/jxskiss/base62 v1.1.0
-	github.com/kaptinlin/jsonrepair v0.4.3
+	github.com/kaptinlin/jsonrepair v0.4.4
 	github.com/lithammer/fuzzysearch v1.1.8
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mavolin/go-htmx v1.0.0
@@ -154,16 +154,16 @@ require (
 	github.com/nats-io/nats-server/v2 v2.14.1
 	github.com/nats-io/nats.go v1.52.0
 	github.com/nats-io/nkeys v0.4.15
-	github.com/neo4j/neo4j-go-driver/v6 v6.0.0
+	github.com/neo4j/neo4j-go-driver/v6 v6.1.0
 	github.com/onsi/ginkgo/v2 v2.28.3
 	github.com/onsi/gomega v1.40.0
-	github.com/openai/openai-go/v3 v3.35.0
+	github.com/openai/openai-go/v3 v3.37.0
 	github.com/openrdap/rdap v0.9.2-0.20240517203139-eb57b3a8dedd
 	github.com/overmindtech/pterm v0.0.0-20240919144758-04d94ccb2297
 	github.com/pb33f/ordered-map/v2 v2.3.1
 	github.com/pborman/ansi v1.1.0
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
-	github.com/posthog/posthog-go v1.12.5
+	github.com/posthog/posthog-go v1.12.6
 	github.com/qhenkart/anthropic-tokenizer-go v0.0.0-20231011194518-5519949e0faf
 	github.com/resend/resend-go/v3 v3.6.0
 	github.com/riverqueue/river v0.35.1
@@ -215,7 +215,7 @@ require (
 	k8s.io/apimachinery v0.35.4
 	k8s.io/client-go v0.35.4
 	k8s.io/component-base v0.35.4
-	riverqueue.com/riverui v0.15.0
+	riverqueue.com/riverui v0.16.0
 	sigs.k8s.io/controller-runtime v0.23.3
 	sigs.k8s.io/kind v0.31.0
 	sigs.k8s.io/structured-merge-diff/v6 v6.4.0
@@ -225,7 +225,7 @@ require (
 	al.essio.dev/pkg/shellescape v1.5.1 // indirect
 	atomicgo.dev/cursor v0.2.0 // indirect
 	atomicgo.dev/schedule v0.1.0 // indirect
-	buf.build/gen/go/depot/api/connectrpc/go v1.19.2-20260430091712-6fbfdf526256.1
+	buf.build/gen/go/depot/api/connectrpc/go v1.20.0-20260430091712-6fbfdf526256.1
 	buf.build/gen/go/depot/api/protocolbuffers/go v1.36.11-20260430091712-6fbfdf526256.1
 	cel.dev/expr v0.25.1 // indirect
 	cloud.google.com/go v0.123.0 // indirect
@@ -296,7 +296,7 @@ require (
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.9.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.12 // indirect
-	github.com/go-json-experiment/json v0.0.0-20260504200034-64a0a05799db // indirect
+	github.com/go-json-experiment/json v0.0.0-20260505212615-e40f80bf6836 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-logr/zapr v1.3.0 // indirect
