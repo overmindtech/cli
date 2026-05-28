@@ -317,7 +317,9 @@ func TestDelete(t *testing.T) {
 			item := GenerateRandomItem()
 			ck := CacheKeyFromQuery(item.GetMetadata().GetSourceQuery(), item.GetMetadata().GetSourceName())
 
-			cache.StoreItem(t.Context(), item, time.Millisecond, ck)
+			// Use a generous TTL: ShardedCache LIST fan-out can race with sub-ms
+			// expiry on loaded CI runners when duration is time.Millisecond.
+			cache.StoreItem(t.Context(), item, 10*time.Second, ck)
 			sst := SST{
 				SourceName: item.GetMetadata().GetSourceName(),
 				Scope:      item.GetScope(),
