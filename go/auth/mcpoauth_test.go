@@ -15,6 +15,8 @@ func TestNewMCPOAuthMetadataHandler(t *testing.T) {
 		"https://api.example.com/area51/oauth",
 		"https://api.example.com/area51/oauth/register",
 		scopes,
+		"",
+		"",
 	)
 
 	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/.well-known/oauth-authorization-server/area51/oauth", nil)
@@ -173,6 +175,50 @@ func TestNewMCPPRMHandler(t *testing.T) {
 	}
 	if body.ClientID != "" {
 		t.Errorf("expected no client_id in PRM, got %q", body.ClientID)
+	}
+}
+
+func TestNewMCPOAuthMetadataHandler_Overrides(t *testing.T) {
+	scopes := []string{"openid"}
+	handler := NewMCPOAuthMetadataHandler(
+		"auth.example.com",
+		"https://api.example.com/brent/oauth",
+		"https://api.example.com/brent/oauth/register",
+		scopes,
+		"https://api.example.com/brent/oauth/authorize",
+		"https://api.example.com/brent/oauth/token",
+	)
+
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/metadata", nil)
+	rec := httptest.NewRecorder()
+	handler.ServeHTTP(rec, req)
+
+	var body map[string]any
+	if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
+		t.Fatalf("decode: %v", err)
+	}
+	if body["authorization_endpoint"] != "https://api.example.com/brent/oauth/authorize" {
+		t.Errorf("authorization_endpoint = %v", body["authorization_endpoint"])
+	}
+	if body["token_endpoint"] != "https://api.example.com/brent/oauth/token" {
+		t.Errorf("token_endpoint = %v", body["token_endpoint"])
+	}
+}
+
+func TestIsAllowedMCPRedirect(t *testing.T) {
+	tests := []struct {
+		uri  string
+		want bool
+	}{
+		{"cursor://anysphere.cursor-mcp/oauth/callback", true},
+		{"https://www.cursor.com/agents/mcp/oauth/callback", true},
+		{"http://127.0.0.1/callback", true},
+		{"https://evil.com/callback", false},
+	}
+	for _, tt := range tests {
+		if got := IsAllowedMCPRedirect(tt.uri); got != tt.want {
+			t.Errorf("IsAllowedMCPRedirect(%q) = %v, want %v", tt.uri, got, tt.want)
+		}
 	}
 }
 
