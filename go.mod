@@ -119,7 +119,7 @@ require (
 	github.com/exaring/otelpgx v0.11.1
 	github.com/getsentry/sentry-go v0.46.2
 	github.com/go-jose/go-jose/v4 v4.1.4
-	github.com/gocarina/gocsv v0.0.0-20240520201108-78e41c74b4b1
+	github.com/gocarina/gocsv v0.0.0-20260523204920-c264028e67ea
 	github.com/google/btree v1.1.3
 	github.com/google/cel-go v0.28.1
 	github.com/google/go-github/v84 v84.0.0
