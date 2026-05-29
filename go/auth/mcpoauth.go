@@ -18,11 +18,20 @@ import (
 //
 // scopes should include both the standard OIDC scopes and any
 // application-specific scopes (e.g. "admin:read", "changes:read").
-func NewMCPOAuthMetadataHandler(auth0Domain, issuerURL, registrationEndpointURL string, scopes []string) http.Handler {
+func NewMCPOAuthMetadataHandler(auth0Domain, issuerURL, registrationEndpointURL string, scopes []string, authorizationEndpointOverride, tokenEndpointOverride string) http.Handler {
+	authEndpoint := fmt.Sprintf("https://%s/authorize", auth0Domain)
+	if authorizationEndpointOverride != "" {
+		authEndpoint = authorizationEndpointOverride
+	}
+	tokenEndpoint := fmt.Sprintf("https://%s/oauth/token", auth0Domain)
+	if tokenEndpointOverride != "" {
+		tokenEndpoint = tokenEndpointOverride
+	}
+
 	metadata := map[string]any{
 		"issuer":                 issuerURL,
-		"authorization_endpoint": fmt.Sprintf("https://%s/authorize", auth0Domain),
-		"token_endpoint":         fmt.Sprintf("https://%s/oauth/token", auth0Domain),
+		"authorization_endpoint": authEndpoint,
+		"token_endpoint":         tokenEndpoint,
 		"registration_endpoint":  registrationEndpointURL,
 
 		"jwks_uri":            fmt.Sprintf("https://%s/.well-known/jwks.json", auth0Domain),
@@ -131,6 +140,20 @@ func NewMCPPRMHandler(authorizationServerURL, resourceURL string, scopes []strin
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write(body)
 	})
+}
+
+const (
+	cursorMCPRedirectURI      = "cursor://anysphere.cursor-mcp/oauth/callback"
+	cursorCloudAgentsRedirect = "https://www.cursor.com/agents/mcp/oauth/callback"
+)
+
+// IsAllowedMCPRedirect returns true when uri is a registered Cursor MCP
+// handoff target (desktop cursor://, Cloud Agents HTTPS, or loopback).
+func IsAllowedMCPRedirect(uri string) bool {
+	if uri == cursorMCPRedirectURI || uri == cursorCloudAgentsRedirect {
+		return true
+	}
+	return IsLocalhostRedirect(uri)
 }
 
 // IsLocalhostRedirect returns true if the URI is a loopback redirect, which is
