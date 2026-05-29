@@ -40,7 +40,7 @@ jobs:
           project: xnsnw3m20t
 
       - name: Build and push container
-        uses: depot/build-push-action@v1.17.0
+        uses: depot/build-push-action@v1.18.0
         id: build
         with:
           project: xnsnw3m20t
