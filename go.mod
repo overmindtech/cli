@@ -18,6 +18,8 @@ replace github.com/go-git/go-git/v5 => github.com/go-git/go-git/v5 v5.19.1
 require (
 	atomicgo.dev/keyboard v0.2.10
 	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.11-20260415201107-50325440f8f2.1
+	buf.build/gen/go/depot/api/connectrpc/go v1.20.0-20260430091712-6fbfdf526256.1
+	buf.build/gen/go/depot/api/protocolbuffers/go v1.36.11-20260430091712-6fbfdf526256.1
 	buf.build/go/protovalidate v1.2.0
 	charm.land/lipgloss/v2 v2.0.3
 	cloud.google.com/go/aiplatform v1.125.0
@@ -76,7 +78,7 @@ require (
 	github.com/akedrou/textdiff v0.1.0
 	github.com/anthropics/anthropic-sdk-go v0.2.0-alpha.4
 	github.com/antihax/optional v1.0.0
-	github.com/auth0/go-auth0/v2 v2.11.0
+	github.com/auth0/go-auth0/v2 v2.12.0
 	github.com/auth0/go-jwt-middleware/v3 v3.2.0
 	github.com/aws/aws-sdk-go-v2 v1.41.8
 	github.com/aws/aws-sdk-go-v2/config v1.32.19
@@ -107,7 +109,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.42.28
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.68.7
 	github.com/aws/aws-sdk-go-v2/service/sts v1.42.2
-	github.com/aws/smithy-go v1.25.1
+	github.com/aws/smithy-go v1.26.0
 	github.com/bombsimon/logrusr/v4 v4.1.0
 	github.com/bradleyfalzon/ghinstallation/v2 v2.18.0
 	github.com/brianvoe/gofakeit/v7 v7.15.0
@@ -127,7 +129,7 @@ require (
 	github.com/googleapis/gax-go/v2 v2.22.0
 	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
 	github.com/gorilla/mux v1.8.1
-	github.com/harness/harness-go-sdk v0.7.28
+	github.com/harness/harness-go-sdk v0.7.30
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/hashicorp/hcl/v2 v2.24.0
@@ -139,7 +141,7 @@ require (
 	github.com/jackc/pgx/v5 v5.9.2
 	github.com/jedib0t/go-pretty/v6 v6.7.10
 	github.com/jxskiss/base62 v1.1.0
-	github.com/kaptinlin/jsonrepair v0.4.4
+	github.com/kaptinlin/jsonrepair v0.4.5
 	github.com/lithammer/fuzzysearch v1.1.8
 	github.com/manifoldco/promptui v0.9.0
 	github.com/mavolin/go-htmx v1.0.0
@@ -148,7 +150,7 @@ require (
 	github.com/miekg/dns v1.1.72
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/go-ps v1.0.0
-	github.com/modelcontextprotocol/go-sdk v1.6.0
+	github.com/modelcontextprotocol/go-sdk v1.6.1
 	github.com/muesli/reflow v0.3.0
 	github.com/nats-io/jwt/v2 v2.8.1
 	github.com/nats-io/nats-server/v2 v2.14.1
@@ -163,7 +165,7 @@ require (
 	github.com/pb33f/ordered-map/v2 v2.3.1
 	github.com/pborman/ansi v1.1.0
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
-	github.com/posthog/posthog-go v1.12.6
+	github.com/posthog/posthog-go v1.13.1
 	github.com/qhenkart/anthropic-tokenizer-go v0.0.0-20231011194518-5519949e0faf
 	github.com/resend/resend-go/v3 v3.7.0
 	github.com/riverqueue/river v0.37.1
@@ -174,14 +176,14 @@ require (
 	github.com/samber/slog-logrus/v2 v2.5.4
 	github.com/sashabaranov/go-openai v1.41.2
 	github.com/sirupsen/logrus v1.9.4
-	github.com/slack-go/slack v0.23.1
+	github.com/slack-go/slack v0.24.0
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.11.1
 	github.com/stripe/stripe-go/v84 v84.4.1
-	github.com/tiktoken-go/tokenizer v0.7.0
+	github.com/tiktoken-go/tokenizer v0.8.0
 	github.com/ttacon/chalk v0.0.0-20160626202418-22c06c80ed31
 	github.com/uptrace/opentelemetry-go-extra/otellogrus v0.3.2
 	github.com/xiam/dig v0.0.0-20191116195832-893b5fb5093b
@@ -225,8 +227,6 @@ require (
 	al.essio.dev/pkg/shellescape v1.5.1 // indirect
 	atomicgo.dev/cursor v0.2.0 // indirect
 	atomicgo.dev/schedule v0.1.0 // indirect
-	buf.build/gen/go/depot/api/connectrpc/go v1.20.0-20260430091712-6fbfdf526256.1
-	buf.build/gen/go/depot/api/protocolbuffers/go v1.36.11-20260430091712-6fbfdf526256.1
 	cel.dev/expr v0.25.1 // indirect
 	cloud.google.com/go v0.123.0 // indirect
 	cloud.google.com/go/longrunning v0.9.0 // indirect
@@ -282,6 +282,7 @@ require (
 	github.com/containerd/console v1.0.5 // indirect
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0 // indirect
 	github.com/dlclark/regexp2 v1.11.5 // indirect
+	github.com/dlclark/regexp2/v2 v2.1.0 // indirect
 	github.com/dylibso/observe-sdk/go v0.0.0-20240828172851-9145d8ad07e1 // indirect
 	github.com/emicklei/go-restful/v3 v3.13.0 // indirect
 	github.com/envoyproxy/go-control-plane/envoy v1.37.0 // indirect
@@ -293,7 +294,7 @@ require (
 	github.com/fsnotify/fsnotify v1.9.0 // indirect
 	github.com/fxamacker/cbor/v2 v2.9.0 // indirect
 	github.com/gabriel-vasile/mimetype v1.4.12 // indirect
-	github.com/go-json-experiment/json v0.0.0-20260505212615-e40f80bf6836 // indirect
+	github.com/go-json-experiment/json v0.0.0-20260520185125-572e7c383686 // indirect
 	github.com/go-logr/logr v1.4.3 // indirect
 	github.com/go-logr/stdr v1.2.2 // indirect
 	github.com/go-logr/zapr v1.3.0 // indirect
@@ -460,11 +461,10 @@ require (
 	k8s.io/apiserver v0.36.0 // indirect
 	k8s.io/klog/v2 v2.140.0 // indirect
 	k8s.io/kube-openapi v0.0.0-20260317180543-43fb72c5454a // indirect
+	k8s.io/streaming v0.36.1 // indirect
 	k8s.io/utils v0.0.0-20260210185600-b8788abfbbc2 // indirect
 	sigs.k8s.io/apiserver-network-proxy/konnectivity-client v0.34.0 // indirect
 	sigs.k8s.io/json v0.0.0-20250730193827-2d320260d730 // indirect
 	sigs.k8s.io/randfill v1.0.0 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
-
-require k8s.io/streaming v0.36.1 // indirect
