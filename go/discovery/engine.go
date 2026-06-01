@@ -18,6 +18,7 @@ import (
 	"github.com/nats-io/nats.go"
 	"github.com/overmindtech/cli/go/auth"
 	"github.com/overmindtech/cli/go/sdp-go"
+	"github.com/overmindtech/workspace/go/startup"
 	"github.com/overmindtech/cli/go/tracing"
 	log "github.com/sirupsen/logrus"
 	"github.com/sourcegraph/conc/pool"
@@ -437,6 +438,7 @@ func (e *Engine) IsNATSConnected() bool {
 // See: https://kubernetes.io/docs/concepts/workloads/pods/pod-lifecycle/#container-probes
 func (e *Engine) LivenessHealthCheck(ctx context.Context) error {
 	span := trace.SpanFromContext(ctx)
+	span.SetAttributes(attribute.String("ovm.healthcheck.type", "liveness"))
 
 	e.natsConnectionMutex.Lock()
 	var (
@@ -854,12 +856,9 @@ func (e *Engine) InitialiseAdapters(ctx context.Context, initFn func(ctx context
 // This checks only engine initialization (NATS connection, heartbeats) and does NOT check adapter-specific health.
 func (e *Engine) LivenessProbeHandlerFunc() func(http.ResponseWriter, *http.Request) {
 	return func(rw http.ResponseWriter, r *http.Request) {
-		ctx, span := tracing.Tracer().Start(r.Context(), "healthcheck.liveness")
-		defer span.End()
-
-		err := e.LivenessHealthCheck(ctx)
+		err := e.LivenessHealthCheck(r.Context())
 		if err != nil {
-			log.WithContext(ctx).WithError(err).Error("Liveness check failed")
+			log.WithContext(r.Context()).WithError(err).Error("Liveness check failed")
 			http.Error(rw, err.Error(), http.StatusServiceUnavailable)
 			return
 		}
@@ -880,12 +879,9 @@ func (e *Engine) SetReadinessCheck(check func(context.Context) error) {
 // This checks adapter-specific health only (not engine/liveness).
 func (e *Engine) ReadinessProbeHandlerFunc() func(http.ResponseWriter, *http.Request) {
 	return func(rw http.ResponseWriter, r *http.Request) {
-		ctx, span := tracing.Tracer().Start(r.Context(), "healthcheck.readiness")
-		defer span.End()
-
-		err := e.ReadinessHealthCheck(ctx)
+		err := e.ReadinessHealthCheck(r.Context())
 		if err != nil {
-			log.WithContext(ctx).WithError(err).Error("Readiness check failed")
+			log.WithContext(r.Context()).WithError(err).Error("Readiness check failed")
 			http.Error(rw, err.Error(), http.StatusServiceUnavailable)
 			return
 		}
@@ -894,14 +890,25 @@ func (e *Engine) ReadinessProbeHandlerFunc() func(http.ResponseWriter, *http.Req
 	}
 }
 
+// healthProbeHandler returns the HTTP handler for Kubernetes liveness/readiness probes.
+// Spans are created by startup.WrapHandler (otelhttp) so http.route is set for collector sampling.
+func (e *Engine) healthProbeHandler() http.Handler {
+	mux := http.NewServeMux()
+	mux.HandleFunc("GET /healthz/alive", e.LivenessProbeHandlerFunc())
+	mux.HandleFunc("GET /healthz/ready", e.ReadinessProbeHandlerFunc())
+
+	serviceName := "source-healthz"
+	if e.EngineConfig != nil && e.EngineConfig.SourceName != "" {
+		serviceName = e.EngineConfig.SourceName + "-healthz"
+	}
+
+	return startup.WrapHandler(mux, startup.WithServiceName(serviceName))
+}
+
 // ServeHealthProbes starts an HTTP server for Kubernetes health probes on the given port.
 // Registers /healthz/alive (liveness) and /healthz/ready (readiness).
 // Runs in a goroutine. Use for sources that only need health checks on the given port.
 func (e *Engine) ServeHealthProbes(port int) {
-	mux := http.NewServeMux()
-	mux.HandleFunc("/healthz/alive", e.LivenessProbeHandlerFunc())
-	mux.HandleFunc("/healthz/ready", e.ReadinessProbeHandlerFunc())
-
 	logFields := log.Fields{"port": port}
 	if e.EngineConfig != nil {
 		logFields["ovm.engine.type"] = e.EngineConfig.EngineType
@@ -913,7 +920,7 @@ func (e *Engine) ServeHealthProbes(port int) {
 		defer sentry.Recover()
 		server := &http.Server{
 			Addr:         fmt.Sprintf(":%d", port),
-			Handler:      mux,
+			Handler:      e.healthProbeHandler(),
 			ReadTimeout:  5 * time.Second,
 			WriteTimeout: 10 * time.Second,
 		}
