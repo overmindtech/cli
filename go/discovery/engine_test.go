@@ -762,7 +762,7 @@ func GetTestOAuthTokenClient(t *testing.T, account string) auth.TokenClient {
 	var clientSecret string
 	var exists bool
 
-	errorFormat := "environment variable %v not found. Set up your test environment first. See: https://github.com/overmindtech/cli/go/auth0-test-data"
+	errorFormat := "environment variable %v not found. Load secrets via op run --env-file=./.devcontainer/env/op.local.env (see docs/DEVELOPMENT_PLAYBOOKS.md)"
 
 	// Read secrets form the environment
 	if domain, exists = os.LookupEnv("OVERMIND_NTE_ALLPERMS_DOMAIN"); !exists || domain == "" {
