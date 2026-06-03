@@ -161,7 +161,7 @@ func (k keyvaultSecretWrapper) SearchStream(ctx context.Context, stream discover
 }
 
 func (k keyvaultSecretWrapper) azureSecretToSDPItem(secret *armkeyvault.Secret, vaultName, secretName, scope string) (*sdp.Item, *sdp.QueryError) {
-	attributes, err := shared.ToAttributesWithExclude(secret, "tags")
+	attributes, err := shared.ToAttributesWithExclude(secret, "tags", "Properties.Value")
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, k.Type())
 	}
