@@ -34,7 +34,7 @@ func TestIAMServiceAccountKey(t *testing.T) {
 	t.Run("Get", func(t *testing.T) {
 		wrapper := manual.NewIAMServiceAccountKey(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
 
-		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createServiceAccountKey(testKeyFullName), nil)
+		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(createServiceAccountKeyWithKeyData(testKeyFullName), nil)
 
 		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
 
@@ -43,13 +43,28 @@ func TestIAMServiceAccountKey(t *testing.T) {
 			t.Fatalf("Expected no error, got: %v", qErr)
 		}
 
+		t.Run("ExcludesKeyMaterialFromAttributes", func(t *testing.T) {
+			fields := sdpItem.GetAttributes().GetAttrStruct().GetFields()
+			excludedFields := []string{
+				"private_key_data",
+				"public_key_data",
+				"PrivateKeyData",
+				"PublicKeyData",
+			}
+			for _, field := range excludedFields {
+				if _, ok := fields[field]; ok {
+					t.Errorf("Expected attribute %q to be excluded, but it was present", field)
+				}
+			}
+		})
+
 		t.Run("StaticTests", func(t *testing.T) {
 			queryTests := shared.QueryTests{
 				{
-					ExpectedType:             gcpshared.IAMServiceAccount.String(),
-					ExpectedMethod:           sdp.QueryMethod_GET,
-					ExpectedQuery:            testServiceAccount,
-					ExpectedScope:            projectID,
+					ExpectedType:   gcpshared.IAMServiceAccount.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  testServiceAccount,
+					ExpectedScope:  projectID,
 				},
 			}
 
@@ -232,5 +247,15 @@ func TestIAMServiceAccountKey(t *testing.T) {
 func createServiceAccountKey(name string) *adminpb.ServiceAccountKey {
 	return &adminpb.ServiceAccountKey{
 		Name: name,
+	}
+}
+
+// createServiceAccountKeyWithKeyData creates a ServiceAccountKey with key material set.
+// Used to verify that private/public key fields are excluded from SDP attributes.
+func createServiceAccountKeyWithKeyData(name string) *adminpb.ServiceAccountKey {
+	return &adminpb.ServiceAccountKey{
+		Name:           name,
+		PrivateKeyData: []byte("fake-private-key-material"),
+		PublicKeyData:  []byte("fake-public-key-material"),
 	}
 }
