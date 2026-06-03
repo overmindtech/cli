@@ -152,7 +152,10 @@ func (c iamServiceAccountKeyWrapper) SearchStream(ctx context.Context, stream di
 
 // gcpIAMServiceAccountKeyToSDPItem converts a ServiceAccountKey to an sdp.Item
 func (c iamServiceAccountKeyWrapper) gcpIAMServiceAccountKeyToSDPItem(key *adminpb.ServiceAccountKey, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {
-	attributes, err := shared.ToAttributesWithExclude(key)
+	// private_key_data is only ever populated on CreateServiceAccountKey responses
+	// (this adapter only Gets/Lists), but exclude it defensively so key material can
+	// never reach SDP attributes. public_key_data is non-sensitive but excluded for tidiness.
+	attributes, err := shared.ToAttributesWithExclude(key, "private_key_data", "public_key_data")
 	if err != nil {
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
