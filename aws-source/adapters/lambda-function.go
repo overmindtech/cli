@@ -27,7 +27,6 @@ type FunctionDetails struct {
 // FunctionGetFunc Gets the details of a specific lambda function
 func functionGetFunc(ctx context.Context, client LambdaClient, scope string, input *lambda.GetFunctionInput) (*sdp.Item, error) {
 	out, err := client.GetFunction(ctx, input)
-
 	if err != nil {
 		return nil, err
 	}
@@ -108,14 +107,21 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 		}
 	}
 
-	attributes, err := ToAttributesWithExclude(function, "resultMetadata")
+	// Environment variables often contain secrets; extract links before redacting.
+	var envVars map[string]string
+	if function.Configuration != nil && function.Configuration.Environment != nil {
+		envVars = function.Configuration.Environment.Variables
+		configCopy := *function.Configuration
+		configCopy.Environment = nil
+		function.Configuration = &configCopy
+	}
 
+	attributes, err := ToAttributesWithExclude(function, "resultMetadata")
 	if err != nil {
 		return nil, err
 	}
 
 	err = attributes.Set("Name", *out.Configuration.FunctionName)
-
 	if err != nil {
 		return nil, err
 	}
@@ -218,9 +224,9 @@ func functionGetFunc(ctx context.Context, client LambdaClient, scope string, inp
 			}
 		}
 
-		if function.Configuration.Environment != nil {
+		if envVars != nil {
 			// Automatically extract links from the environment variables
-			newQueries, err := sdp.ExtractLinksFrom(function.Configuration.Environment.Variables)
+			newQueries, err := sdp.ExtractLinksFrom(envVars)
 			if err == nil {
 				item.LinkedItemQueries = append(item.LinkedItemQueries, newQueries...)
 			}
@@ -449,7 +455,6 @@ func ExtractLinksFromPolicy(policy *PolicyDocument) []*sdp.LinkedItemQuery {
 		if scope == "" {
 			// If we don't have a scope set then extract it from the target ARN
 			parsedARN, err := ParseARN(statement.Condition.ArnLike.AWSSourceArn)
-
 			if err != nil {
 				continue
 			}
@@ -473,7 +478,6 @@ func ExtractLinksFromPolicy(policy *PolicyDocument) []*sdp.LinkedItemQuery {
 // GetEventLinkedItem Gets the linked item request for a given destination ARN
 func GetEventLinkedItem(destinationARN string) (*sdp.LinkedItemQuery, error) {
 	parsed, err := ParseARN(destinationARN)
-
 	if err != nil {
 		return nil, err
 	}
@@ -532,7 +536,7 @@ func NewLambdaFunctionAdapter(client LambdaClient, accountID string, region stri
 		ListInput:       &lambda.ListFunctionsInput{},
 		GetFunc:         functionGetFunc,
 		AdapterMetadata: lambdaFunctionAdapterMetadata,
-		cache:        cache,
+		cache:           cache,
 		GetInputMapper: func(scope, query string) *lambda.GetFunctionInput {
 			return &lambda.GetFunctionInput{
 				FunctionName: &query,

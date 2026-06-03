@@ -2,6 +2,8 @@ package adapters
 
 import (
 	"context"
+	"encoding/json"
+	"strings"
 	"testing"
 	"time"
 
@@ -169,9 +171,39 @@ func (t *TestLambdaClient) GetPolicy(ctx context.Context, params *lambda.GetPoli
 	}, nil
 }
 
+func TestFunctionGetFuncRedactsEnvironmentVariables(t *testing.T) {
+	item, err := functionGetFunc(context.Background(), &TestLambdaClient{}, "foo", &lambda.GetFunctionInput{})
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	attrMap := item.GetAttributes().GetAttrStruct().AsMap()
+	config, ok := attrMap["Configuration"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected Configuration in attributes, got %T", attrMap["Configuration"])
+	}
+
+	if env, ok := config["Environment"].(map[string]any); ok {
+		if _, hasVariables := env["Variables"]; hasVariables {
+			t.Errorf("expected Configuration.Environment.Variables to be redacted, got %v", env["Variables"])
+		}
+	}
+
+	// Ensure env var names and values do not appear anywhere in attributes.
+	attrJSON, err := json.Marshal(attrMap)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	for _, secret := range []string{"sns_arn", "aws-controltower-AggregateSecurityNotifications"} {
+		if strings.Contains(string(attrJSON), secret) {
+			t.Errorf("expected attributes not to contain %q, got %s", secret, attrJSON)
+		}
+	}
+}
+
 func TestFunctionGetFunc(t *testing.T) {
 	item, err := functionGetFunc(context.Background(), &TestLambdaClient{}, "foo", &lambda.GetFunctionInput{})
-
 	if err != nil {
 		t.Error(err)
 	}
