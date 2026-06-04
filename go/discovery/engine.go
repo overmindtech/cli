@@ -18,7 +18,6 @@ import (
 	"github.com/nats-io/nats.go"
 	"github.com/overmindtech/cli/go/auth"
 	"github.com/overmindtech/cli/go/sdp-go"
-	"github.com/overmindtech/workspace/go/startup"
 	"github.com/overmindtech/cli/go/tracing"
 	log "github.com/sirupsen/logrus"
 	"github.com/sourcegraph/conc/pool"
@@ -891,7 +890,8 @@ func (e *Engine) ReadinessProbeHandlerFunc() func(http.ResponseWriter, *http.Req
 }
 
 // healthProbeHandler returns the HTTP handler for Kubernetes liveness/readiness probes.
-// Spans are created by startup.WrapHandler (otelhttp) so http.route is set for collector sampling.
+// Spans are created by otelhttp (via wrapHealthProbeHandler) so http.route is set
+// for collector sampling.
 func (e *Engine) healthProbeHandler() http.Handler {
 	mux := http.NewServeMux()
 	mux.HandleFunc("GET /healthz/alive", e.LivenessProbeHandlerFunc())
@@ -902,7 +902,7 @@ func (e *Engine) healthProbeHandler() http.Handler {
 		serviceName = e.EngineConfig.SourceName + "-healthz"
 	}
 
-	return startup.WrapHandler(mux, startup.WithServiceName(serviceName))
+	return wrapHealthProbeHandler(mux, serviceName)
 }
 
 // ServeHealthProbes starts an HTTP server for Kubernetes health probes on the given port.
