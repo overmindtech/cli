@@ -53,7 +53,7 @@ require (
 	connectrpc.com/connect v1.20.0 // v1.19.0 was faulty, wait until it is above this version
 	connectrpc.com/otelconnect v0.9.0
 	github.com/1password/onepassword-sdk-go v0.4.0
-	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.21.1
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.22.0
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.13.1
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v3 v3.0.0-beta.3
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/batch/armbatch/v4 v4.0.0
@@ -121,7 +121,6 @@ require (
 	github.com/exaring/otelpgx v0.11.1
 	github.com/getsentry/sentry-go v0.46.2
 	github.com/go-jose/go-jose/v4 v4.1.4
-	github.com/gocarina/gocsv v0.0.0-20260523204920-c264028e67ea
 	github.com/google/btree v1.1.3
 	github.com/google/cel-go v0.28.1
 	github.com/google/go-github/v84 v84.0.0
@@ -143,7 +142,6 @@ require (
 	github.com/jxskiss/base62 v1.1.0
 	github.com/kaptinlin/jsonrepair v0.4.5
 	github.com/lithammer/fuzzysearch v1.1.8
-	github.com/manifoldco/promptui v0.9.0
 	github.com/mavolin/go-htmx v1.0.0
 	github.com/mergestat/timediff v0.0.4
 	github.com/micahhausler/aws-iam-policy v0.4.4
@@ -206,6 +204,7 @@ require (
 	golang.org/x/oauth2 v0.36.0
 	golang.org/x/sync v0.20.0
 	golang.org/x/text v0.37.0
+	golang.org/x/time v0.15.0
 	gonum.org/v1/gonum v0.17.0
 	google.golang.org/api v0.282.0
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260526163538-3dc84a4a5aaa
@@ -274,7 +273,6 @@ require (
 	github.com/charmbracelet/x/term v0.2.2 // indirect
 	github.com/charmbracelet/x/termios v0.1.1 // indirect
 	github.com/charmbracelet/x/windows v0.2.2 // indirect
-	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/clipperhouse/displaywidth v0.11.0 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/cloudflare/circl v1.6.3 // indirect
@@ -448,7 +446,6 @@ require (
 	golang.org/x/sys v0.45.0 // indirect
 	golang.org/x/telemetry v0.0.0-20260409153401-be6f6cb8b1fa // indirect
 	golang.org/x/term v0.43.0 // indirect
-	golang.org/x/time v0.15.0 // indirect
 	golang.org/x/tools v0.44.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	gomodules.xyz/jsonpatch/v2 v2.5.0 // indirect
