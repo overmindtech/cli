@@ -218,7 +218,7 @@ require (
 	k8s.io/component-base v0.36.1
 	riverqueue.com/riverui v0.16.0
 	sigs.k8s.io/controller-runtime v0.24.1
-	sigs.k8s.io/kind v0.31.0
+	sigs.k8s.io/kind v0.32.0
 	sigs.k8s.io/structured-merge-diff/v6 v6.4.0
 )
 
