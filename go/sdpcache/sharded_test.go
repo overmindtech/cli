@@ -611,14 +611,17 @@ func TestShardedCachePurgeAggregation(t *testing.T) {
 		cache.StoreItem(ctx, item, 100*time.Millisecond, ck)
 	}
 
-	// Wait for expiry
-	time.Sleep(200 * time.Millisecond)
-
-	// Purge and check aggregated stats
-	stats := cache.Purge(ctx, time.Now())
-	if stats.NumPurged != 10 {
-		t.Errorf("expected 10 items purged, got %d", stats.NumPurged)
+	// Wait for all shards to observe expiry; purge timing is wall-clock sensitive under -race.
+	deadline := time.Now().Add(2 * time.Second)
+	var stats PurgeStats
+	for time.Now().Before(deadline) {
+		stats = cache.Purge(ctx, time.Now())
+		if stats.NumPurged == 10 {
+			return
+		}
+		time.Sleep(50 * time.Millisecond)
 	}
+	t.Errorf("expected 10 items purged, got %d", stats.NumPurged)
 }
 
 // TestShardedCacheShardForBounds verifies that shardFor always returns a valid
