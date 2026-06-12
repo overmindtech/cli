@@ -78,7 +78,7 @@ jobs:
       # `cosign verify-blob-attestation`. See
       # docs.overmind.tech/docs/cli/verifying-releases.md.
       - name: Attest build provenance for release archives
-        uses: actions/attest-build-provenance@v3
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: |
             dist/overmind_cli_*.tar.gz
