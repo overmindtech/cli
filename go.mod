@@ -21,7 +21,7 @@ require (
 	buf.build/gen/go/depot/api/connectrpc/go v1.20.0-20260430091712-6fbfdf526256.1
 	buf.build/gen/go/depot/api/protocolbuffers/go v1.36.11-20260430091712-6fbfdf526256.1
 	buf.build/go/protovalidate v1.2.0
-	charm.land/lipgloss/v2 v2.0.3
+	charm.land/lipgloss/v2 v2.0.4
 	cloud.google.com/go/aiplatform v1.125.0
 	cloud.google.com/go/auth v0.20.0
 	cloud.google.com/go/auth/oauth2adapt v0.2.8
@@ -78,7 +78,7 @@ require (
 	github.com/akedrou/textdiff v0.1.0
 	github.com/anthropics/anthropic-sdk-go v0.2.0-alpha.4
 	github.com/antihax/optional v1.0.0
-	github.com/auth0/go-auth0/v2 v2.12.0
+	github.com/auth0/go-auth0/v2 v2.13.0
 	github.com/auth0/go-jwt-middleware/v3 v3.2.0
 	github.com/aws/aws-sdk-go-v2 v1.41.12
 	github.com/aws/aws-sdk-go-v2/config v1.32.23
@@ -109,9 +109,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.43.2
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.69.2
 	github.com/aws/aws-sdk-go-v2/service/sts v1.43.2
-	github.com/aws/smithy-go v1.27.1
+	github.com/aws/smithy-go v1.27.2
 	github.com/bombsimon/logrusr/v4 v4.1.0
-	github.com/bradleyfalzon/ghinstallation/v2 v2.18.0
+	github.com/bradleyfalzon/ghinstallation/v2 v2.19.0
 	github.com/brianvoe/gofakeit/v7 v7.15.0
 	github.com/cenkalti/backoff/v5 v5.0.3
 	github.com/charmbracelet/glamour v0.10.0
@@ -128,7 +128,7 @@ require (
 	github.com/googleapis/gax-go/v2 v2.22.0
 	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
 	github.com/gorilla/mux v1.8.1
-	github.com/harness/harness-go-sdk v0.8.1
+	github.com/harness/harness-go-sdk v0.8.2
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/hashicorp/hcl/v2 v2.24.0
@@ -138,7 +138,7 @@ require (
 	github.com/hashicorp/terraform-plugin-testing v1.16.0
 	github.com/invopop/jsonschema v0.14.0
 	github.com/jackc/pgx/v5 v5.10.0
-	github.com/jedib0t/go-pretty/v6 v6.8.0
+	github.com/jedib0t/go-pretty/v6 v6.8.1
 	github.com/jxskiss/base62 v1.1.0
 	github.com/kaptinlin/jsonrepair v0.4.6
 	github.com/lithammer/fuzzysearch v1.1.8
@@ -163,7 +163,7 @@ require (
 	github.com/pb33f/ordered-map/v2 v2.3.1
 	github.com/pborman/ansi v1.1.0
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
-	github.com/posthog/posthog-go v1.14.0
+	github.com/posthog/posthog-go v1.15.0
 	github.com/qhenkart/anthropic-tokenizer-go v0.0.0-20231011194518-5519949e0faf
 	github.com/resend/resend-go/v3 v3.7.0
 	github.com/riverqueue/river v0.39.0
@@ -200,17 +200,17 @@ require (
 	go.uber.org/goleak v1.3.0
 	go.uber.org/mock v0.6.0
 	go.yaml.in/yaml/v3 v3.0.4
-	golang.org/x/net v0.55.0
+	golang.org/x/net v0.56.0
 	golang.org/x/oauth2 v0.36.0
-	golang.org/x/sync v0.20.0
-	golang.org/x/text v0.37.0
+	golang.org/x/sync v0.21.0
+	golang.org/x/text v0.38.0
 	golang.org/x/time v0.15.0
 	gonum.org/v1/gonum v0.17.0
 	google.golang.org/api v0.283.0
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260526163538-3dc84a4a5aaa
 	google.golang.org/grpc v1.81.1
 	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af
-	gopkg.in/ini.v1 v1.67.2
+	gopkg.in/ini.v1 v1.67.3
 	gopkg.in/yaml.v3 v3.0.1
 	k8s.io/api v0.36.1
 	k8s.io/apimachinery v0.36.1
@@ -440,13 +440,13 @@ require (
 	go.uber.org/zap v1.27.1 // indirect
 	go.yaml.in/yaml/v2 v2.4.3 // indirect
 	go.yaml.in/yaml/v4 v4.0.0-rc.2 // indirect
-	golang.org/x/crypto v0.52.0 // indirect
+	golang.org/x/crypto v0.53.0 // indirect
 	golang.org/x/exp v0.0.0-20251219203646-944ab1f22d93 // indirect
 	golang.org/x/mod v0.36.0 // indirect
-	golang.org/x/sys v0.45.0 // indirect
-	golang.org/x/telemetry v0.0.0-20260409153401-be6f6cb8b1fa // indirect
-	golang.org/x/term v0.43.0 // indirect
-	golang.org/x/tools v0.44.0 // indirect
+	golang.org/x/sys v0.46.0 // indirect
+	golang.org/x/telemetry v0.0.0-20260508192327-42602be52be6 // indirect
+	golang.org/x/term v0.44.0 // indirect
+	golang.org/x/tools v0.45.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 	gomodules.xyz/jsonpatch/v2 v2.5.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
@@ -465,3 +465,5 @@ require (
 	sigs.k8s.io/randfill v1.0.0 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
+
+require github.com/google/go-github/v88 v88.0.0 // indirect
