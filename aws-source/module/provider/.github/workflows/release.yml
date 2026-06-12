@@ -18,7 +18,7 @@ jobs:
           fetch-depth: 0
 
       - name: Install 1Password CLI
-        uses: 1password/install-cli-action@v3.0.0
+        uses: 1password/install-cli-action@v4.0.0
 
       - name: Load GPG secrets from 1Password
         uses: 1password/load-secrets-action@v4.0.1
