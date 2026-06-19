@@ -123,7 +123,7 @@ require (
 	github.com/go-jose/go-jose/v4 v4.1.4
 	github.com/google/btree v1.1.3
 	github.com/google/cel-go v0.28.1
-	github.com/google/go-github/v84 v84.0.0
+	github.com/google/go-github/v88 v88.0.0
 	github.com/google/uuid v1.6.0
 	github.com/googleapis/gax-go/v2 v2.22.0
 	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
@@ -465,5 +465,3 @@ require (
 	sigs.k8s.io/randfill v1.0.0 // indirect
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
-
-require github.com/google/go-github/v88 v88.0.0 // indirect
