@@ -451,6 +451,104 @@ func TestNewAuthMiddleware(t *testing.T) {
 	}
 }
 
+func TestNewAuthMiddleware_PreservesMCPGrantKeyClaim(t *testing.T) {
+	server, err := NewTestJWTServer()
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	ctx := t.Context()
+	jwksURL := server.Start(ctx)
+
+	config := MiddlewareConfig{
+		IssuerURL:     jwksURL,
+		Auth0Audience: "https://api.overmind.tech",
+	}
+
+	tests := []struct {
+		name         string
+		mcpGrantKey  string
+		expectedKey  string
+		expectedCode int
+	}{
+		{
+			name:         "claim present",
+			mcpGrantKey:  "grant-key-123",
+			expectedKey:  "grant-key-123",
+			expectedCode: http.StatusOK,
+		},
+		{
+			name:         "claim missing",
+			expectedKey:  "",
+			expectedCode: http.StatusOK,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			token, err := server.GenerateJWT(&TestTokenOptions{
+				Audience: []string{"https://api.overmind.tech"},
+				Expiry:   time.Now().Add(time.Hour),
+				CustomClaims: CustomClaims{
+					AccountName: "test",
+					Scope:       "test:pass",
+					MCPGrantKey: test.mcpGrantKey,
+				},
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+
+			handler := NewAuthMiddleware(config, http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+				claims, ok := r.Context().Value(CustomClaimsContextKey{}).(*CustomClaims)
+				if !ok {
+					w.WriteHeader(http.StatusInternalServerError)
+					_, err := fmt.Fprintf(w, "expected *CustomClaims in context, got %T", r.Context().Value(CustomClaimsContextKey{}))
+					if err != nil {
+						t.Error(err)
+					}
+					return
+				}
+				if claims.AccountName != "test" {
+					w.WriteHeader(http.StatusInternalServerError)
+					_, err := fmt.Fprintf(w, "expected account %q, got %q", "test", claims.AccountName)
+					if err != nil {
+						t.Error(err)
+					}
+					return
+				}
+				if claims.Scope != "test:pass" {
+					w.WriteHeader(http.StatusInternalServerError)
+					_, err := fmt.Fprintf(w, "expected scope %q, got %q", "test:pass", claims.Scope)
+					if err != nil {
+						t.Error(err)
+					}
+					return
+				}
+				if claims.MCPGrantKey != test.expectedKey {
+					w.WriteHeader(http.StatusInternalServerError)
+					_, err := fmt.Fprintf(w, "expected mcp grant key %q, got %q", test.expectedKey, claims.MCPGrantKey)
+					if err != nil {
+						t.Error(err)
+					}
+					return
+				}
+				w.WriteHeader(http.StatusOK)
+			}))
+
+			req := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil)
+			req.Header.Set("Authorization", fmt.Sprintf("Bearer %s", token))
+			rr := httptest.NewRecorder()
+
+			handler.ServeHTTP(rr, req)
+
+			if rr.Code != test.expectedCode {
+				t.Errorf("expected status code %d, got %d: %s", test.expectedCode, rr.Code, rr.Body.String())
+			}
+		})
+	}
+}
+
 // TestBypassAuthInjectsSubject verifies the BypassAuth code path (local/dev
 // environments only — never runs in production where real JWTs provide the
 // subject). It ensures a synthetic "auth-bypass" subject is injected into
