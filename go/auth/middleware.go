@@ -594,6 +594,7 @@ func (w *resourceMetadataWriter) Unwrap() http.ResponseWriter {
 type CustomClaims struct {
 	Scope       string `json:"scope"`
 	AccountName string `json:"https://api.overmind.tech/account-name"`
+	MCPGrantKey string `json:"https://api.overmind.tech/mcp-grant-key"`
 }
 
 // HasScope checks whether our claims have a specific scope.
