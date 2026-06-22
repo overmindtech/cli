@@ -26,7 +26,7 @@ require (
 	cloud.google.com/go/auth v0.20.0
 	cloud.google.com/go/auth/oauth2adapt v0.2.8
 	cloud.google.com/go/bigquery v1.77.0
-	cloud.google.com/go/bigtable v1.49.0
+	cloud.google.com/go/bigtable v1.50.0
 	cloud.google.com/go/certificatemanager v1.14.0
 	cloud.google.com/go/compute v1.64.0
 	cloud.google.com/go/compute/metadata v0.9.0
@@ -47,7 +47,7 @@ require (
 	cloud.google.com/go/run v1.21.0
 	cloud.google.com/go/secretmanager v1.20.0
 	cloud.google.com/go/securitycentermanagement v1.6.0
-	cloud.google.com/go/spanner v1.91.0
+	cloud.google.com/go/spanner v1.92.0
 	cloud.google.com/go/storage v1.62.3
 	cloud.google.com/go/storagetransfer v1.18.0
 	connectrpc.com/connect v1.20.0 // v1.19.0 was faulty, wait until it is above this version
@@ -206,8 +206,8 @@ require (
 	golang.org/x/text v0.38.0
 	golang.org/x/time v0.15.0
 	gonum.org/v1/gonum v0.17.0
-	google.golang.org/api v0.284.0
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260610212136-7ab31c22f7ad
+	google.golang.org/api v0.285.0
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260618152121-87f3d3e198d3
 	google.golang.org/grpc v1.81.1
 	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af
 	gopkg.in/ini.v1 v1.67.3
