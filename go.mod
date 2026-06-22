@@ -169,7 +169,7 @@ require (
 	github.com/riverqueue/river v0.39.0
 	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.39.0
 	github.com/riverqueue/river/rivertype v0.39.0
-	github.com/riverqueue/rivercontrib/otelriver v0.9.0
+	github.com/riverqueue/rivercontrib/otelriver v0.10.0
 	github.com/rs/cors v1.11.1
 	github.com/samber/slog-logrus/v2 v2.5.4
 	github.com/sashabaranov/go-openai v1.41.2
