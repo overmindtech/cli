@@ -119,7 +119,7 @@ require (
 	github.com/coreos/go-oidc/v3 v3.19.0
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/exaring/otelpgx v0.11.1
-	github.com/getsentry/sentry-go v0.46.2
+	github.com/getsentry/sentry-go v0.47.0
 	github.com/go-jose/go-jose/v4 v4.1.4
 	github.com/google/btree v1.1.3
 	github.com/google/cel-go v0.28.1
