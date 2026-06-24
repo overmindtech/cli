@@ -717,6 +717,56 @@ func TestExtractAccount(t *testing.T) {
 	})
 }
 
+func TestExtractMCPGrantKey(t *testing.T) {
+	t.Parallel()
+
+	t.Run("returns ErrNoClaims when no claims on context", func(t *testing.T) {
+		t.Parallel()
+
+		grantKey, err := ExtractMCPGrantKey(context.Background())
+		if !errors.Is(err, ErrNoClaims) {
+			t.Errorf("expected ErrNoClaims, got %v", err)
+		}
+		if grantKey != "" {
+			t.Errorf("expected empty grant key, got %q", grantKey)
+		}
+	})
+
+	t.Run("returns empty string when claim is absent", func(t *testing.T) {
+		t.Parallel()
+
+		ctx := context.WithValue(context.Background(), CustomClaimsContextKey{}, &CustomClaims{
+			Scope:       "account:read",
+			AccountName: "tenant-a",
+		})
+
+		grantKey, err := ExtractMCPGrantKey(ctx)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if grantKey != "" {
+			t.Errorf("expected empty grant key, got %q", grantKey)
+		}
+	})
+
+	t.Run("returns grant key when claim is populated", func(t *testing.T) {
+		t.Parallel()
+
+		ctx := OverrideAuth(context.Background(),
+			WithAccount("tenant-a"),
+			WithMCPGrantKey("grant-key-123"),
+		)
+
+		grantKey, err := ExtractMCPGrantKey(ctx)
+		if err != nil {
+			t.Fatalf("expected no error, got %v", err)
+		}
+		if grantKey != "grant-key-123" {
+			t.Errorf("expected %q, got %q", "grant-key-123", grantKey)
+		}
+	})
+}
+
 func TestOverrideAuth(t *testing.T) {
 	tests := []struct {
 		Name           string

@@ -193,6 +193,18 @@ func ExtractAccount(ctx context.Context) (string, error) {
 	return accountName, nil
 }
 
+// ExtractMCPGrantKey reads the opaque MCP grant-key claim from context. An
+// empty string with a nil error means the claim is absent — expected until
+// Auth0 mints grant keys on MCP tokens (ENG-5343). ErrNoClaims means no JWT
+// claims were attached upstream.
+func ExtractMCPGrantKey(ctx context.Context) (string, error) {
+	claims := ctx.Value(CustomClaimsContextKey{})
+	if claims == nil {
+		return "", ErrNoClaims
+	}
+	return claims.(*CustomClaims).MCPGrantKey, nil
+}
+
 // NewAuthMiddleware Creates new auth middleware. The options allow you to
 // bypass the authentication process or not, but either way this middleware will
 // set the `CustomClaimsContextKey` in the request context which allows you to
@@ -255,6 +267,13 @@ func WithScope(scope string) OverrideAuthOptionFunc {
 func WithAccount(account string) OverrideAuthOptionFunc {
 	return withCustomClaims(func(claims *CustomClaims) {
 		claims.AccountName = account
+	})
+}
+
+// Sets the MCP grant-key claim in the context to the given value.
+func WithMCPGrantKey(grantKey string) OverrideAuthOptionFunc {
+	return withCustomClaims(func(claims *CustomClaims) {
+		claims.MCPGrantKey = grantKey
 	})
 }
 
