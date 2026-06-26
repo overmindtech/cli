@@ -94,9 +94,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.67.4
 	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.65.2
 	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.59.0
-	github.com/aws/aws-sdk-go-v2/service/directconnect v1.40.0
+	github.com/aws/aws-sdk-go-v2/service/directconnect v1.41.0
 	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.59.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.307.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.308.0
 	github.com/aws/aws-sdk-go-v2/service/ecs v1.85.0
 	github.com/aws/aws-sdk-go-v2/service/efs v1.42.1
 	github.com/aws/aws-sdk-go-v2/service/eks v1.87.0

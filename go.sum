@@ -229,12 +229,12 @@ github.com/aws/aws-sdk-go-v2/service/cloudfront v1.65.2 h1:zG2KsuGIzgujekjJmRY4t
 github.com/aws/aws-sdk-go-v2/service/cloudfront v1.65.2/go.mod h1:rVFXjLSku4g0zfriDSkI1sdUGEJAjnmlPDqOnIFGZJ0=
 github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.59.0 h1:JOrwHweL6IzRjbDxdjup2YI2QjWa8/h0PGexR8MZpKw=
 github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.59.0/go.mod h1:tsfAcBcMTF2G9UirQTP1In3DrkNO16SyUU527NPLPhs=
-github.com/aws/aws-sdk-go-v2/service/directconnect v1.40.0 h1:80SZbsSqpFybapKcpLK7lqAbLqFZpWm6daTGP3k6HDk=
-github.com/aws/aws-sdk-go-v2/service/directconnect v1.40.0/go.mod h1:iU8VT4ZfqCrIlNGQp8gg6E5bIzEAjoVRTifJYASYjus=
+github.com/aws/aws-sdk-go-v2/service/directconnect v1.41.0 h1:Qzq0ztL85nGdhlHk01b0C3/CHPNY8yHdLwpKX5d0Ft8=
+github.com/aws/aws-sdk-go-v2/service/directconnect v1.41.0/go.mod h1:iU8VT4ZfqCrIlNGQp8gg6E5bIzEAjoVRTifJYASYjus=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.59.0 h1:S1qETDbdXKZMYVveuxACCKuRqnAt2NlnmYnlq5SeuMY=
 github.com/aws/aws-sdk-go-v2/service/dynamodb v1.59.0/go.mod h1:jLkDwIDBkCIpiENQhAOjAR2L9jwj56mZgVEvuro4gUE=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.307.1 h1:BzCT/JXN5E2OBQhal8KwqmqDVdV77R7NVVTiVOI9JmA=
-github.com/aws/aws-sdk-go-v2/service/ec2 v1.307.1/go.mod h1:8mrDF7OtbuL0QpwP4YCvLuoOE4/5lL7D33MXgp069/Y=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.308.0 h1:xBP+yWpveXD/PxK7HRMcoG6yj1vdOjSahAg4qPomF+0=
+github.com/aws/aws-sdk-go-v2/service/ec2 v1.308.0/go.mod h1:8mrDF7OtbuL0QpwP4YCvLuoOE4/5lL7D33MXgp069/Y=
 github.com/aws/aws-sdk-go-v2/service/ecs v1.85.0 h1:1e9htzu1Yykx0SSNd8dpWJXa5g8i9Wcl1ngdjPaBHsM=
 github.com/aws/aws-sdk-go-v2/service/ecs v1.85.0/go.mod h1:0vahPCh3slyORHbSuAP8YDyJKLEUQAMX7+bzYGxEnVI=
 github.com/aws/aws-sdk-go-v2/service/efs v1.42.1 h1:Ii4N3TQ2wa18cOlFR2Kxcji4wVsaySku+ygiBeKGqTU=
