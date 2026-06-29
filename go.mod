@@ -232,7 +232,7 @@ require (
 	al.essio.dev/pkg/shellescape v1.5.1 // indirect
 	atomicgo.dev/cursor v0.2.0 // indirect
 	atomicgo.dev/schedule v0.1.0 // indirect
-	cel.dev/expr v0.25.1 // indirect
+	cel.dev/expr v0.25.2 // indirect
 	cloud.google.com/go v0.123.0 // indirect
 	cloud.google.com/go/longrunning v1.0.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.12.0 // indirect
@@ -473,3 +473,5 @@ require (
 )
 
 require golang.org/x/image v0.43.0
+
+require gitlab.com/gitlab-org/api/client-go/v2 v2.43.0 // indirect
