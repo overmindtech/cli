@@ -23,7 +23,7 @@ jobs:
           VERSION=$(echo "$GITHUB_REF" | sed 's|refs/heads/copybara/||')
           echo "version=$VERSION" >> $GITHUB_OUTPUT
 
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ github.ref }}
           fetch-depth: 0
