@@ -27,7 +27,7 @@ require (
 	buf.build/gen/go/depot/api/connectrpc/go v1.20.0-20260620134603-18444ddb9580.1
 	buf.build/gen/go/depot/api/protocolbuffers/go v1.36.11-20260620134603-18444ddb9580.1
 	buf.build/go/protovalidate v1.2.0
-	charm.land/lipgloss/v2 v2.0.4
+	charm.land/lipgloss/v2 v2.0.5
 	cloud.google.com/go/aiplatform v1.125.0
 	cloud.google.com/go/auth v0.20.0
 	cloud.google.com/go/auth/oauth2adapt v0.2.8
@@ -84,7 +84,7 @@ require (
 	github.com/akedrou/textdiff v0.1.0
 	github.com/anthropics/anthropic-sdk-go v0.2.0-alpha.4
 	github.com/antihax/optional v1.0.0
-	github.com/auth0/go-auth0/v2 v2.13.0
+	github.com/auth0/go-auth0/v2 v2.14.0
 	github.com/auth0/go-jwt-middleware/v3 v3.2.0
 	github.com/aws/aws-sdk-go-v2 v1.42.1
 	github.com/aws/aws-sdk-go-v2/config v1.32.27
@@ -134,7 +134,7 @@ require (
 	github.com/googleapis/gax-go/v2 v2.22.0
 	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
 	github.com/gorilla/mux v1.8.1
-	github.com/harness/harness-go-sdk v0.8.3
+	github.com/harness/harness-go-sdk v0.8.7
 	github.com/hashicorp/go-retryablehttp v0.7.8
 	github.com/hashicorp/golang-lru/v2 v2.0.7
 	github.com/hashicorp/hcl/v2 v2.24.0
@@ -144,7 +144,7 @@ require (
 	github.com/hashicorp/terraform-plugin-testing v1.16.0
 	github.com/invopop/jsonschema v0.14.0
 	github.com/jackc/pgx/v5 v5.10.0
-	github.com/jedib0t/go-pretty/v6 v6.8.1
+	github.com/jedib0t/go-pretty/v6 v6.8.2
 	github.com/jxskiss/base62 v1.1.0
 	github.com/kaptinlin/jsonrepair v0.4.8
 	github.com/lithammer/fuzzysearch v1.1.8
@@ -169,7 +169,7 @@ require (
 	github.com/pb33f/ordered-map/v2 v2.3.1
 	github.com/pborman/ansi v1.1.0
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
-	github.com/posthog/posthog-go v1.16.1
+	github.com/posthog/posthog-go v1.17.4
 	github.com/qhenkart/anthropic-tokenizer-go v0.0.0-20231011194518-5519949e0faf
 	github.com/resend/resend-go/v3 v3.9.2
 	github.com/riverqueue/river v0.39.0
@@ -180,7 +180,7 @@ require (
 	github.com/samber/slog-logrus/v2 v2.5.4
 	github.com/sashabaranov/go-openai v1.41.2
 	github.com/sirupsen/logrus v1.9.4
-	github.com/slack-go/slack v0.26.0
+	github.com/slack-go/slack v0.27.0
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
@@ -214,7 +214,7 @@ require (
 	gonum.org/v1/gonum v0.17.0
 	google.golang.org/api v0.286.0
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260622175928-b703f567277d
-	google.golang.org/grpc v1.81.1
+	google.golang.org/grpc v1.82.0
 	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af
 	gopkg.in/ini.v1 v1.67.3
 	gopkg.in/yaml.v3 v3.0.1
@@ -238,7 +238,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.12.0 // indirect
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.7.2 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
-	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.31.0 // indirect
+	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.32.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/exporter/metric v0.57.0 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/internal/resourcemapping v0.57.0 // indirect
 	github.com/ProtonMail/go-crypto v1.4.1 // indirect
@@ -435,7 +435,7 @@ require (
 	github.com/zeebo/xxh3 v1.0.2 // indirect
 	go.devnw.com/structs v1.0.0 // indirect
 	go.opentelemetry.io/auto/sdk v1.2.1 // indirect
-	go.opentelemetry.io/contrib/detectors/gcp v1.42.0 // indirect
+	go.opentelemetry.io/contrib/detectors/gcp v1.43.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.68.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.40.0 // indirect
 	go.opentelemetry.io/otel/log v0.11.0 // indirect
@@ -474,4 +474,6 @@ require (
 
 require golang.org/x/image v0.43.0
 
-require gitlab.com/gitlab-org/api/client-go/v2 v2.43.0
+require gitlab.com/gitlab-org/api/client-go/v2 v2.44.0
+
+require github.com/andybalholm/brotli v1.1.1 // indirect
