@@ -157,7 +157,7 @@ require (
 	github.com/modelcontextprotocol/go-sdk v1.6.1
 	github.com/muesli/reflow v0.3.0
 	github.com/nats-io/jwt/v2 v2.8.2
-	github.com/nats-io/nats-server/v2 v2.14.2
+	github.com/nats-io/nats-server/v2 v2.14.3
 	github.com/nats-io/nats.go v1.52.0
 	github.com/nats-io/nkeys v0.4.16
 	github.com/neo4j/neo4j-go-driver/v6 v6.1.0
@@ -474,4 +474,4 @@ require (
 
 require golang.org/x/image v0.43.0
 
-require gitlab.com/gitlab-org/api/client-go/v2 v2.43.0 // indirect
+require gitlab.com/gitlab-org/api/client-go/v2 v2.43.0
