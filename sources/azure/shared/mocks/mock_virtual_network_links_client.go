@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	armprivatedns "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
+	armprivatedns "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns/v2"
 	clients "github.com/overmindtech/cli/sources/azure/clients"
 	gomock "go.uber.org/mock/gomock"
 )

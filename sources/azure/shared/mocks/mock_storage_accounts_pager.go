@@ -13,7 +13,7 @@ import (
 	context "context"
 	reflect "reflect"
 
-	armstorage "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v3"
+	armstorage "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v4"
 	gomock "go.uber.org/mock/gomock"
 )
 

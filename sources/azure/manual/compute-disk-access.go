@@ -4,7 +4,7 @@ import (
 	"context"
 	"errors"
 
-	armcompute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
+	armcompute "github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v8"
 	discovery "github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
 	sdpcache "github.com/overmindtech/cli/go/sdpcache"

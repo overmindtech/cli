@@ -3,7 +3,7 @@ package clients
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v8"
 )
 
 //go:generate mockgen -destination=../shared/mocks/mock_virtual_machine_run_commands_client.go -package=mocks -source=virtual-machine-run-commands-client.go

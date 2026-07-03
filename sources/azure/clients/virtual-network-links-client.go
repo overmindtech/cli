@@ -3,7 +3,7 @@ package clients
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns/v2"
 )
 
 //go:generate mockgen -destination=../shared/mocks/mock_virtual_network_links_client.go -package=mocks -source=virtual-network-links-client.go

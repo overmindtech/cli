@@ -3,7 +3,7 @@ package clients
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v8"
 )
 
 //go:generate mockgen -destination=../shared/mocks/mock_proximity_placement_groups_client.go -package=mocks -source=proximity-placement-groups-client.go

@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v4"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql/v2"
 	log "github.com/sirupsen/logrus"
 

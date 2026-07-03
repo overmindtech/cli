@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v3"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v4"
 	"go.uber.org/mock/gomock"
 
 	"github.com/overmindtech/cli/go/discovery"

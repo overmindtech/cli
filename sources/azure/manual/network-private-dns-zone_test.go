@@ -7,7 +7,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns/v2"
 	"go.uber.org/mock/gomock"
 
 	"github.com/overmindtech/cli/go/discovery"

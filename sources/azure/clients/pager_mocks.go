@@ -3,8 +3,8 @@ package clients
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v3"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v8"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v4"
 )
 
 // These interfaces are defined specifically for mock generation.

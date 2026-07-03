@@ -6,7 +6,7 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights/v3"
 	"go.uber.org/mock/gomock"
 
 	"github.com/overmindtech/cli/go/discovery"
