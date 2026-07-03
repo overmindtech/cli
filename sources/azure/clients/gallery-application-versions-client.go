@@ -3,7 +3,7 @@ package clients
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v8"
 )
 
 //go:generate mockgen -destination=../shared/mocks/mock_gallery_application_versions_client.go -package=mocks -source=gallery-application-versions-client.go

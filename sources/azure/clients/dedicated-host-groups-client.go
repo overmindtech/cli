@@ -3,7 +3,7 @@ package clients
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v7"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/compute/armcompute/v8"
 )
 
 //go:generate mockgen -destination=../shared/mocks/mock_dedicated_host_groups_client.go -package=mocks -source=dedicated-host-groups-client.go

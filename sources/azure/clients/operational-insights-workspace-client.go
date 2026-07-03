@@ -3,7 +3,7 @@ package clients
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights/v3"
 )
 
 //go:generate mockgen -destination=../shared/mocks/mock_operational_insights_workspace_client.go -package=mocks -source=operational-insights-workspace-client.go

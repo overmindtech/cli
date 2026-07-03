@@ -9,8 +9,8 @@ import (
 	"testing"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v2"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v3"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v4"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/storage/armstorage/v4"
 	log "github.com/sirupsen/logrus"
 
 	"github.com/overmindtech/cli/go/discovery"
@@ -290,11 +290,9 @@ func createTable(ctx context.Context, client *armstorage.TableClient, resourceGr
 
 	// Create the table
 	// Tables don't require any properties
-	resp, err := client.Create(ctx, resourceGroupName, accountName, tableName, &armstorage.TableClientCreateOptions{
-		Parameters: &armstorage.Table{
-			TableProperties: &armstorage.TableProperties{},
-		},
-	})
+	resp, err := client.Create(ctx, resourceGroupName, accountName, tableName, armstorage.Table{
+		TableProperties: &armstorage.TableProperties{},
+	}, nil)
 	if err != nil {
 		// Check if table already exists (conflict)
 		var respErr *azcore.ResponseError
