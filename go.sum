@@ -553,8 +553,8 @@ github.com/hashicorp/hcl/v2 v2.24.0 h1:2QJdZ454DSsYGoaE6QheQZjtKZSUs9Nh2izTWiwQx
 github.com/hashicorp/hcl/v2 v2.24.0/go.mod h1:oGoO1FIQYfn/AgyOhlg9qLC6/nOJPX3qGbkZpYAcqfM=
 github.com/hashicorp/logutils v1.0.0 h1:dLEQVugN8vlakKOUE3ihGLTZJRB4j+M2cdTm/ORI65Y=
 github.com/hashicorp/logutils v1.0.0/go.mod h1:QIAnNjmIWmVIIkWDTG1z5v++HQmx9WQRO+LraFDTW64=
-github.com/hashicorp/terraform-config-inspect v0.0.0-20260224005459-813a97530220 h1:v0h6j7IMgA24b8aWG5+d6WStIP9G8e/p0DKK3Bmk7YQ=
-github.com/hashicorp/terraform-config-inspect v0.0.0-20260224005459-813a97530220/go.mod h1:Gz/z9Hbn+4KSp8A2FBtNszfLSdT2Tn/uAKGuVqqWmDI=
+github.com/hashicorp/terraform-config-inspect v0.0.0-20260709150029-2fb54c236733 h1:e1CDVoHQG7iqZvWK6EY7gWOVg70z9zDy6PseAAoSEJY=
+github.com/hashicorp/terraform-config-inspect v0.0.0-20260709150029-2fb54c236733/go.mod h1:Gz/z9Hbn+4KSp8A2FBtNszfLSdT2Tn/uAKGuVqqWmDI=
 github.com/hashicorp/terraform-exec v0.25.1 h1:PRutYRGM8pixV3B8812NYoBK5O+yuf3qcB/70KFKGiU=
 github.com/hashicorp/terraform-exec v0.25.1/go.mod h1:+izOYrs9sKMQK4OYvGDnrSSJHY/pm4e4eXFqSL2Q5mA=
 github.com/hashicorp/terraform-json v0.27.2 h1:BwGuzM6iUPqf9JYM/Z4AF1OJ5VVJEEzoKST/tRDBJKU=
