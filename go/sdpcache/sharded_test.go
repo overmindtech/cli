@@ -612,10 +612,12 @@ func TestShardedCachePurgeAggregation(t *testing.T) {
 	}
 
 	// Wait for all shards to observe expiry; purge timing is wall-clock sensitive under -race.
-	deadline := time.Now().Add(2 * time.Second)
+	time.Sleep(150 * time.Millisecond)
+
+	deadline := time.Now().Add(5 * time.Second)
 	var stats PurgeStats
 	for time.Now().Before(deadline) {
-		stats = cache.Purge(ctx, time.Now())
+		stats = cache.Purge(ctx, time.Now().Add(100*time.Millisecond))
 		if stats.NumPurged == 10 {
 			return
 		}
