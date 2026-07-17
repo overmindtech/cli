@@ -87,34 +87,34 @@ require (
 	github.com/auth0/go-auth0/v2 v2.14.0
 	github.com/auth0/go-jwt-middleware/v3 v3.2.0
 	github.com/aws/aws-sdk-go-v2 v1.42.1
-	github.com/aws/aws-sdk-go-v2/config v1.32.29
-	github.com/aws/aws-sdk-go-v2/credentials v1.19.28
+	github.com/aws/aws-sdk-go-v2/config v1.32.30
+	github.com/aws/aws-sdk-go-v2/credentials v1.19.29
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.30
-	github.com/aws/aws-sdk-go-v2/service/apigateway v1.41.0
-	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.69.0
-	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.66.0
-	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.62.0
-	github.com/aws/aws-sdk-go-v2/service/directconnect v1.42.0
-	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.60.0
-	github.com/aws/aws-sdk-go-v2/service/ec2 v1.315.0
-	github.com/aws/aws-sdk-go-v2/service/ecs v1.88.0
-	github.com/aws/aws-sdk-go-v2/service/efs v1.43.0
-	github.com/aws/aws-sdk-go-v2/service/eks v1.89.0
-	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.35.0
-	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.56.0
-	github.com/aws/aws-sdk-go-v2/service/iam v1.55.0
-	github.com/aws/aws-sdk-go-v2/service/kms v1.54.0
-	github.com/aws/aws-sdk-go-v2/service/lambda v1.96.0
-	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.63.0
-	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.43.0
-	github.com/aws/aws-sdk-go-v2/service/rds v1.120.0
-	github.com/aws/aws-sdk-go-v2/service/route53 v1.64.0
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.105.0
-	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.63.0
-	github.com/aws/aws-sdk-go-v2/service/sns v1.41.0
-	github.com/aws/aws-sdk-go-v2/service/sqs v1.45.0
-	github.com/aws/aws-sdk-go-v2/service/ssm v1.71.0
-	github.com/aws/aws-sdk-go-v2/service/sts v1.44.0
+	github.com/aws/aws-sdk-go-v2/service/apigateway v1.41.1
+	github.com/aws/aws-sdk-go-v2/service/autoscaling v1.69.1
+	github.com/aws/aws-sdk-go-v2/service/cloudfront v1.66.1
+	github.com/aws/aws-sdk-go-v2/service/cloudwatch v1.63.1
+	github.com/aws/aws-sdk-go-v2/service/directconnect v1.42.1
+	github.com/aws/aws-sdk-go-v2/service/dynamodb v1.60.1
+	github.com/aws/aws-sdk-go-v2/service/ec2 v1.316.1
+	github.com/aws/aws-sdk-go-v2/service/ecs v1.88.1
+	github.com/aws/aws-sdk-go-v2/service/efs v1.43.1
+	github.com/aws/aws-sdk-go-v2/service/eks v1.89.1
+	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancing v1.35.1
+	github.com/aws/aws-sdk-go-v2/service/elasticloadbalancingv2 v1.57.0
+	github.com/aws/aws-sdk-go-v2/service/iam v1.55.1
+	github.com/aws/aws-sdk-go-v2/service/kms v1.54.1
+	github.com/aws/aws-sdk-go-v2/service/lambda v1.99.0
+	github.com/aws/aws-sdk-go-v2/service/networkfirewall v1.63.1
+	github.com/aws/aws-sdk-go-v2/service/networkmanager v1.43.1
+	github.com/aws/aws-sdk-go-v2/service/rds v1.121.0
+	github.com/aws/aws-sdk-go-v2/service/route53 v1.64.1
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.105.2
+	github.com/aws/aws-sdk-go-v2/service/sesv2 v1.63.1
+	github.com/aws/aws-sdk-go-v2/service/sns v1.41.1
+	github.com/aws/aws-sdk-go-v2/service/sqs v1.45.1
+	github.com/aws/aws-sdk-go-v2/service/ssm v1.72.0
+	github.com/aws/aws-sdk-go-v2/service/sts v1.44.1
 	github.com/aws/smithy-go v1.27.3
 	github.com/bombsimon/logrusr/v4 v4.1.0
 	github.com/bradleyfalzon/ghinstallation/v2 v2.19.0
@@ -264,9 +264,9 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/internal/endpoint-discovery v1.12.7 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/presigned-url v1.13.30 // indirect
 	github.com/aws/aws-sdk-go-v2/service/internal/s3shared v1.19.31 // indirect
-	github.com/aws/aws-sdk-go-v2/service/signin v1.4.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/sso v1.32.0 // indirect
-	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.37.0 // indirect
+	github.com/aws/aws-sdk-go-v2/service/signin v1.4.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/sso v1.32.1 // indirect
+	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.37.1 // indirect
 	github.com/aymanbagabas/go-osc52/v2 v2.0.1 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
 	github.com/bahlo/generic-list-go v0.2.0 // indirect
