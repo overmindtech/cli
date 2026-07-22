@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	_ "embed"
@@ -161,21 +162,43 @@ func tracingResource(component string) *resource.Resource {
 
 var tp *sdktrace.TracerProvider
 
+// sentryEnvironment chooses the Sentry environment label.
+//
+// A non-empty honeycombEnvironment wins. Brent's cobra flag defaults to empty
+// so an unconfigured local/test/release process keeps the run-mode mapping
+// below; ServerConfig still defaults empty HoneycombEnvironment to "dev" for
+// audit-event trace URLs. AWS dogfood/prod overlays set
+// BRENT_BACKEND_HONEYCOMB_ENVIRONMENT and therefore label Sentry correctly
+// even when run-mode is release.
+func sentryEnvironment(runMode, honeycombEnvironment string) string {
+	if env := strings.TrimSpace(honeycombEnvironment); env != "" {
+		return env
+	}
+
+	switch runMode {
+	case "release":
+		return "prod"
+	case "test":
+		return "dogfood"
+	case "debug":
+		return "local"
+	default:
+		// Fallback to dev for backward compatibility
+		return "dev"
+	}
+}
+
+func sentryEnvironmentFromViper() string {
+	return sentryEnvironment(
+		viper.GetString("run-mode"),
+		viper.GetString("honeycomb-environment"),
+	)
+}
+
 // InitTracerWithUpstreams initialises the tracer with uploading directly to Honeycomb and sentry if `honeycombApiKey` and `sentryDSN` is set respectively. `component` is used as the service name.
 func InitTracerWithUpstreams(component, honeycombApiKey, sentryDSN string, opts ...otlptracehttp.Option) error {
 	if sentryDSN != "" {
-		var environment string
-		switch viper.GetString("run-mode") {
-		case "release":
-			environment = "prod"
-		case "test":
-			environment = "dogfood"
-		case "debug":
-			environment = "local"
-		default:
-			// Fallback to dev for backward compatibility
-			environment = "dev"
-		}
+		environment := sentryEnvironmentFromViper()
 		err := sentry.Init(sentry.ClientOptions{
 			Dsn:              sentryDSN,
 			AttachStacktrace: true,
