@@ -121,8 +121,9 @@ func GetTfc(cmd *cobra.Command, args []string) error {
 	fmt.Println("Name:              Overmind")
 	fmt.Println("Endpoint URL:     ", params.Msg.GetConfig().GetEndpoint())
 	fmt.Println("Description:       Overmind provides a risk analysis and change tracking for your Terraform changes with no extra effort.")
-	fmt.Println("HMAC Key (secret):", params.Msg.GetConfig().GetSecret())
 	fmt.Println("")
+	fmt.Println("The HMAC key is shown only when credentials are generated.")
+	fmt.Println("Use `create-tfc` or the settings \"Regenerate credentials\" flow to obtain a new key.")
 
 	return nil
 }
