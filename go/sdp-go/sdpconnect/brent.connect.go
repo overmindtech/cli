@@ -71,6 +71,12 @@ const (
 	// BrentServiceListMyBindingsProcedure is the fully-qualified name of the BrentService's
 	// ListMyBindings RPC.
 	BrentServiceListMyBindingsProcedure = "/brent.BrentService/ListMyBindings"
+	// BrentServiceGetMyNotificationPreferencesProcedure is the fully-qualified name of the
+	// BrentService's GetMyNotificationPreferences RPC.
+	BrentServiceGetMyNotificationPreferencesProcedure = "/brent.BrentService/GetMyNotificationPreferences"
+	// BrentServiceUpdateMyNotificationPreferencesProcedure is the fully-qualified name of the
+	// BrentService's UpdateMyNotificationPreferences RPC.
+	BrentServiceUpdateMyNotificationPreferencesProcedure = "/brent.BrentService/UpdateMyNotificationPreferences"
 	// BrentServiceUpdateMyDisplayNameProcedure is the fully-qualified name of the BrentService's
 	// UpdateMyDisplayName RPC.
 	BrentServiceUpdateMyDisplayNameProcedure = "/brent.BrentService/UpdateMyDisplayName"
@@ -361,6 +367,12 @@ type BrentServiceClient interface {
 	// Lists all bindings for the calling principal. Tenant-scoped and
 	// principal-scoped. Gated on brent:read.
 	ListMyBindings(context.Context, *connect.Request[sdp_go.ListMyBindingsRequest]) (*connect.Response[sdp_go.ListMyBindingsResponse], error)
+	// Returns the calling principal's notification preferences (full effective
+	// matrix with code defaults applied). Gated on brent:read.
+	GetMyNotificationPreferences(context.Context, *connect.Request[sdp_go.GetMyNotificationPreferencesRequest]) (*connect.Response[sdp_go.GetMyNotificationPreferencesResponse], error)
+	// Patches the calling principal's notification preferences. Only cells present
+	// in the request are changed; everything else is preserved. Gated on brent:write.
+	UpdateMyNotificationPreferences(context.Context, *connect.Request[sdp_go.UpdateMyNotificationPreferencesRequest]) (*connect.Response[sdp_go.UpdateMyNotificationPreferencesResponse], error)
 	// Sets the calling principal's display_name and marks it user-set so
 	// provisioning no longer re-syncs it from the identity provider. The
 	// principal is resolved server-side from the JWT. Gated on brent:write.
@@ -621,6 +633,18 @@ func NewBrentServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(brentServiceMethods.ByName("ListMyBindings")),
 			connect.WithClientOptions(opts...),
 		),
+		getMyNotificationPreferences: connect.NewClient[sdp_go.GetMyNotificationPreferencesRequest, sdp_go.GetMyNotificationPreferencesResponse](
+			httpClient,
+			baseURL+BrentServiceGetMyNotificationPreferencesProcedure,
+			connect.WithSchema(brentServiceMethods.ByName("GetMyNotificationPreferences")),
+			connect.WithClientOptions(opts...),
+		),
+		updateMyNotificationPreferences: connect.NewClient[sdp_go.UpdateMyNotificationPreferencesRequest, sdp_go.UpdateMyNotificationPreferencesResponse](
+			httpClient,
+			baseURL+BrentServiceUpdateMyNotificationPreferencesProcedure,
+			connect.WithSchema(brentServiceMethods.ByName("UpdateMyNotificationPreferences")),
+			connect.WithClientOptions(opts...),
+		),
 		updateMyDisplayName: connect.NewClient[sdp_go.UpdateMyDisplayNameRequest, sdp_go.UpdateMyDisplayNameResponse](
 			httpClient,
 			baseURL+BrentServiceUpdateMyDisplayNameProcedure,
@@ -853,6 +877,8 @@ type brentServiceClient struct {
 	saveGitLabSigningToken          *connect.Client[sdp_go.SaveGitLabSigningTokenRequest, sdp_go.SaveGitLabSigningTokenResponse]
 	upsertMyVerifiedBinding         *connect.Client[sdp_go.UpsertMyVerifiedBindingRequest, sdp_go.UpsertMyVerifiedBindingResponse]
 	listMyBindings                  *connect.Client[sdp_go.ListMyBindingsRequest, sdp_go.ListMyBindingsResponse]
+	getMyNotificationPreferences    *connect.Client[sdp_go.GetMyNotificationPreferencesRequest, sdp_go.GetMyNotificationPreferencesResponse]
+	updateMyNotificationPreferences *connect.Client[sdp_go.UpdateMyNotificationPreferencesRequest, sdp_go.UpdateMyNotificationPreferencesResponse]
 	updateMyDisplayName             *connect.Client[sdp_go.UpdateMyDisplayNameRequest, sdp_go.UpdateMyDisplayNameResponse]
 	setPreferredIDE                 *connect.Client[sdp_go.SetPreferredIDERequest, sdp_go.SetPreferredIDEResponse]
 	getBrentSettings                *connect.Client[sdp_go.GetBrentSettingsRequest, sdp_go.GetBrentSettingsResponse]
@@ -944,6 +970,16 @@ func (c *brentServiceClient) UpsertMyVerifiedBinding(ctx context.Context, req *c
 // ListMyBindings calls brent.BrentService.ListMyBindings.
 func (c *brentServiceClient) ListMyBindings(ctx context.Context, req *connect.Request[sdp_go.ListMyBindingsRequest]) (*connect.Response[sdp_go.ListMyBindingsResponse], error) {
 	return c.listMyBindings.CallUnary(ctx, req)
+}
+
+// GetMyNotificationPreferences calls brent.BrentService.GetMyNotificationPreferences.
+func (c *brentServiceClient) GetMyNotificationPreferences(ctx context.Context, req *connect.Request[sdp_go.GetMyNotificationPreferencesRequest]) (*connect.Response[sdp_go.GetMyNotificationPreferencesResponse], error) {
+	return c.getMyNotificationPreferences.CallUnary(ctx, req)
+}
+
+// UpdateMyNotificationPreferences calls brent.BrentService.UpdateMyNotificationPreferences.
+func (c *brentServiceClient) UpdateMyNotificationPreferences(ctx context.Context, req *connect.Request[sdp_go.UpdateMyNotificationPreferencesRequest]) (*connect.Response[sdp_go.UpdateMyNotificationPreferencesResponse], error) {
+	return c.updateMyNotificationPreferences.CallUnary(ctx, req)
 }
 
 // UpdateMyDisplayName calls brent.BrentService.UpdateMyDisplayName.
@@ -1186,6 +1222,12 @@ type BrentServiceHandler interface {
 	// Lists all bindings for the calling principal. Tenant-scoped and
 	// principal-scoped. Gated on brent:read.
 	ListMyBindings(context.Context, *connect.Request[sdp_go.ListMyBindingsRequest]) (*connect.Response[sdp_go.ListMyBindingsResponse], error)
+	// Returns the calling principal's notification preferences (full effective
+	// matrix with code defaults applied). Gated on brent:read.
+	GetMyNotificationPreferences(context.Context, *connect.Request[sdp_go.GetMyNotificationPreferencesRequest]) (*connect.Response[sdp_go.GetMyNotificationPreferencesResponse], error)
+	// Patches the calling principal's notification preferences. Only cells present
+	// in the request are changed; everything else is preserved. Gated on brent:write.
+	UpdateMyNotificationPreferences(context.Context, *connect.Request[sdp_go.UpdateMyNotificationPreferencesRequest]) (*connect.Response[sdp_go.UpdateMyNotificationPreferencesResponse], error)
 	// Sets the calling principal's display_name and marks it user-set so
 	// provisioning no longer re-syncs it from the identity provider. The
 	// principal is resolved server-side from the JWT. Gated on brent:write.
@@ -1442,6 +1484,18 @@ func NewBrentServiceHandler(svc BrentServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(brentServiceMethods.ByName("ListMyBindings")),
 		connect.WithHandlerOptions(opts...),
 	)
+	brentServiceGetMyNotificationPreferencesHandler := connect.NewUnaryHandler(
+		BrentServiceGetMyNotificationPreferencesProcedure,
+		svc.GetMyNotificationPreferences,
+		connect.WithSchema(brentServiceMethods.ByName("GetMyNotificationPreferences")),
+		connect.WithHandlerOptions(opts...),
+	)
+	brentServiceUpdateMyNotificationPreferencesHandler := connect.NewUnaryHandler(
+		BrentServiceUpdateMyNotificationPreferencesProcedure,
+		svc.UpdateMyNotificationPreferences,
+		connect.WithSchema(brentServiceMethods.ByName("UpdateMyNotificationPreferences")),
+		connect.WithHandlerOptions(opts...),
+	)
 	brentServiceUpdateMyDisplayNameHandler := connect.NewUnaryHandler(
 		BrentServiceUpdateMyDisplayNameProcedure,
 		svc.UpdateMyDisplayName,
@@ -1682,6 +1736,10 @@ func NewBrentServiceHandler(svc BrentServiceHandler, opts ...connect.HandlerOpti
 			brentServiceUpsertMyVerifiedBindingHandler.ServeHTTP(w, r)
 		case BrentServiceListMyBindingsProcedure:
 			brentServiceListMyBindingsHandler.ServeHTTP(w, r)
+		case BrentServiceGetMyNotificationPreferencesProcedure:
+			brentServiceGetMyNotificationPreferencesHandler.ServeHTTP(w, r)
+		case BrentServiceUpdateMyNotificationPreferencesProcedure:
+			brentServiceUpdateMyNotificationPreferencesHandler.ServeHTTP(w, r)
 		case BrentServiceUpdateMyDisplayNameProcedure:
 			brentServiceUpdateMyDisplayNameHandler.ServeHTTP(w, r)
 		case BrentServiceSetPreferredIDEProcedure:
@@ -1805,6 +1863,14 @@ func (UnimplementedBrentServiceHandler) UpsertMyVerifiedBinding(context.Context,
 
 func (UnimplementedBrentServiceHandler) ListMyBindings(context.Context, *connect.Request[sdp_go.ListMyBindingsRequest]) (*connect.Response[sdp_go.ListMyBindingsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.ListMyBindings is not implemented"))
+}
+
+func (UnimplementedBrentServiceHandler) GetMyNotificationPreferences(context.Context, *connect.Request[sdp_go.GetMyNotificationPreferencesRequest]) (*connect.Response[sdp_go.GetMyNotificationPreferencesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.GetMyNotificationPreferences is not implemented"))
+}
+
+func (UnimplementedBrentServiceHandler) UpdateMyNotificationPreferences(context.Context, *connect.Request[sdp_go.UpdateMyNotificationPreferencesRequest]) (*connect.Response[sdp_go.UpdateMyNotificationPreferencesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.UpdateMyNotificationPreferences is not implemented"))
 }
 
 func (UnimplementedBrentServiceHandler) UpdateMyDisplayName(context.Context, *connect.Request[sdp_go.UpdateMyDisplayNameRequest]) (*connect.Response[sdp_go.UpdateMyDisplayNameResponse], error) {
