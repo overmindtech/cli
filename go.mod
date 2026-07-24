@@ -28,34 +28,34 @@ require (
 	buf.build/gen/go/depot/api/protocolbuffers/go v1.36.11-20260706220319-a3bcb894aab3.1
 	buf.build/go/protovalidate v1.2.0
 	charm.land/lipgloss/v2 v2.0.5
-	cloud.google.com/go/aiplatform v1.125.0
-	cloud.google.com/go/auth v0.20.0
+	cloud.google.com/go/aiplatform v1.126.0
+	cloud.google.com/go/auth v0.22.0
 	cloud.google.com/go/auth/oauth2adapt v0.2.8
-	cloud.google.com/go/bigquery v1.77.0
-	cloud.google.com/go/bigtable v1.50.0
-	cloud.google.com/go/certificatemanager v1.14.0
-	cloud.google.com/go/compute v1.64.0
+	cloud.google.com/go/bigquery v1.79.0
+	cloud.google.com/go/bigtable v1.51.0
+	cloud.google.com/go/certificatemanager v1.15.0
+	cloud.google.com/go/compute v1.65.0
 	cloud.google.com/go/compute/metadata v0.9.0
 	cloud.google.com/go/container v1.53.0
-	cloud.google.com/go/dataplex v1.35.0
-	cloud.google.com/go/dataproc/v2 v2.23.0
-	cloud.google.com/go/eventarc v1.23.0
-	cloud.google.com/go/filestore v1.15.0
-	cloud.google.com/go/functions v1.24.0
-	cloud.google.com/go/iam v1.11.0
-	cloud.google.com/go/kms v1.31.0
-	cloud.google.com/go/logging v1.18.0
-	cloud.google.com/go/monitoring v1.29.0
-	cloud.google.com/go/networksecurity v0.17.0
+	cloud.google.com/go/dataplex v1.36.0
+	cloud.google.com/go/dataproc/v2 v2.25.0
+	cloud.google.com/go/eventarc v1.25.0
+	cloud.google.com/go/filestore v1.16.0
+	cloud.google.com/go/functions v1.25.0
+	cloud.google.com/go/iam v1.12.0
+	cloud.google.com/go/kms v1.33.0
+	cloud.google.com/go/logging v1.19.0
+	cloud.google.com/go/monitoring v1.30.0
+	cloud.google.com/go/networksecurity v0.19.0
 	cloud.google.com/go/orgpolicy v1.20.0
-	cloud.google.com/go/redis v1.23.0
-	cloud.google.com/go/resourcemanager v1.15.0
-	cloud.google.com/go/run v1.21.0
-	cloud.google.com/go/secretmanager v1.20.0
+	cloud.google.com/go/redis v1.25.0
+	cloud.google.com/go/resourcemanager v1.16.0
+	cloud.google.com/go/run v1.22.0
+	cloud.google.com/go/secretmanager v1.21.0
 	cloud.google.com/go/securitycentermanagement v1.6.0
-	cloud.google.com/go/spanner v1.92.0
-	cloud.google.com/go/storage v1.63.0
-	cloud.google.com/go/storagetransfer v1.18.0
+	cloud.google.com/go/spanner v1.93.0
+	cloud.google.com/go/storage v1.64.0
+	cloud.google.com/go/storagetransfer v1.19.0
 	connectrpc.com/connect v1.20.0 // v1.19.0 was faulty, wait until it is above this version
 	connectrpc.com/otelconnect v0.9.0
 	github.com/1password/onepassword-sdk-go v0.4.0
@@ -214,8 +214,8 @@ require (
 	golang.org/x/text v0.40.0
 	golang.org/x/time v0.15.0
 	gonum.org/v1/gonum v0.17.0
-	google.golang.org/api v0.287.1
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260630182238-925bb5da69e7
+	google.golang.org/api v0.290.0
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260723215102-3fe39f3c1018
 	google.golang.org/grpc v1.82.1
 	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af
 	gopkg.in/ini.v1 v1.67.3
@@ -236,7 +236,7 @@ require (
 	atomicgo.dev/schedule v0.1.0 // indirect
 	cel.dev/expr v0.25.2 // indirect
 	cloud.google.com/go v0.123.0 // indirect
-	cloud.google.com/go/longrunning v1.0.0 // indirect
+	cloud.google.com/go/longrunning v1.2.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.12.0 // indirect
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.7.2 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
@@ -327,7 +327,7 @@ require (
 	github.com/google/jsonschema-go v0.4.3 // indirect
 	github.com/google/pprof v0.0.0-20260402051712-545e8a4df936 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
-	github.com/googleapis/enterprise-certificate-proxy v0.3.17 // indirect
+	github.com/googleapis/enterprise-certificate-proxy v0.3.18 // indirect
 	github.com/gookit/color v1.6.0 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
 	github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674 // indirect
