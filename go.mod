@@ -161,8 +161,8 @@ require (
 	github.com/nats-io/nats.go v1.52.0
 	github.com/nats-io/nkeys v0.4.16
 	github.com/neo4j/neo4j-go-driver/v6 v6.2.0
-	github.com/onsi/ginkgo/v2 v2.31.0
-	github.com/onsi/gomega v1.42.0
+	github.com/onsi/ginkgo/v2 v2.32.0
+	github.com/onsi/gomega v1.42.1
 	github.com/openai/openai-go/v3 v3.46.0
 	github.com/openrdap/rdap v0.10.1
 	github.com/overmindtech/pterm v0.0.0-20240919144758-04d94ccb2297
