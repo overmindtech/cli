@@ -476,3 +476,5 @@ require (
 )
 
 require golang.org/x/image v0.44.0
+
+require github.com/SherClockHolmes/webpush-go v1.4.0 // indirect
