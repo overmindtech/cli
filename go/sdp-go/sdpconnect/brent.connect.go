@@ -77,6 +77,12 @@ const (
 	// BrentServiceUpdateMyNotificationPreferencesProcedure is the fully-qualified name of the
 	// BrentService's UpdateMyNotificationPreferences RPC.
 	BrentServiceUpdateMyNotificationPreferencesProcedure = "/brent.BrentService/UpdateMyNotificationPreferences"
+	// BrentServiceRegisterMyPushSubscriptionProcedure is the fully-qualified name of the BrentService's
+	// RegisterMyPushSubscription RPC.
+	BrentServiceRegisterMyPushSubscriptionProcedure = "/brent.BrentService/RegisterMyPushSubscription"
+	// BrentServiceGetWebPushPublicKeyProcedure is the fully-qualified name of the BrentService's
+	// GetWebPushPublicKey RPC.
+	BrentServiceGetWebPushPublicKeyProcedure = "/brent.BrentService/GetWebPushPublicKey"
 	// BrentServiceUpdateMyDisplayNameProcedure is the fully-qualified name of the BrentService's
 	// UpdateMyDisplayName RPC.
 	BrentServiceUpdateMyDisplayNameProcedure = "/brent.BrentService/UpdateMyDisplayName"
@@ -370,6 +376,15 @@ type BrentServiceClient interface {
 	// Patches the calling principal's notification preferences. Only cells present
 	// in the request are changed; everything else is preserved. Gated on brent:write.
 	UpdateMyNotificationPreferences(context.Context, *connect.Request[sdp_go.UpdateMyNotificationPreferencesRequest]) (*connect.Response[sdp_go.UpdateMyNotificationPreferencesResponse], error)
+	// Registers a push subscription for the calling principal's browser. The
+	// subscription is keyed by (workspace_id, principal_id, endpoint) so the same
+	// device can re-subscribe and update keys without duplicating rows. Sends a
+	// confirmation push on success. Gated on brent:write, workspace-scoped.
+	RegisterMyPushSubscription(context.Context, *connect.Request[sdp_go.RegisterMyPushSubscriptionRequest]) (*connect.Response[sdp_go.RegisterMyPushSubscriptionResponse], error)
+	// Returns the VAPID application server public key needed to subscribe a
+	// browser to push notifications. The key is a deploy-time constant, not
+	// per-user. Gated on brent:read, identity-scoped.
+	GetWebPushPublicKey(context.Context, *connect.Request[sdp_go.GetWebPushPublicKeyRequest]) (*connect.Response[sdp_go.GetWebPushPublicKeyResponse], error)
 	// Sets the calling principal's display_name and marks it user-set so
 	// provisioning no longer re-syncs it from the identity provider. The
 	// principal is resolved server-side from the JWT. Gated on brent:write.
@@ -638,6 +653,18 @@ func NewBrentServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(brentServiceMethods.ByName("UpdateMyNotificationPreferences")),
 			connect.WithClientOptions(opts...),
 		),
+		registerMyPushSubscription: connect.NewClient[sdp_go.RegisterMyPushSubscriptionRequest, sdp_go.RegisterMyPushSubscriptionResponse](
+			httpClient,
+			baseURL+BrentServiceRegisterMyPushSubscriptionProcedure,
+			connect.WithSchema(brentServiceMethods.ByName("RegisterMyPushSubscription")),
+			connect.WithClientOptions(opts...),
+		),
+		getWebPushPublicKey: connect.NewClient[sdp_go.GetWebPushPublicKeyRequest, sdp_go.GetWebPushPublicKeyResponse](
+			httpClient,
+			baseURL+BrentServiceGetWebPushPublicKeyProcedure,
+			connect.WithSchema(brentServiceMethods.ByName("GetWebPushPublicKey")),
+			connect.WithClientOptions(opts...),
+		),
 		updateMyDisplayName: connect.NewClient[sdp_go.UpdateMyDisplayNameRequest, sdp_go.UpdateMyDisplayNameResponse](
 			httpClient,
 			baseURL+BrentServiceUpdateMyDisplayNameProcedure,
@@ -866,6 +893,8 @@ type brentServiceClient struct {
 	listMyBindings                  *connect.Client[sdp_go.ListMyBindingsRequest, sdp_go.ListMyBindingsResponse]
 	getMyNotificationPreferences    *connect.Client[sdp_go.GetMyNotificationPreferencesRequest, sdp_go.GetMyNotificationPreferencesResponse]
 	updateMyNotificationPreferences *connect.Client[sdp_go.UpdateMyNotificationPreferencesRequest, sdp_go.UpdateMyNotificationPreferencesResponse]
+	registerMyPushSubscription      *connect.Client[sdp_go.RegisterMyPushSubscriptionRequest, sdp_go.RegisterMyPushSubscriptionResponse]
+	getWebPushPublicKey             *connect.Client[sdp_go.GetWebPushPublicKeyRequest, sdp_go.GetWebPushPublicKeyResponse]
 	updateMyDisplayName             *connect.Client[sdp_go.UpdateMyDisplayNameRequest, sdp_go.UpdateMyDisplayNameResponse]
 	getBrentSettings                *connect.Client[sdp_go.GetBrentSettingsRequest, sdp_go.GetBrentSettingsResponse]
 	updateBrentSettings             *connect.Client[sdp_go.UpdateBrentSettingsRequest, sdp_go.UpdateBrentSettingsResponse]
@@ -966,6 +995,16 @@ func (c *brentServiceClient) GetMyNotificationPreferences(ctx context.Context, r
 // UpdateMyNotificationPreferences calls brent.BrentService.UpdateMyNotificationPreferences.
 func (c *brentServiceClient) UpdateMyNotificationPreferences(ctx context.Context, req *connect.Request[sdp_go.UpdateMyNotificationPreferencesRequest]) (*connect.Response[sdp_go.UpdateMyNotificationPreferencesResponse], error) {
 	return c.updateMyNotificationPreferences.CallUnary(ctx, req)
+}
+
+// RegisterMyPushSubscription calls brent.BrentService.RegisterMyPushSubscription.
+func (c *brentServiceClient) RegisterMyPushSubscription(ctx context.Context, req *connect.Request[sdp_go.RegisterMyPushSubscriptionRequest]) (*connect.Response[sdp_go.RegisterMyPushSubscriptionResponse], error) {
+	return c.registerMyPushSubscription.CallUnary(ctx, req)
+}
+
+// GetWebPushPublicKey calls brent.BrentService.GetWebPushPublicKey.
+func (c *brentServiceClient) GetWebPushPublicKey(ctx context.Context, req *connect.Request[sdp_go.GetWebPushPublicKeyRequest]) (*connect.Response[sdp_go.GetWebPushPublicKeyResponse], error) {
+	return c.getWebPushPublicKey.CallUnary(ctx, req)
 }
 
 // UpdateMyDisplayName calls brent.BrentService.UpdateMyDisplayName.
@@ -1209,6 +1248,15 @@ type BrentServiceHandler interface {
 	// Patches the calling principal's notification preferences. Only cells present
 	// in the request are changed; everything else is preserved. Gated on brent:write.
 	UpdateMyNotificationPreferences(context.Context, *connect.Request[sdp_go.UpdateMyNotificationPreferencesRequest]) (*connect.Response[sdp_go.UpdateMyNotificationPreferencesResponse], error)
+	// Registers a push subscription for the calling principal's browser. The
+	// subscription is keyed by (workspace_id, principal_id, endpoint) so the same
+	// device can re-subscribe and update keys without duplicating rows. Sends a
+	// confirmation push on success. Gated on brent:write, workspace-scoped.
+	RegisterMyPushSubscription(context.Context, *connect.Request[sdp_go.RegisterMyPushSubscriptionRequest]) (*connect.Response[sdp_go.RegisterMyPushSubscriptionResponse], error)
+	// Returns the VAPID application server public key needed to subscribe a
+	// browser to push notifications. The key is a deploy-time constant, not
+	// per-user. Gated on brent:read, identity-scoped.
+	GetWebPushPublicKey(context.Context, *connect.Request[sdp_go.GetWebPushPublicKeyRequest]) (*connect.Response[sdp_go.GetWebPushPublicKeyResponse], error)
 	// Sets the calling principal's display_name and marks it user-set so
 	// provisioning no longer re-syncs it from the identity provider. The
 	// principal is resolved server-side from the JWT. Gated on brent:write.
@@ -1473,6 +1521,18 @@ func NewBrentServiceHandler(svc BrentServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(brentServiceMethods.ByName("UpdateMyNotificationPreferences")),
 		connect.WithHandlerOptions(opts...),
 	)
+	brentServiceRegisterMyPushSubscriptionHandler := connect.NewUnaryHandler(
+		BrentServiceRegisterMyPushSubscriptionProcedure,
+		svc.RegisterMyPushSubscription,
+		connect.WithSchema(brentServiceMethods.ByName("RegisterMyPushSubscription")),
+		connect.WithHandlerOptions(opts...),
+	)
+	brentServiceGetWebPushPublicKeyHandler := connect.NewUnaryHandler(
+		BrentServiceGetWebPushPublicKeyProcedure,
+		svc.GetWebPushPublicKey,
+		connect.WithSchema(brentServiceMethods.ByName("GetWebPushPublicKey")),
+		connect.WithHandlerOptions(opts...),
+	)
 	brentServiceUpdateMyDisplayNameHandler := connect.NewUnaryHandler(
 		BrentServiceUpdateMyDisplayNameProcedure,
 		svc.UpdateMyDisplayName,
@@ -1711,6 +1771,10 @@ func NewBrentServiceHandler(svc BrentServiceHandler, opts ...connect.HandlerOpti
 			brentServiceGetMyNotificationPreferencesHandler.ServeHTTP(w, r)
 		case BrentServiceUpdateMyNotificationPreferencesProcedure:
 			brentServiceUpdateMyNotificationPreferencesHandler.ServeHTTP(w, r)
+		case BrentServiceRegisterMyPushSubscriptionProcedure:
+			brentServiceRegisterMyPushSubscriptionHandler.ServeHTTP(w, r)
+		case BrentServiceGetWebPushPublicKeyProcedure:
+			brentServiceGetWebPushPublicKeyHandler.ServeHTTP(w, r)
 		case BrentServiceUpdateMyDisplayNameProcedure:
 			brentServiceUpdateMyDisplayNameHandler.ServeHTTP(w, r)
 		case BrentServiceGetBrentSettingsProcedure:
@@ -1840,6 +1904,14 @@ func (UnimplementedBrentServiceHandler) GetMyNotificationPreferences(context.Con
 
 func (UnimplementedBrentServiceHandler) UpdateMyNotificationPreferences(context.Context, *connect.Request[sdp_go.UpdateMyNotificationPreferencesRequest]) (*connect.Response[sdp_go.UpdateMyNotificationPreferencesResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.UpdateMyNotificationPreferences is not implemented"))
+}
+
+func (UnimplementedBrentServiceHandler) RegisterMyPushSubscription(context.Context, *connect.Request[sdp_go.RegisterMyPushSubscriptionRequest]) (*connect.Response[sdp_go.RegisterMyPushSubscriptionResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.RegisterMyPushSubscription is not implemented"))
+}
+
+func (UnimplementedBrentServiceHandler) GetWebPushPublicKey(context.Context, *connect.Request[sdp_go.GetWebPushPublicKeyRequest]) (*connect.Response[sdp_go.GetWebPushPublicKeyResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.GetWebPushPublicKey is not implemented"))
 }
 
 func (UnimplementedBrentServiceHandler) UpdateMyDisplayName(context.Context, *connect.Request[sdp_go.UpdateMyDisplayNameRequest]) (*connect.Response[sdp_go.UpdateMyDisplayNameResponse], error) {
