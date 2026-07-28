@@ -251,6 +251,9 @@ const (
 	// BrentAdminServiceGetAccountLLMCredentialStatusProcedure is the fully-qualified name of the
 	// BrentAdminService's GetAccountLLMCredentialStatus RPC.
 	BrentAdminServiceGetAccountLLMCredentialStatusProcedure = "/brent.BrentAdminService/GetAccountLLMCredentialStatus"
+	// BrentAdminServiceListAccountIntegrationsProcedure is the fully-qualified name of the
+	// BrentAdminService's ListAccountIntegrations RPC.
+	BrentAdminServiceListAccountIntegrationsProcedure = "/brent.BrentAdminService/ListAccountIntegrations"
 	// BrentAdminServiceListWorkflowsProcedure is the fully-qualified name of the BrentAdminService's
 	// ListWorkflows RPC.
 	BrentAdminServiceListWorkflowsProcedure = "/brent.BrentAdminService/ListWorkflows"
@@ -2223,6 +2226,11 @@ type BrentAdminServiceClient interface {
 	// without holding that account's brent:read scope. Metadata only — never the
 	// secret. account_name is required (no caller-account fallback).
 	GetAccountLLMCredentialStatus(context.Context, *connect.Request[sdp_go.AdminGetAccountLLMCredentialStatusRequest]) (*connect.Response[sdp_go.AdminGetAccountLLMCredentialStatusResponse], error)
+	// Lists organisation_app_installations for one account with credential-presence
+	// flags, shared readiness fields, and workspace integration roles.
+	// Metadata only — never secrets. Cross-tenant; gated on admin:read.
+	// account_name required.
+	ListAccountIntegrations(context.Context, *connect.Request[sdp_go.AdminListAccountIntegrationsRequest]) (*connect.Response[sdp_go.AdminListAccountIntegrationsResponse], error)
 	// Lists workflow definitions for the caller's account, ordered by name.
 	// Account-scoped: callers see only their own tenant's rows. Operator-only;
 	// gated on admin:read. Returns summary fields only (no body_template, no on_yaml);
@@ -2429,6 +2437,12 @@ func NewBrentAdminServiceClient(httpClient connect.HTTPClient, baseURL string, o
 			connect.WithSchema(brentAdminServiceMethods.ByName("GetAccountLLMCredentialStatus")),
 			connect.WithClientOptions(opts...),
 		),
+		listAccountIntegrations: connect.NewClient[sdp_go.AdminListAccountIntegrationsRequest, sdp_go.AdminListAccountIntegrationsResponse](
+			httpClient,
+			baseURL+BrentAdminServiceListAccountIntegrationsProcedure,
+			connect.WithSchema(brentAdminServiceMethods.ByName("ListAccountIntegrations")),
+			connect.WithClientOptions(opts...),
+		),
 		listWorkflows: connect.NewClient[sdp_go.ListWorkflowsRequest, sdp_go.ListWorkflowsResponse](
 			httpClient,
 			baseURL+BrentAdminServiceListWorkflowsProcedure,
@@ -2568,6 +2582,7 @@ type brentAdminServiceClient struct {
 	getAccountBrentSettings            *connect.Client[sdp_go.AdminGetAccountBrentSettingsRequest, sdp_go.GetBrentSettingsResponse]
 	updateAccountBrentSettings         *connect.Client[sdp_go.AdminUpdateAccountBrentSettingsRequest, sdp_go.UpdateBrentSettingsResponse]
 	getAccountLLMCredentialStatus      *connect.Client[sdp_go.AdminGetAccountLLMCredentialStatusRequest, sdp_go.AdminGetAccountLLMCredentialStatusResponse]
+	listAccountIntegrations            *connect.Client[sdp_go.AdminListAccountIntegrationsRequest, sdp_go.AdminListAccountIntegrationsResponse]
 	listWorkflows                      *connect.Client[sdp_go.ListWorkflowsRequest, sdp_go.ListWorkflowsResponse]
 	getWorkflow                        *connect.Client[sdp_go.GetWorkflowRequest, sdp_go.GetWorkflowResponse]
 	listWorkflowRuns                   *connect.Client[sdp_go.ListWorkflowRunsRequest, sdp_go.ListWorkflowRunsResponse]
@@ -2687,6 +2702,11 @@ func (c *brentAdminServiceClient) UpdateAccountBrentSettings(ctx context.Context
 // GetAccountLLMCredentialStatus calls brent.BrentAdminService.GetAccountLLMCredentialStatus.
 func (c *brentAdminServiceClient) GetAccountLLMCredentialStatus(ctx context.Context, req *connect.Request[sdp_go.AdminGetAccountLLMCredentialStatusRequest]) (*connect.Response[sdp_go.AdminGetAccountLLMCredentialStatusResponse], error) {
 	return c.getAccountLLMCredentialStatus.CallUnary(ctx, req)
+}
+
+// ListAccountIntegrations calls brent.BrentAdminService.ListAccountIntegrations.
+func (c *brentAdminServiceClient) ListAccountIntegrations(ctx context.Context, req *connect.Request[sdp_go.AdminListAccountIntegrationsRequest]) (*connect.Response[sdp_go.AdminListAccountIntegrationsResponse], error) {
+	return c.listAccountIntegrations.CallUnary(ctx, req)
 }
 
 // ListWorkflows calls brent.BrentAdminService.ListWorkflows.
@@ -2884,6 +2904,11 @@ type BrentAdminServiceHandler interface {
 	// without holding that account's brent:read scope. Metadata only — never the
 	// secret. account_name is required (no caller-account fallback).
 	GetAccountLLMCredentialStatus(context.Context, *connect.Request[sdp_go.AdminGetAccountLLMCredentialStatusRequest]) (*connect.Response[sdp_go.AdminGetAccountLLMCredentialStatusResponse], error)
+	// Lists organisation_app_installations for one account with credential-presence
+	// flags, shared readiness fields, and workspace integration roles.
+	// Metadata only — never secrets. Cross-tenant; gated on admin:read.
+	// account_name required.
+	ListAccountIntegrations(context.Context, *connect.Request[sdp_go.AdminListAccountIntegrationsRequest]) (*connect.Response[sdp_go.AdminListAccountIntegrationsResponse], error)
 	// Lists workflow definitions for the caller's account, ordered by name.
 	// Account-scoped: callers see only their own tenant's rows. Operator-only;
 	// gated on admin:read. Returns summary fields only (no body_template, no on_yaml);
@@ -3086,6 +3111,12 @@ func NewBrentAdminServiceHandler(svc BrentAdminServiceHandler, opts ...connect.H
 		connect.WithSchema(brentAdminServiceMethods.ByName("GetAccountLLMCredentialStatus")),
 		connect.WithHandlerOptions(opts...),
 	)
+	brentAdminServiceListAccountIntegrationsHandler := connect.NewUnaryHandler(
+		BrentAdminServiceListAccountIntegrationsProcedure,
+		svc.ListAccountIntegrations,
+		connect.WithSchema(brentAdminServiceMethods.ByName("ListAccountIntegrations")),
+		connect.WithHandlerOptions(opts...),
+	)
 	brentAdminServiceListWorkflowsHandler := connect.NewUnaryHandler(
 		BrentAdminServiceListWorkflowsProcedure,
 		svc.ListWorkflows,
@@ -3242,6 +3273,8 @@ func NewBrentAdminServiceHandler(svc BrentAdminServiceHandler, opts ...connect.H
 			brentAdminServiceUpdateAccountBrentSettingsHandler.ServeHTTP(w, r)
 		case BrentAdminServiceGetAccountLLMCredentialStatusProcedure:
 			brentAdminServiceGetAccountLLMCredentialStatusHandler.ServeHTTP(w, r)
+		case BrentAdminServiceListAccountIntegrationsProcedure:
+			brentAdminServiceListAccountIntegrationsHandler.ServeHTTP(w, r)
 		case BrentAdminServiceListWorkflowsProcedure:
 			brentAdminServiceListWorkflowsHandler.ServeHTTP(w, r)
 		case BrentAdminServiceGetWorkflowProcedure:
@@ -3367,6 +3400,10 @@ func (UnimplementedBrentAdminServiceHandler) UpdateAccountBrentSettings(context.
 
 func (UnimplementedBrentAdminServiceHandler) GetAccountLLMCredentialStatus(context.Context, *connect.Request[sdp_go.AdminGetAccountLLMCredentialStatusRequest]) (*connect.Response[sdp_go.AdminGetAccountLLMCredentialStatusResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.GetAccountLLMCredentialStatus is not implemented"))
+}
+
+func (UnimplementedBrentAdminServiceHandler) ListAccountIntegrations(context.Context, *connect.Request[sdp_go.AdminListAccountIntegrationsRequest]) (*connect.Response[sdp_go.AdminListAccountIntegrationsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.ListAccountIntegrations is not implemented"))
 }
 
 func (UnimplementedBrentAdminServiceHandler) ListWorkflows(context.Context, *connect.Request[sdp_go.ListWorkflowsRequest]) (*connect.Response[sdp_go.ListWorkflowsResponse], error) {
