@@ -80,9 +80,6 @@ const (
 	// BrentServiceUpdateMyDisplayNameProcedure is the fully-qualified name of the BrentService's
 	// UpdateMyDisplayName RPC.
 	BrentServiceUpdateMyDisplayNameProcedure = "/brent.BrentService/UpdateMyDisplayName"
-	// BrentServiceSetPreferredIDEProcedure is the fully-qualified name of the BrentService's
-	// SetPreferredIDE RPC.
-	BrentServiceSetPreferredIDEProcedure = "/brent.BrentService/SetPreferredIDE"
 	// BrentServiceGetBrentSettingsProcedure is the fully-qualified name of the BrentService's
 	// GetBrentSettings RPC.
 	BrentServiceGetBrentSettingsProcedure = "/brent.BrentService/GetBrentSettings"
@@ -377,10 +374,6 @@ type BrentServiceClient interface {
 	// provisioning no longer re-syncs it from the identity provider. The
 	// principal is resolved server-side from the JWT. Gated on brent:write.
 	UpdateMyDisplayName(context.Context, *connect.Request[sdp_go.UpdateMyDisplayNameRequest]) (*connect.Response[sdp_go.UpdateMyDisplayNameResponse], error)
-	// Sets the calling user's preferred IDE for MCP install UI. Stored on the
-	// global principal_identities row so the preference applies across all
-	// workspaces. Gated on brent:write.
-	SetPreferredIDE(context.Context, *connect.Request[sdp_go.SetPreferredIDERequest]) (*connect.Response[sdp_go.SetPreferredIDEResponse], error)
 	// Returns Brent tenant settings for the given account. Customer callers
 	// use their JWT account; brent-area51 operators may pass any account_name
 	// when holding admin:write.
@@ -651,12 +644,6 @@ func NewBrentServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			connect.WithSchema(brentServiceMethods.ByName("UpdateMyDisplayName")),
 			connect.WithClientOptions(opts...),
 		),
-		setPreferredIDE: connect.NewClient[sdp_go.SetPreferredIDERequest, sdp_go.SetPreferredIDEResponse](
-			httpClient,
-			baseURL+BrentServiceSetPreferredIDEProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("SetPreferredIDE")),
-			connect.WithClientOptions(opts...),
-		),
 		getBrentSettings: connect.NewClient[sdp_go.GetBrentSettingsRequest, sdp_go.GetBrentSettingsResponse](
 			httpClient,
 			baseURL+BrentServiceGetBrentSettingsProcedure,
@@ -880,7 +867,6 @@ type brentServiceClient struct {
 	getMyNotificationPreferences    *connect.Client[sdp_go.GetMyNotificationPreferencesRequest, sdp_go.GetMyNotificationPreferencesResponse]
 	updateMyNotificationPreferences *connect.Client[sdp_go.UpdateMyNotificationPreferencesRequest, sdp_go.UpdateMyNotificationPreferencesResponse]
 	updateMyDisplayName             *connect.Client[sdp_go.UpdateMyDisplayNameRequest, sdp_go.UpdateMyDisplayNameResponse]
-	setPreferredIDE                 *connect.Client[sdp_go.SetPreferredIDERequest, sdp_go.SetPreferredIDEResponse]
 	getBrentSettings                *connect.Client[sdp_go.GetBrentSettingsRequest, sdp_go.GetBrentSettingsResponse]
 	updateBrentSettings             *connect.Client[sdp_go.UpdateBrentSettingsRequest, sdp_go.UpdateBrentSettingsResponse]
 	listIntegrationCatalogue        *connect.Client[sdp_go.ListIntegrationCatalogueRequest, sdp_go.ListIntegrationCatalogueResponse]
@@ -985,11 +971,6 @@ func (c *brentServiceClient) UpdateMyNotificationPreferences(ctx context.Context
 // UpdateMyDisplayName calls brent.BrentService.UpdateMyDisplayName.
 func (c *brentServiceClient) UpdateMyDisplayName(ctx context.Context, req *connect.Request[sdp_go.UpdateMyDisplayNameRequest]) (*connect.Response[sdp_go.UpdateMyDisplayNameResponse], error) {
 	return c.updateMyDisplayName.CallUnary(ctx, req)
-}
-
-// SetPreferredIDE calls brent.BrentService.SetPreferredIDE.
-func (c *brentServiceClient) SetPreferredIDE(ctx context.Context, req *connect.Request[sdp_go.SetPreferredIDERequest]) (*connect.Response[sdp_go.SetPreferredIDEResponse], error) {
-	return c.setPreferredIDE.CallUnary(ctx, req)
 }
 
 // GetBrentSettings calls brent.BrentService.GetBrentSettings.
@@ -1232,10 +1213,6 @@ type BrentServiceHandler interface {
 	// provisioning no longer re-syncs it from the identity provider. The
 	// principal is resolved server-side from the JWT. Gated on brent:write.
 	UpdateMyDisplayName(context.Context, *connect.Request[sdp_go.UpdateMyDisplayNameRequest]) (*connect.Response[sdp_go.UpdateMyDisplayNameResponse], error)
-	// Sets the calling user's preferred IDE for MCP install UI. Stored on the
-	// global principal_identities row so the preference applies across all
-	// workspaces. Gated on brent:write.
-	SetPreferredIDE(context.Context, *connect.Request[sdp_go.SetPreferredIDERequest]) (*connect.Response[sdp_go.SetPreferredIDEResponse], error)
 	// Returns Brent tenant settings for the given account. Customer callers
 	// use their JWT account; brent-area51 operators may pass any account_name
 	// when holding admin:write.
@@ -1502,12 +1479,6 @@ func NewBrentServiceHandler(svc BrentServiceHandler, opts ...connect.HandlerOpti
 		connect.WithSchema(brentServiceMethods.ByName("UpdateMyDisplayName")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceSetPreferredIDEHandler := connect.NewUnaryHandler(
-		BrentServiceSetPreferredIDEProcedure,
-		svc.SetPreferredIDE,
-		connect.WithSchema(brentServiceMethods.ByName("SetPreferredIDE")),
-		connect.WithHandlerOptions(opts...),
-	)
 	brentServiceGetBrentSettingsHandler := connect.NewUnaryHandler(
 		BrentServiceGetBrentSettingsProcedure,
 		svc.GetBrentSettings,
@@ -1742,8 +1713,6 @@ func NewBrentServiceHandler(svc BrentServiceHandler, opts ...connect.HandlerOpti
 			brentServiceUpdateMyNotificationPreferencesHandler.ServeHTTP(w, r)
 		case BrentServiceUpdateMyDisplayNameProcedure:
 			brentServiceUpdateMyDisplayNameHandler.ServeHTTP(w, r)
-		case BrentServiceSetPreferredIDEProcedure:
-			brentServiceSetPreferredIDEHandler.ServeHTTP(w, r)
 		case BrentServiceGetBrentSettingsProcedure:
 			brentServiceGetBrentSettingsHandler.ServeHTTP(w, r)
 		case BrentServiceUpdateBrentSettingsProcedure:
@@ -1875,10 +1844,6 @@ func (UnimplementedBrentServiceHandler) UpdateMyNotificationPreferences(context.
 
 func (UnimplementedBrentServiceHandler) UpdateMyDisplayName(context.Context, *connect.Request[sdp_go.UpdateMyDisplayNameRequest]) (*connect.Response[sdp_go.UpdateMyDisplayNameResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.UpdateMyDisplayName is not implemented"))
-}
-
-func (UnimplementedBrentServiceHandler) SetPreferredIDE(context.Context, *connect.Request[sdp_go.SetPreferredIDERequest]) (*connect.Response[sdp_go.SetPreferredIDEResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.SetPreferredIDE is not implemented"))
 }
 
 func (UnimplementedBrentServiceHandler) GetBrentSettings(context.Context, *connect.Request[sdp_go.GetBrentSettingsRequest]) (*connect.Response[sdp_go.GetBrentSettingsResponse], error) {
