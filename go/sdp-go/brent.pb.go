@@ -17860,9 +17860,12 @@ type DisconnectIntegrationRequest struct {
 	state    protoimpl.MessageState `protogen:"open.v1"`
 	Provider IntegrationProvider    `protobuf:"varint,1,opt,name=provider,proto3,enum=brent.IntegrationProvider" json:"provider,omitempty"`
 	// Instance discriminator for aggregator providers (the Composio toolkit slug
-	// for MCP_AGGREGATOR). Required for MCP_AGGREGATOR; ignored by single-instance
-	// providers (GitHub/Linear/Slack/BYO).
-	InstanceSlug  string `protobuf:"bytes,2,opt,name=instance_slug,json=instanceSlug,proto3" json:"instance_slug,omitempty"`
+	// for MCP_AGGREGATOR) and a compatibility endpoint slug for BYO HTTP MCP.
+	// Required for MCP_AGGREGATOR; ignored by other single-instance providers.
+	InstanceSlug string `protobuf:"bytes,2,opt,name=instance_slug,json=instanceSlug,proto3" json:"instance_slug,omitempty"`
+	// Opaque connected BYO HTTP MCP install UUID. Empty for other providers and
+	// for older clients, which continue to use instance_slug.
+	InstanceId    string `protobuf:"bytes,3,opt,name=instance_id,json=instanceId,proto3" json:"instance_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -17907,6 +17910,13 @@ func (x *DisconnectIntegrationRequest) GetProvider() IntegrationProvider {
 func (x *DisconnectIntegrationRequest) GetInstanceSlug() string {
 	if x != nil {
 		return x.InstanceSlug
+	}
+	return ""
+}
+
+func (x *DisconnectIntegrationRequest) GetInstanceId() string {
+	if x != nil {
+		return x.InstanceId
 	}
 	return ""
 }
@@ -24008,7 +24018,10 @@ type IntegrationCatalogueEntry struct {
 	AutoRank int32               `protobuf:"varint,11,opt,name=auto_rank,json=autoRank,proto3" json:"auto_rank,omitempty"`
 	// When the install was created. Set for connected BYO HTTP MCP endpoint
 	// cards; unset for catalogue/builtin rows that are not installed instances.
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	CreatedAt *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	// Opaque connected BYO HTTP MCP install UUID. Empty for catalogue rows and
+	// integrations whose provider is not BYO HTTP MCP.
+	InstanceId    string `protobuf:"bytes,13,opt,name=instance_id,json=instanceId,proto3" json:"instance_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -24125,6 +24138,13 @@ func (x *IntegrationCatalogueEntry) GetCreatedAt() *timestamppb.Timestamp {
 		return x.CreatedAt
 	}
 	return nil
+}
+
+func (x *IntegrationCatalogueEntry) GetInstanceId() string {
+	if x != nil {
+		return x.InstanceId
+	}
+	return ""
 }
 
 var file_brent_proto_extTypes = []protoimpl.ExtensionInfo{
@@ -25684,10 +25704,12 @@ const file_brent_proto_rawDesc = "" +
 	"\x06intent\x18\x02 \x01(\x0e2\x18.brent.IntegrationIntentR\x06intent\x12#\n" +
 	"\rinstance_slug\x18\x03 \x01(\tR\finstanceSlug\"4\n" +
 	" GetIntegrationConnectURLResponse\x12\x10\n" +
-	"\x03url\x18\x01 \x01(\tR\x03url\"{\n" +
+	"\x03url\x18\x01 \x01(\tR\x03url\"\x9c\x01\n" +
 	"\x1cDisconnectIntegrationRequest\x126\n" +
 	"\bprovider\x18\x01 \x01(\x0e2\x1a.brent.IntegrationProviderR\bprovider\x12#\n" +
-	"\rinstance_slug\x18\x02 \x01(\tR\finstanceSlug\"\x1f\n" +
+	"\rinstance_slug\x18\x02 \x01(\tR\finstanceSlug\x12\x1f\n" +
+	"\vinstance_id\x18\x03 \x01(\tR\n" +
+	"instanceId\"\x1f\n" +
 	"\x1dDisconnectIntegrationResponse\"\xd5\x01\n" +
 	"\x18ConnectByoHttpMcpRequest\x12\x1a\n" +
 	"\bendpoint\x18\x01 \x01(\tR\bendpoint\x12!\n" +
@@ -26072,7 +26094,7 @@ const file_brent_proto_rawDesc = "" +
 	"\x12messaging_provider\x18\x04 \x01(\x0e2\x1a.brent.IntegrationProviderR\x11messagingProvider\"!\n" +
 	"\x1fListIntegrationCatalogueRequest\"^\n" +
 	" ListIntegrationCatalogueResponse\x12:\n" +
-	"\aentries\x18\x01 \x03(\v2 .brent.IntegrationCatalogueEntryR\aentries\"\xf3\x03\n" +
+	"\aentries\x18\x01 \x03(\v2 .brent.IntegrationCatalogueEntryR\aentries\"\x94\x04\n" +
 	"\x19IntegrationCatalogueEntry\x12\x1b\n" +
 	"\tstable_id\x18\x01 \x01(\tR\bstableId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1a\n" +
@@ -26088,7 +26110,9 @@ const file_brent_proto_rawDesc = "" +
 	" \x01(\x0e2\x1a.brent.IntegrationProviderR\bprovider\x12\x1b\n" +
 	"\tauto_rank\x18\v \x01(\x05R\bautoRank\x129\n" +
 	"\n" +
-	"created_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt*\x89\x01\n" +
+	"created_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12\x1f\n" +
+	"\vinstance_id\x18\r \x01(\tR\n" +
+	"instanceId*\x89\x01\n" +
 	"\tRunStatus\x12\x1a\n" +
 	"\x16RUN_STATUS_UNSPECIFIED\x10\x00\x12\x16\n" +
 	"\x12RUN_STATUS_RUNNING\x10\x01\x12\x18\n" +
