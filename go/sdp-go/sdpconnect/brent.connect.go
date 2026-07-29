@@ -554,8 +554,8 @@ type BrentServiceClient interface {
 	// Deletes the calling principal's personal Cursor key and tombstones its
 	// verified Cursor binding. Idempotent and workspace-scoped; gated on brent:write.
 	DeleteMyCursorCredential(context.Context, *connect.Request[sdp_go.DeleteMyCursorCredentialRequest]) (*connect.Response[sdp_go.DeleteMyCursorCredentialResponse], error)
-	// Returns the workspace's configured integration roles (git, ticketing,
-	// messaging providers) and the Manage URL for the connected git provider.
+	// Returns the workspace's configured git integration role and the Manage URL
+	// for the connected git provider.
 	// Workspace-scoped; the caller must be an active member. Gated on brent:read.
 	GetWorkspaceIntegrationRoles(context.Context, *connect.Request[sdp_go.GetWorkspaceIntegrationRolesRequest]) (*connect.Response[sdp_go.GetWorkspaceIntegrationRolesResponse], error)
 	// Sets the workspace's integration roles. Validates that providers are
@@ -1443,8 +1443,8 @@ type BrentServiceHandler interface {
 	// Deletes the calling principal's personal Cursor key and tombstones its
 	// verified Cursor binding. Idempotent and workspace-scoped; gated on brent:write.
 	DeleteMyCursorCredential(context.Context, *connect.Request[sdp_go.DeleteMyCursorCredentialRequest]) (*connect.Response[sdp_go.DeleteMyCursorCredentialResponse], error)
-	// Returns the workspace's configured integration roles (git, ticketing,
-	// messaging providers) and the Manage URL for the connected git provider.
+	// Returns the workspace's configured git integration role and the Manage URL
+	// for the connected git provider.
 	// Workspace-scoped; the caller must be an active member. Gated on brent:read.
 	GetWorkspaceIntegrationRoles(context.Context, *connect.Request[sdp_go.GetWorkspaceIntegrationRolesRequest]) (*connect.Response[sdp_go.GetWorkspaceIntegrationRolesResponse], error)
 	// Sets the workspace's integration roles. Validates that providers are

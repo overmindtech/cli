@@ -18611,10 +18611,6 @@ type GetWorkspaceIntegrationRolesResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Chosen source-control provider, or UNSPECIFIED if not yet configured.
 	GitProvider IntegrationProvider `protobuf:"varint,1,opt,name=git_provider,json=gitProvider,proto3,enum=brent.IntegrationProvider" json:"git_provider,omitempty"`
-	// Chosen ticketing provider, or UNSPECIFIED for none.
-	TicketingProvider IntegrationProvider `protobuf:"varint,2,opt,name=ticketing_provider,json=ticketingProvider,proto3,enum=brent.IntegrationProvider" json:"ticketing_provider,omitempty"`
-	// Chosen messaging provider, or UNSPECIFIED for none.
-	MessagingProvider IntegrationProvider `protobuf:"varint,3,opt,name=messaging_provider,json=messagingProvider,proto3,enum=brent.IntegrationProvider" json:"messaging_provider,omitempty"`
 	// Present when the workspace has a connected install for the current
 	// git_provider and the registry can build a safe manage URL.
 	GitManageUrl  string `protobuf:"bytes,4,opt,name=git_manage_url,json=gitManageUrl,proto3" json:"git_manage_url,omitempty"`
@@ -18659,20 +18655,6 @@ func (x *GetWorkspaceIntegrationRolesResponse) GetGitProvider() IntegrationProvi
 	return IntegrationProvider_INTEGRATION_PROVIDER_UNSPECIFIED
 }
 
-func (x *GetWorkspaceIntegrationRolesResponse) GetTicketingProvider() IntegrationProvider {
-	if x != nil {
-		return x.TicketingProvider
-	}
-	return IntegrationProvider_INTEGRATION_PROVIDER_UNSPECIFIED
-}
-
-func (x *GetWorkspaceIntegrationRolesResponse) GetMessagingProvider() IntegrationProvider {
-	if x != nil {
-		return x.MessagingProvider
-	}
-	return IntegrationProvider_INTEGRATION_PROVIDER_UNSPECIFIED
-}
-
 func (x *GetWorkspaceIntegrationRolesResponse) GetGitManageUrl() string {
 	if x != nil {
 		return x.GitManageUrl
@@ -18682,14 +18664,12 @@ func (x *GetWorkspaceIntegrationRolesResponse) GetGitManageUrl() string {
 
 type SetWorkspaceIntegrationRolesRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Use UNSPECIFIED to clear optional roles. git_provider UNSPECIFIED is
-	// rejected once a git provider has ever been set OR while a git install is
-	// connected (cannot clear required role without disconnect).
-	GitProvider       IntegrationProvider `protobuf:"varint,1,opt,name=git_provider,json=gitProvider,proto3,enum=brent.IntegrationProvider" json:"git_provider,omitempty"`
-	TicketingProvider IntegrationProvider `protobuf:"varint,2,opt,name=ticketing_provider,json=ticketingProvider,proto3,enum=brent.IntegrationProvider" json:"ticketing_provider,omitempty"`
-	MessagingProvider IntegrationProvider `protobuf:"varint,3,opt,name=messaging_provider,json=messagingProvider,proto3,enum=brent.IntegrationProvider" json:"messaging_provider,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
+	// git_provider UNSPECIFIED is rejected once a git provider has ever been set
+	// OR while a git install is connected (cannot clear required role without
+	// disconnect).
+	GitProvider   IntegrationProvider `protobuf:"varint,1,opt,name=git_provider,json=gitProvider,proto3,enum=brent.IntegrationProvider" json:"git_provider,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *SetWorkspaceIntegrationRolesRequest) Reset() {
@@ -18729,28 +18709,12 @@ func (x *SetWorkspaceIntegrationRolesRequest) GetGitProvider() IntegrationProvid
 	return IntegrationProvider_INTEGRATION_PROVIDER_UNSPECIFIED
 }
 
-func (x *SetWorkspaceIntegrationRolesRequest) GetTicketingProvider() IntegrationProvider {
-	if x != nil {
-		return x.TicketingProvider
-	}
-	return IntegrationProvider_INTEGRATION_PROVIDER_UNSPECIFIED
-}
-
-func (x *SetWorkspaceIntegrationRolesRequest) GetMessagingProvider() IntegrationProvider {
-	if x != nil {
-		return x.MessagingProvider
-	}
-	return IntegrationProvider_INTEGRATION_PROVIDER_UNSPECIFIED
-}
-
 type SetWorkspaceIntegrationRolesResponse struct {
-	state             protoimpl.MessageState `protogen:"open.v1"`
-	GitProvider       IntegrationProvider    `protobuf:"varint,1,opt,name=git_provider,json=gitProvider,proto3,enum=brent.IntegrationProvider" json:"git_provider,omitempty"`
-	TicketingProvider IntegrationProvider    `protobuf:"varint,2,opt,name=ticketing_provider,json=ticketingProvider,proto3,enum=brent.IntegrationProvider" json:"ticketing_provider,omitempty"`
-	MessagingProvider IntegrationProvider    `protobuf:"varint,3,opt,name=messaging_provider,json=messagingProvider,proto3,enum=brent.IntegrationProvider" json:"messaging_provider,omitempty"`
-	GitManageUrl      string                 `protobuf:"bytes,4,opt,name=git_manage_url,json=gitManageUrl,proto3" json:"git_manage_url,omitempty"`
-	unknownFields     protoimpl.UnknownFields
-	sizeCache         protoimpl.SizeCache
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	GitProvider   IntegrationProvider    `protobuf:"varint,1,opt,name=git_provider,json=gitProvider,proto3,enum=brent.IntegrationProvider" json:"git_provider,omitempty"`
+	GitManageUrl  string                 `protobuf:"bytes,4,opt,name=git_manage_url,json=gitManageUrl,proto3" json:"git_manage_url,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *SetWorkspaceIntegrationRolesResponse) Reset() {
@@ -18786,20 +18750,6 @@ func (*SetWorkspaceIntegrationRolesResponse) Descriptor() ([]byte, []int) {
 func (x *SetWorkspaceIntegrationRolesResponse) GetGitProvider() IntegrationProvider {
 	if x != nil {
 		return x.GitProvider
-	}
-	return IntegrationProvider_INTEGRATION_PROVIDER_UNSPECIFIED
-}
-
-func (x *SetWorkspaceIntegrationRolesResponse) GetTicketingProvider() IntegrationProvider {
-	if x != nil {
-		return x.TicketingProvider
-	}
-	return IntegrationProvider_INTEGRATION_PROVIDER_UNSPECIFIED
-}
-
-func (x *SetWorkspaceIntegrationRolesResponse) GetMessagingProvider() IntegrationProvider {
-	if x != nil {
-		return x.MessagingProvider
 	}
 	return IntegrationProvider_INTEGRATION_PROVIDER_UNSPECIFIED
 }
@@ -25858,21 +25808,15 @@ const file_brent_proto_rawDesc = "" +
 	"\asummary\x18\b \x01(\tB\t\xbaH\x06r\x04\x10\x01\x18 R\asummary\x12\"\n" +
 	"\x06detail\x18\t \x01(\tB\n" +
 	"\xbaH\ar\x05\x10\x01\x18\xa0\x01R\x06detail\"%\n" +
-	"#GetWorkspaceIntegrationRolesRequest\"\xa1\x02\n" +
+	"#GetWorkspaceIntegrationRolesRequest\"\xbf\x01\n" +
 	"$GetWorkspaceIntegrationRolesResponse\x12=\n" +
-	"\fgit_provider\x18\x01 \x01(\x0e2\x1a.brent.IntegrationProviderR\vgitProvider\x12I\n" +
-	"\x12ticketing_provider\x18\x02 \x01(\x0e2\x1a.brent.IntegrationProviderR\x11ticketingProvider\x12I\n" +
-	"\x12messaging_provider\x18\x03 \x01(\x0e2\x1a.brent.IntegrationProviderR\x11messagingProvider\x12$\n" +
-	"\x0egit_manage_url\x18\x04 \x01(\tR\fgitManageUrl\"\xfa\x01\n" +
+	"\fgit_provider\x18\x01 \x01(\x0e2\x1a.brent.IntegrationProviderR\vgitProvider\x12$\n" +
+	"\x0egit_manage_url\x18\x04 \x01(\tR\fgitManageUrlJ\x04\b\x02\x10\x03J\x04\b\x03\x10\x04R\x12ticketing_providerR\x12messaging_provider\"\x98\x01\n" +
 	"#SetWorkspaceIntegrationRolesRequest\x12=\n" +
-	"\fgit_provider\x18\x01 \x01(\x0e2\x1a.brent.IntegrationProviderR\vgitProvider\x12I\n" +
-	"\x12ticketing_provider\x18\x02 \x01(\x0e2\x1a.brent.IntegrationProviderR\x11ticketingProvider\x12I\n" +
-	"\x12messaging_provider\x18\x03 \x01(\x0e2\x1a.brent.IntegrationProviderR\x11messagingProvider\"\xa1\x02\n" +
+	"\fgit_provider\x18\x01 \x01(\x0e2\x1a.brent.IntegrationProviderR\vgitProviderJ\x04\b\x02\x10\x03J\x04\b\x03\x10\x04R\x12ticketing_providerR\x12messaging_provider\"\xbf\x01\n" +
 	"$SetWorkspaceIntegrationRolesResponse\x12=\n" +
-	"\fgit_provider\x18\x01 \x01(\x0e2\x1a.brent.IntegrationProviderR\vgitProvider\x12I\n" +
-	"\x12ticketing_provider\x18\x02 \x01(\x0e2\x1a.brent.IntegrationProviderR\x11ticketingProvider\x12I\n" +
-	"\x12messaging_provider\x18\x03 \x01(\x0e2\x1a.brent.IntegrationProviderR\x11messagingProvider\x12$\n" +
-	"\x0egit_manage_url\x18\x04 \x01(\tR\fgitManageUrl\"\x94\x02\n" +
+	"\fgit_provider\x18\x01 \x01(\x0e2\x1a.brent.IntegrationProviderR\vgitProvider\x12$\n" +
+	"\x0egit_manage_url\x18\x04 \x01(\tR\fgitManageUrlJ\x04\b\x02\x10\x03J\x04\b\x03\x10\x04R\x12ticketing_providerR\x12messaging_provider\"\x94\x02\n" +
 	"\tPrincipal\x12\x1f\n" +
 	"\vexternal_id\x18\x01 \x01(\tR\n" +
 	"externalId\x12!\n" +
@@ -26990,274 +26934,268 @@ var file_brent_proto_depIdxs = []int32{
 	342, // 235: brent.IntegrationStatus.connected_at:type_name -> google.protobuf.Timestamp
 	5,   // 236: brent.IntegrationStatus.status:type_name -> brent.IntegrationConnectionStatus
 	3,   // 237: brent.GetWorkspaceIntegrationRolesResponse.git_provider:type_name -> brent.IntegrationProvider
-	3,   // 238: brent.GetWorkspaceIntegrationRolesResponse.ticketing_provider:type_name -> brent.IntegrationProvider
-	3,   // 239: brent.GetWorkspaceIntegrationRolesResponse.messaging_provider:type_name -> brent.IntegrationProvider
-	3,   // 240: brent.SetWorkspaceIntegrationRolesRequest.git_provider:type_name -> brent.IntegrationProvider
-	3,   // 241: brent.SetWorkspaceIntegrationRolesRequest.ticketing_provider:type_name -> brent.IntegrationProvider
-	3,   // 242: brent.SetWorkspaceIntegrationRolesRequest.messaging_provider:type_name -> brent.IntegrationProvider
-	3,   // 243: brent.SetWorkspaceIntegrationRolesResponse.git_provider:type_name -> brent.IntegrationProvider
-	3,   // 244: brent.SetWorkspaceIntegrationRolesResponse.ticketing_provider:type_name -> brent.IntegrationProvider
-	3,   // 245: brent.SetWorkspaceIntegrationRolesResponse.messaging_provider:type_name -> brent.IntegrationProvider
-	342, // 246: brent.Principal.created_at:type_name -> google.protobuf.Timestamp
-	342, // 247: brent.Principal.updated_at:type_name -> google.protobuf.Timestamp
-	225, // 248: brent.CreateWorkspaceResponse.workspace:type_name -> brent.Workspace
-	225, // 249: brent.ListMyWorkspacesResponse.workspaces:type_name -> brent.Workspace
-	6,   // 250: brent.LoginRecoveryCandidate.provider:type_name -> brent.LoginProvider
-	6,   // 251: brent.DiscoverLoginRecoveryCandidatesResponse.arriving_provider:type_name -> brent.LoginProvider
-	231, // 252: brent.DiscoverLoginRecoveryCandidatesResponse.candidates:type_name -> brent.LoginRecoveryCandidate
-	225, // 253: brent.RenameWorkspaceResponse.workspace:type_name -> brent.Workspace
-	239, // 254: brent.ListJoinableWorkspacesResponse.workspaces:type_name -> brent.JoinableWorkspace
-	342, // 255: brent.JoinableWorkspace.created_at:type_name -> google.protobuf.Timestamp
-	240, // 256: brent.JoinableWorkspace.member_previews:type_name -> brent.JoinableWorkspaceMember
-	7,   // 257: brent.JoinableWorkspace.source:type_name -> brent.JoinSource
-	225, // 258: brent.JoinWorkspaceResponse.workspace:type_name -> brent.Workspace
-	342, // 259: brent.ApprovedEmailDomain.created_at:type_name -> google.protobuf.Timestamp
-	243, // 260: brent.ListApprovedEmailDomainsResponse.domains:type_name -> brent.ApprovedEmailDomain
-	243, // 261: brent.AddApprovedEmailDomainResponse.domain:type_name -> brent.ApprovedEmailDomain
-	243, // 262: brent.VerifyApprovedEmailDomainResponse.domain:type_name -> brent.ApprovedEmailDomain
-	342, // 263: brent.WorkspaceLLMCredentialStatus.last_validated_at:type_name -> google.protobuf.Timestamp
-	342, // 264: brent.WorkspaceLLMCredentialStatus.updated_at:type_name -> google.protobuf.Timestamp
-	256, // 265: brent.GetWorkspaceLLMCredentialStatusResponse.status:type_name -> brent.WorkspaceLLMCredentialStatus
-	256, // 266: brent.SetWorkspaceLLMCredentialResponse.status:type_name -> brent.WorkspaceLLMCredentialStatus
-	342, // 267: brent.MyCursorCredentialStatus.last_validated_at:type_name -> google.protobuf.Timestamp
-	263, // 268: brent.GetMyCursorCredentialStatusResponse.status:type_name -> brent.MyCursorCredentialStatus
-	263, // 269: brent.SetMyCursorCredentialResponse.status:type_name -> brent.MyCursorCredentialStatus
-	225, // 270: brent.UpdateWorkspaceBrandingResponse.workspace:type_name -> brent.Workspace
-	225, // 271: brent.CompleteWorkspaceOnboardingResponse.workspace:type_name -> brent.Workspace
-	342, // 272: brent.CreateInvitationResponse.expires_at:type_name -> google.protobuf.Timestamp
-	9,   // 273: brent.InvitationResult.status:type_name -> brent.InvitationResultStatus
-	277, // 274: brent.CreateInvitationsResponse.results:type_name -> brent.InvitationResult
-	225, // 275: brent.AcceptInvitationResponse.workspace:type_name -> brent.Workspace
-	283, // 276: brent.ListWorkspaceMembersResponse.members:type_name -> brent.WorkspaceMember
-	10,  // 277: brent.WorkspaceMember.state:type_name -> brent.WorkspaceMemberState
-	342, // 278: brent.ResendInvitationResponse.expires_at:type_name -> google.protobuf.Timestamp
-	8,   // 279: brent.GetInvitationResponse.status:type_name -> brent.InvitationStatus
-	310, // 280: brent.UpsertMyVerifiedBindingResponse.binding:type_name -> brent.Binding
-	224, // 281: brent.UpdateMyDisplayNameResponse.principal:type_name -> brent.Principal
-	310, // 282: brent.ListMyBindingsResponse.bindings:type_name -> brent.Binding
-	340, // 283: brent.NotificationPreferences.preferences:type_name -> brent.NotificationPreferences.PreferencesEntry
-	341, // 284: brent.ChannelPreferences.channels:type_name -> brent.ChannelPreferences.ChannelsEntry
-	300, // 285: brent.GetMyNotificationPreferencesResponse.preferences:type_name -> brent.NotificationPreferences
-	300, // 286: brent.UpdateMyNotificationPreferencesRequest.preferences:type_name -> brent.NotificationPreferences
-	300, // 287: brent.UpdateMyNotificationPreferencesResponse.preferences:type_name -> brent.NotificationPreferences
-	342, // 288: brent.Binding.created_at:type_name -> google.protobuf.Timestamp
-	342, // 289: brent.Binding.updated_at:type_name -> google.protobuf.Timestamp
-	342, // 290: brent.GetBrentSettingsResponse.red_finding_kinds_updated_at:type_name -> google.protobuf.Timestamp
-	311, // 291: brent.UpdateBrentSettingsRequest.red_finding_kinds:type_name -> brent.RedFindingKindsPatch
-	342, // 292: brent.UpdateBrentSettingsResponse.red_finding_kinds_updated_at:type_name -> google.protobuf.Timestamp
-	311, // 293: brent.AdminUpdateAccountBrentSettingsRequest.red_finding_kinds:type_name -> brent.RedFindingKindsPatch
-	256, // 294: brent.AdminGetAccountLLMCredentialStatusResponse.status:type_name -> brent.WorkspaceLLMCredentialStatus
-	342, // 295: brent.AdminAccountIntegrationInstall.created_at:type_name -> google.protobuf.Timestamp
-	5,   // 296: brent.AdminAccountIntegrationInstall.status:type_name -> brent.IntegrationConnectionStatus
-	321, // 297: brent.AdminListAccountIntegrationsResponse.installs:type_name -> brent.AdminAccountIntegrationInstall
-	3,   // 298: brent.AdminListAccountIntegrationsResponse.git_provider:type_name -> brent.IntegrationProvider
-	3,   // 299: brent.AdminListAccountIntegrationsResponse.ticketing_provider:type_name -> brent.IntegrationProvider
-	3,   // 300: brent.AdminListAccountIntegrationsResponse.messaging_provider:type_name -> brent.IntegrationProvider
-	325, // 301: brent.ListIntegrationCatalogueResponse.entries:type_name -> brent.IntegrationCatalogueEntry
-	11,  // 302: brent.IntegrationCatalogueEntry.source:type_name -> brent.IntegrationCatalogueSource
-	3,   // 303: brent.IntegrationCatalogueEntry.provider:type_name -> brent.IntegrationProvider
-	342, // 304: brent.IntegrationCatalogueEntry.created_at:type_name -> google.protobuf.Timestamp
-	343, // 305: brent.PlanUpdated.PreviousEntry.value:type_name -> google.protobuf.Value
-	343, // 306: brent.PlanUpdated.AfterEntry.value:type_name -> google.protobuf.Value
-	343, // 307: brent.PrincipalUpdated.PreviousEntry.value:type_name -> google.protobuf.Value
-	343, // 308: brent.PrincipalUpdated.AfterEntry.value:type_name -> google.protobuf.Value
-	343, // 309: brent.BindingUpdated.PreviousEntry.value:type_name -> google.protobuf.Value
-	343, // 310: brent.BindingUpdated.AfterEntry.value:type_name -> google.protobuf.Value
-	343, // 311: brent.PullRequestUpdated.PreviousEntry.value:type_name -> google.protobuf.Value
-	343, // 312: brent.PullRequestUpdated.AfterEntry.value:type_name -> google.protobuf.Value
-	343, // 313: brent.DeviationFindingUpdated.PreviousEntry.value:type_name -> google.protobuf.Value
-	343, // 314: brent.DeviationFindingUpdated.AfterEntry.value:type_name -> google.protobuf.Value
-	301, // 315: brent.NotificationPreferences.PreferencesEntry.value:type_name -> brent.ChannelPreferences
-	344, // 316: brent.embedded_json:extendee -> google.protobuf.FieldOptions
-	37,  // 317: brent.BrentService.ListOpenPullRequests:input_type -> brent.ListOpenPullRequestsRequest
-	39,  // 318: brent.BrentService.GetPullRequest:input_type -> brent.GetPullRequestRequest
-	204, // 319: brent.BrentService.GetPrincipalStatus:input_type -> brent.GetPrincipalStatusRequest
-	326, // 320: brent.BrentService.GetPlanPrompt:input_type -> brent.GetPlanPromptRequest
-	206, // 321: brent.BrentService.GetIntegrationConnectURL:input_type -> brent.GetIntegrationConnectURLRequest
-	208, // 322: brent.BrentService.DisconnectIntegration:input_type -> brent.DisconnectIntegrationRequest
-	210, // 323: brent.BrentService.ConnectByoHttpMcp:input_type -> brent.ConnectByoHttpMcpRequest
-	212, // 324: brent.BrentService.GetGitLabConnection:input_type -> brent.GetGitLabConnectionRequest
-	214, // 325: brent.BrentService.ConnectGitLab:input_type -> brent.ConnectGitLabRequest
-	216, // 326: brent.BrentService.SaveGitLabSigningToken:input_type -> brent.SaveGitLabSigningTokenRequest
-	294, // 327: brent.BrentService.UpsertMyVerifiedBinding:input_type -> brent.UpsertMyVerifiedBindingRequest
-	298, // 328: brent.BrentService.ListMyBindings:input_type -> brent.ListMyBindingsRequest
-	302, // 329: brent.BrentService.GetMyNotificationPreferences:input_type -> brent.GetMyNotificationPreferencesRequest
-	304, // 330: brent.BrentService.UpdateMyNotificationPreferences:input_type -> brent.UpdateMyNotificationPreferencesRequest
-	306, // 331: brent.BrentService.RegisterMyPushSubscription:input_type -> brent.RegisterMyPushSubscriptionRequest
-	308, // 332: brent.BrentService.GetWebPushPublicKey:input_type -> brent.GetWebPushPublicKeyRequest
-	296, // 333: brent.BrentService.UpdateMyDisplayName:input_type -> brent.UpdateMyDisplayNameRequest
-	312, // 334: brent.BrentService.GetBrentSettings:input_type -> brent.GetBrentSettingsRequest
-	314, // 335: brent.BrentService.UpdateBrentSettings:input_type -> brent.UpdateBrentSettingsRequest
-	323, // 336: brent.BrentService.ListIntegrationCatalogue:input_type -> brent.ListIntegrationCatalogueRequest
-	226, // 337: brent.BrentService.CreateWorkspace:input_type -> brent.CreateWorkspaceRequest
-	228, // 338: brent.BrentService.ListMyWorkspaces:input_type -> brent.ListMyWorkspacesRequest
-	230, // 339: brent.BrentService.DiscoverLoginRecoveryCandidates:input_type -> brent.DiscoverLoginRecoveryCandidatesRequest
-	233, // 340: brent.BrentService.RenameWorkspace:input_type -> brent.RenameWorkspaceRequest
-	270, // 341: brent.BrentService.UpdateWorkspaceBranding:input_type -> brent.UpdateWorkspaceBrandingRequest
-	272, // 342: brent.BrentService.CompleteWorkspaceOnboarding:input_type -> brent.CompleteWorkspaceOnboardingRequest
-	235, // 343: brent.BrentService.DeleteWorkspace:input_type -> brent.DeleteWorkspaceRequest
-	237, // 344: brent.BrentService.ListJoinableWorkspaces:input_type -> brent.ListJoinableWorkspacesRequest
-	241, // 345: brent.BrentService.JoinWorkspace:input_type -> brent.JoinWorkspaceRequest
-	274, // 346: brent.BrentService.CreateInvitation:input_type -> brent.CreateInvitationRequest
-	276, // 347: brent.BrentService.CreateInvitations:input_type -> brent.CreateInvitationsRequest
-	279, // 348: brent.BrentService.AcceptInvitation:input_type -> brent.AcceptInvitationRequest
-	281, // 349: brent.BrentService.ListWorkspaceMembers:input_type -> brent.ListWorkspaceMembersRequest
-	284, // 350: brent.BrentService.ResendInvitation:input_type -> brent.ResendInvitationRequest
-	286, // 351: brent.BrentService.RevokeInvitation:input_type -> brent.RevokeInvitationRequest
-	288, // 352: brent.BrentService.RemoveWorkspaceMember:input_type -> brent.RemoveWorkspaceMemberRequest
-	290, // 353: brent.BrentService.UpdateWorkspaceMemberRole:input_type -> brent.UpdateWorkspaceMemberRoleRequest
-	244, // 354: brent.BrentService.ListApprovedEmailDomains:input_type -> brent.ListApprovedEmailDomainsRequest
-	246, // 355: brent.BrentService.AddApprovedEmailDomain:input_type -> brent.AddApprovedEmailDomainRequest
-	248, // 356: brent.BrentService.VerifyApprovedEmailDomain:input_type -> brent.VerifyApprovedEmailDomainRequest
-	250, // 357: brent.BrentService.ResendApprovedEmailDomainCode:input_type -> brent.ResendApprovedEmailDomainCodeRequest
-	254, // 358: brent.BrentService.DeleteApprovedEmailDomain:input_type -> brent.DeleteApprovedEmailDomainRequest
-	257, // 359: brent.BrentService.GetWorkspaceLLMCredentialStatus:input_type -> brent.GetWorkspaceLLMCredentialStatusRequest
-	259, // 360: brent.BrentService.SetWorkspaceLLMCredential:input_type -> brent.SetWorkspaceLLMCredentialRequest
-	261, // 361: brent.BrentService.DeleteWorkspaceLLMCredential:input_type -> brent.DeleteWorkspaceLLMCredentialRequest
-	264, // 362: brent.BrentService.GetMyCursorCredentialStatus:input_type -> brent.GetMyCursorCredentialStatusRequest
-	266, // 363: brent.BrentService.SetMyCursorCredential:input_type -> brent.SetMyCursorCredentialRequest
-	268, // 364: brent.BrentService.DeleteMyCursorCredential:input_type -> brent.DeleteMyCursorCredentialRequest
-	220, // 365: brent.BrentService.GetWorkspaceIntegrationRoles:input_type -> brent.GetWorkspaceIntegrationRolesRequest
-	222, // 366: brent.BrentService.SetWorkspaceIntegrationRoles:input_type -> brent.SetWorkspaceIntegrationRolesRequest
-	252, // 367: brent.BrentService.ResendVerificationEmail:input_type -> brent.ResendVerificationEmailRequest
-	292, // 368: brent.BrentPublicService.GetInvitation:input_type -> brent.GetInvitationRequest
-	26,  // 369: brent.BrentAdminService.ExecuteWorkflow:input_type -> brent.ExecuteWorkflowRequest
-	27,  // 370: brent.BrentAdminService.ListRuns:input_type -> brent.ListRunsRequest
-	30,  // 371: brent.BrentAdminService.WatchRun:input_type -> brent.WatchRunRequest
-	31,  // 372: brent.BrentAdminService.StreamEvents:input_type -> brent.StreamEventsRequest
-	33,  // 373: brent.BrentAdminService.ListEvents:input_type -> brent.ListEventsRequest
-	35,  // 374: brent.BrentAdminService.CancelRun:input_type -> brent.CancelRunRequest
-	53,  // 375: brent.BrentAdminService.SendQuestion:input_type -> brent.SendQuestionRequest
-	54,  // 376: brent.BrentAdminService.ListPlans:input_type -> brent.AdminListPlansRequest
-	57,  // 377: brent.BrentAdminService.GetPlan:input_type -> brent.AdminGetPlanRequest
-	82,  // 378: brent.BrentAdminService.ListReviews:input_type -> brent.AdminListReviewsRequest
-	85,  // 379: brent.BrentAdminService.GetReview:input_type -> brent.AdminGetReviewRequest
-	345, // 380: brent.BrentAdminService.ListAccounts:input_type -> google.protobuf.Empty
-	90,  // 381: brent.BrentAdminService.GetAccountSummary:input_type -> brent.AdminGetAccountSummaryRequest
-	93,  // 382: brent.BrentAdminService.GetAccountHealthAnalysis:input_type -> brent.AdminGetAccountHealthAnalysisRequest
-	96,  // 383: brent.BrentAdminService.ListAccountMetricRepos:input_type -> brent.AdminListAccountMetricReposRequest
-	99,  // 384: brent.BrentAdminService.StartAccountMetricsComparison:input_type -> brent.AdminStartAccountMetricsComparisonRequest
-	101, // 385: brent.BrentAdminService.GetAccountMetricsComparisonRun:input_type -> brent.AdminGetAccountMetricsComparisonRunRequest
-	316, // 386: brent.BrentAdminService.GetAccountBrentSettings:input_type -> brent.AdminGetAccountBrentSettingsRequest
-	317, // 387: brent.BrentAdminService.UpdateAccountBrentSettings:input_type -> brent.AdminUpdateAccountBrentSettingsRequest
-	318, // 388: brent.BrentAdminService.GetAccountLLMCredentialStatus:input_type -> brent.AdminGetAccountLLMCredentialStatusRequest
-	320, // 389: brent.BrentAdminService.ListAccountIntegrations:input_type -> brent.AdminListAccountIntegrationsRequest
-	189, // 390: brent.BrentAdminService.ListWorkflows:input_type -> brent.ListWorkflowsRequest
-	192, // 391: brent.BrentAdminService.GetWorkflow:input_type -> brent.GetWorkflowRequest
-	195, // 392: brent.BrentAdminService.ListWorkflowRuns:input_type -> brent.ListWorkflowRunsRequest
-	198, // 393: brent.BrentAdminService.GetWorkflowRun:input_type -> brent.GetWorkflowRunRequest
-	199, // 394: brent.BrentAdminService.GetWorkflowRunThreadHistory:input_type -> brent.GetWorkflowRunThreadHistoryRequest
-	12,  // 395: brent.BrentAdminService.ListPullRequests:input_type -> brent.ListPullRequestsRequest
-	14,  // 396: brent.BrentAdminService.GetPullRequestByID:input_type -> brent.GetPullRequestByIDRequest
-	16,  // 397: brent.BrentAdminService.ListDeviationAnalysesForPR:input_type -> brent.ListDeviationAnalysesForPRRequest
-	60,  // 398: brent.BrentAdminService.ListPrincipals:input_type -> brent.AdminListPrincipalsRequest
-	62,  // 399: brent.BrentAdminService.GetPrincipal:input_type -> brent.AdminGetPrincipalRequest
-	65,  // 400: brent.BrentAdminService.UpsertPrincipalBinding:input_type -> brent.AdminUpsertPrincipalBindingRequest
-	67,  // 401: brent.BrentAdminService.DeletePrincipalBinding:input_type -> brent.AdminDeletePrincipalBindingRequest
-	69,  // 402: brent.BrentAdminService.UpdatePrincipal:input_type -> brent.AdminUpdatePrincipalRequest
-	71,  // 403: brent.BrentAdminService.CreatePrincipalIdentity:input_type -> brent.AdminCreatePrincipalIdentityRequest
-	73,  // 404: brent.BrentAdminService.DeletePrincipalIdentity:input_type -> brent.AdminDeletePrincipalIdentityRequest
-	75,  // 405: brent.BrentAdminService.SetPrincipalCredential:input_type -> brent.AdminSetPrincipalCredentialRequest
-	77,  // 406: brent.BrentAdminService.ListPrincipalCredentialConnections:input_type -> brent.AdminListPrincipalCredentialConnectionsRequest
-	80,  // 407: brent.BrentAdminService.DeletePrincipalCredential:input_type -> brent.AdminDeletePrincipalCredentialRequest
-	18,  // 408: brent.BrentAdminService.GetPullRequestTimeline:input_type -> brent.GetPullRequestTimelineRequest
-	38,  // 409: brent.BrentService.ListOpenPullRequests:output_type -> brent.ListOpenPullRequestsResponse
-	40,  // 410: brent.BrentService.GetPullRequest:output_type -> brent.GetPullRequestResponse
-	205, // 411: brent.BrentService.GetPrincipalStatus:output_type -> brent.GetPrincipalStatusResponse
-	327, // 412: brent.BrentService.GetPlanPrompt:output_type -> brent.GetPlanPromptResponse
-	207, // 413: brent.BrentService.GetIntegrationConnectURL:output_type -> brent.GetIntegrationConnectURLResponse
-	209, // 414: brent.BrentService.DisconnectIntegration:output_type -> brent.DisconnectIntegrationResponse
-	211, // 415: brent.BrentService.ConnectByoHttpMcp:output_type -> brent.ConnectByoHttpMcpResponse
-	213, // 416: brent.BrentService.GetGitLabConnection:output_type -> brent.GetGitLabConnectionResponse
-	215, // 417: brent.BrentService.ConnectGitLab:output_type -> brent.ConnectGitLabResponse
-	217, // 418: brent.BrentService.SaveGitLabSigningToken:output_type -> brent.SaveGitLabSigningTokenResponse
-	295, // 419: brent.BrentService.UpsertMyVerifiedBinding:output_type -> brent.UpsertMyVerifiedBindingResponse
-	299, // 420: brent.BrentService.ListMyBindings:output_type -> brent.ListMyBindingsResponse
-	303, // 421: brent.BrentService.GetMyNotificationPreferences:output_type -> brent.GetMyNotificationPreferencesResponse
-	305, // 422: brent.BrentService.UpdateMyNotificationPreferences:output_type -> brent.UpdateMyNotificationPreferencesResponse
-	307, // 423: brent.BrentService.RegisterMyPushSubscription:output_type -> brent.RegisterMyPushSubscriptionResponse
-	309, // 424: brent.BrentService.GetWebPushPublicKey:output_type -> brent.GetWebPushPublicKeyResponse
-	297, // 425: brent.BrentService.UpdateMyDisplayName:output_type -> brent.UpdateMyDisplayNameResponse
-	313, // 426: brent.BrentService.GetBrentSettings:output_type -> brent.GetBrentSettingsResponse
-	315, // 427: brent.BrentService.UpdateBrentSettings:output_type -> brent.UpdateBrentSettingsResponse
-	324, // 428: brent.BrentService.ListIntegrationCatalogue:output_type -> brent.ListIntegrationCatalogueResponse
-	227, // 429: brent.BrentService.CreateWorkspace:output_type -> brent.CreateWorkspaceResponse
-	229, // 430: brent.BrentService.ListMyWorkspaces:output_type -> brent.ListMyWorkspacesResponse
-	232, // 431: brent.BrentService.DiscoverLoginRecoveryCandidates:output_type -> brent.DiscoverLoginRecoveryCandidatesResponse
-	234, // 432: brent.BrentService.RenameWorkspace:output_type -> brent.RenameWorkspaceResponse
-	271, // 433: brent.BrentService.UpdateWorkspaceBranding:output_type -> brent.UpdateWorkspaceBrandingResponse
-	273, // 434: brent.BrentService.CompleteWorkspaceOnboarding:output_type -> brent.CompleteWorkspaceOnboardingResponse
-	236, // 435: brent.BrentService.DeleteWorkspace:output_type -> brent.DeleteWorkspaceResponse
-	238, // 436: brent.BrentService.ListJoinableWorkspaces:output_type -> brent.ListJoinableWorkspacesResponse
-	242, // 437: brent.BrentService.JoinWorkspace:output_type -> brent.JoinWorkspaceResponse
-	275, // 438: brent.BrentService.CreateInvitation:output_type -> brent.CreateInvitationResponse
-	278, // 439: brent.BrentService.CreateInvitations:output_type -> brent.CreateInvitationsResponse
-	280, // 440: brent.BrentService.AcceptInvitation:output_type -> brent.AcceptInvitationResponse
-	282, // 441: brent.BrentService.ListWorkspaceMembers:output_type -> brent.ListWorkspaceMembersResponse
-	285, // 442: brent.BrentService.ResendInvitation:output_type -> brent.ResendInvitationResponse
-	287, // 443: brent.BrentService.RevokeInvitation:output_type -> brent.RevokeInvitationResponse
-	289, // 444: brent.BrentService.RemoveWorkspaceMember:output_type -> brent.RemoveWorkspaceMemberResponse
-	291, // 445: brent.BrentService.UpdateWorkspaceMemberRole:output_type -> brent.UpdateWorkspaceMemberRoleResponse
-	245, // 446: brent.BrentService.ListApprovedEmailDomains:output_type -> brent.ListApprovedEmailDomainsResponse
-	247, // 447: brent.BrentService.AddApprovedEmailDomain:output_type -> brent.AddApprovedEmailDomainResponse
-	249, // 448: brent.BrentService.VerifyApprovedEmailDomain:output_type -> brent.VerifyApprovedEmailDomainResponse
-	251, // 449: brent.BrentService.ResendApprovedEmailDomainCode:output_type -> brent.ResendApprovedEmailDomainCodeResponse
-	255, // 450: brent.BrentService.DeleteApprovedEmailDomain:output_type -> brent.DeleteApprovedEmailDomainResponse
-	258, // 451: brent.BrentService.GetWorkspaceLLMCredentialStatus:output_type -> brent.GetWorkspaceLLMCredentialStatusResponse
-	260, // 452: brent.BrentService.SetWorkspaceLLMCredential:output_type -> brent.SetWorkspaceLLMCredentialResponse
-	262, // 453: brent.BrentService.DeleteWorkspaceLLMCredential:output_type -> brent.DeleteWorkspaceLLMCredentialResponse
-	265, // 454: brent.BrentService.GetMyCursorCredentialStatus:output_type -> brent.GetMyCursorCredentialStatusResponse
-	267, // 455: brent.BrentService.SetMyCursorCredential:output_type -> brent.SetMyCursorCredentialResponse
-	269, // 456: brent.BrentService.DeleteMyCursorCredential:output_type -> brent.DeleteMyCursorCredentialResponse
-	221, // 457: brent.BrentService.GetWorkspaceIntegrationRoles:output_type -> brent.GetWorkspaceIntegrationRolesResponse
-	223, // 458: brent.BrentService.SetWorkspaceIntegrationRoles:output_type -> brent.SetWorkspaceIntegrationRolesResponse
-	253, // 459: brent.BrentService.ResendVerificationEmail:output_type -> brent.ResendVerificationEmailResponse
-	293, // 460: brent.BrentPublicService.GetInvitation:output_type -> brent.GetInvitationResponse
-	42,  // 461: brent.BrentAdminService.ExecuteWorkflow:output_type -> brent.ExecuteWorkflowResponse
-	28,  // 462: brent.BrentAdminService.ListRuns:output_type -> brent.ListRunsResponse
-	42,  // 463: brent.BrentAdminService.WatchRun:output_type -> brent.ExecuteWorkflowResponse
-	32,  // 464: brent.BrentAdminService.StreamEvents:output_type -> brent.StreamEventsResponse
-	34,  // 465: brent.BrentAdminService.ListEvents:output_type -> brent.ListEventsResponse
-	36,  // 466: brent.BrentAdminService.CancelRun:output_type -> brent.CancelRunResponse
-	42,  // 467: brent.BrentAdminService.SendQuestion:output_type -> brent.ExecuteWorkflowResponse
-	55,  // 468: brent.BrentAdminService.ListPlans:output_type -> brent.AdminListPlansResponse
-	58,  // 469: brent.BrentAdminService.GetPlan:output_type -> brent.AdminGetPlanResponse
-	83,  // 470: brent.BrentAdminService.ListReviews:output_type -> brent.AdminListReviewsResponse
-	86,  // 471: brent.BrentAdminService.GetReview:output_type -> brent.AdminGetReviewResponse
-	89,  // 472: brent.BrentAdminService.ListAccounts:output_type -> brent.AdminListAccountsResponse
-	92,  // 473: brent.BrentAdminService.GetAccountSummary:output_type -> brent.AdminGetAccountSummaryResponse
-	95,  // 474: brent.BrentAdminService.GetAccountHealthAnalysis:output_type -> brent.AdminGetAccountHealthAnalysisResponse
-	98,  // 475: brent.BrentAdminService.ListAccountMetricRepos:output_type -> brent.AdminListAccountMetricReposResponse
-	100, // 476: brent.BrentAdminService.StartAccountMetricsComparison:output_type -> brent.AdminStartAccountMetricsComparisonResponse
-	104, // 477: brent.BrentAdminService.GetAccountMetricsComparisonRun:output_type -> brent.AdminGetAccountMetricsComparisonRunResponse
-	313, // 478: brent.BrentAdminService.GetAccountBrentSettings:output_type -> brent.GetBrentSettingsResponse
-	315, // 479: brent.BrentAdminService.UpdateAccountBrentSettings:output_type -> brent.UpdateBrentSettingsResponse
-	319, // 480: brent.BrentAdminService.GetAccountLLMCredentialStatus:output_type -> brent.AdminGetAccountLLMCredentialStatusResponse
-	322, // 481: brent.BrentAdminService.ListAccountIntegrations:output_type -> brent.AdminListAccountIntegrationsResponse
-	190, // 482: brent.BrentAdminService.ListWorkflows:output_type -> brent.ListWorkflowsResponse
-	193, // 483: brent.BrentAdminService.GetWorkflow:output_type -> brent.GetWorkflowResponse
-	196, // 484: brent.BrentAdminService.ListWorkflowRuns:output_type -> brent.ListWorkflowRunsResponse
-	202, // 485: brent.BrentAdminService.GetWorkflowRun:output_type -> brent.GetWorkflowRunResponse
-	201, // 486: brent.BrentAdminService.GetWorkflowRunThreadHistory:output_type -> brent.GetWorkflowRunThreadHistoryResponse
-	13,  // 487: brent.BrentAdminService.ListPullRequests:output_type -> brent.ListPullRequestsResponse
-	15,  // 488: brent.BrentAdminService.GetPullRequestByID:output_type -> brent.GetPullRequestByIDResponse
-	17,  // 489: brent.BrentAdminService.ListDeviationAnalysesForPR:output_type -> brent.ListDeviationAnalysesForPRResponse
-	61,  // 490: brent.BrentAdminService.ListPrincipals:output_type -> brent.AdminListPrincipalsResponse
-	63,  // 491: brent.BrentAdminService.GetPrincipal:output_type -> brent.AdminGetPrincipalResponse
-	66,  // 492: brent.BrentAdminService.UpsertPrincipalBinding:output_type -> brent.AdminUpsertPrincipalBindingResponse
-	68,  // 493: brent.BrentAdminService.DeletePrincipalBinding:output_type -> brent.AdminDeletePrincipalBindingResponse
-	70,  // 494: brent.BrentAdminService.UpdatePrincipal:output_type -> brent.AdminUpdatePrincipalResponse
-	72,  // 495: brent.BrentAdminService.CreatePrincipalIdentity:output_type -> brent.AdminCreatePrincipalIdentityResponse
-	74,  // 496: brent.BrentAdminService.DeletePrincipalIdentity:output_type -> brent.AdminDeletePrincipalIdentityResponse
-	76,  // 497: brent.BrentAdminService.SetPrincipalCredential:output_type -> brent.AdminSetPrincipalCredentialResponse
-	78,  // 498: brent.BrentAdminService.ListPrincipalCredentialConnections:output_type -> brent.AdminListPrincipalCredentialConnectionsResponse
-	81,  // 499: brent.BrentAdminService.DeletePrincipalCredential:output_type -> brent.AdminDeletePrincipalCredentialResponse
-	21,  // 500: brent.BrentAdminService.GetPullRequestTimeline:output_type -> brent.GetPullRequestTimelineResponse
-	409, // [409:501] is the sub-list for method output_type
-	317, // [317:409] is the sub-list for method input_type
-	317, // [317:317] is the sub-list for extension type_name
-	316, // [316:317] is the sub-list for extension extendee
-	0,   // [0:316] is the sub-list for field type_name
+	3,   // 238: brent.SetWorkspaceIntegrationRolesRequest.git_provider:type_name -> brent.IntegrationProvider
+	3,   // 239: brent.SetWorkspaceIntegrationRolesResponse.git_provider:type_name -> brent.IntegrationProvider
+	342, // 240: brent.Principal.created_at:type_name -> google.protobuf.Timestamp
+	342, // 241: brent.Principal.updated_at:type_name -> google.protobuf.Timestamp
+	225, // 242: brent.CreateWorkspaceResponse.workspace:type_name -> brent.Workspace
+	225, // 243: brent.ListMyWorkspacesResponse.workspaces:type_name -> brent.Workspace
+	6,   // 244: brent.LoginRecoveryCandidate.provider:type_name -> brent.LoginProvider
+	6,   // 245: brent.DiscoverLoginRecoveryCandidatesResponse.arriving_provider:type_name -> brent.LoginProvider
+	231, // 246: brent.DiscoverLoginRecoveryCandidatesResponse.candidates:type_name -> brent.LoginRecoveryCandidate
+	225, // 247: brent.RenameWorkspaceResponse.workspace:type_name -> brent.Workspace
+	239, // 248: brent.ListJoinableWorkspacesResponse.workspaces:type_name -> brent.JoinableWorkspace
+	342, // 249: brent.JoinableWorkspace.created_at:type_name -> google.protobuf.Timestamp
+	240, // 250: brent.JoinableWorkspace.member_previews:type_name -> brent.JoinableWorkspaceMember
+	7,   // 251: brent.JoinableWorkspace.source:type_name -> brent.JoinSource
+	225, // 252: brent.JoinWorkspaceResponse.workspace:type_name -> brent.Workspace
+	342, // 253: brent.ApprovedEmailDomain.created_at:type_name -> google.protobuf.Timestamp
+	243, // 254: brent.ListApprovedEmailDomainsResponse.domains:type_name -> brent.ApprovedEmailDomain
+	243, // 255: brent.AddApprovedEmailDomainResponse.domain:type_name -> brent.ApprovedEmailDomain
+	243, // 256: brent.VerifyApprovedEmailDomainResponse.domain:type_name -> brent.ApprovedEmailDomain
+	342, // 257: brent.WorkspaceLLMCredentialStatus.last_validated_at:type_name -> google.protobuf.Timestamp
+	342, // 258: brent.WorkspaceLLMCredentialStatus.updated_at:type_name -> google.protobuf.Timestamp
+	256, // 259: brent.GetWorkspaceLLMCredentialStatusResponse.status:type_name -> brent.WorkspaceLLMCredentialStatus
+	256, // 260: brent.SetWorkspaceLLMCredentialResponse.status:type_name -> brent.WorkspaceLLMCredentialStatus
+	342, // 261: brent.MyCursorCredentialStatus.last_validated_at:type_name -> google.protobuf.Timestamp
+	263, // 262: brent.GetMyCursorCredentialStatusResponse.status:type_name -> brent.MyCursorCredentialStatus
+	263, // 263: brent.SetMyCursorCredentialResponse.status:type_name -> brent.MyCursorCredentialStatus
+	225, // 264: brent.UpdateWorkspaceBrandingResponse.workspace:type_name -> brent.Workspace
+	225, // 265: brent.CompleteWorkspaceOnboardingResponse.workspace:type_name -> brent.Workspace
+	342, // 266: brent.CreateInvitationResponse.expires_at:type_name -> google.protobuf.Timestamp
+	9,   // 267: brent.InvitationResult.status:type_name -> brent.InvitationResultStatus
+	277, // 268: brent.CreateInvitationsResponse.results:type_name -> brent.InvitationResult
+	225, // 269: brent.AcceptInvitationResponse.workspace:type_name -> brent.Workspace
+	283, // 270: brent.ListWorkspaceMembersResponse.members:type_name -> brent.WorkspaceMember
+	10,  // 271: brent.WorkspaceMember.state:type_name -> brent.WorkspaceMemberState
+	342, // 272: brent.ResendInvitationResponse.expires_at:type_name -> google.protobuf.Timestamp
+	8,   // 273: brent.GetInvitationResponse.status:type_name -> brent.InvitationStatus
+	310, // 274: brent.UpsertMyVerifiedBindingResponse.binding:type_name -> brent.Binding
+	224, // 275: brent.UpdateMyDisplayNameResponse.principal:type_name -> brent.Principal
+	310, // 276: brent.ListMyBindingsResponse.bindings:type_name -> brent.Binding
+	340, // 277: brent.NotificationPreferences.preferences:type_name -> brent.NotificationPreferences.PreferencesEntry
+	341, // 278: brent.ChannelPreferences.channels:type_name -> brent.ChannelPreferences.ChannelsEntry
+	300, // 279: brent.GetMyNotificationPreferencesResponse.preferences:type_name -> brent.NotificationPreferences
+	300, // 280: brent.UpdateMyNotificationPreferencesRequest.preferences:type_name -> brent.NotificationPreferences
+	300, // 281: brent.UpdateMyNotificationPreferencesResponse.preferences:type_name -> brent.NotificationPreferences
+	342, // 282: brent.Binding.created_at:type_name -> google.protobuf.Timestamp
+	342, // 283: brent.Binding.updated_at:type_name -> google.protobuf.Timestamp
+	342, // 284: brent.GetBrentSettingsResponse.red_finding_kinds_updated_at:type_name -> google.protobuf.Timestamp
+	311, // 285: brent.UpdateBrentSettingsRequest.red_finding_kinds:type_name -> brent.RedFindingKindsPatch
+	342, // 286: brent.UpdateBrentSettingsResponse.red_finding_kinds_updated_at:type_name -> google.protobuf.Timestamp
+	311, // 287: brent.AdminUpdateAccountBrentSettingsRequest.red_finding_kinds:type_name -> brent.RedFindingKindsPatch
+	256, // 288: brent.AdminGetAccountLLMCredentialStatusResponse.status:type_name -> brent.WorkspaceLLMCredentialStatus
+	342, // 289: brent.AdminAccountIntegrationInstall.created_at:type_name -> google.protobuf.Timestamp
+	5,   // 290: brent.AdminAccountIntegrationInstall.status:type_name -> brent.IntegrationConnectionStatus
+	321, // 291: brent.AdminListAccountIntegrationsResponse.installs:type_name -> brent.AdminAccountIntegrationInstall
+	3,   // 292: brent.AdminListAccountIntegrationsResponse.git_provider:type_name -> brent.IntegrationProvider
+	3,   // 293: brent.AdminListAccountIntegrationsResponse.ticketing_provider:type_name -> brent.IntegrationProvider
+	3,   // 294: brent.AdminListAccountIntegrationsResponse.messaging_provider:type_name -> brent.IntegrationProvider
+	325, // 295: brent.ListIntegrationCatalogueResponse.entries:type_name -> brent.IntegrationCatalogueEntry
+	11,  // 296: brent.IntegrationCatalogueEntry.source:type_name -> brent.IntegrationCatalogueSource
+	3,   // 297: brent.IntegrationCatalogueEntry.provider:type_name -> brent.IntegrationProvider
+	342, // 298: brent.IntegrationCatalogueEntry.created_at:type_name -> google.protobuf.Timestamp
+	343, // 299: brent.PlanUpdated.PreviousEntry.value:type_name -> google.protobuf.Value
+	343, // 300: brent.PlanUpdated.AfterEntry.value:type_name -> google.protobuf.Value
+	343, // 301: brent.PrincipalUpdated.PreviousEntry.value:type_name -> google.protobuf.Value
+	343, // 302: brent.PrincipalUpdated.AfterEntry.value:type_name -> google.protobuf.Value
+	343, // 303: brent.BindingUpdated.PreviousEntry.value:type_name -> google.protobuf.Value
+	343, // 304: brent.BindingUpdated.AfterEntry.value:type_name -> google.protobuf.Value
+	343, // 305: brent.PullRequestUpdated.PreviousEntry.value:type_name -> google.protobuf.Value
+	343, // 306: brent.PullRequestUpdated.AfterEntry.value:type_name -> google.protobuf.Value
+	343, // 307: brent.DeviationFindingUpdated.PreviousEntry.value:type_name -> google.protobuf.Value
+	343, // 308: brent.DeviationFindingUpdated.AfterEntry.value:type_name -> google.protobuf.Value
+	301, // 309: brent.NotificationPreferences.PreferencesEntry.value:type_name -> brent.ChannelPreferences
+	344, // 310: brent.embedded_json:extendee -> google.protobuf.FieldOptions
+	37,  // 311: brent.BrentService.ListOpenPullRequests:input_type -> brent.ListOpenPullRequestsRequest
+	39,  // 312: brent.BrentService.GetPullRequest:input_type -> brent.GetPullRequestRequest
+	204, // 313: brent.BrentService.GetPrincipalStatus:input_type -> brent.GetPrincipalStatusRequest
+	326, // 314: brent.BrentService.GetPlanPrompt:input_type -> brent.GetPlanPromptRequest
+	206, // 315: brent.BrentService.GetIntegrationConnectURL:input_type -> brent.GetIntegrationConnectURLRequest
+	208, // 316: brent.BrentService.DisconnectIntegration:input_type -> brent.DisconnectIntegrationRequest
+	210, // 317: brent.BrentService.ConnectByoHttpMcp:input_type -> brent.ConnectByoHttpMcpRequest
+	212, // 318: brent.BrentService.GetGitLabConnection:input_type -> brent.GetGitLabConnectionRequest
+	214, // 319: brent.BrentService.ConnectGitLab:input_type -> brent.ConnectGitLabRequest
+	216, // 320: brent.BrentService.SaveGitLabSigningToken:input_type -> brent.SaveGitLabSigningTokenRequest
+	294, // 321: brent.BrentService.UpsertMyVerifiedBinding:input_type -> brent.UpsertMyVerifiedBindingRequest
+	298, // 322: brent.BrentService.ListMyBindings:input_type -> brent.ListMyBindingsRequest
+	302, // 323: brent.BrentService.GetMyNotificationPreferences:input_type -> brent.GetMyNotificationPreferencesRequest
+	304, // 324: brent.BrentService.UpdateMyNotificationPreferences:input_type -> brent.UpdateMyNotificationPreferencesRequest
+	306, // 325: brent.BrentService.RegisterMyPushSubscription:input_type -> brent.RegisterMyPushSubscriptionRequest
+	308, // 326: brent.BrentService.GetWebPushPublicKey:input_type -> brent.GetWebPushPublicKeyRequest
+	296, // 327: brent.BrentService.UpdateMyDisplayName:input_type -> brent.UpdateMyDisplayNameRequest
+	312, // 328: brent.BrentService.GetBrentSettings:input_type -> brent.GetBrentSettingsRequest
+	314, // 329: brent.BrentService.UpdateBrentSettings:input_type -> brent.UpdateBrentSettingsRequest
+	323, // 330: brent.BrentService.ListIntegrationCatalogue:input_type -> brent.ListIntegrationCatalogueRequest
+	226, // 331: brent.BrentService.CreateWorkspace:input_type -> brent.CreateWorkspaceRequest
+	228, // 332: brent.BrentService.ListMyWorkspaces:input_type -> brent.ListMyWorkspacesRequest
+	230, // 333: brent.BrentService.DiscoverLoginRecoveryCandidates:input_type -> brent.DiscoverLoginRecoveryCandidatesRequest
+	233, // 334: brent.BrentService.RenameWorkspace:input_type -> brent.RenameWorkspaceRequest
+	270, // 335: brent.BrentService.UpdateWorkspaceBranding:input_type -> brent.UpdateWorkspaceBrandingRequest
+	272, // 336: brent.BrentService.CompleteWorkspaceOnboarding:input_type -> brent.CompleteWorkspaceOnboardingRequest
+	235, // 337: brent.BrentService.DeleteWorkspace:input_type -> brent.DeleteWorkspaceRequest
+	237, // 338: brent.BrentService.ListJoinableWorkspaces:input_type -> brent.ListJoinableWorkspacesRequest
+	241, // 339: brent.BrentService.JoinWorkspace:input_type -> brent.JoinWorkspaceRequest
+	274, // 340: brent.BrentService.CreateInvitation:input_type -> brent.CreateInvitationRequest
+	276, // 341: brent.BrentService.CreateInvitations:input_type -> brent.CreateInvitationsRequest
+	279, // 342: brent.BrentService.AcceptInvitation:input_type -> brent.AcceptInvitationRequest
+	281, // 343: brent.BrentService.ListWorkspaceMembers:input_type -> brent.ListWorkspaceMembersRequest
+	284, // 344: brent.BrentService.ResendInvitation:input_type -> brent.ResendInvitationRequest
+	286, // 345: brent.BrentService.RevokeInvitation:input_type -> brent.RevokeInvitationRequest
+	288, // 346: brent.BrentService.RemoveWorkspaceMember:input_type -> brent.RemoveWorkspaceMemberRequest
+	290, // 347: brent.BrentService.UpdateWorkspaceMemberRole:input_type -> brent.UpdateWorkspaceMemberRoleRequest
+	244, // 348: brent.BrentService.ListApprovedEmailDomains:input_type -> brent.ListApprovedEmailDomainsRequest
+	246, // 349: brent.BrentService.AddApprovedEmailDomain:input_type -> brent.AddApprovedEmailDomainRequest
+	248, // 350: brent.BrentService.VerifyApprovedEmailDomain:input_type -> brent.VerifyApprovedEmailDomainRequest
+	250, // 351: brent.BrentService.ResendApprovedEmailDomainCode:input_type -> brent.ResendApprovedEmailDomainCodeRequest
+	254, // 352: brent.BrentService.DeleteApprovedEmailDomain:input_type -> brent.DeleteApprovedEmailDomainRequest
+	257, // 353: brent.BrentService.GetWorkspaceLLMCredentialStatus:input_type -> brent.GetWorkspaceLLMCredentialStatusRequest
+	259, // 354: brent.BrentService.SetWorkspaceLLMCredential:input_type -> brent.SetWorkspaceLLMCredentialRequest
+	261, // 355: brent.BrentService.DeleteWorkspaceLLMCredential:input_type -> brent.DeleteWorkspaceLLMCredentialRequest
+	264, // 356: brent.BrentService.GetMyCursorCredentialStatus:input_type -> brent.GetMyCursorCredentialStatusRequest
+	266, // 357: brent.BrentService.SetMyCursorCredential:input_type -> brent.SetMyCursorCredentialRequest
+	268, // 358: brent.BrentService.DeleteMyCursorCredential:input_type -> brent.DeleteMyCursorCredentialRequest
+	220, // 359: brent.BrentService.GetWorkspaceIntegrationRoles:input_type -> brent.GetWorkspaceIntegrationRolesRequest
+	222, // 360: brent.BrentService.SetWorkspaceIntegrationRoles:input_type -> brent.SetWorkspaceIntegrationRolesRequest
+	252, // 361: brent.BrentService.ResendVerificationEmail:input_type -> brent.ResendVerificationEmailRequest
+	292, // 362: brent.BrentPublicService.GetInvitation:input_type -> brent.GetInvitationRequest
+	26,  // 363: brent.BrentAdminService.ExecuteWorkflow:input_type -> brent.ExecuteWorkflowRequest
+	27,  // 364: brent.BrentAdminService.ListRuns:input_type -> brent.ListRunsRequest
+	30,  // 365: brent.BrentAdminService.WatchRun:input_type -> brent.WatchRunRequest
+	31,  // 366: brent.BrentAdminService.StreamEvents:input_type -> brent.StreamEventsRequest
+	33,  // 367: brent.BrentAdminService.ListEvents:input_type -> brent.ListEventsRequest
+	35,  // 368: brent.BrentAdminService.CancelRun:input_type -> brent.CancelRunRequest
+	53,  // 369: brent.BrentAdminService.SendQuestion:input_type -> brent.SendQuestionRequest
+	54,  // 370: brent.BrentAdminService.ListPlans:input_type -> brent.AdminListPlansRequest
+	57,  // 371: brent.BrentAdminService.GetPlan:input_type -> brent.AdminGetPlanRequest
+	82,  // 372: brent.BrentAdminService.ListReviews:input_type -> brent.AdminListReviewsRequest
+	85,  // 373: brent.BrentAdminService.GetReview:input_type -> brent.AdminGetReviewRequest
+	345, // 374: brent.BrentAdminService.ListAccounts:input_type -> google.protobuf.Empty
+	90,  // 375: brent.BrentAdminService.GetAccountSummary:input_type -> brent.AdminGetAccountSummaryRequest
+	93,  // 376: brent.BrentAdminService.GetAccountHealthAnalysis:input_type -> brent.AdminGetAccountHealthAnalysisRequest
+	96,  // 377: brent.BrentAdminService.ListAccountMetricRepos:input_type -> brent.AdminListAccountMetricReposRequest
+	99,  // 378: brent.BrentAdminService.StartAccountMetricsComparison:input_type -> brent.AdminStartAccountMetricsComparisonRequest
+	101, // 379: brent.BrentAdminService.GetAccountMetricsComparisonRun:input_type -> brent.AdminGetAccountMetricsComparisonRunRequest
+	316, // 380: brent.BrentAdminService.GetAccountBrentSettings:input_type -> brent.AdminGetAccountBrentSettingsRequest
+	317, // 381: brent.BrentAdminService.UpdateAccountBrentSettings:input_type -> brent.AdminUpdateAccountBrentSettingsRequest
+	318, // 382: brent.BrentAdminService.GetAccountLLMCredentialStatus:input_type -> brent.AdminGetAccountLLMCredentialStatusRequest
+	320, // 383: brent.BrentAdminService.ListAccountIntegrations:input_type -> brent.AdminListAccountIntegrationsRequest
+	189, // 384: brent.BrentAdminService.ListWorkflows:input_type -> brent.ListWorkflowsRequest
+	192, // 385: brent.BrentAdminService.GetWorkflow:input_type -> brent.GetWorkflowRequest
+	195, // 386: brent.BrentAdminService.ListWorkflowRuns:input_type -> brent.ListWorkflowRunsRequest
+	198, // 387: brent.BrentAdminService.GetWorkflowRun:input_type -> brent.GetWorkflowRunRequest
+	199, // 388: brent.BrentAdminService.GetWorkflowRunThreadHistory:input_type -> brent.GetWorkflowRunThreadHistoryRequest
+	12,  // 389: brent.BrentAdminService.ListPullRequests:input_type -> brent.ListPullRequestsRequest
+	14,  // 390: brent.BrentAdminService.GetPullRequestByID:input_type -> brent.GetPullRequestByIDRequest
+	16,  // 391: brent.BrentAdminService.ListDeviationAnalysesForPR:input_type -> brent.ListDeviationAnalysesForPRRequest
+	60,  // 392: brent.BrentAdminService.ListPrincipals:input_type -> brent.AdminListPrincipalsRequest
+	62,  // 393: brent.BrentAdminService.GetPrincipal:input_type -> brent.AdminGetPrincipalRequest
+	65,  // 394: brent.BrentAdminService.UpsertPrincipalBinding:input_type -> brent.AdminUpsertPrincipalBindingRequest
+	67,  // 395: brent.BrentAdminService.DeletePrincipalBinding:input_type -> brent.AdminDeletePrincipalBindingRequest
+	69,  // 396: brent.BrentAdminService.UpdatePrincipal:input_type -> brent.AdminUpdatePrincipalRequest
+	71,  // 397: brent.BrentAdminService.CreatePrincipalIdentity:input_type -> brent.AdminCreatePrincipalIdentityRequest
+	73,  // 398: brent.BrentAdminService.DeletePrincipalIdentity:input_type -> brent.AdminDeletePrincipalIdentityRequest
+	75,  // 399: brent.BrentAdminService.SetPrincipalCredential:input_type -> brent.AdminSetPrincipalCredentialRequest
+	77,  // 400: brent.BrentAdminService.ListPrincipalCredentialConnections:input_type -> brent.AdminListPrincipalCredentialConnectionsRequest
+	80,  // 401: brent.BrentAdminService.DeletePrincipalCredential:input_type -> brent.AdminDeletePrincipalCredentialRequest
+	18,  // 402: brent.BrentAdminService.GetPullRequestTimeline:input_type -> brent.GetPullRequestTimelineRequest
+	38,  // 403: brent.BrentService.ListOpenPullRequests:output_type -> brent.ListOpenPullRequestsResponse
+	40,  // 404: brent.BrentService.GetPullRequest:output_type -> brent.GetPullRequestResponse
+	205, // 405: brent.BrentService.GetPrincipalStatus:output_type -> brent.GetPrincipalStatusResponse
+	327, // 406: brent.BrentService.GetPlanPrompt:output_type -> brent.GetPlanPromptResponse
+	207, // 407: brent.BrentService.GetIntegrationConnectURL:output_type -> brent.GetIntegrationConnectURLResponse
+	209, // 408: brent.BrentService.DisconnectIntegration:output_type -> brent.DisconnectIntegrationResponse
+	211, // 409: brent.BrentService.ConnectByoHttpMcp:output_type -> brent.ConnectByoHttpMcpResponse
+	213, // 410: brent.BrentService.GetGitLabConnection:output_type -> brent.GetGitLabConnectionResponse
+	215, // 411: brent.BrentService.ConnectGitLab:output_type -> brent.ConnectGitLabResponse
+	217, // 412: brent.BrentService.SaveGitLabSigningToken:output_type -> brent.SaveGitLabSigningTokenResponse
+	295, // 413: brent.BrentService.UpsertMyVerifiedBinding:output_type -> brent.UpsertMyVerifiedBindingResponse
+	299, // 414: brent.BrentService.ListMyBindings:output_type -> brent.ListMyBindingsResponse
+	303, // 415: brent.BrentService.GetMyNotificationPreferences:output_type -> brent.GetMyNotificationPreferencesResponse
+	305, // 416: brent.BrentService.UpdateMyNotificationPreferences:output_type -> brent.UpdateMyNotificationPreferencesResponse
+	307, // 417: brent.BrentService.RegisterMyPushSubscription:output_type -> brent.RegisterMyPushSubscriptionResponse
+	309, // 418: brent.BrentService.GetWebPushPublicKey:output_type -> brent.GetWebPushPublicKeyResponse
+	297, // 419: brent.BrentService.UpdateMyDisplayName:output_type -> brent.UpdateMyDisplayNameResponse
+	313, // 420: brent.BrentService.GetBrentSettings:output_type -> brent.GetBrentSettingsResponse
+	315, // 421: brent.BrentService.UpdateBrentSettings:output_type -> brent.UpdateBrentSettingsResponse
+	324, // 422: brent.BrentService.ListIntegrationCatalogue:output_type -> brent.ListIntegrationCatalogueResponse
+	227, // 423: brent.BrentService.CreateWorkspace:output_type -> brent.CreateWorkspaceResponse
+	229, // 424: brent.BrentService.ListMyWorkspaces:output_type -> brent.ListMyWorkspacesResponse
+	232, // 425: brent.BrentService.DiscoverLoginRecoveryCandidates:output_type -> brent.DiscoverLoginRecoveryCandidatesResponse
+	234, // 426: brent.BrentService.RenameWorkspace:output_type -> brent.RenameWorkspaceResponse
+	271, // 427: brent.BrentService.UpdateWorkspaceBranding:output_type -> brent.UpdateWorkspaceBrandingResponse
+	273, // 428: brent.BrentService.CompleteWorkspaceOnboarding:output_type -> brent.CompleteWorkspaceOnboardingResponse
+	236, // 429: brent.BrentService.DeleteWorkspace:output_type -> brent.DeleteWorkspaceResponse
+	238, // 430: brent.BrentService.ListJoinableWorkspaces:output_type -> brent.ListJoinableWorkspacesResponse
+	242, // 431: brent.BrentService.JoinWorkspace:output_type -> brent.JoinWorkspaceResponse
+	275, // 432: brent.BrentService.CreateInvitation:output_type -> brent.CreateInvitationResponse
+	278, // 433: brent.BrentService.CreateInvitations:output_type -> brent.CreateInvitationsResponse
+	280, // 434: brent.BrentService.AcceptInvitation:output_type -> brent.AcceptInvitationResponse
+	282, // 435: brent.BrentService.ListWorkspaceMembers:output_type -> brent.ListWorkspaceMembersResponse
+	285, // 436: brent.BrentService.ResendInvitation:output_type -> brent.ResendInvitationResponse
+	287, // 437: brent.BrentService.RevokeInvitation:output_type -> brent.RevokeInvitationResponse
+	289, // 438: brent.BrentService.RemoveWorkspaceMember:output_type -> brent.RemoveWorkspaceMemberResponse
+	291, // 439: brent.BrentService.UpdateWorkspaceMemberRole:output_type -> brent.UpdateWorkspaceMemberRoleResponse
+	245, // 440: brent.BrentService.ListApprovedEmailDomains:output_type -> brent.ListApprovedEmailDomainsResponse
+	247, // 441: brent.BrentService.AddApprovedEmailDomain:output_type -> brent.AddApprovedEmailDomainResponse
+	249, // 442: brent.BrentService.VerifyApprovedEmailDomain:output_type -> brent.VerifyApprovedEmailDomainResponse
+	251, // 443: brent.BrentService.ResendApprovedEmailDomainCode:output_type -> brent.ResendApprovedEmailDomainCodeResponse
+	255, // 444: brent.BrentService.DeleteApprovedEmailDomain:output_type -> brent.DeleteApprovedEmailDomainResponse
+	258, // 445: brent.BrentService.GetWorkspaceLLMCredentialStatus:output_type -> brent.GetWorkspaceLLMCredentialStatusResponse
+	260, // 446: brent.BrentService.SetWorkspaceLLMCredential:output_type -> brent.SetWorkspaceLLMCredentialResponse
+	262, // 447: brent.BrentService.DeleteWorkspaceLLMCredential:output_type -> brent.DeleteWorkspaceLLMCredentialResponse
+	265, // 448: brent.BrentService.GetMyCursorCredentialStatus:output_type -> brent.GetMyCursorCredentialStatusResponse
+	267, // 449: brent.BrentService.SetMyCursorCredential:output_type -> brent.SetMyCursorCredentialResponse
+	269, // 450: brent.BrentService.DeleteMyCursorCredential:output_type -> brent.DeleteMyCursorCredentialResponse
+	221, // 451: brent.BrentService.GetWorkspaceIntegrationRoles:output_type -> brent.GetWorkspaceIntegrationRolesResponse
+	223, // 452: brent.BrentService.SetWorkspaceIntegrationRoles:output_type -> brent.SetWorkspaceIntegrationRolesResponse
+	253, // 453: brent.BrentService.ResendVerificationEmail:output_type -> brent.ResendVerificationEmailResponse
+	293, // 454: brent.BrentPublicService.GetInvitation:output_type -> brent.GetInvitationResponse
+	42,  // 455: brent.BrentAdminService.ExecuteWorkflow:output_type -> brent.ExecuteWorkflowResponse
+	28,  // 456: brent.BrentAdminService.ListRuns:output_type -> brent.ListRunsResponse
+	42,  // 457: brent.BrentAdminService.WatchRun:output_type -> brent.ExecuteWorkflowResponse
+	32,  // 458: brent.BrentAdminService.StreamEvents:output_type -> brent.StreamEventsResponse
+	34,  // 459: brent.BrentAdminService.ListEvents:output_type -> brent.ListEventsResponse
+	36,  // 460: brent.BrentAdminService.CancelRun:output_type -> brent.CancelRunResponse
+	42,  // 461: brent.BrentAdminService.SendQuestion:output_type -> brent.ExecuteWorkflowResponse
+	55,  // 462: brent.BrentAdminService.ListPlans:output_type -> brent.AdminListPlansResponse
+	58,  // 463: brent.BrentAdminService.GetPlan:output_type -> brent.AdminGetPlanResponse
+	83,  // 464: brent.BrentAdminService.ListReviews:output_type -> brent.AdminListReviewsResponse
+	86,  // 465: brent.BrentAdminService.GetReview:output_type -> brent.AdminGetReviewResponse
+	89,  // 466: brent.BrentAdminService.ListAccounts:output_type -> brent.AdminListAccountsResponse
+	92,  // 467: brent.BrentAdminService.GetAccountSummary:output_type -> brent.AdminGetAccountSummaryResponse
+	95,  // 468: brent.BrentAdminService.GetAccountHealthAnalysis:output_type -> brent.AdminGetAccountHealthAnalysisResponse
+	98,  // 469: brent.BrentAdminService.ListAccountMetricRepos:output_type -> brent.AdminListAccountMetricReposResponse
+	100, // 470: brent.BrentAdminService.StartAccountMetricsComparison:output_type -> brent.AdminStartAccountMetricsComparisonResponse
+	104, // 471: brent.BrentAdminService.GetAccountMetricsComparisonRun:output_type -> brent.AdminGetAccountMetricsComparisonRunResponse
+	313, // 472: brent.BrentAdminService.GetAccountBrentSettings:output_type -> brent.GetBrentSettingsResponse
+	315, // 473: brent.BrentAdminService.UpdateAccountBrentSettings:output_type -> brent.UpdateBrentSettingsResponse
+	319, // 474: brent.BrentAdminService.GetAccountLLMCredentialStatus:output_type -> brent.AdminGetAccountLLMCredentialStatusResponse
+	322, // 475: brent.BrentAdminService.ListAccountIntegrations:output_type -> brent.AdminListAccountIntegrationsResponse
+	190, // 476: brent.BrentAdminService.ListWorkflows:output_type -> brent.ListWorkflowsResponse
+	193, // 477: brent.BrentAdminService.GetWorkflow:output_type -> brent.GetWorkflowResponse
+	196, // 478: brent.BrentAdminService.ListWorkflowRuns:output_type -> brent.ListWorkflowRunsResponse
+	202, // 479: brent.BrentAdminService.GetWorkflowRun:output_type -> brent.GetWorkflowRunResponse
+	201, // 480: brent.BrentAdminService.GetWorkflowRunThreadHistory:output_type -> brent.GetWorkflowRunThreadHistoryResponse
+	13,  // 481: brent.BrentAdminService.ListPullRequests:output_type -> brent.ListPullRequestsResponse
+	15,  // 482: brent.BrentAdminService.GetPullRequestByID:output_type -> brent.GetPullRequestByIDResponse
+	17,  // 483: brent.BrentAdminService.ListDeviationAnalysesForPR:output_type -> brent.ListDeviationAnalysesForPRResponse
+	61,  // 484: brent.BrentAdminService.ListPrincipals:output_type -> brent.AdminListPrincipalsResponse
+	63,  // 485: brent.BrentAdminService.GetPrincipal:output_type -> brent.AdminGetPrincipalResponse
+	66,  // 486: brent.BrentAdminService.UpsertPrincipalBinding:output_type -> brent.AdminUpsertPrincipalBindingResponse
+	68,  // 487: brent.BrentAdminService.DeletePrincipalBinding:output_type -> brent.AdminDeletePrincipalBindingResponse
+	70,  // 488: brent.BrentAdminService.UpdatePrincipal:output_type -> brent.AdminUpdatePrincipalResponse
+	72,  // 489: brent.BrentAdminService.CreatePrincipalIdentity:output_type -> brent.AdminCreatePrincipalIdentityResponse
+	74,  // 490: brent.BrentAdminService.DeletePrincipalIdentity:output_type -> brent.AdminDeletePrincipalIdentityResponse
+	76,  // 491: brent.BrentAdminService.SetPrincipalCredential:output_type -> brent.AdminSetPrincipalCredentialResponse
+	78,  // 492: brent.BrentAdminService.ListPrincipalCredentialConnections:output_type -> brent.AdminListPrincipalCredentialConnectionsResponse
+	81,  // 493: brent.BrentAdminService.DeletePrincipalCredential:output_type -> brent.AdminDeletePrincipalCredentialResponse
+	21,  // 494: brent.BrentAdminService.GetPullRequestTimeline:output_type -> brent.GetPullRequestTimelineResponse
+	403, // [403:495] is the sub-list for method output_type
+	311, // [311:403] is the sub-list for method input_type
+	311, // [311:311] is the sub-list for extension type_name
+	310, // [310:311] is the sub-list for extension extendee
+	0,   // [0:310] is the sub-list for field type_name
 }
 
 func init() { file_brent_proto_init() }
