@@ -47,6 +47,9 @@ const (
 	// BrentServiceGetPrincipalStatusProcedure is the fully-qualified name of the BrentService's
 	// GetPrincipalStatus RPC.
 	BrentServiceGetPrincipalStatusProcedure = "/brent.BrentService/GetPrincipalStatus"
+	// BrentServiceGetPlanPromptProcedure is the fully-qualified name of the BrentService's
+	// GetPlanPrompt RPC.
+	BrentServiceGetPlanPromptProcedure = "/brent.BrentService/GetPlanPrompt"
 	// BrentServiceGetIntegrationConnectURLProcedure is the fully-qualified name of the BrentService's
 	// GetIntegrationConnectURL RPC.
 	BrentServiceGetIntegrationConnectURLProcedure = "/brent.BrentService/GetIntegrationConnectURL"
@@ -334,6 +337,11 @@ type BrentServiceClient interface {
 	// the future Organizations work will evolve when a principal needs to
 	// belong to multiple orgs.
 	GetPrincipalStatus(context.Context, *connect.Request[sdp_go.GetPrincipalStatusRequest]) (*connect.Response[sdp_go.GetPrincipalStatusResponse], error)
+	// Returns the minimal metadata needed to render the authenticated Plan prompt
+	// page. Identity-scoped: workspace_id is explicit and active membership is
+	// checked server-side. Missing plans, workspaces, and memberships all return
+	// NotFound. Gated on brent:read.
+	GetPlanPrompt(context.Context, *connect.Request[sdp_go.GetPlanPromptRequest]) (*connect.Response[sdp_go.GetPlanPromptResponse], error)
 	// Returns a provider-specific OAuth redirect URL for the connections setup
 	// page. Sets an HMAC-signed state cookie on the HTTP response; the browser
 	// sends it back on the callback redirect. Gated on brent:read.
@@ -594,6 +602,12 @@ func NewBrentServiceClient(httpClient connect.HTTPClient, baseURL string, opts .
 			httpClient,
 			baseURL+BrentServiceGetPrincipalStatusProcedure,
 			connect.WithSchema(brentServiceMethods.ByName("GetPrincipalStatus")),
+			connect.WithClientOptions(opts...),
+		),
+		getPlanPrompt: connect.NewClient[sdp_go.GetPlanPromptRequest, sdp_go.GetPlanPromptResponse](
+			httpClient,
+			baseURL+BrentServiceGetPlanPromptProcedure,
+			connect.WithSchema(brentServiceMethods.ByName("GetPlanPrompt")),
 			connect.WithClientOptions(opts...),
 		),
 		getIntegrationConnectURL: connect.NewClient[sdp_go.GetIntegrationConnectURLRequest, sdp_go.GetIntegrationConnectURLResponse](
@@ -886,6 +900,7 @@ type brentServiceClient struct {
 	listOpenPullRequests            *connect.Client[sdp_go.ListOpenPullRequestsRequest, sdp_go.ListOpenPullRequestsResponse]
 	getPullRequest                  *connect.Client[sdp_go.GetPullRequestRequest, sdp_go.GetPullRequestResponse]
 	getPrincipalStatus              *connect.Client[sdp_go.GetPrincipalStatusRequest, sdp_go.GetPrincipalStatusResponse]
+	getPlanPrompt                   *connect.Client[sdp_go.GetPlanPromptRequest, sdp_go.GetPlanPromptResponse]
 	getIntegrationConnectURL        *connect.Client[sdp_go.GetIntegrationConnectURLRequest, sdp_go.GetIntegrationConnectURLResponse]
 	disconnectIntegration           *connect.Client[sdp_go.DisconnectIntegrationRequest, sdp_go.DisconnectIntegrationResponse]
 	connectByoHttpMcp               *connect.Client[sdp_go.ConnectByoHttpMcpRequest, sdp_go.ConnectByoHttpMcpResponse]
@@ -948,6 +963,11 @@ func (c *brentServiceClient) GetPullRequest(ctx context.Context, req *connect.Re
 // GetPrincipalStatus calls brent.BrentService.GetPrincipalStatus.
 func (c *brentServiceClient) GetPrincipalStatus(ctx context.Context, req *connect.Request[sdp_go.GetPrincipalStatusRequest]) (*connect.Response[sdp_go.GetPrincipalStatusResponse], error) {
 	return c.getPrincipalStatus.CallUnary(ctx, req)
+}
+
+// GetPlanPrompt calls brent.BrentService.GetPlanPrompt.
+func (c *brentServiceClient) GetPlanPrompt(ctx context.Context, req *connect.Request[sdp_go.GetPlanPromptRequest]) (*connect.Response[sdp_go.GetPlanPromptResponse], error) {
+	return c.getPlanPrompt.CallUnary(ctx, req)
 }
 
 // GetIntegrationConnectURL calls brent.BrentService.GetIntegrationConnectURL.
@@ -1206,6 +1226,11 @@ type BrentServiceHandler interface {
 	// the future Organizations work will evolve when a principal needs to
 	// belong to multiple orgs.
 	GetPrincipalStatus(context.Context, *connect.Request[sdp_go.GetPrincipalStatusRequest]) (*connect.Response[sdp_go.GetPrincipalStatusResponse], error)
+	// Returns the minimal metadata needed to render the authenticated Plan prompt
+	// page. Identity-scoped: workspace_id is explicit and active membership is
+	// checked server-side. Missing plans, workspaces, and memberships all return
+	// NotFound. Gated on brent:read.
+	GetPlanPrompt(context.Context, *connect.Request[sdp_go.GetPlanPromptRequest]) (*connect.Response[sdp_go.GetPlanPromptResponse], error)
 	// Returns a provider-specific OAuth redirect URL for the connections setup
 	// page. Sets an HMAC-signed state cookie on the HTTP response; the browser
 	// sends it back on the callback redirect. Gated on brent:read.
@@ -1462,6 +1487,12 @@ func NewBrentServiceHandler(svc BrentServiceHandler, opts ...connect.HandlerOpti
 		BrentServiceGetPrincipalStatusProcedure,
 		svc.GetPrincipalStatus,
 		connect.WithSchema(brentServiceMethods.ByName("GetPrincipalStatus")),
+		connect.WithHandlerOptions(opts...),
+	)
+	brentServiceGetPlanPromptHandler := connect.NewUnaryHandler(
+		BrentServiceGetPlanPromptProcedure,
+		svc.GetPlanPrompt,
+		connect.WithSchema(brentServiceMethods.ByName("GetPlanPrompt")),
 		connect.WithHandlerOptions(opts...),
 	)
 	brentServiceGetIntegrationConnectURLHandler := connect.NewUnaryHandler(
@@ -1754,6 +1785,8 @@ func NewBrentServiceHandler(svc BrentServiceHandler, opts ...connect.HandlerOpti
 			brentServiceGetPullRequestHandler.ServeHTTP(w, r)
 		case BrentServiceGetPrincipalStatusProcedure:
 			brentServiceGetPrincipalStatusHandler.ServeHTTP(w, r)
+		case BrentServiceGetPlanPromptProcedure:
+			brentServiceGetPlanPromptHandler.ServeHTTP(w, r)
 		case BrentServiceGetIntegrationConnectURLProcedure:
 			brentServiceGetIntegrationConnectURLHandler.ServeHTTP(w, r)
 		case BrentServiceDisconnectIntegrationProcedure:
@@ -1867,6 +1900,10 @@ func (UnimplementedBrentServiceHandler) GetPullRequest(context.Context, *connect
 
 func (UnimplementedBrentServiceHandler) GetPrincipalStatus(context.Context, *connect.Request[sdp_go.GetPrincipalStatusRequest]) (*connect.Response[sdp_go.GetPrincipalStatusResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.GetPrincipalStatus is not implemented"))
+}
+
+func (UnimplementedBrentServiceHandler) GetPlanPrompt(context.Context, *connect.Request[sdp_go.GetPlanPromptRequest]) (*connect.Response[sdp_go.GetPlanPromptResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.GetPlanPrompt is not implemented"))
 }
 
 func (UnimplementedBrentServiceHandler) GetIntegrationConnectURL(context.Context, *connect.Request[sdp_go.GetIntegrationConnectURLRequest]) (*connect.Response[sdp_go.GetIntegrationConnectURLResponse], error) {
