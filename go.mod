@@ -36,7 +36,7 @@ require (
 	cloud.google.com/go/certificatemanager v1.15.0
 	cloud.google.com/go/compute v1.65.0
 	cloud.google.com/go/compute/metadata v0.9.0
-	cloud.google.com/go/container v1.53.0
+	cloud.google.com/go/container v1.53.1
 	cloud.google.com/go/dataplex v1.36.0
 	cloud.google.com/go/dataproc/v2 v2.25.0
 	cloud.google.com/go/eventarc v1.25.0
@@ -53,7 +53,7 @@ require (
 	cloud.google.com/go/run v1.22.0
 	cloud.google.com/go/secretmanager v1.21.0
 	cloud.google.com/go/securitycentermanagement v1.6.0
-	cloud.google.com/go/spanner v1.93.0
+	cloud.google.com/go/spanner v1.94.0
 	cloud.google.com/go/storage v1.64.0
 	cloud.google.com/go/storagetransfer v1.19.0
 	connectrpc.com/connect v1.20.0 // v1.19.0 was faulty, wait until it is above this version
@@ -214,8 +214,8 @@ require (
 	golang.org/x/text v0.40.0
 	golang.org/x/time v0.15.0
 	gonum.org/v1/gonum v0.17.0
-	google.golang.org/api v0.290.0
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260723215102-3fe39f3c1018
+	google.golang.org/api v0.291.0
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260729162451-8efbd57d26e0
 	google.golang.org/grpc v1.82.1
 	google.golang.org/protobuf v1.36.12-0.20260120151049-f2248ac996af
 	gopkg.in/ini.v1 v1.67.3
@@ -327,7 +327,7 @@ require (
 	github.com/google/jsonschema-go v0.4.3 // indirect
 	github.com/google/pprof v0.0.0-20260402051712-545e8a4df936 // indirect
 	github.com/google/s2a-go v0.1.9 // indirect
-	github.com/googleapis/enterprise-certificate-proxy v0.3.18 // indirect
+	github.com/googleapis/enterprise-certificate-proxy v0.3.19 // indirect
 	github.com/gookit/color v1.6.0 // indirect
 	github.com/gorilla/css v1.0.1 // indirect
 	github.com/gorilla/websocket v1.5.4-0.20250319132907-e064f32e3674 // indirect
@@ -477,4 +477,4 @@ require (
 
 require golang.org/x/image v0.44.0
 
-require github.com/SherClockHolmes/webpush-go v1.4.0 // indirect
+require github.com/SherClockHolmes/webpush-go v1.4.0
