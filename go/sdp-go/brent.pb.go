@@ -18866,10 +18866,12 @@ type Principal struct {
 	Kind string `protobuf:"bytes,3,opt,name=kind,proto3" json:"kind,omitempty"`
 	// 'active' | 'shadow' | 'tombstoned' (the friends-using-brent
 	// milestone writes 'active' only).
-	Status        string                 `protobuf:"bytes,4,opt,name=status,proto3" json:"status,omitempty"`
-	DisplayName   string                 `protobuf:"bytes,5,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	Status      string                 `protobuf:"bytes,4,opt,name=status,proto3" json:"status,omitempty"`
+	DisplayName string                 `protobuf:"bytes,5,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
+	CreatedAt   *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt   *timestamppb.Timestamp `protobuf:"bytes,7,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	// Auth0/IdP profile picture URL from principal_identities; absent/empty → initials.
+	PictureUrl    *string `protobuf:"bytes,8,opt,name=picture_url,json=pictureUrl,proto3,oneof" json:"picture_url,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -18951,6 +18953,13 @@ func (x *Principal) GetUpdatedAt() *timestamppb.Timestamp {
 		return x.UpdatedAt
 	}
 	return nil
+}
+
+func (x *Principal) GetPictureUrl() string {
+	if x != nil && x.PictureUrl != nil {
+		return *x.PictureUrl
+	}
+	return ""
 }
 
 // Workspace is a tenant the caller belongs to. workspace_id is the uuid tenant
@@ -19750,9 +19759,10 @@ func (x *JoinableWorkspace) GetSource() JoinSource {
 }
 
 type JoinableWorkspaceMember struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	DisplayName   string                 `protobuf:"bytes,1,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
-	PictureUrl    *string                `protobuf:"bytes,2,opt,name=picture_url,json=pictureUrl,proto3,oneof" json:"picture_url,omitempty"` // absent this milestone → initials fallback
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	DisplayName string                 `protobuf:"bytes,1,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
+	// Auth0/IdP profile picture when the member has synced; absent/empty → initials.
+	PictureUrl    *string `protobuf:"bytes,2,opt,name=picture_url,json=pictureUrl,proto3,oneof" json:"picture_url,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -21825,8 +21835,10 @@ type WorkspaceMember struct {
 	Email       string                 `protobuf:"bytes,3,opt,name=email,proto3" json:"email,omitempty"`
 	Role        string                 `protobuf:"bytes,4,opt,name=role,proto3" json:"role,omitempty"`
 	// Deprecated: Marked as deprecated in brent.proto.
-	Status        string               `protobuf:"bytes,5,opt,name=status,proto3" json:"status,omitempty"`
-	State         WorkspaceMemberState `protobuf:"varint,6,opt,name=state,proto3,enum=brent.WorkspaceMemberState" json:"state,omitempty"`
+	Status string               `protobuf:"bytes,5,opt,name=status,proto3" json:"status,omitempty"`
+	State  WorkspaceMemberState `protobuf:"varint,6,opt,name=state,proto3,enum=brent.WorkspaceMemberState" json:"state,omitempty"`
+	// Auth0/IdP profile picture when the member has synced; absent/empty → initials.
+	PictureUrl    *string `protobuf:"bytes,7,opt,name=picture_url,json=pictureUrl,proto3,oneof" json:"picture_url,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -21902,6 +21914,13 @@ func (x *WorkspaceMember) GetState() WorkspaceMemberState {
 		return x.State
 	}
 	return WorkspaceMemberState_WORKSPACE_MEMBER_STATE_UNSPECIFIED
+}
+
+func (x *WorkspaceMember) GetPictureUrl() string {
+	if x != nil && x.PictureUrl != nil {
+		return *x.PictureUrl
+	}
+	return ""
 }
 
 type ResendInvitationRequest struct {
@@ -25914,7 +25933,7 @@ const file_brent_proto_rawDesc = "" +
 	"\fgit_provider\x18\x01 \x01(\x0e2\x1a.brent.IntegrationProviderR\vgitProviderJ\x04\b\x02\x10\x03J\x04\b\x03\x10\x04R\x12ticketing_providerR\x12messaging_provider\"\xbf\x01\n" +
 	"$SetWorkspaceIntegrationRolesResponse\x12=\n" +
 	"\fgit_provider\x18\x01 \x01(\x0e2\x1a.brent.IntegrationProviderR\vgitProvider\x12$\n" +
-	"\x0egit_manage_url\x18\x04 \x01(\tR\fgitManageUrlJ\x04\b\x02\x10\x03J\x04\b\x03\x10\x04R\x12ticketing_providerR\x12messaging_provider\"\x94\x02\n" +
+	"\x0egit_manage_url\x18\x04 \x01(\tR\fgitManageUrlJ\x04\b\x02\x10\x03J\x04\b\x03\x10\x04R\x12ticketing_providerR\x12messaging_provider\"\xca\x02\n" +
 	"\tPrincipal\x12\x1f\n" +
 	"\vexternal_id\x18\x01 \x01(\tR\n" +
 	"externalId\x12!\n" +
@@ -25925,7 +25944,10 @@ const file_brent_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\xbf\x02\n" +
+	"updated_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12$\n" +
+	"\vpicture_url\x18\b \x01(\tH\x00R\n" +
+	"pictureUrl\x88\x01\x01B\x0e\n" +
+	"\f_picture_url\"\xbf\x02\n" +
 	"\tWorkspace\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x12\n" +
 	"\x04slug\x18\x02 \x01(\tR\x04slug\x12!\n" +
@@ -26093,14 +26115,17 @@ const file_brent_proto_rawDesc = "" +
 	"\x1bListWorkspaceMembersRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\"P\n" +
 	"\x1cListWorkspaceMembersResponse\x120\n" +
-	"\amembers\x18\x01 \x03(\v2\x16.brent.WorkspaceMemberR\amembers\"\xd0\x01\n" +
+	"\amembers\x18\x01 \x03(\v2\x16.brent.WorkspaceMemberR\amembers\"\x86\x02\n" +
 	"\x0fWorkspaceMember\x12!\n" +
 	"\fprincipal_id\x18\x01 \x01(\tR\vprincipalId\x12!\n" +
 	"\fdisplay_name\x18\x02 \x01(\tR\vdisplayName\x12\x14\n" +
 	"\x05email\x18\x03 \x01(\tR\x05email\x12\x12\n" +
 	"\x04role\x18\x04 \x01(\tR\x04role\x12\x1a\n" +
 	"\x06status\x18\x05 \x01(\tB\x02\x18\x01R\x06status\x121\n" +
-	"\x05state\x18\x06 \x01(\x0e2\x1b.brent.WorkspaceMemberStateR\x05state\"_\n" +
+	"\x05state\x18\x06 \x01(\x0e2\x1b.brent.WorkspaceMemberStateR\x05state\x12$\n" +
+	"\vpicture_url\x18\a \x01(\tH\x00R\n" +
+	"pictureUrl\x88\x01\x01B\x0e\n" +
+	"\f_picture_url\"_\n" +
 	"\x17ResendInvitationRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12!\n" +
 	"\fprincipal_id\x18\x02 \x01(\tR\vprincipalId\"t\n" +
@@ -27408,9 +27433,11 @@ func file_brent_proto_init() {
 	file_brent_proto_msgTypes[191].OneofWrappers = []any{}
 	file_brent_proto_msgTypes[192].OneofWrappers = []any{}
 	file_brent_proto_msgTypes[194].OneofWrappers = []any{}
+	file_brent_proto_msgTypes[213].OneofWrappers = []any{}
 	file_brent_proto_msgTypes[214].OneofWrappers = []any{}
 	file_brent_proto_msgTypes[228].OneofWrappers = []any{}
 	file_brent_proto_msgTypes[229].OneofWrappers = []any{}
+	file_brent_proto_msgTypes[272].OneofWrappers = []any{}
 	file_brent_proto_msgTypes[282].OneofWrappers = []any{}
 	file_brent_proto_msgTypes[303].OneofWrappers = []any{}
 	file_brent_proto_msgTypes[306].OneofWrappers = []any{}
