@@ -3925,8 +3925,11 @@ type PlanSummary struct {
 	// Set when lifecycle_stage is needs_attention.
 	LifecycleReason         string                 `protobuf:"bytes,16,opt,name=lifecycle_reason,json=lifecycleReason,proto3" json:"lifecycle_reason,omitempty"`
 	LifecycleStageUpdatedAt *timestamppb.Timestamp `protobuf:"bytes,17,opt,name=lifecycle_stage_updated_at,json=lifecycleStageUpdatedAt,proto3" json:"lifecycle_stage_updated_at,omitempty"`
-	unknownFields           protoimpl.UnknownFields
-	sizeCache               protoimpl.SizeCache
+	// Opaque external ticketing identifier for plan-ticket sync (e.g. ENG-123
+	// or #42). Empty string means no external ticket link.
+	TicketId      string `protobuf:"bytes,18,opt,name=ticket_id,json=ticketId,proto3" json:"ticket_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *PlanSummary) Reset() {
@@ -4071,6 +4074,13 @@ func (x *PlanSummary) GetLifecycleStageUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
+func (x *PlanSummary) GetTicketId() string {
+	if x != nil {
+		return x.TicketId
+	}
+	return ""
+}
+
 type AdminGetPlanRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Friendly identifier (e.g. BRENT-42) or plan UUID.
@@ -4204,8 +4214,11 @@ type Plan struct {
 	LifecycleStage          string                 `protobuf:"bytes,14,opt,name=lifecycle_stage,json=lifecycleStage,proto3" json:"lifecycle_stage,omitempty"`
 	LifecycleReason         string                 `protobuf:"bytes,15,opt,name=lifecycle_reason,json=lifecycleReason,proto3" json:"lifecycle_reason,omitempty"`
 	LifecycleStageUpdatedAt *timestamppb.Timestamp `protobuf:"bytes,16,opt,name=lifecycle_stage_updated_at,json=lifecycleStageUpdatedAt,proto3" json:"lifecycle_stage_updated_at,omitempty"`
-	unknownFields           protoimpl.UnknownFields
-	sizeCache               protoimpl.SizeCache
+	// Opaque external ticketing identifier for plan-ticket sync (e.g. ENG-123
+	// or #42). Empty string means no external ticket link.
+	TicketId      string `protobuf:"bytes,17,opt,name=ticket_id,json=ticketId,proto3" json:"ticket_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Plan) Reset() {
@@ -4341,6 +4354,13 @@ func (x *Plan) GetLifecycleStageUpdatedAt() *timestamppb.Timestamp {
 		return x.LifecycleStageUpdatedAt
 	}
 	return nil
+}
+
+func (x *Plan) GetTicketId() string {
+	if x != nil {
+		return x.TicketId
+	}
+	return ""
 }
 
 type AdminListPrincipalsRequest struct {
@@ -24598,7 +24618,7 @@ const file_brent_proto_rawDesc = "" +
 	"\x16AdminListPlansResponse\x12(\n" +
 	"\x05plans\x18\x01 \x03(\v2\x12.brent.PlanSummaryR\x05plans\x12\x1f\n" +
 	"\vtotal_count\x18\x02 \x01(\rR\n" +
-	"totalCount\"\x83\x06\n" +
+	"totalCount\"\xa0\x06\n" +
 	"\vPlanSummary\x12\x1f\n" +
 	"\vfriendly_id\x18\x01 \x01(\tR\n" +
 	"friendlyId\x12!\n" +
@@ -24620,13 +24640,14 @@ const file_brent_proto_rawDesc = "" +
 	"\rreview_status\x18\x0e \x01(\tR\freviewStatus\x12'\n" +
 	"\x0flifecycle_stage\x18\x0f \x01(\tR\x0elifecycleStage\x12)\n" +
 	"\x10lifecycle_reason\x18\x10 \x01(\tR\x0flifecycleReason\x12W\n" +
-	"\x1alifecycle_stage_updated_at\x18\x11 \x01(\v2\x1a.google.protobuf.TimestampR\x17lifecycleStageUpdatedAtJ\x04\b\x03\x10\x04R\x0eauthor_subject\"%\n" +
+	"\x1alifecycle_stage_updated_at\x18\x11 \x01(\v2\x1a.google.protobuf.TimestampR\x17lifecycleStageUpdatedAt\x12\x1b\n" +
+	"\tticket_id\x18\x12 \x01(\tR\bticketIdJ\x04\b\x03\x10\x04R\x0eauthor_subject\"%\n" +
 	"\x13AdminGetPlanRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"\xc5\x01\n" +
 	"\x14AdminGetPlanResponse\x12\x1f\n" +
 	"\x04plan\x18\x01 \x01(\v2\v.brent.PlanR\x04plan\x12=\n" +
 	"\x0frelated_reviews\x18\x02 \x03(\v2\x14.brent.ReviewSummaryR\x0erelatedReviews\x12M\n" +
-	"\x15related_pull_requests\x18\x03 \x03(\v2\x19.brent.PullRequestSummaryR\x13relatedPullRequests\"\xb6\x05\n" +
+	"\x15related_pull_requests\x18\x03 \x03(\v2\x19.brent.PullRequestSummaryR\x13relatedPullRequests\"\xd3\x05\n" +
 	"\x04Plan\x12\x1f\n" +
 	"\vfriendly_id\x18\x01 \x01(\tR\n" +
 	"friendlyId\x12!\n" +
@@ -24646,7 +24667,8 @@ const file_brent_proto_rawDesc = "" +
 	"\fproject_code\x18\r \x01(\tR\vprojectCode\x12'\n" +
 	"\x0flifecycle_stage\x18\x0e \x01(\tR\x0elifecycleStage\x12)\n" +
 	"\x10lifecycle_reason\x18\x0f \x01(\tR\x0flifecycleReason\x12W\n" +
-	"\x1alifecycle_stage_updated_at\x18\x10 \x01(\v2\x1a.google.protobuf.TimestampR\x17lifecycleStageUpdatedAtJ\x04\b\x03\x10\x04R\x0eauthor_subject\"\x99\x01\n" +
+	"\x1alifecycle_stage_updated_at\x18\x10 \x01(\v2\x1a.google.protobuf.TimestampR\x17lifecycleStageUpdatedAt\x12\x1b\n" +
+	"\tticket_id\x18\x11 \x01(\tR\bticketIdJ\x04\b\x03\x10\x04R\x0eauthor_subject\"\x99\x01\n" +
 	"\x1aAdminListPrincipalsRequest\x12!\n" +
 	"\faccount_name\x18\x01 \x01(\tR\vaccountName\x12\x12\n" +
 	"\x04kind\x18\x02 \x01(\tR\x04kind\x12\x16\n" +
