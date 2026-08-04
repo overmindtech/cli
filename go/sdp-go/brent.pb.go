@@ -8594,7 +8594,7 @@ type Event_WorkspaceLlmCredentialRevoked struct {
 
 type Event_BitbucketWebhook struct {
 	// BitbucketWebhook carries a Bitbucket PR webhook delivery relayed by the
-	// Brent Forge app and verified via its Forge Invocation Token at the ingest
+	// Until Forge app and verified via its Forge Invocation Token at the ingest
 	// endpoint. ENG-5495: foundation for native Bitbucket integration.
 	BitbucketWebhook *BitbucketWebhook `protobuf:"bytes,84,opt,name=bitbucket_webhook,json=bitbucketWebhook,proto3,oneof"`
 }
