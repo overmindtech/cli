@@ -632,6 +632,57 @@ func (WorkspaceMemberState) EnumDescriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{10}
 }
 
+// WorkspaceReviewPolicy is the explicit peer-review policy for a workspace
+// (ENG-6046 / BRENT-824). Additive enum — future values must not reuse numbers.
+type WorkspaceReviewPolicy int32
+
+const (
+	WorkspaceReviewPolicy_WORKSPACE_REVIEW_POLICY_UNSPECIFIED WorkspaceReviewPolicy = 0
+	WorkspaceReviewPolicy_WORKSPACE_REVIEW_POLICY_DISABLED    WorkspaceReviewPolicy = 1
+	WorkspaceReviewPolicy_WORKSPACE_REVIEW_POLICY_REQUIRED    WorkspaceReviewPolicy = 2
+)
+
+// Enum value maps for WorkspaceReviewPolicy.
+var (
+	WorkspaceReviewPolicy_name = map[int32]string{
+		0: "WORKSPACE_REVIEW_POLICY_UNSPECIFIED",
+		1: "WORKSPACE_REVIEW_POLICY_DISABLED",
+		2: "WORKSPACE_REVIEW_POLICY_REQUIRED",
+	}
+	WorkspaceReviewPolicy_value = map[string]int32{
+		"WORKSPACE_REVIEW_POLICY_UNSPECIFIED": 0,
+		"WORKSPACE_REVIEW_POLICY_DISABLED":    1,
+		"WORKSPACE_REVIEW_POLICY_REQUIRED":    2,
+	}
+)
+
+func (x WorkspaceReviewPolicy) Enum() *WorkspaceReviewPolicy {
+	p := new(WorkspaceReviewPolicy)
+	*p = x
+	return p
+}
+
+func (x WorkspaceReviewPolicy) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (WorkspaceReviewPolicy) Descriptor() protoreflect.EnumDescriptor {
+	return file_brent_proto_enumTypes[11].Descriptor()
+}
+
+func (WorkspaceReviewPolicy) Type() protoreflect.EnumType {
+	return &file_brent_proto_enumTypes[11]
+}
+
+func (x WorkspaceReviewPolicy) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use WorkspaceReviewPolicy.Descriptor instead.
+func (WorkspaceReviewPolicy) EnumDescriptor() ([]byte, []int) {
+	return file_brent_proto_rawDescGZIP(), []int{11}
+}
+
 type IntegrationCatalogueSource int32
 
 const (
@@ -668,11 +719,11 @@ func (x IntegrationCatalogueSource) String() string {
 }
 
 func (IntegrationCatalogueSource) Descriptor() protoreflect.EnumDescriptor {
-	return file_brent_proto_enumTypes[11].Descriptor()
+	return file_brent_proto_enumTypes[12].Descriptor()
 }
 
 func (IntegrationCatalogueSource) Type() protoreflect.EnumType {
-	return &file_brent_proto_enumTypes[11]
+	return &file_brent_proto_enumTypes[12]
 }
 
 func (x IntegrationCatalogueSource) Number() protoreflect.EnumNumber {
@@ -681,7 +732,7 @@ func (x IntegrationCatalogueSource) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use IntegrationCatalogueSource.Descriptor instead.
 func (IntegrationCatalogueSource) EnumDescriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{11}
+	return file_brent_proto_rawDescGZIP(), []int{12}
 }
 
 type ListPullRequestsRequest struct {
@@ -7459,6 +7510,7 @@ type Event struct {
 	//	*Event_DeviationFindingAcknowledgementCleared
 	//	*Event_PlanReviewPolicyDecided
 	//	*Event_ReviewRestored
+	//	*Event_WorkspaceReviewPolicyUpdated
 	//	*Event_UnknownStoredPayload
 	Payload       isEvent_Payload `protobuf_oneof:"payload"`
 	unknownFields protoimpl.UnknownFields
@@ -8283,6 +8335,15 @@ func (x *Event) GetReviewRestored() *ReviewRestored {
 	return nil
 }
 
+func (x *Event) GetWorkspaceReviewPolicyUpdated() *WorkspaceReviewPolicyUpdated {
+	if x != nil {
+		if x, ok := x.Payload.(*Event_WorkspaceReviewPolicyUpdated); ok {
+			return x.WorkspaceReviewPolicyUpdated
+		}
+	}
+	return nil
+}
+
 func (x *Event) GetUnknownStoredPayload() *UnknownStoredPayload {
 	if x != nil {
 		if x, ok := x.Payload.(*Event_UnknownStoredPayload); ok {
@@ -8660,6 +8721,12 @@ type Event_ReviewRestored struct {
 	ReviewRestored *ReviewRestored `protobuf:"bytes,91,opt,name=review_restored,json=reviewRestored,proto3,oneof"`
 }
 
+type Event_WorkspaceReviewPolicyUpdated struct {
+	// WorkspaceReviewPolicyUpdated fires when an operator changes a
+	// workspace's peer-review policy (ENG-6046 / BRENT-824).
+	WorkspaceReviewPolicyUpdated *WorkspaceReviewPolicyUpdated `protobuf:"bytes,92,opt,name=workspace_review_policy_updated,json=workspaceReviewPolicyUpdated,proto3,oneof"`
+}
+
 type Event_UnknownStoredPayload struct {
 	// UnknownStoredPayload is a read-path placeholder when a persisted row
 	// cannot be reconstructed into a typed variant. Never written by
@@ -8824,6 +8891,8 @@ func (*Event_DeviationFindingAcknowledgementCleared) isEvent_Payload() {}
 func (*Event_PlanReviewPolicyDecided) isEvent_Payload() {}
 
 func (*Event_ReviewRestored) isEvent_Payload() {}
+
+func (*Event_WorkspaceReviewPolicyUpdated) isEvent_Payload() {}
 
 func (*Event_UnknownStoredPayload) isEvent_Payload() {}
 
@@ -9727,9 +9796,10 @@ func (x *ReviewNoEligibleReviewer) GetActiveHumanPrincipalCount() int32 {
 }
 
 // PlanReviewPolicyDecided fires when plans.Store creates a plan and
-// stamps the server-owned peer-review requirement (ENG-5637). The
-// decision is fixed at creation from the workspace's active human
-// count; MCP clients cannot set or override these fields.
+// stamps the server-owned peer-review requirement (ENG-5637 / ENG-6046).
+// New plans snapshot workspaces.review_policy; MCP clients cannot set or
+// override these fields. Field 5 remains for wire compatibility but is no
+// longer the decision source.
 type PlanReviewPolicyDecided struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// External UUID of the plan (matches plans.external_id).
@@ -9738,12 +9808,17 @@ type PlanReviewPolicyDecided struct {
 	PlanFriendlyId string `protobuf:"bytes,2,opt,name=plan_friendly_id,json=planFriendlyId,proto3" json:"plan_friendly_id,omitempty"`
 	// required | not_required
 	ReviewRequirement string `protobuf:"bytes,3,opt,name=review_requirement,json=reviewRequirement,proto3" json:"review_requirement,omitempty"`
-	// another_human_available | no_other_human | existing_plan
+	// another_human_available | no_other_human | existing_plan |
+	// workspace_policy_required | workspace_policy_disabled
 	ReviewPolicyReason string `protobuf:"bytes,4,opt,name=review_policy_reason,json=reviewPolicyReason,proto3" json:"review_policy_reason,omitempty"`
-	// Active human principal count observed when the decision was made.
+	// Active human principal count observed when the decision was made
+	// (observability only for new workspace-policy snapshots).
 	ActiveHumanPrincipalCount int32 `protobuf:"varint,5,opt,name=active_human_principal_count,json=activeHumanPrincipalCount,proto3" json:"active_human_principal_count,omitempty"`
-	unknownFields             protoimpl.UnknownFields
-	sizeCache                 protoimpl.SizeCache
+	// Workspace review_policy snapshotted for this plan: disabled | required.
+	// Empty on legacy events that predate ENG-6046.
+	WorkspaceReviewPolicy string `protobuf:"bytes,6,opt,name=workspace_review_policy,json=workspaceReviewPolicy,proto3" json:"workspace_review_policy,omitempty"`
+	unknownFields         protoimpl.UnknownFields
+	sizeCache             protoimpl.SizeCache
 }
 
 func (x *PlanReviewPolicyDecided) Reset() {
@@ -9811,6 +9886,79 @@ func (x *PlanReviewPolicyDecided) GetActiveHumanPrincipalCount() int32 {
 	return 0
 }
 
+func (x *PlanReviewPolicyDecided) GetWorkspaceReviewPolicy() string {
+	if x != nil {
+		return x.WorkspaceReviewPolicy
+	}
+	return ""
+}
+
+// WorkspaceReviewPolicyUpdated fires when an operator changes
+// workspaces.review_policy (ENG-6046 / BRENT-824). The Event actor is the
+// operator; the object reference is the workspace.
+type WorkspaceReviewPolicyUpdated struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Previous policy value: disabled | required.
+	PreviousPolicy string `protobuf:"bytes,1,opt,name=previous_policy,json=previousPolicy,proto3" json:"previous_policy,omitempty"`
+	// New policy value: disabled | required.
+	NewPolicy string `protobuf:"bytes,2,opt,name=new_policy,json=newPolicy,proto3" json:"new_policy,omitempty"`
+	// Active human principal count observed at update time.
+	ActiveHumanPrincipalCount int32 `protobuf:"varint,3,opt,name=active_human_principal_count,json=activeHumanPrincipalCount,proto3" json:"active_human_principal_count,omitempty"`
+	unknownFields             protoimpl.UnknownFields
+	sizeCache                 protoimpl.SizeCache
+}
+
+func (x *WorkspaceReviewPolicyUpdated) Reset() {
+	*x = WorkspaceReviewPolicyUpdated{}
+	mi := &file_brent_proto_msgTypes[106]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *WorkspaceReviewPolicyUpdated) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*WorkspaceReviewPolicyUpdated) ProtoMessage() {}
+
+func (x *WorkspaceReviewPolicyUpdated) ProtoReflect() protoreflect.Message {
+	mi := &file_brent_proto_msgTypes[106]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use WorkspaceReviewPolicyUpdated.ProtoReflect.Descriptor instead.
+func (*WorkspaceReviewPolicyUpdated) Descriptor() ([]byte, []int) {
+	return file_brent_proto_rawDescGZIP(), []int{106}
+}
+
+func (x *WorkspaceReviewPolicyUpdated) GetPreviousPolicy() string {
+	if x != nil {
+		return x.PreviousPolicy
+	}
+	return ""
+}
+
+func (x *WorkspaceReviewPolicyUpdated) GetNewPolicy() string {
+	if x != nil {
+		return x.NewPolicy
+	}
+	return ""
+}
+
+func (x *WorkspaceReviewPolicyUpdated) GetActiveHumanPrincipalCount() int32 {
+	if x != nil {
+		return x.ActiveHumanPrincipalCount
+	}
+	return 0
+}
+
 // PrincipalCreated fires after a principal row is inserted by
 // principals.Store. Emitted exactly once per principal_id; for the system
 // (kind='agent') principal the bootstrap shape sets the actor equal to the
@@ -9830,7 +9978,7 @@ type PrincipalCreated struct {
 
 func (x *PrincipalCreated) Reset() {
 	*x = PrincipalCreated{}
-	mi := &file_brent_proto_msgTypes[106]
+	mi := &file_brent_proto_msgTypes[107]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9842,7 +9990,7 @@ func (x *PrincipalCreated) String() string {
 func (*PrincipalCreated) ProtoMessage() {}
 
 func (x *PrincipalCreated) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[106]
+	mi := &file_brent_proto_msgTypes[107]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9855,7 +10003,7 @@ func (x *PrincipalCreated) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PrincipalCreated.ProtoReflect.Descriptor instead.
 func (*PrincipalCreated) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{106}
+	return file_brent_proto_rawDescGZIP(), []int{107}
 }
 
 func (x *PrincipalCreated) GetPrincipalId() string {
@@ -9901,7 +10049,7 @@ type PrincipalUpdated struct {
 
 func (x *PrincipalUpdated) Reset() {
 	*x = PrincipalUpdated{}
-	mi := &file_brent_proto_msgTypes[107]
+	mi := &file_brent_proto_msgTypes[108]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9913,7 +10061,7 @@ func (x *PrincipalUpdated) String() string {
 func (*PrincipalUpdated) ProtoMessage() {}
 
 func (x *PrincipalUpdated) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[107]
+	mi := &file_brent_proto_msgTypes[108]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9926,7 +10074,7 @@ func (x *PrincipalUpdated) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PrincipalUpdated.ProtoReflect.Descriptor instead.
 func (*PrincipalUpdated) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{107}
+	return file_brent_proto_rawDescGZIP(), []int{108}
 }
 
 func (x *PrincipalUpdated) GetPrincipalId() string {
@@ -9972,7 +10120,7 @@ type PrincipalTombstoned struct {
 
 func (x *PrincipalTombstoned) Reset() {
 	*x = PrincipalTombstoned{}
-	mi := &file_brent_proto_msgTypes[108]
+	mi := &file_brent_proto_msgTypes[109]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -9984,7 +10132,7 @@ func (x *PrincipalTombstoned) String() string {
 func (*PrincipalTombstoned) ProtoMessage() {}
 
 func (x *PrincipalTombstoned) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[108]
+	mi := &file_brent_proto_msgTypes[109]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -9997,7 +10145,7 @@ func (x *PrincipalTombstoned) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PrincipalTombstoned.ProtoReflect.Descriptor instead.
 func (*PrincipalTombstoned) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{108}
+	return file_brent_proto_rawDescGZIP(), []int{109}
 }
 
 func (x *PrincipalTombstoned) GetPrincipalId() string {
@@ -10033,7 +10181,7 @@ type WorkspaceCreated struct {
 
 func (x *WorkspaceCreated) Reset() {
 	*x = WorkspaceCreated{}
-	mi := &file_brent_proto_msgTypes[109]
+	mi := &file_brent_proto_msgTypes[110]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10045,7 +10193,7 @@ func (x *WorkspaceCreated) String() string {
 func (*WorkspaceCreated) ProtoMessage() {}
 
 func (x *WorkspaceCreated) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[109]
+	mi := &file_brent_proto_msgTypes[110]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10058,7 +10206,7 @@ func (x *WorkspaceCreated) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkspaceCreated.ProtoReflect.Descriptor instead.
 func (*WorkspaceCreated) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{109}
+	return file_brent_proto_rawDescGZIP(), []int{110}
 }
 
 func (x *WorkspaceCreated) GetWorkspaceId() string {
@@ -10104,7 +10252,7 @@ type WorkspaceOnboardingCompleted struct {
 
 func (x *WorkspaceOnboardingCompleted) Reset() {
 	*x = WorkspaceOnboardingCompleted{}
-	mi := &file_brent_proto_msgTypes[110]
+	mi := &file_brent_proto_msgTypes[111]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10116,7 +10264,7 @@ func (x *WorkspaceOnboardingCompleted) String() string {
 func (*WorkspaceOnboardingCompleted) ProtoMessage() {}
 
 func (x *WorkspaceOnboardingCompleted) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[110]
+	mi := &file_brent_proto_msgTypes[111]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10129,7 +10277,7 @@ func (x *WorkspaceOnboardingCompleted) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkspaceOnboardingCompleted.ProtoReflect.Descriptor instead.
 func (*WorkspaceOnboardingCompleted) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{110}
+	return file_brent_proto_rawDescGZIP(), []int{111}
 }
 
 func (x *WorkspaceOnboardingCompleted) GetWorkspaceId() string {
@@ -10171,7 +10319,7 @@ type WorkspaceRenamed struct {
 
 func (x *WorkspaceRenamed) Reset() {
 	*x = WorkspaceRenamed{}
-	mi := &file_brent_proto_msgTypes[111]
+	mi := &file_brent_proto_msgTypes[112]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10183,7 +10331,7 @@ func (x *WorkspaceRenamed) String() string {
 func (*WorkspaceRenamed) ProtoMessage() {}
 
 func (x *WorkspaceRenamed) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[111]
+	mi := &file_brent_proto_msgTypes[112]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10196,7 +10344,7 @@ func (x *WorkspaceRenamed) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkspaceRenamed.ProtoReflect.Descriptor instead.
 func (*WorkspaceRenamed) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{111}
+	return file_brent_proto_rawDescGZIP(), []int{112}
 }
 
 func (x *WorkspaceRenamed) GetWorkspaceId() string {
@@ -10254,7 +10402,7 @@ type WorkspaceDeleted struct {
 
 func (x *WorkspaceDeleted) Reset() {
 	*x = WorkspaceDeleted{}
-	mi := &file_brent_proto_msgTypes[112]
+	mi := &file_brent_proto_msgTypes[113]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10266,7 +10414,7 @@ func (x *WorkspaceDeleted) String() string {
 func (*WorkspaceDeleted) ProtoMessage() {}
 
 func (x *WorkspaceDeleted) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[112]
+	mi := &file_brent_proto_msgTypes[113]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10279,7 +10427,7 @@ func (x *WorkspaceDeleted) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkspaceDeleted.ProtoReflect.Descriptor instead.
 func (*WorkspaceDeleted) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{112}
+	return file_brent_proto_rawDescGZIP(), []int{113}
 }
 
 func (x *WorkspaceDeleted) GetWorkspaceId() string {
@@ -10320,7 +10468,7 @@ type WorkspaceMemberJoined struct {
 
 func (x *WorkspaceMemberJoined) Reset() {
 	*x = WorkspaceMemberJoined{}
-	mi := &file_brent_proto_msgTypes[113]
+	mi := &file_brent_proto_msgTypes[114]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10332,7 +10480,7 @@ func (x *WorkspaceMemberJoined) String() string {
 func (*WorkspaceMemberJoined) ProtoMessage() {}
 
 func (x *WorkspaceMemberJoined) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[113]
+	mi := &file_brent_proto_msgTypes[114]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10345,7 +10493,7 @@ func (x *WorkspaceMemberJoined) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkspaceMemberJoined.ProtoReflect.Descriptor instead.
 func (*WorkspaceMemberJoined) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{113}
+	return file_brent_proto_rawDescGZIP(), []int{114}
 }
 
 func (x *WorkspaceMemberJoined) GetWorkspaceId() string {
@@ -10397,7 +10545,7 @@ type WorkspaceMemberLeft struct {
 
 func (x *WorkspaceMemberLeft) Reset() {
 	*x = WorkspaceMemberLeft{}
-	mi := &file_brent_proto_msgTypes[114]
+	mi := &file_brent_proto_msgTypes[115]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10409,7 +10557,7 @@ func (x *WorkspaceMemberLeft) String() string {
 func (*WorkspaceMemberLeft) ProtoMessage() {}
 
 func (x *WorkspaceMemberLeft) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[114]
+	mi := &file_brent_proto_msgTypes[115]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10422,7 +10570,7 @@ func (x *WorkspaceMemberLeft) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkspaceMemberLeft.ProtoReflect.Descriptor instead.
 func (*WorkspaceMemberLeft) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{114}
+	return file_brent_proto_rawDescGZIP(), []int{115}
 }
 
 func (x *WorkspaceMemberLeft) GetWorkspaceId() string {
@@ -10465,7 +10613,7 @@ type ApprovedEmailDomainAdded struct {
 
 func (x *ApprovedEmailDomainAdded) Reset() {
 	*x = ApprovedEmailDomainAdded{}
-	mi := &file_brent_proto_msgTypes[115]
+	mi := &file_brent_proto_msgTypes[116]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10477,7 +10625,7 @@ func (x *ApprovedEmailDomainAdded) String() string {
 func (*ApprovedEmailDomainAdded) ProtoMessage() {}
 
 func (x *ApprovedEmailDomainAdded) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[115]
+	mi := &file_brent_proto_msgTypes[116]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10490,7 +10638,7 @@ func (x *ApprovedEmailDomainAdded) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ApprovedEmailDomainAdded.ProtoReflect.Descriptor instead.
 func (*ApprovedEmailDomainAdded) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{115}
+	return file_brent_proto_rawDescGZIP(), []int{116}
 }
 
 func (x *ApprovedEmailDomainAdded) GetWorkspaceId() string {
@@ -10536,7 +10684,7 @@ type ApprovedEmailDomainVerified struct {
 
 func (x *ApprovedEmailDomainVerified) Reset() {
 	*x = ApprovedEmailDomainVerified{}
-	mi := &file_brent_proto_msgTypes[116]
+	mi := &file_brent_proto_msgTypes[117]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10548,7 +10696,7 @@ func (x *ApprovedEmailDomainVerified) String() string {
 func (*ApprovedEmailDomainVerified) ProtoMessage() {}
 
 func (x *ApprovedEmailDomainVerified) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[116]
+	mi := &file_brent_proto_msgTypes[117]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10561,7 +10709,7 @@ func (x *ApprovedEmailDomainVerified) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ApprovedEmailDomainVerified.ProtoReflect.Descriptor instead.
 func (*ApprovedEmailDomainVerified) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{116}
+	return file_brent_proto_rawDescGZIP(), []int{117}
 }
 
 func (x *ApprovedEmailDomainVerified) GetWorkspaceId() string {
@@ -10607,7 +10755,7 @@ type ApprovedEmailDomainDeleted struct {
 
 func (x *ApprovedEmailDomainDeleted) Reset() {
 	*x = ApprovedEmailDomainDeleted{}
-	mi := &file_brent_proto_msgTypes[117]
+	mi := &file_brent_proto_msgTypes[118]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10619,7 +10767,7 @@ func (x *ApprovedEmailDomainDeleted) String() string {
 func (*ApprovedEmailDomainDeleted) ProtoMessage() {}
 
 func (x *ApprovedEmailDomainDeleted) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[117]
+	mi := &file_brent_proto_msgTypes[118]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10632,7 +10780,7 @@ func (x *ApprovedEmailDomainDeleted) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ApprovedEmailDomainDeleted.ProtoReflect.Descriptor instead.
 func (*ApprovedEmailDomainDeleted) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{117}
+	return file_brent_proto_rawDescGZIP(), []int{118}
 }
 
 func (x *ApprovedEmailDomainDeleted) GetWorkspaceId() string {
@@ -10689,7 +10837,7 @@ type MCPGrantWorkspaceBindingChanged struct {
 
 func (x *MCPGrantWorkspaceBindingChanged) Reset() {
 	*x = MCPGrantWorkspaceBindingChanged{}
-	mi := &file_brent_proto_msgTypes[118]
+	mi := &file_brent_proto_msgTypes[119]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10701,7 +10849,7 @@ func (x *MCPGrantWorkspaceBindingChanged) String() string {
 func (*MCPGrantWorkspaceBindingChanged) ProtoMessage() {}
 
 func (x *MCPGrantWorkspaceBindingChanged) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[118]
+	mi := &file_brent_proto_msgTypes[119]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10714,7 +10862,7 @@ func (x *MCPGrantWorkspaceBindingChanged) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MCPGrantWorkspaceBindingChanged.ProtoReflect.Descriptor instead.
 func (*MCPGrantWorkspaceBindingChanged) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{118}
+	return file_brent_proto_rawDescGZIP(), []int{119}
 }
 
 func (x *MCPGrantWorkspaceBindingChanged) GetBindingId() string {
@@ -10793,7 +10941,7 @@ type IdentityCreated struct {
 
 func (x *IdentityCreated) Reset() {
 	*x = IdentityCreated{}
-	mi := &file_brent_proto_msgTypes[119]
+	mi := &file_brent_proto_msgTypes[120]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10805,7 +10953,7 @@ func (x *IdentityCreated) String() string {
 func (*IdentityCreated) ProtoMessage() {}
 
 func (x *IdentityCreated) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[119]
+	mi := &file_brent_proto_msgTypes[120]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10818,7 +10966,7 @@ func (x *IdentityCreated) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IdentityCreated.ProtoReflect.Descriptor instead.
 func (*IdentityCreated) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{119}
+	return file_brent_proto_rawDescGZIP(), []int{120}
 }
 
 func (x *IdentityCreated) GetIdentityId() string {
@@ -10864,7 +11012,7 @@ type IdentityDeleted struct {
 
 func (x *IdentityDeleted) Reset() {
 	*x = IdentityDeleted{}
-	mi := &file_brent_proto_msgTypes[120]
+	mi := &file_brent_proto_msgTypes[121]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10876,7 +11024,7 @@ func (x *IdentityDeleted) String() string {
 func (*IdentityDeleted) ProtoMessage() {}
 
 func (x *IdentityDeleted) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[120]
+	mi := &file_brent_proto_msgTypes[121]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10889,7 +11037,7 @@ func (x *IdentityDeleted) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IdentityDeleted.ProtoReflect.Descriptor instead.
 func (*IdentityDeleted) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{120}
+	return file_brent_proto_rawDescGZIP(), []int{121}
 }
 
 func (x *IdentityDeleted) GetIdentityId() string {
@@ -10946,7 +11094,7 @@ type BindingCreated struct {
 
 func (x *BindingCreated) Reset() {
 	*x = BindingCreated{}
-	mi := &file_brent_proto_msgTypes[121]
+	mi := &file_brent_proto_msgTypes[122]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -10958,7 +11106,7 @@ func (x *BindingCreated) String() string {
 func (*BindingCreated) ProtoMessage() {}
 
 func (x *BindingCreated) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[121]
+	mi := &file_brent_proto_msgTypes[122]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -10971,7 +11119,7 @@ func (x *BindingCreated) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BindingCreated.ProtoReflect.Descriptor instead.
 func (*BindingCreated) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{121}
+	return file_brent_proto_rawDescGZIP(), []int{122}
 }
 
 func (x *BindingCreated) GetBindingId() string {
@@ -11029,7 +11177,7 @@ type BindingUpdated struct {
 
 func (x *BindingUpdated) Reset() {
 	*x = BindingUpdated{}
-	mi := &file_brent_proto_msgTypes[122]
+	mi := &file_brent_proto_msgTypes[123]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11041,7 +11189,7 @@ func (x *BindingUpdated) String() string {
 func (*BindingUpdated) ProtoMessage() {}
 
 func (x *BindingUpdated) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[122]
+	mi := &file_brent_proto_msgTypes[123]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11054,7 +11202,7 @@ func (x *BindingUpdated) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BindingUpdated.ProtoReflect.Descriptor instead.
 func (*BindingUpdated) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{122}
+	return file_brent_proto_rawDescGZIP(), []int{123}
 }
 
 func (x *BindingUpdated) GetBindingId() string {
@@ -11107,7 +11255,7 @@ type BindingDeleted struct {
 
 func (x *BindingDeleted) Reset() {
 	*x = BindingDeleted{}
-	mi := &file_brent_proto_msgTypes[123]
+	mi := &file_brent_proto_msgTypes[124]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11119,7 +11267,7 @@ func (x *BindingDeleted) String() string {
 func (*BindingDeleted) ProtoMessage() {}
 
 func (x *BindingDeleted) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[123]
+	mi := &file_brent_proto_msgTypes[124]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11132,7 +11280,7 @@ func (x *BindingDeleted) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BindingDeleted.ProtoReflect.Descriptor instead.
 func (*BindingDeleted) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{123}
+	return file_brent_proto_rawDescGZIP(), []int{124}
 }
 
 func (x *BindingDeleted) GetBindingId() string {
@@ -11176,7 +11324,7 @@ type CredentialConnected struct {
 
 func (x *CredentialConnected) Reset() {
 	*x = CredentialConnected{}
-	mi := &file_brent_proto_msgTypes[124]
+	mi := &file_brent_proto_msgTypes[125]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11188,7 +11336,7 @@ func (x *CredentialConnected) String() string {
 func (*CredentialConnected) ProtoMessage() {}
 
 func (x *CredentialConnected) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[124]
+	mi := &file_brent_proto_msgTypes[125]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11201,7 +11349,7 @@ func (x *CredentialConnected) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CredentialConnected.ProtoReflect.Descriptor instead.
 func (*CredentialConnected) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{124}
+	return file_brent_proto_rawDescGZIP(), []int{125}
 }
 
 func (x *CredentialConnected) GetProvider() string {
@@ -11236,7 +11384,7 @@ type CredentialRevoked struct {
 
 func (x *CredentialRevoked) Reset() {
 	*x = CredentialRevoked{}
-	mi := &file_brent_proto_msgTypes[125]
+	mi := &file_brent_proto_msgTypes[126]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11248,7 +11396,7 @@ func (x *CredentialRevoked) String() string {
 func (*CredentialRevoked) ProtoMessage() {}
 
 func (x *CredentialRevoked) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[125]
+	mi := &file_brent_proto_msgTypes[126]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11261,7 +11409,7 @@ func (x *CredentialRevoked) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CredentialRevoked.ProtoReflect.Descriptor instead.
 func (*CredentialRevoked) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{125}
+	return file_brent_proto_rawDescGZIP(), []int{126}
 }
 
 func (x *CredentialRevoked) GetProvider() string {
@@ -11283,7 +11431,7 @@ type WorkspaceLLMCredentialConnected struct {
 
 func (x *WorkspaceLLMCredentialConnected) Reset() {
 	*x = WorkspaceLLMCredentialConnected{}
-	mi := &file_brent_proto_msgTypes[126]
+	mi := &file_brent_proto_msgTypes[127]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11295,7 +11443,7 @@ func (x *WorkspaceLLMCredentialConnected) String() string {
 func (*WorkspaceLLMCredentialConnected) ProtoMessage() {}
 
 func (x *WorkspaceLLMCredentialConnected) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[126]
+	mi := &file_brent_proto_msgTypes[127]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11308,7 +11456,7 @@ func (x *WorkspaceLLMCredentialConnected) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkspaceLLMCredentialConnected.ProtoReflect.Descriptor instead.
 func (*WorkspaceLLMCredentialConnected) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{126}
+	return file_brent_proto_rawDescGZIP(), []int{127}
 }
 
 func (x *WorkspaceLLMCredentialConnected) GetProvider() string {
@@ -11336,7 +11484,7 @@ type WorkspaceLLMCredentialRevoked struct {
 
 func (x *WorkspaceLLMCredentialRevoked) Reset() {
 	*x = WorkspaceLLMCredentialRevoked{}
-	mi := &file_brent_proto_msgTypes[127]
+	mi := &file_brent_proto_msgTypes[128]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11348,7 +11496,7 @@ func (x *WorkspaceLLMCredentialRevoked) String() string {
 func (*WorkspaceLLMCredentialRevoked) ProtoMessage() {}
 
 func (x *WorkspaceLLMCredentialRevoked) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[127]
+	mi := &file_brent_proto_msgTypes[128]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11361,7 +11509,7 @@ func (x *WorkspaceLLMCredentialRevoked) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkspaceLLMCredentialRevoked.ProtoReflect.Descriptor instead.
 func (*WorkspaceLLMCredentialRevoked) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{127}
+	return file_brent_proto_rawDescGZIP(), []int{128}
 }
 
 func (x *WorkspaceLLMCredentialRevoked) GetProvider() string {
@@ -11399,7 +11547,7 @@ type ReviewDriveByStarted struct {
 
 func (x *ReviewDriveByStarted) Reset() {
 	*x = ReviewDriveByStarted{}
-	mi := &file_brent_proto_msgTypes[128]
+	mi := &file_brent_proto_msgTypes[129]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11411,7 +11559,7 @@ func (x *ReviewDriveByStarted) String() string {
 func (*ReviewDriveByStarted) ProtoMessage() {}
 
 func (x *ReviewDriveByStarted) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[128]
+	mi := &file_brent_proto_msgTypes[129]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11424,7 +11572,7 @@ func (x *ReviewDriveByStarted) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReviewDriveByStarted.ProtoReflect.Descriptor instead.
 func (*ReviewDriveByStarted) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{128}
+	return file_brent_proto_rawDescGZIP(), []int{129}
 }
 
 func (x *ReviewDriveByStarted) GetReviewId() string {
@@ -11491,7 +11639,7 @@ type OtherEvent struct {
 
 func (x *OtherEvent) Reset() {
 	*x = OtherEvent{}
-	mi := &file_brent_proto_msgTypes[129]
+	mi := &file_brent_proto_msgTypes[130]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11503,7 +11651,7 @@ func (x *OtherEvent) String() string {
 func (*OtherEvent) ProtoMessage() {}
 
 func (x *OtherEvent) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[129]
+	mi := &file_brent_proto_msgTypes[130]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11516,7 +11664,7 @@ func (x *OtherEvent) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use OtherEvent.ProtoReflect.Descriptor instead.
 func (*OtherEvent) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{129}
+	return file_brent_proto_rawDescGZIP(), []int{130}
 }
 
 func (x *OtherEvent) GetSource() string {
@@ -11556,7 +11704,7 @@ type UnknownStoredPayload struct {
 
 func (x *UnknownStoredPayload) Reset() {
 	*x = UnknownStoredPayload{}
-	mi := &file_brent_proto_msgTypes[130]
+	mi := &file_brent_proto_msgTypes[131]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11568,7 +11716,7 @@ func (x *UnknownStoredPayload) String() string {
 func (*UnknownStoredPayload) ProtoMessage() {}
 
 func (x *UnknownStoredPayload) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[130]
+	mi := &file_brent_proto_msgTypes[131]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11581,7 +11729,7 @@ func (x *UnknownStoredPayload) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UnknownStoredPayload.ProtoReflect.Descriptor instead.
 func (*UnknownStoredPayload) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{130}
+	return file_brent_proto_rawDescGZIP(), []int{131}
 }
 
 func (x *UnknownStoredPayload) GetStoredPayloadType() string {
@@ -11630,7 +11778,7 @@ type PullRequestOpened struct {
 
 func (x *PullRequestOpened) Reset() {
 	*x = PullRequestOpened{}
-	mi := &file_brent_proto_msgTypes[131]
+	mi := &file_brent_proto_msgTypes[132]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11642,7 +11790,7 @@ func (x *PullRequestOpened) String() string {
 func (*PullRequestOpened) ProtoMessage() {}
 
 func (x *PullRequestOpened) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[131]
+	mi := &file_brent_proto_msgTypes[132]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11655,7 +11803,7 @@ func (x *PullRequestOpened) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PullRequestOpened.ProtoReflect.Descriptor instead.
 func (*PullRequestOpened) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{131}
+	return file_brent_proto_rawDescGZIP(), []int{132}
 }
 
 func (x *PullRequestOpened) GetPrId() string {
@@ -11780,7 +11928,7 @@ type PullRequestSynchronized struct {
 
 func (x *PullRequestSynchronized) Reset() {
 	*x = PullRequestSynchronized{}
-	mi := &file_brent_proto_msgTypes[132]
+	mi := &file_brent_proto_msgTypes[133]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11792,7 +11940,7 @@ func (x *PullRequestSynchronized) String() string {
 func (*PullRequestSynchronized) ProtoMessage() {}
 
 func (x *PullRequestSynchronized) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[132]
+	mi := &file_brent_proto_msgTypes[133]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11805,7 +11953,7 @@ func (x *PullRequestSynchronized) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PullRequestSynchronized.ProtoReflect.Descriptor instead.
 func (*PullRequestSynchronized) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{132}
+	return file_brent_proto_rawDescGZIP(), []int{133}
 }
 
 func (x *PullRequestSynchronized) GetPrId() string {
@@ -11945,7 +12093,7 @@ type PullRequestUpdated struct {
 
 func (x *PullRequestUpdated) Reset() {
 	*x = PullRequestUpdated{}
-	mi := &file_brent_proto_msgTypes[133]
+	mi := &file_brent_proto_msgTypes[134]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -11957,7 +12105,7 @@ func (x *PullRequestUpdated) String() string {
 func (*PullRequestUpdated) ProtoMessage() {}
 
 func (x *PullRequestUpdated) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[133]
+	mi := &file_brent_proto_msgTypes[134]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -11970,7 +12118,7 @@ func (x *PullRequestUpdated) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PullRequestUpdated.ProtoReflect.Descriptor instead.
 func (*PullRequestUpdated) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{133}
+	return file_brent_proto_rawDescGZIP(), []int{134}
 }
 
 func (x *PullRequestUpdated) GetPrId() string {
@@ -12117,7 +12265,7 @@ type PullRequestClosed struct {
 
 func (x *PullRequestClosed) Reset() {
 	*x = PullRequestClosed{}
-	mi := &file_brent_proto_msgTypes[134]
+	mi := &file_brent_proto_msgTypes[135]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12129,7 +12277,7 @@ func (x *PullRequestClosed) String() string {
 func (*PullRequestClosed) ProtoMessage() {}
 
 func (x *PullRequestClosed) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[134]
+	mi := &file_brent_proto_msgTypes[135]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12142,7 +12290,7 @@ func (x *PullRequestClosed) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PullRequestClosed.ProtoReflect.Descriptor instead.
 func (*PullRequestClosed) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{134}
+	return file_brent_proto_rawDescGZIP(), []int{135}
 }
 
 func (x *PullRequestClosed) GetPrId() string {
@@ -12282,7 +12430,7 @@ type PullRequestLinkedToPlan struct {
 
 func (x *PullRequestLinkedToPlan) Reset() {
 	*x = PullRequestLinkedToPlan{}
-	mi := &file_brent_proto_msgTypes[135]
+	mi := &file_brent_proto_msgTypes[136]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12294,7 +12442,7 @@ func (x *PullRequestLinkedToPlan) String() string {
 func (*PullRequestLinkedToPlan) ProtoMessage() {}
 
 func (x *PullRequestLinkedToPlan) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[135]
+	mi := &file_brent_proto_msgTypes[136]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12307,7 +12455,7 @@ func (x *PullRequestLinkedToPlan) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PullRequestLinkedToPlan.ProtoReflect.Descriptor instead.
 func (*PullRequestLinkedToPlan) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{135}
+	return file_brent_proto_rawDescGZIP(), []int{136}
 }
 
 func (x *PullRequestLinkedToPlan) GetPrId() string {
@@ -12433,7 +12581,7 @@ type PullRequestUnlinkedFromPlan struct {
 
 func (x *PullRequestUnlinkedFromPlan) Reset() {
 	*x = PullRequestUnlinkedFromPlan{}
-	mi := &file_brent_proto_msgTypes[136]
+	mi := &file_brent_proto_msgTypes[137]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12445,7 +12593,7 @@ func (x *PullRequestUnlinkedFromPlan) String() string {
 func (*PullRequestUnlinkedFromPlan) ProtoMessage() {}
 
 func (x *PullRequestUnlinkedFromPlan) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[136]
+	mi := &file_brent_proto_msgTypes[137]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12458,7 +12606,7 @@ func (x *PullRequestUnlinkedFromPlan) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PullRequestUnlinkedFromPlan.ProtoReflect.Descriptor instead.
 func (*PullRequestUnlinkedFromPlan) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{136}
+	return file_brent_proto_rawDescGZIP(), []int{137}
 }
 
 func (x *PullRequestUnlinkedFromPlan) GetPrId() string {
@@ -12593,7 +12741,7 @@ type PullRequestLinkedToAgentRun struct {
 
 func (x *PullRequestLinkedToAgentRun) Reset() {
 	*x = PullRequestLinkedToAgentRun{}
-	mi := &file_brent_proto_msgTypes[137]
+	mi := &file_brent_proto_msgTypes[138]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12605,7 +12753,7 @@ func (x *PullRequestLinkedToAgentRun) String() string {
 func (*PullRequestLinkedToAgentRun) ProtoMessage() {}
 
 func (x *PullRequestLinkedToAgentRun) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[137]
+	mi := &file_brent_proto_msgTypes[138]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12618,7 +12766,7 @@ func (x *PullRequestLinkedToAgentRun) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PullRequestLinkedToAgentRun.ProtoReflect.Descriptor instead.
 func (*PullRequestLinkedToAgentRun) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{137}
+	return file_brent_proto_rawDescGZIP(), []int{138}
 }
 
 func (x *PullRequestLinkedToAgentRun) GetPrId() string {
@@ -12743,7 +12891,7 @@ type PullRequestReviewRequested struct {
 
 func (x *PullRequestReviewRequested) Reset() {
 	*x = PullRequestReviewRequested{}
-	mi := &file_brent_proto_msgTypes[138]
+	mi := &file_brent_proto_msgTypes[139]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12755,7 +12903,7 @@ func (x *PullRequestReviewRequested) String() string {
 func (*PullRequestReviewRequested) ProtoMessage() {}
 
 func (x *PullRequestReviewRequested) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[138]
+	mi := &file_brent_proto_msgTypes[139]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12768,7 +12916,7 @@ func (x *PullRequestReviewRequested) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PullRequestReviewRequested.ProtoReflect.Descriptor instead.
 func (*PullRequestReviewRequested) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{138}
+	return file_brent_proto_rawDescGZIP(), []int{139}
 }
 
 func (x *PullRequestReviewRequested) GetPrId() string {
@@ -12870,7 +13018,7 @@ type PullRequestApproved struct {
 
 func (x *PullRequestApproved) Reset() {
 	*x = PullRequestApproved{}
-	mi := &file_brent_proto_msgTypes[139]
+	mi := &file_brent_proto_msgTypes[140]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -12882,7 +13030,7 @@ func (x *PullRequestApproved) String() string {
 func (*PullRequestApproved) ProtoMessage() {}
 
 func (x *PullRequestApproved) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[139]
+	mi := &file_brent_proto_msgTypes[140]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -12895,7 +13043,7 @@ func (x *PullRequestApproved) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PullRequestApproved.ProtoReflect.Descriptor instead.
 func (*PullRequestApproved) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{139}
+	return file_brent_proto_rawDescGZIP(), []int{140}
 }
 
 func (x *PullRequestApproved) GetPrId() string {
@@ -13011,7 +13159,7 @@ type PullRequestChangesRequested struct {
 
 func (x *PullRequestChangesRequested) Reset() {
 	*x = PullRequestChangesRequested{}
-	mi := &file_brent_proto_msgTypes[140]
+	mi := &file_brent_proto_msgTypes[141]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -13023,7 +13171,7 @@ func (x *PullRequestChangesRequested) String() string {
 func (*PullRequestChangesRequested) ProtoMessage() {}
 
 func (x *PullRequestChangesRequested) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[140]
+	mi := &file_brent_proto_msgTypes[141]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13036,7 +13184,7 @@ func (x *PullRequestChangesRequested) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PullRequestChangesRequested.ProtoReflect.Descriptor instead.
 func (*PullRequestChangesRequested) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{140}
+	return file_brent_proto_rawDescGZIP(), []int{141}
 }
 
 func (x *PullRequestChangesRequested) GetPrId() string {
@@ -13147,7 +13295,7 @@ type PullRequestReviewDismissed struct {
 
 func (x *PullRequestReviewDismissed) Reset() {
 	*x = PullRequestReviewDismissed{}
-	mi := &file_brent_proto_msgTypes[141]
+	mi := &file_brent_proto_msgTypes[142]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -13159,7 +13307,7 @@ func (x *PullRequestReviewDismissed) String() string {
 func (*PullRequestReviewDismissed) ProtoMessage() {}
 
 func (x *PullRequestReviewDismissed) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[141]
+	mi := &file_brent_proto_msgTypes[142]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13172,7 +13320,7 @@ func (x *PullRequestReviewDismissed) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PullRequestReviewDismissed.ProtoReflect.Descriptor instead.
 func (*PullRequestReviewDismissed) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{141}
+	return file_brent_proto_rawDescGZIP(), []int{142}
 }
 
 func (x *PullRequestReviewDismissed) GetPrId() string {
@@ -13280,7 +13428,7 @@ type PullRequestCommentCreated struct {
 
 func (x *PullRequestCommentCreated) Reset() {
 	*x = PullRequestCommentCreated{}
-	mi := &file_brent_proto_msgTypes[142]
+	mi := &file_brent_proto_msgTypes[143]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -13292,7 +13440,7 @@ func (x *PullRequestCommentCreated) String() string {
 func (*PullRequestCommentCreated) ProtoMessage() {}
 
 func (x *PullRequestCommentCreated) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[142]
+	mi := &file_brent_proto_msgTypes[143]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13305,7 +13453,7 @@ func (x *PullRequestCommentCreated) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PullRequestCommentCreated.ProtoReflect.Descriptor instead.
 func (*PullRequestCommentCreated) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{142}
+	return file_brent_proto_rawDescGZIP(), []int{143}
 }
 
 func (x *PullRequestCommentCreated) GetPrId() string {
@@ -13402,7 +13550,7 @@ type DeviationAnalysisStarted struct {
 
 func (x *DeviationAnalysisStarted) Reset() {
 	*x = DeviationAnalysisStarted{}
-	mi := &file_brent_proto_msgTypes[143]
+	mi := &file_brent_proto_msgTypes[144]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -13414,7 +13562,7 @@ func (x *DeviationAnalysisStarted) String() string {
 func (*DeviationAnalysisStarted) ProtoMessage() {}
 
 func (x *DeviationAnalysisStarted) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[143]
+	mi := &file_brent_proto_msgTypes[144]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13427,7 +13575,7 @@ func (x *DeviationAnalysisStarted) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeviationAnalysisStarted.ProtoReflect.Descriptor instead.
 func (*DeviationAnalysisStarted) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{143}
+	return file_brent_proto_rawDescGZIP(), []int{144}
 }
 
 func (x *DeviationAnalysisStarted) GetAnalysisId() string {
@@ -13495,7 +13643,7 @@ type FindingSummary struct {
 
 func (x *FindingSummary) Reset() {
 	*x = FindingSummary{}
-	mi := &file_brent_proto_msgTypes[144]
+	mi := &file_brent_proto_msgTypes[145]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -13507,7 +13655,7 @@ func (x *FindingSummary) String() string {
 func (*FindingSummary) ProtoMessage() {}
 
 func (x *FindingSummary) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[144]
+	mi := &file_brent_proto_msgTypes[145]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13520,7 +13668,7 @@ func (x *FindingSummary) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use FindingSummary.ProtoReflect.Descriptor instead.
 func (*FindingSummary) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{144}
+	return file_brent_proto_rawDescGZIP(), []int{145}
 }
 
 func (x *FindingSummary) GetKind() string {
@@ -13576,7 +13724,7 @@ type DeviationAnalysisCompleted struct {
 
 func (x *DeviationAnalysisCompleted) Reset() {
 	*x = DeviationAnalysisCompleted{}
-	mi := &file_brent_proto_msgTypes[145]
+	mi := &file_brent_proto_msgTypes[146]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -13588,7 +13736,7 @@ func (x *DeviationAnalysisCompleted) String() string {
 func (*DeviationAnalysisCompleted) ProtoMessage() {}
 
 func (x *DeviationAnalysisCompleted) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[145]
+	mi := &file_brent_proto_msgTypes[146]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13601,7 +13749,7 @@ func (x *DeviationAnalysisCompleted) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeviationAnalysisCompleted.ProtoReflect.Descriptor instead.
 func (*DeviationAnalysisCompleted) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{145}
+	return file_brent_proto_rawDescGZIP(), []int{146}
 }
 
 func (x *DeviationAnalysisCompleted) GetAnalysisId() string {
@@ -13690,7 +13838,7 @@ type DeviationAnalysisFailed struct {
 
 func (x *DeviationAnalysisFailed) Reset() {
 	*x = DeviationAnalysisFailed{}
-	mi := &file_brent_proto_msgTypes[146]
+	mi := &file_brent_proto_msgTypes[147]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -13702,7 +13850,7 @@ func (x *DeviationAnalysisFailed) String() string {
 func (*DeviationAnalysisFailed) ProtoMessage() {}
 
 func (x *DeviationAnalysisFailed) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[146]
+	mi := &file_brent_proto_msgTypes[147]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13715,7 +13863,7 @@ func (x *DeviationAnalysisFailed) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeviationAnalysisFailed.ProtoReflect.Descriptor instead.
 func (*DeviationAnalysisFailed) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{146}
+	return file_brent_proto_rawDescGZIP(), []int{147}
 }
 
 func (x *DeviationAnalysisFailed) GetAnalysisId() string {
@@ -13781,7 +13929,7 @@ type DeviationFindingRecorded struct {
 
 func (x *DeviationFindingRecorded) Reset() {
 	*x = DeviationFindingRecorded{}
-	mi := &file_brent_proto_msgTypes[147]
+	mi := &file_brent_proto_msgTypes[148]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -13793,7 +13941,7 @@ func (x *DeviationFindingRecorded) String() string {
 func (*DeviationFindingRecorded) ProtoMessage() {}
 
 func (x *DeviationFindingRecorded) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[147]
+	mi := &file_brent_proto_msgTypes[148]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13806,7 +13954,7 @@ func (x *DeviationFindingRecorded) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeviationFindingRecorded.ProtoReflect.Descriptor instead.
 func (*DeviationFindingRecorded) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{147}
+	return file_brent_proto_rawDescGZIP(), []int{148}
 }
 
 func (x *DeviationFindingRecorded) GetFindingId() string {
@@ -13866,7 +14014,7 @@ type DeviationFindingUpdated struct {
 
 func (x *DeviationFindingUpdated) Reset() {
 	*x = DeviationFindingUpdated{}
-	mi := &file_brent_proto_msgTypes[148]
+	mi := &file_brent_proto_msgTypes[149]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -13878,7 +14026,7 @@ func (x *DeviationFindingUpdated) String() string {
 func (*DeviationFindingUpdated) ProtoMessage() {}
 
 func (x *DeviationFindingUpdated) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[148]
+	mi := &file_brent_proto_msgTypes[149]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13891,7 +14039,7 @@ func (x *DeviationFindingUpdated) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeviationFindingUpdated.ProtoReflect.Descriptor instead.
 func (*DeviationFindingUpdated) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{148}
+	return file_brent_proto_rawDescGZIP(), []int{149}
 }
 
 func (x *DeviationFindingUpdated) GetFindingId() string {
@@ -13958,7 +14106,7 @@ type DeviationFindingResolved struct {
 
 func (x *DeviationFindingResolved) Reset() {
 	*x = DeviationFindingResolved{}
-	mi := &file_brent_proto_msgTypes[149]
+	mi := &file_brent_proto_msgTypes[150]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -13970,7 +14118,7 @@ func (x *DeviationFindingResolved) String() string {
 func (*DeviationFindingResolved) ProtoMessage() {}
 
 func (x *DeviationFindingResolved) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[149]
+	mi := &file_brent_proto_msgTypes[150]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -13983,7 +14131,7 @@ func (x *DeviationFindingResolved) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeviationFindingResolved.ProtoReflect.Descriptor instead.
 func (*DeviationFindingResolved) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{149}
+	return file_brent_proto_rawDescGZIP(), []int{150}
 }
 
 func (x *DeviationFindingResolved) GetFindingId() string {
@@ -14048,7 +14196,7 @@ type DeviationFindingAcknowledged struct {
 
 func (x *DeviationFindingAcknowledged) Reset() {
 	*x = DeviationFindingAcknowledged{}
-	mi := &file_brent_proto_msgTypes[150]
+	mi := &file_brent_proto_msgTypes[151]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14060,7 +14208,7 @@ func (x *DeviationFindingAcknowledged) String() string {
 func (*DeviationFindingAcknowledged) ProtoMessage() {}
 
 func (x *DeviationFindingAcknowledged) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[150]
+	mi := &file_brent_proto_msgTypes[151]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14073,7 +14221,7 @@ func (x *DeviationFindingAcknowledged) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeviationFindingAcknowledged.ProtoReflect.Descriptor instead.
 func (*DeviationFindingAcknowledged) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{150}
+	return file_brent_proto_rawDescGZIP(), []int{151}
 }
 
 func (x *DeviationFindingAcknowledged) GetFindingId() string {
@@ -14152,7 +14300,7 @@ type DeviationFindingAcknowledgementCleared struct {
 
 func (x *DeviationFindingAcknowledgementCleared) Reset() {
 	*x = DeviationFindingAcknowledgementCleared{}
-	mi := &file_brent_proto_msgTypes[151]
+	mi := &file_brent_proto_msgTypes[152]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14164,7 +14312,7 @@ func (x *DeviationFindingAcknowledgementCleared) String() string {
 func (*DeviationFindingAcknowledgementCleared) ProtoMessage() {}
 
 func (x *DeviationFindingAcknowledgementCleared) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[151]
+	mi := &file_brent_proto_msgTypes[152]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14177,7 +14325,7 @@ func (x *DeviationFindingAcknowledgementCleared) ProtoReflect() protoreflect.Mes
 
 // Deprecated: Use DeviationFindingAcknowledgementCleared.ProtoReflect.Descriptor instead.
 func (*DeviationFindingAcknowledgementCleared) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{151}
+	return file_brent_proto_rawDescGZIP(), []int{152}
 }
 
 func (x *DeviationFindingAcknowledgementCleared) GetFindingId() string {
@@ -14255,7 +14403,7 @@ type AgentRunDispatched struct {
 
 func (x *AgentRunDispatched) Reset() {
 	*x = AgentRunDispatched{}
-	mi := &file_brent_proto_msgTypes[152]
+	mi := &file_brent_proto_msgTypes[153]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14267,7 +14415,7 @@ func (x *AgentRunDispatched) String() string {
 func (*AgentRunDispatched) ProtoMessage() {}
 
 func (x *AgentRunDispatched) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[152]
+	mi := &file_brent_proto_msgTypes[153]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14280,7 +14428,7 @@ func (x *AgentRunDispatched) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AgentRunDispatched.ProtoReflect.Descriptor instead.
 func (*AgentRunDispatched) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{152}
+	return file_brent_proto_rawDescGZIP(), []int{153}
 }
 
 func (x *AgentRunDispatched) GetAgentRunUuid() string {
@@ -14358,7 +14506,7 @@ type AgentRunStarted struct {
 
 func (x *AgentRunStarted) Reset() {
 	*x = AgentRunStarted{}
-	mi := &file_brent_proto_msgTypes[153]
+	mi := &file_brent_proto_msgTypes[154]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14370,7 +14518,7 @@ func (x *AgentRunStarted) String() string {
 func (*AgentRunStarted) ProtoMessage() {}
 
 func (x *AgentRunStarted) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[153]
+	mi := &file_brent_proto_msgTypes[154]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14383,7 +14531,7 @@ func (x *AgentRunStarted) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AgentRunStarted.ProtoReflect.Descriptor instead.
 func (*AgentRunStarted) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{153}
+	return file_brent_proto_rawDescGZIP(), []int{154}
 }
 
 func (x *AgentRunStarted) GetAgentRunUuid() string {
@@ -14420,7 +14568,7 @@ type AgentRunPullRequestMatched struct {
 
 func (x *AgentRunPullRequestMatched) Reset() {
 	*x = AgentRunPullRequestMatched{}
-	mi := &file_brent_proto_msgTypes[154]
+	mi := &file_brent_proto_msgTypes[155]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14432,7 +14580,7 @@ func (x *AgentRunPullRequestMatched) String() string {
 func (*AgentRunPullRequestMatched) ProtoMessage() {}
 
 func (x *AgentRunPullRequestMatched) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[154]
+	mi := &file_brent_proto_msgTypes[155]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14445,7 +14593,7 @@ func (x *AgentRunPullRequestMatched) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AgentRunPullRequestMatched.ProtoReflect.Descriptor instead.
 func (*AgentRunPullRequestMatched) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{154}
+	return file_brent_proto_rawDescGZIP(), []int{155}
 }
 
 func (x *AgentRunPullRequestMatched) GetAgentRunUuid() string {
@@ -14489,7 +14637,7 @@ type AgentRunFlaggedNeedsYou struct {
 
 func (x *AgentRunFlaggedNeedsYou) Reset() {
 	*x = AgentRunFlaggedNeedsYou{}
-	mi := &file_brent_proto_msgTypes[155]
+	mi := &file_brent_proto_msgTypes[156]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14501,7 +14649,7 @@ func (x *AgentRunFlaggedNeedsYou) String() string {
 func (*AgentRunFlaggedNeedsYou) ProtoMessage() {}
 
 func (x *AgentRunFlaggedNeedsYou) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[155]
+	mi := &file_brent_proto_msgTypes[156]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14514,7 +14662,7 @@ func (x *AgentRunFlaggedNeedsYou) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AgentRunFlaggedNeedsYou.ProtoReflect.Descriptor instead.
 func (*AgentRunFlaggedNeedsYou) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{155}
+	return file_brent_proto_rawDescGZIP(), []int{156}
 }
 
 func (x *AgentRunFlaggedNeedsYou) GetAgentRunUuid() string {
@@ -14560,7 +14708,7 @@ type AgentRunGatePassed struct {
 
 func (x *AgentRunGatePassed) Reset() {
 	*x = AgentRunGatePassed{}
-	mi := &file_brent_proto_msgTypes[156]
+	mi := &file_brent_proto_msgTypes[157]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14572,7 +14720,7 @@ func (x *AgentRunGatePassed) String() string {
 func (*AgentRunGatePassed) ProtoMessage() {}
 
 func (x *AgentRunGatePassed) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[156]
+	mi := &file_brent_proto_msgTypes[157]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14585,7 +14733,7 @@ func (x *AgentRunGatePassed) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AgentRunGatePassed.ProtoReflect.Descriptor instead.
 func (*AgentRunGatePassed) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{156}
+	return file_brent_proto_rawDescGZIP(), []int{157}
 }
 
 func (x *AgentRunGatePassed) GetAgentRunUuid() string {
@@ -14629,7 +14777,7 @@ type AgentRunMerged struct {
 
 func (x *AgentRunMerged) Reset() {
 	*x = AgentRunMerged{}
-	mi := &file_brent_proto_msgTypes[157]
+	mi := &file_brent_proto_msgTypes[158]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14641,7 +14789,7 @@ func (x *AgentRunMerged) String() string {
 func (*AgentRunMerged) ProtoMessage() {}
 
 func (x *AgentRunMerged) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[157]
+	mi := &file_brent_proto_msgTypes[158]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14654,7 +14802,7 @@ func (x *AgentRunMerged) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AgentRunMerged.ProtoReflect.Descriptor instead.
 func (*AgentRunMerged) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{157}
+	return file_brent_proto_rawDescGZIP(), []int{158}
 }
 
 func (x *AgentRunMerged) GetAgentRunUuid() string {
@@ -14698,7 +14846,7 @@ type AgentRunCancelled struct {
 
 func (x *AgentRunCancelled) Reset() {
 	*x = AgentRunCancelled{}
-	mi := &file_brent_proto_msgTypes[158]
+	mi := &file_brent_proto_msgTypes[159]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14710,7 +14858,7 @@ func (x *AgentRunCancelled) String() string {
 func (*AgentRunCancelled) ProtoMessage() {}
 
 func (x *AgentRunCancelled) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[158]
+	mi := &file_brent_proto_msgTypes[159]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14723,7 +14871,7 @@ func (x *AgentRunCancelled) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AgentRunCancelled.ProtoReflect.Descriptor instead.
 func (*AgentRunCancelled) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{158}
+	return file_brent_proto_rawDescGZIP(), []int{159}
 }
 
 func (x *AgentRunCancelled) GetAgentRunUuid() string {
@@ -14767,7 +14915,7 @@ type AgentRunDeclined struct {
 
 func (x *AgentRunDeclined) Reset() {
 	*x = AgentRunDeclined{}
-	mi := &file_brent_proto_msgTypes[159]
+	mi := &file_brent_proto_msgTypes[160]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14779,7 +14927,7 @@ func (x *AgentRunDeclined) String() string {
 func (*AgentRunDeclined) ProtoMessage() {}
 
 func (x *AgentRunDeclined) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[159]
+	mi := &file_brent_proto_msgTypes[160]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14792,7 +14940,7 @@ func (x *AgentRunDeclined) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AgentRunDeclined.ProtoReflect.Descriptor instead.
 func (*AgentRunDeclined) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{159}
+	return file_brent_proto_rawDescGZIP(), []int{160}
 }
 
 func (x *AgentRunDeclined) GetPlanUuid() string {
@@ -14831,7 +14979,7 @@ type AgentRunAnnotated struct {
 
 func (x *AgentRunAnnotated) Reset() {
 	*x = AgentRunAnnotated{}
-	mi := &file_brent_proto_msgTypes[160]
+	mi := &file_brent_proto_msgTypes[161]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14843,7 +14991,7 @@ func (x *AgentRunAnnotated) String() string {
 func (*AgentRunAnnotated) ProtoMessage() {}
 
 func (x *AgentRunAnnotated) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[160]
+	mi := &file_brent_proto_msgTypes[161]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14856,7 +15004,7 @@ func (x *AgentRunAnnotated) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AgentRunAnnotated.ProtoReflect.Descriptor instead.
 func (*AgentRunAnnotated) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{160}
+	return file_brent_proto_rawDescGZIP(), []int{161}
 }
 
 func (x *AgentRunAnnotated) GetAgentRunUuid() string {
@@ -14921,7 +15069,7 @@ type WorkflowIngested struct {
 
 func (x *WorkflowIngested) Reset() {
 	*x = WorkflowIngested{}
-	mi := &file_brent_proto_msgTypes[161]
+	mi := &file_brent_proto_msgTypes[162]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -14933,7 +15081,7 @@ func (x *WorkflowIngested) String() string {
 func (*WorkflowIngested) ProtoMessage() {}
 
 func (x *WorkflowIngested) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[161]
+	mi := &file_brent_proto_msgTypes[162]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -14946,7 +15094,7 @@ func (x *WorkflowIngested) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkflowIngested.ProtoReflect.Descriptor instead.
 func (*WorkflowIngested) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{161}
+	return file_brent_proto_rawDescGZIP(), []int{162}
 }
 
 func (x *WorkflowIngested) GetSourceRepoFullName() string {
@@ -15013,7 +15161,7 @@ type WorkflowRunQueued struct {
 
 func (x *WorkflowRunQueued) Reset() {
 	*x = WorkflowRunQueued{}
-	mi := &file_brent_proto_msgTypes[162]
+	mi := &file_brent_proto_msgTypes[163]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15025,7 +15173,7 @@ func (x *WorkflowRunQueued) String() string {
 func (*WorkflowRunQueued) ProtoMessage() {}
 
 func (x *WorkflowRunQueued) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[162]
+	mi := &file_brent_proto_msgTypes[163]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15038,7 +15186,7 @@ func (x *WorkflowRunQueued) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkflowRunQueued.ProtoReflect.Descriptor instead.
 func (*WorkflowRunQueued) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{162}
+	return file_brent_proto_rawDescGZIP(), []int{163}
 }
 
 func (x *WorkflowRunQueued) GetWorkflowRunId() string {
@@ -15098,7 +15246,7 @@ type WorkflowRunStarted struct {
 
 func (x *WorkflowRunStarted) Reset() {
 	*x = WorkflowRunStarted{}
-	mi := &file_brent_proto_msgTypes[163]
+	mi := &file_brent_proto_msgTypes[164]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15110,7 +15258,7 @@ func (x *WorkflowRunStarted) String() string {
 func (*WorkflowRunStarted) ProtoMessage() {}
 
 func (x *WorkflowRunStarted) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[163]
+	mi := &file_brent_proto_msgTypes[164]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15123,7 +15271,7 @@ func (x *WorkflowRunStarted) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkflowRunStarted.ProtoReflect.Descriptor instead.
 func (*WorkflowRunStarted) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{163}
+	return file_brent_proto_rawDescGZIP(), []int{164}
 }
 
 func (x *WorkflowRunStarted) GetWorkflowRunId() string {
@@ -15183,7 +15331,7 @@ type WorkflowRunCompleted struct {
 
 func (x *WorkflowRunCompleted) Reset() {
 	*x = WorkflowRunCompleted{}
-	mi := &file_brent_proto_msgTypes[164]
+	mi := &file_brent_proto_msgTypes[165]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15195,7 +15343,7 @@ func (x *WorkflowRunCompleted) String() string {
 func (*WorkflowRunCompleted) ProtoMessage() {}
 
 func (x *WorkflowRunCompleted) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[164]
+	mi := &file_brent_proto_msgTypes[165]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15208,7 +15356,7 @@ func (x *WorkflowRunCompleted) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkflowRunCompleted.ProtoReflect.Descriptor instead.
 func (*WorkflowRunCompleted) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{164}
+	return file_brent_proto_rawDescGZIP(), []int{165}
 }
 
 func (x *WorkflowRunCompleted) GetWorkflowRunId() string {
@@ -15269,7 +15417,7 @@ type WorkflowRunFailed struct {
 
 func (x *WorkflowRunFailed) Reset() {
 	*x = WorkflowRunFailed{}
-	mi := &file_brent_proto_msgTypes[165]
+	mi := &file_brent_proto_msgTypes[166]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15281,7 +15429,7 @@ func (x *WorkflowRunFailed) String() string {
 func (*WorkflowRunFailed) ProtoMessage() {}
 
 func (x *WorkflowRunFailed) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[165]
+	mi := &file_brent_proto_msgTypes[166]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15294,7 +15442,7 @@ func (x *WorkflowRunFailed) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkflowRunFailed.ProtoReflect.Descriptor instead.
 func (*WorkflowRunFailed) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{165}
+	return file_brent_proto_rawDescGZIP(), []int{166}
 }
 
 func (x *WorkflowRunFailed) GetWorkflowRunId() string {
@@ -15362,7 +15510,7 @@ type WorkflowRunCancelled struct {
 
 func (x *WorkflowRunCancelled) Reset() {
 	*x = WorkflowRunCancelled{}
-	mi := &file_brent_proto_msgTypes[166]
+	mi := &file_brent_proto_msgTypes[167]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15374,7 +15522,7 @@ func (x *WorkflowRunCancelled) String() string {
 func (*WorkflowRunCancelled) ProtoMessage() {}
 
 func (x *WorkflowRunCancelled) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[166]
+	mi := &file_brent_proto_msgTypes[167]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15387,7 +15535,7 @@ func (x *WorkflowRunCancelled) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkflowRunCancelled.ProtoReflect.Descriptor instead.
 func (*WorkflowRunCancelled) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{166}
+	return file_brent_proto_rawDescGZIP(), []int{167}
 }
 
 func (x *WorkflowRunCancelled) GetWorkflowRunId() string {
@@ -15465,7 +15613,7 @@ type SlackWebhook struct {
 
 func (x *SlackWebhook) Reset() {
 	*x = SlackWebhook{}
-	mi := &file_brent_proto_msgTypes[167]
+	mi := &file_brent_proto_msgTypes[168]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15477,7 +15625,7 @@ func (x *SlackWebhook) String() string {
 func (*SlackWebhook) ProtoMessage() {}
 
 func (x *SlackWebhook) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[167]
+	mi := &file_brent_proto_msgTypes[168]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15490,7 +15638,7 @@ func (x *SlackWebhook) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SlackWebhook.ProtoReflect.Descriptor instead.
 func (*SlackWebhook) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{167}
+	return file_brent_proto_rawDescGZIP(), []int{168}
 }
 
 func (x *SlackWebhook) GetDeliveryId() string {
@@ -15566,7 +15714,7 @@ type LinearWebhook struct {
 
 func (x *LinearWebhook) Reset() {
 	*x = LinearWebhook{}
-	mi := &file_brent_proto_msgTypes[168]
+	mi := &file_brent_proto_msgTypes[169]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15578,7 +15726,7 @@ func (x *LinearWebhook) String() string {
 func (*LinearWebhook) ProtoMessage() {}
 
 func (x *LinearWebhook) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[168]
+	mi := &file_brent_proto_msgTypes[169]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15591,7 +15739,7 @@ func (x *LinearWebhook) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LinearWebhook.ProtoReflect.Descriptor instead.
 func (*LinearWebhook) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{168}
+	return file_brent_proto_rawDescGZIP(), []int{169}
 }
 
 func (x *LinearWebhook) GetDeliveryId() string {
@@ -15669,7 +15817,7 @@ type ComposioTriggerMessage struct {
 
 func (x *ComposioTriggerMessage) Reset() {
 	*x = ComposioTriggerMessage{}
-	mi := &file_brent_proto_msgTypes[169]
+	mi := &file_brent_proto_msgTypes[170]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15681,7 +15829,7 @@ func (x *ComposioTriggerMessage) String() string {
 func (*ComposioTriggerMessage) ProtoMessage() {}
 
 func (x *ComposioTriggerMessage) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[169]
+	mi := &file_brent_proto_msgTypes[170]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15694,7 +15842,7 @@ func (x *ComposioTriggerMessage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ComposioTriggerMessage.ProtoReflect.Descriptor instead.
 func (*ComposioTriggerMessage) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{169}
+	return file_brent_proto_rawDescGZIP(), []int{170}
 }
 
 func (x *ComposioTriggerMessage) GetDeliveryId() string {
@@ -15761,7 +15909,7 @@ type GitHubWebhook struct {
 
 func (x *GitHubWebhook) Reset() {
 	*x = GitHubWebhook{}
-	mi := &file_brent_proto_msgTypes[170]
+	mi := &file_brent_proto_msgTypes[171]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15773,7 +15921,7 @@ func (x *GitHubWebhook) String() string {
 func (*GitHubWebhook) ProtoMessage() {}
 
 func (x *GitHubWebhook) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[170]
+	mi := &file_brent_proto_msgTypes[171]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15786,7 +15934,7 @@ func (x *GitHubWebhook) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GitHubWebhook.ProtoReflect.Descriptor instead.
 func (*GitHubWebhook) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{170}
+	return file_brent_proto_rawDescGZIP(), []int{171}
 }
 
 func (x *GitHubWebhook) GetDeliveryId() string {
@@ -15847,7 +15995,7 @@ type GitLabWebhook struct {
 
 func (x *GitLabWebhook) Reset() {
 	*x = GitLabWebhook{}
-	mi := &file_brent_proto_msgTypes[171]
+	mi := &file_brent_proto_msgTypes[172]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15859,7 +16007,7 @@ func (x *GitLabWebhook) String() string {
 func (*GitLabWebhook) ProtoMessage() {}
 
 func (x *GitLabWebhook) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[171]
+	mi := &file_brent_proto_msgTypes[172]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15872,7 +16020,7 @@ func (x *GitLabWebhook) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GitLabWebhook.ProtoReflect.Descriptor instead.
 func (*GitLabWebhook) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{171}
+	return file_brent_proto_rawDescGZIP(), []int{172}
 }
 
 func (x *GitLabWebhook) GetDeliveryId() string {
@@ -15928,7 +16076,7 @@ type BitbucketWebhook struct {
 
 func (x *BitbucketWebhook) Reset() {
 	*x = BitbucketWebhook{}
-	mi := &file_brent_proto_msgTypes[172]
+	mi := &file_brent_proto_msgTypes[173]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -15940,7 +16088,7 @@ func (x *BitbucketWebhook) String() string {
 func (*BitbucketWebhook) ProtoMessage() {}
 
 func (x *BitbucketWebhook) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[172]
+	mi := &file_brent_proto_msgTypes[173]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -15953,7 +16101,7 @@ func (x *BitbucketWebhook) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use BitbucketWebhook.ProtoReflect.Descriptor instead.
 func (*BitbucketWebhook) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{172}
+	return file_brent_proto_rawDescGZIP(), []int{173}
 }
 
 func (x *BitbucketWebhook) GetDeliveryId() string {
@@ -15996,7 +16144,7 @@ type EmbeddedJsonCELFixture struct {
 
 func (x *EmbeddedJsonCELFixture) Reset() {
 	*x = EmbeddedJsonCELFixture{}
-	mi := &file_brent_proto_msgTypes[173]
+	mi := &file_brent_proto_msgTypes[174]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16008,7 +16156,7 @@ func (x *EmbeddedJsonCELFixture) String() string {
 func (*EmbeddedJsonCELFixture) ProtoMessage() {}
 
 func (x *EmbeddedJsonCELFixture) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[173]
+	mi := &file_brent_proto_msgTypes[174]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16021,7 +16169,7 @@ func (x *EmbeddedJsonCELFixture) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use EmbeddedJsonCELFixture.ProtoReflect.Descriptor instead.
 func (*EmbeddedJsonCELFixture) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{173}
+	return file_brent_proto_rawDescGZIP(), []int{174}
 }
 
 func (x *EmbeddedJsonCELFixture) GetId() string {
@@ -16074,7 +16222,7 @@ type SlackMentionReceived struct {
 
 func (x *SlackMentionReceived) Reset() {
 	*x = SlackMentionReceived{}
-	mi := &file_brent_proto_msgTypes[174]
+	mi := &file_brent_proto_msgTypes[175]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16086,7 +16234,7 @@ func (x *SlackMentionReceived) String() string {
 func (*SlackMentionReceived) ProtoMessage() {}
 
 func (x *SlackMentionReceived) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[174]
+	mi := &file_brent_proto_msgTypes[175]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16099,7 +16247,7 @@ func (x *SlackMentionReceived) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SlackMentionReceived.ProtoReflect.Descriptor instead.
 func (*SlackMentionReceived) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{174}
+	return file_brent_proto_rawDescGZIP(), []int{175}
 }
 
 func (x *SlackMentionReceived) GetTeamId() string {
@@ -16171,7 +16319,7 @@ type OrganisationAppInstallationUpserted struct {
 
 func (x *OrganisationAppInstallationUpserted) Reset() {
 	*x = OrganisationAppInstallationUpserted{}
-	mi := &file_brent_proto_msgTypes[175]
+	mi := &file_brent_proto_msgTypes[176]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16183,7 +16331,7 @@ func (x *OrganisationAppInstallationUpserted) String() string {
 func (*OrganisationAppInstallationUpserted) ProtoMessage() {}
 
 func (x *OrganisationAppInstallationUpserted) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[175]
+	mi := &file_brent_proto_msgTypes[176]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16196,7 +16344,7 @@ func (x *OrganisationAppInstallationUpserted) ProtoReflect() protoreflect.Messag
 
 // Deprecated: Use OrganisationAppInstallationUpserted.ProtoReflect.Descriptor instead.
 func (*OrganisationAppInstallationUpserted) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{175}
+	return file_brent_proto_rawDescGZIP(), []int{176}
 }
 
 func (x *OrganisationAppInstallationUpserted) GetProvider() string {
@@ -16232,7 +16380,7 @@ type OrganisationAppInstallationDeleted struct {
 
 func (x *OrganisationAppInstallationDeleted) Reset() {
 	*x = OrganisationAppInstallationDeleted{}
-	mi := &file_brent_proto_msgTypes[176]
+	mi := &file_brent_proto_msgTypes[177]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16244,7 +16392,7 @@ func (x *OrganisationAppInstallationDeleted) String() string {
 func (*OrganisationAppInstallationDeleted) ProtoMessage() {}
 
 func (x *OrganisationAppInstallationDeleted) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[176]
+	mi := &file_brent_proto_msgTypes[177]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16257,7 +16405,7 @@ func (x *OrganisationAppInstallationDeleted) ProtoReflect() protoreflect.Message
 
 // Deprecated: Use OrganisationAppInstallationDeleted.ProtoReflect.Descriptor instead.
 func (*OrganisationAppInstallationDeleted) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{176}
+	return file_brent_proto_rawDescGZIP(), []int{177}
 }
 
 func (x *OrganisationAppInstallationDeleted) GetProvider() string {
@@ -16299,7 +16447,7 @@ type SlackReactionAdded struct {
 
 func (x *SlackReactionAdded) Reset() {
 	*x = SlackReactionAdded{}
-	mi := &file_brent_proto_msgTypes[177]
+	mi := &file_brent_proto_msgTypes[178]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16311,7 +16459,7 @@ func (x *SlackReactionAdded) String() string {
 func (*SlackReactionAdded) ProtoMessage() {}
 
 func (x *SlackReactionAdded) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[177]
+	mi := &file_brent_proto_msgTypes[178]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16324,7 +16472,7 @@ func (x *SlackReactionAdded) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SlackReactionAdded.ProtoReflect.Descriptor instead.
 func (*SlackReactionAdded) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{177}
+	return file_brent_proto_rawDescGZIP(), []int{178}
 }
 
 func (x *SlackReactionAdded) GetTeamId() string {
@@ -16380,7 +16528,7 @@ type ListWorkflowsRequest struct {
 
 func (x *ListWorkflowsRequest) Reset() {
 	*x = ListWorkflowsRequest{}
-	mi := &file_brent_proto_msgTypes[178]
+	mi := &file_brent_proto_msgTypes[179]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16392,7 +16540,7 @@ func (x *ListWorkflowsRequest) String() string {
 func (*ListWorkflowsRequest) ProtoMessage() {}
 
 func (x *ListWorkflowsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[178]
+	mi := &file_brent_proto_msgTypes[179]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16405,7 +16553,7 @@ func (x *ListWorkflowsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListWorkflowsRequest.ProtoReflect.Descriptor instead.
 func (*ListWorkflowsRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{178}
+	return file_brent_proto_rawDescGZIP(), []int{179}
 }
 
 func (x *ListWorkflowsRequest) GetAccountName() string {
@@ -16424,7 +16572,7 @@ type ListWorkflowsResponse struct {
 
 func (x *ListWorkflowsResponse) Reset() {
 	*x = ListWorkflowsResponse{}
-	mi := &file_brent_proto_msgTypes[179]
+	mi := &file_brent_proto_msgTypes[180]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16436,7 +16584,7 @@ func (x *ListWorkflowsResponse) String() string {
 func (*ListWorkflowsResponse) ProtoMessage() {}
 
 func (x *ListWorkflowsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[179]
+	mi := &file_brent_proto_msgTypes[180]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16449,7 +16597,7 @@ func (x *ListWorkflowsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListWorkflowsResponse.ProtoReflect.Descriptor instead.
 func (*ListWorkflowsResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{179}
+	return file_brent_proto_rawDescGZIP(), []int{180}
 }
 
 func (x *ListWorkflowsResponse) GetWorkflows() []*WorkflowSummary {
@@ -16487,7 +16635,7 @@ type WorkflowSummary struct {
 
 func (x *WorkflowSummary) Reset() {
 	*x = WorkflowSummary{}
-	mi := &file_brent_proto_msgTypes[180]
+	mi := &file_brent_proto_msgTypes[181]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16499,7 +16647,7 @@ func (x *WorkflowSummary) String() string {
 func (*WorkflowSummary) ProtoMessage() {}
 
 func (x *WorkflowSummary) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[180]
+	mi := &file_brent_proto_msgTypes[181]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16512,7 +16660,7 @@ func (x *WorkflowSummary) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkflowSummary.ProtoReflect.Descriptor instead.
 func (*WorkflowSummary) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{180}
+	return file_brent_proto_rawDescGZIP(), []int{181}
 }
 
 func (x *WorkflowSummary) GetId() string {
@@ -16609,7 +16757,7 @@ type GetWorkflowRequest struct {
 
 func (x *GetWorkflowRequest) Reset() {
 	*x = GetWorkflowRequest{}
-	mi := &file_brent_proto_msgTypes[181]
+	mi := &file_brent_proto_msgTypes[182]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16621,7 +16769,7 @@ func (x *GetWorkflowRequest) String() string {
 func (*GetWorkflowRequest) ProtoMessage() {}
 
 func (x *GetWorkflowRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[181]
+	mi := &file_brent_proto_msgTypes[182]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16634,7 +16782,7 @@ func (x *GetWorkflowRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetWorkflowRequest.ProtoReflect.Descriptor instead.
 func (*GetWorkflowRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{181}
+	return file_brent_proto_rawDescGZIP(), []int{182}
 }
 
 func (x *GetWorkflowRequest) GetId() string {
@@ -16653,7 +16801,7 @@ type GetWorkflowResponse struct {
 
 func (x *GetWorkflowResponse) Reset() {
 	*x = GetWorkflowResponse{}
-	mi := &file_brent_proto_msgTypes[182]
+	mi := &file_brent_proto_msgTypes[183]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16665,7 +16813,7 @@ func (x *GetWorkflowResponse) String() string {
 func (*GetWorkflowResponse) ProtoMessage() {}
 
 func (x *GetWorkflowResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[182]
+	mi := &file_brent_proto_msgTypes[183]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16678,7 +16826,7 @@ func (x *GetWorkflowResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetWorkflowResponse.ProtoReflect.Descriptor instead.
 func (*GetWorkflowResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{182}
+	return file_brent_proto_rawDescGZIP(), []int{183}
 }
 
 func (x *GetWorkflowResponse) GetWorkflow() *Workflow {
@@ -16720,7 +16868,7 @@ type Workflow struct {
 
 func (x *Workflow) Reset() {
 	*x = Workflow{}
-	mi := &file_brent_proto_msgTypes[183]
+	mi := &file_brent_proto_msgTypes[184]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16732,7 +16880,7 @@ func (x *Workflow) String() string {
 func (*Workflow) ProtoMessage() {}
 
 func (x *Workflow) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[183]
+	mi := &file_brent_proto_msgTypes[184]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16745,7 +16893,7 @@ func (x *Workflow) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Workflow.ProtoReflect.Descriptor instead.
 func (*Workflow) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{183}
+	return file_brent_proto_rawDescGZIP(), []int{184}
 }
 
 func (x *Workflow) GetId() string {
@@ -16873,7 +17021,7 @@ type ListWorkflowRunsRequest struct {
 
 func (x *ListWorkflowRunsRequest) Reset() {
 	*x = ListWorkflowRunsRequest{}
-	mi := &file_brent_proto_msgTypes[184]
+	mi := &file_brent_proto_msgTypes[185]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16885,7 +17033,7 @@ func (x *ListWorkflowRunsRequest) String() string {
 func (*ListWorkflowRunsRequest) ProtoMessage() {}
 
 func (x *ListWorkflowRunsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[184]
+	mi := &file_brent_proto_msgTypes[185]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16898,7 +17046,7 @@ func (x *ListWorkflowRunsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListWorkflowRunsRequest.ProtoReflect.Descriptor instead.
 func (*ListWorkflowRunsRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{184}
+	return file_brent_proto_rawDescGZIP(), []int{185}
 }
 
 func (x *ListWorkflowRunsRequest) GetWorkflowName() string {
@@ -16948,7 +17096,7 @@ type ListWorkflowRunsResponse struct {
 
 func (x *ListWorkflowRunsResponse) Reset() {
 	*x = ListWorkflowRunsResponse{}
-	mi := &file_brent_proto_msgTypes[185]
+	mi := &file_brent_proto_msgTypes[186]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -16960,7 +17108,7 @@ func (x *ListWorkflowRunsResponse) String() string {
 func (*ListWorkflowRunsResponse) ProtoMessage() {}
 
 func (x *ListWorkflowRunsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[185]
+	mi := &file_brent_proto_msgTypes[186]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -16973,7 +17121,7 @@ func (x *ListWorkflowRunsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListWorkflowRunsResponse.ProtoReflect.Descriptor instead.
 func (*ListWorkflowRunsResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{185}
+	return file_brent_proto_rawDescGZIP(), []int{186}
 }
 
 func (x *ListWorkflowRunsResponse) GetRuns() []*WorkflowRunSummary {
@@ -17047,7 +17195,7 @@ type WorkflowRunSummary struct {
 
 func (x *WorkflowRunSummary) Reset() {
 	*x = WorkflowRunSummary{}
-	mi := &file_brent_proto_msgTypes[186]
+	mi := &file_brent_proto_msgTypes[187]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17059,7 +17207,7 @@ func (x *WorkflowRunSummary) String() string {
 func (*WorkflowRunSummary) ProtoMessage() {}
 
 func (x *WorkflowRunSummary) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[186]
+	mi := &file_brent_proto_msgTypes[187]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17072,7 +17220,7 @@ func (x *WorkflowRunSummary) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkflowRunSummary.ProtoReflect.Descriptor instead.
 func (*WorkflowRunSummary) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{186}
+	return file_brent_proto_rawDescGZIP(), []int{187}
 }
 
 func (x *WorkflowRunSummary) GetId() string {
@@ -17252,7 +17400,7 @@ type GetWorkflowRunRequest struct {
 
 func (x *GetWorkflowRunRequest) Reset() {
 	*x = GetWorkflowRunRequest{}
-	mi := &file_brent_proto_msgTypes[187]
+	mi := &file_brent_proto_msgTypes[188]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17264,7 +17412,7 @@ func (x *GetWorkflowRunRequest) String() string {
 func (*GetWorkflowRunRequest) ProtoMessage() {}
 
 func (x *GetWorkflowRunRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[187]
+	mi := &file_brent_proto_msgTypes[188]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17277,7 +17425,7 @@ func (x *GetWorkflowRunRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetWorkflowRunRequest.ProtoReflect.Descriptor instead.
 func (*GetWorkflowRunRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{187}
+	return file_brent_proto_rawDescGZIP(), []int{188}
 }
 
 func (x *GetWorkflowRunRequest) GetId() string {
@@ -17297,7 +17445,7 @@ type GetWorkflowRunThreadHistoryRequest struct {
 
 func (x *GetWorkflowRunThreadHistoryRequest) Reset() {
 	*x = GetWorkflowRunThreadHistoryRequest{}
-	mi := &file_brent_proto_msgTypes[188]
+	mi := &file_brent_proto_msgTypes[189]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17309,7 +17457,7 @@ func (x *GetWorkflowRunThreadHistoryRequest) String() string {
 func (*GetWorkflowRunThreadHistoryRequest) ProtoMessage() {}
 
 func (x *GetWorkflowRunThreadHistoryRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[188]
+	mi := &file_brent_proto_msgTypes[189]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17322,7 +17470,7 @@ func (x *GetWorkflowRunThreadHistoryRequest) ProtoReflect() protoreflect.Message
 
 // Deprecated: Use GetWorkflowRunThreadHistoryRequest.ProtoReflect.Descriptor instead.
 func (*GetWorkflowRunThreadHistoryRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{188}
+	return file_brent_proto_rawDescGZIP(), []int{189}
 }
 
 func (x *GetWorkflowRunThreadHistoryRequest) GetId() string {
@@ -17342,7 +17490,7 @@ type WorkflowRunThreadSegment struct {
 
 func (x *WorkflowRunThreadSegment) Reset() {
 	*x = WorkflowRunThreadSegment{}
-	mi := &file_brent_proto_msgTypes[189]
+	mi := &file_brent_proto_msgTypes[190]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17354,7 +17502,7 @@ func (x *WorkflowRunThreadSegment) String() string {
 func (*WorkflowRunThreadSegment) ProtoMessage() {}
 
 func (x *WorkflowRunThreadSegment) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[189]
+	mi := &file_brent_proto_msgTypes[190]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17367,7 +17515,7 @@ func (x *WorkflowRunThreadSegment) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkflowRunThreadSegment.ProtoReflect.Descriptor instead.
 func (*WorkflowRunThreadSegment) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{189}
+	return file_brent_proto_rawDescGZIP(), []int{190}
 }
 
 func (x *WorkflowRunThreadSegment) GetRun() *WorkflowRunSummary {
@@ -17396,7 +17544,7 @@ type GetWorkflowRunThreadHistoryResponse struct {
 
 func (x *GetWorkflowRunThreadHistoryResponse) Reset() {
 	*x = GetWorkflowRunThreadHistoryResponse{}
-	mi := &file_brent_proto_msgTypes[190]
+	mi := &file_brent_proto_msgTypes[191]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17408,7 +17556,7 @@ func (x *GetWorkflowRunThreadHistoryResponse) String() string {
 func (*GetWorkflowRunThreadHistoryResponse) ProtoMessage() {}
 
 func (x *GetWorkflowRunThreadHistoryResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[190]
+	mi := &file_brent_proto_msgTypes[191]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17421,7 +17569,7 @@ func (x *GetWorkflowRunThreadHistoryResponse) ProtoReflect() protoreflect.Messag
 
 // Deprecated: Use GetWorkflowRunThreadHistoryResponse.ProtoReflect.Descriptor instead.
 func (*GetWorkflowRunThreadHistoryResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{190}
+	return file_brent_proto_rawDescGZIP(), []int{191}
 }
 
 func (x *GetWorkflowRunThreadHistoryResponse) GetSegments() []*WorkflowRunThreadSegment {
@@ -17451,7 +17599,7 @@ type GetWorkflowRunResponse struct {
 
 func (x *GetWorkflowRunResponse) Reset() {
 	*x = GetWorkflowRunResponse{}
-	mi := &file_brent_proto_msgTypes[191]
+	mi := &file_brent_proto_msgTypes[192]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17463,7 +17611,7 @@ func (x *GetWorkflowRunResponse) String() string {
 func (*GetWorkflowRunResponse) ProtoMessage() {}
 
 func (x *GetWorkflowRunResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[191]
+	mi := &file_brent_proto_msgTypes[192]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17476,7 +17624,7 @@ func (x *GetWorkflowRunResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetWorkflowRunResponse.ProtoReflect.Descriptor instead.
 func (*GetWorkflowRunResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{191}
+	return file_brent_proto_rawDescGZIP(), []int{192}
 }
 
 func (x *GetWorkflowRunResponse) GetRun() *WorkflowRun {
@@ -17553,7 +17701,7 @@ type WorkflowRun struct {
 
 func (x *WorkflowRun) Reset() {
 	*x = WorkflowRun{}
-	mi := &file_brent_proto_msgTypes[192]
+	mi := &file_brent_proto_msgTypes[193]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17565,7 +17713,7 @@ func (x *WorkflowRun) String() string {
 func (*WorkflowRun) ProtoMessage() {}
 
 func (x *WorkflowRun) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[192]
+	mi := &file_brent_proto_msgTypes[193]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17578,7 +17726,7 @@ func (x *WorkflowRun) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkflowRun.ProtoReflect.Descriptor instead.
 func (*WorkflowRun) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{192}
+	return file_brent_proto_rawDescGZIP(), []int{193}
 }
 
 func (x *WorkflowRun) GetId() string {
@@ -17771,7 +17919,7 @@ type GetPrincipalStatusRequest struct {
 
 func (x *GetPrincipalStatusRequest) Reset() {
 	*x = GetPrincipalStatusRequest{}
-	mi := &file_brent_proto_msgTypes[193]
+	mi := &file_brent_proto_msgTypes[194]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17783,7 +17931,7 @@ func (x *GetPrincipalStatusRequest) String() string {
 func (*GetPrincipalStatusRequest) ProtoMessage() {}
 
 func (x *GetPrincipalStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[193]
+	mi := &file_brent_proto_msgTypes[194]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17796,7 +17944,7 @@ func (x *GetPrincipalStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPrincipalStatusRequest.ProtoReflect.Descriptor instead.
 func (*GetPrincipalStatusRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{193}
+	return file_brent_proto_rawDescGZIP(), []int{194}
 }
 
 type GetPrincipalStatusResponse struct {
@@ -17812,7 +17960,7 @@ type GetPrincipalStatusResponse struct {
 
 func (x *GetPrincipalStatusResponse) Reset() {
 	*x = GetPrincipalStatusResponse{}
-	mi := &file_brent_proto_msgTypes[194]
+	mi := &file_brent_proto_msgTypes[195]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17824,7 +17972,7 @@ func (x *GetPrincipalStatusResponse) String() string {
 func (*GetPrincipalStatusResponse) ProtoMessage() {}
 
 func (x *GetPrincipalStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[194]
+	mi := &file_brent_proto_msgTypes[195]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17837,7 +17985,7 @@ func (x *GetPrincipalStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPrincipalStatusResponse.ProtoReflect.Descriptor instead.
 func (*GetPrincipalStatusResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{194}
+	return file_brent_proto_rawDescGZIP(), []int{195}
 }
 
 func (x *GetPrincipalStatusResponse) GetState() PrincipalStatusState {
@@ -17875,7 +18023,7 @@ type GetIntegrationConnectURLRequest struct {
 
 func (x *GetIntegrationConnectURLRequest) Reset() {
 	*x = GetIntegrationConnectURLRequest{}
-	mi := &file_brent_proto_msgTypes[195]
+	mi := &file_brent_proto_msgTypes[196]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17887,7 +18035,7 @@ func (x *GetIntegrationConnectURLRequest) String() string {
 func (*GetIntegrationConnectURLRequest) ProtoMessage() {}
 
 func (x *GetIntegrationConnectURLRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[195]
+	mi := &file_brent_proto_msgTypes[196]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17900,7 +18048,7 @@ func (x *GetIntegrationConnectURLRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetIntegrationConnectURLRequest.ProtoReflect.Descriptor instead.
 func (*GetIntegrationConnectURLRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{195}
+	return file_brent_proto_rawDescGZIP(), []int{196}
 }
 
 func (x *GetIntegrationConnectURLRequest) GetProvider() IntegrationProvider {
@@ -17933,7 +18081,7 @@ type GetIntegrationConnectURLResponse struct {
 
 func (x *GetIntegrationConnectURLResponse) Reset() {
 	*x = GetIntegrationConnectURLResponse{}
-	mi := &file_brent_proto_msgTypes[196]
+	mi := &file_brent_proto_msgTypes[197]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17945,7 +18093,7 @@ func (x *GetIntegrationConnectURLResponse) String() string {
 func (*GetIntegrationConnectURLResponse) ProtoMessage() {}
 
 func (x *GetIntegrationConnectURLResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[196]
+	mi := &file_brent_proto_msgTypes[197]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -17958,7 +18106,7 @@ func (x *GetIntegrationConnectURLResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetIntegrationConnectURLResponse.ProtoReflect.Descriptor instead.
 func (*GetIntegrationConnectURLResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{196}
+	return file_brent_proto_rawDescGZIP(), []int{197}
 }
 
 func (x *GetIntegrationConnectURLResponse) GetUrl() string {
@@ -17984,7 +18132,7 @@ type DisconnectIntegrationRequest struct {
 
 func (x *DisconnectIntegrationRequest) Reset() {
 	*x = DisconnectIntegrationRequest{}
-	mi := &file_brent_proto_msgTypes[197]
+	mi := &file_brent_proto_msgTypes[198]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -17996,7 +18144,7 @@ func (x *DisconnectIntegrationRequest) String() string {
 func (*DisconnectIntegrationRequest) ProtoMessage() {}
 
 func (x *DisconnectIntegrationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[197]
+	mi := &file_brent_proto_msgTypes[198]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18009,7 +18157,7 @@ func (x *DisconnectIntegrationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DisconnectIntegrationRequest.ProtoReflect.Descriptor instead.
 func (*DisconnectIntegrationRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{197}
+	return file_brent_proto_rawDescGZIP(), []int{198}
 }
 
 func (x *DisconnectIntegrationRequest) GetProvider() IntegrationProvider {
@@ -18041,7 +18189,7 @@ type DisconnectIntegrationResponse struct {
 
 func (x *DisconnectIntegrationResponse) Reset() {
 	*x = DisconnectIntegrationResponse{}
-	mi := &file_brent_proto_msgTypes[198]
+	mi := &file_brent_proto_msgTypes[199]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18053,7 +18201,7 @@ func (x *DisconnectIntegrationResponse) String() string {
 func (*DisconnectIntegrationResponse) ProtoMessage() {}
 
 func (x *DisconnectIntegrationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[198]
+	mi := &file_brent_proto_msgTypes[199]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18066,7 +18214,7 @@ func (x *DisconnectIntegrationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DisconnectIntegrationResponse.ProtoReflect.Descriptor instead.
 func (*DisconnectIntegrationResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{198}
+	return file_brent_proto_rawDescGZIP(), []int{199}
 }
 
 type ConnectByoHttpMcpRequest struct {
@@ -18087,7 +18235,7 @@ type ConnectByoHttpMcpRequest struct {
 
 func (x *ConnectByoHttpMcpRequest) Reset() {
 	*x = ConnectByoHttpMcpRequest{}
-	mi := &file_brent_proto_msgTypes[199]
+	mi := &file_brent_proto_msgTypes[200]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18099,7 +18247,7 @@ func (x *ConnectByoHttpMcpRequest) String() string {
 func (*ConnectByoHttpMcpRequest) ProtoMessage() {}
 
 func (x *ConnectByoHttpMcpRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[199]
+	mi := &file_brent_proto_msgTypes[200]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18112,7 +18260,7 @@ func (x *ConnectByoHttpMcpRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConnectByoHttpMcpRequest.ProtoReflect.Descriptor instead.
 func (*ConnectByoHttpMcpRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{199}
+	return file_brent_proto_rawDescGZIP(), []int{200}
 }
 
 func (x *ConnectByoHttpMcpRequest) GetEndpoint() string {
@@ -18163,7 +18311,7 @@ type ConnectByoHttpMcpResponse struct {
 
 func (x *ConnectByoHttpMcpResponse) Reset() {
 	*x = ConnectByoHttpMcpResponse{}
-	mi := &file_brent_proto_msgTypes[200]
+	mi := &file_brent_proto_msgTypes[201]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18175,7 +18323,7 @@ func (x *ConnectByoHttpMcpResponse) String() string {
 func (*ConnectByoHttpMcpResponse) ProtoMessage() {}
 
 func (x *ConnectByoHttpMcpResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[200]
+	mi := &file_brent_proto_msgTypes[201]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18188,7 +18336,7 @@ func (x *ConnectByoHttpMcpResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConnectByoHttpMcpResponse.ProtoReflect.Descriptor instead.
 func (*ConnectByoHttpMcpResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{200}
+	return file_brent_proto_rawDescGZIP(), []int{201}
 }
 
 func (x *ConnectByoHttpMcpResponse) GetDiscoveredToolCount() uint32 {
@@ -18213,7 +18361,7 @@ type GetGitLabConnectionRequest struct {
 
 func (x *GetGitLabConnectionRequest) Reset() {
 	*x = GetGitLabConnectionRequest{}
-	mi := &file_brent_proto_msgTypes[201]
+	mi := &file_brent_proto_msgTypes[202]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18225,7 +18373,7 @@ func (x *GetGitLabConnectionRequest) String() string {
 func (*GetGitLabConnectionRequest) ProtoMessage() {}
 
 func (x *GetGitLabConnectionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[201]
+	mi := &file_brent_proto_msgTypes[202]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18238,7 +18386,7 @@ func (x *GetGitLabConnectionRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetGitLabConnectionRequest.ProtoReflect.Descriptor instead.
 func (*GetGitLabConnectionRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{201}
+	return file_brent_proto_rawDescGZIP(), []int{202}
 }
 
 type GetGitLabConnectionResponse struct {
@@ -18253,7 +18401,7 @@ type GetGitLabConnectionResponse struct {
 
 func (x *GetGitLabConnectionResponse) Reset() {
 	*x = GetGitLabConnectionResponse{}
-	mi := &file_brent_proto_msgTypes[202]
+	mi := &file_brent_proto_msgTypes[203]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18265,7 +18413,7 @@ func (x *GetGitLabConnectionResponse) String() string {
 func (*GetGitLabConnectionResponse) ProtoMessage() {}
 
 func (x *GetGitLabConnectionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[202]
+	mi := &file_brent_proto_msgTypes[203]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18278,7 +18426,7 @@ func (x *GetGitLabConnectionResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetGitLabConnectionResponse.ProtoReflect.Descriptor instead.
 func (*GetGitLabConnectionResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{202}
+	return file_brent_proto_rawDescGZIP(), []int{203}
 }
 
 func (x *GetGitLabConnectionResponse) GetConnected() bool {
@@ -18312,7 +18460,7 @@ type ConnectGitLabRequest struct {
 
 func (x *ConnectGitLabRequest) Reset() {
 	*x = ConnectGitLabRequest{}
-	mi := &file_brent_proto_msgTypes[203]
+	mi := &file_brent_proto_msgTypes[204]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18324,7 +18472,7 @@ func (x *ConnectGitLabRequest) String() string {
 func (*ConnectGitLabRequest) ProtoMessage() {}
 
 func (x *ConnectGitLabRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[203]
+	mi := &file_brent_proto_msgTypes[204]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18337,7 +18485,7 @@ func (x *ConnectGitLabRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConnectGitLabRequest.ProtoReflect.Descriptor instead.
 func (*ConnectGitLabRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{203}
+	return file_brent_proto_rawDescGZIP(), []int{204}
 }
 
 func (x *ConnectGitLabRequest) GetBaseUrl() string {
@@ -18365,7 +18513,7 @@ type ConnectGitLabResponse struct {
 
 func (x *ConnectGitLabResponse) Reset() {
 	*x = ConnectGitLabResponse{}
-	mi := &file_brent_proto_msgTypes[204]
+	mi := &file_brent_proto_msgTypes[205]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18377,7 +18525,7 @@ func (x *ConnectGitLabResponse) String() string {
 func (*ConnectGitLabResponse) ProtoMessage() {}
 
 func (x *ConnectGitLabResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[204]
+	mi := &file_brent_proto_msgTypes[205]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18390,7 +18538,7 @@ func (x *ConnectGitLabResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ConnectGitLabResponse.ProtoReflect.Descriptor instead.
 func (*ConnectGitLabResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{204}
+	return file_brent_proto_rawDescGZIP(), []int{205}
 }
 
 func (x *ConnectGitLabResponse) GetWebhookUrl() string {
@@ -18418,7 +18566,7 @@ type SaveGitLabSigningTokenRequest struct {
 
 func (x *SaveGitLabSigningTokenRequest) Reset() {
 	*x = SaveGitLabSigningTokenRequest{}
-	mi := &file_brent_proto_msgTypes[205]
+	mi := &file_brent_proto_msgTypes[206]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18430,7 +18578,7 @@ func (x *SaveGitLabSigningTokenRequest) String() string {
 func (*SaveGitLabSigningTokenRequest) ProtoMessage() {}
 
 func (x *SaveGitLabSigningTokenRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[205]
+	mi := &file_brent_proto_msgTypes[206]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18443,7 +18591,7 @@ func (x *SaveGitLabSigningTokenRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SaveGitLabSigningTokenRequest.ProtoReflect.Descriptor instead.
 func (*SaveGitLabSigningTokenRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{205}
+	return file_brent_proto_rawDescGZIP(), []int{206}
 }
 
 func (x *SaveGitLabSigningTokenRequest) GetSigningToken() string {
@@ -18461,7 +18609,7 @@ type SaveGitLabSigningTokenResponse struct {
 
 func (x *SaveGitLabSigningTokenResponse) Reset() {
 	*x = SaveGitLabSigningTokenResponse{}
-	mi := &file_brent_proto_msgTypes[206]
+	mi := &file_brent_proto_msgTypes[207]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18473,7 +18621,7 @@ func (x *SaveGitLabSigningTokenResponse) String() string {
 func (*SaveGitLabSigningTokenResponse) ProtoMessage() {}
 
 func (x *SaveGitLabSigningTokenResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[206]
+	mi := &file_brent_proto_msgTypes[207]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18486,7 +18634,7 @@ func (x *SaveGitLabSigningTokenResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SaveGitLabSigningTokenResponse.ProtoReflect.Descriptor instead.
 func (*SaveGitLabSigningTokenResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{206}
+	return file_brent_proto_rawDescGZIP(), []int{207}
 }
 
 type GitHubPendingInstall struct {
@@ -18502,7 +18650,7 @@ type GitHubPendingInstall struct {
 
 func (x *GitHubPendingInstall) Reset() {
 	*x = GitHubPendingInstall{}
-	mi := &file_brent_proto_msgTypes[207]
+	mi := &file_brent_proto_msgTypes[208]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18514,7 +18662,7 @@ func (x *GitHubPendingInstall) String() string {
 func (*GitHubPendingInstall) ProtoMessage() {}
 
 func (x *GitHubPendingInstall) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[207]
+	mi := &file_brent_proto_msgTypes[208]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18527,7 +18675,7 @@ func (x *GitHubPendingInstall) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GitHubPendingInstall.ProtoReflect.Descriptor instead.
 func (*GitHubPendingInstall) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{207}
+	return file_brent_proto_rawDescGZIP(), []int{208}
 }
 
 func (x *GitHubPendingInstall) GetOrgName() string {
@@ -18592,7 +18740,7 @@ type IntegrationStatus struct {
 
 func (x *IntegrationStatus) Reset() {
 	*x = IntegrationStatus{}
-	mi := &file_brent_proto_msgTypes[208]
+	mi := &file_brent_proto_msgTypes[209]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18604,7 +18752,7 @@ func (x *IntegrationStatus) String() string {
 func (*IntegrationStatus) ProtoMessage() {}
 
 func (x *IntegrationStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[208]
+	mi := &file_brent_proto_msgTypes[209]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18617,7 +18765,7 @@ func (x *IntegrationStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IntegrationStatus.ProtoReflect.Descriptor instead.
 func (*IntegrationStatus) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{208}
+	return file_brent_proto_rawDescGZIP(), []int{209}
 }
 
 func (x *IntegrationStatus) GetProvider() IntegrationProvider {
@@ -18691,7 +18839,7 @@ type GetWorkspaceIntegrationRolesRequest struct {
 
 func (x *GetWorkspaceIntegrationRolesRequest) Reset() {
 	*x = GetWorkspaceIntegrationRolesRequest{}
-	mi := &file_brent_proto_msgTypes[209]
+	mi := &file_brent_proto_msgTypes[210]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18703,7 +18851,7 @@ func (x *GetWorkspaceIntegrationRolesRequest) String() string {
 func (*GetWorkspaceIntegrationRolesRequest) ProtoMessage() {}
 
 func (x *GetWorkspaceIntegrationRolesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[209]
+	mi := &file_brent_proto_msgTypes[210]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18716,7 +18864,7 @@ func (x *GetWorkspaceIntegrationRolesRequest) ProtoReflect() protoreflect.Messag
 
 // Deprecated: Use GetWorkspaceIntegrationRolesRequest.ProtoReflect.Descriptor instead.
 func (*GetWorkspaceIntegrationRolesRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{209}
+	return file_brent_proto_rawDescGZIP(), []int{210}
 }
 
 type GetWorkspaceIntegrationRolesResponse struct {
@@ -18732,7 +18880,7 @@ type GetWorkspaceIntegrationRolesResponse struct {
 
 func (x *GetWorkspaceIntegrationRolesResponse) Reset() {
 	*x = GetWorkspaceIntegrationRolesResponse{}
-	mi := &file_brent_proto_msgTypes[210]
+	mi := &file_brent_proto_msgTypes[211]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18744,7 +18892,7 @@ func (x *GetWorkspaceIntegrationRolesResponse) String() string {
 func (*GetWorkspaceIntegrationRolesResponse) ProtoMessage() {}
 
 func (x *GetWorkspaceIntegrationRolesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[210]
+	mi := &file_brent_proto_msgTypes[211]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18757,7 +18905,7 @@ func (x *GetWorkspaceIntegrationRolesResponse) ProtoReflect() protoreflect.Messa
 
 // Deprecated: Use GetWorkspaceIntegrationRolesResponse.ProtoReflect.Descriptor instead.
 func (*GetWorkspaceIntegrationRolesResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{210}
+	return file_brent_proto_rawDescGZIP(), []int{211}
 }
 
 func (x *GetWorkspaceIntegrationRolesResponse) GetGitProvider() IntegrationProvider {
@@ -18786,7 +18934,7 @@ type SetWorkspaceIntegrationRolesRequest struct {
 
 func (x *SetWorkspaceIntegrationRolesRequest) Reset() {
 	*x = SetWorkspaceIntegrationRolesRequest{}
-	mi := &file_brent_proto_msgTypes[211]
+	mi := &file_brent_proto_msgTypes[212]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18798,7 +18946,7 @@ func (x *SetWorkspaceIntegrationRolesRequest) String() string {
 func (*SetWorkspaceIntegrationRolesRequest) ProtoMessage() {}
 
 func (x *SetWorkspaceIntegrationRolesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[211]
+	mi := &file_brent_proto_msgTypes[212]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18811,7 +18959,7 @@ func (x *SetWorkspaceIntegrationRolesRequest) ProtoReflect() protoreflect.Messag
 
 // Deprecated: Use SetWorkspaceIntegrationRolesRequest.ProtoReflect.Descriptor instead.
 func (*SetWorkspaceIntegrationRolesRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{211}
+	return file_brent_proto_rawDescGZIP(), []int{212}
 }
 
 func (x *SetWorkspaceIntegrationRolesRequest) GetGitProvider() IntegrationProvider {
@@ -18831,7 +18979,7 @@ type SetWorkspaceIntegrationRolesResponse struct {
 
 func (x *SetWorkspaceIntegrationRolesResponse) Reset() {
 	*x = SetWorkspaceIntegrationRolesResponse{}
-	mi := &file_brent_proto_msgTypes[212]
+	mi := &file_brent_proto_msgTypes[213]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18843,7 +18991,7 @@ func (x *SetWorkspaceIntegrationRolesResponse) String() string {
 func (*SetWorkspaceIntegrationRolesResponse) ProtoMessage() {}
 
 func (x *SetWorkspaceIntegrationRolesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[212]
+	mi := &file_brent_proto_msgTypes[213]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18856,7 +19004,7 @@ func (x *SetWorkspaceIntegrationRolesResponse) ProtoReflect() protoreflect.Messa
 
 // Deprecated: Use SetWorkspaceIntegrationRolesResponse.ProtoReflect.Descriptor instead.
 func (*SetWorkspaceIntegrationRolesResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{212}
+	return file_brent_proto_rawDescGZIP(), []int{213}
 }
 
 func (x *SetWorkspaceIntegrationRolesResponse) GetGitProvider() IntegrationProvider {
@@ -18898,7 +19046,7 @@ type Principal struct {
 
 func (x *Principal) Reset() {
 	*x = Principal{}
-	mi := &file_brent_proto_msgTypes[213]
+	mi := &file_brent_proto_msgTypes[214]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -18910,7 +19058,7 @@ func (x *Principal) String() string {
 func (*Principal) ProtoMessage() {}
 
 func (x *Principal) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[213]
+	mi := &file_brent_proto_msgTypes[214]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -18923,7 +19071,7 @@ func (x *Principal) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Principal.ProtoReflect.Descriptor instead.
 func (*Principal) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{213}
+	return file_brent_proto_rawDescGZIP(), []int{214}
 }
 
 func (x *Principal) GetExternalId() string {
@@ -19009,7 +19157,7 @@ type Workspace struct {
 
 func (x *Workspace) Reset() {
 	*x = Workspace{}
-	mi := &file_brent_proto_msgTypes[214]
+	mi := &file_brent_proto_msgTypes[215]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19021,7 +19169,7 @@ func (x *Workspace) String() string {
 func (*Workspace) ProtoMessage() {}
 
 func (x *Workspace) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[214]
+	mi := &file_brent_proto_msgTypes[215]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19034,7 +19182,7 @@ func (x *Workspace) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Workspace.ProtoReflect.Descriptor instead.
 func (*Workspace) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{214}
+	return file_brent_proto_rawDescGZIP(), []int{215}
 }
 
 func (x *Workspace) GetWorkspaceId() string {
@@ -19102,7 +19250,7 @@ type CreateWorkspaceRequest struct {
 
 func (x *CreateWorkspaceRequest) Reset() {
 	*x = CreateWorkspaceRequest{}
-	mi := &file_brent_proto_msgTypes[215]
+	mi := &file_brent_proto_msgTypes[216]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19114,7 +19262,7 @@ func (x *CreateWorkspaceRequest) String() string {
 func (*CreateWorkspaceRequest) ProtoMessage() {}
 
 func (x *CreateWorkspaceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[215]
+	mi := &file_brent_proto_msgTypes[216]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19127,7 +19275,7 @@ func (x *CreateWorkspaceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateWorkspaceRequest.ProtoReflect.Descriptor instead.
 func (*CreateWorkspaceRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{215}
+	return file_brent_proto_rawDescGZIP(), []int{216}
 }
 
 func (x *CreateWorkspaceRequest) GetDisplayName() string {
@@ -19146,7 +19294,7 @@ type CreateWorkspaceResponse struct {
 
 func (x *CreateWorkspaceResponse) Reset() {
 	*x = CreateWorkspaceResponse{}
-	mi := &file_brent_proto_msgTypes[216]
+	mi := &file_brent_proto_msgTypes[217]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19158,7 +19306,7 @@ func (x *CreateWorkspaceResponse) String() string {
 func (*CreateWorkspaceResponse) ProtoMessage() {}
 
 func (x *CreateWorkspaceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[216]
+	mi := &file_brent_proto_msgTypes[217]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19171,7 +19319,7 @@ func (x *CreateWorkspaceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateWorkspaceResponse.ProtoReflect.Descriptor instead.
 func (*CreateWorkspaceResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{216}
+	return file_brent_proto_rawDescGZIP(), []int{217}
 }
 
 func (x *CreateWorkspaceResponse) GetWorkspace() *Workspace {
@@ -19189,7 +19337,7 @@ type ListMyWorkspacesRequest struct {
 
 func (x *ListMyWorkspacesRequest) Reset() {
 	*x = ListMyWorkspacesRequest{}
-	mi := &file_brent_proto_msgTypes[217]
+	mi := &file_brent_proto_msgTypes[218]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19201,7 +19349,7 @@ func (x *ListMyWorkspacesRequest) String() string {
 func (*ListMyWorkspacesRequest) ProtoMessage() {}
 
 func (x *ListMyWorkspacesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[217]
+	mi := &file_brent_proto_msgTypes[218]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19214,7 +19362,7 @@ func (x *ListMyWorkspacesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListMyWorkspacesRequest.ProtoReflect.Descriptor instead.
 func (*ListMyWorkspacesRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{217}
+	return file_brent_proto_rawDescGZIP(), []int{218}
 }
 
 type ListMyWorkspacesResponse struct {
@@ -19226,7 +19374,7 @@ type ListMyWorkspacesResponse struct {
 
 func (x *ListMyWorkspacesResponse) Reset() {
 	*x = ListMyWorkspacesResponse{}
-	mi := &file_brent_proto_msgTypes[218]
+	mi := &file_brent_proto_msgTypes[219]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19238,7 +19386,7 @@ func (x *ListMyWorkspacesResponse) String() string {
 func (*ListMyWorkspacesResponse) ProtoMessage() {}
 
 func (x *ListMyWorkspacesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[218]
+	mi := &file_brent_proto_msgTypes[219]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19251,7 +19399,7 @@ func (x *ListMyWorkspacesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListMyWorkspacesResponse.ProtoReflect.Descriptor instead.
 func (*ListMyWorkspacesResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{218}
+	return file_brent_proto_rawDescGZIP(), []int{219}
 }
 
 func (x *ListMyWorkspacesResponse) GetWorkspaces() []*Workspace {
@@ -19269,7 +19417,7 @@ type DiscoverLoginRecoveryCandidatesRequest struct {
 
 func (x *DiscoverLoginRecoveryCandidatesRequest) Reset() {
 	*x = DiscoverLoginRecoveryCandidatesRequest{}
-	mi := &file_brent_proto_msgTypes[219]
+	mi := &file_brent_proto_msgTypes[220]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19281,7 +19429,7 @@ func (x *DiscoverLoginRecoveryCandidatesRequest) String() string {
 func (*DiscoverLoginRecoveryCandidatesRequest) ProtoMessage() {}
 
 func (x *DiscoverLoginRecoveryCandidatesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[219]
+	mi := &file_brent_proto_msgTypes[220]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19294,7 +19442,7 @@ func (x *DiscoverLoginRecoveryCandidatesRequest) ProtoReflect() protoreflect.Mes
 
 // Deprecated: Use DiscoverLoginRecoveryCandidatesRequest.ProtoReflect.Descriptor instead.
 func (*DiscoverLoginRecoveryCandidatesRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{219}
+	return file_brent_proto_rawDescGZIP(), []int{220}
 }
 
 // A single recovery candidate. Exposes only the allowlisted Auth0 connection
@@ -19311,7 +19459,7 @@ type LoginRecoveryCandidate struct {
 
 func (x *LoginRecoveryCandidate) Reset() {
 	*x = LoginRecoveryCandidate{}
-	mi := &file_brent_proto_msgTypes[220]
+	mi := &file_brent_proto_msgTypes[221]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19323,7 +19471,7 @@ func (x *LoginRecoveryCandidate) String() string {
 func (*LoginRecoveryCandidate) ProtoMessage() {}
 
 func (x *LoginRecoveryCandidate) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[220]
+	mi := &file_brent_proto_msgTypes[221]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19336,7 +19484,7 @@ func (x *LoginRecoveryCandidate) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use LoginRecoveryCandidate.ProtoReflect.Descriptor instead.
 func (*LoginRecoveryCandidate) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{220}
+	return file_brent_proto_rawDescGZIP(), []int{221}
 }
 
 func (x *LoginRecoveryCandidate) GetProvider() LoginProvider {
@@ -19373,7 +19521,7 @@ type DiscoverLoginRecoveryCandidatesResponse struct {
 
 func (x *DiscoverLoginRecoveryCandidatesResponse) Reset() {
 	*x = DiscoverLoginRecoveryCandidatesResponse{}
-	mi := &file_brent_proto_msgTypes[221]
+	mi := &file_brent_proto_msgTypes[222]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19385,7 +19533,7 @@ func (x *DiscoverLoginRecoveryCandidatesResponse) String() string {
 func (*DiscoverLoginRecoveryCandidatesResponse) ProtoMessage() {}
 
 func (x *DiscoverLoginRecoveryCandidatesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[221]
+	mi := &file_brent_proto_msgTypes[222]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19398,7 +19546,7 @@ func (x *DiscoverLoginRecoveryCandidatesResponse) ProtoReflect() protoreflect.Me
 
 // Deprecated: Use DiscoverLoginRecoveryCandidatesResponse.ProtoReflect.Descriptor instead.
 func (*DiscoverLoginRecoveryCandidatesResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{221}
+	return file_brent_proto_rawDescGZIP(), []int{222}
 }
 
 func (x *DiscoverLoginRecoveryCandidatesResponse) GetArrivingProvider() LoginProvider {
@@ -19428,7 +19576,7 @@ type RenameWorkspaceRequest struct {
 
 func (x *RenameWorkspaceRequest) Reset() {
 	*x = RenameWorkspaceRequest{}
-	mi := &file_brent_proto_msgTypes[222]
+	mi := &file_brent_proto_msgTypes[223]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19440,7 +19588,7 @@ func (x *RenameWorkspaceRequest) String() string {
 func (*RenameWorkspaceRequest) ProtoMessage() {}
 
 func (x *RenameWorkspaceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[222]
+	mi := &file_brent_proto_msgTypes[223]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19453,7 +19601,7 @@ func (x *RenameWorkspaceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RenameWorkspaceRequest.ProtoReflect.Descriptor instead.
 func (*RenameWorkspaceRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{222}
+	return file_brent_proto_rawDescGZIP(), []int{223}
 }
 
 func (x *RenameWorkspaceRequest) GetDisplayName() string {
@@ -19472,7 +19620,7 @@ type RenameWorkspaceResponse struct {
 
 func (x *RenameWorkspaceResponse) Reset() {
 	*x = RenameWorkspaceResponse{}
-	mi := &file_brent_proto_msgTypes[223]
+	mi := &file_brent_proto_msgTypes[224]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19484,7 +19632,7 @@ func (x *RenameWorkspaceResponse) String() string {
 func (*RenameWorkspaceResponse) ProtoMessage() {}
 
 func (x *RenameWorkspaceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[223]
+	mi := &file_brent_proto_msgTypes[224]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19497,7 +19645,7 @@ func (x *RenameWorkspaceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RenameWorkspaceResponse.ProtoReflect.Descriptor instead.
 func (*RenameWorkspaceResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{223}
+	return file_brent_proto_rawDescGZIP(), []int{224}
 }
 
 func (x *RenameWorkspaceResponse) GetWorkspace() *Workspace {
@@ -19518,7 +19666,7 @@ type DeleteWorkspaceRequest struct {
 
 func (x *DeleteWorkspaceRequest) Reset() {
 	*x = DeleteWorkspaceRequest{}
-	mi := &file_brent_proto_msgTypes[224]
+	mi := &file_brent_proto_msgTypes[225]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19530,7 +19678,7 @@ func (x *DeleteWorkspaceRequest) String() string {
 func (*DeleteWorkspaceRequest) ProtoMessage() {}
 
 func (x *DeleteWorkspaceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[224]
+	mi := &file_brent_proto_msgTypes[225]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19543,7 +19691,7 @@ func (x *DeleteWorkspaceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteWorkspaceRequest.ProtoReflect.Descriptor instead.
 func (*DeleteWorkspaceRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{224}
+	return file_brent_proto_rawDescGZIP(), []int{225}
 }
 
 func (x *DeleteWorkspaceRequest) GetWorkspaceId() string {
@@ -19561,7 +19709,7 @@ type DeleteWorkspaceResponse struct {
 
 func (x *DeleteWorkspaceResponse) Reset() {
 	*x = DeleteWorkspaceResponse{}
-	mi := &file_brent_proto_msgTypes[225]
+	mi := &file_brent_proto_msgTypes[226]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19573,7 +19721,7 @@ func (x *DeleteWorkspaceResponse) String() string {
 func (*DeleteWorkspaceResponse) ProtoMessage() {}
 
 func (x *DeleteWorkspaceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[225]
+	mi := &file_brent_proto_msgTypes[226]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19586,7 +19734,7 @@ func (x *DeleteWorkspaceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteWorkspaceResponse.ProtoReflect.Descriptor instead.
 func (*DeleteWorkspaceResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{225}
+	return file_brent_proto_rawDescGZIP(), []int{226}
 }
 
 type ListJoinableWorkspacesRequest struct {
@@ -19597,7 +19745,7 @@ type ListJoinableWorkspacesRequest struct {
 
 func (x *ListJoinableWorkspacesRequest) Reset() {
 	*x = ListJoinableWorkspacesRequest{}
-	mi := &file_brent_proto_msgTypes[226]
+	mi := &file_brent_proto_msgTypes[227]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19609,7 +19757,7 @@ func (x *ListJoinableWorkspacesRequest) String() string {
 func (*ListJoinableWorkspacesRequest) ProtoMessage() {}
 
 func (x *ListJoinableWorkspacesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[226]
+	mi := &file_brent_proto_msgTypes[227]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19622,7 +19770,7 @@ func (x *ListJoinableWorkspacesRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListJoinableWorkspacesRequest.ProtoReflect.Descriptor instead.
 func (*ListJoinableWorkspacesRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{226}
+	return file_brent_proto_rawDescGZIP(), []int{227}
 }
 
 type ListJoinableWorkspacesResponse struct {
@@ -19634,7 +19782,7 @@ type ListJoinableWorkspacesResponse struct {
 
 func (x *ListJoinableWorkspacesResponse) Reset() {
 	*x = ListJoinableWorkspacesResponse{}
-	mi := &file_brent_proto_msgTypes[227]
+	mi := &file_brent_proto_msgTypes[228]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19646,7 +19794,7 @@ func (x *ListJoinableWorkspacesResponse) String() string {
 func (*ListJoinableWorkspacesResponse) ProtoMessage() {}
 
 func (x *ListJoinableWorkspacesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[227]
+	mi := &file_brent_proto_msgTypes[228]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19659,7 +19807,7 @@ func (x *ListJoinableWorkspacesResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListJoinableWorkspacesResponse.ProtoReflect.Descriptor instead.
 func (*ListJoinableWorkspacesResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{227}
+	return file_brent_proto_rawDescGZIP(), []int{228}
 }
 
 func (x *ListJoinableWorkspacesResponse) GetWorkspaces() []*JoinableWorkspace {
@@ -19687,7 +19835,7 @@ type JoinableWorkspace struct {
 
 func (x *JoinableWorkspace) Reset() {
 	*x = JoinableWorkspace{}
-	mi := &file_brent_proto_msgTypes[228]
+	mi := &file_brent_proto_msgTypes[229]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19699,7 +19847,7 @@ func (x *JoinableWorkspace) String() string {
 func (*JoinableWorkspace) ProtoMessage() {}
 
 func (x *JoinableWorkspace) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[228]
+	mi := &file_brent_proto_msgTypes[229]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19712,7 +19860,7 @@ func (x *JoinableWorkspace) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JoinableWorkspace.ProtoReflect.Descriptor instead.
 func (*JoinableWorkspace) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{228}
+	return file_brent_proto_rawDescGZIP(), []int{229}
 }
 
 func (x *JoinableWorkspace) GetWorkspaceId() string {
@@ -19789,7 +19937,7 @@ type JoinableWorkspaceMember struct {
 
 func (x *JoinableWorkspaceMember) Reset() {
 	*x = JoinableWorkspaceMember{}
-	mi := &file_brent_proto_msgTypes[229]
+	mi := &file_brent_proto_msgTypes[230]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19801,7 +19949,7 @@ func (x *JoinableWorkspaceMember) String() string {
 func (*JoinableWorkspaceMember) ProtoMessage() {}
 
 func (x *JoinableWorkspaceMember) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[229]
+	mi := &file_brent_proto_msgTypes[230]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19814,7 +19962,7 @@ func (x *JoinableWorkspaceMember) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JoinableWorkspaceMember.ProtoReflect.Descriptor instead.
 func (*JoinableWorkspaceMember) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{229}
+	return file_brent_proto_rawDescGZIP(), []int{230}
 }
 
 func (x *JoinableWorkspaceMember) GetDisplayName() string {
@@ -19840,7 +19988,7 @@ type JoinWorkspaceRequest struct {
 
 func (x *JoinWorkspaceRequest) Reset() {
 	*x = JoinWorkspaceRequest{}
-	mi := &file_brent_proto_msgTypes[230]
+	mi := &file_brent_proto_msgTypes[231]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19852,7 +20000,7 @@ func (x *JoinWorkspaceRequest) String() string {
 func (*JoinWorkspaceRequest) ProtoMessage() {}
 
 func (x *JoinWorkspaceRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[230]
+	mi := &file_brent_proto_msgTypes[231]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19865,7 +20013,7 @@ func (x *JoinWorkspaceRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JoinWorkspaceRequest.ProtoReflect.Descriptor instead.
 func (*JoinWorkspaceRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{230}
+	return file_brent_proto_rawDescGZIP(), []int{231}
 }
 
 func (x *JoinWorkspaceRequest) GetWorkspaceId() string {
@@ -19884,7 +20032,7 @@ type JoinWorkspaceResponse struct {
 
 func (x *JoinWorkspaceResponse) Reset() {
 	*x = JoinWorkspaceResponse{}
-	mi := &file_brent_proto_msgTypes[231]
+	mi := &file_brent_proto_msgTypes[232]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19896,7 +20044,7 @@ func (x *JoinWorkspaceResponse) String() string {
 func (*JoinWorkspaceResponse) ProtoMessage() {}
 
 func (x *JoinWorkspaceResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[231]
+	mi := &file_brent_proto_msgTypes[232]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19909,7 +20057,7 @@ func (x *JoinWorkspaceResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use JoinWorkspaceResponse.ProtoReflect.Descriptor instead.
 func (*JoinWorkspaceResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{231}
+	return file_brent_proto_rawDescGZIP(), []int{232}
 }
 
 func (x *JoinWorkspaceResponse) GetWorkspace() *Workspace {
@@ -19938,7 +20086,7 @@ type ApprovedEmailDomain struct {
 
 func (x *ApprovedEmailDomain) Reset() {
 	*x = ApprovedEmailDomain{}
-	mi := &file_brent_proto_msgTypes[232]
+	mi := &file_brent_proto_msgTypes[233]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -19950,7 +20098,7 @@ func (x *ApprovedEmailDomain) String() string {
 func (*ApprovedEmailDomain) ProtoMessage() {}
 
 func (x *ApprovedEmailDomain) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[232]
+	mi := &file_brent_proto_msgTypes[233]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -19963,7 +20111,7 @@ func (x *ApprovedEmailDomain) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ApprovedEmailDomain.ProtoReflect.Descriptor instead.
 func (*ApprovedEmailDomain) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{232}
+	return file_brent_proto_rawDescGZIP(), []int{233}
 }
 
 func (x *ApprovedEmailDomain) GetId() string {
@@ -20016,7 +20164,7 @@ type ListApprovedEmailDomainsRequest struct {
 
 func (x *ListApprovedEmailDomainsRequest) Reset() {
 	*x = ListApprovedEmailDomainsRequest{}
-	mi := &file_brent_proto_msgTypes[233]
+	mi := &file_brent_proto_msgTypes[234]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20028,7 +20176,7 @@ func (x *ListApprovedEmailDomainsRequest) String() string {
 func (*ListApprovedEmailDomainsRequest) ProtoMessage() {}
 
 func (x *ListApprovedEmailDomainsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[233]
+	mi := &file_brent_proto_msgTypes[234]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20041,7 +20189,7 @@ func (x *ListApprovedEmailDomainsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListApprovedEmailDomainsRequest.ProtoReflect.Descriptor instead.
 func (*ListApprovedEmailDomainsRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{233}
+	return file_brent_proto_rawDescGZIP(), []int{234}
 }
 
 type ListApprovedEmailDomainsResponse struct {
@@ -20053,7 +20201,7 @@ type ListApprovedEmailDomainsResponse struct {
 
 func (x *ListApprovedEmailDomainsResponse) Reset() {
 	*x = ListApprovedEmailDomainsResponse{}
-	mi := &file_brent_proto_msgTypes[234]
+	mi := &file_brent_proto_msgTypes[235]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20065,7 +20213,7 @@ func (x *ListApprovedEmailDomainsResponse) String() string {
 func (*ListApprovedEmailDomainsResponse) ProtoMessage() {}
 
 func (x *ListApprovedEmailDomainsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[234]
+	mi := &file_brent_proto_msgTypes[235]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20078,7 +20226,7 @@ func (x *ListApprovedEmailDomainsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListApprovedEmailDomainsResponse.ProtoReflect.Descriptor instead.
 func (*ListApprovedEmailDomainsResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{234}
+	return file_brent_proto_rawDescGZIP(), []int{235}
 }
 
 func (x *ListApprovedEmailDomainsResponse) GetDomains() []*ApprovedEmailDomain {
@@ -20102,7 +20250,7 @@ type AddApprovedEmailDomainRequest struct {
 
 func (x *AddApprovedEmailDomainRequest) Reset() {
 	*x = AddApprovedEmailDomainRequest{}
-	mi := &file_brent_proto_msgTypes[235]
+	mi := &file_brent_proto_msgTypes[236]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20114,7 +20262,7 @@ func (x *AddApprovedEmailDomainRequest) String() string {
 func (*AddApprovedEmailDomainRequest) ProtoMessage() {}
 
 func (x *AddApprovedEmailDomainRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[235]
+	mi := &file_brent_proto_msgTypes[236]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20127,7 +20275,7 @@ func (x *AddApprovedEmailDomainRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddApprovedEmailDomainRequest.ProtoReflect.Descriptor instead.
 func (*AddApprovedEmailDomainRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{235}
+	return file_brent_proto_rawDescGZIP(), []int{236}
 }
 
 func (x *AddApprovedEmailDomainRequest) GetDomain() string {
@@ -20153,7 +20301,7 @@ type AddApprovedEmailDomainResponse struct {
 
 func (x *AddApprovedEmailDomainResponse) Reset() {
 	*x = AddApprovedEmailDomainResponse{}
-	mi := &file_brent_proto_msgTypes[236]
+	mi := &file_brent_proto_msgTypes[237]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20165,7 +20313,7 @@ func (x *AddApprovedEmailDomainResponse) String() string {
 func (*AddApprovedEmailDomainResponse) ProtoMessage() {}
 
 func (x *AddApprovedEmailDomainResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[236]
+	mi := &file_brent_proto_msgTypes[237]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20178,7 +20326,7 @@ func (x *AddApprovedEmailDomainResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddApprovedEmailDomainResponse.ProtoReflect.Descriptor instead.
 func (*AddApprovedEmailDomainResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{236}
+	return file_brent_proto_rawDescGZIP(), []int{237}
 }
 
 func (x *AddApprovedEmailDomainResponse) GetDomain() *ApprovedEmailDomain {
@@ -20200,7 +20348,7 @@ type VerifyApprovedEmailDomainRequest struct {
 
 func (x *VerifyApprovedEmailDomainRequest) Reset() {
 	*x = VerifyApprovedEmailDomainRequest{}
-	mi := &file_brent_proto_msgTypes[237]
+	mi := &file_brent_proto_msgTypes[238]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20212,7 +20360,7 @@ func (x *VerifyApprovedEmailDomainRequest) String() string {
 func (*VerifyApprovedEmailDomainRequest) ProtoMessage() {}
 
 func (x *VerifyApprovedEmailDomainRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[237]
+	mi := &file_brent_proto_msgTypes[238]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20225,7 +20373,7 @@ func (x *VerifyApprovedEmailDomainRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use VerifyApprovedEmailDomainRequest.ProtoReflect.Descriptor instead.
 func (*VerifyApprovedEmailDomainRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{237}
+	return file_brent_proto_rawDescGZIP(), []int{238}
 }
 
 func (x *VerifyApprovedEmailDomainRequest) GetId() string {
@@ -20251,7 +20399,7 @@ type VerifyApprovedEmailDomainResponse struct {
 
 func (x *VerifyApprovedEmailDomainResponse) Reset() {
 	*x = VerifyApprovedEmailDomainResponse{}
-	mi := &file_brent_proto_msgTypes[238]
+	mi := &file_brent_proto_msgTypes[239]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20263,7 +20411,7 @@ func (x *VerifyApprovedEmailDomainResponse) String() string {
 func (*VerifyApprovedEmailDomainResponse) ProtoMessage() {}
 
 func (x *VerifyApprovedEmailDomainResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[238]
+	mi := &file_brent_proto_msgTypes[239]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20276,7 +20424,7 @@ func (x *VerifyApprovedEmailDomainResponse) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use VerifyApprovedEmailDomainResponse.ProtoReflect.Descriptor instead.
 func (*VerifyApprovedEmailDomainResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{238}
+	return file_brent_proto_rawDescGZIP(), []int{239}
 }
 
 func (x *VerifyApprovedEmailDomainResponse) GetDomain() *ApprovedEmailDomain {
@@ -20296,7 +20444,7 @@ type ResendApprovedEmailDomainCodeRequest struct {
 
 func (x *ResendApprovedEmailDomainCodeRequest) Reset() {
 	*x = ResendApprovedEmailDomainCodeRequest{}
-	mi := &file_brent_proto_msgTypes[239]
+	mi := &file_brent_proto_msgTypes[240]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20308,7 +20456,7 @@ func (x *ResendApprovedEmailDomainCodeRequest) String() string {
 func (*ResendApprovedEmailDomainCodeRequest) ProtoMessage() {}
 
 func (x *ResendApprovedEmailDomainCodeRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[239]
+	mi := &file_brent_proto_msgTypes[240]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20321,7 +20469,7 @@ func (x *ResendApprovedEmailDomainCodeRequest) ProtoReflect() protoreflect.Messa
 
 // Deprecated: Use ResendApprovedEmailDomainCodeRequest.ProtoReflect.Descriptor instead.
 func (*ResendApprovedEmailDomainCodeRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{239}
+	return file_brent_proto_rawDescGZIP(), []int{240}
 }
 
 func (x *ResendApprovedEmailDomainCodeRequest) GetId() string {
@@ -20339,7 +20487,7 @@ type ResendApprovedEmailDomainCodeResponse struct {
 
 func (x *ResendApprovedEmailDomainCodeResponse) Reset() {
 	*x = ResendApprovedEmailDomainCodeResponse{}
-	mi := &file_brent_proto_msgTypes[240]
+	mi := &file_brent_proto_msgTypes[241]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20351,7 +20499,7 @@ func (x *ResendApprovedEmailDomainCodeResponse) String() string {
 func (*ResendApprovedEmailDomainCodeResponse) ProtoMessage() {}
 
 func (x *ResendApprovedEmailDomainCodeResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[240]
+	mi := &file_brent_proto_msgTypes[241]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20364,7 +20512,7 @@ func (x *ResendApprovedEmailDomainCodeResponse) ProtoReflect() protoreflect.Mess
 
 // Deprecated: Use ResendApprovedEmailDomainCodeResponse.ProtoReflect.Descriptor instead.
 func (*ResendApprovedEmailDomainCodeResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{240}
+	return file_brent_proto_rawDescGZIP(), []int{241}
 }
 
 // ResendVerificationEmailRequest carries no fields: the recipient identity is
@@ -20377,7 +20525,7 @@ type ResendVerificationEmailRequest struct {
 
 func (x *ResendVerificationEmailRequest) Reset() {
 	*x = ResendVerificationEmailRequest{}
-	mi := &file_brent_proto_msgTypes[241]
+	mi := &file_brent_proto_msgTypes[242]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20389,7 +20537,7 @@ func (x *ResendVerificationEmailRequest) String() string {
 func (*ResendVerificationEmailRequest) ProtoMessage() {}
 
 func (x *ResendVerificationEmailRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[241]
+	mi := &file_brent_proto_msgTypes[242]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20402,7 +20550,7 @@ func (x *ResendVerificationEmailRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResendVerificationEmailRequest.ProtoReflect.Descriptor instead.
 func (*ResendVerificationEmailRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{241}
+	return file_brent_proto_rawDescGZIP(), []int{242}
 }
 
 type ResendVerificationEmailResponse struct {
@@ -20413,7 +20561,7 @@ type ResendVerificationEmailResponse struct {
 
 func (x *ResendVerificationEmailResponse) Reset() {
 	*x = ResendVerificationEmailResponse{}
-	mi := &file_brent_proto_msgTypes[242]
+	mi := &file_brent_proto_msgTypes[243]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20425,7 +20573,7 @@ func (x *ResendVerificationEmailResponse) String() string {
 func (*ResendVerificationEmailResponse) ProtoMessage() {}
 
 func (x *ResendVerificationEmailResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[242]
+	mi := &file_brent_proto_msgTypes[243]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20438,7 +20586,7 @@ func (x *ResendVerificationEmailResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResendVerificationEmailResponse.ProtoReflect.Descriptor instead.
 func (*ResendVerificationEmailResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{242}
+	return file_brent_proto_rawDescGZIP(), []int{243}
 }
 
 type DeleteApprovedEmailDomainRequest struct {
@@ -20451,7 +20599,7 @@ type DeleteApprovedEmailDomainRequest struct {
 
 func (x *DeleteApprovedEmailDomainRequest) Reset() {
 	*x = DeleteApprovedEmailDomainRequest{}
-	mi := &file_brent_proto_msgTypes[243]
+	mi := &file_brent_proto_msgTypes[244]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20463,7 +20611,7 @@ func (x *DeleteApprovedEmailDomainRequest) String() string {
 func (*DeleteApprovedEmailDomainRequest) ProtoMessage() {}
 
 func (x *DeleteApprovedEmailDomainRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[243]
+	mi := &file_brent_proto_msgTypes[244]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20476,7 +20624,7 @@ func (x *DeleteApprovedEmailDomainRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteApprovedEmailDomainRequest.ProtoReflect.Descriptor instead.
 func (*DeleteApprovedEmailDomainRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{243}
+	return file_brent_proto_rawDescGZIP(), []int{244}
 }
 
 func (x *DeleteApprovedEmailDomainRequest) GetId() string {
@@ -20494,7 +20642,7 @@ type DeleteApprovedEmailDomainResponse struct {
 
 func (x *DeleteApprovedEmailDomainResponse) Reset() {
 	*x = DeleteApprovedEmailDomainResponse{}
-	mi := &file_brent_proto_msgTypes[244]
+	mi := &file_brent_proto_msgTypes[245]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20506,7 +20654,7 @@ func (x *DeleteApprovedEmailDomainResponse) String() string {
 func (*DeleteApprovedEmailDomainResponse) ProtoMessage() {}
 
 func (x *DeleteApprovedEmailDomainResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[244]
+	mi := &file_brent_proto_msgTypes[245]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20519,7 +20667,7 @@ func (x *DeleteApprovedEmailDomainResponse) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use DeleteApprovedEmailDomainResponse.ProtoReflect.Descriptor instead.
 func (*DeleteApprovedEmailDomainResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{244}
+	return file_brent_proto_rawDescGZIP(), []int{245}
 }
 
 // WorkspaceLLMCredentialStatus is the metadata-only view of a stored workspace
@@ -20543,7 +20691,7 @@ type WorkspaceLLMCredentialStatus struct {
 
 func (x *WorkspaceLLMCredentialStatus) Reset() {
 	*x = WorkspaceLLMCredentialStatus{}
-	mi := &file_brent_proto_msgTypes[245]
+	mi := &file_brent_proto_msgTypes[246]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20555,7 +20703,7 @@ func (x *WorkspaceLLMCredentialStatus) String() string {
 func (*WorkspaceLLMCredentialStatus) ProtoMessage() {}
 
 func (x *WorkspaceLLMCredentialStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[245]
+	mi := &file_brent_proto_msgTypes[246]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20568,7 +20716,7 @@ func (x *WorkspaceLLMCredentialStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkspaceLLMCredentialStatus.ProtoReflect.Descriptor instead.
 func (*WorkspaceLLMCredentialStatus) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{245}
+	return file_brent_proto_rawDescGZIP(), []int{246}
 }
 
 func (x *WorkspaceLLMCredentialStatus) GetProvider() string {
@@ -20616,7 +20764,7 @@ type GetWorkspaceLLMCredentialStatusRequest struct {
 
 func (x *GetWorkspaceLLMCredentialStatusRequest) Reset() {
 	*x = GetWorkspaceLLMCredentialStatusRequest{}
-	mi := &file_brent_proto_msgTypes[246]
+	mi := &file_brent_proto_msgTypes[247]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20628,7 +20776,7 @@ func (x *GetWorkspaceLLMCredentialStatusRequest) String() string {
 func (*GetWorkspaceLLMCredentialStatusRequest) ProtoMessage() {}
 
 func (x *GetWorkspaceLLMCredentialStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[246]
+	mi := &file_brent_proto_msgTypes[247]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20641,7 +20789,7 @@ func (x *GetWorkspaceLLMCredentialStatusRequest) ProtoReflect() protoreflect.Mes
 
 // Deprecated: Use GetWorkspaceLLMCredentialStatusRequest.ProtoReflect.Descriptor instead.
 func (*GetWorkspaceLLMCredentialStatusRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{246}
+	return file_brent_proto_rawDescGZIP(), []int{247}
 }
 
 func (x *GetWorkspaceLLMCredentialStatusRequest) GetProvider() string {
@@ -20660,7 +20808,7 @@ type GetWorkspaceLLMCredentialStatusResponse struct {
 
 func (x *GetWorkspaceLLMCredentialStatusResponse) Reset() {
 	*x = GetWorkspaceLLMCredentialStatusResponse{}
-	mi := &file_brent_proto_msgTypes[247]
+	mi := &file_brent_proto_msgTypes[248]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20672,7 +20820,7 @@ func (x *GetWorkspaceLLMCredentialStatusResponse) String() string {
 func (*GetWorkspaceLLMCredentialStatusResponse) ProtoMessage() {}
 
 func (x *GetWorkspaceLLMCredentialStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[247]
+	mi := &file_brent_proto_msgTypes[248]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20685,7 +20833,7 @@ func (x *GetWorkspaceLLMCredentialStatusResponse) ProtoReflect() protoreflect.Me
 
 // Deprecated: Use GetWorkspaceLLMCredentialStatusResponse.ProtoReflect.Descriptor instead.
 func (*GetWorkspaceLLMCredentialStatusResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{247}
+	return file_brent_proto_rawDescGZIP(), []int{248}
 }
 
 func (x *GetWorkspaceLLMCredentialStatusResponse) GetStatus() *WorkspaceLLMCredentialStatus {
@@ -20707,7 +20855,7 @@ type SetWorkspaceLLMCredentialRequest struct {
 
 func (x *SetWorkspaceLLMCredentialRequest) Reset() {
 	*x = SetWorkspaceLLMCredentialRequest{}
-	mi := &file_brent_proto_msgTypes[248]
+	mi := &file_brent_proto_msgTypes[249]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20719,7 +20867,7 @@ func (x *SetWorkspaceLLMCredentialRequest) String() string {
 func (*SetWorkspaceLLMCredentialRequest) ProtoMessage() {}
 
 func (x *SetWorkspaceLLMCredentialRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[248]
+	mi := &file_brent_proto_msgTypes[249]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20732,7 +20880,7 @@ func (x *SetWorkspaceLLMCredentialRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetWorkspaceLLMCredentialRequest.ProtoReflect.Descriptor instead.
 func (*SetWorkspaceLLMCredentialRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{248}
+	return file_brent_proto_rawDescGZIP(), []int{249}
 }
 
 func (x *SetWorkspaceLLMCredentialRequest) GetProvider() string {
@@ -20763,7 +20911,7 @@ type SetWorkspaceLLMCredentialResponse struct {
 
 func (x *SetWorkspaceLLMCredentialResponse) Reset() {
 	*x = SetWorkspaceLLMCredentialResponse{}
-	mi := &file_brent_proto_msgTypes[249]
+	mi := &file_brent_proto_msgTypes[250]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20775,7 +20923,7 @@ func (x *SetWorkspaceLLMCredentialResponse) String() string {
 func (*SetWorkspaceLLMCredentialResponse) ProtoMessage() {}
 
 func (x *SetWorkspaceLLMCredentialResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[249]
+	mi := &file_brent_proto_msgTypes[250]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20788,7 +20936,7 @@ func (x *SetWorkspaceLLMCredentialResponse) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use SetWorkspaceLLMCredentialResponse.ProtoReflect.Descriptor instead.
 func (*SetWorkspaceLLMCredentialResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{249}
+	return file_brent_proto_rawDescGZIP(), []int{250}
 }
 
 func (x *SetWorkspaceLLMCredentialResponse) GetStatus() *WorkspaceLLMCredentialStatus {
@@ -20815,7 +20963,7 @@ type DeleteWorkspaceLLMCredentialRequest struct {
 
 func (x *DeleteWorkspaceLLMCredentialRequest) Reset() {
 	*x = DeleteWorkspaceLLMCredentialRequest{}
-	mi := &file_brent_proto_msgTypes[250]
+	mi := &file_brent_proto_msgTypes[251]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20827,7 +20975,7 @@ func (x *DeleteWorkspaceLLMCredentialRequest) String() string {
 func (*DeleteWorkspaceLLMCredentialRequest) ProtoMessage() {}
 
 func (x *DeleteWorkspaceLLMCredentialRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[250]
+	mi := &file_brent_proto_msgTypes[251]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20840,7 +20988,7 @@ func (x *DeleteWorkspaceLLMCredentialRequest) ProtoReflect() protoreflect.Messag
 
 // Deprecated: Use DeleteWorkspaceLLMCredentialRequest.ProtoReflect.Descriptor instead.
 func (*DeleteWorkspaceLLMCredentialRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{250}
+	return file_brent_proto_rawDescGZIP(), []int{251}
 }
 
 func (x *DeleteWorkspaceLLMCredentialRequest) GetProvider() string {
@@ -20858,7 +21006,7 @@ type DeleteWorkspaceLLMCredentialResponse struct {
 
 func (x *DeleteWorkspaceLLMCredentialResponse) Reset() {
 	*x = DeleteWorkspaceLLMCredentialResponse{}
-	mi := &file_brent_proto_msgTypes[251]
+	mi := &file_brent_proto_msgTypes[252]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20870,7 +21018,7 @@ func (x *DeleteWorkspaceLLMCredentialResponse) String() string {
 func (*DeleteWorkspaceLLMCredentialResponse) ProtoMessage() {}
 
 func (x *DeleteWorkspaceLLMCredentialResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[251]
+	mi := &file_brent_proto_msgTypes[252]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20883,7 +21031,7 @@ func (x *DeleteWorkspaceLLMCredentialResponse) ProtoReflect() protoreflect.Messa
 
 // Deprecated: Use DeleteWorkspaceLLMCredentialResponse.ProtoReflect.Descriptor instead.
 func (*DeleteWorkspaceLLMCredentialResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{251}
+	return file_brent_proto_rawDescGZIP(), []int{252}
 }
 
 type MyCursorCredentialStatus struct {
@@ -20900,7 +21048,7 @@ type MyCursorCredentialStatus struct {
 
 func (x *MyCursorCredentialStatus) Reset() {
 	*x = MyCursorCredentialStatus{}
-	mi := &file_brent_proto_msgTypes[252]
+	mi := &file_brent_proto_msgTypes[253]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20912,7 +21060,7 @@ func (x *MyCursorCredentialStatus) String() string {
 func (*MyCursorCredentialStatus) ProtoMessage() {}
 
 func (x *MyCursorCredentialStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[252]
+	mi := &file_brent_proto_msgTypes[253]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20925,7 +21073,7 @@ func (x *MyCursorCredentialStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use MyCursorCredentialStatus.ProtoReflect.Descriptor instead.
 func (*MyCursorCredentialStatus) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{252}
+	return file_brent_proto_rawDescGZIP(), []int{253}
 }
 
 func (x *MyCursorCredentialStatus) GetConnected() bool {
@@ -20957,7 +21105,7 @@ type GetMyCursorCredentialStatusRequest struct {
 
 func (x *GetMyCursorCredentialStatusRequest) Reset() {
 	*x = GetMyCursorCredentialStatusRequest{}
-	mi := &file_brent_proto_msgTypes[253]
+	mi := &file_brent_proto_msgTypes[254]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -20969,7 +21117,7 @@ func (x *GetMyCursorCredentialStatusRequest) String() string {
 func (*GetMyCursorCredentialStatusRequest) ProtoMessage() {}
 
 func (x *GetMyCursorCredentialStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[253]
+	mi := &file_brent_proto_msgTypes[254]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -20982,7 +21130,7 @@ func (x *GetMyCursorCredentialStatusRequest) ProtoReflect() protoreflect.Message
 
 // Deprecated: Use GetMyCursorCredentialStatusRequest.ProtoReflect.Descriptor instead.
 func (*GetMyCursorCredentialStatusRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{253}
+	return file_brent_proto_rawDescGZIP(), []int{254}
 }
 
 type GetMyCursorCredentialStatusResponse struct {
@@ -20994,7 +21142,7 @@ type GetMyCursorCredentialStatusResponse struct {
 
 func (x *GetMyCursorCredentialStatusResponse) Reset() {
 	*x = GetMyCursorCredentialStatusResponse{}
-	mi := &file_brent_proto_msgTypes[254]
+	mi := &file_brent_proto_msgTypes[255]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21006,7 +21154,7 @@ func (x *GetMyCursorCredentialStatusResponse) String() string {
 func (*GetMyCursorCredentialStatusResponse) ProtoMessage() {}
 
 func (x *GetMyCursorCredentialStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[254]
+	mi := &file_brent_proto_msgTypes[255]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21019,7 +21167,7 @@ func (x *GetMyCursorCredentialStatusResponse) ProtoReflect() protoreflect.Messag
 
 // Deprecated: Use GetMyCursorCredentialStatusResponse.ProtoReflect.Descriptor instead.
 func (*GetMyCursorCredentialStatusResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{254}
+	return file_brent_proto_rawDescGZIP(), []int{255}
 }
 
 func (x *GetMyCursorCredentialStatusResponse) GetStatus() *MyCursorCredentialStatus {
@@ -21039,7 +21187,7 @@ type SetMyCursorCredentialRequest struct {
 
 func (x *SetMyCursorCredentialRequest) Reset() {
 	*x = SetMyCursorCredentialRequest{}
-	mi := &file_brent_proto_msgTypes[255]
+	mi := &file_brent_proto_msgTypes[256]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21051,7 +21199,7 @@ func (x *SetMyCursorCredentialRequest) String() string {
 func (*SetMyCursorCredentialRequest) ProtoMessage() {}
 
 func (x *SetMyCursorCredentialRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[255]
+	mi := &file_brent_proto_msgTypes[256]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21064,7 +21212,7 @@ func (x *SetMyCursorCredentialRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetMyCursorCredentialRequest.ProtoReflect.Descriptor instead.
 func (*SetMyCursorCredentialRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{255}
+	return file_brent_proto_rawDescGZIP(), []int{256}
 }
 
 func (x *SetMyCursorCredentialRequest) GetSecret() string {
@@ -21083,7 +21231,7 @@ type SetMyCursorCredentialResponse struct {
 
 func (x *SetMyCursorCredentialResponse) Reset() {
 	*x = SetMyCursorCredentialResponse{}
-	mi := &file_brent_proto_msgTypes[256]
+	mi := &file_brent_proto_msgTypes[257]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21095,7 +21243,7 @@ func (x *SetMyCursorCredentialResponse) String() string {
 func (*SetMyCursorCredentialResponse) ProtoMessage() {}
 
 func (x *SetMyCursorCredentialResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[256]
+	mi := &file_brent_proto_msgTypes[257]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21108,7 +21256,7 @@ func (x *SetMyCursorCredentialResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SetMyCursorCredentialResponse.ProtoReflect.Descriptor instead.
 func (*SetMyCursorCredentialResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{256}
+	return file_brent_proto_rawDescGZIP(), []int{257}
 }
 
 func (x *SetMyCursorCredentialResponse) GetStatus() *MyCursorCredentialStatus {
@@ -21126,7 +21274,7 @@ type DeleteMyCursorCredentialRequest struct {
 
 func (x *DeleteMyCursorCredentialRequest) Reset() {
 	*x = DeleteMyCursorCredentialRequest{}
-	mi := &file_brent_proto_msgTypes[257]
+	mi := &file_brent_proto_msgTypes[258]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21138,7 +21286,7 @@ func (x *DeleteMyCursorCredentialRequest) String() string {
 func (*DeleteMyCursorCredentialRequest) ProtoMessage() {}
 
 func (x *DeleteMyCursorCredentialRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[257]
+	mi := &file_brent_proto_msgTypes[258]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21151,7 +21299,7 @@ func (x *DeleteMyCursorCredentialRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteMyCursorCredentialRequest.ProtoReflect.Descriptor instead.
 func (*DeleteMyCursorCredentialRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{257}
+	return file_brent_proto_rawDescGZIP(), []int{258}
 }
 
 type DeleteMyCursorCredentialResponse struct {
@@ -21162,7 +21310,7 @@ type DeleteMyCursorCredentialResponse struct {
 
 func (x *DeleteMyCursorCredentialResponse) Reset() {
 	*x = DeleteMyCursorCredentialResponse{}
-	mi := &file_brent_proto_msgTypes[258]
+	mi := &file_brent_proto_msgTypes[259]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21174,7 +21322,7 @@ func (x *DeleteMyCursorCredentialResponse) String() string {
 func (*DeleteMyCursorCredentialResponse) ProtoMessage() {}
 
 func (x *DeleteMyCursorCredentialResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[258]
+	mi := &file_brent_proto_msgTypes[259]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21187,7 +21335,7 @@ func (x *DeleteMyCursorCredentialResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteMyCursorCredentialResponse.ProtoReflect.Descriptor instead.
 func (*DeleteMyCursorCredentialResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{258}
+	return file_brent_proto_rawDescGZIP(), []int{259}
 }
 
 type UpdateWorkspaceBrandingRequest struct {
@@ -21203,7 +21351,7 @@ type UpdateWorkspaceBrandingRequest struct {
 
 func (x *UpdateWorkspaceBrandingRequest) Reset() {
 	*x = UpdateWorkspaceBrandingRequest{}
-	mi := &file_brent_proto_msgTypes[259]
+	mi := &file_brent_proto_msgTypes[260]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21215,7 +21363,7 @@ func (x *UpdateWorkspaceBrandingRequest) String() string {
 func (*UpdateWorkspaceBrandingRequest) ProtoMessage() {}
 
 func (x *UpdateWorkspaceBrandingRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[259]
+	mi := &file_brent_proto_msgTypes[260]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21228,7 +21376,7 @@ func (x *UpdateWorkspaceBrandingRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateWorkspaceBrandingRequest.ProtoReflect.Descriptor instead.
 func (*UpdateWorkspaceBrandingRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{259}
+	return file_brent_proto_rawDescGZIP(), []int{260}
 }
 
 func (x *UpdateWorkspaceBrandingRequest) GetThemeColor() string {
@@ -21247,7 +21395,7 @@ type UpdateWorkspaceBrandingResponse struct {
 
 func (x *UpdateWorkspaceBrandingResponse) Reset() {
 	*x = UpdateWorkspaceBrandingResponse{}
-	mi := &file_brent_proto_msgTypes[260]
+	mi := &file_brent_proto_msgTypes[261]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21259,7 +21407,7 @@ func (x *UpdateWorkspaceBrandingResponse) String() string {
 func (*UpdateWorkspaceBrandingResponse) ProtoMessage() {}
 
 func (x *UpdateWorkspaceBrandingResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[260]
+	mi := &file_brent_proto_msgTypes[261]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21272,7 +21420,7 @@ func (x *UpdateWorkspaceBrandingResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateWorkspaceBrandingResponse.ProtoReflect.Descriptor instead.
 func (*UpdateWorkspaceBrandingResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{260}
+	return file_brent_proto_rawDescGZIP(), []int{261}
 }
 
 func (x *UpdateWorkspaceBrandingResponse) GetWorkspace() *Workspace {
@@ -21293,7 +21441,7 @@ type CompleteWorkspaceOnboardingRequest struct {
 
 func (x *CompleteWorkspaceOnboardingRequest) Reset() {
 	*x = CompleteWorkspaceOnboardingRequest{}
-	mi := &file_brent_proto_msgTypes[261]
+	mi := &file_brent_proto_msgTypes[262]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21305,7 +21453,7 @@ func (x *CompleteWorkspaceOnboardingRequest) String() string {
 func (*CompleteWorkspaceOnboardingRequest) ProtoMessage() {}
 
 func (x *CompleteWorkspaceOnboardingRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[261]
+	mi := &file_brent_proto_msgTypes[262]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21318,7 +21466,7 @@ func (x *CompleteWorkspaceOnboardingRequest) ProtoReflect() protoreflect.Message
 
 // Deprecated: Use CompleteWorkspaceOnboardingRequest.ProtoReflect.Descriptor instead.
 func (*CompleteWorkspaceOnboardingRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{261}
+	return file_brent_proto_rawDescGZIP(), []int{262}
 }
 
 func (x *CompleteWorkspaceOnboardingRequest) GetWorkspaceId() string {
@@ -21337,7 +21485,7 @@ type CompleteWorkspaceOnboardingResponse struct {
 
 func (x *CompleteWorkspaceOnboardingResponse) Reset() {
 	*x = CompleteWorkspaceOnboardingResponse{}
-	mi := &file_brent_proto_msgTypes[262]
+	mi := &file_brent_proto_msgTypes[263]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21349,7 +21497,7 @@ func (x *CompleteWorkspaceOnboardingResponse) String() string {
 func (*CompleteWorkspaceOnboardingResponse) ProtoMessage() {}
 
 func (x *CompleteWorkspaceOnboardingResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[262]
+	mi := &file_brent_proto_msgTypes[263]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21362,7 +21510,7 @@ func (x *CompleteWorkspaceOnboardingResponse) ProtoReflect() protoreflect.Messag
 
 // Deprecated: Use CompleteWorkspaceOnboardingResponse.ProtoReflect.Descriptor instead.
 func (*CompleteWorkspaceOnboardingResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{262}
+	return file_brent_proto_rawDescGZIP(), []int{263}
 }
 
 func (x *CompleteWorkspaceOnboardingResponse) GetWorkspace() *Workspace {
@@ -21383,7 +21531,7 @@ type CreateInvitationRequest struct {
 
 func (x *CreateInvitationRequest) Reset() {
 	*x = CreateInvitationRequest{}
-	mi := &file_brent_proto_msgTypes[263]
+	mi := &file_brent_proto_msgTypes[264]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21395,7 +21543,7 @@ func (x *CreateInvitationRequest) String() string {
 func (*CreateInvitationRequest) ProtoMessage() {}
 
 func (x *CreateInvitationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[263]
+	mi := &file_brent_proto_msgTypes[264]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21408,7 +21556,7 @@ func (x *CreateInvitationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateInvitationRequest.ProtoReflect.Descriptor instead.
 func (*CreateInvitationRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{263}
+	return file_brent_proto_rawDescGZIP(), []int{264}
 }
 
 func (x *CreateInvitationRequest) GetWorkspaceId() string {
@@ -21444,7 +21592,7 @@ type CreateInvitationResponse struct {
 
 func (x *CreateInvitationResponse) Reset() {
 	*x = CreateInvitationResponse{}
-	mi := &file_brent_proto_msgTypes[264]
+	mi := &file_brent_proto_msgTypes[265]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21456,7 +21604,7 @@ func (x *CreateInvitationResponse) String() string {
 func (*CreateInvitationResponse) ProtoMessage() {}
 
 func (x *CreateInvitationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[264]
+	mi := &file_brent_proto_msgTypes[265]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21469,7 +21617,7 @@ func (x *CreateInvitationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateInvitationResponse.ProtoReflect.Descriptor instead.
 func (*CreateInvitationResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{264}
+	return file_brent_proto_rawDescGZIP(), []int{265}
 }
 
 func (x *CreateInvitationResponse) GetAcceptUrl() string {
@@ -21511,7 +21659,7 @@ type CreateInvitationsRequest struct {
 
 func (x *CreateInvitationsRequest) Reset() {
 	*x = CreateInvitationsRequest{}
-	mi := &file_brent_proto_msgTypes[265]
+	mi := &file_brent_proto_msgTypes[266]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21523,7 +21671,7 @@ func (x *CreateInvitationsRequest) String() string {
 func (*CreateInvitationsRequest) ProtoMessage() {}
 
 func (x *CreateInvitationsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[265]
+	mi := &file_brent_proto_msgTypes[266]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21536,7 +21684,7 @@ func (x *CreateInvitationsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateInvitationsRequest.ProtoReflect.Descriptor instead.
 func (*CreateInvitationsRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{265}
+	return file_brent_proto_rawDescGZIP(), []int{266}
 }
 
 func (x *CreateInvitationsRequest) GetWorkspaceId() string {
@@ -21572,7 +21720,7 @@ type InvitationResult struct {
 
 func (x *InvitationResult) Reset() {
 	*x = InvitationResult{}
-	mi := &file_brent_proto_msgTypes[266]
+	mi := &file_brent_proto_msgTypes[267]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21584,7 +21732,7 @@ func (x *InvitationResult) String() string {
 func (*InvitationResult) ProtoMessage() {}
 
 func (x *InvitationResult) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[266]
+	mi := &file_brent_proto_msgTypes[267]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21597,7 +21745,7 @@ func (x *InvitationResult) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InvitationResult.ProtoReflect.Descriptor instead.
 func (*InvitationResult) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{266}
+	return file_brent_proto_rawDescGZIP(), []int{267}
 }
 
 func (x *InvitationResult) GetEmail() string {
@@ -21637,7 +21785,7 @@ type CreateInvitationsResponse struct {
 
 func (x *CreateInvitationsResponse) Reset() {
 	*x = CreateInvitationsResponse{}
-	mi := &file_brent_proto_msgTypes[267]
+	mi := &file_brent_proto_msgTypes[268]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21649,7 +21797,7 @@ func (x *CreateInvitationsResponse) String() string {
 func (*CreateInvitationsResponse) ProtoMessage() {}
 
 func (x *CreateInvitationsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[267]
+	mi := &file_brent_proto_msgTypes[268]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21662,7 +21810,7 @@ func (x *CreateInvitationsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateInvitationsResponse.ProtoReflect.Descriptor instead.
 func (*CreateInvitationsResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{267}
+	return file_brent_proto_rawDescGZIP(), []int{268}
 }
 
 func (x *CreateInvitationsResponse) GetResults() []*InvitationResult {
@@ -21681,7 +21829,7 @@ type AcceptInvitationRequest struct {
 
 func (x *AcceptInvitationRequest) Reset() {
 	*x = AcceptInvitationRequest{}
-	mi := &file_brent_proto_msgTypes[268]
+	mi := &file_brent_proto_msgTypes[269]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21693,7 +21841,7 @@ func (x *AcceptInvitationRequest) String() string {
 func (*AcceptInvitationRequest) ProtoMessage() {}
 
 func (x *AcceptInvitationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[268]
+	mi := &file_brent_proto_msgTypes[269]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21706,7 +21854,7 @@ func (x *AcceptInvitationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AcceptInvitationRequest.ProtoReflect.Descriptor instead.
 func (*AcceptInvitationRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{268}
+	return file_brent_proto_rawDescGZIP(), []int{269}
 }
 
 func (x *AcceptInvitationRequest) GetToken() string {
@@ -21725,7 +21873,7 @@ type AcceptInvitationResponse struct {
 
 func (x *AcceptInvitationResponse) Reset() {
 	*x = AcceptInvitationResponse{}
-	mi := &file_brent_proto_msgTypes[269]
+	mi := &file_brent_proto_msgTypes[270]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21737,7 +21885,7 @@ func (x *AcceptInvitationResponse) String() string {
 func (*AcceptInvitationResponse) ProtoMessage() {}
 
 func (x *AcceptInvitationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[269]
+	mi := &file_brent_proto_msgTypes[270]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21750,7 +21898,7 @@ func (x *AcceptInvitationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AcceptInvitationResponse.ProtoReflect.Descriptor instead.
 func (*AcceptInvitationResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{269}
+	return file_brent_proto_rawDescGZIP(), []int{270}
 }
 
 func (x *AcceptInvitationResponse) GetWorkspace() *Workspace {
@@ -21769,7 +21917,7 @@ type ListWorkspaceMembersRequest struct {
 
 func (x *ListWorkspaceMembersRequest) Reset() {
 	*x = ListWorkspaceMembersRequest{}
-	mi := &file_brent_proto_msgTypes[270]
+	mi := &file_brent_proto_msgTypes[271]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21781,7 +21929,7 @@ func (x *ListWorkspaceMembersRequest) String() string {
 func (*ListWorkspaceMembersRequest) ProtoMessage() {}
 
 func (x *ListWorkspaceMembersRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[270]
+	mi := &file_brent_proto_msgTypes[271]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21794,7 +21942,7 @@ func (x *ListWorkspaceMembersRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListWorkspaceMembersRequest.ProtoReflect.Descriptor instead.
 func (*ListWorkspaceMembersRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{270}
+	return file_brent_proto_rawDescGZIP(), []int{271}
 }
 
 func (x *ListWorkspaceMembersRequest) GetWorkspaceId() string {
@@ -21813,7 +21961,7 @@ type ListWorkspaceMembersResponse struct {
 
 func (x *ListWorkspaceMembersResponse) Reset() {
 	*x = ListWorkspaceMembersResponse{}
-	mi := &file_brent_proto_msgTypes[271]
+	mi := &file_brent_proto_msgTypes[272]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21825,7 +21973,7 @@ func (x *ListWorkspaceMembersResponse) String() string {
 func (*ListWorkspaceMembersResponse) ProtoMessage() {}
 
 func (x *ListWorkspaceMembersResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[271]
+	mi := &file_brent_proto_msgTypes[272]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21838,7 +21986,7 @@ func (x *ListWorkspaceMembersResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListWorkspaceMembersResponse.ProtoReflect.Descriptor instead.
 func (*ListWorkspaceMembersResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{271}
+	return file_brent_proto_rawDescGZIP(), []int{272}
 }
 
 func (x *ListWorkspaceMembersResponse) GetMembers() []*WorkspaceMember {
@@ -21865,7 +22013,7 @@ type WorkspaceMember struct {
 
 func (x *WorkspaceMember) Reset() {
 	*x = WorkspaceMember{}
-	mi := &file_brent_proto_msgTypes[272]
+	mi := &file_brent_proto_msgTypes[273]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21877,7 +22025,7 @@ func (x *WorkspaceMember) String() string {
 func (*WorkspaceMember) ProtoMessage() {}
 
 func (x *WorkspaceMember) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[272]
+	mi := &file_brent_proto_msgTypes[273]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21890,7 +22038,7 @@ func (x *WorkspaceMember) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use WorkspaceMember.ProtoReflect.Descriptor instead.
 func (*WorkspaceMember) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{272}
+	return file_brent_proto_rawDescGZIP(), []int{273}
 }
 
 func (x *WorkspaceMember) GetPrincipalId() string {
@@ -21953,7 +22101,7 @@ type ResendInvitationRequest struct {
 
 func (x *ResendInvitationRequest) Reset() {
 	*x = ResendInvitationRequest{}
-	mi := &file_brent_proto_msgTypes[273]
+	mi := &file_brent_proto_msgTypes[274]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -21965,7 +22113,7 @@ func (x *ResendInvitationRequest) String() string {
 func (*ResendInvitationRequest) ProtoMessage() {}
 
 func (x *ResendInvitationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[273]
+	mi := &file_brent_proto_msgTypes[274]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -21978,7 +22126,7 @@ func (x *ResendInvitationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResendInvitationRequest.ProtoReflect.Descriptor instead.
 func (*ResendInvitationRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{273}
+	return file_brent_proto_rawDescGZIP(), []int{274}
 }
 
 func (x *ResendInvitationRequest) GetWorkspaceId() string {
@@ -22005,7 +22153,7 @@ type ResendInvitationResponse struct {
 
 func (x *ResendInvitationResponse) Reset() {
 	*x = ResendInvitationResponse{}
-	mi := &file_brent_proto_msgTypes[274]
+	mi := &file_brent_proto_msgTypes[275]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22017,7 +22165,7 @@ func (x *ResendInvitationResponse) String() string {
 func (*ResendInvitationResponse) ProtoMessage() {}
 
 func (x *ResendInvitationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[274]
+	mi := &file_brent_proto_msgTypes[275]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22030,7 +22178,7 @@ func (x *ResendInvitationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ResendInvitationResponse.ProtoReflect.Descriptor instead.
 func (*ResendInvitationResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{274}
+	return file_brent_proto_rawDescGZIP(), []int{275}
 }
 
 func (x *ResendInvitationResponse) GetAcceptUrl() string {
@@ -22057,7 +22205,7 @@ type RevokeInvitationRequest struct {
 
 func (x *RevokeInvitationRequest) Reset() {
 	*x = RevokeInvitationRequest{}
-	mi := &file_brent_proto_msgTypes[275]
+	mi := &file_brent_proto_msgTypes[276]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22069,7 +22217,7 @@ func (x *RevokeInvitationRequest) String() string {
 func (*RevokeInvitationRequest) ProtoMessage() {}
 
 func (x *RevokeInvitationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[275]
+	mi := &file_brent_proto_msgTypes[276]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22082,7 +22230,7 @@ func (x *RevokeInvitationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RevokeInvitationRequest.ProtoReflect.Descriptor instead.
 func (*RevokeInvitationRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{275}
+	return file_brent_proto_rawDescGZIP(), []int{276}
 }
 
 func (x *RevokeInvitationRequest) GetWorkspaceId() string {
@@ -22107,7 +22255,7 @@ type RevokeInvitationResponse struct {
 
 func (x *RevokeInvitationResponse) Reset() {
 	*x = RevokeInvitationResponse{}
-	mi := &file_brent_proto_msgTypes[276]
+	mi := &file_brent_proto_msgTypes[277]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22119,7 +22267,7 @@ func (x *RevokeInvitationResponse) String() string {
 func (*RevokeInvitationResponse) ProtoMessage() {}
 
 func (x *RevokeInvitationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[276]
+	mi := &file_brent_proto_msgTypes[277]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22132,7 +22280,7 @@ func (x *RevokeInvitationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RevokeInvitationResponse.ProtoReflect.Descriptor instead.
 func (*RevokeInvitationResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{276}
+	return file_brent_proto_rawDescGZIP(), []int{277}
 }
 
 type RemoveWorkspaceMemberRequest struct {
@@ -22145,7 +22293,7 @@ type RemoveWorkspaceMemberRequest struct {
 
 func (x *RemoveWorkspaceMemberRequest) Reset() {
 	*x = RemoveWorkspaceMemberRequest{}
-	mi := &file_brent_proto_msgTypes[277]
+	mi := &file_brent_proto_msgTypes[278]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22157,7 +22305,7 @@ func (x *RemoveWorkspaceMemberRequest) String() string {
 func (*RemoveWorkspaceMemberRequest) ProtoMessage() {}
 
 func (x *RemoveWorkspaceMemberRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[277]
+	mi := &file_brent_proto_msgTypes[278]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22170,7 +22318,7 @@ func (x *RemoveWorkspaceMemberRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveWorkspaceMemberRequest.ProtoReflect.Descriptor instead.
 func (*RemoveWorkspaceMemberRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{277}
+	return file_brent_proto_rawDescGZIP(), []int{278}
 }
 
 func (x *RemoveWorkspaceMemberRequest) GetWorkspaceId() string {
@@ -22195,7 +22343,7 @@ type RemoveWorkspaceMemberResponse struct {
 
 func (x *RemoveWorkspaceMemberResponse) Reset() {
 	*x = RemoveWorkspaceMemberResponse{}
-	mi := &file_brent_proto_msgTypes[278]
+	mi := &file_brent_proto_msgTypes[279]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22207,7 +22355,7 @@ func (x *RemoveWorkspaceMemberResponse) String() string {
 func (*RemoveWorkspaceMemberResponse) ProtoMessage() {}
 
 func (x *RemoveWorkspaceMemberResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[278]
+	mi := &file_brent_proto_msgTypes[279]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22220,7 +22368,7 @@ func (x *RemoveWorkspaceMemberResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveWorkspaceMemberResponse.ProtoReflect.Descriptor instead.
 func (*RemoveWorkspaceMemberResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{278}
+	return file_brent_proto_rawDescGZIP(), []int{279}
 }
 
 type UpdateWorkspaceMemberRoleRequest struct {
@@ -22234,7 +22382,7 @@ type UpdateWorkspaceMemberRoleRequest struct {
 
 func (x *UpdateWorkspaceMemberRoleRequest) Reset() {
 	*x = UpdateWorkspaceMemberRoleRequest{}
-	mi := &file_brent_proto_msgTypes[279]
+	mi := &file_brent_proto_msgTypes[280]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22246,7 +22394,7 @@ func (x *UpdateWorkspaceMemberRoleRequest) String() string {
 func (*UpdateWorkspaceMemberRoleRequest) ProtoMessage() {}
 
 func (x *UpdateWorkspaceMemberRoleRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[279]
+	mi := &file_brent_proto_msgTypes[280]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22259,7 +22407,7 @@ func (x *UpdateWorkspaceMemberRoleRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateWorkspaceMemberRoleRequest.ProtoReflect.Descriptor instead.
 func (*UpdateWorkspaceMemberRoleRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{279}
+	return file_brent_proto_rawDescGZIP(), []int{280}
 }
 
 func (x *UpdateWorkspaceMemberRoleRequest) GetWorkspaceId() string {
@@ -22291,7 +22439,7 @@ type UpdateWorkspaceMemberRoleResponse struct {
 
 func (x *UpdateWorkspaceMemberRoleResponse) Reset() {
 	*x = UpdateWorkspaceMemberRoleResponse{}
-	mi := &file_brent_proto_msgTypes[280]
+	mi := &file_brent_proto_msgTypes[281]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22303,7 +22451,7 @@ func (x *UpdateWorkspaceMemberRoleResponse) String() string {
 func (*UpdateWorkspaceMemberRoleResponse) ProtoMessage() {}
 
 func (x *UpdateWorkspaceMemberRoleResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[280]
+	mi := &file_brent_proto_msgTypes[281]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22316,7 +22464,7 @@ func (x *UpdateWorkspaceMemberRoleResponse) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use UpdateWorkspaceMemberRoleResponse.ProtoReflect.Descriptor instead.
 func (*UpdateWorkspaceMemberRoleResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{280}
+	return file_brent_proto_rawDescGZIP(), []int{281}
 }
 
 type GetInvitationRequest struct {
@@ -22328,7 +22476,7 @@ type GetInvitationRequest struct {
 
 func (x *GetInvitationRequest) Reset() {
 	*x = GetInvitationRequest{}
-	mi := &file_brent_proto_msgTypes[281]
+	mi := &file_brent_proto_msgTypes[282]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22340,7 +22488,7 @@ func (x *GetInvitationRequest) String() string {
 func (*GetInvitationRequest) ProtoMessage() {}
 
 func (x *GetInvitationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[281]
+	mi := &file_brent_proto_msgTypes[282]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22353,7 +22501,7 @@ func (x *GetInvitationRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetInvitationRequest.ProtoReflect.Descriptor instead.
 func (*GetInvitationRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{281}
+	return file_brent_proto_rawDescGZIP(), []int{282}
 }
 
 func (x *GetInvitationRequest) GetToken() string {
@@ -22379,7 +22527,7 @@ type GetInvitationResponse struct {
 
 func (x *GetInvitationResponse) Reset() {
 	*x = GetInvitationResponse{}
-	mi := &file_brent_proto_msgTypes[282]
+	mi := &file_brent_proto_msgTypes[283]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22391,7 +22539,7 @@ func (x *GetInvitationResponse) String() string {
 func (*GetInvitationResponse) ProtoMessage() {}
 
 func (x *GetInvitationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[282]
+	mi := &file_brent_proto_msgTypes[283]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22404,7 +22552,7 @@ func (x *GetInvitationResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetInvitationResponse.ProtoReflect.Descriptor instead.
 func (*GetInvitationResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{282}
+	return file_brent_proto_rawDescGZIP(), []int{283}
 }
 
 func (x *GetInvitationResponse) GetStatus() InvitationStatus {
@@ -22473,7 +22621,7 @@ type UpsertMyVerifiedBindingRequest struct {
 
 func (x *UpsertMyVerifiedBindingRequest) Reset() {
 	*x = UpsertMyVerifiedBindingRequest{}
-	mi := &file_brent_proto_msgTypes[283]
+	mi := &file_brent_proto_msgTypes[284]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22485,7 +22633,7 @@ func (x *UpsertMyVerifiedBindingRequest) String() string {
 func (*UpsertMyVerifiedBindingRequest) ProtoMessage() {}
 
 func (x *UpsertMyVerifiedBindingRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[283]
+	mi := &file_brent_proto_msgTypes[284]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22498,7 +22646,7 @@ func (x *UpsertMyVerifiedBindingRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpsertMyVerifiedBindingRequest.ProtoReflect.Descriptor instead.
 func (*UpsertMyVerifiedBindingRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{283}
+	return file_brent_proto_rawDescGZIP(), []int{284}
 }
 
 func (x *UpsertMyVerifiedBindingRequest) GetProvider() string {
@@ -22524,7 +22672,7 @@ type UpsertMyVerifiedBindingResponse struct {
 
 func (x *UpsertMyVerifiedBindingResponse) Reset() {
 	*x = UpsertMyVerifiedBindingResponse{}
-	mi := &file_brent_proto_msgTypes[284]
+	mi := &file_brent_proto_msgTypes[285]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22536,7 +22684,7 @@ func (x *UpsertMyVerifiedBindingResponse) String() string {
 func (*UpsertMyVerifiedBindingResponse) ProtoMessage() {}
 
 func (x *UpsertMyVerifiedBindingResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[284]
+	mi := &file_brent_proto_msgTypes[285]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22549,7 +22697,7 @@ func (x *UpsertMyVerifiedBindingResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpsertMyVerifiedBindingResponse.ProtoReflect.Descriptor instead.
 func (*UpsertMyVerifiedBindingResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{284}
+	return file_brent_proto_rawDescGZIP(), []int{285}
 }
 
 func (x *UpsertMyVerifiedBindingResponse) GetBinding() *Binding {
@@ -22570,7 +22718,7 @@ type UpdateMyDisplayNameRequest struct {
 
 func (x *UpdateMyDisplayNameRequest) Reset() {
 	*x = UpdateMyDisplayNameRequest{}
-	mi := &file_brent_proto_msgTypes[285]
+	mi := &file_brent_proto_msgTypes[286]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22582,7 +22730,7 @@ func (x *UpdateMyDisplayNameRequest) String() string {
 func (*UpdateMyDisplayNameRequest) ProtoMessage() {}
 
 func (x *UpdateMyDisplayNameRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[285]
+	mi := &file_brent_proto_msgTypes[286]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22595,7 +22743,7 @@ func (x *UpdateMyDisplayNameRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateMyDisplayNameRequest.ProtoReflect.Descriptor instead.
 func (*UpdateMyDisplayNameRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{285}
+	return file_brent_proto_rawDescGZIP(), []int{286}
 }
 
 func (x *UpdateMyDisplayNameRequest) GetDisplayName() string {
@@ -22616,7 +22764,7 @@ type UpdateMyDisplayNameResponse struct {
 
 func (x *UpdateMyDisplayNameResponse) Reset() {
 	*x = UpdateMyDisplayNameResponse{}
-	mi := &file_brent_proto_msgTypes[286]
+	mi := &file_brent_proto_msgTypes[287]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22628,7 +22776,7 @@ func (x *UpdateMyDisplayNameResponse) String() string {
 func (*UpdateMyDisplayNameResponse) ProtoMessage() {}
 
 func (x *UpdateMyDisplayNameResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[286]
+	mi := &file_brent_proto_msgTypes[287]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22641,7 +22789,7 @@ func (x *UpdateMyDisplayNameResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateMyDisplayNameResponse.ProtoReflect.Descriptor instead.
 func (*UpdateMyDisplayNameResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{286}
+	return file_brent_proto_rawDescGZIP(), []int{287}
 }
 
 func (x *UpdateMyDisplayNameResponse) GetPrincipal() *Principal {
@@ -22659,7 +22807,7 @@ type ListMyBindingsRequest struct {
 
 func (x *ListMyBindingsRequest) Reset() {
 	*x = ListMyBindingsRequest{}
-	mi := &file_brent_proto_msgTypes[287]
+	mi := &file_brent_proto_msgTypes[288]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22671,7 +22819,7 @@ func (x *ListMyBindingsRequest) String() string {
 func (*ListMyBindingsRequest) ProtoMessage() {}
 
 func (x *ListMyBindingsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[287]
+	mi := &file_brent_proto_msgTypes[288]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22684,7 +22832,7 @@ func (x *ListMyBindingsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListMyBindingsRequest.ProtoReflect.Descriptor instead.
 func (*ListMyBindingsRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{287}
+	return file_brent_proto_rawDescGZIP(), []int{288}
 }
 
 type ListMyBindingsResponse struct {
@@ -22696,7 +22844,7 @@ type ListMyBindingsResponse struct {
 
 func (x *ListMyBindingsResponse) Reset() {
 	*x = ListMyBindingsResponse{}
-	mi := &file_brent_proto_msgTypes[288]
+	mi := &file_brent_proto_msgTypes[289]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22708,7 +22856,7 @@ func (x *ListMyBindingsResponse) String() string {
 func (*ListMyBindingsResponse) ProtoMessage() {}
 
 func (x *ListMyBindingsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[288]
+	mi := &file_brent_proto_msgTypes[289]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22721,7 +22869,7 @@ func (x *ListMyBindingsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListMyBindingsResponse.ProtoReflect.Descriptor instead.
 func (*ListMyBindingsResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{288}
+	return file_brent_proto_rawDescGZIP(), []int{289}
 }
 
 func (x *ListMyBindingsResponse) GetBindings() []*Binding {
@@ -22741,7 +22889,7 @@ type NotificationPreferences struct {
 
 func (x *NotificationPreferences) Reset() {
 	*x = NotificationPreferences{}
-	mi := &file_brent_proto_msgTypes[289]
+	mi := &file_brent_proto_msgTypes[290]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22753,7 +22901,7 @@ func (x *NotificationPreferences) String() string {
 func (*NotificationPreferences) ProtoMessage() {}
 
 func (x *NotificationPreferences) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[289]
+	mi := &file_brent_proto_msgTypes[290]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22766,7 +22914,7 @@ func (x *NotificationPreferences) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use NotificationPreferences.ProtoReflect.Descriptor instead.
 func (*NotificationPreferences) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{289}
+	return file_brent_proto_rawDescGZIP(), []int{290}
 }
 
 func (x *NotificationPreferences) GetPreferences() map[string]*ChannelPreferences {
@@ -22785,7 +22933,7 @@ type ChannelPreferences struct {
 
 func (x *ChannelPreferences) Reset() {
 	*x = ChannelPreferences{}
-	mi := &file_brent_proto_msgTypes[290]
+	mi := &file_brent_proto_msgTypes[291]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22797,7 +22945,7 @@ func (x *ChannelPreferences) String() string {
 func (*ChannelPreferences) ProtoMessage() {}
 
 func (x *ChannelPreferences) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[290]
+	mi := &file_brent_proto_msgTypes[291]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22810,7 +22958,7 @@ func (x *ChannelPreferences) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ChannelPreferences.ProtoReflect.Descriptor instead.
 func (*ChannelPreferences) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{290}
+	return file_brent_proto_rawDescGZIP(), []int{291}
 }
 
 func (x *ChannelPreferences) GetChannels() map[string]bool {
@@ -22828,7 +22976,7 @@ type GetMyNotificationPreferencesRequest struct {
 
 func (x *GetMyNotificationPreferencesRequest) Reset() {
 	*x = GetMyNotificationPreferencesRequest{}
-	mi := &file_brent_proto_msgTypes[291]
+	mi := &file_brent_proto_msgTypes[292]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22840,7 +22988,7 @@ func (x *GetMyNotificationPreferencesRequest) String() string {
 func (*GetMyNotificationPreferencesRequest) ProtoMessage() {}
 
 func (x *GetMyNotificationPreferencesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[291]
+	mi := &file_brent_proto_msgTypes[292]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22853,7 +23001,7 @@ func (x *GetMyNotificationPreferencesRequest) ProtoReflect() protoreflect.Messag
 
 // Deprecated: Use GetMyNotificationPreferencesRequest.ProtoReflect.Descriptor instead.
 func (*GetMyNotificationPreferencesRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{291}
+	return file_brent_proto_rawDescGZIP(), []int{292}
 }
 
 type GetMyNotificationPreferencesResponse struct {
@@ -22865,7 +23013,7 @@ type GetMyNotificationPreferencesResponse struct {
 
 func (x *GetMyNotificationPreferencesResponse) Reset() {
 	*x = GetMyNotificationPreferencesResponse{}
-	mi := &file_brent_proto_msgTypes[292]
+	mi := &file_brent_proto_msgTypes[293]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22877,7 +23025,7 @@ func (x *GetMyNotificationPreferencesResponse) String() string {
 func (*GetMyNotificationPreferencesResponse) ProtoMessage() {}
 
 func (x *GetMyNotificationPreferencesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[292]
+	mi := &file_brent_proto_msgTypes[293]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22890,7 +23038,7 @@ func (x *GetMyNotificationPreferencesResponse) ProtoReflect() protoreflect.Messa
 
 // Deprecated: Use GetMyNotificationPreferencesResponse.ProtoReflect.Descriptor instead.
 func (*GetMyNotificationPreferencesResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{292}
+	return file_brent_proto_rawDescGZIP(), []int{293}
 }
 
 func (x *GetMyNotificationPreferencesResponse) GetPreferences() *NotificationPreferences {
@@ -22910,7 +23058,7 @@ type UpdateMyNotificationPreferencesRequest struct {
 
 func (x *UpdateMyNotificationPreferencesRequest) Reset() {
 	*x = UpdateMyNotificationPreferencesRequest{}
-	mi := &file_brent_proto_msgTypes[293]
+	mi := &file_brent_proto_msgTypes[294]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22922,7 +23070,7 @@ func (x *UpdateMyNotificationPreferencesRequest) String() string {
 func (*UpdateMyNotificationPreferencesRequest) ProtoMessage() {}
 
 func (x *UpdateMyNotificationPreferencesRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[293]
+	mi := &file_brent_proto_msgTypes[294]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22935,7 +23083,7 @@ func (x *UpdateMyNotificationPreferencesRequest) ProtoReflect() protoreflect.Mes
 
 // Deprecated: Use UpdateMyNotificationPreferencesRequest.ProtoReflect.Descriptor instead.
 func (*UpdateMyNotificationPreferencesRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{293}
+	return file_brent_proto_rawDescGZIP(), []int{294}
 }
 
 func (x *UpdateMyNotificationPreferencesRequest) GetPreferences() *NotificationPreferences {
@@ -22955,7 +23103,7 @@ type UpdateMyNotificationPreferencesResponse struct {
 
 func (x *UpdateMyNotificationPreferencesResponse) Reset() {
 	*x = UpdateMyNotificationPreferencesResponse{}
-	mi := &file_brent_proto_msgTypes[294]
+	mi := &file_brent_proto_msgTypes[295]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -22967,7 +23115,7 @@ func (x *UpdateMyNotificationPreferencesResponse) String() string {
 func (*UpdateMyNotificationPreferencesResponse) ProtoMessage() {}
 
 func (x *UpdateMyNotificationPreferencesResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[294]
+	mi := &file_brent_proto_msgTypes[295]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -22980,7 +23128,7 @@ func (x *UpdateMyNotificationPreferencesResponse) ProtoReflect() protoreflect.Me
 
 // Deprecated: Use UpdateMyNotificationPreferencesResponse.ProtoReflect.Descriptor instead.
 func (*UpdateMyNotificationPreferencesResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{294}
+	return file_brent_proto_rawDescGZIP(), []int{295}
 }
 
 func (x *UpdateMyNotificationPreferencesResponse) GetPreferences() *NotificationPreferences {
@@ -23004,7 +23152,7 @@ type RegisterMyPushSubscriptionRequest struct {
 
 func (x *RegisterMyPushSubscriptionRequest) Reset() {
 	*x = RegisterMyPushSubscriptionRequest{}
-	mi := &file_brent_proto_msgTypes[295]
+	mi := &file_brent_proto_msgTypes[296]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -23016,7 +23164,7 @@ func (x *RegisterMyPushSubscriptionRequest) String() string {
 func (*RegisterMyPushSubscriptionRequest) ProtoMessage() {}
 
 func (x *RegisterMyPushSubscriptionRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[295]
+	mi := &file_brent_proto_msgTypes[296]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -23029,7 +23177,7 @@ func (x *RegisterMyPushSubscriptionRequest) ProtoReflect() protoreflect.Message 
 
 // Deprecated: Use RegisterMyPushSubscriptionRequest.ProtoReflect.Descriptor instead.
 func (*RegisterMyPushSubscriptionRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{295}
+	return file_brent_proto_rawDescGZIP(), []int{296}
 }
 
 func (x *RegisterMyPushSubscriptionRequest) GetEndpoint() string {
@@ -23062,7 +23210,7 @@ type RegisterMyPushSubscriptionResponse struct {
 
 func (x *RegisterMyPushSubscriptionResponse) Reset() {
 	*x = RegisterMyPushSubscriptionResponse{}
-	mi := &file_brent_proto_msgTypes[296]
+	mi := &file_brent_proto_msgTypes[297]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -23074,7 +23222,7 @@ func (x *RegisterMyPushSubscriptionResponse) String() string {
 func (*RegisterMyPushSubscriptionResponse) ProtoMessage() {}
 
 func (x *RegisterMyPushSubscriptionResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[296]
+	mi := &file_brent_proto_msgTypes[297]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -23087,7 +23235,7 @@ func (x *RegisterMyPushSubscriptionResponse) ProtoReflect() protoreflect.Message
 
 // Deprecated: Use RegisterMyPushSubscriptionResponse.ProtoReflect.Descriptor instead.
 func (*RegisterMyPushSubscriptionResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{296}
+	return file_brent_proto_rawDescGZIP(), []int{297}
 }
 
 type GetWebPushPublicKeyRequest struct {
@@ -23098,7 +23246,7 @@ type GetWebPushPublicKeyRequest struct {
 
 func (x *GetWebPushPublicKeyRequest) Reset() {
 	*x = GetWebPushPublicKeyRequest{}
-	mi := &file_brent_proto_msgTypes[297]
+	mi := &file_brent_proto_msgTypes[298]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -23110,7 +23258,7 @@ func (x *GetWebPushPublicKeyRequest) String() string {
 func (*GetWebPushPublicKeyRequest) ProtoMessage() {}
 
 func (x *GetWebPushPublicKeyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[297]
+	mi := &file_brent_proto_msgTypes[298]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -23123,7 +23271,7 @@ func (x *GetWebPushPublicKeyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetWebPushPublicKeyRequest.ProtoReflect.Descriptor instead.
 func (*GetWebPushPublicKeyRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{297}
+	return file_brent_proto_rawDescGZIP(), []int{298}
 }
 
 type GetWebPushPublicKeyResponse struct {
@@ -23137,7 +23285,7 @@ type GetWebPushPublicKeyResponse struct {
 
 func (x *GetWebPushPublicKeyResponse) Reset() {
 	*x = GetWebPushPublicKeyResponse{}
-	mi := &file_brent_proto_msgTypes[298]
+	mi := &file_brent_proto_msgTypes[299]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -23149,7 +23297,7 @@ func (x *GetWebPushPublicKeyResponse) String() string {
 func (*GetWebPushPublicKeyResponse) ProtoMessage() {}
 
 func (x *GetWebPushPublicKeyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[298]
+	mi := &file_brent_proto_msgTypes[299]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -23162,7 +23310,7 @@ func (x *GetWebPushPublicKeyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetWebPushPublicKeyResponse.ProtoReflect.Descriptor instead.
 func (*GetWebPushPublicKeyResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{298}
+	return file_brent_proto_rawDescGZIP(), []int{299}
 }
 
 func (x *GetWebPushPublicKeyResponse) GetPublicKey() string {
@@ -23189,7 +23337,7 @@ type Binding struct {
 
 func (x *Binding) Reset() {
 	*x = Binding{}
-	mi := &file_brent_proto_msgTypes[299]
+	mi := &file_brent_proto_msgTypes[300]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -23201,7 +23349,7 @@ func (x *Binding) String() string {
 func (*Binding) ProtoMessage() {}
 
 func (x *Binding) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[299]
+	mi := &file_brent_proto_msgTypes[300]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -23214,7 +23362,7 @@ func (x *Binding) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Binding.ProtoReflect.Descriptor instead.
 func (*Binding) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{299}
+	return file_brent_proto_rawDescGZIP(), []int{300}
 }
 
 func (x *Binding) GetExternalId() string {
@@ -23275,7 +23423,7 @@ type RedFindingKindsPatch struct {
 
 func (x *RedFindingKindsPatch) Reset() {
 	*x = RedFindingKindsPatch{}
-	mi := &file_brent_proto_msgTypes[300]
+	mi := &file_brent_proto_msgTypes[301]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -23287,7 +23435,7 @@ func (x *RedFindingKindsPatch) String() string {
 func (*RedFindingKindsPatch) ProtoMessage() {}
 
 func (x *RedFindingKindsPatch) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[300]
+	mi := &file_brent_proto_msgTypes[301]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -23300,7 +23448,7 @@ func (x *RedFindingKindsPatch) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RedFindingKindsPatch.ProtoReflect.Descriptor instead.
 func (*RedFindingKindsPatch) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{300}
+	return file_brent_proto_rawDescGZIP(), []int{301}
 }
 
 func (x *RedFindingKindsPatch) GetKinds() []string {
@@ -23319,7 +23467,7 @@ type GetBrentSettingsRequest struct {
 
 func (x *GetBrentSettingsRequest) Reset() {
 	*x = GetBrentSettingsRequest{}
-	mi := &file_brent_proto_msgTypes[301]
+	mi := &file_brent_proto_msgTypes[302]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -23331,7 +23479,7 @@ func (x *GetBrentSettingsRequest) String() string {
 func (*GetBrentSettingsRequest) ProtoMessage() {}
 
 func (x *GetBrentSettingsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[301]
+	mi := &file_brent_proto_msgTypes[302]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -23344,7 +23492,7 @@ func (x *GetBrentSettingsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetBrentSettingsRequest.ProtoReflect.Descriptor instead.
 func (*GetBrentSettingsRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{301}
+	return file_brent_proto_rawDescGZIP(), []int{302}
 }
 
 func (x *GetBrentSettingsRequest) GetAccountName() string {
@@ -23365,7 +23513,7 @@ type GetBrentSettingsResponse struct {
 
 func (x *GetBrentSettingsResponse) Reset() {
 	*x = GetBrentSettingsResponse{}
-	mi := &file_brent_proto_msgTypes[302]
+	mi := &file_brent_proto_msgTypes[303]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -23377,7 +23525,7 @@ func (x *GetBrentSettingsResponse) String() string {
 func (*GetBrentSettingsResponse) ProtoMessage() {}
 
 func (x *GetBrentSettingsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[302]
+	mi := &file_brent_proto_msgTypes[303]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -23390,7 +23538,7 @@ func (x *GetBrentSettingsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetBrentSettingsResponse.ProtoReflect.Descriptor instead.
 func (*GetBrentSettingsResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{302}
+	return file_brent_proto_rawDescGZIP(), []int{303}
 }
 
 func (x *GetBrentSettingsResponse) GetRedFindingKinds() []string {
@@ -23424,7 +23572,7 @@ type UpdateBrentSettingsRequest struct {
 
 func (x *UpdateBrentSettingsRequest) Reset() {
 	*x = UpdateBrentSettingsRequest{}
-	mi := &file_brent_proto_msgTypes[303]
+	mi := &file_brent_proto_msgTypes[304]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -23436,7 +23584,7 @@ func (x *UpdateBrentSettingsRequest) String() string {
 func (*UpdateBrentSettingsRequest) ProtoMessage() {}
 
 func (x *UpdateBrentSettingsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[303]
+	mi := &file_brent_proto_msgTypes[304]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -23449,7 +23597,7 @@ func (x *UpdateBrentSettingsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateBrentSettingsRequest.ProtoReflect.Descriptor instead.
 func (*UpdateBrentSettingsRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{303}
+	return file_brent_proto_rawDescGZIP(), []int{304}
 }
 
 func (x *UpdateBrentSettingsRequest) GetAccountName() string {
@@ -23477,7 +23625,7 @@ type UpdateBrentSettingsResponse struct {
 
 func (x *UpdateBrentSettingsResponse) Reset() {
 	*x = UpdateBrentSettingsResponse{}
-	mi := &file_brent_proto_msgTypes[304]
+	mi := &file_brent_proto_msgTypes[305]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -23489,7 +23637,7 @@ func (x *UpdateBrentSettingsResponse) String() string {
 func (*UpdateBrentSettingsResponse) ProtoMessage() {}
 
 func (x *UpdateBrentSettingsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[304]
+	mi := &file_brent_proto_msgTypes[305]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -23502,7 +23650,7 @@ func (x *UpdateBrentSettingsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateBrentSettingsResponse.ProtoReflect.Descriptor instead.
 func (*UpdateBrentSettingsResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{304}
+	return file_brent_proto_rawDescGZIP(), []int{305}
 }
 
 func (x *UpdateBrentSettingsResponse) GetRedFindingKinds() []string {
@@ -23538,7 +23686,7 @@ type AdminGetAccountBrentSettingsRequest struct {
 
 func (x *AdminGetAccountBrentSettingsRequest) Reset() {
 	*x = AdminGetAccountBrentSettingsRequest{}
-	mi := &file_brent_proto_msgTypes[305]
+	mi := &file_brent_proto_msgTypes[306]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -23550,7 +23698,7 @@ func (x *AdminGetAccountBrentSettingsRequest) String() string {
 func (*AdminGetAccountBrentSettingsRequest) ProtoMessage() {}
 
 func (x *AdminGetAccountBrentSettingsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[305]
+	mi := &file_brent_proto_msgTypes[306]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -23563,7 +23711,7 @@ func (x *AdminGetAccountBrentSettingsRequest) ProtoReflect() protoreflect.Messag
 
 // Deprecated: Use AdminGetAccountBrentSettingsRequest.ProtoReflect.Descriptor instead.
 func (*AdminGetAccountBrentSettingsRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{305}
+	return file_brent_proto_rawDescGZIP(), []int{306}
 }
 
 func (x *AdminGetAccountBrentSettingsRequest) GetAccountName() string {
@@ -23586,7 +23734,7 @@ type AdminUpdateAccountBrentSettingsRequest struct {
 
 func (x *AdminUpdateAccountBrentSettingsRequest) Reset() {
 	*x = AdminUpdateAccountBrentSettingsRequest{}
-	mi := &file_brent_proto_msgTypes[306]
+	mi := &file_brent_proto_msgTypes[307]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -23598,7 +23746,7 @@ func (x *AdminUpdateAccountBrentSettingsRequest) String() string {
 func (*AdminUpdateAccountBrentSettingsRequest) ProtoMessage() {}
 
 func (x *AdminUpdateAccountBrentSettingsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[306]
+	mi := &file_brent_proto_msgTypes[307]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -23611,7 +23759,7 @@ func (x *AdminUpdateAccountBrentSettingsRequest) ProtoReflect() protoreflect.Mes
 
 // Deprecated: Use AdminUpdateAccountBrentSettingsRequest.ProtoReflect.Descriptor instead.
 func (*AdminUpdateAccountBrentSettingsRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{306}
+	return file_brent_proto_rawDescGZIP(), []int{307}
 }
 
 func (x *AdminUpdateAccountBrentSettingsRequest) GetAccountName() string {
@@ -23624,6 +23772,248 @@ func (x *AdminUpdateAccountBrentSettingsRequest) GetAccountName() string {
 func (x *AdminUpdateAccountBrentSettingsRequest) GetRedFindingKinds() *RedFindingKindsPatch {
 	if x != nil {
 		return x.RedFindingKinds
+	}
+	return nil
+}
+
+// AdminGetAccountReviewPolicyRequest selects the workspace whose review
+// policy an operator wants to read. account_name is required.
+type AdminGetAccountReviewPolicyRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AccountName   string                 `protobuf:"bytes,1,opt,name=account_name,json=accountName,proto3" json:"account_name,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AdminGetAccountReviewPolicyRequest) Reset() {
+	*x = AdminGetAccountReviewPolicyRequest{}
+	mi := &file_brent_proto_msgTypes[308]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminGetAccountReviewPolicyRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminGetAccountReviewPolicyRequest) ProtoMessage() {}
+
+func (x *AdminGetAccountReviewPolicyRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_brent_proto_msgTypes[308]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminGetAccountReviewPolicyRequest.ProtoReflect.Descriptor instead.
+func (*AdminGetAccountReviewPolicyRequest) Descriptor() ([]byte, []int) {
+	return file_brent_proto_rawDescGZIP(), []int{308}
+}
+
+func (x *AdminGetAccountReviewPolicyRequest) GetAccountName() string {
+	if x != nil {
+		return x.AccountName
+	}
+	return ""
+}
+
+// AdminGetAccountReviewPolicyResponse returns the persisted policy and
+// attribution metadata for operator triage.
+type AdminGetAccountReviewPolicyResponse struct {
+	state                     protoimpl.MessageState `protogen:"open.v1"`
+	Policy                    WorkspaceReviewPolicy  `protobuf:"varint,1,opt,name=policy,proto3,enum=brent.WorkspaceReviewPolicy" json:"policy,omitempty"`
+	ActiveHumanPrincipalCount int32                  `protobuf:"varint,2,opt,name=active_human_principal_count,json=activeHumanPrincipalCount,proto3" json:"active_human_principal_count,omitempty"`
+	// Principal UUID that last updated the policy; empty when set by
+	// creation/migration rather than an operator.
+	UpdatedBy     string                 `protobuf:"bytes,3,opt,name=updated_by,json=updatedBy,proto3" json:"updated_by,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AdminGetAccountReviewPolicyResponse) Reset() {
+	*x = AdminGetAccountReviewPolicyResponse{}
+	mi := &file_brent_proto_msgTypes[309]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminGetAccountReviewPolicyResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminGetAccountReviewPolicyResponse) ProtoMessage() {}
+
+func (x *AdminGetAccountReviewPolicyResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_brent_proto_msgTypes[309]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminGetAccountReviewPolicyResponse.ProtoReflect.Descriptor instead.
+func (*AdminGetAccountReviewPolicyResponse) Descriptor() ([]byte, []int) {
+	return file_brent_proto_rawDescGZIP(), []int{309}
+}
+
+func (x *AdminGetAccountReviewPolicyResponse) GetPolicy() WorkspaceReviewPolicy {
+	if x != nil {
+		return x.Policy
+	}
+	return WorkspaceReviewPolicy_WORKSPACE_REVIEW_POLICY_UNSPECIFIED
+}
+
+func (x *AdminGetAccountReviewPolicyResponse) GetActiveHumanPrincipalCount() int32 {
+	if x != nil {
+		return x.ActiveHumanPrincipalCount
+	}
+	return 0
+}
+
+func (x *AdminGetAccountReviewPolicyResponse) GetUpdatedBy() string {
+	if x != nil {
+		return x.UpdatedBy
+	}
+	return ""
+}
+
+func (x *AdminGetAccountReviewPolicyResponse) GetUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return nil
+}
+
+// AdminUpdateAccountReviewPolicyRequest sets the workspace review policy.
+// account_name and a concrete (non-UNSPECIFIED) policy are required.
+type AdminUpdateAccountReviewPolicyRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AccountName   string                 `protobuf:"bytes,1,opt,name=account_name,json=accountName,proto3" json:"account_name,omitempty"`
+	Policy        WorkspaceReviewPolicy  `protobuf:"varint,2,opt,name=policy,proto3,enum=brent.WorkspaceReviewPolicy" json:"policy,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AdminUpdateAccountReviewPolicyRequest) Reset() {
+	*x = AdminUpdateAccountReviewPolicyRequest{}
+	mi := &file_brent_proto_msgTypes[310]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminUpdateAccountReviewPolicyRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminUpdateAccountReviewPolicyRequest) ProtoMessage() {}
+
+func (x *AdminUpdateAccountReviewPolicyRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_brent_proto_msgTypes[310]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminUpdateAccountReviewPolicyRequest.ProtoReflect.Descriptor instead.
+func (*AdminUpdateAccountReviewPolicyRequest) Descriptor() ([]byte, []int) {
+	return file_brent_proto_rawDescGZIP(), []int{310}
+}
+
+func (x *AdminUpdateAccountReviewPolicyRequest) GetAccountName() string {
+	if x != nil {
+		return x.AccountName
+	}
+	return ""
+}
+
+func (x *AdminUpdateAccountReviewPolicyRequest) GetPolicy() WorkspaceReviewPolicy {
+	if x != nil {
+		return x.Policy
+	}
+	return WorkspaceReviewPolicy_WORKSPACE_REVIEW_POLICY_UNSPECIFIED
+}
+
+// AdminUpdateAccountReviewPolicyResponse mirrors the get response after a
+// successful update (or idempotent no-op).
+type AdminUpdateAccountReviewPolicyResponse struct {
+	state                     protoimpl.MessageState `protogen:"open.v1"`
+	Policy                    WorkspaceReviewPolicy  `protobuf:"varint,1,opt,name=policy,proto3,enum=brent.WorkspaceReviewPolicy" json:"policy,omitempty"`
+	ActiveHumanPrincipalCount int32                  `protobuf:"varint,2,opt,name=active_human_principal_count,json=activeHumanPrincipalCount,proto3" json:"active_human_principal_count,omitempty"`
+	UpdatedBy                 string                 `protobuf:"bytes,3,opt,name=updated_by,json=updatedBy,proto3" json:"updated_by,omitempty"`
+	UpdatedAt                 *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	unknownFields             protoimpl.UnknownFields
+	sizeCache                 protoimpl.SizeCache
+}
+
+func (x *AdminUpdateAccountReviewPolicyResponse) Reset() {
+	*x = AdminUpdateAccountReviewPolicyResponse{}
+	mi := &file_brent_proto_msgTypes[311]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AdminUpdateAccountReviewPolicyResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AdminUpdateAccountReviewPolicyResponse) ProtoMessage() {}
+
+func (x *AdminUpdateAccountReviewPolicyResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_brent_proto_msgTypes[311]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AdminUpdateAccountReviewPolicyResponse.ProtoReflect.Descriptor instead.
+func (*AdminUpdateAccountReviewPolicyResponse) Descriptor() ([]byte, []int) {
+	return file_brent_proto_rawDescGZIP(), []int{311}
+}
+
+func (x *AdminUpdateAccountReviewPolicyResponse) GetPolicy() WorkspaceReviewPolicy {
+	if x != nil {
+		return x.Policy
+	}
+	return WorkspaceReviewPolicy_WORKSPACE_REVIEW_POLICY_UNSPECIFIED
+}
+
+func (x *AdminUpdateAccountReviewPolicyResponse) GetActiveHumanPrincipalCount() int32 {
+	if x != nil {
+		return x.ActiveHumanPrincipalCount
+	}
+	return 0
+}
+
+func (x *AdminUpdateAccountReviewPolicyResponse) GetUpdatedBy() string {
+	if x != nil {
+		return x.UpdatedBy
+	}
+	return ""
+}
+
+func (x *AdminUpdateAccountReviewPolicyResponse) GetUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdatedAt
 	}
 	return nil
 }
@@ -23643,7 +24033,7 @@ type AdminGetAccountLLMCredentialStatusRequest struct {
 
 func (x *AdminGetAccountLLMCredentialStatusRequest) Reset() {
 	*x = AdminGetAccountLLMCredentialStatusRequest{}
-	mi := &file_brent_proto_msgTypes[307]
+	mi := &file_brent_proto_msgTypes[312]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -23655,7 +24045,7 @@ func (x *AdminGetAccountLLMCredentialStatusRequest) String() string {
 func (*AdminGetAccountLLMCredentialStatusRequest) ProtoMessage() {}
 
 func (x *AdminGetAccountLLMCredentialStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[307]
+	mi := &file_brent_proto_msgTypes[312]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -23668,7 +24058,7 @@ func (x *AdminGetAccountLLMCredentialStatusRequest) ProtoReflect() protoreflect.
 
 // Deprecated: Use AdminGetAccountLLMCredentialStatusRequest.ProtoReflect.Descriptor instead.
 func (*AdminGetAccountLLMCredentialStatusRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{307}
+	return file_brent_proto_rawDescGZIP(), []int{312}
 }
 
 func (x *AdminGetAccountLLMCredentialStatusRequest) GetAccountName() string {
@@ -23700,7 +24090,7 @@ type AdminGetAccountLLMCredentialStatusResponse struct {
 
 func (x *AdminGetAccountLLMCredentialStatusResponse) Reset() {
 	*x = AdminGetAccountLLMCredentialStatusResponse{}
-	mi := &file_brent_proto_msgTypes[308]
+	mi := &file_brent_proto_msgTypes[313]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -23712,7 +24102,7 @@ func (x *AdminGetAccountLLMCredentialStatusResponse) String() string {
 func (*AdminGetAccountLLMCredentialStatusResponse) ProtoMessage() {}
 
 func (x *AdminGetAccountLLMCredentialStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[308]
+	mi := &file_brent_proto_msgTypes[313]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -23725,7 +24115,7 @@ func (x *AdminGetAccountLLMCredentialStatusResponse) ProtoReflect() protoreflect
 
 // Deprecated: Use AdminGetAccountLLMCredentialStatusResponse.ProtoReflect.Descriptor instead.
 func (*AdminGetAccountLLMCredentialStatusResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{308}
+	return file_brent_proto_rawDescGZIP(), []int{313}
 }
 
 func (x *AdminGetAccountLLMCredentialStatusResponse) GetStatus() *WorkspaceLLMCredentialStatus {
@@ -23753,7 +24143,7 @@ type AdminListAccountIntegrationsRequest struct {
 
 func (x *AdminListAccountIntegrationsRequest) Reset() {
 	*x = AdminListAccountIntegrationsRequest{}
-	mi := &file_brent_proto_msgTypes[309]
+	mi := &file_brent_proto_msgTypes[314]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -23765,7 +24155,7 @@ func (x *AdminListAccountIntegrationsRequest) String() string {
 func (*AdminListAccountIntegrationsRequest) ProtoMessage() {}
 
 func (x *AdminListAccountIntegrationsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[309]
+	mi := &file_brent_proto_msgTypes[314]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -23778,7 +24168,7 @@ func (x *AdminListAccountIntegrationsRequest) ProtoReflect() protoreflect.Messag
 
 // Deprecated: Use AdminListAccountIntegrationsRequest.ProtoReflect.Descriptor instead.
 func (*AdminListAccountIntegrationsRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{309}
+	return file_brent_proto_rawDescGZIP(), []int{314}
 }
 
 func (x *AdminListAccountIntegrationsRequest) GetAccountName() string {
@@ -23813,7 +24203,7 @@ type AdminAccountIntegrationInstall struct {
 
 func (x *AdminAccountIntegrationInstall) Reset() {
 	*x = AdminAccountIntegrationInstall{}
-	mi := &file_brent_proto_msgTypes[310]
+	mi := &file_brent_proto_msgTypes[315]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -23825,7 +24215,7 @@ func (x *AdminAccountIntegrationInstall) String() string {
 func (*AdminAccountIntegrationInstall) ProtoMessage() {}
 
 func (x *AdminAccountIntegrationInstall) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[310]
+	mi := &file_brent_proto_msgTypes[315]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -23838,7 +24228,7 @@ func (x *AdminAccountIntegrationInstall) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AdminAccountIntegrationInstall.ProtoReflect.Descriptor instead.
 func (*AdminAccountIntegrationInstall) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{310}
+	return file_brent_proto_rawDescGZIP(), []int{315}
 }
 
 func (x *AdminAccountIntegrationInstall) GetInstallId() int64 {
@@ -23939,7 +24329,7 @@ type AdminListAccountIntegrationsResponse struct {
 
 func (x *AdminListAccountIntegrationsResponse) Reset() {
 	*x = AdminListAccountIntegrationsResponse{}
-	mi := &file_brent_proto_msgTypes[311]
+	mi := &file_brent_proto_msgTypes[316]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -23951,7 +24341,7 @@ func (x *AdminListAccountIntegrationsResponse) String() string {
 func (*AdminListAccountIntegrationsResponse) ProtoMessage() {}
 
 func (x *AdminListAccountIntegrationsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[311]
+	mi := &file_brent_proto_msgTypes[316]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -23964,7 +24354,7 @@ func (x *AdminListAccountIntegrationsResponse) ProtoReflect() protoreflect.Messa
 
 // Deprecated: Use AdminListAccountIntegrationsResponse.ProtoReflect.Descriptor instead.
 func (*AdminListAccountIntegrationsResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{311}
+	return file_brent_proto_rawDescGZIP(), []int{316}
 }
 
 func (x *AdminListAccountIntegrationsResponse) GetInstalls() []*AdminAccountIntegrationInstall {
@@ -24003,7 +24393,7 @@ type ListIntegrationCatalogueRequest struct {
 
 func (x *ListIntegrationCatalogueRequest) Reset() {
 	*x = ListIntegrationCatalogueRequest{}
-	mi := &file_brent_proto_msgTypes[312]
+	mi := &file_brent_proto_msgTypes[317]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -24015,7 +24405,7 @@ func (x *ListIntegrationCatalogueRequest) String() string {
 func (*ListIntegrationCatalogueRequest) ProtoMessage() {}
 
 func (x *ListIntegrationCatalogueRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[312]
+	mi := &file_brent_proto_msgTypes[317]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -24028,7 +24418,7 @@ func (x *ListIntegrationCatalogueRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListIntegrationCatalogueRequest.ProtoReflect.Descriptor instead.
 func (*ListIntegrationCatalogueRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{312}
+	return file_brent_proto_rawDescGZIP(), []int{317}
 }
 
 type ListIntegrationCatalogueResponse struct {
@@ -24040,7 +24430,7 @@ type ListIntegrationCatalogueResponse struct {
 
 func (x *ListIntegrationCatalogueResponse) Reset() {
 	*x = ListIntegrationCatalogueResponse{}
-	mi := &file_brent_proto_msgTypes[313]
+	mi := &file_brent_proto_msgTypes[318]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -24052,7 +24442,7 @@ func (x *ListIntegrationCatalogueResponse) String() string {
 func (*ListIntegrationCatalogueResponse) ProtoMessage() {}
 
 func (x *ListIntegrationCatalogueResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[313]
+	mi := &file_brent_proto_msgTypes[318]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -24065,7 +24455,7 @@ func (x *ListIntegrationCatalogueResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListIntegrationCatalogueResponse.ProtoReflect.Descriptor instead.
 func (*ListIntegrationCatalogueResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{313}
+	return file_brent_proto_rawDescGZIP(), []int{318}
 }
 
 func (x *ListIntegrationCatalogueResponse) GetEntries() []*IntegrationCatalogueEntry {
@@ -24109,7 +24499,7 @@ type IntegrationCatalogueEntry struct {
 
 func (x *IntegrationCatalogueEntry) Reset() {
 	*x = IntegrationCatalogueEntry{}
-	mi := &file_brent_proto_msgTypes[314]
+	mi := &file_brent_proto_msgTypes[319]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -24121,7 +24511,7 @@ func (x *IntegrationCatalogueEntry) String() string {
 func (*IntegrationCatalogueEntry) ProtoMessage() {}
 
 func (x *IntegrationCatalogueEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[314]
+	mi := &file_brent_proto_msgTypes[319]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -24134,7 +24524,7 @@ func (x *IntegrationCatalogueEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use IntegrationCatalogueEntry.ProtoReflect.Descriptor instead.
 func (*IntegrationCatalogueEntry) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{314}
+	return file_brent_proto_rawDescGZIP(), []int{319}
 }
 
 func (x *IntegrationCatalogueEntry) GetStableId() string {
@@ -24238,7 +24628,7 @@ type GetPlanPromptRequest struct {
 
 func (x *GetPlanPromptRequest) Reset() {
 	*x = GetPlanPromptRequest{}
-	mi := &file_brent_proto_msgTypes[315]
+	mi := &file_brent_proto_msgTypes[320]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -24250,7 +24640,7 @@ func (x *GetPlanPromptRequest) String() string {
 func (*GetPlanPromptRequest) ProtoMessage() {}
 
 func (x *GetPlanPromptRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[315]
+	mi := &file_brent_proto_msgTypes[320]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -24263,7 +24653,7 @@ func (x *GetPlanPromptRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPlanPromptRequest.ProtoReflect.Descriptor instead.
 func (*GetPlanPromptRequest) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{315}
+	return file_brent_proto_rawDescGZIP(), []int{320}
 }
 
 func (x *GetPlanPromptRequest) GetWorkspaceId() string {
@@ -24290,7 +24680,7 @@ type GetPlanPromptResponse struct {
 
 func (x *GetPlanPromptResponse) Reset() {
 	*x = GetPlanPromptResponse{}
-	mi := &file_brent_proto_msgTypes[316]
+	mi := &file_brent_proto_msgTypes[321]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -24302,7 +24692,7 @@ func (x *GetPlanPromptResponse) String() string {
 func (*GetPlanPromptResponse) ProtoMessage() {}
 
 func (x *GetPlanPromptResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_brent_proto_msgTypes[316]
+	mi := &file_brent_proto_msgTypes[321]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -24315,7 +24705,7 @@ func (x *GetPlanPromptResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetPlanPromptResponse.ProtoReflect.Descriptor instead.
 func (*GetPlanPromptResponse) Descriptor() ([]byte, []int) {
-	return file_brent_proto_rawDescGZIP(), []int{316}
+	return file_brent_proto_rawDescGZIP(), []int{321}
 }
 
 func (x *GetPlanPromptResponse) GetPlanFriendlyId() string {
@@ -24913,7 +25303,7 @@ const file_brent_proto_rawDesc = "" +
 	"\tartifacts\x18\x12 \x03(\v2 .brent.MetricsComparisonArtifactR\tartifacts\x12E\n" +
 	"\x0fcomparison_mode\x18\x13 \x01(\x0e2\x1c.brent.MetricsComparisonModeR\x0ecomparisonMode\x12R\n" +
 	"\x17planned_unplanned_start\x18\x14 \x01(\v2\x1a.google.protobuf.TimestampR\x15plannedUnplannedStart\x12N\n" +
-	"\x15planned_unplanned_end\x18\x15 \x01(\v2\x1a.google.protobuf.TimestampR\x13plannedUnplannedEnd\"\x8b9\n" +
+	"\x15planned_unplanned_end\x18\x15 \x01(\v2\x1a.google.protobuf.TimestampR\x13plannedUnplannedEnd\"\xf99\n" +
 	"\x05Event\x12\x19\n" +
 	"\bevent_id\x18\x01 \x01(\tR\aeventId\x12;\n" +
 	"\voccurred_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
@@ -25006,7 +25396,8 @@ const file_brent_proto_rawDesc = "" +
 	"\x1edeviation_finding_acknowledged\x18X \x01(\v2#.brent.DeviationFindingAcknowledgedH\x00R\x1cdeviationFindingAcknowledged\x12\x8a\x01\n" +
 	")deviation_finding_acknowledgement_cleared\x18Y \x01(\v2-.brent.DeviationFindingAcknowledgementClearedH\x00R&deviationFindingAcknowledgementCleared\x12]\n" +
 	"\x1aplan_review_policy_decided\x18Z \x01(\v2\x1e.brent.PlanReviewPolicyDecidedH\x00R\x17planReviewPolicyDecided\x12@\n" +
-	"\x0freview_restored\x18[ \x01(\v2\x15.brent.ReviewRestoredH\x00R\x0ereviewRestored\x12S\n" +
+	"\x0freview_restored\x18[ \x01(\v2\x15.brent.ReviewRestoredH\x00R\x0ereviewRestored\x12l\n" +
+	"\x1fworkspace_review_policy_updated\x18\\ \x01(\v2#.brent.WorkspaceReviewPolicyUpdatedH\x00R\x1cworkspaceReviewPolicyUpdated\x12S\n" +
 	"\x16unknown_stored_payload\x18F \x01(\v2\x1b.brent.UnknownStoredPayloadH\x00R\x14unknownStoredPayloadB\t\n" +
 	"\apayloadB\t\n" +
 	"\a_objectB\x12\n" +
@@ -25078,13 +25469,19 @@ const file_brent_proto_rawDesc = "" +
 	"\tplan_uuid\x18\x01 \x01(\tR\bplanUuid\x12(\n" +
 	"\x10plan_friendly_id\x18\x04 \x01(\tR\x0eplanFriendlyId\x124\n" +
 	"\x16requester_principal_id\x18\x02 \x01(\tR\x14requesterPrincipalId\x12?\n" +
-	"\x1cactive_human_principal_count\x18\x03 \x01(\x05R\x19activeHumanPrincipalCount\"\x82\x02\n" +
+	"\x1cactive_human_principal_count\x18\x03 \x01(\x05R\x19activeHumanPrincipalCount\"\xba\x02\n" +
 	"\x17PlanReviewPolicyDecided\x12\x1b\n" +
 	"\tplan_uuid\x18\x01 \x01(\tR\bplanUuid\x12(\n" +
 	"\x10plan_friendly_id\x18\x02 \x01(\tR\x0eplanFriendlyId\x12-\n" +
 	"\x12review_requirement\x18\x03 \x01(\tR\x11reviewRequirement\x120\n" +
 	"\x14review_policy_reason\x18\x04 \x01(\tR\x12reviewPolicyReason\x12?\n" +
-	"\x1cactive_human_principal_count\x18\x05 \x01(\x05R\x19activeHumanPrincipalCount\"l\n" +
+	"\x1cactive_human_principal_count\x18\x05 \x01(\x05R\x19activeHumanPrincipalCount\x126\n" +
+	"\x17workspace_review_policy\x18\x06 \x01(\tR\x15workspaceReviewPolicy\"\xa7\x01\n" +
+	"\x1cWorkspaceReviewPolicyUpdated\x12'\n" +
+	"\x0fprevious_policy\x18\x01 \x01(\tR\x0epreviousPolicy\x12\x1d\n" +
+	"\n" +
+	"new_policy\x18\x02 \x01(\tR\tnewPolicy\x12?\n" +
+	"\x1cactive_human_principal_count\x18\x03 \x01(\x05R\x19activeHumanPrincipalCount\"l\n" +
 	"\x10PrincipalCreated\x12!\n" +
 	"\fprincipal_id\x18\x01 \x01(\tR\vprincipalId\x12\x12\n" +
 	"\x04kind\x18\x02 \x01(\tR\x04kind\x12!\n" +
@@ -26252,7 +26649,26 @@ const file_brent_proto_rawDesc = "" +
 	"&AdminUpdateAccountBrentSettingsRequest\x12!\n" +
 	"\faccount_name\x18\x01 \x01(\tR\vaccountName\x12L\n" +
 	"\x11red_finding_kinds\x18\x02 \x01(\v2\x1b.brent.RedFindingKindsPatchH\x00R\x0fredFindingKinds\x88\x01\x01B\x14\n" +
-	"\x12_red_finding_kinds\"j\n" +
+	"\x12_red_finding_kinds\"G\n" +
+	"\"AdminGetAccountReviewPolicyRequest\x12!\n" +
+	"\faccount_name\x18\x01 \x01(\tR\vaccountName\"\xf6\x01\n" +
+	"#AdminGetAccountReviewPolicyResponse\x124\n" +
+	"\x06policy\x18\x01 \x01(\x0e2\x1c.brent.WorkspaceReviewPolicyR\x06policy\x12?\n" +
+	"\x1cactive_human_principal_count\x18\x02 \x01(\x05R\x19activeHumanPrincipalCount\x12\x1d\n" +
+	"\n" +
+	"updated_by\x18\x03 \x01(\tR\tupdatedBy\x129\n" +
+	"\n" +
+	"updated_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\x80\x01\n" +
+	"%AdminUpdateAccountReviewPolicyRequest\x12!\n" +
+	"\faccount_name\x18\x01 \x01(\tR\vaccountName\x124\n" +
+	"\x06policy\x18\x02 \x01(\x0e2\x1c.brent.WorkspaceReviewPolicyR\x06policy\"\xf9\x01\n" +
+	"&AdminUpdateAccountReviewPolicyResponse\x124\n" +
+	"\x06policy\x18\x01 \x01(\x0e2\x1c.brent.WorkspaceReviewPolicyR\x06policy\x12?\n" +
+	"\x1cactive_human_principal_count\x18\x02 \x01(\x05R\x19activeHumanPrincipalCount\x12\x1d\n" +
+	"\n" +
+	"updated_by\x18\x03 \x01(\tR\tupdatedBy\x129\n" +
+	"\n" +
+	"updated_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"j\n" +
 	")AdminGetAccountLLMCredentialStatusRequest\x12!\n" +
 	"\faccount_name\x18\x01 \x01(\tR\vaccountName\x12\x1a\n" +
 	"\bprovider\x18\x02 \x01(\tR\bprovider\"\x94\x01\n" +
@@ -26374,7 +26790,11 @@ const file_brent_proto_rawDesc = "" +
 	"\x14WorkspaceMemberState\x12&\n" +
 	"\"WORKSPACE_MEMBER_STATE_UNSPECIFIED\x10\x00\x12!\n" +
 	"\x1dWORKSPACE_MEMBER_STATE_ACTIVE\x10\x01\x12\"\n" +
-	"\x1eWORKSPACE_MEMBER_STATE_INVITED\x10\x02*\xcf\x01\n" +
+	"\x1eWORKSPACE_MEMBER_STATE_INVITED\x10\x02*\x8c\x01\n" +
+	"\x15WorkspaceReviewPolicy\x12'\n" +
+	"#WORKSPACE_REVIEW_POLICY_UNSPECIFIED\x10\x00\x12$\n" +
+	" WORKSPACE_REVIEW_POLICY_DISABLED\x10\x01\x12$\n" +
+	" WORKSPACE_REVIEW_POLICY_REQUIRED\x10\x02*\xcf\x01\n" +
 	"\x1aIntegrationCatalogueSource\x12,\n" +
 	"(INTEGRATION_CATALOGUE_SOURCE_UNSPECIFIED\x10\x00\x12,\n" +
 	"(INTEGRATION_CATALOGUE_SOURCE_FIRST_PARTY\x10\x01\x12$\n" +
@@ -26433,7 +26853,7 @@ const file_brent_proto_rawDesc = "" +
 	"\x1cSetWorkspaceIntegrationRoles\x12*.brent.SetWorkspaceIntegrationRolesRequest\x1a+.brent.SetWorkspaceIntegrationRolesResponse\x12h\n" +
 	"\x17ResendVerificationEmail\x12%.brent.ResendVerificationEmailRequest\x1a&.brent.ResendVerificationEmailResponse2`\n" +
 	"\x12BrentPublicService\x12J\n" +
-	"\rGetInvitation\x12\x1b.brent.GetInvitationRequest\x1a\x1c.brent.GetInvitationResponse2\xb0\x1e\n" +
+	"\rGetInvitation\x12\x1b.brent.GetInvitationRequest\x1a\x1c.brent.GetInvitationResponse2\x9b \n" +
 	"\x11BrentAdminService\x12R\n" +
 	"\x0fExecuteWorkflow\x12\x1d.brent.ExecuteWorkflowRequest\x1a\x1e.brent.ExecuteWorkflowResponse0\x01\x12;\n" +
 	"\bListRuns\x12\x16.brent.ListRunsRequest\x1a\x17.brent.ListRunsResponse\x12D\n" +
@@ -26454,7 +26874,9 @@ const file_brent_proto_rawDesc = "" +
 	"\x1dStartAccountMetricsComparison\x120.brent.AdminStartAccountMetricsComparisonRequest\x1a1.brent.AdminStartAccountMetricsComparisonResponse\x12\x87\x01\n" +
 	"\x1eGetAccountMetricsComparisonRun\x121.brent.AdminGetAccountMetricsComparisonRunRequest\x1a2.brent.AdminGetAccountMetricsComparisonRunResponse\x12f\n" +
 	"\x17GetAccountBrentSettings\x12*.brent.AdminGetAccountBrentSettingsRequest\x1a\x1f.brent.GetBrentSettingsResponse\x12o\n" +
-	"\x1aUpdateAccountBrentSettings\x12-.brent.AdminUpdateAccountBrentSettingsRequest\x1a\".brent.UpdateBrentSettingsResponse\x12\x84\x01\n" +
+	"\x1aUpdateAccountBrentSettings\x12-.brent.AdminUpdateAccountBrentSettingsRequest\x1a\".brent.UpdateBrentSettingsResponse\x12o\n" +
+	"\x16GetAccountReviewPolicy\x12).brent.AdminGetAccountReviewPolicyRequest\x1a*.brent.AdminGetAccountReviewPolicyResponse\x12x\n" +
+	"\x19UpdateAccountReviewPolicy\x12,.brent.AdminUpdateAccountReviewPolicyRequest\x1a-.brent.AdminUpdateAccountReviewPolicyResponse\x12\x84\x01\n" +
 	"\x1dGetAccountLLMCredentialStatus\x120.brent.AdminGetAccountLLMCredentialStatusRequest\x1a1.brent.AdminGetAccountLLMCredentialStatusResponse\x12r\n" +
 	"\x17ListAccountIntegrations\x12*.brent.AdminListAccountIntegrationsRequest\x1a+.brent.AdminListAccountIntegrationsResponse\x12J\n" +
 	"\rListWorkflows\x12\x1b.brent.ListWorkflowsRequest\x1a\x1c.brent.ListWorkflowsResponse\x12D\n" +
@@ -26490,8 +26912,8 @@ func file_brent_proto_rawDescGZIP() []byte {
 	return file_brent_proto_rawDescData
 }
 
-var file_brent_proto_enumTypes = make([]protoimpl.EnumInfo, 12)
-var file_brent_proto_msgTypes = make([]protoimpl.MessageInfo, 331)
+var file_brent_proto_enumTypes = make([]protoimpl.EnumInfo, 13)
+var file_brent_proto_msgTypes = make([]protoimpl.MessageInfo, 336)
 var file_brent_proto_goTypes = []any{
 	(RunStatus)(0),                                          // 0: brent.RunStatus
 	(MetricsComparisonMode)(0),                              // 1: brent.MetricsComparisonMode
@@ -26504,845 +26926,861 @@ var file_brent_proto_goTypes = []any{
 	(InvitationStatus)(0),                                   // 8: brent.InvitationStatus
 	(InvitationResultStatus)(0),                             // 9: brent.InvitationResultStatus
 	(WorkspaceMemberState)(0),                               // 10: brent.WorkspaceMemberState
-	(IntegrationCatalogueSource)(0),                         // 11: brent.IntegrationCatalogueSource
-	(*ListPullRequestsRequest)(nil),                         // 12: brent.ListPullRequestsRequest
-	(*ListPullRequestsResponse)(nil),                        // 13: brent.ListPullRequestsResponse
-	(*GetPullRequestByIDRequest)(nil),                       // 14: brent.GetPullRequestByIDRequest
-	(*GetPullRequestByIDResponse)(nil),                      // 15: brent.GetPullRequestByIDResponse
-	(*ListDeviationAnalysesForPRRequest)(nil),               // 16: brent.ListDeviationAnalysesForPRRequest
-	(*ListDeviationAnalysesForPRResponse)(nil),              // 17: brent.ListDeviationAnalysesForPRResponse
-	(*GetPullRequestTimelineRequest)(nil),                   // 18: brent.GetPullRequestTimelineRequest
-	(*PullRequestTimelineEventRow)(nil),                     // 19: brent.PullRequestTimelineEventRow
-	(*PullRequestTimelineWarning)(nil),                      // 20: brent.PullRequestTimelineWarning
-	(*GetPullRequestTimelineResponse)(nil),                  // 21: brent.GetPullRequestTimelineResponse
-	(*PullRequestSummary)(nil),                              // 22: brent.PullRequestSummary
-	(*PullRequest)(nil),                                     // 23: brent.PullRequest
-	(*DeviationAnalysisSummary)(nil),                        // 24: brent.DeviationAnalysisSummary
-	(*DeviationFinding)(nil),                                // 25: brent.DeviationFinding
-	(*ExecuteWorkflowRequest)(nil),                          // 26: brent.ExecuteWorkflowRequest
-	(*ListRunsRequest)(nil),                                 // 27: brent.ListRunsRequest
-	(*ListRunsResponse)(nil),                                // 28: brent.ListRunsResponse
-	(*RunSummary)(nil),                                      // 29: brent.RunSummary
-	(*WatchRunRequest)(nil),                                 // 30: brent.WatchRunRequest
-	(*StreamEventsRequest)(nil),                             // 31: brent.StreamEventsRequest
-	(*StreamEventsResponse)(nil),                            // 32: brent.StreamEventsResponse
-	(*ListEventsRequest)(nil),                               // 33: brent.ListEventsRequest
-	(*ListEventsResponse)(nil),                              // 34: brent.ListEventsResponse
-	(*CancelRunRequest)(nil),                                // 35: brent.CancelRunRequest
-	(*CancelRunResponse)(nil),                               // 36: brent.CancelRunResponse
-	(*ListOpenPullRequestsRequest)(nil),                     // 37: brent.ListOpenPullRequestsRequest
-	(*ListOpenPullRequestsResponse)(nil),                    // 38: brent.ListOpenPullRequestsResponse
-	(*GetPullRequestRequest)(nil),                           // 39: brent.GetPullRequestRequest
-	(*GetPullRequestResponse)(nil),                          // 40: brent.GetPullRequestResponse
-	(*OpenPullRequest)(nil),                                 // 41: brent.OpenPullRequest
-	(*ExecuteWorkflowResponse)(nil),                         // 42: brent.ExecuteWorkflowResponse
-	(*ReasoningStep)(nil),                                   // 43: brent.ReasoningStep
-	(*ToolCallStep)(nil),                                    // 44: brent.ToolCallStep
-	(*ToolResultStep)(nil),                                  // 45: brent.ToolResultStep
-	(*CompletionStep)(nil),                                  // 46: brent.CompletionStep
-	(*ErrorStep)(nil),                                       // 47: brent.ErrorStep
-	(*StatusStep)(nil),                                      // 48: brent.StatusStep
-	(*RunStartedStep)(nil),                                  // 49: brent.RunStartedStep
-	(*QAReadyStep)(nil),                                     // 50: brent.QAReadyStep
-	(*UserQuestionStep)(nil),                                // 51: brent.UserQuestionStep
-	(*UserMessageStep)(nil),                                 // 52: brent.UserMessageStep
-	(*SendQuestionRequest)(nil),                             // 53: brent.SendQuestionRequest
-	(*AdminListPlansRequest)(nil),                           // 54: brent.AdminListPlansRequest
-	(*AdminListPlansResponse)(nil),                          // 55: brent.AdminListPlansResponse
-	(*PlanSummary)(nil),                                     // 56: brent.PlanSummary
-	(*AdminGetPlanRequest)(nil),                             // 57: brent.AdminGetPlanRequest
-	(*AdminGetPlanResponse)(nil),                            // 58: brent.AdminGetPlanResponse
-	(*Plan)(nil),                                            // 59: brent.Plan
-	(*AdminListPrincipalsRequest)(nil),                      // 60: brent.AdminListPrincipalsRequest
-	(*AdminListPrincipalsResponse)(nil),                     // 61: brent.AdminListPrincipalsResponse
-	(*AdminGetPrincipalRequest)(nil),                        // 62: brent.AdminGetPrincipalRequest
-	(*AdminGetPrincipalResponse)(nil),                       // 63: brent.AdminGetPrincipalResponse
-	(*PrincipalIdentity)(nil),                               // 64: brent.PrincipalIdentity
-	(*AdminUpsertPrincipalBindingRequest)(nil),              // 65: brent.AdminUpsertPrincipalBindingRequest
-	(*AdminUpsertPrincipalBindingResponse)(nil),             // 66: brent.AdminUpsertPrincipalBindingResponse
-	(*AdminDeletePrincipalBindingRequest)(nil),              // 67: brent.AdminDeletePrincipalBindingRequest
-	(*AdminDeletePrincipalBindingResponse)(nil),             // 68: brent.AdminDeletePrincipalBindingResponse
-	(*AdminUpdatePrincipalRequest)(nil),                     // 69: brent.AdminUpdatePrincipalRequest
-	(*AdminUpdatePrincipalResponse)(nil),                    // 70: brent.AdminUpdatePrincipalResponse
-	(*AdminCreatePrincipalIdentityRequest)(nil),             // 71: brent.AdminCreatePrincipalIdentityRequest
-	(*AdminCreatePrincipalIdentityResponse)(nil),            // 72: brent.AdminCreatePrincipalIdentityResponse
-	(*AdminDeletePrincipalIdentityRequest)(nil),             // 73: brent.AdminDeletePrincipalIdentityRequest
-	(*AdminDeletePrincipalIdentityResponse)(nil),            // 74: brent.AdminDeletePrincipalIdentityResponse
-	(*AdminSetPrincipalCredentialRequest)(nil),              // 75: brent.AdminSetPrincipalCredentialRequest
-	(*AdminSetPrincipalCredentialResponse)(nil),             // 76: brent.AdminSetPrincipalCredentialResponse
-	(*AdminListPrincipalCredentialConnectionsRequest)(nil),  // 77: brent.AdminListPrincipalCredentialConnectionsRequest
-	(*AdminListPrincipalCredentialConnectionsResponse)(nil), // 78: brent.AdminListPrincipalCredentialConnectionsResponse
-	(*PrincipalCredentialConnection)(nil),                   // 79: brent.PrincipalCredentialConnection
-	(*AdminDeletePrincipalCredentialRequest)(nil),           // 80: brent.AdminDeletePrincipalCredentialRequest
-	(*AdminDeletePrincipalCredentialResponse)(nil),          // 81: brent.AdminDeletePrincipalCredentialResponse
-	(*AdminListReviewsRequest)(nil),                         // 82: brent.AdminListReviewsRequest
-	(*AdminListReviewsResponse)(nil),                        // 83: brent.AdminListReviewsResponse
-	(*ReviewSummary)(nil),                                   // 84: brent.ReviewSummary
-	(*AdminGetReviewRequest)(nil),                           // 85: brent.AdminGetReviewRequest
-	(*AdminGetReviewResponse)(nil),                          // 86: brent.AdminGetReviewResponse
-	(*Review)(nil),                                          // 87: brent.Review
-	(*AccountSummary)(nil),                                  // 88: brent.AccountSummary
-	(*AdminListAccountsResponse)(nil),                       // 89: brent.AdminListAccountsResponse
-	(*AdminGetAccountSummaryRequest)(nil),                   // 90: brent.AdminGetAccountSummaryRequest
-	(*AccountRunSummary)(nil),                               // 91: brent.AccountRunSummary
-	(*AdminGetAccountSummaryResponse)(nil),                  // 92: brent.AdminGetAccountSummaryResponse
-	(*AdminGetAccountHealthAnalysisRequest)(nil),            // 93: brent.AdminGetAccountHealthAnalysisRequest
-	(*AccountHealthFinding)(nil),                            // 94: brent.AccountHealthFinding
-	(*AdminGetAccountHealthAnalysisResponse)(nil),           // 95: brent.AdminGetAccountHealthAnalysisResponse
-	(*AdminListAccountMetricReposRequest)(nil),              // 96: brent.AdminListAccountMetricReposRequest
-	(*AccountMetricRepo)(nil),                               // 97: brent.AccountMetricRepo
-	(*AdminListAccountMetricReposResponse)(nil),             // 98: brent.AdminListAccountMetricReposResponse
-	(*AdminStartAccountMetricsComparisonRequest)(nil),       // 99: brent.AdminStartAccountMetricsComparisonRequest
-	(*AdminStartAccountMetricsComparisonResponse)(nil),      // 100: brent.AdminStartAccountMetricsComparisonResponse
-	(*AdminGetAccountMetricsComparisonRunRequest)(nil),      // 101: brent.AdminGetAccountMetricsComparisonRunRequest
-	(*MetricsComparisonHeadline)(nil),                       // 102: brent.MetricsComparisonHeadline
-	(*MetricsComparisonArtifact)(nil),                       // 103: brent.MetricsComparisonArtifact
-	(*AdminGetAccountMetricsComparisonRunResponse)(nil),     // 104: brent.AdminGetAccountMetricsComparisonRunResponse
-	(*Event)(nil),                                           // 105: brent.Event
-	(*Actor)(nil),                                           // 106: brent.Actor
-	(*ObjectReference)(nil),                                 // 107: brent.ObjectReference
-	(*PlanCreated)(nil),                                     // 108: brent.PlanCreated
-	(*PlanUpdated)(nil),                                     // 109: brent.PlanUpdated
-	(*PlanDeleted)(nil),                                     // 110: brent.PlanDeleted
-	(*ReviewDeleted)(nil),                                   // 111: brent.ReviewDeleted
-	(*ReviewRestored)(nil),                                  // 112: brent.ReviewRestored
-	(*PlanRestored)(nil),                                    // 113: brent.PlanRestored
-	(*ReviewRequested)(nil),                                 // 114: brent.ReviewRequested
-	(*ReviewSubmitted)(nil),                                 // 115: brent.ReviewSubmitted
-	(*ReviewNoEligibleReviewer)(nil),                        // 116: brent.ReviewNoEligibleReviewer
-	(*PlanReviewPolicyDecided)(nil),                         // 117: brent.PlanReviewPolicyDecided
-	(*PrincipalCreated)(nil),                                // 118: brent.PrincipalCreated
-	(*PrincipalUpdated)(nil),                                // 119: brent.PrincipalUpdated
-	(*PrincipalTombstoned)(nil),                             // 120: brent.PrincipalTombstoned
-	(*WorkspaceCreated)(nil),                                // 121: brent.WorkspaceCreated
-	(*WorkspaceOnboardingCompleted)(nil),                    // 122: brent.WorkspaceOnboardingCompleted
-	(*WorkspaceRenamed)(nil),                                // 123: brent.WorkspaceRenamed
-	(*WorkspaceDeleted)(nil),                                // 124: brent.WorkspaceDeleted
-	(*WorkspaceMemberJoined)(nil),                           // 125: brent.WorkspaceMemberJoined
-	(*WorkspaceMemberLeft)(nil),                             // 126: brent.WorkspaceMemberLeft
-	(*ApprovedEmailDomainAdded)(nil),                        // 127: brent.ApprovedEmailDomainAdded
-	(*ApprovedEmailDomainVerified)(nil),                     // 128: brent.ApprovedEmailDomainVerified
-	(*ApprovedEmailDomainDeleted)(nil),                      // 129: brent.ApprovedEmailDomainDeleted
-	(*MCPGrantWorkspaceBindingChanged)(nil),                 // 130: brent.MCPGrantWorkspaceBindingChanged
-	(*IdentityCreated)(nil),                                 // 131: brent.IdentityCreated
-	(*IdentityDeleted)(nil),                                 // 132: brent.IdentityDeleted
-	(*BindingCreated)(nil),                                  // 133: brent.BindingCreated
-	(*BindingUpdated)(nil),                                  // 134: brent.BindingUpdated
-	(*BindingDeleted)(nil),                                  // 135: brent.BindingDeleted
-	(*CredentialConnected)(nil),                             // 136: brent.CredentialConnected
-	(*CredentialRevoked)(nil),                               // 137: brent.CredentialRevoked
-	(*WorkspaceLLMCredentialConnected)(nil),                 // 138: brent.WorkspaceLLMCredentialConnected
-	(*WorkspaceLLMCredentialRevoked)(nil),                   // 139: brent.WorkspaceLLMCredentialRevoked
-	(*ReviewDriveByStarted)(nil),                            // 140: brent.ReviewDriveByStarted
-	(*OtherEvent)(nil),                                      // 141: brent.OtherEvent
-	(*UnknownStoredPayload)(nil),                            // 142: brent.UnknownStoredPayload
-	(*PullRequestOpened)(nil),                               // 143: brent.PullRequestOpened
-	(*PullRequestSynchronized)(nil),                         // 144: brent.PullRequestSynchronized
-	(*PullRequestUpdated)(nil),                              // 145: brent.PullRequestUpdated
-	(*PullRequestClosed)(nil),                               // 146: brent.PullRequestClosed
-	(*PullRequestLinkedToPlan)(nil),                         // 147: brent.PullRequestLinkedToPlan
-	(*PullRequestUnlinkedFromPlan)(nil),                     // 148: brent.PullRequestUnlinkedFromPlan
-	(*PullRequestLinkedToAgentRun)(nil),                     // 149: brent.PullRequestLinkedToAgentRun
-	(*PullRequestReviewRequested)(nil),                      // 150: brent.PullRequestReviewRequested
-	(*PullRequestApproved)(nil),                             // 151: brent.PullRequestApproved
-	(*PullRequestChangesRequested)(nil),                     // 152: brent.PullRequestChangesRequested
-	(*PullRequestReviewDismissed)(nil),                      // 153: brent.PullRequestReviewDismissed
-	(*PullRequestCommentCreated)(nil),                       // 154: brent.PullRequestCommentCreated
-	(*DeviationAnalysisStarted)(nil),                        // 155: brent.DeviationAnalysisStarted
-	(*FindingSummary)(nil),                                  // 156: brent.FindingSummary
-	(*DeviationAnalysisCompleted)(nil),                      // 157: brent.DeviationAnalysisCompleted
-	(*DeviationAnalysisFailed)(nil),                         // 158: brent.DeviationAnalysisFailed
-	(*DeviationFindingRecorded)(nil),                        // 159: brent.DeviationFindingRecorded
-	(*DeviationFindingUpdated)(nil),                         // 160: brent.DeviationFindingUpdated
-	(*DeviationFindingResolved)(nil),                        // 161: brent.DeviationFindingResolved
-	(*DeviationFindingAcknowledged)(nil),                    // 162: brent.DeviationFindingAcknowledged
-	(*DeviationFindingAcknowledgementCleared)(nil),          // 163: brent.DeviationFindingAcknowledgementCleared
-	(*AgentRunDispatched)(nil),                              // 164: brent.AgentRunDispatched
-	(*AgentRunStarted)(nil),                                 // 165: brent.AgentRunStarted
-	(*AgentRunPullRequestMatched)(nil),                      // 166: brent.AgentRunPullRequestMatched
-	(*AgentRunFlaggedNeedsYou)(nil),                         // 167: brent.AgentRunFlaggedNeedsYou
-	(*AgentRunGatePassed)(nil),                              // 168: brent.AgentRunGatePassed
-	(*AgentRunMerged)(nil),                                  // 169: brent.AgentRunMerged
-	(*AgentRunCancelled)(nil),                               // 170: brent.AgentRunCancelled
-	(*AgentRunDeclined)(nil),                                // 171: brent.AgentRunDeclined
-	(*AgentRunAnnotated)(nil),                               // 172: brent.AgentRunAnnotated
-	(*WorkflowIngested)(nil),                                // 173: brent.WorkflowIngested
-	(*WorkflowRunQueued)(nil),                               // 174: brent.WorkflowRunQueued
-	(*WorkflowRunStarted)(nil),                              // 175: brent.WorkflowRunStarted
-	(*WorkflowRunCompleted)(nil),                            // 176: brent.WorkflowRunCompleted
-	(*WorkflowRunFailed)(nil),                               // 177: brent.WorkflowRunFailed
-	(*WorkflowRunCancelled)(nil),                            // 178: brent.WorkflowRunCancelled
-	(*SlackWebhook)(nil),                                    // 179: brent.SlackWebhook
-	(*LinearWebhook)(nil),                                   // 180: brent.LinearWebhook
-	(*ComposioTriggerMessage)(nil),                          // 181: brent.ComposioTriggerMessage
-	(*GitHubWebhook)(nil),                                   // 182: brent.GitHubWebhook
-	(*GitLabWebhook)(nil),                                   // 183: brent.GitLabWebhook
-	(*BitbucketWebhook)(nil),                                // 184: brent.BitbucketWebhook
-	(*EmbeddedJsonCELFixture)(nil),                          // 185: brent.EmbeddedJsonCELFixture
-	(*SlackMentionReceived)(nil),                            // 186: brent.SlackMentionReceived
-	(*OrganisationAppInstallationUpserted)(nil),             // 187: brent.OrganisationAppInstallationUpserted
-	(*OrganisationAppInstallationDeleted)(nil),              // 188: brent.OrganisationAppInstallationDeleted
-	(*SlackReactionAdded)(nil),                              // 189: brent.SlackReactionAdded
-	(*ListWorkflowsRequest)(nil),                            // 190: brent.ListWorkflowsRequest
-	(*ListWorkflowsResponse)(nil),                           // 191: brent.ListWorkflowsResponse
-	(*WorkflowSummary)(nil),                                 // 192: brent.WorkflowSummary
-	(*GetWorkflowRequest)(nil),                              // 193: brent.GetWorkflowRequest
-	(*GetWorkflowResponse)(nil),                             // 194: brent.GetWorkflowResponse
-	(*Workflow)(nil),                                        // 195: brent.Workflow
-	(*ListWorkflowRunsRequest)(nil),                         // 196: brent.ListWorkflowRunsRequest
-	(*ListWorkflowRunsResponse)(nil),                        // 197: brent.ListWorkflowRunsResponse
-	(*WorkflowRunSummary)(nil),                              // 198: brent.WorkflowRunSummary
-	(*GetWorkflowRunRequest)(nil),                           // 199: brent.GetWorkflowRunRequest
-	(*GetWorkflowRunThreadHistoryRequest)(nil),              // 200: brent.GetWorkflowRunThreadHistoryRequest
-	(*WorkflowRunThreadSegment)(nil),                        // 201: brent.WorkflowRunThreadSegment
-	(*GetWorkflowRunThreadHistoryResponse)(nil),             // 202: brent.GetWorkflowRunThreadHistoryResponse
-	(*GetWorkflowRunResponse)(nil),                          // 203: brent.GetWorkflowRunResponse
-	(*WorkflowRun)(nil),                                     // 204: brent.WorkflowRun
-	(*GetPrincipalStatusRequest)(nil),                       // 205: brent.GetPrincipalStatusRequest
-	(*GetPrincipalStatusResponse)(nil),                      // 206: brent.GetPrincipalStatusResponse
-	(*GetIntegrationConnectURLRequest)(nil),                 // 207: brent.GetIntegrationConnectURLRequest
-	(*GetIntegrationConnectURLResponse)(nil),                // 208: brent.GetIntegrationConnectURLResponse
-	(*DisconnectIntegrationRequest)(nil),                    // 209: brent.DisconnectIntegrationRequest
-	(*DisconnectIntegrationResponse)(nil),                   // 210: brent.DisconnectIntegrationResponse
-	(*ConnectByoHttpMcpRequest)(nil),                        // 211: brent.ConnectByoHttpMcpRequest
-	(*ConnectByoHttpMcpResponse)(nil),                       // 212: brent.ConnectByoHttpMcpResponse
-	(*GetGitLabConnectionRequest)(nil),                      // 213: brent.GetGitLabConnectionRequest
-	(*GetGitLabConnectionResponse)(nil),                     // 214: brent.GetGitLabConnectionResponse
-	(*ConnectGitLabRequest)(nil),                            // 215: brent.ConnectGitLabRequest
-	(*ConnectGitLabResponse)(nil),                           // 216: brent.ConnectGitLabResponse
-	(*SaveGitLabSigningTokenRequest)(nil),                   // 217: brent.SaveGitLabSigningTokenRequest
-	(*SaveGitLabSigningTokenResponse)(nil),                  // 218: brent.SaveGitLabSigningTokenResponse
-	(*GitHubPendingInstall)(nil),                            // 219: brent.GitHubPendingInstall
-	(*IntegrationStatus)(nil),                               // 220: brent.IntegrationStatus
-	(*GetWorkspaceIntegrationRolesRequest)(nil),             // 221: brent.GetWorkspaceIntegrationRolesRequest
-	(*GetWorkspaceIntegrationRolesResponse)(nil),            // 222: brent.GetWorkspaceIntegrationRolesResponse
-	(*SetWorkspaceIntegrationRolesRequest)(nil),             // 223: brent.SetWorkspaceIntegrationRolesRequest
-	(*SetWorkspaceIntegrationRolesResponse)(nil),            // 224: brent.SetWorkspaceIntegrationRolesResponse
-	(*Principal)(nil),                                       // 225: brent.Principal
-	(*Workspace)(nil),                                       // 226: brent.Workspace
-	(*CreateWorkspaceRequest)(nil),                          // 227: brent.CreateWorkspaceRequest
-	(*CreateWorkspaceResponse)(nil),                         // 228: brent.CreateWorkspaceResponse
-	(*ListMyWorkspacesRequest)(nil),                         // 229: brent.ListMyWorkspacesRequest
-	(*ListMyWorkspacesResponse)(nil),                        // 230: brent.ListMyWorkspacesResponse
-	(*DiscoverLoginRecoveryCandidatesRequest)(nil),          // 231: brent.DiscoverLoginRecoveryCandidatesRequest
-	(*LoginRecoveryCandidate)(nil),                          // 232: brent.LoginRecoveryCandidate
-	(*DiscoverLoginRecoveryCandidatesResponse)(nil),         // 233: brent.DiscoverLoginRecoveryCandidatesResponse
-	(*RenameWorkspaceRequest)(nil),                          // 234: brent.RenameWorkspaceRequest
-	(*RenameWorkspaceResponse)(nil),                         // 235: brent.RenameWorkspaceResponse
-	(*DeleteWorkspaceRequest)(nil),                          // 236: brent.DeleteWorkspaceRequest
-	(*DeleteWorkspaceResponse)(nil),                         // 237: brent.DeleteWorkspaceResponse
-	(*ListJoinableWorkspacesRequest)(nil),                   // 238: brent.ListJoinableWorkspacesRequest
-	(*ListJoinableWorkspacesResponse)(nil),                  // 239: brent.ListJoinableWorkspacesResponse
-	(*JoinableWorkspace)(nil),                               // 240: brent.JoinableWorkspace
-	(*JoinableWorkspaceMember)(nil),                         // 241: brent.JoinableWorkspaceMember
-	(*JoinWorkspaceRequest)(nil),                            // 242: brent.JoinWorkspaceRequest
-	(*JoinWorkspaceResponse)(nil),                           // 243: brent.JoinWorkspaceResponse
-	(*ApprovedEmailDomain)(nil),                             // 244: brent.ApprovedEmailDomain
-	(*ListApprovedEmailDomainsRequest)(nil),                 // 245: brent.ListApprovedEmailDomainsRequest
-	(*ListApprovedEmailDomainsResponse)(nil),                // 246: brent.ListApprovedEmailDomainsResponse
-	(*AddApprovedEmailDomainRequest)(nil),                   // 247: brent.AddApprovedEmailDomainRequest
-	(*AddApprovedEmailDomainResponse)(nil),                  // 248: brent.AddApprovedEmailDomainResponse
-	(*VerifyApprovedEmailDomainRequest)(nil),                // 249: brent.VerifyApprovedEmailDomainRequest
-	(*VerifyApprovedEmailDomainResponse)(nil),               // 250: brent.VerifyApprovedEmailDomainResponse
-	(*ResendApprovedEmailDomainCodeRequest)(nil),            // 251: brent.ResendApprovedEmailDomainCodeRequest
-	(*ResendApprovedEmailDomainCodeResponse)(nil),           // 252: brent.ResendApprovedEmailDomainCodeResponse
-	(*ResendVerificationEmailRequest)(nil),                  // 253: brent.ResendVerificationEmailRequest
-	(*ResendVerificationEmailResponse)(nil),                 // 254: brent.ResendVerificationEmailResponse
-	(*DeleteApprovedEmailDomainRequest)(nil),                // 255: brent.DeleteApprovedEmailDomainRequest
-	(*DeleteApprovedEmailDomainResponse)(nil),               // 256: brent.DeleteApprovedEmailDomainResponse
-	(*WorkspaceLLMCredentialStatus)(nil),                    // 257: brent.WorkspaceLLMCredentialStatus
-	(*GetWorkspaceLLMCredentialStatusRequest)(nil),          // 258: brent.GetWorkspaceLLMCredentialStatusRequest
-	(*GetWorkspaceLLMCredentialStatusResponse)(nil),         // 259: brent.GetWorkspaceLLMCredentialStatusResponse
-	(*SetWorkspaceLLMCredentialRequest)(nil),                // 260: brent.SetWorkspaceLLMCredentialRequest
-	(*SetWorkspaceLLMCredentialResponse)(nil),               // 261: brent.SetWorkspaceLLMCredentialResponse
-	(*DeleteWorkspaceLLMCredentialRequest)(nil),             // 262: brent.DeleteWorkspaceLLMCredentialRequest
-	(*DeleteWorkspaceLLMCredentialResponse)(nil),            // 263: brent.DeleteWorkspaceLLMCredentialResponse
-	(*MyCursorCredentialStatus)(nil),                        // 264: brent.MyCursorCredentialStatus
-	(*GetMyCursorCredentialStatusRequest)(nil),              // 265: brent.GetMyCursorCredentialStatusRequest
-	(*GetMyCursorCredentialStatusResponse)(nil),             // 266: brent.GetMyCursorCredentialStatusResponse
-	(*SetMyCursorCredentialRequest)(nil),                    // 267: brent.SetMyCursorCredentialRequest
-	(*SetMyCursorCredentialResponse)(nil),                   // 268: brent.SetMyCursorCredentialResponse
-	(*DeleteMyCursorCredentialRequest)(nil),                 // 269: brent.DeleteMyCursorCredentialRequest
-	(*DeleteMyCursorCredentialResponse)(nil),                // 270: brent.DeleteMyCursorCredentialResponse
-	(*UpdateWorkspaceBrandingRequest)(nil),                  // 271: brent.UpdateWorkspaceBrandingRequest
-	(*UpdateWorkspaceBrandingResponse)(nil),                 // 272: brent.UpdateWorkspaceBrandingResponse
-	(*CompleteWorkspaceOnboardingRequest)(nil),              // 273: brent.CompleteWorkspaceOnboardingRequest
-	(*CompleteWorkspaceOnboardingResponse)(nil),             // 274: brent.CompleteWorkspaceOnboardingResponse
-	(*CreateInvitationRequest)(nil),                         // 275: brent.CreateInvitationRequest
-	(*CreateInvitationResponse)(nil),                        // 276: brent.CreateInvitationResponse
-	(*CreateInvitationsRequest)(nil),                        // 277: brent.CreateInvitationsRequest
-	(*InvitationResult)(nil),                                // 278: brent.InvitationResult
-	(*CreateInvitationsResponse)(nil),                       // 279: brent.CreateInvitationsResponse
-	(*AcceptInvitationRequest)(nil),                         // 280: brent.AcceptInvitationRequest
-	(*AcceptInvitationResponse)(nil),                        // 281: brent.AcceptInvitationResponse
-	(*ListWorkspaceMembersRequest)(nil),                     // 282: brent.ListWorkspaceMembersRequest
-	(*ListWorkspaceMembersResponse)(nil),                    // 283: brent.ListWorkspaceMembersResponse
-	(*WorkspaceMember)(nil),                                 // 284: brent.WorkspaceMember
-	(*ResendInvitationRequest)(nil),                         // 285: brent.ResendInvitationRequest
-	(*ResendInvitationResponse)(nil),                        // 286: brent.ResendInvitationResponse
-	(*RevokeInvitationRequest)(nil),                         // 287: brent.RevokeInvitationRequest
-	(*RevokeInvitationResponse)(nil),                        // 288: brent.RevokeInvitationResponse
-	(*RemoveWorkspaceMemberRequest)(nil),                    // 289: brent.RemoveWorkspaceMemberRequest
-	(*RemoveWorkspaceMemberResponse)(nil),                   // 290: brent.RemoveWorkspaceMemberResponse
-	(*UpdateWorkspaceMemberRoleRequest)(nil),                // 291: brent.UpdateWorkspaceMemberRoleRequest
-	(*UpdateWorkspaceMemberRoleResponse)(nil),               // 292: brent.UpdateWorkspaceMemberRoleResponse
-	(*GetInvitationRequest)(nil),                            // 293: brent.GetInvitationRequest
-	(*GetInvitationResponse)(nil),                           // 294: brent.GetInvitationResponse
-	(*UpsertMyVerifiedBindingRequest)(nil),                  // 295: brent.UpsertMyVerifiedBindingRequest
-	(*UpsertMyVerifiedBindingResponse)(nil),                 // 296: brent.UpsertMyVerifiedBindingResponse
-	(*UpdateMyDisplayNameRequest)(nil),                      // 297: brent.UpdateMyDisplayNameRequest
-	(*UpdateMyDisplayNameResponse)(nil),                     // 298: brent.UpdateMyDisplayNameResponse
-	(*ListMyBindingsRequest)(nil),                           // 299: brent.ListMyBindingsRequest
-	(*ListMyBindingsResponse)(nil),                          // 300: brent.ListMyBindingsResponse
-	(*NotificationPreferences)(nil),                         // 301: brent.NotificationPreferences
-	(*ChannelPreferences)(nil),                              // 302: brent.ChannelPreferences
-	(*GetMyNotificationPreferencesRequest)(nil),             // 303: brent.GetMyNotificationPreferencesRequest
-	(*GetMyNotificationPreferencesResponse)(nil),            // 304: brent.GetMyNotificationPreferencesResponse
-	(*UpdateMyNotificationPreferencesRequest)(nil),          // 305: brent.UpdateMyNotificationPreferencesRequest
-	(*UpdateMyNotificationPreferencesResponse)(nil),         // 306: brent.UpdateMyNotificationPreferencesResponse
-	(*RegisterMyPushSubscriptionRequest)(nil),               // 307: brent.RegisterMyPushSubscriptionRequest
-	(*RegisterMyPushSubscriptionResponse)(nil),              // 308: brent.RegisterMyPushSubscriptionResponse
-	(*GetWebPushPublicKeyRequest)(nil),                      // 309: brent.GetWebPushPublicKeyRequest
-	(*GetWebPushPublicKeyResponse)(nil),                     // 310: brent.GetWebPushPublicKeyResponse
-	(*Binding)(nil),                                         // 311: brent.Binding
-	(*RedFindingKindsPatch)(nil),                            // 312: brent.RedFindingKindsPatch
-	(*GetBrentSettingsRequest)(nil),                         // 313: brent.GetBrentSettingsRequest
-	(*GetBrentSettingsResponse)(nil),                        // 314: brent.GetBrentSettingsResponse
-	(*UpdateBrentSettingsRequest)(nil),                      // 315: brent.UpdateBrentSettingsRequest
-	(*UpdateBrentSettingsResponse)(nil),                     // 316: brent.UpdateBrentSettingsResponse
-	(*AdminGetAccountBrentSettingsRequest)(nil),             // 317: brent.AdminGetAccountBrentSettingsRequest
-	(*AdminUpdateAccountBrentSettingsRequest)(nil),          // 318: brent.AdminUpdateAccountBrentSettingsRequest
-	(*AdminGetAccountLLMCredentialStatusRequest)(nil),       // 319: brent.AdminGetAccountLLMCredentialStatusRequest
-	(*AdminGetAccountLLMCredentialStatusResponse)(nil),      // 320: brent.AdminGetAccountLLMCredentialStatusResponse
-	(*AdminListAccountIntegrationsRequest)(nil),             // 321: brent.AdminListAccountIntegrationsRequest
-	(*AdminAccountIntegrationInstall)(nil),                  // 322: brent.AdminAccountIntegrationInstall
-	(*AdminListAccountIntegrationsResponse)(nil),            // 323: brent.AdminListAccountIntegrationsResponse
-	(*ListIntegrationCatalogueRequest)(nil),                 // 324: brent.ListIntegrationCatalogueRequest
-	(*ListIntegrationCatalogueResponse)(nil),                // 325: brent.ListIntegrationCatalogueResponse
-	(*IntegrationCatalogueEntry)(nil),                       // 326: brent.IntegrationCatalogueEntry
-	(*GetPlanPromptRequest)(nil),                            // 327: brent.GetPlanPromptRequest
-	(*GetPlanPromptResponse)(nil),                           // 328: brent.GetPlanPromptResponse
-	nil,                                                     // 329: brent.PlanUpdated.PreviousEntry
-	nil,                                                     // 330: brent.PlanUpdated.AfterEntry
-	nil,                                                     // 331: brent.PrincipalUpdated.PreviousEntry
-	nil,                                                     // 332: brent.PrincipalUpdated.AfterEntry
-	nil,                                                     // 333: brent.BindingUpdated.PreviousEntry
-	nil,                                                     // 334: brent.BindingUpdated.AfterEntry
-	nil,                                                     // 335: brent.OtherEvent.FieldsEntry
-	nil,                                                     // 336: brent.PullRequestUpdated.PreviousEntry
-	nil,                                                     // 337: brent.PullRequestUpdated.AfterEntry
-	nil,                                                     // 338: brent.DeviationAnalysisCompleted.FindingCountByTagEntry
-	nil,                                                     // 339: brent.DeviationFindingUpdated.PreviousEntry
-	nil,                                                     // 340: brent.DeviationFindingUpdated.AfterEntry
-	nil,                                                     // 341: brent.NotificationPreferences.PreferencesEntry
-	nil,                                                     // 342: brent.ChannelPreferences.ChannelsEntry
-	(*timestamppb.Timestamp)(nil),                           // 343: google.protobuf.Timestamp
-	(*structpb.Value)(nil),                                  // 344: google.protobuf.Value
-	(*descriptorpb.FieldOptions)(nil),                       // 345: google.protobuf.FieldOptions
-	(*emptypb.Empty)(nil),                                   // 346: google.protobuf.Empty
+	(WorkspaceReviewPolicy)(0),                              // 11: brent.WorkspaceReviewPolicy
+	(IntegrationCatalogueSource)(0),                         // 12: brent.IntegrationCatalogueSource
+	(*ListPullRequestsRequest)(nil),                         // 13: brent.ListPullRequestsRequest
+	(*ListPullRequestsResponse)(nil),                        // 14: brent.ListPullRequestsResponse
+	(*GetPullRequestByIDRequest)(nil),                       // 15: brent.GetPullRequestByIDRequest
+	(*GetPullRequestByIDResponse)(nil),                      // 16: brent.GetPullRequestByIDResponse
+	(*ListDeviationAnalysesForPRRequest)(nil),               // 17: brent.ListDeviationAnalysesForPRRequest
+	(*ListDeviationAnalysesForPRResponse)(nil),              // 18: brent.ListDeviationAnalysesForPRResponse
+	(*GetPullRequestTimelineRequest)(nil),                   // 19: brent.GetPullRequestTimelineRequest
+	(*PullRequestTimelineEventRow)(nil),                     // 20: brent.PullRequestTimelineEventRow
+	(*PullRequestTimelineWarning)(nil),                      // 21: brent.PullRequestTimelineWarning
+	(*GetPullRequestTimelineResponse)(nil),                  // 22: brent.GetPullRequestTimelineResponse
+	(*PullRequestSummary)(nil),                              // 23: brent.PullRequestSummary
+	(*PullRequest)(nil),                                     // 24: brent.PullRequest
+	(*DeviationAnalysisSummary)(nil),                        // 25: brent.DeviationAnalysisSummary
+	(*DeviationFinding)(nil),                                // 26: brent.DeviationFinding
+	(*ExecuteWorkflowRequest)(nil),                          // 27: brent.ExecuteWorkflowRequest
+	(*ListRunsRequest)(nil),                                 // 28: brent.ListRunsRequest
+	(*ListRunsResponse)(nil),                                // 29: brent.ListRunsResponse
+	(*RunSummary)(nil),                                      // 30: brent.RunSummary
+	(*WatchRunRequest)(nil),                                 // 31: brent.WatchRunRequest
+	(*StreamEventsRequest)(nil),                             // 32: brent.StreamEventsRequest
+	(*StreamEventsResponse)(nil),                            // 33: brent.StreamEventsResponse
+	(*ListEventsRequest)(nil),                               // 34: brent.ListEventsRequest
+	(*ListEventsResponse)(nil),                              // 35: brent.ListEventsResponse
+	(*CancelRunRequest)(nil),                                // 36: brent.CancelRunRequest
+	(*CancelRunResponse)(nil),                               // 37: brent.CancelRunResponse
+	(*ListOpenPullRequestsRequest)(nil),                     // 38: brent.ListOpenPullRequestsRequest
+	(*ListOpenPullRequestsResponse)(nil),                    // 39: brent.ListOpenPullRequestsResponse
+	(*GetPullRequestRequest)(nil),                           // 40: brent.GetPullRequestRequest
+	(*GetPullRequestResponse)(nil),                          // 41: brent.GetPullRequestResponse
+	(*OpenPullRequest)(nil),                                 // 42: brent.OpenPullRequest
+	(*ExecuteWorkflowResponse)(nil),                         // 43: brent.ExecuteWorkflowResponse
+	(*ReasoningStep)(nil),                                   // 44: brent.ReasoningStep
+	(*ToolCallStep)(nil),                                    // 45: brent.ToolCallStep
+	(*ToolResultStep)(nil),                                  // 46: brent.ToolResultStep
+	(*CompletionStep)(nil),                                  // 47: brent.CompletionStep
+	(*ErrorStep)(nil),                                       // 48: brent.ErrorStep
+	(*StatusStep)(nil),                                      // 49: brent.StatusStep
+	(*RunStartedStep)(nil),                                  // 50: brent.RunStartedStep
+	(*QAReadyStep)(nil),                                     // 51: brent.QAReadyStep
+	(*UserQuestionStep)(nil),                                // 52: brent.UserQuestionStep
+	(*UserMessageStep)(nil),                                 // 53: brent.UserMessageStep
+	(*SendQuestionRequest)(nil),                             // 54: brent.SendQuestionRequest
+	(*AdminListPlansRequest)(nil),                           // 55: brent.AdminListPlansRequest
+	(*AdminListPlansResponse)(nil),                          // 56: brent.AdminListPlansResponse
+	(*PlanSummary)(nil),                                     // 57: brent.PlanSummary
+	(*AdminGetPlanRequest)(nil),                             // 58: brent.AdminGetPlanRequest
+	(*AdminGetPlanResponse)(nil),                            // 59: brent.AdminGetPlanResponse
+	(*Plan)(nil),                                            // 60: brent.Plan
+	(*AdminListPrincipalsRequest)(nil),                      // 61: brent.AdminListPrincipalsRequest
+	(*AdminListPrincipalsResponse)(nil),                     // 62: brent.AdminListPrincipalsResponse
+	(*AdminGetPrincipalRequest)(nil),                        // 63: brent.AdminGetPrincipalRequest
+	(*AdminGetPrincipalResponse)(nil),                       // 64: brent.AdminGetPrincipalResponse
+	(*PrincipalIdentity)(nil),                               // 65: brent.PrincipalIdentity
+	(*AdminUpsertPrincipalBindingRequest)(nil),              // 66: brent.AdminUpsertPrincipalBindingRequest
+	(*AdminUpsertPrincipalBindingResponse)(nil),             // 67: brent.AdminUpsertPrincipalBindingResponse
+	(*AdminDeletePrincipalBindingRequest)(nil),              // 68: brent.AdminDeletePrincipalBindingRequest
+	(*AdminDeletePrincipalBindingResponse)(nil),             // 69: brent.AdminDeletePrincipalBindingResponse
+	(*AdminUpdatePrincipalRequest)(nil),                     // 70: brent.AdminUpdatePrincipalRequest
+	(*AdminUpdatePrincipalResponse)(nil),                    // 71: brent.AdminUpdatePrincipalResponse
+	(*AdminCreatePrincipalIdentityRequest)(nil),             // 72: brent.AdminCreatePrincipalIdentityRequest
+	(*AdminCreatePrincipalIdentityResponse)(nil),            // 73: brent.AdminCreatePrincipalIdentityResponse
+	(*AdminDeletePrincipalIdentityRequest)(nil),             // 74: brent.AdminDeletePrincipalIdentityRequest
+	(*AdminDeletePrincipalIdentityResponse)(nil),            // 75: brent.AdminDeletePrincipalIdentityResponse
+	(*AdminSetPrincipalCredentialRequest)(nil),              // 76: brent.AdminSetPrincipalCredentialRequest
+	(*AdminSetPrincipalCredentialResponse)(nil),             // 77: brent.AdminSetPrincipalCredentialResponse
+	(*AdminListPrincipalCredentialConnectionsRequest)(nil),  // 78: brent.AdminListPrincipalCredentialConnectionsRequest
+	(*AdminListPrincipalCredentialConnectionsResponse)(nil), // 79: brent.AdminListPrincipalCredentialConnectionsResponse
+	(*PrincipalCredentialConnection)(nil),                   // 80: brent.PrincipalCredentialConnection
+	(*AdminDeletePrincipalCredentialRequest)(nil),           // 81: brent.AdminDeletePrincipalCredentialRequest
+	(*AdminDeletePrincipalCredentialResponse)(nil),          // 82: brent.AdminDeletePrincipalCredentialResponse
+	(*AdminListReviewsRequest)(nil),                         // 83: brent.AdminListReviewsRequest
+	(*AdminListReviewsResponse)(nil),                        // 84: brent.AdminListReviewsResponse
+	(*ReviewSummary)(nil),                                   // 85: brent.ReviewSummary
+	(*AdminGetReviewRequest)(nil),                           // 86: brent.AdminGetReviewRequest
+	(*AdminGetReviewResponse)(nil),                          // 87: brent.AdminGetReviewResponse
+	(*Review)(nil),                                          // 88: brent.Review
+	(*AccountSummary)(nil),                                  // 89: brent.AccountSummary
+	(*AdminListAccountsResponse)(nil),                       // 90: brent.AdminListAccountsResponse
+	(*AdminGetAccountSummaryRequest)(nil),                   // 91: brent.AdminGetAccountSummaryRequest
+	(*AccountRunSummary)(nil),                               // 92: brent.AccountRunSummary
+	(*AdminGetAccountSummaryResponse)(nil),                  // 93: brent.AdminGetAccountSummaryResponse
+	(*AdminGetAccountHealthAnalysisRequest)(nil),            // 94: brent.AdminGetAccountHealthAnalysisRequest
+	(*AccountHealthFinding)(nil),                            // 95: brent.AccountHealthFinding
+	(*AdminGetAccountHealthAnalysisResponse)(nil),           // 96: brent.AdminGetAccountHealthAnalysisResponse
+	(*AdminListAccountMetricReposRequest)(nil),              // 97: brent.AdminListAccountMetricReposRequest
+	(*AccountMetricRepo)(nil),                               // 98: brent.AccountMetricRepo
+	(*AdminListAccountMetricReposResponse)(nil),             // 99: brent.AdminListAccountMetricReposResponse
+	(*AdminStartAccountMetricsComparisonRequest)(nil),       // 100: brent.AdminStartAccountMetricsComparisonRequest
+	(*AdminStartAccountMetricsComparisonResponse)(nil),      // 101: brent.AdminStartAccountMetricsComparisonResponse
+	(*AdminGetAccountMetricsComparisonRunRequest)(nil),      // 102: brent.AdminGetAccountMetricsComparisonRunRequest
+	(*MetricsComparisonHeadline)(nil),                       // 103: brent.MetricsComparisonHeadline
+	(*MetricsComparisonArtifact)(nil),                       // 104: brent.MetricsComparisonArtifact
+	(*AdminGetAccountMetricsComparisonRunResponse)(nil),     // 105: brent.AdminGetAccountMetricsComparisonRunResponse
+	(*Event)(nil),                                           // 106: brent.Event
+	(*Actor)(nil),                                           // 107: brent.Actor
+	(*ObjectReference)(nil),                                 // 108: brent.ObjectReference
+	(*PlanCreated)(nil),                                     // 109: brent.PlanCreated
+	(*PlanUpdated)(nil),                                     // 110: brent.PlanUpdated
+	(*PlanDeleted)(nil),                                     // 111: brent.PlanDeleted
+	(*ReviewDeleted)(nil),                                   // 112: brent.ReviewDeleted
+	(*ReviewRestored)(nil),                                  // 113: brent.ReviewRestored
+	(*PlanRestored)(nil),                                    // 114: brent.PlanRestored
+	(*ReviewRequested)(nil),                                 // 115: brent.ReviewRequested
+	(*ReviewSubmitted)(nil),                                 // 116: brent.ReviewSubmitted
+	(*ReviewNoEligibleReviewer)(nil),                        // 117: brent.ReviewNoEligibleReviewer
+	(*PlanReviewPolicyDecided)(nil),                         // 118: brent.PlanReviewPolicyDecided
+	(*WorkspaceReviewPolicyUpdated)(nil),                    // 119: brent.WorkspaceReviewPolicyUpdated
+	(*PrincipalCreated)(nil),                                // 120: brent.PrincipalCreated
+	(*PrincipalUpdated)(nil),                                // 121: brent.PrincipalUpdated
+	(*PrincipalTombstoned)(nil),                             // 122: brent.PrincipalTombstoned
+	(*WorkspaceCreated)(nil),                                // 123: brent.WorkspaceCreated
+	(*WorkspaceOnboardingCompleted)(nil),                    // 124: brent.WorkspaceOnboardingCompleted
+	(*WorkspaceRenamed)(nil),                                // 125: brent.WorkspaceRenamed
+	(*WorkspaceDeleted)(nil),                                // 126: brent.WorkspaceDeleted
+	(*WorkspaceMemberJoined)(nil),                           // 127: brent.WorkspaceMemberJoined
+	(*WorkspaceMemberLeft)(nil),                             // 128: brent.WorkspaceMemberLeft
+	(*ApprovedEmailDomainAdded)(nil),                        // 129: brent.ApprovedEmailDomainAdded
+	(*ApprovedEmailDomainVerified)(nil),                     // 130: brent.ApprovedEmailDomainVerified
+	(*ApprovedEmailDomainDeleted)(nil),                      // 131: brent.ApprovedEmailDomainDeleted
+	(*MCPGrantWorkspaceBindingChanged)(nil),                 // 132: brent.MCPGrantWorkspaceBindingChanged
+	(*IdentityCreated)(nil),                                 // 133: brent.IdentityCreated
+	(*IdentityDeleted)(nil),                                 // 134: brent.IdentityDeleted
+	(*BindingCreated)(nil),                                  // 135: brent.BindingCreated
+	(*BindingUpdated)(nil),                                  // 136: brent.BindingUpdated
+	(*BindingDeleted)(nil),                                  // 137: brent.BindingDeleted
+	(*CredentialConnected)(nil),                             // 138: brent.CredentialConnected
+	(*CredentialRevoked)(nil),                               // 139: brent.CredentialRevoked
+	(*WorkspaceLLMCredentialConnected)(nil),                 // 140: brent.WorkspaceLLMCredentialConnected
+	(*WorkspaceLLMCredentialRevoked)(nil),                   // 141: brent.WorkspaceLLMCredentialRevoked
+	(*ReviewDriveByStarted)(nil),                            // 142: brent.ReviewDriveByStarted
+	(*OtherEvent)(nil),                                      // 143: brent.OtherEvent
+	(*UnknownStoredPayload)(nil),                            // 144: brent.UnknownStoredPayload
+	(*PullRequestOpened)(nil),                               // 145: brent.PullRequestOpened
+	(*PullRequestSynchronized)(nil),                         // 146: brent.PullRequestSynchronized
+	(*PullRequestUpdated)(nil),                              // 147: brent.PullRequestUpdated
+	(*PullRequestClosed)(nil),                               // 148: brent.PullRequestClosed
+	(*PullRequestLinkedToPlan)(nil),                         // 149: brent.PullRequestLinkedToPlan
+	(*PullRequestUnlinkedFromPlan)(nil),                     // 150: brent.PullRequestUnlinkedFromPlan
+	(*PullRequestLinkedToAgentRun)(nil),                     // 151: brent.PullRequestLinkedToAgentRun
+	(*PullRequestReviewRequested)(nil),                      // 152: brent.PullRequestReviewRequested
+	(*PullRequestApproved)(nil),                             // 153: brent.PullRequestApproved
+	(*PullRequestChangesRequested)(nil),                     // 154: brent.PullRequestChangesRequested
+	(*PullRequestReviewDismissed)(nil),                      // 155: brent.PullRequestReviewDismissed
+	(*PullRequestCommentCreated)(nil),                       // 156: brent.PullRequestCommentCreated
+	(*DeviationAnalysisStarted)(nil),                        // 157: brent.DeviationAnalysisStarted
+	(*FindingSummary)(nil),                                  // 158: brent.FindingSummary
+	(*DeviationAnalysisCompleted)(nil),                      // 159: brent.DeviationAnalysisCompleted
+	(*DeviationAnalysisFailed)(nil),                         // 160: brent.DeviationAnalysisFailed
+	(*DeviationFindingRecorded)(nil),                        // 161: brent.DeviationFindingRecorded
+	(*DeviationFindingUpdated)(nil),                         // 162: brent.DeviationFindingUpdated
+	(*DeviationFindingResolved)(nil),                        // 163: brent.DeviationFindingResolved
+	(*DeviationFindingAcknowledged)(nil),                    // 164: brent.DeviationFindingAcknowledged
+	(*DeviationFindingAcknowledgementCleared)(nil),          // 165: brent.DeviationFindingAcknowledgementCleared
+	(*AgentRunDispatched)(nil),                              // 166: brent.AgentRunDispatched
+	(*AgentRunStarted)(nil),                                 // 167: brent.AgentRunStarted
+	(*AgentRunPullRequestMatched)(nil),                      // 168: brent.AgentRunPullRequestMatched
+	(*AgentRunFlaggedNeedsYou)(nil),                         // 169: brent.AgentRunFlaggedNeedsYou
+	(*AgentRunGatePassed)(nil),                              // 170: brent.AgentRunGatePassed
+	(*AgentRunMerged)(nil),                                  // 171: brent.AgentRunMerged
+	(*AgentRunCancelled)(nil),                               // 172: brent.AgentRunCancelled
+	(*AgentRunDeclined)(nil),                                // 173: brent.AgentRunDeclined
+	(*AgentRunAnnotated)(nil),                               // 174: brent.AgentRunAnnotated
+	(*WorkflowIngested)(nil),                                // 175: brent.WorkflowIngested
+	(*WorkflowRunQueued)(nil),                               // 176: brent.WorkflowRunQueued
+	(*WorkflowRunStarted)(nil),                              // 177: brent.WorkflowRunStarted
+	(*WorkflowRunCompleted)(nil),                            // 178: brent.WorkflowRunCompleted
+	(*WorkflowRunFailed)(nil),                               // 179: brent.WorkflowRunFailed
+	(*WorkflowRunCancelled)(nil),                            // 180: brent.WorkflowRunCancelled
+	(*SlackWebhook)(nil),                                    // 181: brent.SlackWebhook
+	(*LinearWebhook)(nil),                                   // 182: brent.LinearWebhook
+	(*ComposioTriggerMessage)(nil),                          // 183: brent.ComposioTriggerMessage
+	(*GitHubWebhook)(nil),                                   // 184: brent.GitHubWebhook
+	(*GitLabWebhook)(nil),                                   // 185: brent.GitLabWebhook
+	(*BitbucketWebhook)(nil),                                // 186: brent.BitbucketWebhook
+	(*EmbeddedJsonCELFixture)(nil),                          // 187: brent.EmbeddedJsonCELFixture
+	(*SlackMentionReceived)(nil),                            // 188: brent.SlackMentionReceived
+	(*OrganisationAppInstallationUpserted)(nil),             // 189: brent.OrganisationAppInstallationUpserted
+	(*OrganisationAppInstallationDeleted)(nil),              // 190: brent.OrganisationAppInstallationDeleted
+	(*SlackReactionAdded)(nil),                              // 191: brent.SlackReactionAdded
+	(*ListWorkflowsRequest)(nil),                            // 192: brent.ListWorkflowsRequest
+	(*ListWorkflowsResponse)(nil),                           // 193: brent.ListWorkflowsResponse
+	(*WorkflowSummary)(nil),                                 // 194: brent.WorkflowSummary
+	(*GetWorkflowRequest)(nil),                              // 195: brent.GetWorkflowRequest
+	(*GetWorkflowResponse)(nil),                             // 196: brent.GetWorkflowResponse
+	(*Workflow)(nil),                                        // 197: brent.Workflow
+	(*ListWorkflowRunsRequest)(nil),                         // 198: brent.ListWorkflowRunsRequest
+	(*ListWorkflowRunsResponse)(nil),                        // 199: brent.ListWorkflowRunsResponse
+	(*WorkflowRunSummary)(nil),                              // 200: brent.WorkflowRunSummary
+	(*GetWorkflowRunRequest)(nil),                           // 201: brent.GetWorkflowRunRequest
+	(*GetWorkflowRunThreadHistoryRequest)(nil),              // 202: brent.GetWorkflowRunThreadHistoryRequest
+	(*WorkflowRunThreadSegment)(nil),                        // 203: brent.WorkflowRunThreadSegment
+	(*GetWorkflowRunThreadHistoryResponse)(nil),             // 204: brent.GetWorkflowRunThreadHistoryResponse
+	(*GetWorkflowRunResponse)(nil),                          // 205: brent.GetWorkflowRunResponse
+	(*WorkflowRun)(nil),                                     // 206: brent.WorkflowRun
+	(*GetPrincipalStatusRequest)(nil),                       // 207: brent.GetPrincipalStatusRequest
+	(*GetPrincipalStatusResponse)(nil),                      // 208: brent.GetPrincipalStatusResponse
+	(*GetIntegrationConnectURLRequest)(nil),                 // 209: brent.GetIntegrationConnectURLRequest
+	(*GetIntegrationConnectURLResponse)(nil),                // 210: brent.GetIntegrationConnectURLResponse
+	(*DisconnectIntegrationRequest)(nil),                    // 211: brent.DisconnectIntegrationRequest
+	(*DisconnectIntegrationResponse)(nil),                   // 212: brent.DisconnectIntegrationResponse
+	(*ConnectByoHttpMcpRequest)(nil),                        // 213: brent.ConnectByoHttpMcpRequest
+	(*ConnectByoHttpMcpResponse)(nil),                       // 214: brent.ConnectByoHttpMcpResponse
+	(*GetGitLabConnectionRequest)(nil),                      // 215: brent.GetGitLabConnectionRequest
+	(*GetGitLabConnectionResponse)(nil),                     // 216: brent.GetGitLabConnectionResponse
+	(*ConnectGitLabRequest)(nil),                            // 217: brent.ConnectGitLabRequest
+	(*ConnectGitLabResponse)(nil),                           // 218: brent.ConnectGitLabResponse
+	(*SaveGitLabSigningTokenRequest)(nil),                   // 219: brent.SaveGitLabSigningTokenRequest
+	(*SaveGitLabSigningTokenResponse)(nil),                  // 220: brent.SaveGitLabSigningTokenResponse
+	(*GitHubPendingInstall)(nil),                            // 221: brent.GitHubPendingInstall
+	(*IntegrationStatus)(nil),                               // 222: brent.IntegrationStatus
+	(*GetWorkspaceIntegrationRolesRequest)(nil),             // 223: brent.GetWorkspaceIntegrationRolesRequest
+	(*GetWorkspaceIntegrationRolesResponse)(nil),            // 224: brent.GetWorkspaceIntegrationRolesResponse
+	(*SetWorkspaceIntegrationRolesRequest)(nil),             // 225: brent.SetWorkspaceIntegrationRolesRequest
+	(*SetWorkspaceIntegrationRolesResponse)(nil),            // 226: brent.SetWorkspaceIntegrationRolesResponse
+	(*Principal)(nil),                                       // 227: brent.Principal
+	(*Workspace)(nil),                                       // 228: brent.Workspace
+	(*CreateWorkspaceRequest)(nil),                          // 229: brent.CreateWorkspaceRequest
+	(*CreateWorkspaceResponse)(nil),                         // 230: brent.CreateWorkspaceResponse
+	(*ListMyWorkspacesRequest)(nil),                         // 231: brent.ListMyWorkspacesRequest
+	(*ListMyWorkspacesResponse)(nil),                        // 232: brent.ListMyWorkspacesResponse
+	(*DiscoverLoginRecoveryCandidatesRequest)(nil),          // 233: brent.DiscoverLoginRecoveryCandidatesRequest
+	(*LoginRecoveryCandidate)(nil),                          // 234: brent.LoginRecoveryCandidate
+	(*DiscoverLoginRecoveryCandidatesResponse)(nil),         // 235: brent.DiscoverLoginRecoveryCandidatesResponse
+	(*RenameWorkspaceRequest)(nil),                          // 236: brent.RenameWorkspaceRequest
+	(*RenameWorkspaceResponse)(nil),                         // 237: brent.RenameWorkspaceResponse
+	(*DeleteWorkspaceRequest)(nil),                          // 238: brent.DeleteWorkspaceRequest
+	(*DeleteWorkspaceResponse)(nil),                         // 239: brent.DeleteWorkspaceResponse
+	(*ListJoinableWorkspacesRequest)(nil),                   // 240: brent.ListJoinableWorkspacesRequest
+	(*ListJoinableWorkspacesResponse)(nil),                  // 241: brent.ListJoinableWorkspacesResponse
+	(*JoinableWorkspace)(nil),                               // 242: brent.JoinableWorkspace
+	(*JoinableWorkspaceMember)(nil),                         // 243: brent.JoinableWorkspaceMember
+	(*JoinWorkspaceRequest)(nil),                            // 244: brent.JoinWorkspaceRequest
+	(*JoinWorkspaceResponse)(nil),                           // 245: brent.JoinWorkspaceResponse
+	(*ApprovedEmailDomain)(nil),                             // 246: brent.ApprovedEmailDomain
+	(*ListApprovedEmailDomainsRequest)(nil),                 // 247: brent.ListApprovedEmailDomainsRequest
+	(*ListApprovedEmailDomainsResponse)(nil),                // 248: brent.ListApprovedEmailDomainsResponse
+	(*AddApprovedEmailDomainRequest)(nil),                   // 249: brent.AddApprovedEmailDomainRequest
+	(*AddApprovedEmailDomainResponse)(nil),                  // 250: brent.AddApprovedEmailDomainResponse
+	(*VerifyApprovedEmailDomainRequest)(nil),                // 251: brent.VerifyApprovedEmailDomainRequest
+	(*VerifyApprovedEmailDomainResponse)(nil),               // 252: brent.VerifyApprovedEmailDomainResponse
+	(*ResendApprovedEmailDomainCodeRequest)(nil),            // 253: brent.ResendApprovedEmailDomainCodeRequest
+	(*ResendApprovedEmailDomainCodeResponse)(nil),           // 254: brent.ResendApprovedEmailDomainCodeResponse
+	(*ResendVerificationEmailRequest)(nil),                  // 255: brent.ResendVerificationEmailRequest
+	(*ResendVerificationEmailResponse)(nil),                 // 256: brent.ResendVerificationEmailResponse
+	(*DeleteApprovedEmailDomainRequest)(nil),                // 257: brent.DeleteApprovedEmailDomainRequest
+	(*DeleteApprovedEmailDomainResponse)(nil),               // 258: brent.DeleteApprovedEmailDomainResponse
+	(*WorkspaceLLMCredentialStatus)(nil),                    // 259: brent.WorkspaceLLMCredentialStatus
+	(*GetWorkspaceLLMCredentialStatusRequest)(nil),          // 260: brent.GetWorkspaceLLMCredentialStatusRequest
+	(*GetWorkspaceLLMCredentialStatusResponse)(nil),         // 261: brent.GetWorkspaceLLMCredentialStatusResponse
+	(*SetWorkspaceLLMCredentialRequest)(nil),                // 262: brent.SetWorkspaceLLMCredentialRequest
+	(*SetWorkspaceLLMCredentialResponse)(nil),               // 263: brent.SetWorkspaceLLMCredentialResponse
+	(*DeleteWorkspaceLLMCredentialRequest)(nil),             // 264: brent.DeleteWorkspaceLLMCredentialRequest
+	(*DeleteWorkspaceLLMCredentialResponse)(nil),            // 265: brent.DeleteWorkspaceLLMCredentialResponse
+	(*MyCursorCredentialStatus)(nil),                        // 266: brent.MyCursorCredentialStatus
+	(*GetMyCursorCredentialStatusRequest)(nil),              // 267: brent.GetMyCursorCredentialStatusRequest
+	(*GetMyCursorCredentialStatusResponse)(nil),             // 268: brent.GetMyCursorCredentialStatusResponse
+	(*SetMyCursorCredentialRequest)(nil),                    // 269: brent.SetMyCursorCredentialRequest
+	(*SetMyCursorCredentialResponse)(nil),                   // 270: brent.SetMyCursorCredentialResponse
+	(*DeleteMyCursorCredentialRequest)(nil),                 // 271: brent.DeleteMyCursorCredentialRequest
+	(*DeleteMyCursorCredentialResponse)(nil),                // 272: brent.DeleteMyCursorCredentialResponse
+	(*UpdateWorkspaceBrandingRequest)(nil),                  // 273: brent.UpdateWorkspaceBrandingRequest
+	(*UpdateWorkspaceBrandingResponse)(nil),                 // 274: brent.UpdateWorkspaceBrandingResponse
+	(*CompleteWorkspaceOnboardingRequest)(nil),              // 275: brent.CompleteWorkspaceOnboardingRequest
+	(*CompleteWorkspaceOnboardingResponse)(nil),             // 276: brent.CompleteWorkspaceOnboardingResponse
+	(*CreateInvitationRequest)(nil),                         // 277: brent.CreateInvitationRequest
+	(*CreateInvitationResponse)(nil),                        // 278: brent.CreateInvitationResponse
+	(*CreateInvitationsRequest)(nil),                        // 279: brent.CreateInvitationsRequest
+	(*InvitationResult)(nil),                                // 280: brent.InvitationResult
+	(*CreateInvitationsResponse)(nil),                       // 281: brent.CreateInvitationsResponse
+	(*AcceptInvitationRequest)(nil),                         // 282: brent.AcceptInvitationRequest
+	(*AcceptInvitationResponse)(nil),                        // 283: brent.AcceptInvitationResponse
+	(*ListWorkspaceMembersRequest)(nil),                     // 284: brent.ListWorkspaceMembersRequest
+	(*ListWorkspaceMembersResponse)(nil),                    // 285: brent.ListWorkspaceMembersResponse
+	(*WorkspaceMember)(nil),                                 // 286: brent.WorkspaceMember
+	(*ResendInvitationRequest)(nil),                         // 287: brent.ResendInvitationRequest
+	(*ResendInvitationResponse)(nil),                        // 288: brent.ResendInvitationResponse
+	(*RevokeInvitationRequest)(nil),                         // 289: brent.RevokeInvitationRequest
+	(*RevokeInvitationResponse)(nil),                        // 290: brent.RevokeInvitationResponse
+	(*RemoveWorkspaceMemberRequest)(nil),                    // 291: brent.RemoveWorkspaceMemberRequest
+	(*RemoveWorkspaceMemberResponse)(nil),                   // 292: brent.RemoveWorkspaceMemberResponse
+	(*UpdateWorkspaceMemberRoleRequest)(nil),                // 293: brent.UpdateWorkspaceMemberRoleRequest
+	(*UpdateWorkspaceMemberRoleResponse)(nil),               // 294: brent.UpdateWorkspaceMemberRoleResponse
+	(*GetInvitationRequest)(nil),                            // 295: brent.GetInvitationRequest
+	(*GetInvitationResponse)(nil),                           // 296: brent.GetInvitationResponse
+	(*UpsertMyVerifiedBindingRequest)(nil),                  // 297: brent.UpsertMyVerifiedBindingRequest
+	(*UpsertMyVerifiedBindingResponse)(nil),                 // 298: brent.UpsertMyVerifiedBindingResponse
+	(*UpdateMyDisplayNameRequest)(nil),                      // 299: brent.UpdateMyDisplayNameRequest
+	(*UpdateMyDisplayNameResponse)(nil),                     // 300: brent.UpdateMyDisplayNameResponse
+	(*ListMyBindingsRequest)(nil),                           // 301: brent.ListMyBindingsRequest
+	(*ListMyBindingsResponse)(nil),                          // 302: brent.ListMyBindingsResponse
+	(*NotificationPreferences)(nil),                         // 303: brent.NotificationPreferences
+	(*ChannelPreferences)(nil),                              // 304: brent.ChannelPreferences
+	(*GetMyNotificationPreferencesRequest)(nil),             // 305: brent.GetMyNotificationPreferencesRequest
+	(*GetMyNotificationPreferencesResponse)(nil),            // 306: brent.GetMyNotificationPreferencesResponse
+	(*UpdateMyNotificationPreferencesRequest)(nil),          // 307: brent.UpdateMyNotificationPreferencesRequest
+	(*UpdateMyNotificationPreferencesResponse)(nil),         // 308: brent.UpdateMyNotificationPreferencesResponse
+	(*RegisterMyPushSubscriptionRequest)(nil),               // 309: brent.RegisterMyPushSubscriptionRequest
+	(*RegisterMyPushSubscriptionResponse)(nil),              // 310: brent.RegisterMyPushSubscriptionResponse
+	(*GetWebPushPublicKeyRequest)(nil),                      // 311: brent.GetWebPushPublicKeyRequest
+	(*GetWebPushPublicKeyResponse)(nil),                     // 312: brent.GetWebPushPublicKeyResponse
+	(*Binding)(nil),                                         // 313: brent.Binding
+	(*RedFindingKindsPatch)(nil),                            // 314: brent.RedFindingKindsPatch
+	(*GetBrentSettingsRequest)(nil),                         // 315: brent.GetBrentSettingsRequest
+	(*GetBrentSettingsResponse)(nil),                        // 316: brent.GetBrentSettingsResponse
+	(*UpdateBrentSettingsRequest)(nil),                      // 317: brent.UpdateBrentSettingsRequest
+	(*UpdateBrentSettingsResponse)(nil),                     // 318: brent.UpdateBrentSettingsResponse
+	(*AdminGetAccountBrentSettingsRequest)(nil),             // 319: brent.AdminGetAccountBrentSettingsRequest
+	(*AdminUpdateAccountBrentSettingsRequest)(nil),          // 320: brent.AdminUpdateAccountBrentSettingsRequest
+	(*AdminGetAccountReviewPolicyRequest)(nil),              // 321: brent.AdminGetAccountReviewPolicyRequest
+	(*AdminGetAccountReviewPolicyResponse)(nil),             // 322: brent.AdminGetAccountReviewPolicyResponse
+	(*AdminUpdateAccountReviewPolicyRequest)(nil),           // 323: brent.AdminUpdateAccountReviewPolicyRequest
+	(*AdminUpdateAccountReviewPolicyResponse)(nil),          // 324: brent.AdminUpdateAccountReviewPolicyResponse
+	(*AdminGetAccountLLMCredentialStatusRequest)(nil),       // 325: brent.AdminGetAccountLLMCredentialStatusRequest
+	(*AdminGetAccountLLMCredentialStatusResponse)(nil),      // 326: brent.AdminGetAccountLLMCredentialStatusResponse
+	(*AdminListAccountIntegrationsRequest)(nil),             // 327: brent.AdminListAccountIntegrationsRequest
+	(*AdminAccountIntegrationInstall)(nil),                  // 328: brent.AdminAccountIntegrationInstall
+	(*AdminListAccountIntegrationsResponse)(nil),            // 329: brent.AdminListAccountIntegrationsResponse
+	(*ListIntegrationCatalogueRequest)(nil),                 // 330: brent.ListIntegrationCatalogueRequest
+	(*ListIntegrationCatalogueResponse)(nil),                // 331: brent.ListIntegrationCatalogueResponse
+	(*IntegrationCatalogueEntry)(nil),                       // 332: brent.IntegrationCatalogueEntry
+	(*GetPlanPromptRequest)(nil),                            // 333: brent.GetPlanPromptRequest
+	(*GetPlanPromptResponse)(nil),                           // 334: brent.GetPlanPromptResponse
+	nil,                                                     // 335: brent.PlanUpdated.PreviousEntry
+	nil,                                                     // 336: brent.PlanUpdated.AfterEntry
+	nil,                                                     // 337: brent.PrincipalUpdated.PreviousEntry
+	nil,                                                     // 338: brent.PrincipalUpdated.AfterEntry
+	nil,                                                     // 339: brent.BindingUpdated.PreviousEntry
+	nil,                                                     // 340: brent.BindingUpdated.AfterEntry
+	nil,                                                     // 341: brent.OtherEvent.FieldsEntry
+	nil,                                                     // 342: brent.PullRequestUpdated.PreviousEntry
+	nil,                                                     // 343: brent.PullRequestUpdated.AfterEntry
+	nil,                                                     // 344: brent.DeviationAnalysisCompleted.FindingCountByTagEntry
+	nil,                                                     // 345: brent.DeviationFindingUpdated.PreviousEntry
+	nil,                                                     // 346: brent.DeviationFindingUpdated.AfterEntry
+	nil,                                                     // 347: brent.NotificationPreferences.PreferencesEntry
+	nil,                                                     // 348: brent.ChannelPreferences.ChannelsEntry
+	(*timestamppb.Timestamp)(nil),                           // 349: google.protobuf.Timestamp
+	(*structpb.Value)(nil),                                  // 350: google.protobuf.Value
+	(*descriptorpb.FieldOptions)(nil),                       // 351: google.protobuf.FieldOptions
+	(*emptypb.Empty)(nil),                                   // 352: google.protobuf.Empty
 }
 var file_brent_proto_depIdxs = []int32{
-	22,  // 0: brent.ListPullRequestsResponse.pull_requests:type_name -> brent.PullRequestSummary
-	23,  // 1: brent.GetPullRequestByIDResponse.pull_request:type_name -> brent.PullRequest
-	24,  // 2: brent.ListDeviationAnalysesForPRResponse.analyses:type_name -> brent.DeviationAnalysisSummary
-	343, // 3: brent.PullRequestTimelineEventRow.occurred_at:type_name -> google.protobuf.Timestamp
-	23,  // 4: brent.GetPullRequestTimelineResponse.pull_request:type_name -> brent.PullRequest
-	19,  // 5: brent.GetPullRequestTimelineResponse.events:type_name -> brent.PullRequestTimelineEventRow
-	20,  // 6: brent.GetPullRequestTimelineResponse.warnings:type_name -> brent.PullRequestTimelineWarning
-	343, // 7: brent.PullRequestSummary.updated_at:type_name -> google.protobuf.Timestamp
-	343, // 8: brent.PullRequest.created_at:type_name -> google.protobuf.Timestamp
-	343, // 9: brent.PullRequest.updated_at:type_name -> google.protobuf.Timestamp
-	343, // 10: brent.PullRequest.closed_at:type_name -> google.protobuf.Timestamp
-	343, // 11: brent.DeviationAnalysisSummary.started_at:type_name -> google.protobuf.Timestamp
-	343, // 12: brent.DeviationAnalysisSummary.completed_at:type_name -> google.protobuf.Timestamp
-	343, // 13: brent.DeviationAnalysisSummary.failed_at:type_name -> google.protobuf.Timestamp
-	25,  // 14: brent.DeviationAnalysisSummary.findings:type_name -> brent.DeviationFinding
-	343, // 15: brent.DeviationFinding.resolved_at:type_name -> google.protobuf.Timestamp
-	29,  // 16: brent.ListRunsResponse.runs:type_name -> brent.RunSummary
+	23,  // 0: brent.ListPullRequestsResponse.pull_requests:type_name -> brent.PullRequestSummary
+	24,  // 1: brent.GetPullRequestByIDResponse.pull_request:type_name -> brent.PullRequest
+	25,  // 2: brent.ListDeviationAnalysesForPRResponse.analyses:type_name -> brent.DeviationAnalysisSummary
+	349, // 3: brent.PullRequestTimelineEventRow.occurred_at:type_name -> google.protobuf.Timestamp
+	24,  // 4: brent.GetPullRequestTimelineResponse.pull_request:type_name -> brent.PullRequest
+	20,  // 5: brent.GetPullRequestTimelineResponse.events:type_name -> brent.PullRequestTimelineEventRow
+	21,  // 6: brent.GetPullRequestTimelineResponse.warnings:type_name -> brent.PullRequestTimelineWarning
+	349, // 7: brent.PullRequestSummary.updated_at:type_name -> google.protobuf.Timestamp
+	349, // 8: brent.PullRequest.created_at:type_name -> google.protobuf.Timestamp
+	349, // 9: brent.PullRequest.updated_at:type_name -> google.protobuf.Timestamp
+	349, // 10: brent.PullRequest.closed_at:type_name -> google.protobuf.Timestamp
+	349, // 11: brent.DeviationAnalysisSummary.started_at:type_name -> google.protobuf.Timestamp
+	349, // 12: brent.DeviationAnalysisSummary.completed_at:type_name -> google.protobuf.Timestamp
+	349, // 13: brent.DeviationAnalysisSummary.failed_at:type_name -> google.protobuf.Timestamp
+	26,  // 14: brent.DeviationAnalysisSummary.findings:type_name -> brent.DeviationFinding
+	349, // 15: brent.DeviationFinding.resolved_at:type_name -> google.protobuf.Timestamp
+	30,  // 16: brent.ListRunsResponse.runs:type_name -> brent.RunSummary
 	0,   // 17: brent.RunSummary.status:type_name -> brent.RunStatus
-	343, // 18: brent.RunSummary.started_at:type_name -> google.protobuf.Timestamp
-	343, // 19: brent.RunSummary.completed_at:type_name -> google.protobuf.Timestamp
-	105, // 20: brent.StreamEventsResponse.event:type_name -> brent.Event
-	343, // 21: brent.ListEventsRequest.occurred_from:type_name -> google.protobuf.Timestamp
-	343, // 22: brent.ListEventsRequest.occurred_to:type_name -> google.protobuf.Timestamp
-	105, // 23: brent.ListEventsResponse.events:type_name -> brent.Event
-	41,  // 24: brent.ListOpenPullRequestsResponse.pull_requests:type_name -> brent.OpenPullRequest
-	41,  // 25: brent.GetPullRequestResponse.pull_request:type_name -> brent.OpenPullRequest
-	343, // 26: brent.OpenPullRequest.updated_at:type_name -> google.protobuf.Timestamp
-	343, // 27: brent.ExecuteWorkflowResponse.timestamp:type_name -> google.protobuf.Timestamp
-	43,  // 28: brent.ExecuteWorkflowResponse.reasoning:type_name -> brent.ReasoningStep
-	44,  // 29: brent.ExecuteWorkflowResponse.tool_call:type_name -> brent.ToolCallStep
-	45,  // 30: brent.ExecuteWorkflowResponse.tool_result:type_name -> brent.ToolResultStep
-	46,  // 31: brent.ExecuteWorkflowResponse.completion:type_name -> brent.CompletionStep
-	47,  // 32: brent.ExecuteWorkflowResponse.error:type_name -> brent.ErrorStep
-	48,  // 33: brent.ExecuteWorkflowResponse.status:type_name -> brent.StatusStep
-	49,  // 34: brent.ExecuteWorkflowResponse.run_started:type_name -> brent.RunStartedStep
-	50,  // 35: brent.ExecuteWorkflowResponse.qa_ready:type_name -> brent.QAReadyStep
-	51,  // 36: brent.ExecuteWorkflowResponse.user_question:type_name -> brent.UserQuestionStep
-	52,  // 37: brent.ExecuteWorkflowResponse.user_message:type_name -> brent.UserMessageStep
-	56,  // 38: brent.AdminListPlansResponse.plans:type_name -> brent.PlanSummary
-	343, // 39: brent.PlanSummary.created_at:type_name -> google.protobuf.Timestamp
-	343, // 40: brent.PlanSummary.updated_at:type_name -> google.protobuf.Timestamp
-	343, // 41: brent.PlanSummary.deleted_at:type_name -> google.protobuf.Timestamp
-	343, // 42: brent.PlanSummary.lifecycle_stage_updated_at:type_name -> google.protobuf.Timestamp
-	59,  // 43: brent.AdminGetPlanResponse.plan:type_name -> brent.Plan
-	84,  // 44: brent.AdminGetPlanResponse.related_reviews:type_name -> brent.ReviewSummary
-	22,  // 45: brent.AdminGetPlanResponse.related_pull_requests:type_name -> brent.PullRequestSummary
-	343, // 46: brent.Plan.created_at:type_name -> google.protobuf.Timestamp
-	343, // 47: brent.Plan.updated_at:type_name -> google.protobuf.Timestamp
-	343, // 48: brent.Plan.lifecycle_stage_updated_at:type_name -> google.protobuf.Timestamp
-	225, // 49: brent.AdminListPrincipalsResponse.principals:type_name -> brent.Principal
-	225, // 50: brent.AdminGetPrincipalResponse.principal:type_name -> brent.Principal
-	64,  // 51: brent.AdminGetPrincipalResponse.identities:type_name -> brent.PrincipalIdentity
-	311, // 52: brent.AdminGetPrincipalResponse.bindings:type_name -> brent.Binding
-	343, // 53: brent.PrincipalIdentity.created_at:type_name -> google.protobuf.Timestamp
-	343, // 54: brent.PrincipalIdentity.updated_at:type_name -> google.protobuf.Timestamp
-	311, // 55: brent.AdminUpsertPrincipalBindingResponse.binding:type_name -> brent.Binding
-	225, // 56: brent.AdminUpdatePrincipalResponse.principal:type_name -> brent.Principal
-	64,  // 57: brent.AdminCreatePrincipalIdentityResponse.identity:type_name -> brent.PrincipalIdentity
-	79,  // 58: brent.AdminListPrincipalCredentialConnectionsResponse.connections:type_name -> brent.PrincipalCredentialConnection
-	343, // 59: brent.PrincipalCredentialConnection.last_validated_at:type_name -> google.protobuf.Timestamp
-	84,  // 60: brent.AdminListReviewsResponse.reviews:type_name -> brent.ReviewSummary
-	343, // 61: brent.ReviewSummary.requested_at:type_name -> google.protobuf.Timestamp
-	343, // 62: brent.ReviewSummary.decided_at:type_name -> google.protobuf.Timestamp
-	87,  // 63: brent.AdminGetReviewResponse.review:type_name -> brent.Review
-	56,  // 64: brent.AdminGetReviewResponse.plan:type_name -> brent.PlanSummary
-	343, // 65: brent.Review.requested_at:type_name -> google.protobuf.Timestamp
-	343, // 66: brent.Review.decided_at:type_name -> google.protobuf.Timestamp
-	343, // 67: brent.Review.created_at:type_name -> google.protobuf.Timestamp
-	343, // 68: brent.Review.updated_at:type_name -> google.protobuf.Timestamp
-	88,  // 69: brent.AdminListAccountsResponse.accounts:type_name -> brent.AccountSummary
-	343, // 70: brent.AccountRunSummary.started_at:type_name -> google.protobuf.Timestamp
-	343, // 71: brent.AdminGetAccountSummaryResponse.last_active_at:type_name -> google.protobuf.Timestamp
-	91,  // 72: brent.AdminGetAccountSummaryResponse.recent_runs:type_name -> brent.AccountRunSummary
-	94,  // 73: brent.AdminGetAccountHealthAnalysisResponse.findings:type_name -> brent.AccountHealthFinding
-	343, // 74: brent.AdminGetAccountHealthAnalysisResponse.computed_at:type_name -> google.protobuf.Timestamp
-	97,  // 75: brent.AdminListAccountMetricReposResponse.repos:type_name -> brent.AccountMetricRepo
-	343, // 76: brent.AdminStartAccountMetricsComparisonRequest.before_start:type_name -> google.protobuf.Timestamp
-	343, // 77: brent.AdminStartAccountMetricsComparisonRequest.before_end:type_name -> google.protobuf.Timestamp
-	343, // 78: brent.AdminStartAccountMetricsComparisonRequest.after_start:type_name -> google.protobuf.Timestamp
-	343, // 79: brent.AdminStartAccountMetricsComparisonRequest.after_end:type_name -> google.protobuf.Timestamp
+	349, // 18: brent.RunSummary.started_at:type_name -> google.protobuf.Timestamp
+	349, // 19: brent.RunSummary.completed_at:type_name -> google.protobuf.Timestamp
+	106, // 20: brent.StreamEventsResponse.event:type_name -> brent.Event
+	349, // 21: brent.ListEventsRequest.occurred_from:type_name -> google.protobuf.Timestamp
+	349, // 22: brent.ListEventsRequest.occurred_to:type_name -> google.protobuf.Timestamp
+	106, // 23: brent.ListEventsResponse.events:type_name -> brent.Event
+	42,  // 24: brent.ListOpenPullRequestsResponse.pull_requests:type_name -> brent.OpenPullRequest
+	42,  // 25: brent.GetPullRequestResponse.pull_request:type_name -> brent.OpenPullRequest
+	349, // 26: brent.OpenPullRequest.updated_at:type_name -> google.protobuf.Timestamp
+	349, // 27: brent.ExecuteWorkflowResponse.timestamp:type_name -> google.protobuf.Timestamp
+	44,  // 28: brent.ExecuteWorkflowResponse.reasoning:type_name -> brent.ReasoningStep
+	45,  // 29: brent.ExecuteWorkflowResponse.tool_call:type_name -> brent.ToolCallStep
+	46,  // 30: brent.ExecuteWorkflowResponse.tool_result:type_name -> brent.ToolResultStep
+	47,  // 31: brent.ExecuteWorkflowResponse.completion:type_name -> brent.CompletionStep
+	48,  // 32: brent.ExecuteWorkflowResponse.error:type_name -> brent.ErrorStep
+	49,  // 33: brent.ExecuteWorkflowResponse.status:type_name -> brent.StatusStep
+	50,  // 34: brent.ExecuteWorkflowResponse.run_started:type_name -> brent.RunStartedStep
+	51,  // 35: brent.ExecuteWorkflowResponse.qa_ready:type_name -> brent.QAReadyStep
+	52,  // 36: brent.ExecuteWorkflowResponse.user_question:type_name -> brent.UserQuestionStep
+	53,  // 37: brent.ExecuteWorkflowResponse.user_message:type_name -> brent.UserMessageStep
+	57,  // 38: brent.AdminListPlansResponse.plans:type_name -> brent.PlanSummary
+	349, // 39: brent.PlanSummary.created_at:type_name -> google.protobuf.Timestamp
+	349, // 40: brent.PlanSummary.updated_at:type_name -> google.protobuf.Timestamp
+	349, // 41: brent.PlanSummary.deleted_at:type_name -> google.protobuf.Timestamp
+	349, // 42: brent.PlanSummary.lifecycle_stage_updated_at:type_name -> google.protobuf.Timestamp
+	60,  // 43: brent.AdminGetPlanResponse.plan:type_name -> brent.Plan
+	85,  // 44: brent.AdminGetPlanResponse.related_reviews:type_name -> brent.ReviewSummary
+	23,  // 45: brent.AdminGetPlanResponse.related_pull_requests:type_name -> brent.PullRequestSummary
+	349, // 46: brent.Plan.created_at:type_name -> google.protobuf.Timestamp
+	349, // 47: brent.Plan.updated_at:type_name -> google.protobuf.Timestamp
+	349, // 48: brent.Plan.lifecycle_stage_updated_at:type_name -> google.protobuf.Timestamp
+	227, // 49: brent.AdminListPrincipalsResponse.principals:type_name -> brent.Principal
+	227, // 50: brent.AdminGetPrincipalResponse.principal:type_name -> brent.Principal
+	65,  // 51: brent.AdminGetPrincipalResponse.identities:type_name -> brent.PrincipalIdentity
+	313, // 52: brent.AdminGetPrincipalResponse.bindings:type_name -> brent.Binding
+	349, // 53: brent.PrincipalIdentity.created_at:type_name -> google.protobuf.Timestamp
+	349, // 54: brent.PrincipalIdentity.updated_at:type_name -> google.protobuf.Timestamp
+	313, // 55: brent.AdminUpsertPrincipalBindingResponse.binding:type_name -> brent.Binding
+	227, // 56: brent.AdminUpdatePrincipalResponse.principal:type_name -> brent.Principal
+	65,  // 57: brent.AdminCreatePrincipalIdentityResponse.identity:type_name -> brent.PrincipalIdentity
+	80,  // 58: brent.AdminListPrincipalCredentialConnectionsResponse.connections:type_name -> brent.PrincipalCredentialConnection
+	349, // 59: brent.PrincipalCredentialConnection.last_validated_at:type_name -> google.protobuf.Timestamp
+	85,  // 60: brent.AdminListReviewsResponse.reviews:type_name -> brent.ReviewSummary
+	349, // 61: brent.ReviewSummary.requested_at:type_name -> google.protobuf.Timestamp
+	349, // 62: brent.ReviewSummary.decided_at:type_name -> google.protobuf.Timestamp
+	88,  // 63: brent.AdminGetReviewResponse.review:type_name -> brent.Review
+	57,  // 64: brent.AdminGetReviewResponse.plan:type_name -> brent.PlanSummary
+	349, // 65: brent.Review.requested_at:type_name -> google.protobuf.Timestamp
+	349, // 66: brent.Review.decided_at:type_name -> google.protobuf.Timestamp
+	349, // 67: brent.Review.created_at:type_name -> google.protobuf.Timestamp
+	349, // 68: brent.Review.updated_at:type_name -> google.protobuf.Timestamp
+	89,  // 69: brent.AdminListAccountsResponse.accounts:type_name -> brent.AccountSummary
+	349, // 70: brent.AccountRunSummary.started_at:type_name -> google.protobuf.Timestamp
+	349, // 71: brent.AdminGetAccountSummaryResponse.last_active_at:type_name -> google.protobuf.Timestamp
+	92,  // 72: brent.AdminGetAccountSummaryResponse.recent_runs:type_name -> brent.AccountRunSummary
+	95,  // 73: brent.AdminGetAccountHealthAnalysisResponse.findings:type_name -> brent.AccountHealthFinding
+	349, // 74: brent.AdminGetAccountHealthAnalysisResponse.computed_at:type_name -> google.protobuf.Timestamp
+	98,  // 75: brent.AdminListAccountMetricReposResponse.repos:type_name -> brent.AccountMetricRepo
+	349, // 76: brent.AdminStartAccountMetricsComparisonRequest.before_start:type_name -> google.protobuf.Timestamp
+	349, // 77: brent.AdminStartAccountMetricsComparisonRequest.before_end:type_name -> google.protobuf.Timestamp
+	349, // 78: brent.AdminStartAccountMetricsComparisonRequest.after_start:type_name -> google.protobuf.Timestamp
+	349, // 79: brent.AdminStartAccountMetricsComparisonRequest.after_end:type_name -> google.protobuf.Timestamp
 	1,   // 80: brent.AdminStartAccountMetricsComparisonRequest.comparison_mode:type_name -> brent.MetricsComparisonMode
-	343, // 81: brent.AdminStartAccountMetricsComparisonRequest.planned_unplanned_start:type_name -> google.protobuf.Timestamp
-	343, // 82: brent.AdminStartAccountMetricsComparisonRequest.planned_unplanned_end:type_name -> google.protobuf.Timestamp
-	343, // 83: brent.AdminGetAccountMetricsComparisonRunResponse.started_at:type_name -> google.protobuf.Timestamp
-	343, // 84: brent.AdminGetAccountMetricsComparisonRunResponse.completed_at:type_name -> google.protobuf.Timestamp
-	102, // 85: brent.AdminGetAccountMetricsComparisonRunResponse.headline:type_name -> brent.MetricsComparisonHeadline
-	343, // 86: brent.AdminGetAccountMetricsComparisonRunResponse.before_start:type_name -> google.protobuf.Timestamp
-	343, // 87: brent.AdminGetAccountMetricsComparisonRunResponse.before_end:type_name -> google.protobuf.Timestamp
-	343, // 88: brent.AdminGetAccountMetricsComparisonRunResponse.after_start:type_name -> google.protobuf.Timestamp
-	343, // 89: brent.AdminGetAccountMetricsComparisonRunResponse.after_end:type_name -> google.protobuf.Timestamp
-	103, // 90: brent.AdminGetAccountMetricsComparisonRunResponse.artifacts:type_name -> brent.MetricsComparisonArtifact
+	349, // 81: brent.AdminStartAccountMetricsComparisonRequest.planned_unplanned_start:type_name -> google.protobuf.Timestamp
+	349, // 82: brent.AdminStartAccountMetricsComparisonRequest.planned_unplanned_end:type_name -> google.protobuf.Timestamp
+	349, // 83: brent.AdminGetAccountMetricsComparisonRunResponse.started_at:type_name -> google.protobuf.Timestamp
+	349, // 84: brent.AdminGetAccountMetricsComparisonRunResponse.completed_at:type_name -> google.protobuf.Timestamp
+	103, // 85: brent.AdminGetAccountMetricsComparisonRunResponse.headline:type_name -> brent.MetricsComparisonHeadline
+	349, // 86: brent.AdminGetAccountMetricsComparisonRunResponse.before_start:type_name -> google.protobuf.Timestamp
+	349, // 87: brent.AdminGetAccountMetricsComparisonRunResponse.before_end:type_name -> google.protobuf.Timestamp
+	349, // 88: brent.AdminGetAccountMetricsComparisonRunResponse.after_start:type_name -> google.protobuf.Timestamp
+	349, // 89: brent.AdminGetAccountMetricsComparisonRunResponse.after_end:type_name -> google.protobuf.Timestamp
+	104, // 90: brent.AdminGetAccountMetricsComparisonRunResponse.artifacts:type_name -> brent.MetricsComparisonArtifact
 	1,   // 91: brent.AdminGetAccountMetricsComparisonRunResponse.comparison_mode:type_name -> brent.MetricsComparisonMode
-	343, // 92: brent.AdminGetAccountMetricsComparisonRunResponse.planned_unplanned_start:type_name -> google.protobuf.Timestamp
-	343, // 93: brent.AdminGetAccountMetricsComparisonRunResponse.planned_unplanned_end:type_name -> google.protobuf.Timestamp
-	343, // 94: brent.Event.occurred_at:type_name -> google.protobuf.Timestamp
-	106, // 95: brent.Event.actor:type_name -> brent.Actor
-	107, // 96: brent.Event.object:type_name -> brent.ObjectReference
-	343, // 97: brent.Event.received_at:type_name -> google.protobuf.Timestamp
-	108, // 98: brent.Event.plan_created:type_name -> brent.PlanCreated
-	109, // 99: brent.Event.plan_updated:type_name -> brent.PlanUpdated
-	110, // 100: brent.Event.plan_deleted:type_name -> brent.PlanDeleted
-	114, // 101: brent.Event.review_requested:type_name -> brent.ReviewRequested
-	115, // 102: brent.Event.review_submitted:type_name -> brent.ReviewSubmitted
-	141, // 103: brent.Event.other:type_name -> brent.OtherEvent
-	182, // 104: brent.Event.github_webhook:type_name -> brent.GitHubWebhook
-	186, // 105: brent.Event.slack_mention:type_name -> brent.SlackMentionReceived
-	189, // 106: brent.Event.slack_reaction:type_name -> brent.SlackReactionAdded
-	143, // 107: brent.Event.pull_request_opened:type_name -> brent.PullRequestOpened
-	144, // 108: brent.Event.pull_request_synchronized:type_name -> brent.PullRequestSynchronized
-	145, // 109: brent.Event.pull_request_updated:type_name -> brent.PullRequestUpdated
-	146, // 110: brent.Event.pull_request_closed:type_name -> brent.PullRequestClosed
-	147, // 111: brent.Event.pull_request_linked_to_plan:type_name -> brent.PullRequestLinkedToPlan
-	148, // 112: brent.Event.pull_request_unlinked_from_plan:type_name -> brent.PullRequestUnlinkedFromPlan
-	187, // 113: brent.Event.organisation_app_installation_upserted:type_name -> brent.OrganisationAppInstallationUpserted
-	188, // 114: brent.Event.organisation_app_installation_deleted:type_name -> brent.OrganisationAppInstallationDeleted
-	155, // 115: brent.Event.deviation_analysis_started:type_name -> brent.DeviationAnalysisStarted
-	157, // 116: brent.Event.deviation_analysis_completed:type_name -> brent.DeviationAnalysisCompleted
-	158, // 117: brent.Event.deviation_analysis_failed:type_name -> brent.DeviationAnalysisFailed
-	174, // 118: brent.Event.workflow_run_queued:type_name -> brent.WorkflowRunQueued
-	175, // 119: brent.Event.workflow_run_started:type_name -> brent.WorkflowRunStarted
-	176, // 120: brent.Event.workflow_run_completed:type_name -> brent.WorkflowRunCompleted
-	177, // 121: brent.Event.workflow_run_failed:type_name -> brent.WorkflowRunFailed
-	178, // 122: brent.Event.workflow_run_cancelled:type_name -> brent.WorkflowRunCancelled
-	116, // 123: brent.Event.review_no_eligible_reviewer:type_name -> brent.ReviewNoEligibleReviewer
-	118, // 124: brent.Event.principal_created:type_name -> brent.PrincipalCreated
-	119, // 125: brent.Event.principal_updated:type_name -> brent.PrincipalUpdated
-	120, // 126: brent.Event.principal_tombstoned:type_name -> brent.PrincipalTombstoned
-	131, // 127: brent.Event.identity_created:type_name -> brent.IdentityCreated
-	132, // 128: brent.Event.identity_deleted:type_name -> brent.IdentityDeleted
-	133, // 129: brent.Event.binding_created:type_name -> brent.BindingCreated
-	134, // 130: brent.Event.binding_updated:type_name -> brent.BindingUpdated
-	135, // 131: brent.Event.binding_deleted:type_name -> brent.BindingDeleted
-	140, // 132: brent.Event.review_drive_by_started:type_name -> brent.ReviewDriveByStarted
-	179, // 133: brent.Event.slack_webhook:type_name -> brent.SlackWebhook
-	111, // 134: brent.Event.review_deleted:type_name -> brent.ReviewDeleted
-	113, // 135: brent.Event.plan_restored:type_name -> brent.PlanRestored
-	180, // 136: brent.Event.linear_webhook:type_name -> brent.LinearWebhook
-	154, // 137: brent.Event.pull_request_comment_created:type_name -> brent.PullRequestCommentCreated
-	159, // 138: brent.Event.deviation_finding_recorded:type_name -> brent.DeviationFindingRecorded
-	160, // 139: brent.Event.deviation_finding_updated:type_name -> brent.DeviationFindingUpdated
-	161, // 140: brent.Event.deviation_finding_resolved:type_name -> brent.DeviationFindingResolved
-	164, // 141: brent.Event.agent_run_dispatched:type_name -> brent.AgentRunDispatched
-	165, // 142: brent.Event.agent_run_started:type_name -> brent.AgentRunStarted
-	166, // 143: brent.Event.agent_run_pull_request_matched:type_name -> brent.AgentRunPullRequestMatched
-	167, // 144: brent.Event.agent_run_flagged_needs_you:type_name -> brent.AgentRunFlaggedNeedsYou
-	169, // 145: brent.Event.agent_run_merged:type_name -> brent.AgentRunMerged
-	171, // 146: brent.Event.agent_run_declined:type_name -> brent.AgentRunDeclined
-	170, // 147: brent.Event.agent_run_cancelled:type_name -> brent.AgentRunCancelled
-	168, // 148: brent.Event.agent_run_gate_passed:type_name -> brent.AgentRunGatePassed
-	149, // 149: brent.Event.pull_request_linked_to_agent_run:type_name -> brent.PullRequestLinkedToAgentRun
-	173, // 150: brent.Event.workflow_ingested:type_name -> brent.WorkflowIngested
-	150, // 151: brent.Event.pull_request_review_requested:type_name -> brent.PullRequestReviewRequested
-	151, // 152: brent.Event.pull_request_approved:type_name -> brent.PullRequestApproved
-	152, // 153: brent.Event.pull_request_changes_requested:type_name -> brent.PullRequestChangesRequested
-	153, // 154: brent.Event.pull_request_review_dismissed:type_name -> brent.PullRequestReviewDismissed
-	136, // 155: brent.Event.credential_connected:type_name -> brent.CredentialConnected
-	137, // 156: brent.Event.credential_revoked:type_name -> brent.CredentialRevoked
-	172, // 157: brent.Event.agent_run_annotated:type_name -> brent.AgentRunAnnotated
-	121, // 158: brent.Event.workspace_created:type_name -> brent.WorkspaceCreated
-	130, // 159: brent.Event.mcp_grant_workspace_binding_changed:type_name -> brent.MCPGrantWorkspaceBindingChanged
-	122, // 160: brent.Event.workspace_onboarding_completed:type_name -> brent.WorkspaceOnboardingCompleted
-	123, // 161: brent.Event.workspace_renamed:type_name -> brent.WorkspaceRenamed
-	124, // 162: brent.Event.workspace_deleted:type_name -> brent.WorkspaceDeleted
-	127, // 163: brent.Event.approved_email_domain_added:type_name -> brent.ApprovedEmailDomainAdded
-	128, // 164: brent.Event.approved_email_domain_verified:type_name -> brent.ApprovedEmailDomainVerified
-	129, // 165: brent.Event.approved_email_domain_deleted:type_name -> brent.ApprovedEmailDomainDeleted
-	183, // 166: brent.Event.gitlab_webhook:type_name -> brent.GitLabWebhook
-	138, // 167: brent.Event.workspace_llm_credential_connected:type_name -> brent.WorkspaceLLMCredentialConnected
-	139, // 168: brent.Event.workspace_llm_credential_revoked:type_name -> brent.WorkspaceLLMCredentialRevoked
-	184, // 169: brent.Event.bitbucket_webhook:type_name -> brent.BitbucketWebhook
-	125, // 170: brent.Event.workspace_member_joined:type_name -> brent.WorkspaceMemberJoined
-	126, // 171: brent.Event.workspace_member_left:type_name -> brent.WorkspaceMemberLeft
-	181, // 172: brent.Event.composio_trigger_message:type_name -> brent.ComposioTriggerMessage
-	162, // 173: brent.Event.deviation_finding_acknowledged:type_name -> brent.DeviationFindingAcknowledged
-	163, // 174: brent.Event.deviation_finding_acknowledgement_cleared:type_name -> brent.DeviationFindingAcknowledgementCleared
-	117, // 175: brent.Event.plan_review_policy_decided:type_name -> brent.PlanReviewPolicyDecided
-	112, // 176: brent.Event.review_restored:type_name -> brent.ReviewRestored
-	142, // 177: brent.Event.unknown_stored_payload:type_name -> brent.UnknownStoredPayload
-	329, // 178: brent.PlanUpdated.previous:type_name -> brent.PlanUpdated.PreviousEntry
-	330, // 179: brent.PlanUpdated.after:type_name -> brent.PlanUpdated.AfterEntry
-	343, // 180: brent.ReviewSubmitted.decided_at:type_name -> google.protobuf.Timestamp
-	331, // 181: brent.PrincipalUpdated.previous:type_name -> brent.PrincipalUpdated.PreviousEntry
-	332, // 182: brent.PrincipalUpdated.after:type_name -> brent.PrincipalUpdated.AfterEntry
-	7,   // 183: brent.WorkspaceMemberJoined.source:type_name -> brent.JoinSource
-	333, // 184: brent.BindingUpdated.previous:type_name -> brent.BindingUpdated.PreviousEntry
-	334, // 185: brent.BindingUpdated.after:type_name -> brent.BindingUpdated.AfterEntry
-	335, // 186: brent.OtherEvent.fields:type_name -> brent.OtherEvent.FieldsEntry
-	336, // 187: brent.PullRequestUpdated.previous:type_name -> brent.PullRequestUpdated.PreviousEntry
-	337, // 188: brent.PullRequestUpdated.after:type_name -> brent.PullRequestUpdated.AfterEntry
-	343, // 189: brent.DeviationAnalysisStarted.started_at:type_name -> google.protobuf.Timestamp
-	338, // 190: brent.DeviationAnalysisCompleted.finding_count_by_tag:type_name -> brent.DeviationAnalysisCompleted.FindingCountByTagEntry
-	343, // 191: brent.DeviationAnalysisCompleted.completed_at:type_name -> google.protobuf.Timestamp
-	156, // 192: brent.DeviationAnalysisCompleted.findings:type_name -> brent.FindingSummary
-	343, // 193: brent.DeviationAnalysisFailed.failed_at:type_name -> google.protobuf.Timestamp
-	343, // 194: brent.DeviationFindingRecorded.recorded_at:type_name -> google.protobuf.Timestamp
-	339, // 195: brent.DeviationFindingUpdated.previous:type_name -> brent.DeviationFindingUpdated.PreviousEntry
-	340, // 196: brent.DeviationFindingUpdated.after:type_name -> brent.DeviationFindingUpdated.AfterEntry
-	343, // 197: brent.DeviationFindingResolved.resolved_at:type_name -> google.protobuf.Timestamp
-	343, // 198: brent.DeviationFindingAcknowledged.acknowledged_at:type_name -> google.protobuf.Timestamp
-	343, // 199: brent.DeviationFindingAcknowledgementCleared.cleared_at:type_name -> google.protobuf.Timestamp
-	343, // 200: brent.WorkflowRunQueued.queued_at:type_name -> google.protobuf.Timestamp
-	343, // 201: brent.WorkflowRunStarted.started_at:type_name -> google.protobuf.Timestamp
-	343, // 202: brent.WorkflowRunCompleted.completed_at:type_name -> google.protobuf.Timestamp
-	343, // 203: brent.WorkflowRunFailed.failed_at:type_name -> google.protobuf.Timestamp
-	343, // 204: brent.WorkflowRunCancelled.cancelled_at:type_name -> google.protobuf.Timestamp
-	192, // 205: brent.ListWorkflowsResponse.workflows:type_name -> brent.WorkflowSummary
-	343, // 206: brent.WorkflowSummary.created_at:type_name -> google.protobuf.Timestamp
-	343, // 207: brent.WorkflowSummary.updated_at:type_name -> google.protobuf.Timestamp
-	195, // 208: brent.GetWorkflowResponse.workflow:type_name -> brent.Workflow
-	343, // 209: brent.Workflow.created_at:type_name -> google.protobuf.Timestamp
-	343, // 210: brent.Workflow.updated_at:type_name -> google.protobuf.Timestamp
-	198, // 211: brent.ListWorkflowRunsResponse.runs:type_name -> brent.WorkflowRunSummary
-	343, // 212: brent.WorkflowRunSummary.started_at:type_name -> google.protobuf.Timestamp
-	343, // 213: brent.WorkflowRunSummary.completed_at:type_name -> google.protobuf.Timestamp
-	343, // 214: brent.WorkflowRunSummary.created_at:type_name -> google.protobuf.Timestamp
-	343, // 215: brent.WorkflowRunSummary.updated_at:type_name -> google.protobuf.Timestamp
-	198, // 216: brent.WorkflowRunThreadSegment.run:type_name -> brent.WorkflowRunSummary
-	42,  // 217: brent.WorkflowRunThreadSegment.steps:type_name -> brent.ExecuteWorkflowResponse
-	201, // 218: brent.GetWorkflowRunThreadHistoryResponse.segments:type_name -> brent.WorkflowRunThreadSegment
-	204, // 219: brent.GetWorkflowRunResponse.run:type_name -> brent.WorkflowRun
-	192, // 220: brent.GetWorkflowRunResponse.workflow:type_name -> brent.WorkflowSummary
-	343, // 221: brent.WorkflowRun.started_at:type_name -> google.protobuf.Timestamp
-	343, // 222: brent.WorkflowRun.completed_at:type_name -> google.protobuf.Timestamp
-	343, // 223: brent.WorkflowRun.created_at:type_name -> google.protobuf.Timestamp
-	343, // 224: brent.WorkflowRun.updated_at:type_name -> google.protobuf.Timestamp
-	105, // 225: brent.WorkflowRun.triggering_event_payload:type_name -> brent.Event
-	2,   // 226: brent.GetPrincipalStatusResponse.state:type_name -> brent.PrincipalStatusState
-	225, // 227: brent.GetPrincipalStatusResponse.principal:type_name -> brent.Principal
-	220, // 228: brent.GetPrincipalStatusResponse.integrations:type_name -> brent.IntegrationStatus
-	3,   // 229: brent.GetIntegrationConnectURLRequest.provider:type_name -> brent.IntegrationProvider
-	4,   // 230: brent.GetIntegrationConnectURLRequest.intent:type_name -> brent.IntegrationIntent
-	3,   // 231: brent.DisconnectIntegrationRequest.provider:type_name -> brent.IntegrationProvider
-	343, // 232: brent.GetGitLabConnectionResponse.connected_at:type_name -> google.protobuf.Timestamp
-	343, // 233: brent.GitHubPendingInstall.requested_at:type_name -> google.protobuf.Timestamp
-	3,   // 234: brent.IntegrationStatus.provider:type_name -> brent.IntegrationProvider
-	219, // 235: brent.IntegrationStatus.github_pending:type_name -> brent.GitHubPendingInstall
-	343, // 236: brent.IntegrationStatus.connected_at:type_name -> google.protobuf.Timestamp
-	5,   // 237: brent.IntegrationStatus.status:type_name -> brent.IntegrationConnectionStatus
-	3,   // 238: brent.GetWorkspaceIntegrationRolesResponse.git_provider:type_name -> brent.IntegrationProvider
-	3,   // 239: brent.SetWorkspaceIntegrationRolesRequest.git_provider:type_name -> brent.IntegrationProvider
-	3,   // 240: brent.SetWorkspaceIntegrationRolesResponse.git_provider:type_name -> brent.IntegrationProvider
-	343, // 241: brent.Principal.created_at:type_name -> google.protobuf.Timestamp
-	343, // 242: brent.Principal.updated_at:type_name -> google.protobuf.Timestamp
-	226, // 243: brent.CreateWorkspaceResponse.workspace:type_name -> brent.Workspace
-	226, // 244: brent.ListMyWorkspacesResponse.workspaces:type_name -> brent.Workspace
-	6,   // 245: brent.LoginRecoveryCandidate.provider:type_name -> brent.LoginProvider
-	6,   // 246: brent.DiscoverLoginRecoveryCandidatesResponse.arriving_provider:type_name -> brent.LoginProvider
-	232, // 247: brent.DiscoverLoginRecoveryCandidatesResponse.candidates:type_name -> brent.LoginRecoveryCandidate
-	226, // 248: brent.RenameWorkspaceResponse.workspace:type_name -> brent.Workspace
-	240, // 249: brent.ListJoinableWorkspacesResponse.workspaces:type_name -> brent.JoinableWorkspace
-	343, // 250: brent.JoinableWorkspace.created_at:type_name -> google.protobuf.Timestamp
-	241, // 251: brent.JoinableWorkspace.member_previews:type_name -> brent.JoinableWorkspaceMember
-	7,   // 252: brent.JoinableWorkspace.source:type_name -> brent.JoinSource
-	226, // 253: brent.JoinWorkspaceResponse.workspace:type_name -> brent.Workspace
-	343, // 254: brent.ApprovedEmailDomain.created_at:type_name -> google.protobuf.Timestamp
-	244, // 255: brent.ListApprovedEmailDomainsResponse.domains:type_name -> brent.ApprovedEmailDomain
-	244, // 256: brent.AddApprovedEmailDomainResponse.domain:type_name -> brent.ApprovedEmailDomain
-	244, // 257: brent.VerifyApprovedEmailDomainResponse.domain:type_name -> brent.ApprovedEmailDomain
-	343, // 258: brent.WorkspaceLLMCredentialStatus.last_validated_at:type_name -> google.protobuf.Timestamp
-	343, // 259: brent.WorkspaceLLMCredentialStatus.updated_at:type_name -> google.protobuf.Timestamp
-	257, // 260: brent.GetWorkspaceLLMCredentialStatusResponse.status:type_name -> brent.WorkspaceLLMCredentialStatus
-	257, // 261: brent.SetWorkspaceLLMCredentialResponse.status:type_name -> brent.WorkspaceLLMCredentialStatus
-	343, // 262: brent.MyCursorCredentialStatus.last_validated_at:type_name -> google.protobuf.Timestamp
-	264, // 263: brent.GetMyCursorCredentialStatusResponse.status:type_name -> brent.MyCursorCredentialStatus
-	264, // 264: brent.SetMyCursorCredentialResponse.status:type_name -> brent.MyCursorCredentialStatus
-	226, // 265: brent.UpdateWorkspaceBrandingResponse.workspace:type_name -> brent.Workspace
-	226, // 266: brent.CompleteWorkspaceOnboardingResponse.workspace:type_name -> brent.Workspace
-	343, // 267: brent.CreateInvitationResponse.expires_at:type_name -> google.protobuf.Timestamp
-	9,   // 268: brent.InvitationResult.status:type_name -> brent.InvitationResultStatus
-	278, // 269: brent.CreateInvitationsResponse.results:type_name -> brent.InvitationResult
-	226, // 270: brent.AcceptInvitationResponse.workspace:type_name -> brent.Workspace
-	284, // 271: brent.ListWorkspaceMembersResponse.members:type_name -> brent.WorkspaceMember
-	10,  // 272: brent.WorkspaceMember.state:type_name -> brent.WorkspaceMemberState
-	343, // 273: brent.ResendInvitationResponse.expires_at:type_name -> google.protobuf.Timestamp
-	8,   // 274: brent.GetInvitationResponse.status:type_name -> brent.InvitationStatus
-	311, // 275: brent.UpsertMyVerifiedBindingResponse.binding:type_name -> brent.Binding
-	225, // 276: brent.UpdateMyDisplayNameResponse.principal:type_name -> brent.Principal
-	311, // 277: brent.ListMyBindingsResponse.bindings:type_name -> brent.Binding
-	341, // 278: brent.NotificationPreferences.preferences:type_name -> brent.NotificationPreferences.PreferencesEntry
-	342, // 279: brent.ChannelPreferences.channels:type_name -> brent.ChannelPreferences.ChannelsEntry
-	301, // 280: brent.GetMyNotificationPreferencesResponse.preferences:type_name -> brent.NotificationPreferences
-	301, // 281: brent.UpdateMyNotificationPreferencesRequest.preferences:type_name -> brent.NotificationPreferences
-	301, // 282: brent.UpdateMyNotificationPreferencesResponse.preferences:type_name -> brent.NotificationPreferences
-	343, // 283: brent.Binding.created_at:type_name -> google.protobuf.Timestamp
-	343, // 284: brent.Binding.updated_at:type_name -> google.protobuf.Timestamp
-	343, // 285: brent.GetBrentSettingsResponse.red_finding_kinds_updated_at:type_name -> google.protobuf.Timestamp
-	312, // 286: brent.UpdateBrentSettingsRequest.red_finding_kinds:type_name -> brent.RedFindingKindsPatch
-	343, // 287: brent.UpdateBrentSettingsResponse.red_finding_kinds_updated_at:type_name -> google.protobuf.Timestamp
-	312, // 288: brent.AdminUpdateAccountBrentSettingsRequest.red_finding_kinds:type_name -> brent.RedFindingKindsPatch
-	257, // 289: brent.AdminGetAccountLLMCredentialStatusResponse.status:type_name -> brent.WorkspaceLLMCredentialStatus
-	343, // 290: brent.AdminAccountIntegrationInstall.created_at:type_name -> google.protobuf.Timestamp
-	5,   // 291: brent.AdminAccountIntegrationInstall.status:type_name -> brent.IntegrationConnectionStatus
-	322, // 292: brent.AdminListAccountIntegrationsResponse.installs:type_name -> brent.AdminAccountIntegrationInstall
-	3,   // 293: brent.AdminListAccountIntegrationsResponse.git_provider:type_name -> brent.IntegrationProvider
-	3,   // 294: brent.AdminListAccountIntegrationsResponse.ticketing_provider:type_name -> brent.IntegrationProvider
-	3,   // 295: brent.AdminListAccountIntegrationsResponse.messaging_provider:type_name -> brent.IntegrationProvider
-	326, // 296: brent.ListIntegrationCatalogueResponse.entries:type_name -> brent.IntegrationCatalogueEntry
-	11,  // 297: brent.IntegrationCatalogueEntry.source:type_name -> brent.IntegrationCatalogueSource
-	3,   // 298: brent.IntegrationCatalogueEntry.provider:type_name -> brent.IntegrationProvider
-	343, // 299: brent.IntegrationCatalogueEntry.created_at:type_name -> google.protobuf.Timestamp
-	344, // 300: brent.PlanUpdated.PreviousEntry.value:type_name -> google.protobuf.Value
-	344, // 301: brent.PlanUpdated.AfterEntry.value:type_name -> google.protobuf.Value
-	344, // 302: brent.PrincipalUpdated.PreviousEntry.value:type_name -> google.protobuf.Value
-	344, // 303: brent.PrincipalUpdated.AfterEntry.value:type_name -> google.protobuf.Value
-	344, // 304: brent.BindingUpdated.PreviousEntry.value:type_name -> google.protobuf.Value
-	344, // 305: brent.BindingUpdated.AfterEntry.value:type_name -> google.protobuf.Value
-	344, // 306: brent.PullRequestUpdated.PreviousEntry.value:type_name -> google.protobuf.Value
-	344, // 307: brent.PullRequestUpdated.AfterEntry.value:type_name -> google.protobuf.Value
-	344, // 308: brent.DeviationFindingUpdated.PreviousEntry.value:type_name -> google.protobuf.Value
-	344, // 309: brent.DeviationFindingUpdated.AfterEntry.value:type_name -> google.protobuf.Value
-	302, // 310: brent.NotificationPreferences.PreferencesEntry.value:type_name -> brent.ChannelPreferences
-	345, // 311: brent.embedded_json:extendee -> google.protobuf.FieldOptions
-	37,  // 312: brent.BrentService.ListOpenPullRequests:input_type -> brent.ListOpenPullRequestsRequest
-	39,  // 313: brent.BrentService.GetPullRequest:input_type -> brent.GetPullRequestRequest
-	205, // 314: brent.BrentService.GetPrincipalStatus:input_type -> brent.GetPrincipalStatusRequest
-	327, // 315: brent.BrentService.GetPlanPrompt:input_type -> brent.GetPlanPromptRequest
-	207, // 316: brent.BrentService.GetIntegrationConnectURL:input_type -> brent.GetIntegrationConnectURLRequest
-	209, // 317: brent.BrentService.DisconnectIntegration:input_type -> brent.DisconnectIntegrationRequest
-	211, // 318: brent.BrentService.ConnectByoHttpMcp:input_type -> brent.ConnectByoHttpMcpRequest
-	213, // 319: brent.BrentService.GetGitLabConnection:input_type -> brent.GetGitLabConnectionRequest
-	215, // 320: brent.BrentService.ConnectGitLab:input_type -> brent.ConnectGitLabRequest
-	217, // 321: brent.BrentService.SaveGitLabSigningToken:input_type -> brent.SaveGitLabSigningTokenRequest
-	295, // 322: brent.BrentService.UpsertMyVerifiedBinding:input_type -> brent.UpsertMyVerifiedBindingRequest
-	299, // 323: brent.BrentService.ListMyBindings:input_type -> brent.ListMyBindingsRequest
-	303, // 324: brent.BrentService.GetMyNotificationPreferences:input_type -> brent.GetMyNotificationPreferencesRequest
-	305, // 325: brent.BrentService.UpdateMyNotificationPreferences:input_type -> brent.UpdateMyNotificationPreferencesRequest
-	307, // 326: brent.BrentService.RegisterMyPushSubscription:input_type -> brent.RegisterMyPushSubscriptionRequest
-	309, // 327: brent.BrentService.GetWebPushPublicKey:input_type -> brent.GetWebPushPublicKeyRequest
-	297, // 328: brent.BrentService.UpdateMyDisplayName:input_type -> brent.UpdateMyDisplayNameRequest
-	313, // 329: brent.BrentService.GetBrentSettings:input_type -> brent.GetBrentSettingsRequest
-	315, // 330: brent.BrentService.UpdateBrentSettings:input_type -> brent.UpdateBrentSettingsRequest
-	324, // 331: brent.BrentService.ListIntegrationCatalogue:input_type -> brent.ListIntegrationCatalogueRequest
-	227, // 332: brent.BrentService.CreateWorkspace:input_type -> brent.CreateWorkspaceRequest
-	229, // 333: brent.BrentService.ListMyWorkspaces:input_type -> brent.ListMyWorkspacesRequest
-	231, // 334: brent.BrentService.DiscoverLoginRecoveryCandidates:input_type -> brent.DiscoverLoginRecoveryCandidatesRequest
-	234, // 335: brent.BrentService.RenameWorkspace:input_type -> brent.RenameWorkspaceRequest
-	271, // 336: brent.BrentService.UpdateWorkspaceBranding:input_type -> brent.UpdateWorkspaceBrandingRequest
-	273, // 337: brent.BrentService.CompleteWorkspaceOnboarding:input_type -> brent.CompleteWorkspaceOnboardingRequest
-	236, // 338: brent.BrentService.DeleteWorkspace:input_type -> brent.DeleteWorkspaceRequest
-	238, // 339: brent.BrentService.ListJoinableWorkspaces:input_type -> brent.ListJoinableWorkspacesRequest
-	242, // 340: brent.BrentService.JoinWorkspace:input_type -> brent.JoinWorkspaceRequest
-	275, // 341: brent.BrentService.CreateInvitation:input_type -> brent.CreateInvitationRequest
-	277, // 342: brent.BrentService.CreateInvitations:input_type -> brent.CreateInvitationsRequest
-	280, // 343: brent.BrentService.AcceptInvitation:input_type -> brent.AcceptInvitationRequest
-	282, // 344: brent.BrentService.ListWorkspaceMembers:input_type -> brent.ListWorkspaceMembersRequest
-	285, // 345: brent.BrentService.ResendInvitation:input_type -> brent.ResendInvitationRequest
-	287, // 346: brent.BrentService.RevokeInvitation:input_type -> brent.RevokeInvitationRequest
-	289, // 347: brent.BrentService.RemoveWorkspaceMember:input_type -> brent.RemoveWorkspaceMemberRequest
-	291, // 348: brent.BrentService.UpdateWorkspaceMemberRole:input_type -> brent.UpdateWorkspaceMemberRoleRequest
-	245, // 349: brent.BrentService.ListApprovedEmailDomains:input_type -> brent.ListApprovedEmailDomainsRequest
-	247, // 350: brent.BrentService.AddApprovedEmailDomain:input_type -> brent.AddApprovedEmailDomainRequest
-	249, // 351: brent.BrentService.VerifyApprovedEmailDomain:input_type -> brent.VerifyApprovedEmailDomainRequest
-	251, // 352: brent.BrentService.ResendApprovedEmailDomainCode:input_type -> brent.ResendApprovedEmailDomainCodeRequest
-	255, // 353: brent.BrentService.DeleteApprovedEmailDomain:input_type -> brent.DeleteApprovedEmailDomainRequest
-	258, // 354: brent.BrentService.GetWorkspaceLLMCredentialStatus:input_type -> brent.GetWorkspaceLLMCredentialStatusRequest
-	260, // 355: brent.BrentService.SetWorkspaceLLMCredential:input_type -> brent.SetWorkspaceLLMCredentialRequest
-	262, // 356: brent.BrentService.DeleteWorkspaceLLMCredential:input_type -> brent.DeleteWorkspaceLLMCredentialRequest
-	265, // 357: brent.BrentService.GetMyCursorCredentialStatus:input_type -> brent.GetMyCursorCredentialStatusRequest
-	267, // 358: brent.BrentService.SetMyCursorCredential:input_type -> brent.SetMyCursorCredentialRequest
-	269, // 359: brent.BrentService.DeleteMyCursorCredential:input_type -> brent.DeleteMyCursorCredentialRequest
-	221, // 360: brent.BrentService.GetWorkspaceIntegrationRoles:input_type -> brent.GetWorkspaceIntegrationRolesRequest
-	223, // 361: brent.BrentService.SetWorkspaceIntegrationRoles:input_type -> brent.SetWorkspaceIntegrationRolesRequest
-	253, // 362: brent.BrentService.ResendVerificationEmail:input_type -> brent.ResendVerificationEmailRequest
-	293, // 363: brent.BrentPublicService.GetInvitation:input_type -> brent.GetInvitationRequest
-	26,  // 364: brent.BrentAdminService.ExecuteWorkflow:input_type -> brent.ExecuteWorkflowRequest
-	27,  // 365: brent.BrentAdminService.ListRuns:input_type -> brent.ListRunsRequest
-	30,  // 366: brent.BrentAdminService.WatchRun:input_type -> brent.WatchRunRequest
-	31,  // 367: brent.BrentAdminService.StreamEvents:input_type -> brent.StreamEventsRequest
-	33,  // 368: brent.BrentAdminService.ListEvents:input_type -> brent.ListEventsRequest
-	35,  // 369: brent.BrentAdminService.CancelRun:input_type -> brent.CancelRunRequest
-	53,  // 370: brent.BrentAdminService.SendQuestion:input_type -> brent.SendQuestionRequest
-	54,  // 371: brent.BrentAdminService.ListPlans:input_type -> brent.AdminListPlansRequest
-	57,  // 372: brent.BrentAdminService.GetPlan:input_type -> brent.AdminGetPlanRequest
-	82,  // 373: brent.BrentAdminService.ListReviews:input_type -> brent.AdminListReviewsRequest
-	85,  // 374: brent.BrentAdminService.GetReview:input_type -> brent.AdminGetReviewRequest
-	346, // 375: brent.BrentAdminService.ListAccounts:input_type -> google.protobuf.Empty
-	90,  // 376: brent.BrentAdminService.GetAccountSummary:input_type -> brent.AdminGetAccountSummaryRequest
-	93,  // 377: brent.BrentAdminService.GetAccountHealthAnalysis:input_type -> brent.AdminGetAccountHealthAnalysisRequest
-	96,  // 378: brent.BrentAdminService.ListAccountMetricRepos:input_type -> brent.AdminListAccountMetricReposRequest
-	99,  // 379: brent.BrentAdminService.StartAccountMetricsComparison:input_type -> brent.AdminStartAccountMetricsComparisonRequest
-	101, // 380: brent.BrentAdminService.GetAccountMetricsComparisonRun:input_type -> brent.AdminGetAccountMetricsComparisonRunRequest
-	317, // 381: brent.BrentAdminService.GetAccountBrentSettings:input_type -> brent.AdminGetAccountBrentSettingsRequest
-	318, // 382: brent.BrentAdminService.UpdateAccountBrentSettings:input_type -> brent.AdminUpdateAccountBrentSettingsRequest
-	319, // 383: brent.BrentAdminService.GetAccountLLMCredentialStatus:input_type -> brent.AdminGetAccountLLMCredentialStatusRequest
-	321, // 384: brent.BrentAdminService.ListAccountIntegrations:input_type -> brent.AdminListAccountIntegrationsRequest
-	190, // 385: brent.BrentAdminService.ListWorkflows:input_type -> brent.ListWorkflowsRequest
-	193, // 386: brent.BrentAdminService.GetWorkflow:input_type -> brent.GetWorkflowRequest
-	196, // 387: brent.BrentAdminService.ListWorkflowRuns:input_type -> brent.ListWorkflowRunsRequest
-	199, // 388: brent.BrentAdminService.GetWorkflowRun:input_type -> brent.GetWorkflowRunRequest
-	200, // 389: brent.BrentAdminService.GetWorkflowRunThreadHistory:input_type -> brent.GetWorkflowRunThreadHistoryRequest
-	12,  // 390: brent.BrentAdminService.ListPullRequests:input_type -> brent.ListPullRequestsRequest
-	14,  // 391: brent.BrentAdminService.GetPullRequestByID:input_type -> brent.GetPullRequestByIDRequest
-	16,  // 392: brent.BrentAdminService.ListDeviationAnalysesForPR:input_type -> brent.ListDeviationAnalysesForPRRequest
-	60,  // 393: brent.BrentAdminService.ListPrincipals:input_type -> brent.AdminListPrincipalsRequest
-	62,  // 394: brent.BrentAdminService.GetPrincipal:input_type -> brent.AdminGetPrincipalRequest
-	65,  // 395: brent.BrentAdminService.UpsertPrincipalBinding:input_type -> brent.AdminUpsertPrincipalBindingRequest
-	67,  // 396: brent.BrentAdminService.DeletePrincipalBinding:input_type -> brent.AdminDeletePrincipalBindingRequest
-	69,  // 397: brent.BrentAdminService.UpdatePrincipal:input_type -> brent.AdminUpdatePrincipalRequest
-	71,  // 398: brent.BrentAdminService.CreatePrincipalIdentity:input_type -> brent.AdminCreatePrincipalIdentityRequest
-	73,  // 399: brent.BrentAdminService.DeletePrincipalIdentity:input_type -> brent.AdminDeletePrincipalIdentityRequest
-	75,  // 400: brent.BrentAdminService.SetPrincipalCredential:input_type -> brent.AdminSetPrincipalCredentialRequest
-	77,  // 401: brent.BrentAdminService.ListPrincipalCredentialConnections:input_type -> brent.AdminListPrincipalCredentialConnectionsRequest
-	80,  // 402: brent.BrentAdminService.DeletePrincipalCredential:input_type -> brent.AdminDeletePrincipalCredentialRequest
-	18,  // 403: brent.BrentAdminService.GetPullRequestTimeline:input_type -> brent.GetPullRequestTimelineRequest
-	38,  // 404: brent.BrentService.ListOpenPullRequests:output_type -> brent.ListOpenPullRequestsResponse
-	40,  // 405: brent.BrentService.GetPullRequest:output_type -> brent.GetPullRequestResponse
-	206, // 406: brent.BrentService.GetPrincipalStatus:output_type -> brent.GetPrincipalStatusResponse
-	328, // 407: brent.BrentService.GetPlanPrompt:output_type -> brent.GetPlanPromptResponse
-	208, // 408: brent.BrentService.GetIntegrationConnectURL:output_type -> brent.GetIntegrationConnectURLResponse
-	210, // 409: brent.BrentService.DisconnectIntegration:output_type -> brent.DisconnectIntegrationResponse
-	212, // 410: brent.BrentService.ConnectByoHttpMcp:output_type -> brent.ConnectByoHttpMcpResponse
-	214, // 411: brent.BrentService.GetGitLabConnection:output_type -> brent.GetGitLabConnectionResponse
-	216, // 412: brent.BrentService.ConnectGitLab:output_type -> brent.ConnectGitLabResponse
-	218, // 413: brent.BrentService.SaveGitLabSigningToken:output_type -> brent.SaveGitLabSigningTokenResponse
-	296, // 414: brent.BrentService.UpsertMyVerifiedBinding:output_type -> brent.UpsertMyVerifiedBindingResponse
-	300, // 415: brent.BrentService.ListMyBindings:output_type -> brent.ListMyBindingsResponse
-	304, // 416: brent.BrentService.GetMyNotificationPreferences:output_type -> brent.GetMyNotificationPreferencesResponse
-	306, // 417: brent.BrentService.UpdateMyNotificationPreferences:output_type -> brent.UpdateMyNotificationPreferencesResponse
-	308, // 418: brent.BrentService.RegisterMyPushSubscription:output_type -> brent.RegisterMyPushSubscriptionResponse
-	310, // 419: brent.BrentService.GetWebPushPublicKey:output_type -> brent.GetWebPushPublicKeyResponse
-	298, // 420: brent.BrentService.UpdateMyDisplayName:output_type -> brent.UpdateMyDisplayNameResponse
-	314, // 421: brent.BrentService.GetBrentSettings:output_type -> brent.GetBrentSettingsResponse
-	316, // 422: brent.BrentService.UpdateBrentSettings:output_type -> brent.UpdateBrentSettingsResponse
-	325, // 423: brent.BrentService.ListIntegrationCatalogue:output_type -> brent.ListIntegrationCatalogueResponse
-	228, // 424: brent.BrentService.CreateWorkspace:output_type -> brent.CreateWorkspaceResponse
-	230, // 425: brent.BrentService.ListMyWorkspaces:output_type -> brent.ListMyWorkspacesResponse
-	233, // 426: brent.BrentService.DiscoverLoginRecoveryCandidates:output_type -> brent.DiscoverLoginRecoveryCandidatesResponse
-	235, // 427: brent.BrentService.RenameWorkspace:output_type -> brent.RenameWorkspaceResponse
-	272, // 428: brent.BrentService.UpdateWorkspaceBranding:output_type -> brent.UpdateWorkspaceBrandingResponse
-	274, // 429: brent.BrentService.CompleteWorkspaceOnboarding:output_type -> brent.CompleteWorkspaceOnboardingResponse
-	237, // 430: brent.BrentService.DeleteWorkspace:output_type -> brent.DeleteWorkspaceResponse
-	239, // 431: brent.BrentService.ListJoinableWorkspaces:output_type -> brent.ListJoinableWorkspacesResponse
-	243, // 432: brent.BrentService.JoinWorkspace:output_type -> brent.JoinWorkspaceResponse
-	276, // 433: brent.BrentService.CreateInvitation:output_type -> brent.CreateInvitationResponse
-	279, // 434: brent.BrentService.CreateInvitations:output_type -> brent.CreateInvitationsResponse
-	281, // 435: brent.BrentService.AcceptInvitation:output_type -> brent.AcceptInvitationResponse
-	283, // 436: brent.BrentService.ListWorkspaceMembers:output_type -> brent.ListWorkspaceMembersResponse
-	286, // 437: brent.BrentService.ResendInvitation:output_type -> brent.ResendInvitationResponse
-	288, // 438: brent.BrentService.RevokeInvitation:output_type -> brent.RevokeInvitationResponse
-	290, // 439: brent.BrentService.RemoveWorkspaceMember:output_type -> brent.RemoveWorkspaceMemberResponse
-	292, // 440: brent.BrentService.UpdateWorkspaceMemberRole:output_type -> brent.UpdateWorkspaceMemberRoleResponse
-	246, // 441: brent.BrentService.ListApprovedEmailDomains:output_type -> brent.ListApprovedEmailDomainsResponse
-	248, // 442: brent.BrentService.AddApprovedEmailDomain:output_type -> brent.AddApprovedEmailDomainResponse
-	250, // 443: brent.BrentService.VerifyApprovedEmailDomain:output_type -> brent.VerifyApprovedEmailDomainResponse
-	252, // 444: brent.BrentService.ResendApprovedEmailDomainCode:output_type -> brent.ResendApprovedEmailDomainCodeResponse
-	256, // 445: brent.BrentService.DeleteApprovedEmailDomain:output_type -> brent.DeleteApprovedEmailDomainResponse
-	259, // 446: brent.BrentService.GetWorkspaceLLMCredentialStatus:output_type -> brent.GetWorkspaceLLMCredentialStatusResponse
-	261, // 447: brent.BrentService.SetWorkspaceLLMCredential:output_type -> brent.SetWorkspaceLLMCredentialResponse
-	263, // 448: brent.BrentService.DeleteWorkspaceLLMCredential:output_type -> brent.DeleteWorkspaceLLMCredentialResponse
-	266, // 449: brent.BrentService.GetMyCursorCredentialStatus:output_type -> brent.GetMyCursorCredentialStatusResponse
-	268, // 450: brent.BrentService.SetMyCursorCredential:output_type -> brent.SetMyCursorCredentialResponse
-	270, // 451: brent.BrentService.DeleteMyCursorCredential:output_type -> brent.DeleteMyCursorCredentialResponse
-	222, // 452: brent.BrentService.GetWorkspaceIntegrationRoles:output_type -> brent.GetWorkspaceIntegrationRolesResponse
-	224, // 453: brent.BrentService.SetWorkspaceIntegrationRoles:output_type -> brent.SetWorkspaceIntegrationRolesResponse
-	254, // 454: brent.BrentService.ResendVerificationEmail:output_type -> brent.ResendVerificationEmailResponse
-	294, // 455: brent.BrentPublicService.GetInvitation:output_type -> brent.GetInvitationResponse
-	42,  // 456: brent.BrentAdminService.ExecuteWorkflow:output_type -> brent.ExecuteWorkflowResponse
-	28,  // 457: brent.BrentAdminService.ListRuns:output_type -> brent.ListRunsResponse
-	42,  // 458: brent.BrentAdminService.WatchRun:output_type -> brent.ExecuteWorkflowResponse
-	32,  // 459: brent.BrentAdminService.StreamEvents:output_type -> brent.StreamEventsResponse
-	34,  // 460: brent.BrentAdminService.ListEvents:output_type -> brent.ListEventsResponse
-	36,  // 461: brent.BrentAdminService.CancelRun:output_type -> brent.CancelRunResponse
-	42,  // 462: brent.BrentAdminService.SendQuestion:output_type -> brent.ExecuteWorkflowResponse
-	55,  // 463: brent.BrentAdminService.ListPlans:output_type -> brent.AdminListPlansResponse
-	58,  // 464: brent.BrentAdminService.GetPlan:output_type -> brent.AdminGetPlanResponse
-	83,  // 465: brent.BrentAdminService.ListReviews:output_type -> brent.AdminListReviewsResponse
-	86,  // 466: brent.BrentAdminService.GetReview:output_type -> brent.AdminGetReviewResponse
-	89,  // 467: brent.BrentAdminService.ListAccounts:output_type -> brent.AdminListAccountsResponse
-	92,  // 468: brent.BrentAdminService.GetAccountSummary:output_type -> brent.AdminGetAccountSummaryResponse
-	95,  // 469: brent.BrentAdminService.GetAccountHealthAnalysis:output_type -> brent.AdminGetAccountHealthAnalysisResponse
-	98,  // 470: brent.BrentAdminService.ListAccountMetricRepos:output_type -> brent.AdminListAccountMetricReposResponse
-	100, // 471: brent.BrentAdminService.StartAccountMetricsComparison:output_type -> brent.AdminStartAccountMetricsComparisonResponse
-	104, // 472: brent.BrentAdminService.GetAccountMetricsComparisonRun:output_type -> brent.AdminGetAccountMetricsComparisonRunResponse
-	314, // 473: brent.BrentAdminService.GetAccountBrentSettings:output_type -> brent.GetBrentSettingsResponse
-	316, // 474: brent.BrentAdminService.UpdateAccountBrentSettings:output_type -> brent.UpdateBrentSettingsResponse
-	320, // 475: brent.BrentAdminService.GetAccountLLMCredentialStatus:output_type -> brent.AdminGetAccountLLMCredentialStatusResponse
-	323, // 476: brent.BrentAdminService.ListAccountIntegrations:output_type -> brent.AdminListAccountIntegrationsResponse
-	191, // 477: brent.BrentAdminService.ListWorkflows:output_type -> brent.ListWorkflowsResponse
-	194, // 478: brent.BrentAdminService.GetWorkflow:output_type -> brent.GetWorkflowResponse
-	197, // 479: brent.BrentAdminService.ListWorkflowRuns:output_type -> brent.ListWorkflowRunsResponse
-	203, // 480: brent.BrentAdminService.GetWorkflowRun:output_type -> brent.GetWorkflowRunResponse
-	202, // 481: brent.BrentAdminService.GetWorkflowRunThreadHistory:output_type -> brent.GetWorkflowRunThreadHistoryResponse
-	13,  // 482: brent.BrentAdminService.ListPullRequests:output_type -> brent.ListPullRequestsResponse
-	15,  // 483: brent.BrentAdminService.GetPullRequestByID:output_type -> brent.GetPullRequestByIDResponse
-	17,  // 484: brent.BrentAdminService.ListDeviationAnalysesForPR:output_type -> brent.ListDeviationAnalysesForPRResponse
-	61,  // 485: brent.BrentAdminService.ListPrincipals:output_type -> brent.AdminListPrincipalsResponse
-	63,  // 486: brent.BrentAdminService.GetPrincipal:output_type -> brent.AdminGetPrincipalResponse
-	66,  // 487: brent.BrentAdminService.UpsertPrincipalBinding:output_type -> brent.AdminUpsertPrincipalBindingResponse
-	68,  // 488: brent.BrentAdminService.DeletePrincipalBinding:output_type -> brent.AdminDeletePrincipalBindingResponse
-	70,  // 489: brent.BrentAdminService.UpdatePrincipal:output_type -> brent.AdminUpdatePrincipalResponse
-	72,  // 490: brent.BrentAdminService.CreatePrincipalIdentity:output_type -> brent.AdminCreatePrincipalIdentityResponse
-	74,  // 491: brent.BrentAdminService.DeletePrincipalIdentity:output_type -> brent.AdminDeletePrincipalIdentityResponse
-	76,  // 492: brent.BrentAdminService.SetPrincipalCredential:output_type -> brent.AdminSetPrincipalCredentialResponse
-	78,  // 493: brent.BrentAdminService.ListPrincipalCredentialConnections:output_type -> brent.AdminListPrincipalCredentialConnectionsResponse
-	81,  // 494: brent.BrentAdminService.DeletePrincipalCredential:output_type -> brent.AdminDeletePrincipalCredentialResponse
-	21,  // 495: brent.BrentAdminService.GetPullRequestTimeline:output_type -> brent.GetPullRequestTimelineResponse
-	404, // [404:496] is the sub-list for method output_type
-	312, // [312:404] is the sub-list for method input_type
-	312, // [312:312] is the sub-list for extension type_name
-	311, // [311:312] is the sub-list for extension extendee
-	0,   // [0:311] is the sub-list for field type_name
+	349, // 92: brent.AdminGetAccountMetricsComparisonRunResponse.planned_unplanned_start:type_name -> google.protobuf.Timestamp
+	349, // 93: brent.AdminGetAccountMetricsComparisonRunResponse.planned_unplanned_end:type_name -> google.protobuf.Timestamp
+	349, // 94: brent.Event.occurred_at:type_name -> google.protobuf.Timestamp
+	107, // 95: brent.Event.actor:type_name -> brent.Actor
+	108, // 96: brent.Event.object:type_name -> brent.ObjectReference
+	349, // 97: brent.Event.received_at:type_name -> google.protobuf.Timestamp
+	109, // 98: brent.Event.plan_created:type_name -> brent.PlanCreated
+	110, // 99: brent.Event.plan_updated:type_name -> brent.PlanUpdated
+	111, // 100: brent.Event.plan_deleted:type_name -> brent.PlanDeleted
+	115, // 101: brent.Event.review_requested:type_name -> brent.ReviewRequested
+	116, // 102: brent.Event.review_submitted:type_name -> brent.ReviewSubmitted
+	143, // 103: brent.Event.other:type_name -> brent.OtherEvent
+	184, // 104: brent.Event.github_webhook:type_name -> brent.GitHubWebhook
+	188, // 105: brent.Event.slack_mention:type_name -> brent.SlackMentionReceived
+	191, // 106: brent.Event.slack_reaction:type_name -> brent.SlackReactionAdded
+	145, // 107: brent.Event.pull_request_opened:type_name -> brent.PullRequestOpened
+	146, // 108: brent.Event.pull_request_synchronized:type_name -> brent.PullRequestSynchronized
+	147, // 109: brent.Event.pull_request_updated:type_name -> brent.PullRequestUpdated
+	148, // 110: brent.Event.pull_request_closed:type_name -> brent.PullRequestClosed
+	149, // 111: brent.Event.pull_request_linked_to_plan:type_name -> brent.PullRequestLinkedToPlan
+	150, // 112: brent.Event.pull_request_unlinked_from_plan:type_name -> brent.PullRequestUnlinkedFromPlan
+	189, // 113: brent.Event.organisation_app_installation_upserted:type_name -> brent.OrganisationAppInstallationUpserted
+	190, // 114: brent.Event.organisation_app_installation_deleted:type_name -> brent.OrganisationAppInstallationDeleted
+	157, // 115: brent.Event.deviation_analysis_started:type_name -> brent.DeviationAnalysisStarted
+	159, // 116: brent.Event.deviation_analysis_completed:type_name -> brent.DeviationAnalysisCompleted
+	160, // 117: brent.Event.deviation_analysis_failed:type_name -> brent.DeviationAnalysisFailed
+	176, // 118: brent.Event.workflow_run_queued:type_name -> brent.WorkflowRunQueued
+	177, // 119: brent.Event.workflow_run_started:type_name -> brent.WorkflowRunStarted
+	178, // 120: brent.Event.workflow_run_completed:type_name -> brent.WorkflowRunCompleted
+	179, // 121: brent.Event.workflow_run_failed:type_name -> brent.WorkflowRunFailed
+	180, // 122: brent.Event.workflow_run_cancelled:type_name -> brent.WorkflowRunCancelled
+	117, // 123: brent.Event.review_no_eligible_reviewer:type_name -> brent.ReviewNoEligibleReviewer
+	120, // 124: brent.Event.principal_created:type_name -> brent.PrincipalCreated
+	121, // 125: brent.Event.principal_updated:type_name -> brent.PrincipalUpdated
+	122, // 126: brent.Event.principal_tombstoned:type_name -> brent.PrincipalTombstoned
+	133, // 127: brent.Event.identity_created:type_name -> brent.IdentityCreated
+	134, // 128: brent.Event.identity_deleted:type_name -> brent.IdentityDeleted
+	135, // 129: brent.Event.binding_created:type_name -> brent.BindingCreated
+	136, // 130: brent.Event.binding_updated:type_name -> brent.BindingUpdated
+	137, // 131: brent.Event.binding_deleted:type_name -> brent.BindingDeleted
+	142, // 132: brent.Event.review_drive_by_started:type_name -> brent.ReviewDriveByStarted
+	181, // 133: brent.Event.slack_webhook:type_name -> brent.SlackWebhook
+	112, // 134: brent.Event.review_deleted:type_name -> brent.ReviewDeleted
+	114, // 135: brent.Event.plan_restored:type_name -> brent.PlanRestored
+	182, // 136: brent.Event.linear_webhook:type_name -> brent.LinearWebhook
+	156, // 137: brent.Event.pull_request_comment_created:type_name -> brent.PullRequestCommentCreated
+	161, // 138: brent.Event.deviation_finding_recorded:type_name -> brent.DeviationFindingRecorded
+	162, // 139: brent.Event.deviation_finding_updated:type_name -> brent.DeviationFindingUpdated
+	163, // 140: brent.Event.deviation_finding_resolved:type_name -> brent.DeviationFindingResolved
+	166, // 141: brent.Event.agent_run_dispatched:type_name -> brent.AgentRunDispatched
+	167, // 142: brent.Event.agent_run_started:type_name -> brent.AgentRunStarted
+	168, // 143: brent.Event.agent_run_pull_request_matched:type_name -> brent.AgentRunPullRequestMatched
+	169, // 144: brent.Event.agent_run_flagged_needs_you:type_name -> brent.AgentRunFlaggedNeedsYou
+	171, // 145: brent.Event.agent_run_merged:type_name -> brent.AgentRunMerged
+	173, // 146: brent.Event.agent_run_declined:type_name -> brent.AgentRunDeclined
+	172, // 147: brent.Event.agent_run_cancelled:type_name -> brent.AgentRunCancelled
+	170, // 148: brent.Event.agent_run_gate_passed:type_name -> brent.AgentRunGatePassed
+	151, // 149: brent.Event.pull_request_linked_to_agent_run:type_name -> brent.PullRequestLinkedToAgentRun
+	175, // 150: brent.Event.workflow_ingested:type_name -> brent.WorkflowIngested
+	152, // 151: brent.Event.pull_request_review_requested:type_name -> brent.PullRequestReviewRequested
+	153, // 152: brent.Event.pull_request_approved:type_name -> brent.PullRequestApproved
+	154, // 153: brent.Event.pull_request_changes_requested:type_name -> brent.PullRequestChangesRequested
+	155, // 154: brent.Event.pull_request_review_dismissed:type_name -> brent.PullRequestReviewDismissed
+	138, // 155: brent.Event.credential_connected:type_name -> brent.CredentialConnected
+	139, // 156: brent.Event.credential_revoked:type_name -> brent.CredentialRevoked
+	174, // 157: brent.Event.agent_run_annotated:type_name -> brent.AgentRunAnnotated
+	123, // 158: brent.Event.workspace_created:type_name -> brent.WorkspaceCreated
+	132, // 159: brent.Event.mcp_grant_workspace_binding_changed:type_name -> brent.MCPGrantWorkspaceBindingChanged
+	124, // 160: brent.Event.workspace_onboarding_completed:type_name -> brent.WorkspaceOnboardingCompleted
+	125, // 161: brent.Event.workspace_renamed:type_name -> brent.WorkspaceRenamed
+	126, // 162: brent.Event.workspace_deleted:type_name -> brent.WorkspaceDeleted
+	129, // 163: brent.Event.approved_email_domain_added:type_name -> brent.ApprovedEmailDomainAdded
+	130, // 164: brent.Event.approved_email_domain_verified:type_name -> brent.ApprovedEmailDomainVerified
+	131, // 165: brent.Event.approved_email_domain_deleted:type_name -> brent.ApprovedEmailDomainDeleted
+	185, // 166: brent.Event.gitlab_webhook:type_name -> brent.GitLabWebhook
+	140, // 167: brent.Event.workspace_llm_credential_connected:type_name -> brent.WorkspaceLLMCredentialConnected
+	141, // 168: brent.Event.workspace_llm_credential_revoked:type_name -> brent.WorkspaceLLMCredentialRevoked
+	186, // 169: brent.Event.bitbucket_webhook:type_name -> brent.BitbucketWebhook
+	127, // 170: brent.Event.workspace_member_joined:type_name -> brent.WorkspaceMemberJoined
+	128, // 171: brent.Event.workspace_member_left:type_name -> brent.WorkspaceMemberLeft
+	183, // 172: brent.Event.composio_trigger_message:type_name -> brent.ComposioTriggerMessage
+	164, // 173: brent.Event.deviation_finding_acknowledged:type_name -> brent.DeviationFindingAcknowledged
+	165, // 174: brent.Event.deviation_finding_acknowledgement_cleared:type_name -> brent.DeviationFindingAcknowledgementCleared
+	118, // 175: brent.Event.plan_review_policy_decided:type_name -> brent.PlanReviewPolicyDecided
+	113, // 176: brent.Event.review_restored:type_name -> brent.ReviewRestored
+	119, // 177: brent.Event.workspace_review_policy_updated:type_name -> brent.WorkspaceReviewPolicyUpdated
+	144, // 178: brent.Event.unknown_stored_payload:type_name -> brent.UnknownStoredPayload
+	335, // 179: brent.PlanUpdated.previous:type_name -> brent.PlanUpdated.PreviousEntry
+	336, // 180: brent.PlanUpdated.after:type_name -> brent.PlanUpdated.AfterEntry
+	349, // 181: brent.ReviewSubmitted.decided_at:type_name -> google.protobuf.Timestamp
+	337, // 182: brent.PrincipalUpdated.previous:type_name -> brent.PrincipalUpdated.PreviousEntry
+	338, // 183: brent.PrincipalUpdated.after:type_name -> brent.PrincipalUpdated.AfterEntry
+	7,   // 184: brent.WorkspaceMemberJoined.source:type_name -> brent.JoinSource
+	339, // 185: brent.BindingUpdated.previous:type_name -> brent.BindingUpdated.PreviousEntry
+	340, // 186: brent.BindingUpdated.after:type_name -> brent.BindingUpdated.AfterEntry
+	341, // 187: brent.OtherEvent.fields:type_name -> brent.OtherEvent.FieldsEntry
+	342, // 188: brent.PullRequestUpdated.previous:type_name -> brent.PullRequestUpdated.PreviousEntry
+	343, // 189: brent.PullRequestUpdated.after:type_name -> brent.PullRequestUpdated.AfterEntry
+	349, // 190: brent.DeviationAnalysisStarted.started_at:type_name -> google.protobuf.Timestamp
+	344, // 191: brent.DeviationAnalysisCompleted.finding_count_by_tag:type_name -> brent.DeviationAnalysisCompleted.FindingCountByTagEntry
+	349, // 192: brent.DeviationAnalysisCompleted.completed_at:type_name -> google.protobuf.Timestamp
+	158, // 193: brent.DeviationAnalysisCompleted.findings:type_name -> brent.FindingSummary
+	349, // 194: brent.DeviationAnalysisFailed.failed_at:type_name -> google.protobuf.Timestamp
+	349, // 195: brent.DeviationFindingRecorded.recorded_at:type_name -> google.protobuf.Timestamp
+	345, // 196: brent.DeviationFindingUpdated.previous:type_name -> brent.DeviationFindingUpdated.PreviousEntry
+	346, // 197: brent.DeviationFindingUpdated.after:type_name -> brent.DeviationFindingUpdated.AfterEntry
+	349, // 198: brent.DeviationFindingResolved.resolved_at:type_name -> google.protobuf.Timestamp
+	349, // 199: brent.DeviationFindingAcknowledged.acknowledged_at:type_name -> google.protobuf.Timestamp
+	349, // 200: brent.DeviationFindingAcknowledgementCleared.cleared_at:type_name -> google.protobuf.Timestamp
+	349, // 201: brent.WorkflowRunQueued.queued_at:type_name -> google.protobuf.Timestamp
+	349, // 202: brent.WorkflowRunStarted.started_at:type_name -> google.protobuf.Timestamp
+	349, // 203: brent.WorkflowRunCompleted.completed_at:type_name -> google.protobuf.Timestamp
+	349, // 204: brent.WorkflowRunFailed.failed_at:type_name -> google.protobuf.Timestamp
+	349, // 205: brent.WorkflowRunCancelled.cancelled_at:type_name -> google.protobuf.Timestamp
+	194, // 206: brent.ListWorkflowsResponse.workflows:type_name -> brent.WorkflowSummary
+	349, // 207: brent.WorkflowSummary.created_at:type_name -> google.protobuf.Timestamp
+	349, // 208: brent.WorkflowSummary.updated_at:type_name -> google.protobuf.Timestamp
+	197, // 209: brent.GetWorkflowResponse.workflow:type_name -> brent.Workflow
+	349, // 210: brent.Workflow.created_at:type_name -> google.protobuf.Timestamp
+	349, // 211: brent.Workflow.updated_at:type_name -> google.protobuf.Timestamp
+	200, // 212: brent.ListWorkflowRunsResponse.runs:type_name -> brent.WorkflowRunSummary
+	349, // 213: brent.WorkflowRunSummary.started_at:type_name -> google.protobuf.Timestamp
+	349, // 214: brent.WorkflowRunSummary.completed_at:type_name -> google.protobuf.Timestamp
+	349, // 215: brent.WorkflowRunSummary.created_at:type_name -> google.protobuf.Timestamp
+	349, // 216: brent.WorkflowRunSummary.updated_at:type_name -> google.protobuf.Timestamp
+	200, // 217: brent.WorkflowRunThreadSegment.run:type_name -> brent.WorkflowRunSummary
+	43,  // 218: brent.WorkflowRunThreadSegment.steps:type_name -> brent.ExecuteWorkflowResponse
+	203, // 219: brent.GetWorkflowRunThreadHistoryResponse.segments:type_name -> brent.WorkflowRunThreadSegment
+	206, // 220: brent.GetWorkflowRunResponse.run:type_name -> brent.WorkflowRun
+	194, // 221: brent.GetWorkflowRunResponse.workflow:type_name -> brent.WorkflowSummary
+	349, // 222: brent.WorkflowRun.started_at:type_name -> google.protobuf.Timestamp
+	349, // 223: brent.WorkflowRun.completed_at:type_name -> google.protobuf.Timestamp
+	349, // 224: brent.WorkflowRun.created_at:type_name -> google.protobuf.Timestamp
+	349, // 225: brent.WorkflowRun.updated_at:type_name -> google.protobuf.Timestamp
+	106, // 226: brent.WorkflowRun.triggering_event_payload:type_name -> brent.Event
+	2,   // 227: brent.GetPrincipalStatusResponse.state:type_name -> brent.PrincipalStatusState
+	227, // 228: brent.GetPrincipalStatusResponse.principal:type_name -> brent.Principal
+	222, // 229: brent.GetPrincipalStatusResponse.integrations:type_name -> brent.IntegrationStatus
+	3,   // 230: brent.GetIntegrationConnectURLRequest.provider:type_name -> brent.IntegrationProvider
+	4,   // 231: brent.GetIntegrationConnectURLRequest.intent:type_name -> brent.IntegrationIntent
+	3,   // 232: brent.DisconnectIntegrationRequest.provider:type_name -> brent.IntegrationProvider
+	349, // 233: brent.GetGitLabConnectionResponse.connected_at:type_name -> google.protobuf.Timestamp
+	349, // 234: brent.GitHubPendingInstall.requested_at:type_name -> google.protobuf.Timestamp
+	3,   // 235: brent.IntegrationStatus.provider:type_name -> brent.IntegrationProvider
+	221, // 236: brent.IntegrationStatus.github_pending:type_name -> brent.GitHubPendingInstall
+	349, // 237: brent.IntegrationStatus.connected_at:type_name -> google.protobuf.Timestamp
+	5,   // 238: brent.IntegrationStatus.status:type_name -> brent.IntegrationConnectionStatus
+	3,   // 239: brent.GetWorkspaceIntegrationRolesResponse.git_provider:type_name -> brent.IntegrationProvider
+	3,   // 240: brent.SetWorkspaceIntegrationRolesRequest.git_provider:type_name -> brent.IntegrationProvider
+	3,   // 241: brent.SetWorkspaceIntegrationRolesResponse.git_provider:type_name -> brent.IntegrationProvider
+	349, // 242: brent.Principal.created_at:type_name -> google.protobuf.Timestamp
+	349, // 243: brent.Principal.updated_at:type_name -> google.protobuf.Timestamp
+	228, // 244: brent.CreateWorkspaceResponse.workspace:type_name -> brent.Workspace
+	228, // 245: brent.ListMyWorkspacesResponse.workspaces:type_name -> brent.Workspace
+	6,   // 246: brent.LoginRecoveryCandidate.provider:type_name -> brent.LoginProvider
+	6,   // 247: brent.DiscoverLoginRecoveryCandidatesResponse.arriving_provider:type_name -> brent.LoginProvider
+	234, // 248: brent.DiscoverLoginRecoveryCandidatesResponse.candidates:type_name -> brent.LoginRecoveryCandidate
+	228, // 249: brent.RenameWorkspaceResponse.workspace:type_name -> brent.Workspace
+	242, // 250: brent.ListJoinableWorkspacesResponse.workspaces:type_name -> brent.JoinableWorkspace
+	349, // 251: brent.JoinableWorkspace.created_at:type_name -> google.protobuf.Timestamp
+	243, // 252: brent.JoinableWorkspace.member_previews:type_name -> brent.JoinableWorkspaceMember
+	7,   // 253: brent.JoinableWorkspace.source:type_name -> brent.JoinSource
+	228, // 254: brent.JoinWorkspaceResponse.workspace:type_name -> brent.Workspace
+	349, // 255: brent.ApprovedEmailDomain.created_at:type_name -> google.protobuf.Timestamp
+	246, // 256: brent.ListApprovedEmailDomainsResponse.domains:type_name -> brent.ApprovedEmailDomain
+	246, // 257: brent.AddApprovedEmailDomainResponse.domain:type_name -> brent.ApprovedEmailDomain
+	246, // 258: brent.VerifyApprovedEmailDomainResponse.domain:type_name -> brent.ApprovedEmailDomain
+	349, // 259: brent.WorkspaceLLMCredentialStatus.last_validated_at:type_name -> google.protobuf.Timestamp
+	349, // 260: brent.WorkspaceLLMCredentialStatus.updated_at:type_name -> google.protobuf.Timestamp
+	259, // 261: brent.GetWorkspaceLLMCredentialStatusResponse.status:type_name -> brent.WorkspaceLLMCredentialStatus
+	259, // 262: brent.SetWorkspaceLLMCredentialResponse.status:type_name -> brent.WorkspaceLLMCredentialStatus
+	349, // 263: brent.MyCursorCredentialStatus.last_validated_at:type_name -> google.protobuf.Timestamp
+	266, // 264: brent.GetMyCursorCredentialStatusResponse.status:type_name -> brent.MyCursorCredentialStatus
+	266, // 265: brent.SetMyCursorCredentialResponse.status:type_name -> brent.MyCursorCredentialStatus
+	228, // 266: brent.UpdateWorkspaceBrandingResponse.workspace:type_name -> brent.Workspace
+	228, // 267: brent.CompleteWorkspaceOnboardingResponse.workspace:type_name -> brent.Workspace
+	349, // 268: brent.CreateInvitationResponse.expires_at:type_name -> google.protobuf.Timestamp
+	9,   // 269: brent.InvitationResult.status:type_name -> brent.InvitationResultStatus
+	280, // 270: brent.CreateInvitationsResponse.results:type_name -> brent.InvitationResult
+	228, // 271: brent.AcceptInvitationResponse.workspace:type_name -> brent.Workspace
+	286, // 272: brent.ListWorkspaceMembersResponse.members:type_name -> brent.WorkspaceMember
+	10,  // 273: brent.WorkspaceMember.state:type_name -> brent.WorkspaceMemberState
+	349, // 274: brent.ResendInvitationResponse.expires_at:type_name -> google.protobuf.Timestamp
+	8,   // 275: brent.GetInvitationResponse.status:type_name -> brent.InvitationStatus
+	313, // 276: brent.UpsertMyVerifiedBindingResponse.binding:type_name -> brent.Binding
+	227, // 277: brent.UpdateMyDisplayNameResponse.principal:type_name -> brent.Principal
+	313, // 278: brent.ListMyBindingsResponse.bindings:type_name -> brent.Binding
+	347, // 279: brent.NotificationPreferences.preferences:type_name -> brent.NotificationPreferences.PreferencesEntry
+	348, // 280: brent.ChannelPreferences.channels:type_name -> brent.ChannelPreferences.ChannelsEntry
+	303, // 281: brent.GetMyNotificationPreferencesResponse.preferences:type_name -> brent.NotificationPreferences
+	303, // 282: brent.UpdateMyNotificationPreferencesRequest.preferences:type_name -> brent.NotificationPreferences
+	303, // 283: brent.UpdateMyNotificationPreferencesResponse.preferences:type_name -> brent.NotificationPreferences
+	349, // 284: brent.Binding.created_at:type_name -> google.protobuf.Timestamp
+	349, // 285: brent.Binding.updated_at:type_name -> google.protobuf.Timestamp
+	349, // 286: brent.GetBrentSettingsResponse.red_finding_kinds_updated_at:type_name -> google.protobuf.Timestamp
+	314, // 287: brent.UpdateBrentSettingsRequest.red_finding_kinds:type_name -> brent.RedFindingKindsPatch
+	349, // 288: brent.UpdateBrentSettingsResponse.red_finding_kinds_updated_at:type_name -> google.protobuf.Timestamp
+	314, // 289: brent.AdminUpdateAccountBrentSettingsRequest.red_finding_kinds:type_name -> brent.RedFindingKindsPatch
+	11,  // 290: brent.AdminGetAccountReviewPolicyResponse.policy:type_name -> brent.WorkspaceReviewPolicy
+	349, // 291: brent.AdminGetAccountReviewPolicyResponse.updated_at:type_name -> google.protobuf.Timestamp
+	11,  // 292: brent.AdminUpdateAccountReviewPolicyRequest.policy:type_name -> brent.WorkspaceReviewPolicy
+	11,  // 293: brent.AdminUpdateAccountReviewPolicyResponse.policy:type_name -> brent.WorkspaceReviewPolicy
+	349, // 294: brent.AdminUpdateAccountReviewPolicyResponse.updated_at:type_name -> google.protobuf.Timestamp
+	259, // 295: brent.AdminGetAccountLLMCredentialStatusResponse.status:type_name -> brent.WorkspaceLLMCredentialStatus
+	349, // 296: brent.AdminAccountIntegrationInstall.created_at:type_name -> google.protobuf.Timestamp
+	5,   // 297: brent.AdminAccountIntegrationInstall.status:type_name -> brent.IntegrationConnectionStatus
+	328, // 298: brent.AdminListAccountIntegrationsResponse.installs:type_name -> brent.AdminAccountIntegrationInstall
+	3,   // 299: brent.AdminListAccountIntegrationsResponse.git_provider:type_name -> brent.IntegrationProvider
+	3,   // 300: brent.AdminListAccountIntegrationsResponse.ticketing_provider:type_name -> brent.IntegrationProvider
+	3,   // 301: brent.AdminListAccountIntegrationsResponse.messaging_provider:type_name -> brent.IntegrationProvider
+	332, // 302: brent.ListIntegrationCatalogueResponse.entries:type_name -> brent.IntegrationCatalogueEntry
+	12,  // 303: brent.IntegrationCatalogueEntry.source:type_name -> brent.IntegrationCatalogueSource
+	3,   // 304: brent.IntegrationCatalogueEntry.provider:type_name -> brent.IntegrationProvider
+	349, // 305: brent.IntegrationCatalogueEntry.created_at:type_name -> google.protobuf.Timestamp
+	350, // 306: brent.PlanUpdated.PreviousEntry.value:type_name -> google.protobuf.Value
+	350, // 307: brent.PlanUpdated.AfterEntry.value:type_name -> google.protobuf.Value
+	350, // 308: brent.PrincipalUpdated.PreviousEntry.value:type_name -> google.protobuf.Value
+	350, // 309: brent.PrincipalUpdated.AfterEntry.value:type_name -> google.protobuf.Value
+	350, // 310: brent.BindingUpdated.PreviousEntry.value:type_name -> google.protobuf.Value
+	350, // 311: brent.BindingUpdated.AfterEntry.value:type_name -> google.protobuf.Value
+	350, // 312: brent.PullRequestUpdated.PreviousEntry.value:type_name -> google.protobuf.Value
+	350, // 313: brent.PullRequestUpdated.AfterEntry.value:type_name -> google.protobuf.Value
+	350, // 314: brent.DeviationFindingUpdated.PreviousEntry.value:type_name -> google.protobuf.Value
+	350, // 315: brent.DeviationFindingUpdated.AfterEntry.value:type_name -> google.protobuf.Value
+	304, // 316: brent.NotificationPreferences.PreferencesEntry.value:type_name -> brent.ChannelPreferences
+	351, // 317: brent.embedded_json:extendee -> google.protobuf.FieldOptions
+	38,  // 318: brent.BrentService.ListOpenPullRequests:input_type -> brent.ListOpenPullRequestsRequest
+	40,  // 319: brent.BrentService.GetPullRequest:input_type -> brent.GetPullRequestRequest
+	207, // 320: brent.BrentService.GetPrincipalStatus:input_type -> brent.GetPrincipalStatusRequest
+	333, // 321: brent.BrentService.GetPlanPrompt:input_type -> brent.GetPlanPromptRequest
+	209, // 322: brent.BrentService.GetIntegrationConnectURL:input_type -> brent.GetIntegrationConnectURLRequest
+	211, // 323: brent.BrentService.DisconnectIntegration:input_type -> brent.DisconnectIntegrationRequest
+	213, // 324: brent.BrentService.ConnectByoHttpMcp:input_type -> brent.ConnectByoHttpMcpRequest
+	215, // 325: brent.BrentService.GetGitLabConnection:input_type -> brent.GetGitLabConnectionRequest
+	217, // 326: brent.BrentService.ConnectGitLab:input_type -> brent.ConnectGitLabRequest
+	219, // 327: brent.BrentService.SaveGitLabSigningToken:input_type -> brent.SaveGitLabSigningTokenRequest
+	297, // 328: brent.BrentService.UpsertMyVerifiedBinding:input_type -> brent.UpsertMyVerifiedBindingRequest
+	301, // 329: brent.BrentService.ListMyBindings:input_type -> brent.ListMyBindingsRequest
+	305, // 330: brent.BrentService.GetMyNotificationPreferences:input_type -> brent.GetMyNotificationPreferencesRequest
+	307, // 331: brent.BrentService.UpdateMyNotificationPreferences:input_type -> brent.UpdateMyNotificationPreferencesRequest
+	309, // 332: brent.BrentService.RegisterMyPushSubscription:input_type -> brent.RegisterMyPushSubscriptionRequest
+	311, // 333: brent.BrentService.GetWebPushPublicKey:input_type -> brent.GetWebPushPublicKeyRequest
+	299, // 334: brent.BrentService.UpdateMyDisplayName:input_type -> brent.UpdateMyDisplayNameRequest
+	315, // 335: brent.BrentService.GetBrentSettings:input_type -> brent.GetBrentSettingsRequest
+	317, // 336: brent.BrentService.UpdateBrentSettings:input_type -> brent.UpdateBrentSettingsRequest
+	330, // 337: brent.BrentService.ListIntegrationCatalogue:input_type -> brent.ListIntegrationCatalogueRequest
+	229, // 338: brent.BrentService.CreateWorkspace:input_type -> brent.CreateWorkspaceRequest
+	231, // 339: brent.BrentService.ListMyWorkspaces:input_type -> brent.ListMyWorkspacesRequest
+	233, // 340: brent.BrentService.DiscoverLoginRecoveryCandidates:input_type -> brent.DiscoverLoginRecoveryCandidatesRequest
+	236, // 341: brent.BrentService.RenameWorkspace:input_type -> brent.RenameWorkspaceRequest
+	273, // 342: brent.BrentService.UpdateWorkspaceBranding:input_type -> brent.UpdateWorkspaceBrandingRequest
+	275, // 343: brent.BrentService.CompleteWorkspaceOnboarding:input_type -> brent.CompleteWorkspaceOnboardingRequest
+	238, // 344: brent.BrentService.DeleteWorkspace:input_type -> brent.DeleteWorkspaceRequest
+	240, // 345: brent.BrentService.ListJoinableWorkspaces:input_type -> brent.ListJoinableWorkspacesRequest
+	244, // 346: brent.BrentService.JoinWorkspace:input_type -> brent.JoinWorkspaceRequest
+	277, // 347: brent.BrentService.CreateInvitation:input_type -> brent.CreateInvitationRequest
+	279, // 348: brent.BrentService.CreateInvitations:input_type -> brent.CreateInvitationsRequest
+	282, // 349: brent.BrentService.AcceptInvitation:input_type -> brent.AcceptInvitationRequest
+	284, // 350: brent.BrentService.ListWorkspaceMembers:input_type -> brent.ListWorkspaceMembersRequest
+	287, // 351: brent.BrentService.ResendInvitation:input_type -> brent.ResendInvitationRequest
+	289, // 352: brent.BrentService.RevokeInvitation:input_type -> brent.RevokeInvitationRequest
+	291, // 353: brent.BrentService.RemoveWorkspaceMember:input_type -> brent.RemoveWorkspaceMemberRequest
+	293, // 354: brent.BrentService.UpdateWorkspaceMemberRole:input_type -> brent.UpdateWorkspaceMemberRoleRequest
+	247, // 355: brent.BrentService.ListApprovedEmailDomains:input_type -> brent.ListApprovedEmailDomainsRequest
+	249, // 356: brent.BrentService.AddApprovedEmailDomain:input_type -> brent.AddApprovedEmailDomainRequest
+	251, // 357: brent.BrentService.VerifyApprovedEmailDomain:input_type -> brent.VerifyApprovedEmailDomainRequest
+	253, // 358: brent.BrentService.ResendApprovedEmailDomainCode:input_type -> brent.ResendApprovedEmailDomainCodeRequest
+	257, // 359: brent.BrentService.DeleteApprovedEmailDomain:input_type -> brent.DeleteApprovedEmailDomainRequest
+	260, // 360: brent.BrentService.GetWorkspaceLLMCredentialStatus:input_type -> brent.GetWorkspaceLLMCredentialStatusRequest
+	262, // 361: brent.BrentService.SetWorkspaceLLMCredential:input_type -> brent.SetWorkspaceLLMCredentialRequest
+	264, // 362: brent.BrentService.DeleteWorkspaceLLMCredential:input_type -> brent.DeleteWorkspaceLLMCredentialRequest
+	267, // 363: brent.BrentService.GetMyCursorCredentialStatus:input_type -> brent.GetMyCursorCredentialStatusRequest
+	269, // 364: brent.BrentService.SetMyCursorCredential:input_type -> brent.SetMyCursorCredentialRequest
+	271, // 365: brent.BrentService.DeleteMyCursorCredential:input_type -> brent.DeleteMyCursorCredentialRequest
+	223, // 366: brent.BrentService.GetWorkspaceIntegrationRoles:input_type -> brent.GetWorkspaceIntegrationRolesRequest
+	225, // 367: brent.BrentService.SetWorkspaceIntegrationRoles:input_type -> brent.SetWorkspaceIntegrationRolesRequest
+	255, // 368: brent.BrentService.ResendVerificationEmail:input_type -> brent.ResendVerificationEmailRequest
+	295, // 369: brent.BrentPublicService.GetInvitation:input_type -> brent.GetInvitationRequest
+	27,  // 370: brent.BrentAdminService.ExecuteWorkflow:input_type -> brent.ExecuteWorkflowRequest
+	28,  // 371: brent.BrentAdminService.ListRuns:input_type -> brent.ListRunsRequest
+	31,  // 372: brent.BrentAdminService.WatchRun:input_type -> brent.WatchRunRequest
+	32,  // 373: brent.BrentAdminService.StreamEvents:input_type -> brent.StreamEventsRequest
+	34,  // 374: brent.BrentAdminService.ListEvents:input_type -> brent.ListEventsRequest
+	36,  // 375: brent.BrentAdminService.CancelRun:input_type -> brent.CancelRunRequest
+	54,  // 376: brent.BrentAdminService.SendQuestion:input_type -> brent.SendQuestionRequest
+	55,  // 377: brent.BrentAdminService.ListPlans:input_type -> brent.AdminListPlansRequest
+	58,  // 378: brent.BrentAdminService.GetPlan:input_type -> brent.AdminGetPlanRequest
+	83,  // 379: brent.BrentAdminService.ListReviews:input_type -> brent.AdminListReviewsRequest
+	86,  // 380: brent.BrentAdminService.GetReview:input_type -> brent.AdminGetReviewRequest
+	352, // 381: brent.BrentAdminService.ListAccounts:input_type -> google.protobuf.Empty
+	91,  // 382: brent.BrentAdminService.GetAccountSummary:input_type -> brent.AdminGetAccountSummaryRequest
+	94,  // 383: brent.BrentAdminService.GetAccountHealthAnalysis:input_type -> brent.AdminGetAccountHealthAnalysisRequest
+	97,  // 384: brent.BrentAdminService.ListAccountMetricRepos:input_type -> brent.AdminListAccountMetricReposRequest
+	100, // 385: brent.BrentAdminService.StartAccountMetricsComparison:input_type -> brent.AdminStartAccountMetricsComparisonRequest
+	102, // 386: brent.BrentAdminService.GetAccountMetricsComparisonRun:input_type -> brent.AdminGetAccountMetricsComparisonRunRequest
+	319, // 387: brent.BrentAdminService.GetAccountBrentSettings:input_type -> brent.AdminGetAccountBrentSettingsRequest
+	320, // 388: brent.BrentAdminService.UpdateAccountBrentSettings:input_type -> brent.AdminUpdateAccountBrentSettingsRequest
+	321, // 389: brent.BrentAdminService.GetAccountReviewPolicy:input_type -> brent.AdminGetAccountReviewPolicyRequest
+	323, // 390: brent.BrentAdminService.UpdateAccountReviewPolicy:input_type -> brent.AdminUpdateAccountReviewPolicyRequest
+	325, // 391: brent.BrentAdminService.GetAccountLLMCredentialStatus:input_type -> brent.AdminGetAccountLLMCredentialStatusRequest
+	327, // 392: brent.BrentAdminService.ListAccountIntegrations:input_type -> brent.AdminListAccountIntegrationsRequest
+	192, // 393: brent.BrentAdminService.ListWorkflows:input_type -> brent.ListWorkflowsRequest
+	195, // 394: brent.BrentAdminService.GetWorkflow:input_type -> brent.GetWorkflowRequest
+	198, // 395: brent.BrentAdminService.ListWorkflowRuns:input_type -> brent.ListWorkflowRunsRequest
+	201, // 396: brent.BrentAdminService.GetWorkflowRun:input_type -> brent.GetWorkflowRunRequest
+	202, // 397: brent.BrentAdminService.GetWorkflowRunThreadHistory:input_type -> brent.GetWorkflowRunThreadHistoryRequest
+	13,  // 398: brent.BrentAdminService.ListPullRequests:input_type -> brent.ListPullRequestsRequest
+	15,  // 399: brent.BrentAdminService.GetPullRequestByID:input_type -> brent.GetPullRequestByIDRequest
+	17,  // 400: brent.BrentAdminService.ListDeviationAnalysesForPR:input_type -> brent.ListDeviationAnalysesForPRRequest
+	61,  // 401: brent.BrentAdminService.ListPrincipals:input_type -> brent.AdminListPrincipalsRequest
+	63,  // 402: brent.BrentAdminService.GetPrincipal:input_type -> brent.AdminGetPrincipalRequest
+	66,  // 403: brent.BrentAdminService.UpsertPrincipalBinding:input_type -> brent.AdminUpsertPrincipalBindingRequest
+	68,  // 404: brent.BrentAdminService.DeletePrincipalBinding:input_type -> brent.AdminDeletePrincipalBindingRequest
+	70,  // 405: brent.BrentAdminService.UpdatePrincipal:input_type -> brent.AdminUpdatePrincipalRequest
+	72,  // 406: brent.BrentAdminService.CreatePrincipalIdentity:input_type -> brent.AdminCreatePrincipalIdentityRequest
+	74,  // 407: brent.BrentAdminService.DeletePrincipalIdentity:input_type -> brent.AdminDeletePrincipalIdentityRequest
+	76,  // 408: brent.BrentAdminService.SetPrincipalCredential:input_type -> brent.AdminSetPrincipalCredentialRequest
+	78,  // 409: brent.BrentAdminService.ListPrincipalCredentialConnections:input_type -> brent.AdminListPrincipalCredentialConnectionsRequest
+	81,  // 410: brent.BrentAdminService.DeletePrincipalCredential:input_type -> brent.AdminDeletePrincipalCredentialRequest
+	19,  // 411: brent.BrentAdminService.GetPullRequestTimeline:input_type -> brent.GetPullRequestTimelineRequest
+	39,  // 412: brent.BrentService.ListOpenPullRequests:output_type -> brent.ListOpenPullRequestsResponse
+	41,  // 413: brent.BrentService.GetPullRequest:output_type -> brent.GetPullRequestResponse
+	208, // 414: brent.BrentService.GetPrincipalStatus:output_type -> brent.GetPrincipalStatusResponse
+	334, // 415: brent.BrentService.GetPlanPrompt:output_type -> brent.GetPlanPromptResponse
+	210, // 416: brent.BrentService.GetIntegrationConnectURL:output_type -> brent.GetIntegrationConnectURLResponse
+	212, // 417: brent.BrentService.DisconnectIntegration:output_type -> brent.DisconnectIntegrationResponse
+	214, // 418: brent.BrentService.ConnectByoHttpMcp:output_type -> brent.ConnectByoHttpMcpResponse
+	216, // 419: brent.BrentService.GetGitLabConnection:output_type -> brent.GetGitLabConnectionResponse
+	218, // 420: brent.BrentService.ConnectGitLab:output_type -> brent.ConnectGitLabResponse
+	220, // 421: brent.BrentService.SaveGitLabSigningToken:output_type -> brent.SaveGitLabSigningTokenResponse
+	298, // 422: brent.BrentService.UpsertMyVerifiedBinding:output_type -> brent.UpsertMyVerifiedBindingResponse
+	302, // 423: brent.BrentService.ListMyBindings:output_type -> brent.ListMyBindingsResponse
+	306, // 424: brent.BrentService.GetMyNotificationPreferences:output_type -> brent.GetMyNotificationPreferencesResponse
+	308, // 425: brent.BrentService.UpdateMyNotificationPreferences:output_type -> brent.UpdateMyNotificationPreferencesResponse
+	310, // 426: brent.BrentService.RegisterMyPushSubscription:output_type -> brent.RegisterMyPushSubscriptionResponse
+	312, // 427: brent.BrentService.GetWebPushPublicKey:output_type -> brent.GetWebPushPublicKeyResponse
+	300, // 428: brent.BrentService.UpdateMyDisplayName:output_type -> brent.UpdateMyDisplayNameResponse
+	316, // 429: brent.BrentService.GetBrentSettings:output_type -> brent.GetBrentSettingsResponse
+	318, // 430: brent.BrentService.UpdateBrentSettings:output_type -> brent.UpdateBrentSettingsResponse
+	331, // 431: brent.BrentService.ListIntegrationCatalogue:output_type -> brent.ListIntegrationCatalogueResponse
+	230, // 432: brent.BrentService.CreateWorkspace:output_type -> brent.CreateWorkspaceResponse
+	232, // 433: brent.BrentService.ListMyWorkspaces:output_type -> brent.ListMyWorkspacesResponse
+	235, // 434: brent.BrentService.DiscoverLoginRecoveryCandidates:output_type -> brent.DiscoverLoginRecoveryCandidatesResponse
+	237, // 435: brent.BrentService.RenameWorkspace:output_type -> brent.RenameWorkspaceResponse
+	274, // 436: brent.BrentService.UpdateWorkspaceBranding:output_type -> brent.UpdateWorkspaceBrandingResponse
+	276, // 437: brent.BrentService.CompleteWorkspaceOnboarding:output_type -> brent.CompleteWorkspaceOnboardingResponse
+	239, // 438: brent.BrentService.DeleteWorkspace:output_type -> brent.DeleteWorkspaceResponse
+	241, // 439: brent.BrentService.ListJoinableWorkspaces:output_type -> brent.ListJoinableWorkspacesResponse
+	245, // 440: brent.BrentService.JoinWorkspace:output_type -> brent.JoinWorkspaceResponse
+	278, // 441: brent.BrentService.CreateInvitation:output_type -> brent.CreateInvitationResponse
+	281, // 442: brent.BrentService.CreateInvitations:output_type -> brent.CreateInvitationsResponse
+	283, // 443: brent.BrentService.AcceptInvitation:output_type -> brent.AcceptInvitationResponse
+	285, // 444: brent.BrentService.ListWorkspaceMembers:output_type -> brent.ListWorkspaceMembersResponse
+	288, // 445: brent.BrentService.ResendInvitation:output_type -> brent.ResendInvitationResponse
+	290, // 446: brent.BrentService.RevokeInvitation:output_type -> brent.RevokeInvitationResponse
+	292, // 447: brent.BrentService.RemoveWorkspaceMember:output_type -> brent.RemoveWorkspaceMemberResponse
+	294, // 448: brent.BrentService.UpdateWorkspaceMemberRole:output_type -> brent.UpdateWorkspaceMemberRoleResponse
+	248, // 449: brent.BrentService.ListApprovedEmailDomains:output_type -> brent.ListApprovedEmailDomainsResponse
+	250, // 450: brent.BrentService.AddApprovedEmailDomain:output_type -> brent.AddApprovedEmailDomainResponse
+	252, // 451: brent.BrentService.VerifyApprovedEmailDomain:output_type -> brent.VerifyApprovedEmailDomainResponse
+	254, // 452: brent.BrentService.ResendApprovedEmailDomainCode:output_type -> brent.ResendApprovedEmailDomainCodeResponse
+	258, // 453: brent.BrentService.DeleteApprovedEmailDomain:output_type -> brent.DeleteApprovedEmailDomainResponse
+	261, // 454: brent.BrentService.GetWorkspaceLLMCredentialStatus:output_type -> brent.GetWorkspaceLLMCredentialStatusResponse
+	263, // 455: brent.BrentService.SetWorkspaceLLMCredential:output_type -> brent.SetWorkspaceLLMCredentialResponse
+	265, // 456: brent.BrentService.DeleteWorkspaceLLMCredential:output_type -> brent.DeleteWorkspaceLLMCredentialResponse
+	268, // 457: brent.BrentService.GetMyCursorCredentialStatus:output_type -> brent.GetMyCursorCredentialStatusResponse
+	270, // 458: brent.BrentService.SetMyCursorCredential:output_type -> brent.SetMyCursorCredentialResponse
+	272, // 459: brent.BrentService.DeleteMyCursorCredential:output_type -> brent.DeleteMyCursorCredentialResponse
+	224, // 460: brent.BrentService.GetWorkspaceIntegrationRoles:output_type -> brent.GetWorkspaceIntegrationRolesResponse
+	226, // 461: brent.BrentService.SetWorkspaceIntegrationRoles:output_type -> brent.SetWorkspaceIntegrationRolesResponse
+	256, // 462: brent.BrentService.ResendVerificationEmail:output_type -> brent.ResendVerificationEmailResponse
+	296, // 463: brent.BrentPublicService.GetInvitation:output_type -> brent.GetInvitationResponse
+	43,  // 464: brent.BrentAdminService.ExecuteWorkflow:output_type -> brent.ExecuteWorkflowResponse
+	29,  // 465: brent.BrentAdminService.ListRuns:output_type -> brent.ListRunsResponse
+	43,  // 466: brent.BrentAdminService.WatchRun:output_type -> brent.ExecuteWorkflowResponse
+	33,  // 467: brent.BrentAdminService.StreamEvents:output_type -> brent.StreamEventsResponse
+	35,  // 468: brent.BrentAdminService.ListEvents:output_type -> brent.ListEventsResponse
+	37,  // 469: brent.BrentAdminService.CancelRun:output_type -> brent.CancelRunResponse
+	43,  // 470: brent.BrentAdminService.SendQuestion:output_type -> brent.ExecuteWorkflowResponse
+	56,  // 471: brent.BrentAdminService.ListPlans:output_type -> brent.AdminListPlansResponse
+	59,  // 472: brent.BrentAdminService.GetPlan:output_type -> brent.AdminGetPlanResponse
+	84,  // 473: brent.BrentAdminService.ListReviews:output_type -> brent.AdminListReviewsResponse
+	87,  // 474: brent.BrentAdminService.GetReview:output_type -> brent.AdminGetReviewResponse
+	90,  // 475: brent.BrentAdminService.ListAccounts:output_type -> brent.AdminListAccountsResponse
+	93,  // 476: brent.BrentAdminService.GetAccountSummary:output_type -> brent.AdminGetAccountSummaryResponse
+	96,  // 477: brent.BrentAdminService.GetAccountHealthAnalysis:output_type -> brent.AdminGetAccountHealthAnalysisResponse
+	99,  // 478: brent.BrentAdminService.ListAccountMetricRepos:output_type -> brent.AdminListAccountMetricReposResponse
+	101, // 479: brent.BrentAdminService.StartAccountMetricsComparison:output_type -> brent.AdminStartAccountMetricsComparisonResponse
+	105, // 480: brent.BrentAdminService.GetAccountMetricsComparisonRun:output_type -> brent.AdminGetAccountMetricsComparisonRunResponse
+	316, // 481: brent.BrentAdminService.GetAccountBrentSettings:output_type -> brent.GetBrentSettingsResponse
+	318, // 482: brent.BrentAdminService.UpdateAccountBrentSettings:output_type -> brent.UpdateBrentSettingsResponse
+	322, // 483: brent.BrentAdminService.GetAccountReviewPolicy:output_type -> brent.AdminGetAccountReviewPolicyResponse
+	324, // 484: brent.BrentAdminService.UpdateAccountReviewPolicy:output_type -> brent.AdminUpdateAccountReviewPolicyResponse
+	326, // 485: brent.BrentAdminService.GetAccountLLMCredentialStatus:output_type -> brent.AdminGetAccountLLMCredentialStatusResponse
+	329, // 486: brent.BrentAdminService.ListAccountIntegrations:output_type -> brent.AdminListAccountIntegrationsResponse
+	193, // 487: brent.BrentAdminService.ListWorkflows:output_type -> brent.ListWorkflowsResponse
+	196, // 488: brent.BrentAdminService.GetWorkflow:output_type -> brent.GetWorkflowResponse
+	199, // 489: brent.BrentAdminService.ListWorkflowRuns:output_type -> brent.ListWorkflowRunsResponse
+	205, // 490: brent.BrentAdminService.GetWorkflowRun:output_type -> brent.GetWorkflowRunResponse
+	204, // 491: brent.BrentAdminService.GetWorkflowRunThreadHistory:output_type -> brent.GetWorkflowRunThreadHistoryResponse
+	14,  // 492: brent.BrentAdminService.ListPullRequests:output_type -> brent.ListPullRequestsResponse
+	16,  // 493: brent.BrentAdminService.GetPullRequestByID:output_type -> brent.GetPullRequestByIDResponse
+	18,  // 494: brent.BrentAdminService.ListDeviationAnalysesForPR:output_type -> brent.ListDeviationAnalysesForPRResponse
+	62,  // 495: brent.BrentAdminService.ListPrincipals:output_type -> brent.AdminListPrincipalsResponse
+	64,  // 496: brent.BrentAdminService.GetPrincipal:output_type -> brent.AdminGetPrincipalResponse
+	67,  // 497: brent.BrentAdminService.UpsertPrincipalBinding:output_type -> brent.AdminUpsertPrincipalBindingResponse
+	69,  // 498: brent.BrentAdminService.DeletePrincipalBinding:output_type -> brent.AdminDeletePrincipalBindingResponse
+	71,  // 499: brent.BrentAdminService.UpdatePrincipal:output_type -> brent.AdminUpdatePrincipalResponse
+	73,  // 500: brent.BrentAdminService.CreatePrincipalIdentity:output_type -> brent.AdminCreatePrincipalIdentityResponse
+	75,  // 501: brent.BrentAdminService.DeletePrincipalIdentity:output_type -> brent.AdminDeletePrincipalIdentityResponse
+	77,  // 502: brent.BrentAdminService.SetPrincipalCredential:output_type -> brent.AdminSetPrincipalCredentialResponse
+	79,  // 503: brent.BrentAdminService.ListPrincipalCredentialConnections:output_type -> brent.AdminListPrincipalCredentialConnectionsResponse
+	82,  // 504: brent.BrentAdminService.DeletePrincipalCredential:output_type -> brent.AdminDeletePrincipalCredentialResponse
+	22,  // 505: brent.BrentAdminService.GetPullRequestTimeline:output_type -> brent.GetPullRequestTimelineResponse
+	412, // [412:506] is the sub-list for method output_type
+	318, // [318:412] is the sub-list for method input_type
+	318, // [318:318] is the sub-list for extension type_name
+	317, // [317:318] is the sub-list for extension extendee
+	0,   // [0:317] is the sub-list for field type_name
 }
 
 func init() { file_brent_proto_init() }
@@ -27448,28 +27886,29 @@ func file_brent_proto_init() {
 		(*Event_DeviationFindingAcknowledgementCleared)(nil),
 		(*Event_PlanReviewPolicyDecided)(nil),
 		(*Event_ReviewRestored)(nil),
+		(*Event_WorkspaceReviewPolicyUpdated)(nil),
 		(*Event_UnknownStoredPayload)(nil),
 	}
-	file_brent_proto_msgTypes[161].OneofWrappers = []any{}
-	file_brent_proto_msgTypes[186].OneofWrappers = []any{}
-	file_brent_proto_msgTypes[191].OneofWrappers = []any{}
+	file_brent_proto_msgTypes[162].OneofWrappers = []any{}
+	file_brent_proto_msgTypes[187].OneofWrappers = []any{}
 	file_brent_proto_msgTypes[192].OneofWrappers = []any{}
-	file_brent_proto_msgTypes[194].OneofWrappers = []any{}
-	file_brent_proto_msgTypes[213].OneofWrappers = []any{}
+	file_brent_proto_msgTypes[193].OneofWrappers = []any{}
+	file_brent_proto_msgTypes[195].OneofWrappers = []any{}
 	file_brent_proto_msgTypes[214].OneofWrappers = []any{}
-	file_brent_proto_msgTypes[228].OneofWrappers = []any{}
+	file_brent_proto_msgTypes[215].OneofWrappers = []any{}
 	file_brent_proto_msgTypes[229].OneofWrappers = []any{}
-	file_brent_proto_msgTypes[272].OneofWrappers = []any{}
-	file_brent_proto_msgTypes[282].OneofWrappers = []any{}
-	file_brent_proto_msgTypes[303].OneofWrappers = []any{}
-	file_brent_proto_msgTypes[306].OneofWrappers = []any{}
+	file_brent_proto_msgTypes[230].OneofWrappers = []any{}
+	file_brent_proto_msgTypes[273].OneofWrappers = []any{}
+	file_brent_proto_msgTypes[283].OneofWrappers = []any{}
+	file_brent_proto_msgTypes[304].OneofWrappers = []any{}
+	file_brent_proto_msgTypes[307].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_brent_proto_rawDesc), len(file_brent_proto_rawDesc)),
-			NumEnums:      12,
-			NumMessages:   331,
+			NumEnums:      13,
+			NumMessages:   336,
 			NumExtensions: 1,
 			NumServices:   3,
 		},

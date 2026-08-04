@@ -251,6 +251,12 @@ const (
 	// BrentAdminServiceUpdateAccountBrentSettingsProcedure is the fully-qualified name of the
 	// BrentAdminService's UpdateAccountBrentSettings RPC.
 	BrentAdminServiceUpdateAccountBrentSettingsProcedure = "/brent.BrentAdminService/UpdateAccountBrentSettings"
+	// BrentAdminServiceGetAccountReviewPolicyProcedure is the fully-qualified name of the
+	// BrentAdminService's GetAccountReviewPolicy RPC.
+	BrentAdminServiceGetAccountReviewPolicyProcedure = "/brent.BrentAdminService/GetAccountReviewPolicy"
+	// BrentAdminServiceUpdateAccountReviewPolicyProcedure is the fully-qualified name of the
+	// BrentAdminService's UpdateAccountReviewPolicy RPC.
+	BrentAdminServiceUpdateAccountReviewPolicyProcedure = "/brent.BrentAdminService/UpdateAccountReviewPolicy"
 	// BrentAdminServiceGetAccountLLMCredentialStatusProcedure is the fully-qualified name of the
 	// BrentAdminService's GetAccountLLMCredentialStatus RPC.
 	BrentAdminServiceGetAccountLLMCredentialStatusProcedure = "/brent.BrentAdminService/GetAccountLLMCredentialStatus"
@@ -2257,6 +2263,17 @@ type BrentAdminServiceClient interface {
 	// requires an explicit account_name. PATCH semantics — omit red_finding_kinds
 	// to leave it unchanged; pass an empty array to disable red on all kinds.
 	UpdateAccountBrentSettings(context.Context, *connect.Request[sdp_go.AdminUpdateAccountBrentSettingsRequest]) (*connect.Response[sdp_go.UpdateBrentSettingsResponse], error)
+	// Reads a workspace's explicit peer-review policy (ENG-6046 / BRENT-824).
+	// Gates on admin:read and requires an explicit account_name (no
+	// caller-account fallback). Returns the persisted policy, active-human
+	// principal count, and attribution metadata.
+	GetAccountReviewPolicy(context.Context, *connect.Request[sdp_go.AdminGetAccountReviewPolicyRequest]) (*connect.Response[sdp_go.AdminGetAccountReviewPolicyResponse], error)
+	// Updates a workspace's explicit peer-review policy (ENG-6046 / BRENT-824).
+	// Gates on admin:write and requires an explicit account_name. Enabling
+	// REQUIRED fails with FailedPrecondition when fewer than two active humans
+	// are present. The update, attribution fields, and audit event commit
+	// atomically. Unspecified/unknown policy values return InvalidArgument.
+	UpdateAccountReviewPolicy(context.Context, *connect.Request[sdp_go.AdminUpdateAccountReviewPolicyRequest]) (*connect.Response[sdp_go.AdminUpdateAccountReviewPolicyResponse], error)
 	// Reads an account's LLM provider key status for support triage. Operator-facing
 	// twin of GetWorkspaceLLMCredentialStatus: gates on admin:read and takes an
 	// explicit account_name, so brent-area51 can show any account's key status
@@ -2468,6 +2485,18 @@ func NewBrentAdminServiceClient(httpClient connect.HTTPClient, baseURL string, o
 			connect.WithSchema(brentAdminServiceMethods.ByName("UpdateAccountBrentSettings")),
 			connect.WithClientOptions(opts...),
 		),
+		getAccountReviewPolicy: connect.NewClient[sdp_go.AdminGetAccountReviewPolicyRequest, sdp_go.AdminGetAccountReviewPolicyResponse](
+			httpClient,
+			baseURL+BrentAdminServiceGetAccountReviewPolicyProcedure,
+			connect.WithSchema(brentAdminServiceMethods.ByName("GetAccountReviewPolicy")),
+			connect.WithClientOptions(opts...),
+		),
+		updateAccountReviewPolicy: connect.NewClient[sdp_go.AdminUpdateAccountReviewPolicyRequest, sdp_go.AdminUpdateAccountReviewPolicyResponse](
+			httpClient,
+			baseURL+BrentAdminServiceUpdateAccountReviewPolicyProcedure,
+			connect.WithSchema(brentAdminServiceMethods.ByName("UpdateAccountReviewPolicy")),
+			connect.WithClientOptions(opts...),
+		),
 		getAccountLLMCredentialStatus: connect.NewClient[sdp_go.AdminGetAccountLLMCredentialStatusRequest, sdp_go.AdminGetAccountLLMCredentialStatusResponse](
 			httpClient,
 			baseURL+BrentAdminServiceGetAccountLLMCredentialStatusProcedure,
@@ -2618,6 +2647,8 @@ type brentAdminServiceClient struct {
 	getAccountMetricsComparisonRun     *connect.Client[sdp_go.AdminGetAccountMetricsComparisonRunRequest, sdp_go.AdminGetAccountMetricsComparisonRunResponse]
 	getAccountBrentSettings            *connect.Client[sdp_go.AdminGetAccountBrentSettingsRequest, sdp_go.GetBrentSettingsResponse]
 	updateAccountBrentSettings         *connect.Client[sdp_go.AdminUpdateAccountBrentSettingsRequest, sdp_go.UpdateBrentSettingsResponse]
+	getAccountReviewPolicy             *connect.Client[sdp_go.AdminGetAccountReviewPolicyRequest, sdp_go.AdminGetAccountReviewPolicyResponse]
+	updateAccountReviewPolicy          *connect.Client[sdp_go.AdminUpdateAccountReviewPolicyRequest, sdp_go.AdminUpdateAccountReviewPolicyResponse]
 	getAccountLLMCredentialStatus      *connect.Client[sdp_go.AdminGetAccountLLMCredentialStatusRequest, sdp_go.AdminGetAccountLLMCredentialStatusResponse]
 	listAccountIntegrations            *connect.Client[sdp_go.AdminListAccountIntegrationsRequest, sdp_go.AdminListAccountIntegrationsResponse]
 	listWorkflows                      *connect.Client[sdp_go.ListWorkflowsRequest, sdp_go.ListWorkflowsResponse]
@@ -2734,6 +2765,16 @@ func (c *brentAdminServiceClient) GetAccountBrentSettings(ctx context.Context, r
 // UpdateAccountBrentSettings calls brent.BrentAdminService.UpdateAccountBrentSettings.
 func (c *brentAdminServiceClient) UpdateAccountBrentSettings(ctx context.Context, req *connect.Request[sdp_go.AdminUpdateAccountBrentSettingsRequest]) (*connect.Response[sdp_go.UpdateBrentSettingsResponse], error) {
 	return c.updateAccountBrentSettings.CallUnary(ctx, req)
+}
+
+// GetAccountReviewPolicy calls brent.BrentAdminService.GetAccountReviewPolicy.
+func (c *brentAdminServiceClient) GetAccountReviewPolicy(ctx context.Context, req *connect.Request[sdp_go.AdminGetAccountReviewPolicyRequest]) (*connect.Response[sdp_go.AdminGetAccountReviewPolicyResponse], error) {
+	return c.getAccountReviewPolicy.CallUnary(ctx, req)
+}
+
+// UpdateAccountReviewPolicy calls brent.BrentAdminService.UpdateAccountReviewPolicy.
+func (c *brentAdminServiceClient) UpdateAccountReviewPolicy(ctx context.Context, req *connect.Request[sdp_go.AdminUpdateAccountReviewPolicyRequest]) (*connect.Response[sdp_go.AdminUpdateAccountReviewPolicyResponse], error) {
+	return c.updateAccountReviewPolicy.CallUnary(ctx, req)
 }
 
 // GetAccountLLMCredentialStatus calls brent.BrentAdminService.GetAccountLLMCredentialStatus.
@@ -2935,6 +2976,17 @@ type BrentAdminServiceHandler interface {
 	// requires an explicit account_name. PATCH semantics — omit red_finding_kinds
 	// to leave it unchanged; pass an empty array to disable red on all kinds.
 	UpdateAccountBrentSettings(context.Context, *connect.Request[sdp_go.AdminUpdateAccountBrentSettingsRequest]) (*connect.Response[sdp_go.UpdateBrentSettingsResponse], error)
+	// Reads a workspace's explicit peer-review policy (ENG-6046 / BRENT-824).
+	// Gates on admin:read and requires an explicit account_name (no
+	// caller-account fallback). Returns the persisted policy, active-human
+	// principal count, and attribution metadata.
+	GetAccountReviewPolicy(context.Context, *connect.Request[sdp_go.AdminGetAccountReviewPolicyRequest]) (*connect.Response[sdp_go.AdminGetAccountReviewPolicyResponse], error)
+	// Updates a workspace's explicit peer-review policy (ENG-6046 / BRENT-824).
+	// Gates on admin:write and requires an explicit account_name. Enabling
+	// REQUIRED fails with FailedPrecondition when fewer than two active humans
+	// are present. The update, attribution fields, and audit event commit
+	// atomically. Unspecified/unknown policy values return InvalidArgument.
+	UpdateAccountReviewPolicy(context.Context, *connect.Request[sdp_go.AdminUpdateAccountReviewPolicyRequest]) (*connect.Response[sdp_go.AdminUpdateAccountReviewPolicyResponse], error)
 	// Reads an account's LLM provider key status for support triage. Operator-facing
 	// twin of GetWorkspaceLLMCredentialStatus: gates on admin:read and takes an
 	// explicit account_name, so brent-area51 can show any account's key status
@@ -3142,6 +3194,18 @@ func NewBrentAdminServiceHandler(svc BrentAdminServiceHandler, opts ...connect.H
 		connect.WithSchema(brentAdminServiceMethods.ByName("UpdateAccountBrentSettings")),
 		connect.WithHandlerOptions(opts...),
 	)
+	brentAdminServiceGetAccountReviewPolicyHandler := connect.NewUnaryHandler(
+		BrentAdminServiceGetAccountReviewPolicyProcedure,
+		svc.GetAccountReviewPolicy,
+		connect.WithSchema(brentAdminServiceMethods.ByName("GetAccountReviewPolicy")),
+		connect.WithHandlerOptions(opts...),
+	)
+	brentAdminServiceUpdateAccountReviewPolicyHandler := connect.NewUnaryHandler(
+		BrentAdminServiceUpdateAccountReviewPolicyProcedure,
+		svc.UpdateAccountReviewPolicy,
+		connect.WithSchema(brentAdminServiceMethods.ByName("UpdateAccountReviewPolicy")),
+		connect.WithHandlerOptions(opts...),
+	)
 	brentAdminServiceGetAccountLLMCredentialStatusHandler := connect.NewUnaryHandler(
 		BrentAdminServiceGetAccountLLMCredentialStatusProcedure,
 		svc.GetAccountLLMCredentialStatus,
@@ -3308,6 +3372,10 @@ func NewBrentAdminServiceHandler(svc BrentAdminServiceHandler, opts ...connect.H
 			brentAdminServiceGetAccountBrentSettingsHandler.ServeHTTP(w, r)
 		case BrentAdminServiceUpdateAccountBrentSettingsProcedure:
 			brentAdminServiceUpdateAccountBrentSettingsHandler.ServeHTTP(w, r)
+		case BrentAdminServiceGetAccountReviewPolicyProcedure:
+			brentAdminServiceGetAccountReviewPolicyHandler.ServeHTTP(w, r)
+		case BrentAdminServiceUpdateAccountReviewPolicyProcedure:
+			brentAdminServiceUpdateAccountReviewPolicyHandler.ServeHTTP(w, r)
 		case BrentAdminServiceGetAccountLLMCredentialStatusProcedure:
 			brentAdminServiceGetAccountLLMCredentialStatusHandler.ServeHTTP(w, r)
 		case BrentAdminServiceListAccountIntegrationsProcedure:
@@ -3433,6 +3501,14 @@ func (UnimplementedBrentAdminServiceHandler) GetAccountBrentSettings(context.Con
 
 func (UnimplementedBrentAdminServiceHandler) UpdateAccountBrentSettings(context.Context, *connect.Request[sdp_go.AdminUpdateAccountBrentSettingsRequest]) (*connect.Response[sdp_go.UpdateBrentSettingsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.UpdateAccountBrentSettings is not implemented"))
+}
+
+func (UnimplementedBrentAdminServiceHandler) GetAccountReviewPolicy(context.Context, *connect.Request[sdp_go.AdminGetAccountReviewPolicyRequest]) (*connect.Response[sdp_go.AdminGetAccountReviewPolicyResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.GetAccountReviewPolicy is not implemented"))
+}
+
+func (UnimplementedBrentAdminServiceHandler) UpdateAccountReviewPolicy(context.Context, *connect.Request[sdp_go.AdminUpdateAccountReviewPolicyRequest]) (*connect.Response[sdp_go.AdminUpdateAccountReviewPolicyResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.UpdateAccountReviewPolicy is not implemented"))
 }
 
 func (UnimplementedBrentAdminServiceHandler) GetAccountLLMCredentialStatus(context.Context, *connect.Request[sdp_go.AdminGetAccountLLMCredentialStatusRequest]) (*connect.Response[sdp_go.AdminGetAccountLLMCredentialStatusResponse], error) {
