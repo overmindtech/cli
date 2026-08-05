@@ -6565,7 +6565,7 @@ func (x *AdminGetAccountHealthAnalysisRequest) GetAccountName() string {
 }
 
 // AccountHealthFinding is one heuristic observation about how an account is
-// using Brent. Internal-only operator coaching signal.
+// using Until. Internal-only operator coaching signal.
 type AccountHealthFinding struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Severity bucket: "warning" (likely a problem) or "info" (worth noting).
