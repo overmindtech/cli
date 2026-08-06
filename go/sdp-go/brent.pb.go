@@ -19826,7 +19826,7 @@ type JoinableWorkspace struct {
 	PictureUrl     *string                    `protobuf:"bytes,4,opt,name=picture_url,json=pictureUrl,proto3,oneof" json:"picture_url,omitempty"` // derived branding URL; absent → fallback logo
 	CreatedAt      *timestamppb.Timestamp     `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	CreatedByName  string                     `protobuf:"bytes,6,opt,name=created_by_name,json=createdByName,proto3" json:"created_by_name,omitempty"`  // creator's live display name; empty if the creator has left
-	MemberPreviews []*JoinableWorkspaceMember `protobuf:"bytes,7,rep,name=member_previews,json=memberPreviews,proto3" json:"member_previews,omitempty"` // up to 3 active human members
+	MemberPreviews []*JoinableWorkspaceMember `protobuf:"bytes,7,rep,name=member_previews,json=memberPreviews,proto3" json:"member_previews,omitempty"` // up to 4 active human members
 	MemberCount    uint32                     `protobuf:"varint,8,opt,name=member_count,json=memberCount,proto3" json:"member_count,omitempty"`         // total active human members (drives "+N")
 	Source         JoinSource                 `protobuf:"varint,9,opt,name=source,proto3,enum=until.JoinSource" json:"source,omitempty"`                // why this workspace is joinable (DOMAIN or INVITE)
 	unknownFields  protoimpl.UnknownFields
