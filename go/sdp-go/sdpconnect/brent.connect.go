@@ -22,12 +22,12 @@ import (
 const _ = connect.IsAtLeastVersion1_13_0
 
 const (
-	// BrentServiceName is the fully-qualified name of the BrentService service.
-	BrentServiceName = "brent.BrentService"
-	// BrentPublicServiceName is the fully-qualified name of the BrentPublicService service.
-	BrentPublicServiceName = "brent.BrentPublicService"
-	// BrentAdminServiceName is the fully-qualified name of the BrentAdminService service.
-	BrentAdminServiceName = "brent.BrentAdminService"
+	// WorkspaceServiceName is the fully-qualified name of the WorkspaceService service.
+	WorkspaceServiceName = "until.WorkspaceService"
+	// PublicServiceName is the fully-qualified name of the PublicService service.
+	PublicServiceName = "until.PublicService"
+	// UntilAdminServiceName is the fully-qualified name of the UntilAdminService service.
+	UntilAdminServiceName = "until.AdminService"
 )
 
 // These constants are the fully-qualified names of the RPCs defined in this package. They're
@@ -38,292 +38,282 @@ const (
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
-	// BrentServiceListOpenPullRequestsProcedure is the fully-qualified name of the BrentService's
-	// ListOpenPullRequests RPC.
-	BrentServiceListOpenPullRequestsProcedure = "/brent.BrentService/ListOpenPullRequests"
-	// BrentServiceGetPullRequestProcedure is the fully-qualified name of the BrentService's
+	// WorkspaceServiceListOpenPullRequestsProcedure is the fully-qualified name of the
+	// WorkspaceService's ListOpenPullRequests RPC.
+	WorkspaceServiceListOpenPullRequestsProcedure = "/until.WorkspaceService/ListOpenPullRequests"
+	// WorkspaceServiceGetPullRequestProcedure is the fully-qualified name of the WorkspaceService's
 	// GetPullRequest RPC.
-	BrentServiceGetPullRequestProcedure = "/brent.BrentService/GetPullRequest"
-	// BrentServiceGetPrincipalStatusProcedure is the fully-qualified name of the BrentService's
+	WorkspaceServiceGetPullRequestProcedure = "/until.WorkspaceService/GetPullRequest"
+	// WorkspaceServiceGetPrincipalStatusProcedure is the fully-qualified name of the WorkspaceService's
 	// GetPrincipalStatus RPC.
-	BrentServiceGetPrincipalStatusProcedure = "/brent.BrentService/GetPrincipalStatus"
-	// BrentServiceGetPlanPromptProcedure is the fully-qualified name of the BrentService's
+	WorkspaceServiceGetPrincipalStatusProcedure = "/until.WorkspaceService/GetPrincipalStatus"
+	// WorkspaceServiceGetPlanPromptProcedure is the fully-qualified name of the WorkspaceService's
 	// GetPlanPrompt RPC.
-	BrentServiceGetPlanPromptProcedure = "/brent.BrentService/GetPlanPrompt"
-	// BrentServiceGetIntegrationConnectURLProcedure is the fully-qualified name of the BrentService's
-	// GetIntegrationConnectURL RPC.
-	BrentServiceGetIntegrationConnectURLProcedure = "/brent.BrentService/GetIntegrationConnectURL"
-	// BrentServiceDisconnectIntegrationProcedure is the fully-qualified name of the BrentService's
-	// DisconnectIntegration RPC.
-	BrentServiceDisconnectIntegrationProcedure = "/brent.BrentService/DisconnectIntegration"
-	// BrentServiceConnectByoHttpMcpProcedure is the fully-qualified name of the BrentService's
+	WorkspaceServiceGetPlanPromptProcedure = "/until.WorkspaceService/GetPlanPrompt"
+	// WorkspaceServiceGetIntegrationConnectURLProcedure is the fully-qualified name of the
+	// WorkspaceService's GetIntegrationConnectURL RPC.
+	WorkspaceServiceGetIntegrationConnectURLProcedure = "/until.WorkspaceService/GetIntegrationConnectURL"
+	// WorkspaceServiceDisconnectIntegrationProcedure is the fully-qualified name of the
+	// WorkspaceService's DisconnectIntegration RPC.
+	WorkspaceServiceDisconnectIntegrationProcedure = "/until.WorkspaceService/DisconnectIntegration"
+	// WorkspaceServiceConnectByoHttpMcpProcedure is the fully-qualified name of the WorkspaceService's
 	// ConnectByoHttpMcp RPC.
-	BrentServiceConnectByoHttpMcpProcedure = "/brent.BrentService/ConnectByoHttpMcp"
-	// BrentServiceGetGitLabConnectionProcedure is the fully-qualified name of the BrentService's
-	// GetGitLabConnection RPC.
-	BrentServiceGetGitLabConnectionProcedure = "/brent.BrentService/GetGitLabConnection"
-	// BrentServiceConnectGitLabProcedure is the fully-qualified name of the BrentService's
+	WorkspaceServiceConnectByoHttpMcpProcedure = "/until.WorkspaceService/ConnectByoHttpMcp"
+	// WorkspaceServiceGetGitLabConnectionProcedure is the fully-qualified name of the
+	// WorkspaceService's GetGitLabConnection RPC.
+	WorkspaceServiceGetGitLabConnectionProcedure = "/until.WorkspaceService/GetGitLabConnection"
+	// WorkspaceServiceConnectGitLabProcedure is the fully-qualified name of the WorkspaceService's
 	// ConnectGitLab RPC.
-	BrentServiceConnectGitLabProcedure = "/brent.BrentService/ConnectGitLab"
-	// BrentServiceSaveGitLabSigningTokenProcedure is the fully-qualified name of the BrentService's
-	// SaveGitLabSigningToken RPC.
-	BrentServiceSaveGitLabSigningTokenProcedure = "/brent.BrentService/SaveGitLabSigningToken"
-	// BrentServiceUpsertMyVerifiedBindingProcedure is the fully-qualified name of the BrentService's
-	// UpsertMyVerifiedBinding RPC.
-	BrentServiceUpsertMyVerifiedBindingProcedure = "/brent.BrentService/UpsertMyVerifiedBinding"
-	// BrentServiceListMyBindingsProcedure is the fully-qualified name of the BrentService's
+	WorkspaceServiceConnectGitLabProcedure = "/until.WorkspaceService/ConnectGitLab"
+	// WorkspaceServiceSaveGitLabSigningTokenProcedure is the fully-qualified name of the
+	// WorkspaceService's SaveGitLabSigningToken RPC.
+	WorkspaceServiceSaveGitLabSigningTokenProcedure = "/until.WorkspaceService/SaveGitLabSigningToken"
+	// WorkspaceServiceUpsertMyVerifiedBindingProcedure is the fully-qualified name of the
+	// WorkspaceService's UpsertMyVerifiedBinding RPC.
+	WorkspaceServiceUpsertMyVerifiedBindingProcedure = "/until.WorkspaceService/UpsertMyVerifiedBinding"
+	// WorkspaceServiceListMyBindingsProcedure is the fully-qualified name of the WorkspaceService's
 	// ListMyBindings RPC.
-	BrentServiceListMyBindingsProcedure = "/brent.BrentService/ListMyBindings"
-	// BrentServiceGetMyNotificationPreferencesProcedure is the fully-qualified name of the
-	// BrentService's GetMyNotificationPreferences RPC.
-	BrentServiceGetMyNotificationPreferencesProcedure = "/brent.BrentService/GetMyNotificationPreferences"
-	// BrentServiceUpdateMyNotificationPreferencesProcedure is the fully-qualified name of the
-	// BrentService's UpdateMyNotificationPreferences RPC.
-	BrentServiceUpdateMyNotificationPreferencesProcedure = "/brent.BrentService/UpdateMyNotificationPreferences"
-	// BrentServiceRegisterMyPushSubscriptionProcedure is the fully-qualified name of the BrentService's
-	// RegisterMyPushSubscription RPC.
-	BrentServiceRegisterMyPushSubscriptionProcedure = "/brent.BrentService/RegisterMyPushSubscription"
-	// BrentServiceGetWebPushPublicKeyProcedure is the fully-qualified name of the BrentService's
-	// GetWebPushPublicKey RPC.
-	BrentServiceGetWebPushPublicKeyProcedure = "/brent.BrentService/GetWebPushPublicKey"
-	// BrentServiceUpdateMyDisplayNameProcedure is the fully-qualified name of the BrentService's
-	// UpdateMyDisplayName RPC.
-	BrentServiceUpdateMyDisplayNameProcedure = "/brent.BrentService/UpdateMyDisplayName"
-	// BrentServiceGetBrentSettingsProcedure is the fully-qualified name of the BrentService's
-	// GetBrentSettings RPC.
-	BrentServiceGetBrentSettingsProcedure = "/brent.BrentService/GetBrentSettings"
-	// BrentServiceUpdateBrentSettingsProcedure is the fully-qualified name of the BrentService's
-	// UpdateBrentSettings RPC.
-	BrentServiceUpdateBrentSettingsProcedure = "/brent.BrentService/UpdateBrentSettings"
-	// BrentServiceListIntegrationCatalogueProcedure is the fully-qualified name of the BrentService's
-	// ListIntegrationCatalogue RPC.
-	BrentServiceListIntegrationCatalogueProcedure = "/brent.BrentService/ListIntegrationCatalogue"
-	// BrentServiceCreateWorkspaceProcedure is the fully-qualified name of the BrentService's
+	WorkspaceServiceListMyBindingsProcedure = "/until.WorkspaceService/ListMyBindings"
+	// WorkspaceServiceGetMyNotificationPreferencesProcedure is the fully-qualified name of the
+	// WorkspaceService's GetMyNotificationPreferences RPC.
+	WorkspaceServiceGetMyNotificationPreferencesProcedure = "/until.WorkspaceService/GetMyNotificationPreferences"
+	// WorkspaceServiceUpdateMyNotificationPreferencesProcedure is the fully-qualified name of the
+	// WorkspaceService's UpdateMyNotificationPreferences RPC.
+	WorkspaceServiceUpdateMyNotificationPreferencesProcedure = "/until.WorkspaceService/UpdateMyNotificationPreferences"
+	// WorkspaceServiceRegisterMyPushSubscriptionProcedure is the fully-qualified name of the
+	// WorkspaceService's RegisterMyPushSubscription RPC.
+	WorkspaceServiceRegisterMyPushSubscriptionProcedure = "/until.WorkspaceService/RegisterMyPushSubscription"
+	// WorkspaceServiceGetWebPushPublicKeyProcedure is the fully-qualified name of the
+	// WorkspaceService's GetWebPushPublicKey RPC.
+	WorkspaceServiceGetWebPushPublicKeyProcedure = "/until.WorkspaceService/GetWebPushPublicKey"
+	// WorkspaceServiceUpdateMyDisplayNameProcedure is the fully-qualified name of the
+	// WorkspaceService's UpdateMyDisplayName RPC.
+	WorkspaceServiceUpdateMyDisplayNameProcedure = "/until.WorkspaceService/UpdateMyDisplayName"
+	// WorkspaceServiceGetPlanCheckSettingsProcedure is the fully-qualified name of the
+	// WorkspaceService's GetPlanCheckSettings RPC.
+	WorkspaceServiceGetPlanCheckSettingsProcedure = "/until.WorkspaceService/GetPlanCheckSettings"
+	// WorkspaceServiceUpdatePlanCheckSettingsProcedure is the fully-qualified name of the
+	// WorkspaceService's UpdatePlanCheckSettings RPC.
+	WorkspaceServiceUpdatePlanCheckSettingsProcedure = "/until.WorkspaceService/UpdatePlanCheckSettings"
+	// WorkspaceServiceListIntegrationCatalogueProcedure is the fully-qualified name of the
+	// WorkspaceService's ListIntegrationCatalogue RPC.
+	WorkspaceServiceListIntegrationCatalogueProcedure = "/until.WorkspaceService/ListIntegrationCatalogue"
+	// WorkspaceServiceCreateWorkspaceProcedure is the fully-qualified name of the WorkspaceService's
 	// CreateWorkspace RPC.
-	BrentServiceCreateWorkspaceProcedure = "/brent.BrentService/CreateWorkspace"
-	// BrentServiceListMyWorkspacesProcedure is the fully-qualified name of the BrentService's
+	WorkspaceServiceCreateWorkspaceProcedure = "/until.WorkspaceService/CreateWorkspace"
+	// WorkspaceServiceListMyWorkspacesProcedure is the fully-qualified name of the WorkspaceService's
 	// ListMyWorkspaces RPC.
-	BrentServiceListMyWorkspacesProcedure = "/brent.BrentService/ListMyWorkspaces"
-	// BrentServiceDiscoverLoginRecoveryCandidatesProcedure is the fully-qualified name of the
-	// BrentService's DiscoverLoginRecoveryCandidates RPC.
-	BrentServiceDiscoverLoginRecoveryCandidatesProcedure = "/brent.BrentService/DiscoverLoginRecoveryCandidates"
-	// BrentServiceRenameWorkspaceProcedure is the fully-qualified name of the BrentService's
+	WorkspaceServiceListMyWorkspacesProcedure = "/until.WorkspaceService/ListMyWorkspaces"
+	// WorkspaceServiceDiscoverLoginRecoveryCandidatesProcedure is the fully-qualified name of the
+	// WorkspaceService's DiscoverLoginRecoveryCandidates RPC.
+	WorkspaceServiceDiscoverLoginRecoveryCandidatesProcedure = "/until.WorkspaceService/DiscoverLoginRecoveryCandidates"
+	// WorkspaceServiceRenameWorkspaceProcedure is the fully-qualified name of the WorkspaceService's
 	// RenameWorkspace RPC.
-	BrentServiceRenameWorkspaceProcedure = "/brent.BrentService/RenameWorkspace"
-	// BrentServiceUpdateWorkspaceBrandingProcedure is the fully-qualified name of the BrentService's
-	// UpdateWorkspaceBranding RPC.
-	BrentServiceUpdateWorkspaceBrandingProcedure = "/brent.BrentService/UpdateWorkspaceBranding"
-	// BrentServiceCompleteWorkspaceOnboardingProcedure is the fully-qualified name of the
-	// BrentService's CompleteWorkspaceOnboarding RPC.
-	BrentServiceCompleteWorkspaceOnboardingProcedure = "/brent.BrentService/CompleteWorkspaceOnboarding"
-	// BrentServiceDeleteWorkspaceProcedure is the fully-qualified name of the BrentService's
+	WorkspaceServiceRenameWorkspaceProcedure = "/until.WorkspaceService/RenameWorkspace"
+	// WorkspaceServiceUpdateWorkspaceBrandingProcedure is the fully-qualified name of the
+	// WorkspaceService's UpdateWorkspaceBranding RPC.
+	WorkspaceServiceUpdateWorkspaceBrandingProcedure = "/until.WorkspaceService/UpdateWorkspaceBranding"
+	// WorkspaceServiceCompleteWorkspaceOnboardingProcedure is the fully-qualified name of the
+	// WorkspaceService's CompleteWorkspaceOnboarding RPC.
+	WorkspaceServiceCompleteWorkspaceOnboardingProcedure = "/until.WorkspaceService/CompleteWorkspaceOnboarding"
+	// WorkspaceServiceDeleteWorkspaceProcedure is the fully-qualified name of the WorkspaceService's
 	// DeleteWorkspace RPC.
-	BrentServiceDeleteWorkspaceProcedure = "/brent.BrentService/DeleteWorkspace"
-	// BrentServiceListJoinableWorkspacesProcedure is the fully-qualified name of the BrentService's
-	// ListJoinableWorkspaces RPC.
-	BrentServiceListJoinableWorkspacesProcedure = "/brent.BrentService/ListJoinableWorkspaces"
-	// BrentServiceJoinWorkspaceProcedure is the fully-qualified name of the BrentService's
+	WorkspaceServiceDeleteWorkspaceProcedure = "/until.WorkspaceService/DeleteWorkspace"
+	// WorkspaceServiceListJoinableWorkspacesProcedure is the fully-qualified name of the
+	// WorkspaceService's ListJoinableWorkspaces RPC.
+	WorkspaceServiceListJoinableWorkspacesProcedure = "/until.WorkspaceService/ListJoinableWorkspaces"
+	// WorkspaceServiceJoinWorkspaceProcedure is the fully-qualified name of the WorkspaceService's
 	// JoinWorkspace RPC.
-	BrentServiceJoinWorkspaceProcedure = "/brent.BrentService/JoinWorkspace"
-	// BrentServiceCreateInvitationProcedure is the fully-qualified name of the BrentService's
+	WorkspaceServiceJoinWorkspaceProcedure = "/until.WorkspaceService/JoinWorkspace"
+	// WorkspaceServiceCreateInvitationProcedure is the fully-qualified name of the WorkspaceService's
 	// CreateInvitation RPC.
-	BrentServiceCreateInvitationProcedure = "/brent.BrentService/CreateInvitation"
-	// BrentServiceCreateInvitationsProcedure is the fully-qualified name of the BrentService's
+	WorkspaceServiceCreateInvitationProcedure = "/until.WorkspaceService/CreateInvitation"
+	// WorkspaceServiceCreateInvitationsProcedure is the fully-qualified name of the WorkspaceService's
 	// CreateInvitations RPC.
-	BrentServiceCreateInvitationsProcedure = "/brent.BrentService/CreateInvitations"
-	// BrentServiceAcceptInvitationProcedure is the fully-qualified name of the BrentService's
+	WorkspaceServiceCreateInvitationsProcedure = "/until.WorkspaceService/CreateInvitations"
+	// WorkspaceServiceAcceptInvitationProcedure is the fully-qualified name of the WorkspaceService's
 	// AcceptInvitation RPC.
-	BrentServiceAcceptInvitationProcedure = "/brent.BrentService/AcceptInvitation"
-	// BrentServiceListWorkspaceMembersProcedure is the fully-qualified name of the BrentService's
-	// ListWorkspaceMembers RPC.
-	BrentServiceListWorkspaceMembersProcedure = "/brent.BrentService/ListWorkspaceMembers"
-	// BrentServiceResendInvitationProcedure is the fully-qualified name of the BrentService's
+	WorkspaceServiceAcceptInvitationProcedure = "/until.WorkspaceService/AcceptInvitation"
+	// WorkspaceServiceListWorkspaceMembersProcedure is the fully-qualified name of the
+	// WorkspaceService's ListWorkspaceMembers RPC.
+	WorkspaceServiceListWorkspaceMembersProcedure = "/until.WorkspaceService/ListWorkspaceMembers"
+	// WorkspaceServiceResendInvitationProcedure is the fully-qualified name of the WorkspaceService's
 	// ResendInvitation RPC.
-	BrentServiceResendInvitationProcedure = "/brent.BrentService/ResendInvitation"
-	// BrentServiceRevokeInvitationProcedure is the fully-qualified name of the BrentService's
+	WorkspaceServiceResendInvitationProcedure = "/until.WorkspaceService/ResendInvitation"
+	// WorkspaceServiceRevokeInvitationProcedure is the fully-qualified name of the WorkspaceService's
 	// RevokeInvitation RPC.
-	BrentServiceRevokeInvitationProcedure = "/brent.BrentService/RevokeInvitation"
-	// BrentServiceRemoveWorkspaceMemberProcedure is the fully-qualified name of the BrentService's
-	// RemoveWorkspaceMember RPC.
-	BrentServiceRemoveWorkspaceMemberProcedure = "/brent.BrentService/RemoveWorkspaceMember"
-	// BrentServiceUpdateWorkspaceMemberRoleProcedure is the fully-qualified name of the BrentService's
-	// UpdateWorkspaceMemberRole RPC.
-	BrentServiceUpdateWorkspaceMemberRoleProcedure = "/brent.BrentService/UpdateWorkspaceMemberRole"
-	// BrentServiceListApprovedEmailDomainsProcedure is the fully-qualified name of the BrentService's
-	// ListApprovedEmailDomains RPC.
-	BrentServiceListApprovedEmailDomainsProcedure = "/brent.BrentService/ListApprovedEmailDomains"
-	// BrentServiceAddApprovedEmailDomainProcedure is the fully-qualified name of the BrentService's
-	// AddApprovedEmailDomain RPC.
-	BrentServiceAddApprovedEmailDomainProcedure = "/brent.BrentService/AddApprovedEmailDomain"
-	// BrentServiceVerifyApprovedEmailDomainProcedure is the fully-qualified name of the BrentService's
-	// VerifyApprovedEmailDomain RPC.
-	BrentServiceVerifyApprovedEmailDomainProcedure = "/brent.BrentService/VerifyApprovedEmailDomain"
-	// BrentServiceResendApprovedEmailDomainCodeProcedure is the fully-qualified name of the
-	// BrentService's ResendApprovedEmailDomainCode RPC.
-	BrentServiceResendApprovedEmailDomainCodeProcedure = "/brent.BrentService/ResendApprovedEmailDomainCode"
-	// BrentServiceDeleteApprovedEmailDomainProcedure is the fully-qualified name of the BrentService's
-	// DeleteApprovedEmailDomain RPC.
-	BrentServiceDeleteApprovedEmailDomainProcedure = "/brent.BrentService/DeleteApprovedEmailDomain"
-	// BrentServiceGetWorkspaceLLMCredentialStatusProcedure is the fully-qualified name of the
-	// BrentService's GetWorkspaceLLMCredentialStatus RPC.
-	BrentServiceGetWorkspaceLLMCredentialStatusProcedure = "/brent.BrentService/GetWorkspaceLLMCredentialStatus"
-	// BrentServiceSetWorkspaceLLMCredentialProcedure is the fully-qualified name of the BrentService's
-	// SetWorkspaceLLMCredential RPC.
-	BrentServiceSetWorkspaceLLMCredentialProcedure = "/brent.BrentService/SetWorkspaceLLMCredential"
-	// BrentServiceDeleteWorkspaceLLMCredentialProcedure is the fully-qualified name of the
-	// BrentService's DeleteWorkspaceLLMCredential RPC.
-	BrentServiceDeleteWorkspaceLLMCredentialProcedure = "/brent.BrentService/DeleteWorkspaceLLMCredential"
-	// BrentServiceGetMyCursorCredentialStatusProcedure is the fully-qualified name of the
-	// BrentService's GetMyCursorCredentialStatus RPC.
-	BrentServiceGetMyCursorCredentialStatusProcedure = "/brent.BrentService/GetMyCursorCredentialStatus"
-	// BrentServiceSetMyCursorCredentialProcedure is the fully-qualified name of the BrentService's
-	// SetMyCursorCredential RPC.
-	BrentServiceSetMyCursorCredentialProcedure = "/brent.BrentService/SetMyCursorCredential"
-	// BrentServiceDeleteMyCursorCredentialProcedure is the fully-qualified name of the BrentService's
-	// DeleteMyCursorCredential RPC.
-	BrentServiceDeleteMyCursorCredentialProcedure = "/brent.BrentService/DeleteMyCursorCredential"
-	// BrentServiceGetWorkspaceIntegrationRolesProcedure is the fully-qualified name of the
-	// BrentService's GetWorkspaceIntegrationRoles RPC.
-	BrentServiceGetWorkspaceIntegrationRolesProcedure = "/brent.BrentService/GetWorkspaceIntegrationRoles"
-	// BrentServiceSetWorkspaceIntegrationRolesProcedure is the fully-qualified name of the
-	// BrentService's SetWorkspaceIntegrationRoles RPC.
-	BrentServiceSetWorkspaceIntegrationRolesProcedure = "/brent.BrentService/SetWorkspaceIntegrationRoles"
-	// BrentServiceResendVerificationEmailProcedure is the fully-qualified name of the BrentService's
-	// ResendVerificationEmail RPC.
-	BrentServiceResendVerificationEmailProcedure = "/brent.BrentService/ResendVerificationEmail"
-	// BrentPublicServiceGetInvitationProcedure is the fully-qualified name of the BrentPublicService's
+	WorkspaceServiceRevokeInvitationProcedure = "/until.WorkspaceService/RevokeInvitation"
+	// WorkspaceServiceRemoveWorkspaceMemberProcedure is the fully-qualified name of the
+	// WorkspaceService's RemoveWorkspaceMember RPC.
+	WorkspaceServiceRemoveWorkspaceMemberProcedure = "/until.WorkspaceService/RemoveWorkspaceMember"
+	// WorkspaceServiceUpdateWorkspaceMemberRoleProcedure is the fully-qualified name of the
+	// WorkspaceService's UpdateWorkspaceMemberRole RPC.
+	WorkspaceServiceUpdateWorkspaceMemberRoleProcedure = "/until.WorkspaceService/UpdateWorkspaceMemberRole"
+	// WorkspaceServiceListApprovedEmailDomainsProcedure is the fully-qualified name of the
+	// WorkspaceService's ListApprovedEmailDomains RPC.
+	WorkspaceServiceListApprovedEmailDomainsProcedure = "/until.WorkspaceService/ListApprovedEmailDomains"
+	// WorkspaceServiceAddApprovedEmailDomainProcedure is the fully-qualified name of the
+	// WorkspaceService's AddApprovedEmailDomain RPC.
+	WorkspaceServiceAddApprovedEmailDomainProcedure = "/until.WorkspaceService/AddApprovedEmailDomain"
+	// WorkspaceServiceVerifyApprovedEmailDomainProcedure is the fully-qualified name of the
+	// WorkspaceService's VerifyApprovedEmailDomain RPC.
+	WorkspaceServiceVerifyApprovedEmailDomainProcedure = "/until.WorkspaceService/VerifyApprovedEmailDomain"
+	// WorkspaceServiceResendApprovedEmailDomainCodeProcedure is the fully-qualified name of the
+	// WorkspaceService's ResendApprovedEmailDomainCode RPC.
+	WorkspaceServiceResendApprovedEmailDomainCodeProcedure = "/until.WorkspaceService/ResendApprovedEmailDomainCode"
+	// WorkspaceServiceDeleteApprovedEmailDomainProcedure is the fully-qualified name of the
+	// WorkspaceService's DeleteApprovedEmailDomain RPC.
+	WorkspaceServiceDeleteApprovedEmailDomainProcedure = "/until.WorkspaceService/DeleteApprovedEmailDomain"
+	// WorkspaceServiceGetWorkspaceLLMCredentialStatusProcedure is the fully-qualified name of the
+	// WorkspaceService's GetWorkspaceLLMCredentialStatus RPC.
+	WorkspaceServiceGetWorkspaceLLMCredentialStatusProcedure = "/until.WorkspaceService/GetWorkspaceLLMCredentialStatus"
+	// WorkspaceServiceSetWorkspaceLLMCredentialProcedure is the fully-qualified name of the
+	// WorkspaceService's SetWorkspaceLLMCredential RPC.
+	WorkspaceServiceSetWorkspaceLLMCredentialProcedure = "/until.WorkspaceService/SetWorkspaceLLMCredential"
+	// WorkspaceServiceDeleteWorkspaceLLMCredentialProcedure is the fully-qualified name of the
+	// WorkspaceService's DeleteWorkspaceLLMCredential RPC.
+	WorkspaceServiceDeleteWorkspaceLLMCredentialProcedure = "/until.WorkspaceService/DeleteWorkspaceLLMCredential"
+	// WorkspaceServiceGetMyCursorCredentialStatusProcedure is the fully-qualified name of the
+	// WorkspaceService's GetMyCursorCredentialStatus RPC.
+	WorkspaceServiceGetMyCursorCredentialStatusProcedure = "/until.WorkspaceService/GetMyCursorCredentialStatus"
+	// WorkspaceServiceSetMyCursorCredentialProcedure is the fully-qualified name of the
+	// WorkspaceService's SetMyCursorCredential RPC.
+	WorkspaceServiceSetMyCursorCredentialProcedure = "/until.WorkspaceService/SetMyCursorCredential"
+	// WorkspaceServiceDeleteMyCursorCredentialProcedure is the fully-qualified name of the
+	// WorkspaceService's DeleteMyCursorCredential RPC.
+	WorkspaceServiceDeleteMyCursorCredentialProcedure = "/until.WorkspaceService/DeleteMyCursorCredential"
+	// WorkspaceServiceGetWorkspaceIntegrationRolesProcedure is the fully-qualified name of the
+	// WorkspaceService's GetWorkspaceIntegrationRoles RPC.
+	WorkspaceServiceGetWorkspaceIntegrationRolesProcedure = "/until.WorkspaceService/GetWorkspaceIntegrationRoles"
+	// WorkspaceServiceSetWorkspaceIntegrationRolesProcedure is the fully-qualified name of the
+	// WorkspaceService's SetWorkspaceIntegrationRoles RPC.
+	WorkspaceServiceSetWorkspaceIntegrationRolesProcedure = "/until.WorkspaceService/SetWorkspaceIntegrationRoles"
+	// WorkspaceServiceResendVerificationEmailProcedure is the fully-qualified name of the
+	// WorkspaceService's ResendVerificationEmail RPC.
+	WorkspaceServiceResendVerificationEmailProcedure = "/until.WorkspaceService/ResendVerificationEmail"
+	// PublicServiceGetInvitationProcedure is the fully-qualified name of the PublicService's
 	// GetInvitation RPC.
-	BrentPublicServiceGetInvitationProcedure = "/brent.BrentPublicService/GetInvitation"
-	// BrentAdminServiceExecuteWorkflowProcedure is the fully-qualified name of the BrentAdminService's
-	// ExecuteWorkflow RPC.
-	BrentAdminServiceExecuteWorkflowProcedure = "/brent.BrentAdminService/ExecuteWorkflow"
-	// BrentAdminServiceListRunsProcedure is the fully-qualified name of the BrentAdminService's
-	// ListRuns RPC.
-	BrentAdminServiceListRunsProcedure = "/brent.BrentAdminService/ListRuns"
-	// BrentAdminServiceWatchRunProcedure is the fully-qualified name of the BrentAdminService's
-	// WatchRun RPC.
-	BrentAdminServiceWatchRunProcedure = "/brent.BrentAdminService/WatchRun"
-	// BrentAdminServiceStreamEventsProcedure is the fully-qualified name of the BrentAdminService's
-	// StreamEvents RPC.
-	BrentAdminServiceStreamEventsProcedure = "/brent.BrentAdminService/StreamEvents"
-	// BrentAdminServiceListEventsProcedure is the fully-qualified name of the BrentAdminService's
-	// ListEvents RPC.
-	BrentAdminServiceListEventsProcedure = "/brent.BrentAdminService/ListEvents"
-	// BrentAdminServiceCancelRunProcedure is the fully-qualified name of the BrentAdminService's
-	// CancelRun RPC.
-	BrentAdminServiceCancelRunProcedure = "/brent.BrentAdminService/CancelRun"
-	// BrentAdminServiceSendQuestionProcedure is the fully-qualified name of the BrentAdminService's
-	// SendQuestion RPC.
-	BrentAdminServiceSendQuestionProcedure = "/brent.BrentAdminService/SendQuestion"
-	// BrentAdminServiceListPlansProcedure is the fully-qualified name of the BrentAdminService's
-	// ListPlans RPC.
-	BrentAdminServiceListPlansProcedure = "/brent.BrentAdminService/ListPlans"
-	// BrentAdminServiceGetPlanProcedure is the fully-qualified name of the BrentAdminService's GetPlan
+	PublicServiceGetInvitationProcedure = "/until.PublicService/GetInvitation"
+	// UntilAdminServiceExecuteLoopProcedure is the fully-qualified name of the UntilAdminService's ExecuteLoop
 	// RPC.
-	BrentAdminServiceGetPlanProcedure = "/brent.BrentAdminService/GetPlan"
-	// BrentAdminServiceListReviewsProcedure is the fully-qualified name of the BrentAdminService's
-	// ListReviews RPC.
-	BrentAdminServiceListReviewsProcedure = "/brent.BrentAdminService/ListReviews"
-	// BrentAdminServiceGetReviewProcedure is the fully-qualified name of the BrentAdminService's
-	// GetReview RPC.
-	BrentAdminServiceGetReviewProcedure = "/brent.BrentAdminService/GetReview"
-	// BrentAdminServiceListAccountsProcedure is the fully-qualified name of the BrentAdminService's
-	// ListAccounts RPC.
-	BrentAdminServiceListAccountsProcedure = "/brent.BrentAdminService/ListAccounts"
-	// BrentAdminServiceGetAccountSummaryProcedure is the fully-qualified name of the
-	// BrentAdminService's GetAccountSummary RPC.
-	BrentAdminServiceGetAccountSummaryProcedure = "/brent.BrentAdminService/GetAccountSummary"
-	// BrentAdminServiceGetAccountHealthAnalysisProcedure is the fully-qualified name of the
-	// BrentAdminService's GetAccountHealthAnalysis RPC.
-	BrentAdminServiceGetAccountHealthAnalysisProcedure = "/brent.BrentAdminService/GetAccountHealthAnalysis"
-	// BrentAdminServiceListAccountMetricReposProcedure is the fully-qualified name of the
-	// BrentAdminService's ListAccountMetricRepos RPC.
-	BrentAdminServiceListAccountMetricReposProcedure = "/brent.BrentAdminService/ListAccountMetricRepos"
-	// BrentAdminServiceStartAccountMetricsComparisonProcedure is the fully-qualified name of the
-	// BrentAdminService's StartAccountMetricsComparison RPC.
-	BrentAdminServiceStartAccountMetricsComparisonProcedure = "/brent.BrentAdminService/StartAccountMetricsComparison"
-	// BrentAdminServiceGetAccountMetricsComparisonRunProcedure is the fully-qualified name of the
-	// BrentAdminService's GetAccountMetricsComparisonRun RPC.
-	BrentAdminServiceGetAccountMetricsComparisonRunProcedure = "/brent.BrentAdminService/GetAccountMetricsComparisonRun"
-	// BrentAdminServiceGetAccountBrentSettingsProcedure is the fully-qualified name of the
-	// BrentAdminService's GetAccountBrentSettings RPC.
-	BrentAdminServiceGetAccountBrentSettingsProcedure = "/brent.BrentAdminService/GetAccountBrentSettings"
-	// BrentAdminServiceUpdateAccountBrentSettingsProcedure is the fully-qualified name of the
-	// BrentAdminService's UpdateAccountBrentSettings RPC.
-	BrentAdminServiceUpdateAccountBrentSettingsProcedure = "/brent.BrentAdminService/UpdateAccountBrentSettings"
-	// BrentAdminServiceGetAccountReviewPolicyProcedure is the fully-qualified name of the
-	// BrentAdminService's GetAccountReviewPolicy RPC.
-	BrentAdminServiceGetAccountReviewPolicyProcedure = "/brent.BrentAdminService/GetAccountReviewPolicy"
-	// BrentAdminServiceUpdateAccountReviewPolicyProcedure is the fully-qualified name of the
-	// BrentAdminService's UpdateAccountReviewPolicy RPC.
-	BrentAdminServiceUpdateAccountReviewPolicyProcedure = "/brent.BrentAdminService/UpdateAccountReviewPolicy"
-	// BrentAdminServiceGetAccountLLMCredentialStatusProcedure is the fully-qualified name of the
-	// BrentAdminService's GetAccountLLMCredentialStatus RPC.
-	BrentAdminServiceGetAccountLLMCredentialStatusProcedure = "/brent.BrentAdminService/GetAccountLLMCredentialStatus"
-	// BrentAdminServiceListAccountIntegrationsProcedure is the fully-qualified name of the
-	// BrentAdminService's ListAccountIntegrations RPC.
-	BrentAdminServiceListAccountIntegrationsProcedure = "/brent.BrentAdminService/ListAccountIntegrations"
-	// BrentAdminServiceListWorkflowsProcedure is the fully-qualified name of the BrentAdminService's
-	// ListWorkflows RPC.
-	BrentAdminServiceListWorkflowsProcedure = "/brent.BrentAdminService/ListWorkflows"
-	// BrentAdminServiceGetWorkflowProcedure is the fully-qualified name of the BrentAdminService's
-	// GetWorkflow RPC.
-	BrentAdminServiceGetWorkflowProcedure = "/brent.BrentAdminService/GetWorkflow"
-	// BrentAdminServiceListWorkflowRunsProcedure is the fully-qualified name of the BrentAdminService's
-	// ListWorkflowRuns RPC.
-	BrentAdminServiceListWorkflowRunsProcedure = "/brent.BrentAdminService/ListWorkflowRuns"
-	// BrentAdminServiceGetWorkflowRunProcedure is the fully-qualified name of the BrentAdminService's
-	// GetWorkflowRun RPC.
-	BrentAdminServiceGetWorkflowRunProcedure = "/brent.BrentAdminService/GetWorkflowRun"
-	// BrentAdminServiceGetWorkflowRunThreadHistoryProcedure is the fully-qualified name of the
-	// BrentAdminService's GetWorkflowRunThreadHistory RPC.
-	BrentAdminServiceGetWorkflowRunThreadHistoryProcedure = "/brent.BrentAdminService/GetWorkflowRunThreadHistory"
-	// BrentAdminServiceListPullRequestsProcedure is the fully-qualified name of the BrentAdminService's
+	UntilAdminServiceExecuteLoopProcedure = "/until.AdminService/ExecuteLoop"
+	// UntilAdminServiceListRunsProcedure is the fully-qualified name of the UntilAdminService's ListRuns RPC.
+	UntilAdminServiceListRunsProcedure = "/until.AdminService/ListRuns"
+	// UntilAdminServiceWatchRunProcedure is the fully-qualified name of the UntilAdminService's WatchRun RPC.
+	UntilAdminServiceWatchRunProcedure = "/until.AdminService/WatchRun"
+	// UntilAdminServiceStreamEventsProcedure is the fully-qualified name of the UntilAdminService's StreamEvents
+	// RPC.
+	UntilAdminServiceStreamEventsProcedure = "/until.AdminService/StreamEvents"
+	// UntilAdminServiceListEventsProcedure is the fully-qualified name of the UntilAdminService's ListEvents RPC.
+	UntilAdminServiceListEventsProcedure = "/until.AdminService/ListEvents"
+	// UntilAdminServiceCancelRunProcedure is the fully-qualified name of the UntilAdminService's CancelRun RPC.
+	UntilAdminServiceCancelRunProcedure = "/until.AdminService/CancelRun"
+	// UntilAdminServiceSendQuestionProcedure is the fully-qualified name of the UntilAdminService's SendQuestion
+	// RPC.
+	UntilAdminServiceSendQuestionProcedure = "/until.AdminService/SendQuestion"
+	// UntilAdminServiceListPlansProcedure is the fully-qualified name of the UntilAdminService's ListPlans RPC.
+	UntilAdminServiceListPlansProcedure = "/until.AdminService/ListPlans"
+	// UntilAdminServiceGetPlanProcedure is the fully-qualified name of the UntilAdminService's GetPlan RPC.
+	UntilAdminServiceGetPlanProcedure = "/until.AdminService/GetPlan"
+	// UntilAdminServiceListReviewsProcedure is the fully-qualified name of the UntilAdminService's ListReviews
+	// RPC.
+	UntilAdminServiceListReviewsProcedure = "/until.AdminService/ListReviews"
+	// UntilAdminServiceGetReviewProcedure is the fully-qualified name of the UntilAdminService's GetReview RPC.
+	UntilAdminServiceGetReviewProcedure = "/until.AdminService/GetReview"
+	// UntilAdminServiceListAccountsProcedure is the fully-qualified name of the UntilAdminService's ListAccounts
+	// RPC.
+	UntilAdminServiceListAccountsProcedure = "/until.AdminService/ListAccounts"
+	// UntilAdminServiceGetAccountSummaryProcedure is the fully-qualified name of the UntilAdminService's
+	// GetAccountSummary RPC.
+	UntilAdminServiceGetAccountSummaryProcedure = "/until.AdminService/GetAccountSummary"
+	// UntilAdminServiceGetAccountHealthAnalysisProcedure is the fully-qualified name of the UntilAdminService's
+	// GetAccountHealthAnalysis RPC.
+	UntilAdminServiceGetAccountHealthAnalysisProcedure = "/until.AdminService/GetAccountHealthAnalysis"
+	// UntilAdminServiceListAccountMetricReposProcedure is the fully-qualified name of the UntilAdminService's
+	// ListAccountMetricRepos RPC.
+	UntilAdminServiceListAccountMetricReposProcedure = "/until.AdminService/ListAccountMetricRepos"
+	// UntilAdminServiceStartAccountMetricsComparisonProcedure is the fully-qualified name of the
+	// UntilAdminService's StartAccountMetricsComparison RPC.
+	UntilAdminServiceStartAccountMetricsComparisonProcedure = "/until.AdminService/StartAccountMetricsComparison"
+	// UntilAdminServiceGetAccountMetricsComparisonRunProcedure is the fully-qualified name of the
+	// UntilAdminService's GetAccountMetricsComparisonRun RPC.
+	UntilAdminServiceGetAccountMetricsComparisonRunProcedure = "/until.AdminService/GetAccountMetricsComparisonRun"
+	// UntilAdminServiceGetAccountPlanCheckSettingsProcedure is the fully-qualified name of the
+	// UntilAdminService's GetAccountPlanCheckSettings RPC.
+	UntilAdminServiceGetAccountPlanCheckSettingsProcedure = "/until.AdminService/GetAccountPlanCheckSettings"
+	// UntilAdminServiceUpdateAccountPlanCheckSettingsProcedure is the fully-qualified name of the
+	// UntilAdminService's UpdateAccountPlanCheckSettings RPC.
+	UntilAdminServiceUpdateAccountPlanCheckSettingsProcedure = "/until.AdminService/UpdateAccountPlanCheckSettings"
+	// UntilAdminServiceGetAccountReviewPolicyProcedure is the fully-qualified name of the UntilAdminService's
+	// GetAccountReviewPolicy RPC.
+	UntilAdminServiceGetAccountReviewPolicyProcedure = "/until.AdminService/GetAccountReviewPolicy"
+	// UntilAdminServiceUpdateAccountReviewPolicyProcedure is the fully-qualified name of the UntilAdminService's
+	// UpdateAccountReviewPolicy RPC.
+	UntilAdminServiceUpdateAccountReviewPolicyProcedure = "/until.AdminService/UpdateAccountReviewPolicy"
+	// UntilAdminServiceGetAccountLLMCredentialStatusProcedure is the fully-qualified name of the
+	// UntilAdminService's GetAccountLLMCredentialStatus RPC.
+	UntilAdminServiceGetAccountLLMCredentialStatusProcedure = "/until.AdminService/GetAccountLLMCredentialStatus"
+	// UntilAdminServiceListAccountIntegrationsProcedure is the fully-qualified name of the UntilAdminService's
+	// ListAccountIntegrations RPC.
+	UntilAdminServiceListAccountIntegrationsProcedure = "/until.AdminService/ListAccountIntegrations"
+	// UntilAdminServiceListLoopsProcedure is the fully-qualified name of the UntilAdminService's ListLoops RPC.
+	UntilAdminServiceListLoopsProcedure = "/until.AdminService/ListLoops"
+	// UntilAdminServiceGetLoopProcedure is the fully-qualified name of the UntilAdminService's GetLoop RPC.
+	UntilAdminServiceGetLoopProcedure = "/until.AdminService/GetLoop"
+	// UntilAdminServiceListLoopRunsProcedure is the fully-qualified name of the UntilAdminService's ListLoopRuns
+	// RPC.
+	UntilAdminServiceListLoopRunsProcedure = "/until.AdminService/ListLoopRuns"
+	// UntilAdminServiceGetLoopRunProcedure is the fully-qualified name of the UntilAdminService's GetLoopRun RPC.
+	UntilAdminServiceGetLoopRunProcedure = "/until.AdminService/GetLoopRun"
+	// UntilAdminServiceGetLoopRunThreadHistoryProcedure is the fully-qualified name of the UntilAdminService's
+	// GetLoopRunThreadHistory RPC.
+	UntilAdminServiceGetLoopRunThreadHistoryProcedure = "/until.AdminService/GetLoopRunThreadHistory"
+	// UntilAdminServiceListPullRequestsProcedure is the fully-qualified name of the UntilAdminService's
 	// ListPullRequests RPC.
-	BrentAdminServiceListPullRequestsProcedure = "/brent.BrentAdminService/ListPullRequests"
-	// BrentAdminServiceGetPullRequestByIDProcedure is the fully-qualified name of the
-	// BrentAdminService's GetPullRequestByID RPC.
-	BrentAdminServiceGetPullRequestByIDProcedure = "/brent.BrentAdminService/GetPullRequestByID"
-	// BrentAdminServiceListDeviationAnalysesForPRProcedure is the fully-qualified name of the
-	// BrentAdminService's ListDeviationAnalysesForPR RPC.
-	BrentAdminServiceListDeviationAnalysesForPRProcedure = "/brent.BrentAdminService/ListDeviationAnalysesForPR"
-	// BrentAdminServiceListPrincipalsProcedure is the fully-qualified name of the BrentAdminService's
+	UntilAdminServiceListPullRequestsProcedure = "/until.AdminService/ListPullRequests"
+	// UntilAdminServiceGetPullRequestByIDProcedure is the fully-qualified name of the UntilAdminService's
+	// GetPullRequestByID RPC.
+	UntilAdminServiceGetPullRequestByIDProcedure = "/until.AdminService/GetPullRequestByID"
+	// UntilAdminServiceListPlanChecksForPRProcedure is the fully-qualified name of the UntilAdminService's
+	// ListPlanChecksForPR RPC.
+	UntilAdminServiceListPlanChecksForPRProcedure = "/until.AdminService/ListPlanChecksForPR"
+	// UntilAdminServiceListPrincipalsProcedure is the fully-qualified name of the UntilAdminService's
 	// ListPrincipals RPC.
-	BrentAdminServiceListPrincipalsProcedure = "/brent.BrentAdminService/ListPrincipals"
-	// BrentAdminServiceGetPrincipalProcedure is the fully-qualified name of the BrentAdminService's
-	// GetPrincipal RPC.
-	BrentAdminServiceGetPrincipalProcedure = "/brent.BrentAdminService/GetPrincipal"
-	// BrentAdminServiceUpsertPrincipalBindingProcedure is the fully-qualified name of the
-	// BrentAdminService's UpsertPrincipalBinding RPC.
-	BrentAdminServiceUpsertPrincipalBindingProcedure = "/brent.BrentAdminService/UpsertPrincipalBinding"
-	// BrentAdminServiceDeletePrincipalBindingProcedure is the fully-qualified name of the
-	// BrentAdminService's DeletePrincipalBinding RPC.
-	BrentAdminServiceDeletePrincipalBindingProcedure = "/brent.BrentAdminService/DeletePrincipalBinding"
-	// BrentAdminServiceUpdatePrincipalProcedure is the fully-qualified name of the BrentAdminService's
+	UntilAdminServiceListPrincipalsProcedure = "/until.AdminService/ListPrincipals"
+	// UntilAdminServiceGetPrincipalProcedure is the fully-qualified name of the UntilAdminService's GetPrincipal
+	// RPC.
+	UntilAdminServiceGetPrincipalProcedure = "/until.AdminService/GetPrincipal"
+	// UntilAdminServiceUpsertPrincipalBindingProcedure is the fully-qualified name of the UntilAdminService's
+	// UpsertPrincipalBinding RPC.
+	UntilAdminServiceUpsertPrincipalBindingProcedure = "/until.AdminService/UpsertPrincipalBinding"
+	// UntilAdminServiceDeletePrincipalBindingProcedure is the fully-qualified name of the UntilAdminService's
+	// DeletePrincipalBinding RPC.
+	UntilAdminServiceDeletePrincipalBindingProcedure = "/until.AdminService/DeletePrincipalBinding"
+	// UntilAdminServiceUpdatePrincipalProcedure is the fully-qualified name of the UntilAdminService's
 	// UpdatePrincipal RPC.
-	BrentAdminServiceUpdatePrincipalProcedure = "/brent.BrentAdminService/UpdatePrincipal"
-	// BrentAdminServiceCreatePrincipalIdentityProcedure is the fully-qualified name of the
-	// BrentAdminService's CreatePrincipalIdentity RPC.
-	BrentAdminServiceCreatePrincipalIdentityProcedure = "/brent.BrentAdminService/CreatePrincipalIdentity"
-	// BrentAdminServiceDeletePrincipalIdentityProcedure is the fully-qualified name of the
-	// BrentAdminService's DeletePrincipalIdentity RPC.
-	BrentAdminServiceDeletePrincipalIdentityProcedure = "/brent.BrentAdminService/DeletePrincipalIdentity"
-	// BrentAdminServiceSetPrincipalCredentialProcedure is the fully-qualified name of the
-	// BrentAdminService's SetPrincipalCredential RPC.
-	BrentAdminServiceSetPrincipalCredentialProcedure = "/brent.BrentAdminService/SetPrincipalCredential"
-	// BrentAdminServiceListPrincipalCredentialConnectionsProcedure is the fully-qualified name of the
-	// BrentAdminService's ListPrincipalCredentialConnections RPC.
-	BrentAdminServiceListPrincipalCredentialConnectionsProcedure = "/brent.BrentAdminService/ListPrincipalCredentialConnections"
-	// BrentAdminServiceDeletePrincipalCredentialProcedure is the fully-qualified name of the
-	// BrentAdminService's DeletePrincipalCredential RPC.
-	BrentAdminServiceDeletePrincipalCredentialProcedure = "/brent.BrentAdminService/DeletePrincipalCredential"
-	// BrentAdminServiceGetPullRequestTimelineProcedure is the fully-qualified name of the
-	// BrentAdminService's GetPullRequestTimeline RPC.
-	BrentAdminServiceGetPullRequestTimelineProcedure = "/brent.BrentAdminService/GetPullRequestTimeline"
+	UntilAdminServiceUpdatePrincipalProcedure = "/until.AdminService/UpdatePrincipal"
+	// UntilAdminServiceCreatePrincipalIdentityProcedure is the fully-qualified name of the UntilAdminService's
+	// CreatePrincipalIdentity RPC.
+	UntilAdminServiceCreatePrincipalIdentityProcedure = "/until.AdminService/CreatePrincipalIdentity"
+	// UntilAdminServiceDeletePrincipalIdentityProcedure is the fully-qualified name of the UntilAdminService's
+	// DeletePrincipalIdentity RPC.
+	UntilAdminServiceDeletePrincipalIdentityProcedure = "/until.AdminService/DeletePrincipalIdentity"
+	// UntilAdminServiceSetPrincipalCredentialProcedure is the fully-qualified name of the UntilAdminService's
+	// SetPrincipalCredential RPC.
+	UntilAdminServiceSetPrincipalCredentialProcedure = "/until.AdminService/SetPrincipalCredential"
+	// UntilAdminServiceListPrincipalCredentialConnectionsProcedure is the fully-qualified name of the
+	// UntilAdminService's ListPrincipalCredentialConnections RPC.
+	UntilAdminServiceListPrincipalCredentialConnectionsProcedure = "/until.AdminService/ListPrincipalCredentialConnections"
+	// UntilAdminServiceDeletePrincipalCredentialProcedure is the fully-qualified name of the UntilAdminService's
+	// DeletePrincipalCredential RPC.
+	UntilAdminServiceDeletePrincipalCredentialProcedure = "/until.AdminService/DeletePrincipalCredential"
+	// UntilAdminServiceGetPullRequestTimelineProcedure is the fully-qualified name of the UntilAdminService's
+	// GetPullRequestTimeline RPC.
+	UntilAdminServiceGetPullRequestTimelineProcedure = "/until.AdminService/GetPullRequestTimeline"
 )
 
-// BrentServiceClient is a client for the brent.BrentService service.
-type BrentServiceClient interface {
+// WorkspaceServiceClient is a client for the until.WorkspaceService service.
+type WorkspaceServiceClient interface {
 	// Lists open pull requests for the caller's account from the pull_requests
 	// table (every repo Brent has webhooks for), sorted by updated_at DESC.
 	// Gated on brent:read.
@@ -409,10 +399,10 @@ type BrentServiceClient interface {
 	// Returns Brent tenant settings for the given account. Customer callers
 	// use their JWT account; brent-area51 operators may pass any account_name
 	// when holding admin:write.
-	GetBrentSettings(context.Context, *connect.Request[sdp_go.GetBrentSettingsRequest]) (*connect.Response[sdp_go.GetBrentSettingsResponse], error)
+	GetPlanCheckSettings(context.Context, *connect.Request[sdp_go.GetPlanCheckSettingsRequest]) (*connect.Response[sdp_go.GetPlanCheckSettingsResponse], error)
 	// PATCH semantics for Brent tenant settings. Only set fields are written;
 	// audit columns are server-stamped.
-	UpdateBrentSettings(context.Context, *connect.Request[sdp_go.UpdateBrentSettingsRequest]) (*connect.Response[sdp_go.UpdateBrentSettingsResponse], error)
+	UpdatePlanCheckSettings(context.Context, *connect.Request[sdp_go.UpdatePlanCheckSettingsRequest]) (*connect.Response[sdp_go.UpdatePlanCheckSettingsResponse], error)
 	// Returns the account-scoped integration marketplace catalogue: Composio cache
 	// rows plus synthesised first-party and BYO entries with per-account connection
 	// state. Gated on brent:read.
@@ -581,328 +571,328 @@ type BrentServiceClient interface {
 	ResendVerificationEmail(context.Context, *connect.Request[sdp_go.ResendVerificationEmailRequest]) (*connect.Response[sdp_go.ResendVerificationEmailResponse], error)
 }
 
-// NewBrentServiceClient constructs a client for the brent.BrentService service. By default, it uses
-// the Connect protocol with the binary Protobuf Codec, asks for gzipped responses, and sends
-// uncompressed requests. To use the gRPC or gRPC-Web protocols, supply the connect.WithGRPC() or
-// connect.WithGRPCWeb() options.
+// NewWorkspaceServiceClient constructs a client for the until.WorkspaceService service. By default,
+// it uses the Connect protocol with the binary Protobuf Codec, asks for gzipped responses, and
+// sends uncompressed requests. To use the gRPC or gRPC-Web protocols, supply the connect.WithGRPC()
+// or connect.WithGRPCWeb() options.
 //
 // The URL supplied here should be the base URL for the Connect or gRPC server (for example,
 // http://api.acme.com or https://acme.com/grpc).
-func NewBrentServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) BrentServiceClient {
+func NewWorkspaceServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) WorkspaceServiceClient {
 	baseURL = strings.TrimRight(baseURL, "/")
-	brentServiceMethods := sdp_go.File_brent_proto.Services().ByName("BrentService").Methods()
-	return &brentServiceClient{
+	workspaceServiceMethods := sdp_go.File_brent_proto.Services().ByName("WorkspaceService").Methods()
+	return &workspaceServiceClient{
 		listOpenPullRequests: connect.NewClient[sdp_go.ListOpenPullRequestsRequest, sdp_go.ListOpenPullRequestsResponse](
 			httpClient,
-			baseURL+BrentServiceListOpenPullRequestsProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("ListOpenPullRequests")),
+			baseURL+WorkspaceServiceListOpenPullRequestsProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("ListOpenPullRequests")),
 			connect.WithClientOptions(opts...),
 		),
 		getPullRequest: connect.NewClient[sdp_go.GetPullRequestRequest, sdp_go.GetPullRequestResponse](
 			httpClient,
-			baseURL+BrentServiceGetPullRequestProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("GetPullRequest")),
+			baseURL+WorkspaceServiceGetPullRequestProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("GetPullRequest")),
 			connect.WithClientOptions(opts...),
 		),
 		getPrincipalStatus: connect.NewClient[sdp_go.GetPrincipalStatusRequest, sdp_go.GetPrincipalStatusResponse](
 			httpClient,
-			baseURL+BrentServiceGetPrincipalStatusProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("GetPrincipalStatus")),
+			baseURL+WorkspaceServiceGetPrincipalStatusProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("GetPrincipalStatus")),
 			connect.WithClientOptions(opts...),
 		),
 		getPlanPrompt: connect.NewClient[sdp_go.GetPlanPromptRequest, sdp_go.GetPlanPromptResponse](
 			httpClient,
-			baseURL+BrentServiceGetPlanPromptProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("GetPlanPrompt")),
+			baseURL+WorkspaceServiceGetPlanPromptProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("GetPlanPrompt")),
 			connect.WithClientOptions(opts...),
 		),
 		getIntegrationConnectURL: connect.NewClient[sdp_go.GetIntegrationConnectURLRequest, sdp_go.GetIntegrationConnectURLResponse](
 			httpClient,
-			baseURL+BrentServiceGetIntegrationConnectURLProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("GetIntegrationConnectURL")),
+			baseURL+WorkspaceServiceGetIntegrationConnectURLProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("GetIntegrationConnectURL")),
 			connect.WithClientOptions(opts...),
 		),
 		disconnectIntegration: connect.NewClient[sdp_go.DisconnectIntegrationRequest, sdp_go.DisconnectIntegrationResponse](
 			httpClient,
-			baseURL+BrentServiceDisconnectIntegrationProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("DisconnectIntegration")),
+			baseURL+WorkspaceServiceDisconnectIntegrationProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("DisconnectIntegration")),
 			connect.WithClientOptions(opts...),
 		),
 		connectByoHttpMcp: connect.NewClient[sdp_go.ConnectByoHttpMcpRequest, sdp_go.ConnectByoHttpMcpResponse](
 			httpClient,
-			baseURL+BrentServiceConnectByoHttpMcpProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("ConnectByoHttpMcp")),
+			baseURL+WorkspaceServiceConnectByoHttpMcpProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("ConnectByoHttpMcp")),
 			connect.WithClientOptions(opts...),
 		),
 		getGitLabConnection: connect.NewClient[sdp_go.GetGitLabConnectionRequest, sdp_go.GetGitLabConnectionResponse](
 			httpClient,
-			baseURL+BrentServiceGetGitLabConnectionProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("GetGitLabConnection")),
+			baseURL+WorkspaceServiceGetGitLabConnectionProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("GetGitLabConnection")),
 			connect.WithClientOptions(opts...),
 		),
 		connectGitLab: connect.NewClient[sdp_go.ConnectGitLabRequest, sdp_go.ConnectGitLabResponse](
 			httpClient,
-			baseURL+BrentServiceConnectGitLabProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("ConnectGitLab")),
+			baseURL+WorkspaceServiceConnectGitLabProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("ConnectGitLab")),
 			connect.WithClientOptions(opts...),
 		),
 		saveGitLabSigningToken: connect.NewClient[sdp_go.SaveGitLabSigningTokenRequest, sdp_go.SaveGitLabSigningTokenResponse](
 			httpClient,
-			baseURL+BrentServiceSaveGitLabSigningTokenProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("SaveGitLabSigningToken")),
+			baseURL+WorkspaceServiceSaveGitLabSigningTokenProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("SaveGitLabSigningToken")),
 			connect.WithClientOptions(opts...),
 		),
 		upsertMyVerifiedBinding: connect.NewClient[sdp_go.UpsertMyVerifiedBindingRequest, sdp_go.UpsertMyVerifiedBindingResponse](
 			httpClient,
-			baseURL+BrentServiceUpsertMyVerifiedBindingProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("UpsertMyVerifiedBinding")),
+			baseURL+WorkspaceServiceUpsertMyVerifiedBindingProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("UpsertMyVerifiedBinding")),
 			connect.WithClientOptions(opts...),
 		),
 		listMyBindings: connect.NewClient[sdp_go.ListMyBindingsRequest, sdp_go.ListMyBindingsResponse](
 			httpClient,
-			baseURL+BrentServiceListMyBindingsProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("ListMyBindings")),
+			baseURL+WorkspaceServiceListMyBindingsProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("ListMyBindings")),
 			connect.WithClientOptions(opts...),
 		),
 		getMyNotificationPreferences: connect.NewClient[sdp_go.GetMyNotificationPreferencesRequest, sdp_go.GetMyNotificationPreferencesResponse](
 			httpClient,
-			baseURL+BrentServiceGetMyNotificationPreferencesProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("GetMyNotificationPreferences")),
+			baseURL+WorkspaceServiceGetMyNotificationPreferencesProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("GetMyNotificationPreferences")),
 			connect.WithClientOptions(opts...),
 		),
 		updateMyNotificationPreferences: connect.NewClient[sdp_go.UpdateMyNotificationPreferencesRequest, sdp_go.UpdateMyNotificationPreferencesResponse](
 			httpClient,
-			baseURL+BrentServiceUpdateMyNotificationPreferencesProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("UpdateMyNotificationPreferences")),
+			baseURL+WorkspaceServiceUpdateMyNotificationPreferencesProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("UpdateMyNotificationPreferences")),
 			connect.WithClientOptions(opts...),
 		),
 		registerMyPushSubscription: connect.NewClient[sdp_go.RegisterMyPushSubscriptionRequest, sdp_go.RegisterMyPushSubscriptionResponse](
 			httpClient,
-			baseURL+BrentServiceRegisterMyPushSubscriptionProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("RegisterMyPushSubscription")),
+			baseURL+WorkspaceServiceRegisterMyPushSubscriptionProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("RegisterMyPushSubscription")),
 			connect.WithClientOptions(opts...),
 		),
 		getWebPushPublicKey: connect.NewClient[sdp_go.GetWebPushPublicKeyRequest, sdp_go.GetWebPushPublicKeyResponse](
 			httpClient,
-			baseURL+BrentServiceGetWebPushPublicKeyProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("GetWebPushPublicKey")),
+			baseURL+WorkspaceServiceGetWebPushPublicKeyProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("GetWebPushPublicKey")),
 			connect.WithClientOptions(opts...),
 		),
 		updateMyDisplayName: connect.NewClient[sdp_go.UpdateMyDisplayNameRequest, sdp_go.UpdateMyDisplayNameResponse](
 			httpClient,
-			baseURL+BrentServiceUpdateMyDisplayNameProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("UpdateMyDisplayName")),
+			baseURL+WorkspaceServiceUpdateMyDisplayNameProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("UpdateMyDisplayName")),
 			connect.WithClientOptions(opts...),
 		),
-		getBrentSettings: connect.NewClient[sdp_go.GetBrentSettingsRequest, sdp_go.GetBrentSettingsResponse](
+		getPlanCheckSettings: connect.NewClient[sdp_go.GetPlanCheckSettingsRequest, sdp_go.GetPlanCheckSettingsResponse](
 			httpClient,
-			baseURL+BrentServiceGetBrentSettingsProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("GetBrentSettings")),
+			baseURL+WorkspaceServiceGetPlanCheckSettingsProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("GetPlanCheckSettings")),
 			connect.WithClientOptions(opts...),
 		),
-		updateBrentSettings: connect.NewClient[sdp_go.UpdateBrentSettingsRequest, sdp_go.UpdateBrentSettingsResponse](
+		updatePlanCheckSettings: connect.NewClient[sdp_go.UpdatePlanCheckSettingsRequest, sdp_go.UpdatePlanCheckSettingsResponse](
 			httpClient,
-			baseURL+BrentServiceUpdateBrentSettingsProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("UpdateBrentSettings")),
+			baseURL+WorkspaceServiceUpdatePlanCheckSettingsProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("UpdatePlanCheckSettings")),
 			connect.WithClientOptions(opts...),
 		),
 		listIntegrationCatalogue: connect.NewClient[sdp_go.ListIntegrationCatalogueRequest, sdp_go.ListIntegrationCatalogueResponse](
 			httpClient,
-			baseURL+BrentServiceListIntegrationCatalogueProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("ListIntegrationCatalogue")),
+			baseURL+WorkspaceServiceListIntegrationCatalogueProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("ListIntegrationCatalogue")),
 			connect.WithClientOptions(opts...),
 		),
 		createWorkspace: connect.NewClient[sdp_go.CreateWorkspaceRequest, sdp_go.CreateWorkspaceResponse](
 			httpClient,
-			baseURL+BrentServiceCreateWorkspaceProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("CreateWorkspace")),
+			baseURL+WorkspaceServiceCreateWorkspaceProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("CreateWorkspace")),
 			connect.WithClientOptions(opts...),
 		),
 		listMyWorkspaces: connect.NewClient[sdp_go.ListMyWorkspacesRequest, sdp_go.ListMyWorkspacesResponse](
 			httpClient,
-			baseURL+BrentServiceListMyWorkspacesProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("ListMyWorkspaces")),
+			baseURL+WorkspaceServiceListMyWorkspacesProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("ListMyWorkspaces")),
 			connect.WithClientOptions(opts...),
 		),
 		discoverLoginRecoveryCandidates: connect.NewClient[sdp_go.DiscoverLoginRecoveryCandidatesRequest, sdp_go.DiscoverLoginRecoveryCandidatesResponse](
 			httpClient,
-			baseURL+BrentServiceDiscoverLoginRecoveryCandidatesProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("DiscoverLoginRecoveryCandidates")),
+			baseURL+WorkspaceServiceDiscoverLoginRecoveryCandidatesProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("DiscoverLoginRecoveryCandidates")),
 			connect.WithClientOptions(opts...),
 		),
 		renameWorkspace: connect.NewClient[sdp_go.RenameWorkspaceRequest, sdp_go.RenameWorkspaceResponse](
 			httpClient,
-			baseURL+BrentServiceRenameWorkspaceProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("RenameWorkspace")),
+			baseURL+WorkspaceServiceRenameWorkspaceProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("RenameWorkspace")),
 			connect.WithClientOptions(opts...),
 		),
 		updateWorkspaceBranding: connect.NewClient[sdp_go.UpdateWorkspaceBrandingRequest, sdp_go.UpdateWorkspaceBrandingResponse](
 			httpClient,
-			baseURL+BrentServiceUpdateWorkspaceBrandingProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("UpdateWorkspaceBranding")),
+			baseURL+WorkspaceServiceUpdateWorkspaceBrandingProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("UpdateWorkspaceBranding")),
 			connect.WithClientOptions(opts...),
 		),
 		completeWorkspaceOnboarding: connect.NewClient[sdp_go.CompleteWorkspaceOnboardingRequest, sdp_go.CompleteWorkspaceOnboardingResponse](
 			httpClient,
-			baseURL+BrentServiceCompleteWorkspaceOnboardingProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("CompleteWorkspaceOnboarding")),
+			baseURL+WorkspaceServiceCompleteWorkspaceOnboardingProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("CompleteWorkspaceOnboarding")),
 			connect.WithClientOptions(opts...),
 		),
 		deleteWorkspace: connect.NewClient[sdp_go.DeleteWorkspaceRequest, sdp_go.DeleteWorkspaceResponse](
 			httpClient,
-			baseURL+BrentServiceDeleteWorkspaceProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("DeleteWorkspace")),
+			baseURL+WorkspaceServiceDeleteWorkspaceProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("DeleteWorkspace")),
 			connect.WithClientOptions(opts...),
 		),
 		listJoinableWorkspaces: connect.NewClient[sdp_go.ListJoinableWorkspacesRequest, sdp_go.ListJoinableWorkspacesResponse](
 			httpClient,
-			baseURL+BrentServiceListJoinableWorkspacesProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("ListJoinableWorkspaces")),
+			baseURL+WorkspaceServiceListJoinableWorkspacesProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("ListJoinableWorkspaces")),
 			connect.WithClientOptions(opts...),
 		),
 		joinWorkspace: connect.NewClient[sdp_go.JoinWorkspaceRequest, sdp_go.JoinWorkspaceResponse](
 			httpClient,
-			baseURL+BrentServiceJoinWorkspaceProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("JoinWorkspace")),
+			baseURL+WorkspaceServiceJoinWorkspaceProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("JoinWorkspace")),
 			connect.WithClientOptions(opts...),
 		),
 		createInvitation: connect.NewClient[sdp_go.CreateInvitationRequest, sdp_go.CreateInvitationResponse](
 			httpClient,
-			baseURL+BrentServiceCreateInvitationProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("CreateInvitation")),
+			baseURL+WorkspaceServiceCreateInvitationProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("CreateInvitation")),
 			connect.WithClientOptions(opts...),
 		),
 		createInvitations: connect.NewClient[sdp_go.CreateInvitationsRequest, sdp_go.CreateInvitationsResponse](
 			httpClient,
-			baseURL+BrentServiceCreateInvitationsProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("CreateInvitations")),
+			baseURL+WorkspaceServiceCreateInvitationsProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("CreateInvitations")),
 			connect.WithClientOptions(opts...),
 		),
 		acceptInvitation: connect.NewClient[sdp_go.AcceptInvitationRequest, sdp_go.AcceptInvitationResponse](
 			httpClient,
-			baseURL+BrentServiceAcceptInvitationProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("AcceptInvitation")),
+			baseURL+WorkspaceServiceAcceptInvitationProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("AcceptInvitation")),
 			connect.WithClientOptions(opts...),
 		),
 		listWorkspaceMembers: connect.NewClient[sdp_go.ListWorkspaceMembersRequest, sdp_go.ListWorkspaceMembersResponse](
 			httpClient,
-			baseURL+BrentServiceListWorkspaceMembersProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("ListWorkspaceMembers")),
+			baseURL+WorkspaceServiceListWorkspaceMembersProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("ListWorkspaceMembers")),
 			connect.WithClientOptions(opts...),
 		),
 		resendInvitation: connect.NewClient[sdp_go.ResendInvitationRequest, sdp_go.ResendInvitationResponse](
 			httpClient,
-			baseURL+BrentServiceResendInvitationProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("ResendInvitation")),
+			baseURL+WorkspaceServiceResendInvitationProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("ResendInvitation")),
 			connect.WithClientOptions(opts...),
 		),
 		revokeInvitation: connect.NewClient[sdp_go.RevokeInvitationRequest, sdp_go.RevokeInvitationResponse](
 			httpClient,
-			baseURL+BrentServiceRevokeInvitationProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("RevokeInvitation")),
+			baseURL+WorkspaceServiceRevokeInvitationProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("RevokeInvitation")),
 			connect.WithClientOptions(opts...),
 		),
 		removeWorkspaceMember: connect.NewClient[sdp_go.RemoveWorkspaceMemberRequest, sdp_go.RemoveWorkspaceMemberResponse](
 			httpClient,
-			baseURL+BrentServiceRemoveWorkspaceMemberProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("RemoveWorkspaceMember")),
+			baseURL+WorkspaceServiceRemoveWorkspaceMemberProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("RemoveWorkspaceMember")),
 			connect.WithClientOptions(opts...),
 		),
 		updateWorkspaceMemberRole: connect.NewClient[sdp_go.UpdateWorkspaceMemberRoleRequest, sdp_go.UpdateWorkspaceMemberRoleResponse](
 			httpClient,
-			baseURL+BrentServiceUpdateWorkspaceMemberRoleProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("UpdateWorkspaceMemberRole")),
+			baseURL+WorkspaceServiceUpdateWorkspaceMemberRoleProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("UpdateWorkspaceMemberRole")),
 			connect.WithClientOptions(opts...),
 		),
 		listApprovedEmailDomains: connect.NewClient[sdp_go.ListApprovedEmailDomainsRequest, sdp_go.ListApprovedEmailDomainsResponse](
 			httpClient,
-			baseURL+BrentServiceListApprovedEmailDomainsProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("ListApprovedEmailDomains")),
+			baseURL+WorkspaceServiceListApprovedEmailDomainsProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("ListApprovedEmailDomains")),
 			connect.WithClientOptions(opts...),
 		),
 		addApprovedEmailDomain: connect.NewClient[sdp_go.AddApprovedEmailDomainRequest, sdp_go.AddApprovedEmailDomainResponse](
 			httpClient,
-			baseURL+BrentServiceAddApprovedEmailDomainProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("AddApprovedEmailDomain")),
+			baseURL+WorkspaceServiceAddApprovedEmailDomainProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("AddApprovedEmailDomain")),
 			connect.WithClientOptions(opts...),
 		),
 		verifyApprovedEmailDomain: connect.NewClient[sdp_go.VerifyApprovedEmailDomainRequest, sdp_go.VerifyApprovedEmailDomainResponse](
 			httpClient,
-			baseURL+BrentServiceVerifyApprovedEmailDomainProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("VerifyApprovedEmailDomain")),
+			baseURL+WorkspaceServiceVerifyApprovedEmailDomainProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("VerifyApprovedEmailDomain")),
 			connect.WithClientOptions(opts...),
 		),
 		resendApprovedEmailDomainCode: connect.NewClient[sdp_go.ResendApprovedEmailDomainCodeRequest, sdp_go.ResendApprovedEmailDomainCodeResponse](
 			httpClient,
-			baseURL+BrentServiceResendApprovedEmailDomainCodeProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("ResendApprovedEmailDomainCode")),
+			baseURL+WorkspaceServiceResendApprovedEmailDomainCodeProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("ResendApprovedEmailDomainCode")),
 			connect.WithClientOptions(opts...),
 		),
 		deleteApprovedEmailDomain: connect.NewClient[sdp_go.DeleteApprovedEmailDomainRequest, sdp_go.DeleteApprovedEmailDomainResponse](
 			httpClient,
-			baseURL+BrentServiceDeleteApprovedEmailDomainProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("DeleteApprovedEmailDomain")),
+			baseURL+WorkspaceServiceDeleteApprovedEmailDomainProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("DeleteApprovedEmailDomain")),
 			connect.WithClientOptions(opts...),
 		),
 		getWorkspaceLLMCredentialStatus: connect.NewClient[sdp_go.GetWorkspaceLLMCredentialStatusRequest, sdp_go.GetWorkspaceLLMCredentialStatusResponse](
 			httpClient,
-			baseURL+BrentServiceGetWorkspaceLLMCredentialStatusProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("GetWorkspaceLLMCredentialStatus")),
+			baseURL+WorkspaceServiceGetWorkspaceLLMCredentialStatusProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("GetWorkspaceLLMCredentialStatus")),
 			connect.WithClientOptions(opts...),
 		),
 		setWorkspaceLLMCredential: connect.NewClient[sdp_go.SetWorkspaceLLMCredentialRequest, sdp_go.SetWorkspaceLLMCredentialResponse](
 			httpClient,
-			baseURL+BrentServiceSetWorkspaceLLMCredentialProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("SetWorkspaceLLMCredential")),
+			baseURL+WorkspaceServiceSetWorkspaceLLMCredentialProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("SetWorkspaceLLMCredential")),
 			connect.WithClientOptions(opts...),
 		),
 		deleteWorkspaceLLMCredential: connect.NewClient[sdp_go.DeleteWorkspaceLLMCredentialRequest, sdp_go.DeleteWorkspaceLLMCredentialResponse](
 			httpClient,
-			baseURL+BrentServiceDeleteWorkspaceLLMCredentialProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("DeleteWorkspaceLLMCredential")),
+			baseURL+WorkspaceServiceDeleteWorkspaceLLMCredentialProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("DeleteWorkspaceLLMCredential")),
 			connect.WithClientOptions(opts...),
 		),
 		getMyCursorCredentialStatus: connect.NewClient[sdp_go.GetMyCursorCredentialStatusRequest, sdp_go.GetMyCursorCredentialStatusResponse](
 			httpClient,
-			baseURL+BrentServiceGetMyCursorCredentialStatusProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("GetMyCursorCredentialStatus")),
+			baseURL+WorkspaceServiceGetMyCursorCredentialStatusProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("GetMyCursorCredentialStatus")),
 			connect.WithClientOptions(opts...),
 		),
 		setMyCursorCredential: connect.NewClient[sdp_go.SetMyCursorCredentialRequest, sdp_go.SetMyCursorCredentialResponse](
 			httpClient,
-			baseURL+BrentServiceSetMyCursorCredentialProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("SetMyCursorCredential")),
+			baseURL+WorkspaceServiceSetMyCursorCredentialProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("SetMyCursorCredential")),
 			connect.WithClientOptions(opts...),
 		),
 		deleteMyCursorCredential: connect.NewClient[sdp_go.DeleteMyCursorCredentialRequest, sdp_go.DeleteMyCursorCredentialResponse](
 			httpClient,
-			baseURL+BrentServiceDeleteMyCursorCredentialProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("DeleteMyCursorCredential")),
+			baseURL+WorkspaceServiceDeleteMyCursorCredentialProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("DeleteMyCursorCredential")),
 			connect.WithClientOptions(opts...),
 		),
 		getWorkspaceIntegrationRoles: connect.NewClient[sdp_go.GetWorkspaceIntegrationRolesRequest, sdp_go.GetWorkspaceIntegrationRolesResponse](
 			httpClient,
-			baseURL+BrentServiceGetWorkspaceIntegrationRolesProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("GetWorkspaceIntegrationRoles")),
+			baseURL+WorkspaceServiceGetWorkspaceIntegrationRolesProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("GetWorkspaceIntegrationRoles")),
 			connect.WithClientOptions(opts...),
 		),
 		setWorkspaceIntegrationRoles: connect.NewClient[sdp_go.SetWorkspaceIntegrationRolesRequest, sdp_go.SetWorkspaceIntegrationRolesResponse](
 			httpClient,
-			baseURL+BrentServiceSetWorkspaceIntegrationRolesProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("SetWorkspaceIntegrationRoles")),
+			baseURL+WorkspaceServiceSetWorkspaceIntegrationRolesProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("SetWorkspaceIntegrationRoles")),
 			connect.WithClientOptions(opts...),
 		),
 		resendVerificationEmail: connect.NewClient[sdp_go.ResendVerificationEmailRequest, sdp_go.ResendVerificationEmailResponse](
 			httpClient,
-			baseURL+BrentServiceResendVerificationEmailProcedure,
-			connect.WithSchema(brentServiceMethods.ByName("ResendVerificationEmail")),
+			baseURL+WorkspaceServiceResendVerificationEmailProcedure,
+			connect.WithSchema(workspaceServiceMethods.ByName("ResendVerificationEmail")),
 			connect.WithClientOptions(opts...),
 		),
 	}
 }
 
-// brentServiceClient implements BrentServiceClient.
-type brentServiceClient struct {
+// workspaceServiceClient implements WorkspaceServiceClient.
+type workspaceServiceClient struct {
 	listOpenPullRequests            *connect.Client[sdp_go.ListOpenPullRequestsRequest, sdp_go.ListOpenPullRequestsResponse]
 	getPullRequest                  *connect.Client[sdp_go.GetPullRequestRequest, sdp_go.GetPullRequestResponse]
 	getPrincipalStatus              *connect.Client[sdp_go.GetPrincipalStatusRequest, sdp_go.GetPrincipalStatusResponse]
@@ -920,8 +910,8 @@ type brentServiceClient struct {
 	registerMyPushSubscription      *connect.Client[sdp_go.RegisterMyPushSubscriptionRequest, sdp_go.RegisterMyPushSubscriptionResponse]
 	getWebPushPublicKey             *connect.Client[sdp_go.GetWebPushPublicKeyRequest, sdp_go.GetWebPushPublicKeyResponse]
 	updateMyDisplayName             *connect.Client[sdp_go.UpdateMyDisplayNameRequest, sdp_go.UpdateMyDisplayNameResponse]
-	getBrentSettings                *connect.Client[sdp_go.GetBrentSettingsRequest, sdp_go.GetBrentSettingsResponse]
-	updateBrentSettings             *connect.Client[sdp_go.UpdateBrentSettingsRequest, sdp_go.UpdateBrentSettingsResponse]
+	getPlanCheckSettings            *connect.Client[sdp_go.GetPlanCheckSettingsRequest, sdp_go.GetPlanCheckSettingsResponse]
+	updatePlanCheckSettings         *connect.Client[sdp_go.UpdatePlanCheckSettingsRequest, sdp_go.UpdatePlanCheckSettingsResponse]
 	listIntegrationCatalogue        *connect.Client[sdp_go.ListIntegrationCatalogueRequest, sdp_go.ListIntegrationCatalogueResponse]
 	createWorkspace                 *connect.Client[sdp_go.CreateWorkspaceRequest, sdp_go.CreateWorkspaceResponse]
 	listMyWorkspaces                *connect.Client[sdp_go.ListMyWorkspacesRequest, sdp_go.ListMyWorkspacesResponse]
@@ -956,263 +946,263 @@ type brentServiceClient struct {
 	resendVerificationEmail         *connect.Client[sdp_go.ResendVerificationEmailRequest, sdp_go.ResendVerificationEmailResponse]
 }
 
-// ListOpenPullRequests calls brent.BrentService.ListOpenPullRequests.
-func (c *brentServiceClient) ListOpenPullRequests(ctx context.Context, req *connect.Request[sdp_go.ListOpenPullRequestsRequest]) (*connect.Response[sdp_go.ListOpenPullRequestsResponse], error) {
+// ListOpenPullRequests calls until.WorkspaceService.ListOpenPullRequests.
+func (c *workspaceServiceClient) ListOpenPullRequests(ctx context.Context, req *connect.Request[sdp_go.ListOpenPullRequestsRequest]) (*connect.Response[sdp_go.ListOpenPullRequestsResponse], error) {
 	return c.listOpenPullRequests.CallUnary(ctx, req)
 }
 
-// GetPullRequest calls brent.BrentService.GetPullRequest.
-func (c *brentServiceClient) GetPullRequest(ctx context.Context, req *connect.Request[sdp_go.GetPullRequestRequest]) (*connect.Response[sdp_go.GetPullRequestResponse], error) {
+// GetPullRequest calls until.WorkspaceService.GetPullRequest.
+func (c *workspaceServiceClient) GetPullRequest(ctx context.Context, req *connect.Request[sdp_go.GetPullRequestRequest]) (*connect.Response[sdp_go.GetPullRequestResponse], error) {
 	return c.getPullRequest.CallUnary(ctx, req)
 }
 
-// GetPrincipalStatus calls brent.BrentService.GetPrincipalStatus.
-func (c *brentServiceClient) GetPrincipalStatus(ctx context.Context, req *connect.Request[sdp_go.GetPrincipalStatusRequest]) (*connect.Response[sdp_go.GetPrincipalStatusResponse], error) {
+// GetPrincipalStatus calls until.WorkspaceService.GetPrincipalStatus.
+func (c *workspaceServiceClient) GetPrincipalStatus(ctx context.Context, req *connect.Request[sdp_go.GetPrincipalStatusRequest]) (*connect.Response[sdp_go.GetPrincipalStatusResponse], error) {
 	return c.getPrincipalStatus.CallUnary(ctx, req)
 }
 
-// GetPlanPrompt calls brent.BrentService.GetPlanPrompt.
-func (c *brentServiceClient) GetPlanPrompt(ctx context.Context, req *connect.Request[sdp_go.GetPlanPromptRequest]) (*connect.Response[sdp_go.GetPlanPromptResponse], error) {
+// GetPlanPrompt calls until.WorkspaceService.GetPlanPrompt.
+func (c *workspaceServiceClient) GetPlanPrompt(ctx context.Context, req *connect.Request[sdp_go.GetPlanPromptRequest]) (*connect.Response[sdp_go.GetPlanPromptResponse], error) {
 	return c.getPlanPrompt.CallUnary(ctx, req)
 }
 
-// GetIntegrationConnectURL calls brent.BrentService.GetIntegrationConnectURL.
-func (c *brentServiceClient) GetIntegrationConnectURL(ctx context.Context, req *connect.Request[sdp_go.GetIntegrationConnectURLRequest]) (*connect.Response[sdp_go.GetIntegrationConnectURLResponse], error) {
+// GetIntegrationConnectURL calls until.WorkspaceService.GetIntegrationConnectURL.
+func (c *workspaceServiceClient) GetIntegrationConnectURL(ctx context.Context, req *connect.Request[sdp_go.GetIntegrationConnectURLRequest]) (*connect.Response[sdp_go.GetIntegrationConnectURLResponse], error) {
 	return c.getIntegrationConnectURL.CallUnary(ctx, req)
 }
 
-// DisconnectIntegration calls brent.BrentService.DisconnectIntegration.
-func (c *brentServiceClient) DisconnectIntegration(ctx context.Context, req *connect.Request[sdp_go.DisconnectIntegrationRequest]) (*connect.Response[sdp_go.DisconnectIntegrationResponse], error) {
+// DisconnectIntegration calls until.WorkspaceService.DisconnectIntegration.
+func (c *workspaceServiceClient) DisconnectIntegration(ctx context.Context, req *connect.Request[sdp_go.DisconnectIntegrationRequest]) (*connect.Response[sdp_go.DisconnectIntegrationResponse], error) {
 	return c.disconnectIntegration.CallUnary(ctx, req)
 }
 
-// ConnectByoHttpMcp calls brent.BrentService.ConnectByoHttpMcp.
-func (c *brentServiceClient) ConnectByoHttpMcp(ctx context.Context, req *connect.Request[sdp_go.ConnectByoHttpMcpRequest]) (*connect.Response[sdp_go.ConnectByoHttpMcpResponse], error) {
+// ConnectByoHttpMcp calls until.WorkspaceService.ConnectByoHttpMcp.
+func (c *workspaceServiceClient) ConnectByoHttpMcp(ctx context.Context, req *connect.Request[sdp_go.ConnectByoHttpMcpRequest]) (*connect.Response[sdp_go.ConnectByoHttpMcpResponse], error) {
 	return c.connectByoHttpMcp.CallUnary(ctx, req)
 }
 
-// GetGitLabConnection calls brent.BrentService.GetGitLabConnection.
-func (c *brentServiceClient) GetGitLabConnection(ctx context.Context, req *connect.Request[sdp_go.GetGitLabConnectionRequest]) (*connect.Response[sdp_go.GetGitLabConnectionResponse], error) {
+// GetGitLabConnection calls until.WorkspaceService.GetGitLabConnection.
+func (c *workspaceServiceClient) GetGitLabConnection(ctx context.Context, req *connect.Request[sdp_go.GetGitLabConnectionRequest]) (*connect.Response[sdp_go.GetGitLabConnectionResponse], error) {
 	return c.getGitLabConnection.CallUnary(ctx, req)
 }
 
-// ConnectGitLab calls brent.BrentService.ConnectGitLab.
-func (c *brentServiceClient) ConnectGitLab(ctx context.Context, req *connect.Request[sdp_go.ConnectGitLabRequest]) (*connect.Response[sdp_go.ConnectGitLabResponse], error) {
+// ConnectGitLab calls until.WorkspaceService.ConnectGitLab.
+func (c *workspaceServiceClient) ConnectGitLab(ctx context.Context, req *connect.Request[sdp_go.ConnectGitLabRequest]) (*connect.Response[sdp_go.ConnectGitLabResponse], error) {
 	return c.connectGitLab.CallUnary(ctx, req)
 }
 
-// SaveGitLabSigningToken calls brent.BrentService.SaveGitLabSigningToken.
-func (c *brentServiceClient) SaveGitLabSigningToken(ctx context.Context, req *connect.Request[sdp_go.SaveGitLabSigningTokenRequest]) (*connect.Response[sdp_go.SaveGitLabSigningTokenResponse], error) {
+// SaveGitLabSigningToken calls until.WorkspaceService.SaveGitLabSigningToken.
+func (c *workspaceServiceClient) SaveGitLabSigningToken(ctx context.Context, req *connect.Request[sdp_go.SaveGitLabSigningTokenRequest]) (*connect.Response[sdp_go.SaveGitLabSigningTokenResponse], error) {
 	return c.saveGitLabSigningToken.CallUnary(ctx, req)
 }
 
-// UpsertMyVerifiedBinding calls brent.BrentService.UpsertMyVerifiedBinding.
-func (c *brentServiceClient) UpsertMyVerifiedBinding(ctx context.Context, req *connect.Request[sdp_go.UpsertMyVerifiedBindingRequest]) (*connect.Response[sdp_go.UpsertMyVerifiedBindingResponse], error) {
+// UpsertMyVerifiedBinding calls until.WorkspaceService.UpsertMyVerifiedBinding.
+func (c *workspaceServiceClient) UpsertMyVerifiedBinding(ctx context.Context, req *connect.Request[sdp_go.UpsertMyVerifiedBindingRequest]) (*connect.Response[sdp_go.UpsertMyVerifiedBindingResponse], error) {
 	return c.upsertMyVerifiedBinding.CallUnary(ctx, req)
 }
 
-// ListMyBindings calls brent.BrentService.ListMyBindings.
-func (c *brentServiceClient) ListMyBindings(ctx context.Context, req *connect.Request[sdp_go.ListMyBindingsRequest]) (*connect.Response[sdp_go.ListMyBindingsResponse], error) {
+// ListMyBindings calls until.WorkspaceService.ListMyBindings.
+func (c *workspaceServiceClient) ListMyBindings(ctx context.Context, req *connect.Request[sdp_go.ListMyBindingsRequest]) (*connect.Response[sdp_go.ListMyBindingsResponse], error) {
 	return c.listMyBindings.CallUnary(ctx, req)
 }
 
-// GetMyNotificationPreferences calls brent.BrentService.GetMyNotificationPreferences.
-func (c *brentServiceClient) GetMyNotificationPreferences(ctx context.Context, req *connect.Request[sdp_go.GetMyNotificationPreferencesRequest]) (*connect.Response[sdp_go.GetMyNotificationPreferencesResponse], error) {
+// GetMyNotificationPreferences calls until.WorkspaceService.GetMyNotificationPreferences.
+func (c *workspaceServiceClient) GetMyNotificationPreferences(ctx context.Context, req *connect.Request[sdp_go.GetMyNotificationPreferencesRequest]) (*connect.Response[sdp_go.GetMyNotificationPreferencesResponse], error) {
 	return c.getMyNotificationPreferences.CallUnary(ctx, req)
 }
 
-// UpdateMyNotificationPreferences calls brent.BrentService.UpdateMyNotificationPreferences.
-func (c *brentServiceClient) UpdateMyNotificationPreferences(ctx context.Context, req *connect.Request[sdp_go.UpdateMyNotificationPreferencesRequest]) (*connect.Response[sdp_go.UpdateMyNotificationPreferencesResponse], error) {
+// UpdateMyNotificationPreferences calls until.WorkspaceService.UpdateMyNotificationPreferences.
+func (c *workspaceServiceClient) UpdateMyNotificationPreferences(ctx context.Context, req *connect.Request[sdp_go.UpdateMyNotificationPreferencesRequest]) (*connect.Response[sdp_go.UpdateMyNotificationPreferencesResponse], error) {
 	return c.updateMyNotificationPreferences.CallUnary(ctx, req)
 }
 
-// RegisterMyPushSubscription calls brent.BrentService.RegisterMyPushSubscription.
-func (c *brentServiceClient) RegisterMyPushSubscription(ctx context.Context, req *connect.Request[sdp_go.RegisterMyPushSubscriptionRequest]) (*connect.Response[sdp_go.RegisterMyPushSubscriptionResponse], error) {
+// RegisterMyPushSubscription calls until.WorkspaceService.RegisterMyPushSubscription.
+func (c *workspaceServiceClient) RegisterMyPushSubscription(ctx context.Context, req *connect.Request[sdp_go.RegisterMyPushSubscriptionRequest]) (*connect.Response[sdp_go.RegisterMyPushSubscriptionResponse], error) {
 	return c.registerMyPushSubscription.CallUnary(ctx, req)
 }
 
-// GetWebPushPublicKey calls brent.BrentService.GetWebPushPublicKey.
-func (c *brentServiceClient) GetWebPushPublicKey(ctx context.Context, req *connect.Request[sdp_go.GetWebPushPublicKeyRequest]) (*connect.Response[sdp_go.GetWebPushPublicKeyResponse], error) {
+// GetWebPushPublicKey calls until.WorkspaceService.GetWebPushPublicKey.
+func (c *workspaceServiceClient) GetWebPushPublicKey(ctx context.Context, req *connect.Request[sdp_go.GetWebPushPublicKeyRequest]) (*connect.Response[sdp_go.GetWebPushPublicKeyResponse], error) {
 	return c.getWebPushPublicKey.CallUnary(ctx, req)
 }
 
-// UpdateMyDisplayName calls brent.BrentService.UpdateMyDisplayName.
-func (c *brentServiceClient) UpdateMyDisplayName(ctx context.Context, req *connect.Request[sdp_go.UpdateMyDisplayNameRequest]) (*connect.Response[sdp_go.UpdateMyDisplayNameResponse], error) {
+// UpdateMyDisplayName calls until.WorkspaceService.UpdateMyDisplayName.
+func (c *workspaceServiceClient) UpdateMyDisplayName(ctx context.Context, req *connect.Request[sdp_go.UpdateMyDisplayNameRequest]) (*connect.Response[sdp_go.UpdateMyDisplayNameResponse], error) {
 	return c.updateMyDisplayName.CallUnary(ctx, req)
 }
 
-// GetBrentSettings calls brent.BrentService.GetBrentSettings.
-func (c *brentServiceClient) GetBrentSettings(ctx context.Context, req *connect.Request[sdp_go.GetBrentSettingsRequest]) (*connect.Response[sdp_go.GetBrentSettingsResponse], error) {
-	return c.getBrentSettings.CallUnary(ctx, req)
+// GetPlanCheckSettings calls until.WorkspaceService.GetPlanCheckSettings.
+func (c *workspaceServiceClient) GetPlanCheckSettings(ctx context.Context, req *connect.Request[sdp_go.GetPlanCheckSettingsRequest]) (*connect.Response[sdp_go.GetPlanCheckSettingsResponse], error) {
+	return c.getPlanCheckSettings.CallUnary(ctx, req)
 }
 
-// UpdateBrentSettings calls brent.BrentService.UpdateBrentSettings.
-func (c *brentServiceClient) UpdateBrentSettings(ctx context.Context, req *connect.Request[sdp_go.UpdateBrentSettingsRequest]) (*connect.Response[sdp_go.UpdateBrentSettingsResponse], error) {
-	return c.updateBrentSettings.CallUnary(ctx, req)
+// UpdatePlanCheckSettings calls until.WorkspaceService.UpdatePlanCheckSettings.
+func (c *workspaceServiceClient) UpdatePlanCheckSettings(ctx context.Context, req *connect.Request[sdp_go.UpdatePlanCheckSettingsRequest]) (*connect.Response[sdp_go.UpdatePlanCheckSettingsResponse], error) {
+	return c.updatePlanCheckSettings.CallUnary(ctx, req)
 }
 
-// ListIntegrationCatalogue calls brent.BrentService.ListIntegrationCatalogue.
-func (c *brentServiceClient) ListIntegrationCatalogue(ctx context.Context, req *connect.Request[sdp_go.ListIntegrationCatalogueRequest]) (*connect.Response[sdp_go.ListIntegrationCatalogueResponse], error) {
+// ListIntegrationCatalogue calls until.WorkspaceService.ListIntegrationCatalogue.
+func (c *workspaceServiceClient) ListIntegrationCatalogue(ctx context.Context, req *connect.Request[sdp_go.ListIntegrationCatalogueRequest]) (*connect.Response[sdp_go.ListIntegrationCatalogueResponse], error) {
 	return c.listIntegrationCatalogue.CallUnary(ctx, req)
 }
 
-// CreateWorkspace calls brent.BrentService.CreateWorkspace.
-func (c *brentServiceClient) CreateWorkspace(ctx context.Context, req *connect.Request[sdp_go.CreateWorkspaceRequest]) (*connect.Response[sdp_go.CreateWorkspaceResponse], error) {
+// CreateWorkspace calls until.WorkspaceService.CreateWorkspace.
+func (c *workspaceServiceClient) CreateWorkspace(ctx context.Context, req *connect.Request[sdp_go.CreateWorkspaceRequest]) (*connect.Response[sdp_go.CreateWorkspaceResponse], error) {
 	return c.createWorkspace.CallUnary(ctx, req)
 }
 
-// ListMyWorkspaces calls brent.BrentService.ListMyWorkspaces.
-func (c *brentServiceClient) ListMyWorkspaces(ctx context.Context, req *connect.Request[sdp_go.ListMyWorkspacesRequest]) (*connect.Response[sdp_go.ListMyWorkspacesResponse], error) {
+// ListMyWorkspaces calls until.WorkspaceService.ListMyWorkspaces.
+func (c *workspaceServiceClient) ListMyWorkspaces(ctx context.Context, req *connect.Request[sdp_go.ListMyWorkspacesRequest]) (*connect.Response[sdp_go.ListMyWorkspacesResponse], error) {
 	return c.listMyWorkspaces.CallUnary(ctx, req)
 }
 
-// DiscoverLoginRecoveryCandidates calls brent.BrentService.DiscoverLoginRecoveryCandidates.
-func (c *brentServiceClient) DiscoverLoginRecoveryCandidates(ctx context.Context, req *connect.Request[sdp_go.DiscoverLoginRecoveryCandidatesRequest]) (*connect.Response[sdp_go.DiscoverLoginRecoveryCandidatesResponse], error) {
+// DiscoverLoginRecoveryCandidates calls until.WorkspaceService.DiscoverLoginRecoveryCandidates.
+func (c *workspaceServiceClient) DiscoverLoginRecoveryCandidates(ctx context.Context, req *connect.Request[sdp_go.DiscoverLoginRecoveryCandidatesRequest]) (*connect.Response[sdp_go.DiscoverLoginRecoveryCandidatesResponse], error) {
 	return c.discoverLoginRecoveryCandidates.CallUnary(ctx, req)
 }
 
-// RenameWorkspace calls brent.BrentService.RenameWorkspace.
-func (c *brentServiceClient) RenameWorkspace(ctx context.Context, req *connect.Request[sdp_go.RenameWorkspaceRequest]) (*connect.Response[sdp_go.RenameWorkspaceResponse], error) {
+// RenameWorkspace calls until.WorkspaceService.RenameWorkspace.
+func (c *workspaceServiceClient) RenameWorkspace(ctx context.Context, req *connect.Request[sdp_go.RenameWorkspaceRequest]) (*connect.Response[sdp_go.RenameWorkspaceResponse], error) {
 	return c.renameWorkspace.CallUnary(ctx, req)
 }
 
-// UpdateWorkspaceBranding calls brent.BrentService.UpdateWorkspaceBranding.
-func (c *brentServiceClient) UpdateWorkspaceBranding(ctx context.Context, req *connect.Request[sdp_go.UpdateWorkspaceBrandingRequest]) (*connect.Response[sdp_go.UpdateWorkspaceBrandingResponse], error) {
+// UpdateWorkspaceBranding calls until.WorkspaceService.UpdateWorkspaceBranding.
+func (c *workspaceServiceClient) UpdateWorkspaceBranding(ctx context.Context, req *connect.Request[sdp_go.UpdateWorkspaceBrandingRequest]) (*connect.Response[sdp_go.UpdateWorkspaceBrandingResponse], error) {
 	return c.updateWorkspaceBranding.CallUnary(ctx, req)
 }
 
-// CompleteWorkspaceOnboarding calls brent.BrentService.CompleteWorkspaceOnboarding.
-func (c *brentServiceClient) CompleteWorkspaceOnboarding(ctx context.Context, req *connect.Request[sdp_go.CompleteWorkspaceOnboardingRequest]) (*connect.Response[sdp_go.CompleteWorkspaceOnboardingResponse], error) {
+// CompleteWorkspaceOnboarding calls until.WorkspaceService.CompleteWorkspaceOnboarding.
+func (c *workspaceServiceClient) CompleteWorkspaceOnboarding(ctx context.Context, req *connect.Request[sdp_go.CompleteWorkspaceOnboardingRequest]) (*connect.Response[sdp_go.CompleteWorkspaceOnboardingResponse], error) {
 	return c.completeWorkspaceOnboarding.CallUnary(ctx, req)
 }
 
-// DeleteWorkspace calls brent.BrentService.DeleteWorkspace.
-func (c *brentServiceClient) DeleteWorkspace(ctx context.Context, req *connect.Request[sdp_go.DeleteWorkspaceRequest]) (*connect.Response[sdp_go.DeleteWorkspaceResponse], error) {
+// DeleteWorkspace calls until.WorkspaceService.DeleteWorkspace.
+func (c *workspaceServiceClient) DeleteWorkspace(ctx context.Context, req *connect.Request[sdp_go.DeleteWorkspaceRequest]) (*connect.Response[sdp_go.DeleteWorkspaceResponse], error) {
 	return c.deleteWorkspace.CallUnary(ctx, req)
 }
 
-// ListJoinableWorkspaces calls brent.BrentService.ListJoinableWorkspaces.
-func (c *brentServiceClient) ListJoinableWorkspaces(ctx context.Context, req *connect.Request[sdp_go.ListJoinableWorkspacesRequest]) (*connect.Response[sdp_go.ListJoinableWorkspacesResponse], error) {
+// ListJoinableWorkspaces calls until.WorkspaceService.ListJoinableWorkspaces.
+func (c *workspaceServiceClient) ListJoinableWorkspaces(ctx context.Context, req *connect.Request[sdp_go.ListJoinableWorkspacesRequest]) (*connect.Response[sdp_go.ListJoinableWorkspacesResponse], error) {
 	return c.listJoinableWorkspaces.CallUnary(ctx, req)
 }
 
-// JoinWorkspace calls brent.BrentService.JoinWorkspace.
-func (c *brentServiceClient) JoinWorkspace(ctx context.Context, req *connect.Request[sdp_go.JoinWorkspaceRequest]) (*connect.Response[sdp_go.JoinWorkspaceResponse], error) {
+// JoinWorkspace calls until.WorkspaceService.JoinWorkspace.
+func (c *workspaceServiceClient) JoinWorkspace(ctx context.Context, req *connect.Request[sdp_go.JoinWorkspaceRequest]) (*connect.Response[sdp_go.JoinWorkspaceResponse], error) {
 	return c.joinWorkspace.CallUnary(ctx, req)
 }
 
-// CreateInvitation calls brent.BrentService.CreateInvitation.
-func (c *brentServiceClient) CreateInvitation(ctx context.Context, req *connect.Request[sdp_go.CreateInvitationRequest]) (*connect.Response[sdp_go.CreateInvitationResponse], error) {
+// CreateInvitation calls until.WorkspaceService.CreateInvitation.
+func (c *workspaceServiceClient) CreateInvitation(ctx context.Context, req *connect.Request[sdp_go.CreateInvitationRequest]) (*connect.Response[sdp_go.CreateInvitationResponse], error) {
 	return c.createInvitation.CallUnary(ctx, req)
 }
 
-// CreateInvitations calls brent.BrentService.CreateInvitations.
-func (c *brentServiceClient) CreateInvitations(ctx context.Context, req *connect.Request[sdp_go.CreateInvitationsRequest]) (*connect.Response[sdp_go.CreateInvitationsResponse], error) {
+// CreateInvitations calls until.WorkspaceService.CreateInvitations.
+func (c *workspaceServiceClient) CreateInvitations(ctx context.Context, req *connect.Request[sdp_go.CreateInvitationsRequest]) (*connect.Response[sdp_go.CreateInvitationsResponse], error) {
 	return c.createInvitations.CallUnary(ctx, req)
 }
 
-// AcceptInvitation calls brent.BrentService.AcceptInvitation.
-func (c *brentServiceClient) AcceptInvitation(ctx context.Context, req *connect.Request[sdp_go.AcceptInvitationRequest]) (*connect.Response[sdp_go.AcceptInvitationResponse], error) {
+// AcceptInvitation calls until.WorkspaceService.AcceptInvitation.
+func (c *workspaceServiceClient) AcceptInvitation(ctx context.Context, req *connect.Request[sdp_go.AcceptInvitationRequest]) (*connect.Response[sdp_go.AcceptInvitationResponse], error) {
 	return c.acceptInvitation.CallUnary(ctx, req)
 }
 
-// ListWorkspaceMembers calls brent.BrentService.ListWorkspaceMembers.
-func (c *brentServiceClient) ListWorkspaceMembers(ctx context.Context, req *connect.Request[sdp_go.ListWorkspaceMembersRequest]) (*connect.Response[sdp_go.ListWorkspaceMembersResponse], error) {
+// ListWorkspaceMembers calls until.WorkspaceService.ListWorkspaceMembers.
+func (c *workspaceServiceClient) ListWorkspaceMembers(ctx context.Context, req *connect.Request[sdp_go.ListWorkspaceMembersRequest]) (*connect.Response[sdp_go.ListWorkspaceMembersResponse], error) {
 	return c.listWorkspaceMembers.CallUnary(ctx, req)
 }
 
-// ResendInvitation calls brent.BrentService.ResendInvitation.
-func (c *brentServiceClient) ResendInvitation(ctx context.Context, req *connect.Request[sdp_go.ResendInvitationRequest]) (*connect.Response[sdp_go.ResendInvitationResponse], error) {
+// ResendInvitation calls until.WorkspaceService.ResendInvitation.
+func (c *workspaceServiceClient) ResendInvitation(ctx context.Context, req *connect.Request[sdp_go.ResendInvitationRequest]) (*connect.Response[sdp_go.ResendInvitationResponse], error) {
 	return c.resendInvitation.CallUnary(ctx, req)
 }
 
-// RevokeInvitation calls brent.BrentService.RevokeInvitation.
-func (c *brentServiceClient) RevokeInvitation(ctx context.Context, req *connect.Request[sdp_go.RevokeInvitationRequest]) (*connect.Response[sdp_go.RevokeInvitationResponse], error) {
+// RevokeInvitation calls until.WorkspaceService.RevokeInvitation.
+func (c *workspaceServiceClient) RevokeInvitation(ctx context.Context, req *connect.Request[sdp_go.RevokeInvitationRequest]) (*connect.Response[sdp_go.RevokeInvitationResponse], error) {
 	return c.revokeInvitation.CallUnary(ctx, req)
 }
 
-// RemoveWorkspaceMember calls brent.BrentService.RemoveWorkspaceMember.
-func (c *brentServiceClient) RemoveWorkspaceMember(ctx context.Context, req *connect.Request[sdp_go.RemoveWorkspaceMemberRequest]) (*connect.Response[sdp_go.RemoveWorkspaceMemberResponse], error) {
+// RemoveWorkspaceMember calls until.WorkspaceService.RemoveWorkspaceMember.
+func (c *workspaceServiceClient) RemoveWorkspaceMember(ctx context.Context, req *connect.Request[sdp_go.RemoveWorkspaceMemberRequest]) (*connect.Response[sdp_go.RemoveWorkspaceMemberResponse], error) {
 	return c.removeWorkspaceMember.CallUnary(ctx, req)
 }
 
-// UpdateWorkspaceMemberRole calls brent.BrentService.UpdateWorkspaceMemberRole.
-func (c *brentServiceClient) UpdateWorkspaceMemberRole(ctx context.Context, req *connect.Request[sdp_go.UpdateWorkspaceMemberRoleRequest]) (*connect.Response[sdp_go.UpdateWorkspaceMemberRoleResponse], error) {
+// UpdateWorkspaceMemberRole calls until.WorkspaceService.UpdateWorkspaceMemberRole.
+func (c *workspaceServiceClient) UpdateWorkspaceMemberRole(ctx context.Context, req *connect.Request[sdp_go.UpdateWorkspaceMemberRoleRequest]) (*connect.Response[sdp_go.UpdateWorkspaceMemberRoleResponse], error) {
 	return c.updateWorkspaceMemberRole.CallUnary(ctx, req)
 }
 
-// ListApprovedEmailDomains calls brent.BrentService.ListApprovedEmailDomains.
-func (c *brentServiceClient) ListApprovedEmailDomains(ctx context.Context, req *connect.Request[sdp_go.ListApprovedEmailDomainsRequest]) (*connect.Response[sdp_go.ListApprovedEmailDomainsResponse], error) {
+// ListApprovedEmailDomains calls until.WorkspaceService.ListApprovedEmailDomains.
+func (c *workspaceServiceClient) ListApprovedEmailDomains(ctx context.Context, req *connect.Request[sdp_go.ListApprovedEmailDomainsRequest]) (*connect.Response[sdp_go.ListApprovedEmailDomainsResponse], error) {
 	return c.listApprovedEmailDomains.CallUnary(ctx, req)
 }
 
-// AddApprovedEmailDomain calls brent.BrentService.AddApprovedEmailDomain.
-func (c *brentServiceClient) AddApprovedEmailDomain(ctx context.Context, req *connect.Request[sdp_go.AddApprovedEmailDomainRequest]) (*connect.Response[sdp_go.AddApprovedEmailDomainResponse], error) {
+// AddApprovedEmailDomain calls until.WorkspaceService.AddApprovedEmailDomain.
+func (c *workspaceServiceClient) AddApprovedEmailDomain(ctx context.Context, req *connect.Request[sdp_go.AddApprovedEmailDomainRequest]) (*connect.Response[sdp_go.AddApprovedEmailDomainResponse], error) {
 	return c.addApprovedEmailDomain.CallUnary(ctx, req)
 }
 
-// VerifyApprovedEmailDomain calls brent.BrentService.VerifyApprovedEmailDomain.
-func (c *brentServiceClient) VerifyApprovedEmailDomain(ctx context.Context, req *connect.Request[sdp_go.VerifyApprovedEmailDomainRequest]) (*connect.Response[sdp_go.VerifyApprovedEmailDomainResponse], error) {
+// VerifyApprovedEmailDomain calls until.WorkspaceService.VerifyApprovedEmailDomain.
+func (c *workspaceServiceClient) VerifyApprovedEmailDomain(ctx context.Context, req *connect.Request[sdp_go.VerifyApprovedEmailDomainRequest]) (*connect.Response[sdp_go.VerifyApprovedEmailDomainResponse], error) {
 	return c.verifyApprovedEmailDomain.CallUnary(ctx, req)
 }
 
-// ResendApprovedEmailDomainCode calls brent.BrentService.ResendApprovedEmailDomainCode.
-func (c *brentServiceClient) ResendApprovedEmailDomainCode(ctx context.Context, req *connect.Request[sdp_go.ResendApprovedEmailDomainCodeRequest]) (*connect.Response[sdp_go.ResendApprovedEmailDomainCodeResponse], error) {
+// ResendApprovedEmailDomainCode calls until.WorkspaceService.ResendApprovedEmailDomainCode.
+func (c *workspaceServiceClient) ResendApprovedEmailDomainCode(ctx context.Context, req *connect.Request[sdp_go.ResendApprovedEmailDomainCodeRequest]) (*connect.Response[sdp_go.ResendApprovedEmailDomainCodeResponse], error) {
 	return c.resendApprovedEmailDomainCode.CallUnary(ctx, req)
 }
 
-// DeleteApprovedEmailDomain calls brent.BrentService.DeleteApprovedEmailDomain.
-func (c *brentServiceClient) DeleteApprovedEmailDomain(ctx context.Context, req *connect.Request[sdp_go.DeleteApprovedEmailDomainRequest]) (*connect.Response[sdp_go.DeleteApprovedEmailDomainResponse], error) {
+// DeleteApprovedEmailDomain calls until.WorkspaceService.DeleteApprovedEmailDomain.
+func (c *workspaceServiceClient) DeleteApprovedEmailDomain(ctx context.Context, req *connect.Request[sdp_go.DeleteApprovedEmailDomainRequest]) (*connect.Response[sdp_go.DeleteApprovedEmailDomainResponse], error) {
 	return c.deleteApprovedEmailDomain.CallUnary(ctx, req)
 }
 
-// GetWorkspaceLLMCredentialStatus calls brent.BrentService.GetWorkspaceLLMCredentialStatus.
-func (c *brentServiceClient) GetWorkspaceLLMCredentialStatus(ctx context.Context, req *connect.Request[sdp_go.GetWorkspaceLLMCredentialStatusRequest]) (*connect.Response[sdp_go.GetWorkspaceLLMCredentialStatusResponse], error) {
+// GetWorkspaceLLMCredentialStatus calls until.WorkspaceService.GetWorkspaceLLMCredentialStatus.
+func (c *workspaceServiceClient) GetWorkspaceLLMCredentialStatus(ctx context.Context, req *connect.Request[sdp_go.GetWorkspaceLLMCredentialStatusRequest]) (*connect.Response[sdp_go.GetWorkspaceLLMCredentialStatusResponse], error) {
 	return c.getWorkspaceLLMCredentialStatus.CallUnary(ctx, req)
 }
 
-// SetWorkspaceLLMCredential calls brent.BrentService.SetWorkspaceLLMCredential.
-func (c *brentServiceClient) SetWorkspaceLLMCredential(ctx context.Context, req *connect.Request[sdp_go.SetWorkspaceLLMCredentialRequest]) (*connect.Response[sdp_go.SetWorkspaceLLMCredentialResponse], error) {
+// SetWorkspaceLLMCredential calls until.WorkspaceService.SetWorkspaceLLMCredential.
+func (c *workspaceServiceClient) SetWorkspaceLLMCredential(ctx context.Context, req *connect.Request[sdp_go.SetWorkspaceLLMCredentialRequest]) (*connect.Response[sdp_go.SetWorkspaceLLMCredentialResponse], error) {
 	return c.setWorkspaceLLMCredential.CallUnary(ctx, req)
 }
 
-// DeleteWorkspaceLLMCredential calls brent.BrentService.DeleteWorkspaceLLMCredential.
-func (c *brentServiceClient) DeleteWorkspaceLLMCredential(ctx context.Context, req *connect.Request[sdp_go.DeleteWorkspaceLLMCredentialRequest]) (*connect.Response[sdp_go.DeleteWorkspaceLLMCredentialResponse], error) {
+// DeleteWorkspaceLLMCredential calls until.WorkspaceService.DeleteWorkspaceLLMCredential.
+func (c *workspaceServiceClient) DeleteWorkspaceLLMCredential(ctx context.Context, req *connect.Request[sdp_go.DeleteWorkspaceLLMCredentialRequest]) (*connect.Response[sdp_go.DeleteWorkspaceLLMCredentialResponse], error) {
 	return c.deleteWorkspaceLLMCredential.CallUnary(ctx, req)
 }
 
-// GetMyCursorCredentialStatus calls brent.BrentService.GetMyCursorCredentialStatus.
-func (c *brentServiceClient) GetMyCursorCredentialStatus(ctx context.Context, req *connect.Request[sdp_go.GetMyCursorCredentialStatusRequest]) (*connect.Response[sdp_go.GetMyCursorCredentialStatusResponse], error) {
+// GetMyCursorCredentialStatus calls until.WorkspaceService.GetMyCursorCredentialStatus.
+func (c *workspaceServiceClient) GetMyCursorCredentialStatus(ctx context.Context, req *connect.Request[sdp_go.GetMyCursorCredentialStatusRequest]) (*connect.Response[sdp_go.GetMyCursorCredentialStatusResponse], error) {
 	return c.getMyCursorCredentialStatus.CallUnary(ctx, req)
 }
 
-// SetMyCursorCredential calls brent.BrentService.SetMyCursorCredential.
-func (c *brentServiceClient) SetMyCursorCredential(ctx context.Context, req *connect.Request[sdp_go.SetMyCursorCredentialRequest]) (*connect.Response[sdp_go.SetMyCursorCredentialResponse], error) {
+// SetMyCursorCredential calls until.WorkspaceService.SetMyCursorCredential.
+func (c *workspaceServiceClient) SetMyCursorCredential(ctx context.Context, req *connect.Request[sdp_go.SetMyCursorCredentialRequest]) (*connect.Response[sdp_go.SetMyCursorCredentialResponse], error) {
 	return c.setMyCursorCredential.CallUnary(ctx, req)
 }
 
-// DeleteMyCursorCredential calls brent.BrentService.DeleteMyCursorCredential.
-func (c *brentServiceClient) DeleteMyCursorCredential(ctx context.Context, req *connect.Request[sdp_go.DeleteMyCursorCredentialRequest]) (*connect.Response[sdp_go.DeleteMyCursorCredentialResponse], error) {
+// DeleteMyCursorCredential calls until.WorkspaceService.DeleteMyCursorCredential.
+func (c *workspaceServiceClient) DeleteMyCursorCredential(ctx context.Context, req *connect.Request[sdp_go.DeleteMyCursorCredentialRequest]) (*connect.Response[sdp_go.DeleteMyCursorCredentialResponse], error) {
 	return c.deleteMyCursorCredential.CallUnary(ctx, req)
 }
 
-// GetWorkspaceIntegrationRoles calls brent.BrentService.GetWorkspaceIntegrationRoles.
-func (c *brentServiceClient) GetWorkspaceIntegrationRoles(ctx context.Context, req *connect.Request[sdp_go.GetWorkspaceIntegrationRolesRequest]) (*connect.Response[sdp_go.GetWorkspaceIntegrationRolesResponse], error) {
+// GetWorkspaceIntegrationRoles calls until.WorkspaceService.GetWorkspaceIntegrationRoles.
+func (c *workspaceServiceClient) GetWorkspaceIntegrationRoles(ctx context.Context, req *connect.Request[sdp_go.GetWorkspaceIntegrationRolesRequest]) (*connect.Response[sdp_go.GetWorkspaceIntegrationRolesResponse], error) {
 	return c.getWorkspaceIntegrationRoles.CallUnary(ctx, req)
 }
 
-// SetWorkspaceIntegrationRoles calls brent.BrentService.SetWorkspaceIntegrationRoles.
-func (c *brentServiceClient) SetWorkspaceIntegrationRoles(ctx context.Context, req *connect.Request[sdp_go.SetWorkspaceIntegrationRolesRequest]) (*connect.Response[sdp_go.SetWorkspaceIntegrationRolesResponse], error) {
+// SetWorkspaceIntegrationRoles calls until.WorkspaceService.SetWorkspaceIntegrationRoles.
+func (c *workspaceServiceClient) SetWorkspaceIntegrationRoles(ctx context.Context, req *connect.Request[sdp_go.SetWorkspaceIntegrationRolesRequest]) (*connect.Response[sdp_go.SetWorkspaceIntegrationRolesResponse], error) {
 	return c.setWorkspaceIntegrationRoles.CallUnary(ctx, req)
 }
 
-// ResendVerificationEmail calls brent.BrentService.ResendVerificationEmail.
-func (c *brentServiceClient) ResendVerificationEmail(ctx context.Context, req *connect.Request[sdp_go.ResendVerificationEmailRequest]) (*connect.Response[sdp_go.ResendVerificationEmailResponse], error) {
+// ResendVerificationEmail calls until.WorkspaceService.ResendVerificationEmail.
+func (c *workspaceServiceClient) ResendVerificationEmail(ctx context.Context, req *connect.Request[sdp_go.ResendVerificationEmailRequest]) (*connect.Response[sdp_go.ResendVerificationEmailResponse], error) {
 	return c.resendVerificationEmail.CallUnary(ctx, req)
 }
 
-// BrentServiceHandler is an implementation of the brent.BrentService service.
-type BrentServiceHandler interface {
+// WorkspaceServiceHandler is an implementation of the until.WorkspaceService service.
+type WorkspaceServiceHandler interface {
 	// Lists open pull requests for the caller's account from the pull_requests
 	// table (every repo Brent has webhooks for), sorted by updated_at DESC.
 	// Gated on brent:read.
@@ -1298,10 +1288,10 @@ type BrentServiceHandler interface {
 	// Returns Brent tenant settings for the given account. Customer callers
 	// use their JWT account; brent-area51 operators may pass any account_name
 	// when holding admin:write.
-	GetBrentSettings(context.Context, *connect.Request[sdp_go.GetBrentSettingsRequest]) (*connect.Response[sdp_go.GetBrentSettingsResponse], error)
+	GetPlanCheckSettings(context.Context, *connect.Request[sdp_go.GetPlanCheckSettingsRequest]) (*connect.Response[sdp_go.GetPlanCheckSettingsResponse], error)
 	// PATCH semantics for Brent tenant settings. Only set fields are written;
 	// audit columns are server-stamped.
-	UpdateBrentSettings(context.Context, *connect.Request[sdp_go.UpdateBrentSettingsRequest]) (*connect.Response[sdp_go.UpdateBrentSettingsResponse], error)
+	UpdatePlanCheckSettings(context.Context, *connect.Request[sdp_go.UpdatePlanCheckSettingsRequest]) (*connect.Response[sdp_go.UpdatePlanCheckSettingsResponse], error)
 	// Returns the account-scoped integration marketplace catalogue: Composio cache
 	// rows plus synthesised first-party and BYO entries with per-account connection
 	// state. Gated on brent:read.
@@ -1470,720 +1460,720 @@ type BrentServiceHandler interface {
 	ResendVerificationEmail(context.Context, *connect.Request[sdp_go.ResendVerificationEmailRequest]) (*connect.Response[sdp_go.ResendVerificationEmailResponse], error)
 }
 
-// NewBrentServiceHandler builds an HTTP handler from the service implementation. It returns the
+// NewWorkspaceServiceHandler builds an HTTP handler from the service implementation. It returns the
 // path on which to mount the handler and the handler itself.
 //
 // By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
 // and JSON codecs. They also support gzip compression.
-func NewBrentServiceHandler(svc BrentServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
-	brentServiceMethods := sdp_go.File_brent_proto.Services().ByName("BrentService").Methods()
-	brentServiceListOpenPullRequestsHandler := connect.NewUnaryHandler(
-		BrentServiceListOpenPullRequestsProcedure,
+func NewWorkspaceServiceHandler(svc WorkspaceServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
+	workspaceServiceMethods := sdp_go.File_brent_proto.Services().ByName("WorkspaceService").Methods()
+	workspaceServiceListOpenPullRequestsHandler := connect.NewUnaryHandler(
+		WorkspaceServiceListOpenPullRequestsProcedure,
 		svc.ListOpenPullRequests,
-		connect.WithSchema(brentServiceMethods.ByName("ListOpenPullRequests")),
+		connect.WithSchema(workspaceServiceMethods.ByName("ListOpenPullRequests")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceGetPullRequestHandler := connect.NewUnaryHandler(
-		BrentServiceGetPullRequestProcedure,
+	workspaceServiceGetPullRequestHandler := connect.NewUnaryHandler(
+		WorkspaceServiceGetPullRequestProcedure,
 		svc.GetPullRequest,
-		connect.WithSchema(brentServiceMethods.ByName("GetPullRequest")),
+		connect.WithSchema(workspaceServiceMethods.ByName("GetPullRequest")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceGetPrincipalStatusHandler := connect.NewUnaryHandler(
-		BrentServiceGetPrincipalStatusProcedure,
+	workspaceServiceGetPrincipalStatusHandler := connect.NewUnaryHandler(
+		WorkspaceServiceGetPrincipalStatusProcedure,
 		svc.GetPrincipalStatus,
-		connect.WithSchema(brentServiceMethods.ByName("GetPrincipalStatus")),
+		connect.WithSchema(workspaceServiceMethods.ByName("GetPrincipalStatus")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceGetPlanPromptHandler := connect.NewUnaryHandler(
-		BrentServiceGetPlanPromptProcedure,
+	workspaceServiceGetPlanPromptHandler := connect.NewUnaryHandler(
+		WorkspaceServiceGetPlanPromptProcedure,
 		svc.GetPlanPrompt,
-		connect.WithSchema(brentServiceMethods.ByName("GetPlanPrompt")),
+		connect.WithSchema(workspaceServiceMethods.ByName("GetPlanPrompt")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceGetIntegrationConnectURLHandler := connect.NewUnaryHandler(
-		BrentServiceGetIntegrationConnectURLProcedure,
+	workspaceServiceGetIntegrationConnectURLHandler := connect.NewUnaryHandler(
+		WorkspaceServiceGetIntegrationConnectURLProcedure,
 		svc.GetIntegrationConnectURL,
-		connect.WithSchema(brentServiceMethods.ByName("GetIntegrationConnectURL")),
+		connect.WithSchema(workspaceServiceMethods.ByName("GetIntegrationConnectURL")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceDisconnectIntegrationHandler := connect.NewUnaryHandler(
-		BrentServiceDisconnectIntegrationProcedure,
+	workspaceServiceDisconnectIntegrationHandler := connect.NewUnaryHandler(
+		WorkspaceServiceDisconnectIntegrationProcedure,
 		svc.DisconnectIntegration,
-		connect.WithSchema(brentServiceMethods.ByName("DisconnectIntegration")),
+		connect.WithSchema(workspaceServiceMethods.ByName("DisconnectIntegration")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceConnectByoHttpMcpHandler := connect.NewUnaryHandler(
-		BrentServiceConnectByoHttpMcpProcedure,
+	workspaceServiceConnectByoHttpMcpHandler := connect.NewUnaryHandler(
+		WorkspaceServiceConnectByoHttpMcpProcedure,
 		svc.ConnectByoHttpMcp,
-		connect.WithSchema(brentServiceMethods.ByName("ConnectByoHttpMcp")),
+		connect.WithSchema(workspaceServiceMethods.ByName("ConnectByoHttpMcp")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceGetGitLabConnectionHandler := connect.NewUnaryHandler(
-		BrentServiceGetGitLabConnectionProcedure,
+	workspaceServiceGetGitLabConnectionHandler := connect.NewUnaryHandler(
+		WorkspaceServiceGetGitLabConnectionProcedure,
 		svc.GetGitLabConnection,
-		connect.WithSchema(brentServiceMethods.ByName("GetGitLabConnection")),
+		connect.WithSchema(workspaceServiceMethods.ByName("GetGitLabConnection")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceConnectGitLabHandler := connect.NewUnaryHandler(
-		BrentServiceConnectGitLabProcedure,
+	workspaceServiceConnectGitLabHandler := connect.NewUnaryHandler(
+		WorkspaceServiceConnectGitLabProcedure,
 		svc.ConnectGitLab,
-		connect.WithSchema(brentServiceMethods.ByName("ConnectGitLab")),
+		connect.WithSchema(workspaceServiceMethods.ByName("ConnectGitLab")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceSaveGitLabSigningTokenHandler := connect.NewUnaryHandler(
-		BrentServiceSaveGitLabSigningTokenProcedure,
+	workspaceServiceSaveGitLabSigningTokenHandler := connect.NewUnaryHandler(
+		WorkspaceServiceSaveGitLabSigningTokenProcedure,
 		svc.SaveGitLabSigningToken,
-		connect.WithSchema(brentServiceMethods.ByName("SaveGitLabSigningToken")),
+		connect.WithSchema(workspaceServiceMethods.ByName("SaveGitLabSigningToken")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceUpsertMyVerifiedBindingHandler := connect.NewUnaryHandler(
-		BrentServiceUpsertMyVerifiedBindingProcedure,
+	workspaceServiceUpsertMyVerifiedBindingHandler := connect.NewUnaryHandler(
+		WorkspaceServiceUpsertMyVerifiedBindingProcedure,
 		svc.UpsertMyVerifiedBinding,
-		connect.WithSchema(brentServiceMethods.ByName("UpsertMyVerifiedBinding")),
+		connect.WithSchema(workspaceServiceMethods.ByName("UpsertMyVerifiedBinding")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceListMyBindingsHandler := connect.NewUnaryHandler(
-		BrentServiceListMyBindingsProcedure,
+	workspaceServiceListMyBindingsHandler := connect.NewUnaryHandler(
+		WorkspaceServiceListMyBindingsProcedure,
 		svc.ListMyBindings,
-		connect.WithSchema(brentServiceMethods.ByName("ListMyBindings")),
+		connect.WithSchema(workspaceServiceMethods.ByName("ListMyBindings")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceGetMyNotificationPreferencesHandler := connect.NewUnaryHandler(
-		BrentServiceGetMyNotificationPreferencesProcedure,
+	workspaceServiceGetMyNotificationPreferencesHandler := connect.NewUnaryHandler(
+		WorkspaceServiceGetMyNotificationPreferencesProcedure,
 		svc.GetMyNotificationPreferences,
-		connect.WithSchema(brentServiceMethods.ByName("GetMyNotificationPreferences")),
+		connect.WithSchema(workspaceServiceMethods.ByName("GetMyNotificationPreferences")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceUpdateMyNotificationPreferencesHandler := connect.NewUnaryHandler(
-		BrentServiceUpdateMyNotificationPreferencesProcedure,
+	workspaceServiceUpdateMyNotificationPreferencesHandler := connect.NewUnaryHandler(
+		WorkspaceServiceUpdateMyNotificationPreferencesProcedure,
 		svc.UpdateMyNotificationPreferences,
-		connect.WithSchema(brentServiceMethods.ByName("UpdateMyNotificationPreferences")),
+		connect.WithSchema(workspaceServiceMethods.ByName("UpdateMyNotificationPreferences")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceRegisterMyPushSubscriptionHandler := connect.NewUnaryHandler(
-		BrentServiceRegisterMyPushSubscriptionProcedure,
+	workspaceServiceRegisterMyPushSubscriptionHandler := connect.NewUnaryHandler(
+		WorkspaceServiceRegisterMyPushSubscriptionProcedure,
 		svc.RegisterMyPushSubscription,
-		connect.WithSchema(brentServiceMethods.ByName("RegisterMyPushSubscription")),
+		connect.WithSchema(workspaceServiceMethods.ByName("RegisterMyPushSubscription")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceGetWebPushPublicKeyHandler := connect.NewUnaryHandler(
-		BrentServiceGetWebPushPublicKeyProcedure,
+	workspaceServiceGetWebPushPublicKeyHandler := connect.NewUnaryHandler(
+		WorkspaceServiceGetWebPushPublicKeyProcedure,
 		svc.GetWebPushPublicKey,
-		connect.WithSchema(brentServiceMethods.ByName("GetWebPushPublicKey")),
+		connect.WithSchema(workspaceServiceMethods.ByName("GetWebPushPublicKey")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceUpdateMyDisplayNameHandler := connect.NewUnaryHandler(
-		BrentServiceUpdateMyDisplayNameProcedure,
+	workspaceServiceUpdateMyDisplayNameHandler := connect.NewUnaryHandler(
+		WorkspaceServiceUpdateMyDisplayNameProcedure,
 		svc.UpdateMyDisplayName,
-		connect.WithSchema(brentServiceMethods.ByName("UpdateMyDisplayName")),
+		connect.WithSchema(workspaceServiceMethods.ByName("UpdateMyDisplayName")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceGetBrentSettingsHandler := connect.NewUnaryHandler(
-		BrentServiceGetBrentSettingsProcedure,
-		svc.GetBrentSettings,
-		connect.WithSchema(brentServiceMethods.ByName("GetBrentSettings")),
+	workspaceServiceGetPlanCheckSettingsHandler := connect.NewUnaryHandler(
+		WorkspaceServiceGetPlanCheckSettingsProcedure,
+		svc.GetPlanCheckSettings,
+		connect.WithSchema(workspaceServiceMethods.ByName("GetPlanCheckSettings")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceUpdateBrentSettingsHandler := connect.NewUnaryHandler(
-		BrentServiceUpdateBrentSettingsProcedure,
-		svc.UpdateBrentSettings,
-		connect.WithSchema(brentServiceMethods.ByName("UpdateBrentSettings")),
+	workspaceServiceUpdatePlanCheckSettingsHandler := connect.NewUnaryHandler(
+		WorkspaceServiceUpdatePlanCheckSettingsProcedure,
+		svc.UpdatePlanCheckSettings,
+		connect.WithSchema(workspaceServiceMethods.ByName("UpdatePlanCheckSettings")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceListIntegrationCatalogueHandler := connect.NewUnaryHandler(
-		BrentServiceListIntegrationCatalogueProcedure,
+	workspaceServiceListIntegrationCatalogueHandler := connect.NewUnaryHandler(
+		WorkspaceServiceListIntegrationCatalogueProcedure,
 		svc.ListIntegrationCatalogue,
-		connect.WithSchema(brentServiceMethods.ByName("ListIntegrationCatalogue")),
+		connect.WithSchema(workspaceServiceMethods.ByName("ListIntegrationCatalogue")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceCreateWorkspaceHandler := connect.NewUnaryHandler(
-		BrentServiceCreateWorkspaceProcedure,
+	workspaceServiceCreateWorkspaceHandler := connect.NewUnaryHandler(
+		WorkspaceServiceCreateWorkspaceProcedure,
 		svc.CreateWorkspace,
-		connect.WithSchema(brentServiceMethods.ByName("CreateWorkspace")),
+		connect.WithSchema(workspaceServiceMethods.ByName("CreateWorkspace")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceListMyWorkspacesHandler := connect.NewUnaryHandler(
-		BrentServiceListMyWorkspacesProcedure,
+	workspaceServiceListMyWorkspacesHandler := connect.NewUnaryHandler(
+		WorkspaceServiceListMyWorkspacesProcedure,
 		svc.ListMyWorkspaces,
-		connect.WithSchema(brentServiceMethods.ByName("ListMyWorkspaces")),
+		connect.WithSchema(workspaceServiceMethods.ByName("ListMyWorkspaces")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceDiscoverLoginRecoveryCandidatesHandler := connect.NewUnaryHandler(
-		BrentServiceDiscoverLoginRecoveryCandidatesProcedure,
+	workspaceServiceDiscoverLoginRecoveryCandidatesHandler := connect.NewUnaryHandler(
+		WorkspaceServiceDiscoverLoginRecoveryCandidatesProcedure,
 		svc.DiscoverLoginRecoveryCandidates,
-		connect.WithSchema(brentServiceMethods.ByName("DiscoverLoginRecoveryCandidates")),
+		connect.WithSchema(workspaceServiceMethods.ByName("DiscoverLoginRecoveryCandidates")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceRenameWorkspaceHandler := connect.NewUnaryHandler(
-		BrentServiceRenameWorkspaceProcedure,
+	workspaceServiceRenameWorkspaceHandler := connect.NewUnaryHandler(
+		WorkspaceServiceRenameWorkspaceProcedure,
 		svc.RenameWorkspace,
-		connect.WithSchema(brentServiceMethods.ByName("RenameWorkspace")),
+		connect.WithSchema(workspaceServiceMethods.ByName("RenameWorkspace")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceUpdateWorkspaceBrandingHandler := connect.NewUnaryHandler(
-		BrentServiceUpdateWorkspaceBrandingProcedure,
+	workspaceServiceUpdateWorkspaceBrandingHandler := connect.NewUnaryHandler(
+		WorkspaceServiceUpdateWorkspaceBrandingProcedure,
 		svc.UpdateWorkspaceBranding,
-		connect.WithSchema(brentServiceMethods.ByName("UpdateWorkspaceBranding")),
+		connect.WithSchema(workspaceServiceMethods.ByName("UpdateWorkspaceBranding")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceCompleteWorkspaceOnboardingHandler := connect.NewUnaryHandler(
-		BrentServiceCompleteWorkspaceOnboardingProcedure,
+	workspaceServiceCompleteWorkspaceOnboardingHandler := connect.NewUnaryHandler(
+		WorkspaceServiceCompleteWorkspaceOnboardingProcedure,
 		svc.CompleteWorkspaceOnboarding,
-		connect.WithSchema(brentServiceMethods.ByName("CompleteWorkspaceOnboarding")),
+		connect.WithSchema(workspaceServiceMethods.ByName("CompleteWorkspaceOnboarding")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceDeleteWorkspaceHandler := connect.NewUnaryHandler(
-		BrentServiceDeleteWorkspaceProcedure,
+	workspaceServiceDeleteWorkspaceHandler := connect.NewUnaryHandler(
+		WorkspaceServiceDeleteWorkspaceProcedure,
 		svc.DeleteWorkspace,
-		connect.WithSchema(brentServiceMethods.ByName("DeleteWorkspace")),
+		connect.WithSchema(workspaceServiceMethods.ByName("DeleteWorkspace")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceListJoinableWorkspacesHandler := connect.NewUnaryHandler(
-		BrentServiceListJoinableWorkspacesProcedure,
+	workspaceServiceListJoinableWorkspacesHandler := connect.NewUnaryHandler(
+		WorkspaceServiceListJoinableWorkspacesProcedure,
 		svc.ListJoinableWorkspaces,
-		connect.WithSchema(brentServiceMethods.ByName("ListJoinableWorkspaces")),
+		connect.WithSchema(workspaceServiceMethods.ByName("ListJoinableWorkspaces")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceJoinWorkspaceHandler := connect.NewUnaryHandler(
-		BrentServiceJoinWorkspaceProcedure,
+	workspaceServiceJoinWorkspaceHandler := connect.NewUnaryHandler(
+		WorkspaceServiceJoinWorkspaceProcedure,
 		svc.JoinWorkspace,
-		connect.WithSchema(brentServiceMethods.ByName("JoinWorkspace")),
+		connect.WithSchema(workspaceServiceMethods.ByName("JoinWorkspace")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceCreateInvitationHandler := connect.NewUnaryHandler(
-		BrentServiceCreateInvitationProcedure,
+	workspaceServiceCreateInvitationHandler := connect.NewUnaryHandler(
+		WorkspaceServiceCreateInvitationProcedure,
 		svc.CreateInvitation,
-		connect.WithSchema(brentServiceMethods.ByName("CreateInvitation")),
+		connect.WithSchema(workspaceServiceMethods.ByName("CreateInvitation")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceCreateInvitationsHandler := connect.NewUnaryHandler(
-		BrentServiceCreateInvitationsProcedure,
+	workspaceServiceCreateInvitationsHandler := connect.NewUnaryHandler(
+		WorkspaceServiceCreateInvitationsProcedure,
 		svc.CreateInvitations,
-		connect.WithSchema(brentServiceMethods.ByName("CreateInvitations")),
+		connect.WithSchema(workspaceServiceMethods.ByName("CreateInvitations")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceAcceptInvitationHandler := connect.NewUnaryHandler(
-		BrentServiceAcceptInvitationProcedure,
+	workspaceServiceAcceptInvitationHandler := connect.NewUnaryHandler(
+		WorkspaceServiceAcceptInvitationProcedure,
 		svc.AcceptInvitation,
-		connect.WithSchema(brentServiceMethods.ByName("AcceptInvitation")),
+		connect.WithSchema(workspaceServiceMethods.ByName("AcceptInvitation")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceListWorkspaceMembersHandler := connect.NewUnaryHandler(
-		BrentServiceListWorkspaceMembersProcedure,
+	workspaceServiceListWorkspaceMembersHandler := connect.NewUnaryHandler(
+		WorkspaceServiceListWorkspaceMembersProcedure,
 		svc.ListWorkspaceMembers,
-		connect.WithSchema(brentServiceMethods.ByName("ListWorkspaceMembers")),
+		connect.WithSchema(workspaceServiceMethods.ByName("ListWorkspaceMembers")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceResendInvitationHandler := connect.NewUnaryHandler(
-		BrentServiceResendInvitationProcedure,
+	workspaceServiceResendInvitationHandler := connect.NewUnaryHandler(
+		WorkspaceServiceResendInvitationProcedure,
 		svc.ResendInvitation,
-		connect.WithSchema(brentServiceMethods.ByName("ResendInvitation")),
+		connect.WithSchema(workspaceServiceMethods.ByName("ResendInvitation")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceRevokeInvitationHandler := connect.NewUnaryHandler(
-		BrentServiceRevokeInvitationProcedure,
+	workspaceServiceRevokeInvitationHandler := connect.NewUnaryHandler(
+		WorkspaceServiceRevokeInvitationProcedure,
 		svc.RevokeInvitation,
-		connect.WithSchema(brentServiceMethods.ByName("RevokeInvitation")),
+		connect.WithSchema(workspaceServiceMethods.ByName("RevokeInvitation")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceRemoveWorkspaceMemberHandler := connect.NewUnaryHandler(
-		BrentServiceRemoveWorkspaceMemberProcedure,
+	workspaceServiceRemoveWorkspaceMemberHandler := connect.NewUnaryHandler(
+		WorkspaceServiceRemoveWorkspaceMemberProcedure,
 		svc.RemoveWorkspaceMember,
-		connect.WithSchema(brentServiceMethods.ByName("RemoveWorkspaceMember")),
+		connect.WithSchema(workspaceServiceMethods.ByName("RemoveWorkspaceMember")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceUpdateWorkspaceMemberRoleHandler := connect.NewUnaryHandler(
-		BrentServiceUpdateWorkspaceMemberRoleProcedure,
+	workspaceServiceUpdateWorkspaceMemberRoleHandler := connect.NewUnaryHandler(
+		WorkspaceServiceUpdateWorkspaceMemberRoleProcedure,
 		svc.UpdateWorkspaceMemberRole,
-		connect.WithSchema(brentServiceMethods.ByName("UpdateWorkspaceMemberRole")),
+		connect.WithSchema(workspaceServiceMethods.ByName("UpdateWorkspaceMemberRole")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceListApprovedEmailDomainsHandler := connect.NewUnaryHandler(
-		BrentServiceListApprovedEmailDomainsProcedure,
+	workspaceServiceListApprovedEmailDomainsHandler := connect.NewUnaryHandler(
+		WorkspaceServiceListApprovedEmailDomainsProcedure,
 		svc.ListApprovedEmailDomains,
-		connect.WithSchema(brentServiceMethods.ByName("ListApprovedEmailDomains")),
+		connect.WithSchema(workspaceServiceMethods.ByName("ListApprovedEmailDomains")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceAddApprovedEmailDomainHandler := connect.NewUnaryHandler(
-		BrentServiceAddApprovedEmailDomainProcedure,
+	workspaceServiceAddApprovedEmailDomainHandler := connect.NewUnaryHandler(
+		WorkspaceServiceAddApprovedEmailDomainProcedure,
 		svc.AddApprovedEmailDomain,
-		connect.WithSchema(brentServiceMethods.ByName("AddApprovedEmailDomain")),
+		connect.WithSchema(workspaceServiceMethods.ByName("AddApprovedEmailDomain")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceVerifyApprovedEmailDomainHandler := connect.NewUnaryHandler(
-		BrentServiceVerifyApprovedEmailDomainProcedure,
+	workspaceServiceVerifyApprovedEmailDomainHandler := connect.NewUnaryHandler(
+		WorkspaceServiceVerifyApprovedEmailDomainProcedure,
 		svc.VerifyApprovedEmailDomain,
-		connect.WithSchema(brentServiceMethods.ByName("VerifyApprovedEmailDomain")),
+		connect.WithSchema(workspaceServiceMethods.ByName("VerifyApprovedEmailDomain")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceResendApprovedEmailDomainCodeHandler := connect.NewUnaryHandler(
-		BrentServiceResendApprovedEmailDomainCodeProcedure,
+	workspaceServiceResendApprovedEmailDomainCodeHandler := connect.NewUnaryHandler(
+		WorkspaceServiceResendApprovedEmailDomainCodeProcedure,
 		svc.ResendApprovedEmailDomainCode,
-		connect.WithSchema(brentServiceMethods.ByName("ResendApprovedEmailDomainCode")),
+		connect.WithSchema(workspaceServiceMethods.ByName("ResendApprovedEmailDomainCode")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceDeleteApprovedEmailDomainHandler := connect.NewUnaryHandler(
-		BrentServiceDeleteApprovedEmailDomainProcedure,
+	workspaceServiceDeleteApprovedEmailDomainHandler := connect.NewUnaryHandler(
+		WorkspaceServiceDeleteApprovedEmailDomainProcedure,
 		svc.DeleteApprovedEmailDomain,
-		connect.WithSchema(brentServiceMethods.ByName("DeleteApprovedEmailDomain")),
+		connect.WithSchema(workspaceServiceMethods.ByName("DeleteApprovedEmailDomain")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceGetWorkspaceLLMCredentialStatusHandler := connect.NewUnaryHandler(
-		BrentServiceGetWorkspaceLLMCredentialStatusProcedure,
+	workspaceServiceGetWorkspaceLLMCredentialStatusHandler := connect.NewUnaryHandler(
+		WorkspaceServiceGetWorkspaceLLMCredentialStatusProcedure,
 		svc.GetWorkspaceLLMCredentialStatus,
-		connect.WithSchema(brentServiceMethods.ByName("GetWorkspaceLLMCredentialStatus")),
+		connect.WithSchema(workspaceServiceMethods.ByName("GetWorkspaceLLMCredentialStatus")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceSetWorkspaceLLMCredentialHandler := connect.NewUnaryHandler(
-		BrentServiceSetWorkspaceLLMCredentialProcedure,
+	workspaceServiceSetWorkspaceLLMCredentialHandler := connect.NewUnaryHandler(
+		WorkspaceServiceSetWorkspaceLLMCredentialProcedure,
 		svc.SetWorkspaceLLMCredential,
-		connect.WithSchema(brentServiceMethods.ByName("SetWorkspaceLLMCredential")),
+		connect.WithSchema(workspaceServiceMethods.ByName("SetWorkspaceLLMCredential")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceDeleteWorkspaceLLMCredentialHandler := connect.NewUnaryHandler(
-		BrentServiceDeleteWorkspaceLLMCredentialProcedure,
+	workspaceServiceDeleteWorkspaceLLMCredentialHandler := connect.NewUnaryHandler(
+		WorkspaceServiceDeleteWorkspaceLLMCredentialProcedure,
 		svc.DeleteWorkspaceLLMCredential,
-		connect.WithSchema(brentServiceMethods.ByName("DeleteWorkspaceLLMCredential")),
+		connect.WithSchema(workspaceServiceMethods.ByName("DeleteWorkspaceLLMCredential")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceGetMyCursorCredentialStatusHandler := connect.NewUnaryHandler(
-		BrentServiceGetMyCursorCredentialStatusProcedure,
+	workspaceServiceGetMyCursorCredentialStatusHandler := connect.NewUnaryHandler(
+		WorkspaceServiceGetMyCursorCredentialStatusProcedure,
 		svc.GetMyCursorCredentialStatus,
-		connect.WithSchema(brentServiceMethods.ByName("GetMyCursorCredentialStatus")),
+		connect.WithSchema(workspaceServiceMethods.ByName("GetMyCursorCredentialStatus")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceSetMyCursorCredentialHandler := connect.NewUnaryHandler(
-		BrentServiceSetMyCursorCredentialProcedure,
+	workspaceServiceSetMyCursorCredentialHandler := connect.NewUnaryHandler(
+		WorkspaceServiceSetMyCursorCredentialProcedure,
 		svc.SetMyCursorCredential,
-		connect.WithSchema(brentServiceMethods.ByName("SetMyCursorCredential")),
+		connect.WithSchema(workspaceServiceMethods.ByName("SetMyCursorCredential")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceDeleteMyCursorCredentialHandler := connect.NewUnaryHandler(
-		BrentServiceDeleteMyCursorCredentialProcedure,
+	workspaceServiceDeleteMyCursorCredentialHandler := connect.NewUnaryHandler(
+		WorkspaceServiceDeleteMyCursorCredentialProcedure,
 		svc.DeleteMyCursorCredential,
-		connect.WithSchema(brentServiceMethods.ByName("DeleteMyCursorCredential")),
+		connect.WithSchema(workspaceServiceMethods.ByName("DeleteMyCursorCredential")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceGetWorkspaceIntegrationRolesHandler := connect.NewUnaryHandler(
-		BrentServiceGetWorkspaceIntegrationRolesProcedure,
+	workspaceServiceGetWorkspaceIntegrationRolesHandler := connect.NewUnaryHandler(
+		WorkspaceServiceGetWorkspaceIntegrationRolesProcedure,
 		svc.GetWorkspaceIntegrationRoles,
-		connect.WithSchema(brentServiceMethods.ByName("GetWorkspaceIntegrationRoles")),
+		connect.WithSchema(workspaceServiceMethods.ByName("GetWorkspaceIntegrationRoles")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceSetWorkspaceIntegrationRolesHandler := connect.NewUnaryHandler(
-		BrentServiceSetWorkspaceIntegrationRolesProcedure,
+	workspaceServiceSetWorkspaceIntegrationRolesHandler := connect.NewUnaryHandler(
+		WorkspaceServiceSetWorkspaceIntegrationRolesProcedure,
 		svc.SetWorkspaceIntegrationRoles,
-		connect.WithSchema(brentServiceMethods.ByName("SetWorkspaceIntegrationRoles")),
+		connect.WithSchema(workspaceServiceMethods.ByName("SetWorkspaceIntegrationRoles")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentServiceResendVerificationEmailHandler := connect.NewUnaryHandler(
-		BrentServiceResendVerificationEmailProcedure,
+	workspaceServiceResendVerificationEmailHandler := connect.NewUnaryHandler(
+		WorkspaceServiceResendVerificationEmailProcedure,
 		svc.ResendVerificationEmail,
-		connect.WithSchema(brentServiceMethods.ByName("ResendVerificationEmail")),
+		connect.WithSchema(workspaceServiceMethods.ByName("ResendVerificationEmail")),
 		connect.WithHandlerOptions(opts...),
 	)
-	return "/brent.BrentService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return "/until.WorkspaceService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
-		case BrentServiceListOpenPullRequestsProcedure:
-			brentServiceListOpenPullRequestsHandler.ServeHTTP(w, r)
-		case BrentServiceGetPullRequestProcedure:
-			brentServiceGetPullRequestHandler.ServeHTTP(w, r)
-		case BrentServiceGetPrincipalStatusProcedure:
-			brentServiceGetPrincipalStatusHandler.ServeHTTP(w, r)
-		case BrentServiceGetPlanPromptProcedure:
-			brentServiceGetPlanPromptHandler.ServeHTTP(w, r)
-		case BrentServiceGetIntegrationConnectURLProcedure:
-			brentServiceGetIntegrationConnectURLHandler.ServeHTTP(w, r)
-		case BrentServiceDisconnectIntegrationProcedure:
-			brentServiceDisconnectIntegrationHandler.ServeHTTP(w, r)
-		case BrentServiceConnectByoHttpMcpProcedure:
-			brentServiceConnectByoHttpMcpHandler.ServeHTTP(w, r)
-		case BrentServiceGetGitLabConnectionProcedure:
-			brentServiceGetGitLabConnectionHandler.ServeHTTP(w, r)
-		case BrentServiceConnectGitLabProcedure:
-			brentServiceConnectGitLabHandler.ServeHTTP(w, r)
-		case BrentServiceSaveGitLabSigningTokenProcedure:
-			brentServiceSaveGitLabSigningTokenHandler.ServeHTTP(w, r)
-		case BrentServiceUpsertMyVerifiedBindingProcedure:
-			brentServiceUpsertMyVerifiedBindingHandler.ServeHTTP(w, r)
-		case BrentServiceListMyBindingsProcedure:
-			brentServiceListMyBindingsHandler.ServeHTTP(w, r)
-		case BrentServiceGetMyNotificationPreferencesProcedure:
-			brentServiceGetMyNotificationPreferencesHandler.ServeHTTP(w, r)
-		case BrentServiceUpdateMyNotificationPreferencesProcedure:
-			brentServiceUpdateMyNotificationPreferencesHandler.ServeHTTP(w, r)
-		case BrentServiceRegisterMyPushSubscriptionProcedure:
-			brentServiceRegisterMyPushSubscriptionHandler.ServeHTTP(w, r)
-		case BrentServiceGetWebPushPublicKeyProcedure:
-			brentServiceGetWebPushPublicKeyHandler.ServeHTTP(w, r)
-		case BrentServiceUpdateMyDisplayNameProcedure:
-			brentServiceUpdateMyDisplayNameHandler.ServeHTTP(w, r)
-		case BrentServiceGetBrentSettingsProcedure:
-			brentServiceGetBrentSettingsHandler.ServeHTTP(w, r)
-		case BrentServiceUpdateBrentSettingsProcedure:
-			brentServiceUpdateBrentSettingsHandler.ServeHTTP(w, r)
-		case BrentServiceListIntegrationCatalogueProcedure:
-			brentServiceListIntegrationCatalogueHandler.ServeHTTP(w, r)
-		case BrentServiceCreateWorkspaceProcedure:
-			brentServiceCreateWorkspaceHandler.ServeHTTP(w, r)
-		case BrentServiceListMyWorkspacesProcedure:
-			brentServiceListMyWorkspacesHandler.ServeHTTP(w, r)
-		case BrentServiceDiscoverLoginRecoveryCandidatesProcedure:
-			brentServiceDiscoverLoginRecoveryCandidatesHandler.ServeHTTP(w, r)
-		case BrentServiceRenameWorkspaceProcedure:
-			brentServiceRenameWorkspaceHandler.ServeHTTP(w, r)
-		case BrentServiceUpdateWorkspaceBrandingProcedure:
-			brentServiceUpdateWorkspaceBrandingHandler.ServeHTTP(w, r)
-		case BrentServiceCompleteWorkspaceOnboardingProcedure:
-			brentServiceCompleteWorkspaceOnboardingHandler.ServeHTTP(w, r)
-		case BrentServiceDeleteWorkspaceProcedure:
-			brentServiceDeleteWorkspaceHandler.ServeHTTP(w, r)
-		case BrentServiceListJoinableWorkspacesProcedure:
-			brentServiceListJoinableWorkspacesHandler.ServeHTTP(w, r)
-		case BrentServiceJoinWorkspaceProcedure:
-			brentServiceJoinWorkspaceHandler.ServeHTTP(w, r)
-		case BrentServiceCreateInvitationProcedure:
-			brentServiceCreateInvitationHandler.ServeHTTP(w, r)
-		case BrentServiceCreateInvitationsProcedure:
-			brentServiceCreateInvitationsHandler.ServeHTTP(w, r)
-		case BrentServiceAcceptInvitationProcedure:
-			brentServiceAcceptInvitationHandler.ServeHTTP(w, r)
-		case BrentServiceListWorkspaceMembersProcedure:
-			brentServiceListWorkspaceMembersHandler.ServeHTTP(w, r)
-		case BrentServiceResendInvitationProcedure:
-			brentServiceResendInvitationHandler.ServeHTTP(w, r)
-		case BrentServiceRevokeInvitationProcedure:
-			brentServiceRevokeInvitationHandler.ServeHTTP(w, r)
-		case BrentServiceRemoveWorkspaceMemberProcedure:
-			brentServiceRemoveWorkspaceMemberHandler.ServeHTTP(w, r)
-		case BrentServiceUpdateWorkspaceMemberRoleProcedure:
-			brentServiceUpdateWorkspaceMemberRoleHandler.ServeHTTP(w, r)
-		case BrentServiceListApprovedEmailDomainsProcedure:
-			brentServiceListApprovedEmailDomainsHandler.ServeHTTP(w, r)
-		case BrentServiceAddApprovedEmailDomainProcedure:
-			brentServiceAddApprovedEmailDomainHandler.ServeHTTP(w, r)
-		case BrentServiceVerifyApprovedEmailDomainProcedure:
-			brentServiceVerifyApprovedEmailDomainHandler.ServeHTTP(w, r)
-		case BrentServiceResendApprovedEmailDomainCodeProcedure:
-			brentServiceResendApprovedEmailDomainCodeHandler.ServeHTTP(w, r)
-		case BrentServiceDeleteApprovedEmailDomainProcedure:
-			brentServiceDeleteApprovedEmailDomainHandler.ServeHTTP(w, r)
-		case BrentServiceGetWorkspaceLLMCredentialStatusProcedure:
-			brentServiceGetWorkspaceLLMCredentialStatusHandler.ServeHTTP(w, r)
-		case BrentServiceSetWorkspaceLLMCredentialProcedure:
-			brentServiceSetWorkspaceLLMCredentialHandler.ServeHTTP(w, r)
-		case BrentServiceDeleteWorkspaceLLMCredentialProcedure:
-			brentServiceDeleteWorkspaceLLMCredentialHandler.ServeHTTP(w, r)
-		case BrentServiceGetMyCursorCredentialStatusProcedure:
-			brentServiceGetMyCursorCredentialStatusHandler.ServeHTTP(w, r)
-		case BrentServiceSetMyCursorCredentialProcedure:
-			brentServiceSetMyCursorCredentialHandler.ServeHTTP(w, r)
-		case BrentServiceDeleteMyCursorCredentialProcedure:
-			brentServiceDeleteMyCursorCredentialHandler.ServeHTTP(w, r)
-		case BrentServiceGetWorkspaceIntegrationRolesProcedure:
-			brentServiceGetWorkspaceIntegrationRolesHandler.ServeHTTP(w, r)
-		case BrentServiceSetWorkspaceIntegrationRolesProcedure:
-			brentServiceSetWorkspaceIntegrationRolesHandler.ServeHTTP(w, r)
-		case BrentServiceResendVerificationEmailProcedure:
-			brentServiceResendVerificationEmailHandler.ServeHTTP(w, r)
+		case WorkspaceServiceListOpenPullRequestsProcedure:
+			workspaceServiceListOpenPullRequestsHandler.ServeHTTP(w, r)
+		case WorkspaceServiceGetPullRequestProcedure:
+			workspaceServiceGetPullRequestHandler.ServeHTTP(w, r)
+		case WorkspaceServiceGetPrincipalStatusProcedure:
+			workspaceServiceGetPrincipalStatusHandler.ServeHTTP(w, r)
+		case WorkspaceServiceGetPlanPromptProcedure:
+			workspaceServiceGetPlanPromptHandler.ServeHTTP(w, r)
+		case WorkspaceServiceGetIntegrationConnectURLProcedure:
+			workspaceServiceGetIntegrationConnectURLHandler.ServeHTTP(w, r)
+		case WorkspaceServiceDisconnectIntegrationProcedure:
+			workspaceServiceDisconnectIntegrationHandler.ServeHTTP(w, r)
+		case WorkspaceServiceConnectByoHttpMcpProcedure:
+			workspaceServiceConnectByoHttpMcpHandler.ServeHTTP(w, r)
+		case WorkspaceServiceGetGitLabConnectionProcedure:
+			workspaceServiceGetGitLabConnectionHandler.ServeHTTP(w, r)
+		case WorkspaceServiceConnectGitLabProcedure:
+			workspaceServiceConnectGitLabHandler.ServeHTTP(w, r)
+		case WorkspaceServiceSaveGitLabSigningTokenProcedure:
+			workspaceServiceSaveGitLabSigningTokenHandler.ServeHTTP(w, r)
+		case WorkspaceServiceUpsertMyVerifiedBindingProcedure:
+			workspaceServiceUpsertMyVerifiedBindingHandler.ServeHTTP(w, r)
+		case WorkspaceServiceListMyBindingsProcedure:
+			workspaceServiceListMyBindingsHandler.ServeHTTP(w, r)
+		case WorkspaceServiceGetMyNotificationPreferencesProcedure:
+			workspaceServiceGetMyNotificationPreferencesHandler.ServeHTTP(w, r)
+		case WorkspaceServiceUpdateMyNotificationPreferencesProcedure:
+			workspaceServiceUpdateMyNotificationPreferencesHandler.ServeHTTP(w, r)
+		case WorkspaceServiceRegisterMyPushSubscriptionProcedure:
+			workspaceServiceRegisterMyPushSubscriptionHandler.ServeHTTP(w, r)
+		case WorkspaceServiceGetWebPushPublicKeyProcedure:
+			workspaceServiceGetWebPushPublicKeyHandler.ServeHTTP(w, r)
+		case WorkspaceServiceUpdateMyDisplayNameProcedure:
+			workspaceServiceUpdateMyDisplayNameHandler.ServeHTTP(w, r)
+		case WorkspaceServiceGetPlanCheckSettingsProcedure:
+			workspaceServiceGetPlanCheckSettingsHandler.ServeHTTP(w, r)
+		case WorkspaceServiceUpdatePlanCheckSettingsProcedure:
+			workspaceServiceUpdatePlanCheckSettingsHandler.ServeHTTP(w, r)
+		case WorkspaceServiceListIntegrationCatalogueProcedure:
+			workspaceServiceListIntegrationCatalogueHandler.ServeHTTP(w, r)
+		case WorkspaceServiceCreateWorkspaceProcedure:
+			workspaceServiceCreateWorkspaceHandler.ServeHTTP(w, r)
+		case WorkspaceServiceListMyWorkspacesProcedure:
+			workspaceServiceListMyWorkspacesHandler.ServeHTTP(w, r)
+		case WorkspaceServiceDiscoverLoginRecoveryCandidatesProcedure:
+			workspaceServiceDiscoverLoginRecoveryCandidatesHandler.ServeHTTP(w, r)
+		case WorkspaceServiceRenameWorkspaceProcedure:
+			workspaceServiceRenameWorkspaceHandler.ServeHTTP(w, r)
+		case WorkspaceServiceUpdateWorkspaceBrandingProcedure:
+			workspaceServiceUpdateWorkspaceBrandingHandler.ServeHTTP(w, r)
+		case WorkspaceServiceCompleteWorkspaceOnboardingProcedure:
+			workspaceServiceCompleteWorkspaceOnboardingHandler.ServeHTTP(w, r)
+		case WorkspaceServiceDeleteWorkspaceProcedure:
+			workspaceServiceDeleteWorkspaceHandler.ServeHTTP(w, r)
+		case WorkspaceServiceListJoinableWorkspacesProcedure:
+			workspaceServiceListJoinableWorkspacesHandler.ServeHTTP(w, r)
+		case WorkspaceServiceJoinWorkspaceProcedure:
+			workspaceServiceJoinWorkspaceHandler.ServeHTTP(w, r)
+		case WorkspaceServiceCreateInvitationProcedure:
+			workspaceServiceCreateInvitationHandler.ServeHTTP(w, r)
+		case WorkspaceServiceCreateInvitationsProcedure:
+			workspaceServiceCreateInvitationsHandler.ServeHTTP(w, r)
+		case WorkspaceServiceAcceptInvitationProcedure:
+			workspaceServiceAcceptInvitationHandler.ServeHTTP(w, r)
+		case WorkspaceServiceListWorkspaceMembersProcedure:
+			workspaceServiceListWorkspaceMembersHandler.ServeHTTP(w, r)
+		case WorkspaceServiceResendInvitationProcedure:
+			workspaceServiceResendInvitationHandler.ServeHTTP(w, r)
+		case WorkspaceServiceRevokeInvitationProcedure:
+			workspaceServiceRevokeInvitationHandler.ServeHTTP(w, r)
+		case WorkspaceServiceRemoveWorkspaceMemberProcedure:
+			workspaceServiceRemoveWorkspaceMemberHandler.ServeHTTP(w, r)
+		case WorkspaceServiceUpdateWorkspaceMemberRoleProcedure:
+			workspaceServiceUpdateWorkspaceMemberRoleHandler.ServeHTTP(w, r)
+		case WorkspaceServiceListApprovedEmailDomainsProcedure:
+			workspaceServiceListApprovedEmailDomainsHandler.ServeHTTP(w, r)
+		case WorkspaceServiceAddApprovedEmailDomainProcedure:
+			workspaceServiceAddApprovedEmailDomainHandler.ServeHTTP(w, r)
+		case WorkspaceServiceVerifyApprovedEmailDomainProcedure:
+			workspaceServiceVerifyApprovedEmailDomainHandler.ServeHTTP(w, r)
+		case WorkspaceServiceResendApprovedEmailDomainCodeProcedure:
+			workspaceServiceResendApprovedEmailDomainCodeHandler.ServeHTTP(w, r)
+		case WorkspaceServiceDeleteApprovedEmailDomainProcedure:
+			workspaceServiceDeleteApprovedEmailDomainHandler.ServeHTTP(w, r)
+		case WorkspaceServiceGetWorkspaceLLMCredentialStatusProcedure:
+			workspaceServiceGetWorkspaceLLMCredentialStatusHandler.ServeHTTP(w, r)
+		case WorkspaceServiceSetWorkspaceLLMCredentialProcedure:
+			workspaceServiceSetWorkspaceLLMCredentialHandler.ServeHTTP(w, r)
+		case WorkspaceServiceDeleteWorkspaceLLMCredentialProcedure:
+			workspaceServiceDeleteWorkspaceLLMCredentialHandler.ServeHTTP(w, r)
+		case WorkspaceServiceGetMyCursorCredentialStatusProcedure:
+			workspaceServiceGetMyCursorCredentialStatusHandler.ServeHTTP(w, r)
+		case WorkspaceServiceSetMyCursorCredentialProcedure:
+			workspaceServiceSetMyCursorCredentialHandler.ServeHTTP(w, r)
+		case WorkspaceServiceDeleteMyCursorCredentialProcedure:
+			workspaceServiceDeleteMyCursorCredentialHandler.ServeHTTP(w, r)
+		case WorkspaceServiceGetWorkspaceIntegrationRolesProcedure:
+			workspaceServiceGetWorkspaceIntegrationRolesHandler.ServeHTTP(w, r)
+		case WorkspaceServiceSetWorkspaceIntegrationRolesProcedure:
+			workspaceServiceSetWorkspaceIntegrationRolesHandler.ServeHTTP(w, r)
+		case WorkspaceServiceResendVerificationEmailProcedure:
+			workspaceServiceResendVerificationEmailHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
 	})
 }
 
-// UnimplementedBrentServiceHandler returns CodeUnimplemented from all methods.
-type UnimplementedBrentServiceHandler struct{}
+// UnimplementedWorkspaceServiceHandler returns CodeUnimplemented from all methods.
+type UnimplementedWorkspaceServiceHandler struct{}
 
-func (UnimplementedBrentServiceHandler) ListOpenPullRequests(context.Context, *connect.Request[sdp_go.ListOpenPullRequestsRequest]) (*connect.Response[sdp_go.ListOpenPullRequestsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.ListOpenPullRequests is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) ListOpenPullRequests(context.Context, *connect.Request[sdp_go.ListOpenPullRequestsRequest]) (*connect.Response[sdp_go.ListOpenPullRequestsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.ListOpenPullRequests is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) GetPullRequest(context.Context, *connect.Request[sdp_go.GetPullRequestRequest]) (*connect.Response[sdp_go.GetPullRequestResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.GetPullRequest is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) GetPullRequest(context.Context, *connect.Request[sdp_go.GetPullRequestRequest]) (*connect.Response[sdp_go.GetPullRequestResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.GetPullRequest is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) GetPrincipalStatus(context.Context, *connect.Request[sdp_go.GetPrincipalStatusRequest]) (*connect.Response[sdp_go.GetPrincipalStatusResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.GetPrincipalStatus is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) GetPrincipalStatus(context.Context, *connect.Request[sdp_go.GetPrincipalStatusRequest]) (*connect.Response[sdp_go.GetPrincipalStatusResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.GetPrincipalStatus is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) GetPlanPrompt(context.Context, *connect.Request[sdp_go.GetPlanPromptRequest]) (*connect.Response[sdp_go.GetPlanPromptResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.GetPlanPrompt is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) GetPlanPrompt(context.Context, *connect.Request[sdp_go.GetPlanPromptRequest]) (*connect.Response[sdp_go.GetPlanPromptResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.GetPlanPrompt is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) GetIntegrationConnectURL(context.Context, *connect.Request[sdp_go.GetIntegrationConnectURLRequest]) (*connect.Response[sdp_go.GetIntegrationConnectURLResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.GetIntegrationConnectURL is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) GetIntegrationConnectURL(context.Context, *connect.Request[sdp_go.GetIntegrationConnectURLRequest]) (*connect.Response[sdp_go.GetIntegrationConnectURLResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.GetIntegrationConnectURL is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) DisconnectIntegration(context.Context, *connect.Request[sdp_go.DisconnectIntegrationRequest]) (*connect.Response[sdp_go.DisconnectIntegrationResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.DisconnectIntegration is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) DisconnectIntegration(context.Context, *connect.Request[sdp_go.DisconnectIntegrationRequest]) (*connect.Response[sdp_go.DisconnectIntegrationResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.DisconnectIntegration is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) ConnectByoHttpMcp(context.Context, *connect.Request[sdp_go.ConnectByoHttpMcpRequest]) (*connect.Response[sdp_go.ConnectByoHttpMcpResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.ConnectByoHttpMcp is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) ConnectByoHttpMcp(context.Context, *connect.Request[sdp_go.ConnectByoHttpMcpRequest]) (*connect.Response[sdp_go.ConnectByoHttpMcpResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.ConnectByoHttpMcp is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) GetGitLabConnection(context.Context, *connect.Request[sdp_go.GetGitLabConnectionRequest]) (*connect.Response[sdp_go.GetGitLabConnectionResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.GetGitLabConnection is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) GetGitLabConnection(context.Context, *connect.Request[sdp_go.GetGitLabConnectionRequest]) (*connect.Response[sdp_go.GetGitLabConnectionResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.GetGitLabConnection is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) ConnectGitLab(context.Context, *connect.Request[sdp_go.ConnectGitLabRequest]) (*connect.Response[sdp_go.ConnectGitLabResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.ConnectGitLab is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) ConnectGitLab(context.Context, *connect.Request[sdp_go.ConnectGitLabRequest]) (*connect.Response[sdp_go.ConnectGitLabResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.ConnectGitLab is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) SaveGitLabSigningToken(context.Context, *connect.Request[sdp_go.SaveGitLabSigningTokenRequest]) (*connect.Response[sdp_go.SaveGitLabSigningTokenResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.SaveGitLabSigningToken is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) SaveGitLabSigningToken(context.Context, *connect.Request[sdp_go.SaveGitLabSigningTokenRequest]) (*connect.Response[sdp_go.SaveGitLabSigningTokenResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.SaveGitLabSigningToken is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) UpsertMyVerifiedBinding(context.Context, *connect.Request[sdp_go.UpsertMyVerifiedBindingRequest]) (*connect.Response[sdp_go.UpsertMyVerifiedBindingResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.UpsertMyVerifiedBinding is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) UpsertMyVerifiedBinding(context.Context, *connect.Request[sdp_go.UpsertMyVerifiedBindingRequest]) (*connect.Response[sdp_go.UpsertMyVerifiedBindingResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.UpsertMyVerifiedBinding is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) ListMyBindings(context.Context, *connect.Request[sdp_go.ListMyBindingsRequest]) (*connect.Response[sdp_go.ListMyBindingsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.ListMyBindings is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) ListMyBindings(context.Context, *connect.Request[sdp_go.ListMyBindingsRequest]) (*connect.Response[sdp_go.ListMyBindingsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.ListMyBindings is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) GetMyNotificationPreferences(context.Context, *connect.Request[sdp_go.GetMyNotificationPreferencesRequest]) (*connect.Response[sdp_go.GetMyNotificationPreferencesResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.GetMyNotificationPreferences is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) GetMyNotificationPreferences(context.Context, *connect.Request[sdp_go.GetMyNotificationPreferencesRequest]) (*connect.Response[sdp_go.GetMyNotificationPreferencesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.GetMyNotificationPreferences is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) UpdateMyNotificationPreferences(context.Context, *connect.Request[sdp_go.UpdateMyNotificationPreferencesRequest]) (*connect.Response[sdp_go.UpdateMyNotificationPreferencesResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.UpdateMyNotificationPreferences is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) UpdateMyNotificationPreferences(context.Context, *connect.Request[sdp_go.UpdateMyNotificationPreferencesRequest]) (*connect.Response[sdp_go.UpdateMyNotificationPreferencesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.UpdateMyNotificationPreferences is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) RegisterMyPushSubscription(context.Context, *connect.Request[sdp_go.RegisterMyPushSubscriptionRequest]) (*connect.Response[sdp_go.RegisterMyPushSubscriptionResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.RegisterMyPushSubscription is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) RegisterMyPushSubscription(context.Context, *connect.Request[sdp_go.RegisterMyPushSubscriptionRequest]) (*connect.Response[sdp_go.RegisterMyPushSubscriptionResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.RegisterMyPushSubscription is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) GetWebPushPublicKey(context.Context, *connect.Request[sdp_go.GetWebPushPublicKeyRequest]) (*connect.Response[sdp_go.GetWebPushPublicKeyResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.GetWebPushPublicKey is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) GetWebPushPublicKey(context.Context, *connect.Request[sdp_go.GetWebPushPublicKeyRequest]) (*connect.Response[sdp_go.GetWebPushPublicKeyResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.GetWebPushPublicKey is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) UpdateMyDisplayName(context.Context, *connect.Request[sdp_go.UpdateMyDisplayNameRequest]) (*connect.Response[sdp_go.UpdateMyDisplayNameResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.UpdateMyDisplayName is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) UpdateMyDisplayName(context.Context, *connect.Request[sdp_go.UpdateMyDisplayNameRequest]) (*connect.Response[sdp_go.UpdateMyDisplayNameResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.UpdateMyDisplayName is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) GetBrentSettings(context.Context, *connect.Request[sdp_go.GetBrentSettingsRequest]) (*connect.Response[sdp_go.GetBrentSettingsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.GetBrentSettings is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) GetPlanCheckSettings(context.Context, *connect.Request[sdp_go.GetPlanCheckSettingsRequest]) (*connect.Response[sdp_go.GetPlanCheckSettingsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.GetPlanCheckSettings is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) UpdateBrentSettings(context.Context, *connect.Request[sdp_go.UpdateBrentSettingsRequest]) (*connect.Response[sdp_go.UpdateBrentSettingsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.UpdateBrentSettings is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) UpdatePlanCheckSettings(context.Context, *connect.Request[sdp_go.UpdatePlanCheckSettingsRequest]) (*connect.Response[sdp_go.UpdatePlanCheckSettingsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.UpdatePlanCheckSettings is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) ListIntegrationCatalogue(context.Context, *connect.Request[sdp_go.ListIntegrationCatalogueRequest]) (*connect.Response[sdp_go.ListIntegrationCatalogueResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.ListIntegrationCatalogue is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) ListIntegrationCatalogue(context.Context, *connect.Request[sdp_go.ListIntegrationCatalogueRequest]) (*connect.Response[sdp_go.ListIntegrationCatalogueResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.ListIntegrationCatalogue is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) CreateWorkspace(context.Context, *connect.Request[sdp_go.CreateWorkspaceRequest]) (*connect.Response[sdp_go.CreateWorkspaceResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.CreateWorkspace is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) CreateWorkspace(context.Context, *connect.Request[sdp_go.CreateWorkspaceRequest]) (*connect.Response[sdp_go.CreateWorkspaceResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.CreateWorkspace is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) ListMyWorkspaces(context.Context, *connect.Request[sdp_go.ListMyWorkspacesRequest]) (*connect.Response[sdp_go.ListMyWorkspacesResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.ListMyWorkspaces is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) ListMyWorkspaces(context.Context, *connect.Request[sdp_go.ListMyWorkspacesRequest]) (*connect.Response[sdp_go.ListMyWorkspacesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.ListMyWorkspaces is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) DiscoverLoginRecoveryCandidates(context.Context, *connect.Request[sdp_go.DiscoverLoginRecoveryCandidatesRequest]) (*connect.Response[sdp_go.DiscoverLoginRecoveryCandidatesResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.DiscoverLoginRecoveryCandidates is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) DiscoverLoginRecoveryCandidates(context.Context, *connect.Request[sdp_go.DiscoverLoginRecoveryCandidatesRequest]) (*connect.Response[sdp_go.DiscoverLoginRecoveryCandidatesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.DiscoverLoginRecoveryCandidates is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) RenameWorkspace(context.Context, *connect.Request[sdp_go.RenameWorkspaceRequest]) (*connect.Response[sdp_go.RenameWorkspaceResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.RenameWorkspace is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) RenameWorkspace(context.Context, *connect.Request[sdp_go.RenameWorkspaceRequest]) (*connect.Response[sdp_go.RenameWorkspaceResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.RenameWorkspace is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) UpdateWorkspaceBranding(context.Context, *connect.Request[sdp_go.UpdateWorkspaceBrandingRequest]) (*connect.Response[sdp_go.UpdateWorkspaceBrandingResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.UpdateWorkspaceBranding is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) UpdateWorkspaceBranding(context.Context, *connect.Request[sdp_go.UpdateWorkspaceBrandingRequest]) (*connect.Response[sdp_go.UpdateWorkspaceBrandingResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.UpdateWorkspaceBranding is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) CompleteWorkspaceOnboarding(context.Context, *connect.Request[sdp_go.CompleteWorkspaceOnboardingRequest]) (*connect.Response[sdp_go.CompleteWorkspaceOnboardingResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.CompleteWorkspaceOnboarding is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) CompleteWorkspaceOnboarding(context.Context, *connect.Request[sdp_go.CompleteWorkspaceOnboardingRequest]) (*connect.Response[sdp_go.CompleteWorkspaceOnboardingResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.CompleteWorkspaceOnboarding is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) DeleteWorkspace(context.Context, *connect.Request[sdp_go.DeleteWorkspaceRequest]) (*connect.Response[sdp_go.DeleteWorkspaceResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.DeleteWorkspace is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) DeleteWorkspace(context.Context, *connect.Request[sdp_go.DeleteWorkspaceRequest]) (*connect.Response[sdp_go.DeleteWorkspaceResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.DeleteWorkspace is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) ListJoinableWorkspaces(context.Context, *connect.Request[sdp_go.ListJoinableWorkspacesRequest]) (*connect.Response[sdp_go.ListJoinableWorkspacesResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.ListJoinableWorkspaces is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) ListJoinableWorkspaces(context.Context, *connect.Request[sdp_go.ListJoinableWorkspacesRequest]) (*connect.Response[sdp_go.ListJoinableWorkspacesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.ListJoinableWorkspaces is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) JoinWorkspace(context.Context, *connect.Request[sdp_go.JoinWorkspaceRequest]) (*connect.Response[sdp_go.JoinWorkspaceResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.JoinWorkspace is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) JoinWorkspace(context.Context, *connect.Request[sdp_go.JoinWorkspaceRequest]) (*connect.Response[sdp_go.JoinWorkspaceResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.JoinWorkspace is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) CreateInvitation(context.Context, *connect.Request[sdp_go.CreateInvitationRequest]) (*connect.Response[sdp_go.CreateInvitationResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.CreateInvitation is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) CreateInvitation(context.Context, *connect.Request[sdp_go.CreateInvitationRequest]) (*connect.Response[sdp_go.CreateInvitationResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.CreateInvitation is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) CreateInvitations(context.Context, *connect.Request[sdp_go.CreateInvitationsRequest]) (*connect.Response[sdp_go.CreateInvitationsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.CreateInvitations is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) CreateInvitations(context.Context, *connect.Request[sdp_go.CreateInvitationsRequest]) (*connect.Response[sdp_go.CreateInvitationsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.CreateInvitations is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) AcceptInvitation(context.Context, *connect.Request[sdp_go.AcceptInvitationRequest]) (*connect.Response[sdp_go.AcceptInvitationResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.AcceptInvitation is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) AcceptInvitation(context.Context, *connect.Request[sdp_go.AcceptInvitationRequest]) (*connect.Response[sdp_go.AcceptInvitationResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.AcceptInvitation is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) ListWorkspaceMembers(context.Context, *connect.Request[sdp_go.ListWorkspaceMembersRequest]) (*connect.Response[sdp_go.ListWorkspaceMembersResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.ListWorkspaceMembers is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) ListWorkspaceMembers(context.Context, *connect.Request[sdp_go.ListWorkspaceMembersRequest]) (*connect.Response[sdp_go.ListWorkspaceMembersResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.ListWorkspaceMembers is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) ResendInvitation(context.Context, *connect.Request[sdp_go.ResendInvitationRequest]) (*connect.Response[sdp_go.ResendInvitationResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.ResendInvitation is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) ResendInvitation(context.Context, *connect.Request[sdp_go.ResendInvitationRequest]) (*connect.Response[sdp_go.ResendInvitationResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.ResendInvitation is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) RevokeInvitation(context.Context, *connect.Request[sdp_go.RevokeInvitationRequest]) (*connect.Response[sdp_go.RevokeInvitationResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.RevokeInvitation is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) RevokeInvitation(context.Context, *connect.Request[sdp_go.RevokeInvitationRequest]) (*connect.Response[sdp_go.RevokeInvitationResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.RevokeInvitation is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) RemoveWorkspaceMember(context.Context, *connect.Request[sdp_go.RemoveWorkspaceMemberRequest]) (*connect.Response[sdp_go.RemoveWorkspaceMemberResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.RemoveWorkspaceMember is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) RemoveWorkspaceMember(context.Context, *connect.Request[sdp_go.RemoveWorkspaceMemberRequest]) (*connect.Response[sdp_go.RemoveWorkspaceMemberResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.RemoveWorkspaceMember is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) UpdateWorkspaceMemberRole(context.Context, *connect.Request[sdp_go.UpdateWorkspaceMemberRoleRequest]) (*connect.Response[sdp_go.UpdateWorkspaceMemberRoleResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.UpdateWorkspaceMemberRole is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) UpdateWorkspaceMemberRole(context.Context, *connect.Request[sdp_go.UpdateWorkspaceMemberRoleRequest]) (*connect.Response[sdp_go.UpdateWorkspaceMemberRoleResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.UpdateWorkspaceMemberRole is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) ListApprovedEmailDomains(context.Context, *connect.Request[sdp_go.ListApprovedEmailDomainsRequest]) (*connect.Response[sdp_go.ListApprovedEmailDomainsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.ListApprovedEmailDomains is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) ListApprovedEmailDomains(context.Context, *connect.Request[sdp_go.ListApprovedEmailDomainsRequest]) (*connect.Response[sdp_go.ListApprovedEmailDomainsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.ListApprovedEmailDomains is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) AddApprovedEmailDomain(context.Context, *connect.Request[sdp_go.AddApprovedEmailDomainRequest]) (*connect.Response[sdp_go.AddApprovedEmailDomainResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.AddApprovedEmailDomain is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) AddApprovedEmailDomain(context.Context, *connect.Request[sdp_go.AddApprovedEmailDomainRequest]) (*connect.Response[sdp_go.AddApprovedEmailDomainResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.AddApprovedEmailDomain is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) VerifyApprovedEmailDomain(context.Context, *connect.Request[sdp_go.VerifyApprovedEmailDomainRequest]) (*connect.Response[sdp_go.VerifyApprovedEmailDomainResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.VerifyApprovedEmailDomain is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) VerifyApprovedEmailDomain(context.Context, *connect.Request[sdp_go.VerifyApprovedEmailDomainRequest]) (*connect.Response[sdp_go.VerifyApprovedEmailDomainResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.VerifyApprovedEmailDomain is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) ResendApprovedEmailDomainCode(context.Context, *connect.Request[sdp_go.ResendApprovedEmailDomainCodeRequest]) (*connect.Response[sdp_go.ResendApprovedEmailDomainCodeResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.ResendApprovedEmailDomainCode is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) ResendApprovedEmailDomainCode(context.Context, *connect.Request[sdp_go.ResendApprovedEmailDomainCodeRequest]) (*connect.Response[sdp_go.ResendApprovedEmailDomainCodeResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.ResendApprovedEmailDomainCode is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) DeleteApprovedEmailDomain(context.Context, *connect.Request[sdp_go.DeleteApprovedEmailDomainRequest]) (*connect.Response[sdp_go.DeleteApprovedEmailDomainResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.DeleteApprovedEmailDomain is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) DeleteApprovedEmailDomain(context.Context, *connect.Request[sdp_go.DeleteApprovedEmailDomainRequest]) (*connect.Response[sdp_go.DeleteApprovedEmailDomainResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.DeleteApprovedEmailDomain is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) GetWorkspaceLLMCredentialStatus(context.Context, *connect.Request[sdp_go.GetWorkspaceLLMCredentialStatusRequest]) (*connect.Response[sdp_go.GetWorkspaceLLMCredentialStatusResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.GetWorkspaceLLMCredentialStatus is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) GetWorkspaceLLMCredentialStatus(context.Context, *connect.Request[sdp_go.GetWorkspaceLLMCredentialStatusRequest]) (*connect.Response[sdp_go.GetWorkspaceLLMCredentialStatusResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.GetWorkspaceLLMCredentialStatus is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) SetWorkspaceLLMCredential(context.Context, *connect.Request[sdp_go.SetWorkspaceLLMCredentialRequest]) (*connect.Response[sdp_go.SetWorkspaceLLMCredentialResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.SetWorkspaceLLMCredential is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) SetWorkspaceLLMCredential(context.Context, *connect.Request[sdp_go.SetWorkspaceLLMCredentialRequest]) (*connect.Response[sdp_go.SetWorkspaceLLMCredentialResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.SetWorkspaceLLMCredential is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) DeleteWorkspaceLLMCredential(context.Context, *connect.Request[sdp_go.DeleteWorkspaceLLMCredentialRequest]) (*connect.Response[sdp_go.DeleteWorkspaceLLMCredentialResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.DeleteWorkspaceLLMCredential is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) DeleteWorkspaceLLMCredential(context.Context, *connect.Request[sdp_go.DeleteWorkspaceLLMCredentialRequest]) (*connect.Response[sdp_go.DeleteWorkspaceLLMCredentialResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.DeleteWorkspaceLLMCredential is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) GetMyCursorCredentialStatus(context.Context, *connect.Request[sdp_go.GetMyCursorCredentialStatusRequest]) (*connect.Response[sdp_go.GetMyCursorCredentialStatusResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.GetMyCursorCredentialStatus is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) GetMyCursorCredentialStatus(context.Context, *connect.Request[sdp_go.GetMyCursorCredentialStatusRequest]) (*connect.Response[sdp_go.GetMyCursorCredentialStatusResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.GetMyCursorCredentialStatus is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) SetMyCursorCredential(context.Context, *connect.Request[sdp_go.SetMyCursorCredentialRequest]) (*connect.Response[sdp_go.SetMyCursorCredentialResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.SetMyCursorCredential is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) SetMyCursorCredential(context.Context, *connect.Request[sdp_go.SetMyCursorCredentialRequest]) (*connect.Response[sdp_go.SetMyCursorCredentialResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.SetMyCursorCredential is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) DeleteMyCursorCredential(context.Context, *connect.Request[sdp_go.DeleteMyCursorCredentialRequest]) (*connect.Response[sdp_go.DeleteMyCursorCredentialResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.DeleteMyCursorCredential is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) DeleteMyCursorCredential(context.Context, *connect.Request[sdp_go.DeleteMyCursorCredentialRequest]) (*connect.Response[sdp_go.DeleteMyCursorCredentialResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.DeleteMyCursorCredential is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) GetWorkspaceIntegrationRoles(context.Context, *connect.Request[sdp_go.GetWorkspaceIntegrationRolesRequest]) (*connect.Response[sdp_go.GetWorkspaceIntegrationRolesResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.GetWorkspaceIntegrationRoles is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) GetWorkspaceIntegrationRoles(context.Context, *connect.Request[sdp_go.GetWorkspaceIntegrationRolesRequest]) (*connect.Response[sdp_go.GetWorkspaceIntegrationRolesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.GetWorkspaceIntegrationRoles is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) SetWorkspaceIntegrationRoles(context.Context, *connect.Request[sdp_go.SetWorkspaceIntegrationRolesRequest]) (*connect.Response[sdp_go.SetWorkspaceIntegrationRolesResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.SetWorkspaceIntegrationRoles is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) SetWorkspaceIntegrationRoles(context.Context, *connect.Request[sdp_go.SetWorkspaceIntegrationRolesRequest]) (*connect.Response[sdp_go.SetWorkspaceIntegrationRolesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.SetWorkspaceIntegrationRoles is not implemented"))
 }
 
-func (UnimplementedBrentServiceHandler) ResendVerificationEmail(context.Context, *connect.Request[sdp_go.ResendVerificationEmailRequest]) (*connect.Response[sdp_go.ResendVerificationEmailResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentService.ResendVerificationEmail is not implemented"))
+func (UnimplementedWorkspaceServiceHandler) ResendVerificationEmail(context.Context, *connect.Request[sdp_go.ResendVerificationEmailRequest]) (*connect.Response[sdp_go.ResendVerificationEmailResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.WorkspaceService.ResendVerificationEmail is not implemented"))
 }
 
-// BrentPublicServiceClient is a client for the brent.BrentPublicService service.
-type BrentPublicServiceClient interface {
+// PublicServiceClient is a client for the until.PublicService service.
+type PublicServiceClient interface {
 	GetInvitation(context.Context, *connect.Request[sdp_go.GetInvitationRequest]) (*connect.Response[sdp_go.GetInvitationResponse], error)
 }
 
-// NewBrentPublicServiceClient constructs a client for the brent.BrentPublicService service. By
-// default, it uses the Connect protocol with the binary Protobuf Codec, asks for gzipped responses,
-// and sends uncompressed requests. To use the gRPC or gRPC-Web protocols, supply the
-// connect.WithGRPC() or connect.WithGRPCWeb() options.
+// NewPublicServiceClient constructs a client for the until.PublicService service. By default, it
+// uses the Connect protocol with the binary Protobuf Codec, asks for gzipped responses, and sends
+// uncompressed requests. To use the gRPC or gRPC-Web protocols, supply the connect.WithGRPC() or
+// connect.WithGRPCWeb() options.
 //
 // The URL supplied here should be the base URL for the Connect or gRPC server (for example,
 // http://api.acme.com or https://acme.com/grpc).
-func NewBrentPublicServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) BrentPublicServiceClient {
+func NewPublicServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) PublicServiceClient {
 	baseURL = strings.TrimRight(baseURL, "/")
-	brentPublicServiceMethods := sdp_go.File_brent_proto.Services().ByName("BrentPublicService").Methods()
-	return &brentPublicServiceClient{
+	publicServiceMethods := sdp_go.File_brent_proto.Services().ByName("PublicService").Methods()
+	return &publicServiceClient{
 		getInvitation: connect.NewClient[sdp_go.GetInvitationRequest, sdp_go.GetInvitationResponse](
 			httpClient,
-			baseURL+BrentPublicServiceGetInvitationProcedure,
-			connect.WithSchema(brentPublicServiceMethods.ByName("GetInvitation")),
+			baseURL+PublicServiceGetInvitationProcedure,
+			connect.WithSchema(publicServiceMethods.ByName("GetInvitation")),
 			connect.WithClientOptions(opts...),
 		),
 	}
 }
 
-// brentPublicServiceClient implements BrentPublicServiceClient.
-type brentPublicServiceClient struct {
+// publicServiceClient implements PublicServiceClient.
+type publicServiceClient struct {
 	getInvitation *connect.Client[sdp_go.GetInvitationRequest, sdp_go.GetInvitationResponse]
 }
 
-// GetInvitation calls brent.BrentPublicService.GetInvitation.
-func (c *brentPublicServiceClient) GetInvitation(ctx context.Context, req *connect.Request[sdp_go.GetInvitationRequest]) (*connect.Response[sdp_go.GetInvitationResponse], error) {
+// GetInvitation calls until.PublicService.GetInvitation.
+func (c *publicServiceClient) GetInvitation(ctx context.Context, req *connect.Request[sdp_go.GetInvitationRequest]) (*connect.Response[sdp_go.GetInvitationResponse], error) {
 	return c.getInvitation.CallUnary(ctx, req)
 }
 
-// BrentPublicServiceHandler is an implementation of the brent.BrentPublicService service.
-type BrentPublicServiceHandler interface {
+// PublicServiceHandler is an implementation of the until.PublicService service.
+type PublicServiceHandler interface {
 	GetInvitation(context.Context, *connect.Request[sdp_go.GetInvitationRequest]) (*connect.Response[sdp_go.GetInvitationResponse], error)
 }
 
-// NewBrentPublicServiceHandler builds an HTTP handler from the service implementation. It returns
-// the path on which to mount the handler and the handler itself.
+// NewPublicServiceHandler builds an HTTP handler from the service implementation. It returns the
+// path on which to mount the handler and the handler itself.
 //
 // By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
 // and JSON codecs. They also support gzip compression.
-func NewBrentPublicServiceHandler(svc BrentPublicServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
-	brentPublicServiceMethods := sdp_go.File_brent_proto.Services().ByName("BrentPublicService").Methods()
-	brentPublicServiceGetInvitationHandler := connect.NewUnaryHandler(
-		BrentPublicServiceGetInvitationProcedure,
+func NewPublicServiceHandler(svc PublicServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
+	publicServiceMethods := sdp_go.File_brent_proto.Services().ByName("PublicService").Methods()
+	publicServiceGetInvitationHandler := connect.NewUnaryHandler(
+		PublicServiceGetInvitationProcedure,
 		svc.GetInvitation,
-		connect.WithSchema(brentPublicServiceMethods.ByName("GetInvitation")),
+		connect.WithSchema(publicServiceMethods.ByName("GetInvitation")),
 		connect.WithHandlerOptions(opts...),
 	)
-	return "/brent.BrentPublicService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return "/until.PublicService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
-		case BrentPublicServiceGetInvitationProcedure:
-			brentPublicServiceGetInvitationHandler.ServeHTTP(w, r)
+		case PublicServiceGetInvitationProcedure:
+			publicServiceGetInvitationHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
 	})
 }
 
-// UnimplementedBrentPublicServiceHandler returns CodeUnimplemented from all methods.
-type UnimplementedBrentPublicServiceHandler struct{}
+// UnimplementedPublicServiceHandler returns CodeUnimplemented from all methods.
+type UnimplementedPublicServiceHandler struct{}
 
-func (UnimplementedBrentPublicServiceHandler) GetInvitation(context.Context, *connect.Request[sdp_go.GetInvitationRequest]) (*connect.Response[sdp_go.GetInvitationResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentPublicService.GetInvitation is not implemented"))
+func (UnimplementedPublicServiceHandler) GetInvitation(context.Context, *connect.Request[sdp_go.GetInvitationRequest]) (*connect.Response[sdp_go.GetInvitationResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.PublicService.GetInvitation is not implemented"))
 }
 
-// BrentAdminServiceClient is a client for the brent.BrentAdminService service.
-type BrentAdminServiceClient interface {
+// UntilAdminServiceClient is a client for the until.AdminService service.
+type UntilAdminServiceClient interface {
 	// Executes a workflow from a natural-language prompt. The server streams
 	// steps as the agent reasons, calls MCP tools, and produces a final result.
 	// The stream ends with either a CompletionStep or a terminal ErrorStep.
 	// Operator-only; gated on admin:write.
-	ExecuteWorkflow(context.Context, *connect.Request[sdp_go.ExecuteWorkflowRequest]) (*connect.ServerStreamForClient[sdp_go.ExecuteWorkflowResponse], error)
+	ExecuteLoop(context.Context, *connect.Request[sdp_go.ExecuteLoopRequest]) (*connect.ServerStreamForClient[sdp_go.ExecuteLoopResponse], error)
 	// Lists all tracked runs (both UI-initiated and webhook-triggered).
 	// Operator-only; gated on admin:read.
 	ListRuns(context.Context, *connect.Request[sdp_go.ListRunsRequest]) (*connect.Response[sdp_go.ListRunsResponse], error)
 	// Streams steps for a specific run. Replays buffered steps first, then
 	// streams live steps until the run completes or the client disconnects.
 	// Operator-only; gated on admin:read.
-	WatchRun(context.Context, *connect.Request[sdp_go.WatchRunRequest]) (*connect.ServerStreamForClient[sdp_go.ExecuteWorkflowResponse], error)
+	WatchRun(context.Context, *connect.Request[sdp_go.WatchRunRequest]) (*connect.ServerStreamForClient[sdp_go.ExecuteLoopResponse], error)
 	// Streams live capital-E Events for the caller's account. No history or
 	// replay: clients only receive events emitted after the stream starts.
 	// Operator-only; gated on admin:read.
@@ -2198,10 +2188,10 @@ type BrentAdminServiceClient interface {
 	// Operator-only; gated on admin:write.
 	CancelRun(context.Context, *connect.Request[sdp_go.CancelRunRequest]) (*connect.Response[sdp_go.CancelRunResponse], error)
 	// Sends a follow-up question against a completed run's OpenAI context.
-	// The server streams the model's answer as ExecuteWorkflowResponse steps.
+	// The server streams the model's answer as ExecuteLoopResponse steps.
 	// Returns NotFound when the run has no stored response ID.
 	// Operator-only; gated on admin:write.
-	SendQuestion(context.Context, *connect.Request[sdp_go.SendQuestionRequest]) (*connect.ServerStreamForClient[sdp_go.ExecuteWorkflowResponse], error)
+	SendQuestion(context.Context, *connect.Request[sdp_go.SendQuestionRequest]) (*connect.ServerStreamForClient[sdp_go.ExecuteLoopResponse], error)
 	// Lists every non-deleted plan across every tenant. Operator-only; gated
 	// on admin:read (brent-area51 and staff Admin role).
 	//
@@ -2251,18 +2241,18 @@ type BrentAdminServiceClient interface {
 	// Polls a temporary metrics comparison run. Cross-tenant operator endpoint
 	// gated on admin:read. Completed runs include sandbox-renderable HTML.
 	GetAccountMetricsComparisonRun(context.Context, *connect.Request[sdp_go.AdminGetAccountMetricsComparisonRunRequest]) (*connect.Response[sdp_go.AdminGetAccountMetricsComparisonRunResponse], error)
-	// Reads the Brent deviation settings (red_finding_kinds) for any account.
-	// This is the operator-facing twin of GetBrentSettings: it gates on
+	// Reads the Brent deviation settings (blocking_difference_tags) for any account.
+	// This is the operator-facing twin of GetPlanCheckSettings: it gates on
 	// admin:read and requires an explicit account_name, so the brent-area51
 	// account detail page can show a customer's settings without holding that
 	// customer's brent:read scope. account_name is required (no caller-account
 	// fallback).
-	GetAccountBrentSettings(context.Context, *connect.Request[sdp_go.AdminGetAccountBrentSettingsRequest]) (*connect.Response[sdp_go.GetBrentSettingsResponse], error)
-	// Updates the Brent deviation settings (red_finding_kinds) for any account.
-	// Operator-facing twin of UpdateBrentSettings: gates on admin:write and
-	// requires an explicit account_name. PATCH semantics — omit red_finding_kinds
+	GetAccountPlanCheckSettings(context.Context, *connect.Request[sdp_go.AdminGetAccountPlanCheckSettingsRequest]) (*connect.Response[sdp_go.GetPlanCheckSettingsResponse], error)
+	// Updates the Brent deviation settings (blocking_difference_tags) for any account.
+	// Operator-facing twin of UpdatePlanCheckSettings: gates on admin:write and
+	// requires an explicit account_name. PATCH semantics — omit blocking_difference_tags
 	// to leave it unchanged; pass an empty array to disable red on all kinds.
-	UpdateAccountBrentSettings(context.Context, *connect.Request[sdp_go.AdminUpdateAccountBrentSettingsRequest]) (*connect.Response[sdp_go.UpdateBrentSettingsResponse], error)
+	UpdateAccountPlanCheckSettings(context.Context, *connect.Request[sdp_go.AdminUpdateAccountPlanCheckSettingsRequest]) (*connect.Response[sdp_go.UpdatePlanCheckSettingsResponse], error)
 	// Reads a workspace's explicit peer-review policy (ENG-6046 / BRENT-824).
 	// Gates on admin:read and requires an explicit account_name (no
 	// caller-account fallback). Returns the persisted policy, active-human
@@ -2288,26 +2278,26 @@ type BrentAdminServiceClient interface {
 	// Lists workflow definitions for the caller's account, ordered by name.
 	// Account-scoped: callers see only their own tenant's rows. Operator-only;
 	// gated on admin:read. Returns summary fields only (no body_template, no on_yaml);
-	// use GetWorkflow for the full definition.
-	ListWorkflows(context.Context, *connect.Request[sdp_go.ListWorkflowsRequest]) (*connect.Response[sdp_go.ListWorkflowsResponse], error)
+	// use GetLoop for the full definition.
+	ListLoops(context.Context, *connect.Request[sdp_go.ListLoopsRequest]) (*connect.Response[sdp_go.ListLoopsResponse], error)
 	// Fetches a single workflow definition by ID within the caller's account.
 	// Returns NotFound when the workflow is missing, soft-deleted, or owned by
-	// a different account. Same admin:read gate as ListWorkflows.
-	GetWorkflow(context.Context, *connect.Request[sdp_go.GetWorkflowRequest]) (*connect.Response[sdp_go.GetWorkflowResponse], error)
+	// a different account. Same admin:read gate as ListLoops.
+	GetLoop(context.Context, *connect.Request[sdp_go.GetLoopRequest]) (*connect.Response[sdp_go.GetLoopResponse], error)
 	// Lists workflow runs for the caller's account, newest first. Account-
 	// scoped; gated on admin:read. Supports cursor pagination (limit +
 	// after_cursor) and an optional workflow_name filter for the per-workflow
 	// run-list view.
-	ListWorkflowRuns(context.Context, *connect.Request[sdp_go.ListWorkflowRunsRequest]) (*connect.Response[sdp_go.ListWorkflowRunsResponse], error)
+	ListLoopRuns(context.Context, *connect.Request[sdp_go.ListLoopRunsRequest]) (*connect.Response[sdp_go.ListLoopRunsResponse], error)
 	// Fetches a single workflow run by ID within the caller's account. Returns
-	// the full WorkflowRun (including prompt and the typed Event payload that
-	// triggered it) plus an optional parent WorkflowSummary lookable up by
+	// the full LoopRun (including prompt and the typed Event payload that
+	// triggered it) plus an optional parent LoopSummary lookable up by
 	// (account_name, name). Same admin:read gate.
-	GetWorkflowRun(context.Context, *connect.Request[sdp_go.GetWorkflowRunRequest]) (*connect.Response[sdp_go.GetWorkflowRunResponse], error)
+	GetLoopRun(context.Context, *connect.Request[sdp_go.GetLoopRunRequest]) (*connect.Response[sdp_go.GetLoopRunResponse], error)
 	// Returns persisted steps for ancestor runs in the resumed_from_run_id chain
 	// (oldest first). The current run's live tail stays on WatchRun. Same
-	// admin:read gate as GetWorkflowRun.
-	GetWorkflowRunThreadHistory(context.Context, *connect.Request[sdp_go.GetWorkflowRunThreadHistoryRequest]) (*connect.Response[sdp_go.GetWorkflowRunThreadHistoryResponse], error)
+	// admin:read gate as GetLoopRun.
+	GetLoopRunThreadHistory(context.Context, *connect.Request[sdp_go.GetLoopRunThreadHistoryRequest]) (*connect.Response[sdp_go.GetLoopRunThreadHistoryResponse], error)
 	// Lists pull requests for the caller's tenant, sorted by updated_at DESC.
 	// Account-scoped: callers see only their own rows. Operator-only; gated on admin:read.
 	// The `state` filter accepts "" (default → open), "open", "closed"
@@ -2322,7 +2312,7 @@ type BrentAdminServiceClient interface {
 	// Lists deviation analyses for a pull request, newest-first by started_at.
 	// Account-scoped: a pr_id from another tenant returns an empty list (not an
 	// error). Gated on admin:read.
-	ListDeviationAnalysesForPR(context.Context, *connect.Request[sdp_go.ListDeviationAnalysesForPRRequest]) (*connect.Response[sdp_go.ListDeviationAnalysesForPRResponse], error)
+	ListPlanChecksForPR(context.Context, *connect.Request[sdp_go.ListPlanChecksForPRRequest]) (*connect.Response[sdp_go.ListPlanChecksForPRResponse], error)
 	// Lists principals across every tenant for the Area51 debug UI. Operator-only;
 	// gated on admin:read. Summary fields only; use GetPrincipal for
 	// identities and bindings.
@@ -2360,281 +2350,281 @@ type BrentAdminServiceClient interface {
 	GetPullRequestTimeline(context.Context, *connect.Request[sdp_go.GetPullRequestTimelineRequest]) (*connect.Response[sdp_go.GetPullRequestTimelineResponse], error)
 }
 
-// NewBrentAdminServiceClient constructs a client for the brent.BrentAdminService service. By
-// default, it uses the Connect protocol with the binary Protobuf Codec, asks for gzipped responses,
-// and sends uncompressed requests. To use the gRPC or gRPC-Web protocols, supply the
-// connect.WithGRPC() or connect.WithGRPCWeb() options.
+// NewUntilAdminServiceClient constructs a client for the until.AdminService service. By default, it uses
+// the Connect protocol with the binary Protobuf Codec, asks for gzipped responses, and sends
+// uncompressed requests. To use the gRPC or gRPC-Web protocols, supply the connect.WithGRPC() or
+// connect.WithGRPCWeb() options.
 //
 // The URL supplied here should be the base URL for the Connect or gRPC server (for example,
 // http://api.acme.com or https://acme.com/grpc).
-func NewBrentAdminServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) BrentAdminServiceClient {
+func NewUntilAdminServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...connect.ClientOption) UntilAdminServiceClient {
 	baseURL = strings.TrimRight(baseURL, "/")
-	brentAdminServiceMethods := sdp_go.File_brent_proto.Services().ByName("BrentAdminService").Methods()
-	return &brentAdminServiceClient{
-		executeWorkflow: connect.NewClient[sdp_go.ExecuteWorkflowRequest, sdp_go.ExecuteWorkflowResponse](
+	untilAdminServiceMethods := sdp_go.File_brent_proto.Services().ByName("AdminService").Methods()
+	return &untilAdminServiceClient{
+		executeLoop: connect.NewClient[sdp_go.ExecuteLoopRequest, sdp_go.ExecuteLoopResponse](
 			httpClient,
-			baseURL+BrentAdminServiceExecuteWorkflowProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("ExecuteWorkflow")),
+			baseURL+UntilAdminServiceExecuteLoopProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("ExecuteLoop")),
 			connect.WithClientOptions(opts...),
 		),
 		listRuns: connect.NewClient[sdp_go.ListRunsRequest, sdp_go.ListRunsResponse](
 			httpClient,
-			baseURL+BrentAdminServiceListRunsProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("ListRuns")),
+			baseURL+UntilAdminServiceListRunsProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("ListRuns")),
 			connect.WithClientOptions(opts...),
 		),
-		watchRun: connect.NewClient[sdp_go.WatchRunRequest, sdp_go.ExecuteWorkflowResponse](
+		watchRun: connect.NewClient[sdp_go.WatchRunRequest, sdp_go.ExecuteLoopResponse](
 			httpClient,
-			baseURL+BrentAdminServiceWatchRunProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("WatchRun")),
+			baseURL+UntilAdminServiceWatchRunProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("WatchRun")),
 			connect.WithClientOptions(opts...),
 		),
 		streamEvents: connect.NewClient[sdp_go.StreamEventsRequest, sdp_go.StreamEventsResponse](
 			httpClient,
-			baseURL+BrentAdminServiceStreamEventsProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("StreamEvents")),
+			baseURL+UntilAdminServiceStreamEventsProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("StreamEvents")),
 			connect.WithClientOptions(opts...),
 		),
 		listEvents: connect.NewClient[sdp_go.ListEventsRequest, sdp_go.ListEventsResponse](
 			httpClient,
-			baseURL+BrentAdminServiceListEventsProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("ListEvents")),
+			baseURL+UntilAdminServiceListEventsProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("ListEvents")),
 			connect.WithClientOptions(opts...),
 		),
 		cancelRun: connect.NewClient[sdp_go.CancelRunRequest, sdp_go.CancelRunResponse](
 			httpClient,
-			baseURL+BrentAdminServiceCancelRunProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("CancelRun")),
+			baseURL+UntilAdminServiceCancelRunProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("CancelRun")),
 			connect.WithClientOptions(opts...),
 		),
-		sendQuestion: connect.NewClient[sdp_go.SendQuestionRequest, sdp_go.ExecuteWorkflowResponse](
+		sendQuestion: connect.NewClient[sdp_go.SendQuestionRequest, sdp_go.ExecuteLoopResponse](
 			httpClient,
-			baseURL+BrentAdminServiceSendQuestionProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("SendQuestion")),
+			baseURL+UntilAdminServiceSendQuestionProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("SendQuestion")),
 			connect.WithClientOptions(opts...),
 		),
 		listPlans: connect.NewClient[sdp_go.AdminListPlansRequest, sdp_go.AdminListPlansResponse](
 			httpClient,
-			baseURL+BrentAdminServiceListPlansProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("ListPlans")),
+			baseURL+UntilAdminServiceListPlansProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("ListPlans")),
 			connect.WithClientOptions(opts...),
 		),
 		getPlan: connect.NewClient[sdp_go.AdminGetPlanRequest, sdp_go.AdminGetPlanResponse](
 			httpClient,
-			baseURL+BrentAdminServiceGetPlanProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("GetPlan")),
+			baseURL+UntilAdminServiceGetPlanProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("GetPlan")),
 			connect.WithClientOptions(opts...),
 		),
 		listReviews: connect.NewClient[sdp_go.AdminListReviewsRequest, sdp_go.AdminListReviewsResponse](
 			httpClient,
-			baseURL+BrentAdminServiceListReviewsProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("ListReviews")),
+			baseURL+UntilAdminServiceListReviewsProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("ListReviews")),
 			connect.WithClientOptions(opts...),
 		),
 		getReview: connect.NewClient[sdp_go.AdminGetReviewRequest, sdp_go.AdminGetReviewResponse](
 			httpClient,
-			baseURL+BrentAdminServiceGetReviewProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("GetReview")),
+			baseURL+UntilAdminServiceGetReviewProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("GetReview")),
 			connect.WithClientOptions(opts...),
 		),
 		listAccounts: connect.NewClient[emptypb.Empty, sdp_go.AdminListAccountsResponse](
 			httpClient,
-			baseURL+BrentAdminServiceListAccountsProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("ListAccounts")),
+			baseURL+UntilAdminServiceListAccountsProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("ListAccounts")),
 			connect.WithClientOptions(opts...),
 		),
 		getAccountSummary: connect.NewClient[sdp_go.AdminGetAccountSummaryRequest, sdp_go.AdminGetAccountSummaryResponse](
 			httpClient,
-			baseURL+BrentAdminServiceGetAccountSummaryProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("GetAccountSummary")),
+			baseURL+UntilAdminServiceGetAccountSummaryProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("GetAccountSummary")),
 			connect.WithClientOptions(opts...),
 		),
 		getAccountHealthAnalysis: connect.NewClient[sdp_go.AdminGetAccountHealthAnalysisRequest, sdp_go.AdminGetAccountHealthAnalysisResponse](
 			httpClient,
-			baseURL+BrentAdminServiceGetAccountHealthAnalysisProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("GetAccountHealthAnalysis")),
+			baseURL+UntilAdminServiceGetAccountHealthAnalysisProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("GetAccountHealthAnalysis")),
 			connect.WithClientOptions(opts...),
 		),
 		listAccountMetricRepos: connect.NewClient[sdp_go.AdminListAccountMetricReposRequest, sdp_go.AdminListAccountMetricReposResponse](
 			httpClient,
-			baseURL+BrentAdminServiceListAccountMetricReposProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("ListAccountMetricRepos")),
+			baseURL+UntilAdminServiceListAccountMetricReposProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("ListAccountMetricRepos")),
 			connect.WithClientOptions(opts...),
 		),
 		startAccountMetricsComparison: connect.NewClient[sdp_go.AdminStartAccountMetricsComparisonRequest, sdp_go.AdminStartAccountMetricsComparisonResponse](
 			httpClient,
-			baseURL+BrentAdminServiceStartAccountMetricsComparisonProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("StartAccountMetricsComparison")),
+			baseURL+UntilAdminServiceStartAccountMetricsComparisonProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("StartAccountMetricsComparison")),
 			connect.WithClientOptions(opts...),
 		),
 		getAccountMetricsComparisonRun: connect.NewClient[sdp_go.AdminGetAccountMetricsComparisonRunRequest, sdp_go.AdminGetAccountMetricsComparisonRunResponse](
 			httpClient,
-			baseURL+BrentAdminServiceGetAccountMetricsComparisonRunProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("GetAccountMetricsComparisonRun")),
+			baseURL+UntilAdminServiceGetAccountMetricsComparisonRunProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("GetAccountMetricsComparisonRun")),
 			connect.WithClientOptions(opts...),
 		),
-		getAccountBrentSettings: connect.NewClient[sdp_go.AdminGetAccountBrentSettingsRequest, sdp_go.GetBrentSettingsResponse](
+		getAccountPlanCheckSettings: connect.NewClient[sdp_go.AdminGetAccountPlanCheckSettingsRequest, sdp_go.GetPlanCheckSettingsResponse](
 			httpClient,
-			baseURL+BrentAdminServiceGetAccountBrentSettingsProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("GetAccountBrentSettings")),
+			baseURL+UntilAdminServiceGetAccountPlanCheckSettingsProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("GetAccountPlanCheckSettings")),
 			connect.WithClientOptions(opts...),
 		),
-		updateAccountBrentSettings: connect.NewClient[sdp_go.AdminUpdateAccountBrentSettingsRequest, sdp_go.UpdateBrentSettingsResponse](
+		updateAccountPlanCheckSettings: connect.NewClient[sdp_go.AdminUpdateAccountPlanCheckSettingsRequest, sdp_go.UpdatePlanCheckSettingsResponse](
 			httpClient,
-			baseURL+BrentAdminServiceUpdateAccountBrentSettingsProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("UpdateAccountBrentSettings")),
+			baseURL+UntilAdminServiceUpdateAccountPlanCheckSettingsProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("UpdateAccountPlanCheckSettings")),
 			connect.WithClientOptions(opts...),
 		),
 		getAccountReviewPolicy: connect.NewClient[sdp_go.AdminGetAccountReviewPolicyRequest, sdp_go.AdminGetAccountReviewPolicyResponse](
 			httpClient,
-			baseURL+BrentAdminServiceGetAccountReviewPolicyProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("GetAccountReviewPolicy")),
+			baseURL+UntilAdminServiceGetAccountReviewPolicyProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("GetAccountReviewPolicy")),
 			connect.WithClientOptions(opts...),
 		),
 		updateAccountReviewPolicy: connect.NewClient[sdp_go.AdminUpdateAccountReviewPolicyRequest, sdp_go.AdminUpdateAccountReviewPolicyResponse](
 			httpClient,
-			baseURL+BrentAdminServiceUpdateAccountReviewPolicyProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("UpdateAccountReviewPolicy")),
+			baseURL+UntilAdminServiceUpdateAccountReviewPolicyProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("UpdateAccountReviewPolicy")),
 			connect.WithClientOptions(opts...),
 		),
 		getAccountLLMCredentialStatus: connect.NewClient[sdp_go.AdminGetAccountLLMCredentialStatusRequest, sdp_go.AdminGetAccountLLMCredentialStatusResponse](
 			httpClient,
-			baseURL+BrentAdminServiceGetAccountLLMCredentialStatusProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("GetAccountLLMCredentialStatus")),
+			baseURL+UntilAdminServiceGetAccountLLMCredentialStatusProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("GetAccountLLMCredentialStatus")),
 			connect.WithClientOptions(opts...),
 		),
 		listAccountIntegrations: connect.NewClient[sdp_go.AdminListAccountIntegrationsRequest, sdp_go.AdminListAccountIntegrationsResponse](
 			httpClient,
-			baseURL+BrentAdminServiceListAccountIntegrationsProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("ListAccountIntegrations")),
+			baseURL+UntilAdminServiceListAccountIntegrationsProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("ListAccountIntegrations")),
 			connect.WithClientOptions(opts...),
 		),
-		listWorkflows: connect.NewClient[sdp_go.ListWorkflowsRequest, sdp_go.ListWorkflowsResponse](
+		listLoops: connect.NewClient[sdp_go.ListLoopsRequest, sdp_go.ListLoopsResponse](
 			httpClient,
-			baseURL+BrentAdminServiceListWorkflowsProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("ListWorkflows")),
+			baseURL+UntilAdminServiceListLoopsProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("ListLoops")),
 			connect.WithClientOptions(opts...),
 		),
-		getWorkflow: connect.NewClient[sdp_go.GetWorkflowRequest, sdp_go.GetWorkflowResponse](
+		getLoop: connect.NewClient[sdp_go.GetLoopRequest, sdp_go.GetLoopResponse](
 			httpClient,
-			baseURL+BrentAdminServiceGetWorkflowProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("GetWorkflow")),
+			baseURL+UntilAdminServiceGetLoopProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("GetLoop")),
 			connect.WithClientOptions(opts...),
 		),
-		listWorkflowRuns: connect.NewClient[sdp_go.ListWorkflowRunsRequest, sdp_go.ListWorkflowRunsResponse](
+		listLoopRuns: connect.NewClient[sdp_go.ListLoopRunsRequest, sdp_go.ListLoopRunsResponse](
 			httpClient,
-			baseURL+BrentAdminServiceListWorkflowRunsProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("ListWorkflowRuns")),
+			baseURL+UntilAdminServiceListLoopRunsProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("ListLoopRuns")),
 			connect.WithClientOptions(opts...),
 		),
-		getWorkflowRun: connect.NewClient[sdp_go.GetWorkflowRunRequest, sdp_go.GetWorkflowRunResponse](
+		getLoopRun: connect.NewClient[sdp_go.GetLoopRunRequest, sdp_go.GetLoopRunResponse](
 			httpClient,
-			baseURL+BrentAdminServiceGetWorkflowRunProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("GetWorkflowRun")),
+			baseURL+UntilAdminServiceGetLoopRunProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("GetLoopRun")),
 			connect.WithClientOptions(opts...),
 		),
-		getWorkflowRunThreadHistory: connect.NewClient[sdp_go.GetWorkflowRunThreadHistoryRequest, sdp_go.GetWorkflowRunThreadHistoryResponse](
+		getLoopRunThreadHistory: connect.NewClient[sdp_go.GetLoopRunThreadHistoryRequest, sdp_go.GetLoopRunThreadHistoryResponse](
 			httpClient,
-			baseURL+BrentAdminServiceGetWorkflowRunThreadHistoryProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("GetWorkflowRunThreadHistory")),
+			baseURL+UntilAdminServiceGetLoopRunThreadHistoryProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("GetLoopRunThreadHistory")),
 			connect.WithClientOptions(opts...),
 		),
 		listPullRequests: connect.NewClient[sdp_go.ListPullRequestsRequest, sdp_go.ListPullRequestsResponse](
 			httpClient,
-			baseURL+BrentAdminServiceListPullRequestsProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("ListPullRequests")),
+			baseURL+UntilAdminServiceListPullRequestsProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("ListPullRequests")),
 			connect.WithClientOptions(opts...),
 		),
 		getPullRequestByID: connect.NewClient[sdp_go.GetPullRequestByIDRequest, sdp_go.GetPullRequestByIDResponse](
 			httpClient,
-			baseURL+BrentAdminServiceGetPullRequestByIDProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("GetPullRequestByID")),
+			baseURL+UntilAdminServiceGetPullRequestByIDProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("GetPullRequestByID")),
 			connect.WithClientOptions(opts...),
 		),
-		listDeviationAnalysesForPR: connect.NewClient[sdp_go.ListDeviationAnalysesForPRRequest, sdp_go.ListDeviationAnalysesForPRResponse](
+		listPlanChecksForPR: connect.NewClient[sdp_go.ListPlanChecksForPRRequest, sdp_go.ListPlanChecksForPRResponse](
 			httpClient,
-			baseURL+BrentAdminServiceListDeviationAnalysesForPRProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("ListDeviationAnalysesForPR")),
+			baseURL+UntilAdminServiceListPlanChecksForPRProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("ListPlanChecksForPR")),
 			connect.WithClientOptions(opts...),
 		),
 		listPrincipals: connect.NewClient[sdp_go.AdminListPrincipalsRequest, sdp_go.AdminListPrincipalsResponse](
 			httpClient,
-			baseURL+BrentAdminServiceListPrincipalsProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("ListPrincipals")),
+			baseURL+UntilAdminServiceListPrincipalsProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("ListPrincipals")),
 			connect.WithClientOptions(opts...),
 		),
 		getPrincipal: connect.NewClient[sdp_go.AdminGetPrincipalRequest, sdp_go.AdminGetPrincipalResponse](
 			httpClient,
-			baseURL+BrentAdminServiceGetPrincipalProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("GetPrincipal")),
+			baseURL+UntilAdminServiceGetPrincipalProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("GetPrincipal")),
 			connect.WithClientOptions(opts...),
 		),
 		upsertPrincipalBinding: connect.NewClient[sdp_go.AdminUpsertPrincipalBindingRequest, sdp_go.AdminUpsertPrincipalBindingResponse](
 			httpClient,
-			baseURL+BrentAdminServiceUpsertPrincipalBindingProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("UpsertPrincipalBinding")),
+			baseURL+UntilAdminServiceUpsertPrincipalBindingProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("UpsertPrincipalBinding")),
 			connect.WithClientOptions(opts...),
 		),
 		deletePrincipalBinding: connect.NewClient[sdp_go.AdminDeletePrincipalBindingRequest, sdp_go.AdminDeletePrincipalBindingResponse](
 			httpClient,
-			baseURL+BrentAdminServiceDeletePrincipalBindingProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("DeletePrincipalBinding")),
+			baseURL+UntilAdminServiceDeletePrincipalBindingProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("DeletePrincipalBinding")),
 			connect.WithClientOptions(opts...),
 		),
 		updatePrincipal: connect.NewClient[sdp_go.AdminUpdatePrincipalRequest, sdp_go.AdminUpdatePrincipalResponse](
 			httpClient,
-			baseURL+BrentAdminServiceUpdatePrincipalProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("UpdatePrincipal")),
+			baseURL+UntilAdminServiceUpdatePrincipalProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("UpdatePrincipal")),
 			connect.WithClientOptions(opts...),
 		),
 		createPrincipalIdentity: connect.NewClient[sdp_go.AdminCreatePrincipalIdentityRequest, sdp_go.AdminCreatePrincipalIdentityResponse](
 			httpClient,
-			baseURL+BrentAdminServiceCreatePrincipalIdentityProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("CreatePrincipalIdentity")),
+			baseURL+UntilAdminServiceCreatePrincipalIdentityProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("CreatePrincipalIdentity")),
 			connect.WithClientOptions(opts...),
 		),
 		deletePrincipalIdentity: connect.NewClient[sdp_go.AdminDeletePrincipalIdentityRequest, sdp_go.AdminDeletePrincipalIdentityResponse](
 			httpClient,
-			baseURL+BrentAdminServiceDeletePrincipalIdentityProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("DeletePrincipalIdentity")),
+			baseURL+UntilAdminServiceDeletePrincipalIdentityProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("DeletePrincipalIdentity")),
 			connect.WithClientOptions(opts...),
 		),
 		setPrincipalCredential: connect.NewClient[sdp_go.AdminSetPrincipalCredentialRequest, sdp_go.AdminSetPrincipalCredentialResponse](
 			httpClient,
-			baseURL+BrentAdminServiceSetPrincipalCredentialProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("SetPrincipalCredential")),
+			baseURL+UntilAdminServiceSetPrincipalCredentialProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("SetPrincipalCredential")),
 			connect.WithClientOptions(opts...),
 		),
 		listPrincipalCredentialConnections: connect.NewClient[sdp_go.AdminListPrincipalCredentialConnectionsRequest, sdp_go.AdminListPrincipalCredentialConnectionsResponse](
 			httpClient,
-			baseURL+BrentAdminServiceListPrincipalCredentialConnectionsProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("ListPrincipalCredentialConnections")),
+			baseURL+UntilAdminServiceListPrincipalCredentialConnectionsProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("ListPrincipalCredentialConnections")),
 			connect.WithClientOptions(opts...),
 		),
 		deletePrincipalCredential: connect.NewClient[sdp_go.AdminDeletePrincipalCredentialRequest, sdp_go.AdminDeletePrincipalCredentialResponse](
 			httpClient,
-			baseURL+BrentAdminServiceDeletePrincipalCredentialProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("DeletePrincipalCredential")),
+			baseURL+UntilAdminServiceDeletePrincipalCredentialProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("DeletePrincipalCredential")),
 			connect.WithClientOptions(opts...),
 		),
 		getPullRequestTimeline: connect.NewClient[sdp_go.GetPullRequestTimelineRequest, sdp_go.GetPullRequestTimelineResponse](
 			httpClient,
-			baseURL+BrentAdminServiceGetPullRequestTimelineProcedure,
-			connect.WithSchema(brentAdminServiceMethods.ByName("GetPullRequestTimeline")),
+			baseURL+UntilAdminServiceGetPullRequestTimelineProcedure,
+			connect.WithSchema(untilAdminServiceMethods.ByName("GetPullRequestTimeline")),
 			connect.WithClientOptions(opts...),
 		),
 	}
 }
 
-// brentAdminServiceClient implements BrentAdminServiceClient.
-type brentAdminServiceClient struct {
-	executeWorkflow                    *connect.Client[sdp_go.ExecuteWorkflowRequest, sdp_go.ExecuteWorkflowResponse]
+// untilAdminServiceClient implements UntilAdminServiceClient.
+type untilAdminServiceClient struct {
+	executeLoop                        *connect.Client[sdp_go.ExecuteLoopRequest, sdp_go.ExecuteLoopResponse]
 	listRuns                           *connect.Client[sdp_go.ListRunsRequest, sdp_go.ListRunsResponse]
-	watchRun                           *connect.Client[sdp_go.WatchRunRequest, sdp_go.ExecuteWorkflowResponse]
+	watchRun                           *connect.Client[sdp_go.WatchRunRequest, sdp_go.ExecuteLoopResponse]
 	streamEvents                       *connect.Client[sdp_go.StreamEventsRequest, sdp_go.StreamEventsResponse]
 	listEvents                         *connect.Client[sdp_go.ListEventsRequest, sdp_go.ListEventsResponse]
 	cancelRun                          *connect.Client[sdp_go.CancelRunRequest, sdp_go.CancelRunResponse]
-	sendQuestion                       *connect.Client[sdp_go.SendQuestionRequest, sdp_go.ExecuteWorkflowResponse]
+	sendQuestion                       *connect.Client[sdp_go.SendQuestionRequest, sdp_go.ExecuteLoopResponse]
 	listPlans                          *connect.Client[sdp_go.AdminListPlansRequest, sdp_go.AdminListPlansResponse]
 	getPlan                            *connect.Client[sdp_go.AdminGetPlanRequest, sdp_go.AdminGetPlanResponse]
 	listReviews                        *connect.Client[sdp_go.AdminListReviewsRequest, sdp_go.AdminListReviewsResponse]
@@ -2645,20 +2635,20 @@ type brentAdminServiceClient struct {
 	listAccountMetricRepos             *connect.Client[sdp_go.AdminListAccountMetricReposRequest, sdp_go.AdminListAccountMetricReposResponse]
 	startAccountMetricsComparison      *connect.Client[sdp_go.AdminStartAccountMetricsComparisonRequest, sdp_go.AdminStartAccountMetricsComparisonResponse]
 	getAccountMetricsComparisonRun     *connect.Client[sdp_go.AdminGetAccountMetricsComparisonRunRequest, sdp_go.AdminGetAccountMetricsComparisonRunResponse]
-	getAccountBrentSettings            *connect.Client[sdp_go.AdminGetAccountBrentSettingsRequest, sdp_go.GetBrentSettingsResponse]
-	updateAccountBrentSettings         *connect.Client[sdp_go.AdminUpdateAccountBrentSettingsRequest, sdp_go.UpdateBrentSettingsResponse]
+	getAccountPlanCheckSettings        *connect.Client[sdp_go.AdminGetAccountPlanCheckSettingsRequest, sdp_go.GetPlanCheckSettingsResponse]
+	updateAccountPlanCheckSettings     *connect.Client[sdp_go.AdminUpdateAccountPlanCheckSettingsRequest, sdp_go.UpdatePlanCheckSettingsResponse]
 	getAccountReviewPolicy             *connect.Client[sdp_go.AdminGetAccountReviewPolicyRequest, sdp_go.AdminGetAccountReviewPolicyResponse]
 	updateAccountReviewPolicy          *connect.Client[sdp_go.AdminUpdateAccountReviewPolicyRequest, sdp_go.AdminUpdateAccountReviewPolicyResponse]
 	getAccountLLMCredentialStatus      *connect.Client[sdp_go.AdminGetAccountLLMCredentialStatusRequest, sdp_go.AdminGetAccountLLMCredentialStatusResponse]
 	listAccountIntegrations            *connect.Client[sdp_go.AdminListAccountIntegrationsRequest, sdp_go.AdminListAccountIntegrationsResponse]
-	listWorkflows                      *connect.Client[sdp_go.ListWorkflowsRequest, sdp_go.ListWorkflowsResponse]
-	getWorkflow                        *connect.Client[sdp_go.GetWorkflowRequest, sdp_go.GetWorkflowResponse]
-	listWorkflowRuns                   *connect.Client[sdp_go.ListWorkflowRunsRequest, sdp_go.ListWorkflowRunsResponse]
-	getWorkflowRun                     *connect.Client[sdp_go.GetWorkflowRunRequest, sdp_go.GetWorkflowRunResponse]
-	getWorkflowRunThreadHistory        *connect.Client[sdp_go.GetWorkflowRunThreadHistoryRequest, sdp_go.GetWorkflowRunThreadHistoryResponse]
+	listLoops                          *connect.Client[sdp_go.ListLoopsRequest, sdp_go.ListLoopsResponse]
+	getLoop                            *connect.Client[sdp_go.GetLoopRequest, sdp_go.GetLoopResponse]
+	listLoopRuns                       *connect.Client[sdp_go.ListLoopRunsRequest, sdp_go.ListLoopRunsResponse]
+	getLoopRun                         *connect.Client[sdp_go.GetLoopRunRequest, sdp_go.GetLoopRunResponse]
+	getLoopRunThreadHistory            *connect.Client[sdp_go.GetLoopRunThreadHistoryRequest, sdp_go.GetLoopRunThreadHistoryResponse]
 	listPullRequests                   *connect.Client[sdp_go.ListPullRequestsRequest, sdp_go.ListPullRequestsResponse]
 	getPullRequestByID                 *connect.Client[sdp_go.GetPullRequestByIDRequest, sdp_go.GetPullRequestByIDResponse]
-	listDeviationAnalysesForPR         *connect.Client[sdp_go.ListDeviationAnalysesForPRRequest, sdp_go.ListDeviationAnalysesForPRResponse]
+	listPlanChecksForPR                *connect.Client[sdp_go.ListPlanChecksForPRRequest, sdp_go.ListPlanChecksForPRResponse]
 	listPrincipals                     *connect.Client[sdp_go.AdminListPrincipalsRequest, sdp_go.AdminListPrincipalsResponse]
 	getPrincipal                       *connect.Client[sdp_go.AdminGetPrincipalRequest, sdp_go.AdminGetPrincipalResponse]
 	upsertPrincipalBinding             *connect.Client[sdp_go.AdminUpsertPrincipalBindingRequest, sdp_go.AdminUpsertPrincipalBindingResponse]
@@ -2672,231 +2662,230 @@ type brentAdminServiceClient struct {
 	getPullRequestTimeline             *connect.Client[sdp_go.GetPullRequestTimelineRequest, sdp_go.GetPullRequestTimelineResponse]
 }
 
-// ExecuteWorkflow calls brent.BrentAdminService.ExecuteWorkflow.
-func (c *brentAdminServiceClient) ExecuteWorkflow(ctx context.Context, req *connect.Request[sdp_go.ExecuteWorkflowRequest]) (*connect.ServerStreamForClient[sdp_go.ExecuteWorkflowResponse], error) {
-	return c.executeWorkflow.CallServerStream(ctx, req)
+// ExecuteLoop calls until.AdminService.ExecuteLoop.
+func (c *untilAdminServiceClient) ExecuteLoop(ctx context.Context, req *connect.Request[sdp_go.ExecuteLoopRequest]) (*connect.ServerStreamForClient[sdp_go.ExecuteLoopResponse], error) {
+	return c.executeLoop.CallServerStream(ctx, req)
 }
 
-// ListRuns calls brent.BrentAdminService.ListRuns.
-func (c *brentAdminServiceClient) ListRuns(ctx context.Context, req *connect.Request[sdp_go.ListRunsRequest]) (*connect.Response[sdp_go.ListRunsResponse], error) {
+// ListRuns calls until.AdminService.ListRuns.
+func (c *untilAdminServiceClient) ListRuns(ctx context.Context, req *connect.Request[sdp_go.ListRunsRequest]) (*connect.Response[sdp_go.ListRunsResponse], error) {
 	return c.listRuns.CallUnary(ctx, req)
 }
 
-// WatchRun calls brent.BrentAdminService.WatchRun.
-func (c *brentAdminServiceClient) WatchRun(ctx context.Context, req *connect.Request[sdp_go.WatchRunRequest]) (*connect.ServerStreamForClient[sdp_go.ExecuteWorkflowResponse], error) {
+// WatchRun calls until.AdminService.WatchRun.
+func (c *untilAdminServiceClient) WatchRun(ctx context.Context, req *connect.Request[sdp_go.WatchRunRequest]) (*connect.ServerStreamForClient[sdp_go.ExecuteLoopResponse], error) {
 	return c.watchRun.CallServerStream(ctx, req)
 }
 
-// StreamEvents calls brent.BrentAdminService.StreamEvents.
-func (c *brentAdminServiceClient) StreamEvents(ctx context.Context, req *connect.Request[sdp_go.StreamEventsRequest]) (*connect.ServerStreamForClient[sdp_go.StreamEventsResponse], error) {
+// StreamEvents calls until.AdminService.StreamEvents.
+func (c *untilAdminServiceClient) StreamEvents(ctx context.Context, req *connect.Request[sdp_go.StreamEventsRequest]) (*connect.ServerStreamForClient[sdp_go.StreamEventsResponse], error) {
 	return c.streamEvents.CallServerStream(ctx, req)
 }
 
-// ListEvents calls brent.BrentAdminService.ListEvents.
-func (c *brentAdminServiceClient) ListEvents(ctx context.Context, req *connect.Request[sdp_go.ListEventsRequest]) (*connect.Response[sdp_go.ListEventsResponse], error) {
+// ListEvents calls until.AdminService.ListEvents.
+func (c *untilAdminServiceClient) ListEvents(ctx context.Context, req *connect.Request[sdp_go.ListEventsRequest]) (*connect.Response[sdp_go.ListEventsResponse], error) {
 	return c.listEvents.CallUnary(ctx, req)
 }
 
-// CancelRun calls brent.BrentAdminService.CancelRun.
-func (c *brentAdminServiceClient) CancelRun(ctx context.Context, req *connect.Request[sdp_go.CancelRunRequest]) (*connect.Response[sdp_go.CancelRunResponse], error) {
+// CancelRun calls until.AdminService.CancelRun.
+func (c *untilAdminServiceClient) CancelRun(ctx context.Context, req *connect.Request[sdp_go.CancelRunRequest]) (*connect.Response[sdp_go.CancelRunResponse], error) {
 	return c.cancelRun.CallUnary(ctx, req)
 }
 
-// SendQuestion calls brent.BrentAdminService.SendQuestion.
-func (c *brentAdminServiceClient) SendQuestion(ctx context.Context, req *connect.Request[sdp_go.SendQuestionRequest]) (*connect.ServerStreamForClient[sdp_go.ExecuteWorkflowResponse], error) {
+// SendQuestion calls until.AdminService.SendQuestion.
+func (c *untilAdminServiceClient) SendQuestion(ctx context.Context, req *connect.Request[sdp_go.SendQuestionRequest]) (*connect.ServerStreamForClient[sdp_go.ExecuteLoopResponse], error) {
 	return c.sendQuestion.CallServerStream(ctx, req)
 }
 
-// ListPlans calls brent.BrentAdminService.ListPlans.
-func (c *brentAdminServiceClient) ListPlans(ctx context.Context, req *connect.Request[sdp_go.AdminListPlansRequest]) (*connect.Response[sdp_go.AdminListPlansResponse], error) {
+// ListPlans calls until.AdminService.ListPlans.
+func (c *untilAdminServiceClient) ListPlans(ctx context.Context, req *connect.Request[sdp_go.AdminListPlansRequest]) (*connect.Response[sdp_go.AdminListPlansResponse], error) {
 	return c.listPlans.CallUnary(ctx, req)
 }
 
-// GetPlan calls brent.BrentAdminService.GetPlan.
-func (c *brentAdminServiceClient) GetPlan(ctx context.Context, req *connect.Request[sdp_go.AdminGetPlanRequest]) (*connect.Response[sdp_go.AdminGetPlanResponse], error) {
+// GetPlan calls until.AdminService.GetPlan.
+func (c *untilAdminServiceClient) GetPlan(ctx context.Context, req *connect.Request[sdp_go.AdminGetPlanRequest]) (*connect.Response[sdp_go.AdminGetPlanResponse], error) {
 	return c.getPlan.CallUnary(ctx, req)
 }
 
-// ListReviews calls brent.BrentAdminService.ListReviews.
-func (c *brentAdminServiceClient) ListReviews(ctx context.Context, req *connect.Request[sdp_go.AdminListReviewsRequest]) (*connect.Response[sdp_go.AdminListReviewsResponse], error) {
+// ListReviews calls until.AdminService.ListReviews.
+func (c *untilAdminServiceClient) ListReviews(ctx context.Context, req *connect.Request[sdp_go.AdminListReviewsRequest]) (*connect.Response[sdp_go.AdminListReviewsResponse], error) {
 	return c.listReviews.CallUnary(ctx, req)
 }
 
-// GetReview calls brent.BrentAdminService.GetReview.
-func (c *brentAdminServiceClient) GetReview(ctx context.Context, req *connect.Request[sdp_go.AdminGetReviewRequest]) (*connect.Response[sdp_go.AdminGetReviewResponse], error) {
+// GetReview calls until.AdminService.GetReview.
+func (c *untilAdminServiceClient) GetReview(ctx context.Context, req *connect.Request[sdp_go.AdminGetReviewRequest]) (*connect.Response[sdp_go.AdminGetReviewResponse], error) {
 	return c.getReview.CallUnary(ctx, req)
 }
 
-// ListAccounts calls brent.BrentAdminService.ListAccounts.
-func (c *brentAdminServiceClient) ListAccounts(ctx context.Context, req *connect.Request[emptypb.Empty]) (*connect.Response[sdp_go.AdminListAccountsResponse], error) {
+// ListAccounts calls until.AdminService.ListAccounts.
+func (c *untilAdminServiceClient) ListAccounts(ctx context.Context, req *connect.Request[emptypb.Empty]) (*connect.Response[sdp_go.AdminListAccountsResponse], error) {
 	return c.listAccounts.CallUnary(ctx, req)
 }
 
-// GetAccountSummary calls brent.BrentAdminService.GetAccountSummary.
-func (c *brentAdminServiceClient) GetAccountSummary(ctx context.Context, req *connect.Request[sdp_go.AdminGetAccountSummaryRequest]) (*connect.Response[sdp_go.AdminGetAccountSummaryResponse], error) {
+// GetAccountSummary calls until.AdminService.GetAccountSummary.
+func (c *untilAdminServiceClient) GetAccountSummary(ctx context.Context, req *connect.Request[sdp_go.AdminGetAccountSummaryRequest]) (*connect.Response[sdp_go.AdminGetAccountSummaryResponse], error) {
 	return c.getAccountSummary.CallUnary(ctx, req)
 }
 
-// GetAccountHealthAnalysis calls brent.BrentAdminService.GetAccountHealthAnalysis.
-func (c *brentAdminServiceClient) GetAccountHealthAnalysis(ctx context.Context, req *connect.Request[sdp_go.AdminGetAccountHealthAnalysisRequest]) (*connect.Response[sdp_go.AdminGetAccountHealthAnalysisResponse], error) {
+// GetAccountHealthAnalysis calls until.AdminService.GetAccountHealthAnalysis.
+func (c *untilAdminServiceClient) GetAccountHealthAnalysis(ctx context.Context, req *connect.Request[sdp_go.AdminGetAccountHealthAnalysisRequest]) (*connect.Response[sdp_go.AdminGetAccountHealthAnalysisResponse], error) {
 	return c.getAccountHealthAnalysis.CallUnary(ctx, req)
 }
 
-// ListAccountMetricRepos calls brent.BrentAdminService.ListAccountMetricRepos.
-func (c *brentAdminServiceClient) ListAccountMetricRepos(ctx context.Context, req *connect.Request[sdp_go.AdminListAccountMetricReposRequest]) (*connect.Response[sdp_go.AdminListAccountMetricReposResponse], error) {
+// ListAccountMetricRepos calls until.AdminService.ListAccountMetricRepos.
+func (c *untilAdminServiceClient) ListAccountMetricRepos(ctx context.Context, req *connect.Request[sdp_go.AdminListAccountMetricReposRequest]) (*connect.Response[sdp_go.AdminListAccountMetricReposResponse], error) {
 	return c.listAccountMetricRepos.CallUnary(ctx, req)
 }
 
-// StartAccountMetricsComparison calls brent.BrentAdminService.StartAccountMetricsComparison.
-func (c *brentAdminServiceClient) StartAccountMetricsComparison(ctx context.Context, req *connect.Request[sdp_go.AdminStartAccountMetricsComparisonRequest]) (*connect.Response[sdp_go.AdminStartAccountMetricsComparisonResponse], error) {
+// StartAccountMetricsComparison calls until.AdminService.StartAccountMetricsComparison.
+func (c *untilAdminServiceClient) StartAccountMetricsComparison(ctx context.Context, req *connect.Request[sdp_go.AdminStartAccountMetricsComparisonRequest]) (*connect.Response[sdp_go.AdminStartAccountMetricsComparisonResponse], error) {
 	return c.startAccountMetricsComparison.CallUnary(ctx, req)
 }
 
-// GetAccountMetricsComparisonRun calls brent.BrentAdminService.GetAccountMetricsComparisonRun.
-func (c *brentAdminServiceClient) GetAccountMetricsComparisonRun(ctx context.Context, req *connect.Request[sdp_go.AdminGetAccountMetricsComparisonRunRequest]) (*connect.Response[sdp_go.AdminGetAccountMetricsComparisonRunResponse], error) {
+// GetAccountMetricsComparisonRun calls until.AdminService.GetAccountMetricsComparisonRun.
+func (c *untilAdminServiceClient) GetAccountMetricsComparisonRun(ctx context.Context, req *connect.Request[sdp_go.AdminGetAccountMetricsComparisonRunRequest]) (*connect.Response[sdp_go.AdminGetAccountMetricsComparisonRunResponse], error) {
 	return c.getAccountMetricsComparisonRun.CallUnary(ctx, req)
 }
 
-// GetAccountBrentSettings calls brent.BrentAdminService.GetAccountBrentSettings.
-func (c *brentAdminServiceClient) GetAccountBrentSettings(ctx context.Context, req *connect.Request[sdp_go.AdminGetAccountBrentSettingsRequest]) (*connect.Response[sdp_go.GetBrentSettingsResponse], error) {
-	return c.getAccountBrentSettings.CallUnary(ctx, req)
+// GetAccountPlanCheckSettings calls until.AdminService.GetAccountPlanCheckSettings.
+func (c *untilAdminServiceClient) GetAccountPlanCheckSettings(ctx context.Context, req *connect.Request[sdp_go.AdminGetAccountPlanCheckSettingsRequest]) (*connect.Response[sdp_go.GetPlanCheckSettingsResponse], error) {
+	return c.getAccountPlanCheckSettings.CallUnary(ctx, req)
 }
 
-// UpdateAccountBrentSettings calls brent.BrentAdminService.UpdateAccountBrentSettings.
-func (c *brentAdminServiceClient) UpdateAccountBrentSettings(ctx context.Context, req *connect.Request[sdp_go.AdminUpdateAccountBrentSettingsRequest]) (*connect.Response[sdp_go.UpdateBrentSettingsResponse], error) {
-	return c.updateAccountBrentSettings.CallUnary(ctx, req)
+// UpdateAccountPlanCheckSettings calls until.AdminService.UpdateAccountPlanCheckSettings.
+func (c *untilAdminServiceClient) UpdateAccountPlanCheckSettings(ctx context.Context, req *connect.Request[sdp_go.AdminUpdateAccountPlanCheckSettingsRequest]) (*connect.Response[sdp_go.UpdatePlanCheckSettingsResponse], error) {
+	return c.updateAccountPlanCheckSettings.CallUnary(ctx, req)
 }
 
-// GetAccountReviewPolicy calls brent.BrentAdminService.GetAccountReviewPolicy.
-func (c *brentAdminServiceClient) GetAccountReviewPolicy(ctx context.Context, req *connect.Request[sdp_go.AdminGetAccountReviewPolicyRequest]) (*connect.Response[sdp_go.AdminGetAccountReviewPolicyResponse], error) {
+// GetAccountReviewPolicy calls until.AdminService.GetAccountReviewPolicy.
+func (c *untilAdminServiceClient) GetAccountReviewPolicy(ctx context.Context, req *connect.Request[sdp_go.AdminGetAccountReviewPolicyRequest]) (*connect.Response[sdp_go.AdminGetAccountReviewPolicyResponse], error) {
 	return c.getAccountReviewPolicy.CallUnary(ctx, req)
 }
 
-// UpdateAccountReviewPolicy calls brent.BrentAdminService.UpdateAccountReviewPolicy.
-func (c *brentAdminServiceClient) UpdateAccountReviewPolicy(ctx context.Context, req *connect.Request[sdp_go.AdminUpdateAccountReviewPolicyRequest]) (*connect.Response[sdp_go.AdminUpdateAccountReviewPolicyResponse], error) {
+// UpdateAccountReviewPolicy calls until.AdminService.UpdateAccountReviewPolicy.
+func (c *untilAdminServiceClient) UpdateAccountReviewPolicy(ctx context.Context, req *connect.Request[sdp_go.AdminUpdateAccountReviewPolicyRequest]) (*connect.Response[sdp_go.AdminUpdateAccountReviewPolicyResponse], error) {
 	return c.updateAccountReviewPolicy.CallUnary(ctx, req)
 }
 
-// GetAccountLLMCredentialStatus calls brent.BrentAdminService.GetAccountLLMCredentialStatus.
-func (c *brentAdminServiceClient) GetAccountLLMCredentialStatus(ctx context.Context, req *connect.Request[sdp_go.AdminGetAccountLLMCredentialStatusRequest]) (*connect.Response[sdp_go.AdminGetAccountLLMCredentialStatusResponse], error) {
+// GetAccountLLMCredentialStatus calls until.AdminService.GetAccountLLMCredentialStatus.
+func (c *untilAdminServiceClient) GetAccountLLMCredentialStatus(ctx context.Context, req *connect.Request[sdp_go.AdminGetAccountLLMCredentialStatusRequest]) (*connect.Response[sdp_go.AdminGetAccountLLMCredentialStatusResponse], error) {
 	return c.getAccountLLMCredentialStatus.CallUnary(ctx, req)
 }
 
-// ListAccountIntegrations calls brent.BrentAdminService.ListAccountIntegrations.
-func (c *brentAdminServiceClient) ListAccountIntegrations(ctx context.Context, req *connect.Request[sdp_go.AdminListAccountIntegrationsRequest]) (*connect.Response[sdp_go.AdminListAccountIntegrationsResponse], error) {
+// ListAccountIntegrations calls until.AdminService.ListAccountIntegrations.
+func (c *untilAdminServiceClient) ListAccountIntegrations(ctx context.Context, req *connect.Request[sdp_go.AdminListAccountIntegrationsRequest]) (*connect.Response[sdp_go.AdminListAccountIntegrationsResponse], error) {
 	return c.listAccountIntegrations.CallUnary(ctx, req)
 }
 
-// ListWorkflows calls brent.BrentAdminService.ListWorkflows.
-func (c *brentAdminServiceClient) ListWorkflows(ctx context.Context, req *connect.Request[sdp_go.ListWorkflowsRequest]) (*connect.Response[sdp_go.ListWorkflowsResponse], error) {
-	return c.listWorkflows.CallUnary(ctx, req)
+// ListLoops calls until.AdminService.ListLoops.
+func (c *untilAdminServiceClient) ListLoops(ctx context.Context, req *connect.Request[sdp_go.ListLoopsRequest]) (*connect.Response[sdp_go.ListLoopsResponse], error) {
+	return c.listLoops.CallUnary(ctx, req)
 }
 
-// GetWorkflow calls brent.BrentAdminService.GetWorkflow.
-func (c *brentAdminServiceClient) GetWorkflow(ctx context.Context, req *connect.Request[sdp_go.GetWorkflowRequest]) (*connect.Response[sdp_go.GetWorkflowResponse], error) {
-	return c.getWorkflow.CallUnary(ctx, req)
+// GetLoop calls until.AdminService.GetLoop.
+func (c *untilAdminServiceClient) GetLoop(ctx context.Context, req *connect.Request[sdp_go.GetLoopRequest]) (*connect.Response[sdp_go.GetLoopResponse], error) {
+	return c.getLoop.CallUnary(ctx, req)
 }
 
-// ListWorkflowRuns calls brent.BrentAdminService.ListWorkflowRuns.
-func (c *brentAdminServiceClient) ListWorkflowRuns(ctx context.Context, req *connect.Request[sdp_go.ListWorkflowRunsRequest]) (*connect.Response[sdp_go.ListWorkflowRunsResponse], error) {
-	return c.listWorkflowRuns.CallUnary(ctx, req)
+// ListLoopRuns calls until.AdminService.ListLoopRuns.
+func (c *untilAdminServiceClient) ListLoopRuns(ctx context.Context, req *connect.Request[sdp_go.ListLoopRunsRequest]) (*connect.Response[sdp_go.ListLoopRunsResponse], error) {
+	return c.listLoopRuns.CallUnary(ctx, req)
 }
 
-// GetWorkflowRun calls brent.BrentAdminService.GetWorkflowRun.
-func (c *brentAdminServiceClient) GetWorkflowRun(ctx context.Context, req *connect.Request[sdp_go.GetWorkflowRunRequest]) (*connect.Response[sdp_go.GetWorkflowRunResponse], error) {
-	return c.getWorkflowRun.CallUnary(ctx, req)
+// GetLoopRun calls until.AdminService.GetLoopRun.
+func (c *untilAdminServiceClient) GetLoopRun(ctx context.Context, req *connect.Request[sdp_go.GetLoopRunRequest]) (*connect.Response[sdp_go.GetLoopRunResponse], error) {
+	return c.getLoopRun.CallUnary(ctx, req)
 }
 
-// GetWorkflowRunThreadHistory calls brent.BrentAdminService.GetWorkflowRunThreadHistory.
-func (c *brentAdminServiceClient) GetWorkflowRunThreadHistory(ctx context.Context, req *connect.Request[sdp_go.GetWorkflowRunThreadHistoryRequest]) (*connect.Response[sdp_go.GetWorkflowRunThreadHistoryResponse], error) {
-	return c.getWorkflowRunThreadHistory.CallUnary(ctx, req)
+// GetLoopRunThreadHistory calls until.AdminService.GetLoopRunThreadHistory.
+func (c *untilAdminServiceClient) GetLoopRunThreadHistory(ctx context.Context, req *connect.Request[sdp_go.GetLoopRunThreadHistoryRequest]) (*connect.Response[sdp_go.GetLoopRunThreadHistoryResponse], error) {
+	return c.getLoopRunThreadHistory.CallUnary(ctx, req)
 }
 
-// ListPullRequests calls brent.BrentAdminService.ListPullRequests.
-func (c *brentAdminServiceClient) ListPullRequests(ctx context.Context, req *connect.Request[sdp_go.ListPullRequestsRequest]) (*connect.Response[sdp_go.ListPullRequestsResponse], error) {
+// ListPullRequests calls until.AdminService.ListPullRequests.
+func (c *untilAdminServiceClient) ListPullRequests(ctx context.Context, req *connect.Request[sdp_go.ListPullRequestsRequest]) (*connect.Response[sdp_go.ListPullRequestsResponse], error) {
 	return c.listPullRequests.CallUnary(ctx, req)
 }
 
-// GetPullRequestByID calls brent.BrentAdminService.GetPullRequestByID.
-func (c *brentAdminServiceClient) GetPullRequestByID(ctx context.Context, req *connect.Request[sdp_go.GetPullRequestByIDRequest]) (*connect.Response[sdp_go.GetPullRequestByIDResponse], error) {
+// GetPullRequestByID calls until.AdminService.GetPullRequestByID.
+func (c *untilAdminServiceClient) GetPullRequestByID(ctx context.Context, req *connect.Request[sdp_go.GetPullRequestByIDRequest]) (*connect.Response[sdp_go.GetPullRequestByIDResponse], error) {
 	return c.getPullRequestByID.CallUnary(ctx, req)
 }
 
-// ListDeviationAnalysesForPR calls brent.BrentAdminService.ListDeviationAnalysesForPR.
-func (c *brentAdminServiceClient) ListDeviationAnalysesForPR(ctx context.Context, req *connect.Request[sdp_go.ListDeviationAnalysesForPRRequest]) (*connect.Response[sdp_go.ListDeviationAnalysesForPRResponse], error) {
-	return c.listDeviationAnalysesForPR.CallUnary(ctx, req)
+// ListPlanChecksForPR calls until.AdminService.ListPlanChecksForPR.
+func (c *untilAdminServiceClient) ListPlanChecksForPR(ctx context.Context, req *connect.Request[sdp_go.ListPlanChecksForPRRequest]) (*connect.Response[sdp_go.ListPlanChecksForPRResponse], error) {
+	return c.listPlanChecksForPR.CallUnary(ctx, req)
 }
 
-// ListPrincipals calls brent.BrentAdminService.ListPrincipals.
-func (c *brentAdminServiceClient) ListPrincipals(ctx context.Context, req *connect.Request[sdp_go.AdminListPrincipalsRequest]) (*connect.Response[sdp_go.AdminListPrincipalsResponse], error) {
+// ListPrincipals calls until.AdminService.ListPrincipals.
+func (c *untilAdminServiceClient) ListPrincipals(ctx context.Context, req *connect.Request[sdp_go.AdminListPrincipalsRequest]) (*connect.Response[sdp_go.AdminListPrincipalsResponse], error) {
 	return c.listPrincipals.CallUnary(ctx, req)
 }
 
-// GetPrincipal calls brent.BrentAdminService.GetPrincipal.
-func (c *brentAdminServiceClient) GetPrincipal(ctx context.Context, req *connect.Request[sdp_go.AdminGetPrincipalRequest]) (*connect.Response[sdp_go.AdminGetPrincipalResponse], error) {
+// GetPrincipal calls until.AdminService.GetPrincipal.
+func (c *untilAdminServiceClient) GetPrincipal(ctx context.Context, req *connect.Request[sdp_go.AdminGetPrincipalRequest]) (*connect.Response[sdp_go.AdminGetPrincipalResponse], error) {
 	return c.getPrincipal.CallUnary(ctx, req)
 }
 
-// UpsertPrincipalBinding calls brent.BrentAdminService.UpsertPrincipalBinding.
-func (c *brentAdminServiceClient) UpsertPrincipalBinding(ctx context.Context, req *connect.Request[sdp_go.AdminUpsertPrincipalBindingRequest]) (*connect.Response[sdp_go.AdminUpsertPrincipalBindingResponse], error) {
+// UpsertPrincipalBinding calls until.AdminService.UpsertPrincipalBinding.
+func (c *untilAdminServiceClient) UpsertPrincipalBinding(ctx context.Context, req *connect.Request[sdp_go.AdminUpsertPrincipalBindingRequest]) (*connect.Response[sdp_go.AdminUpsertPrincipalBindingResponse], error) {
 	return c.upsertPrincipalBinding.CallUnary(ctx, req)
 }
 
-// DeletePrincipalBinding calls brent.BrentAdminService.DeletePrincipalBinding.
-func (c *brentAdminServiceClient) DeletePrincipalBinding(ctx context.Context, req *connect.Request[sdp_go.AdminDeletePrincipalBindingRequest]) (*connect.Response[sdp_go.AdminDeletePrincipalBindingResponse], error) {
+// DeletePrincipalBinding calls until.AdminService.DeletePrincipalBinding.
+func (c *untilAdminServiceClient) DeletePrincipalBinding(ctx context.Context, req *connect.Request[sdp_go.AdminDeletePrincipalBindingRequest]) (*connect.Response[sdp_go.AdminDeletePrincipalBindingResponse], error) {
 	return c.deletePrincipalBinding.CallUnary(ctx, req)
 }
 
-// UpdatePrincipal calls brent.BrentAdminService.UpdatePrincipal.
-func (c *brentAdminServiceClient) UpdatePrincipal(ctx context.Context, req *connect.Request[sdp_go.AdminUpdatePrincipalRequest]) (*connect.Response[sdp_go.AdminUpdatePrincipalResponse], error) {
+// UpdatePrincipal calls until.AdminService.UpdatePrincipal.
+func (c *untilAdminServiceClient) UpdatePrincipal(ctx context.Context, req *connect.Request[sdp_go.AdminUpdatePrincipalRequest]) (*connect.Response[sdp_go.AdminUpdatePrincipalResponse], error) {
 	return c.updatePrincipal.CallUnary(ctx, req)
 }
 
-// CreatePrincipalIdentity calls brent.BrentAdminService.CreatePrincipalIdentity.
-func (c *brentAdminServiceClient) CreatePrincipalIdentity(ctx context.Context, req *connect.Request[sdp_go.AdminCreatePrincipalIdentityRequest]) (*connect.Response[sdp_go.AdminCreatePrincipalIdentityResponse], error) {
+// CreatePrincipalIdentity calls until.AdminService.CreatePrincipalIdentity.
+func (c *untilAdminServiceClient) CreatePrincipalIdentity(ctx context.Context, req *connect.Request[sdp_go.AdminCreatePrincipalIdentityRequest]) (*connect.Response[sdp_go.AdminCreatePrincipalIdentityResponse], error) {
 	return c.createPrincipalIdentity.CallUnary(ctx, req)
 }
 
-// DeletePrincipalIdentity calls brent.BrentAdminService.DeletePrincipalIdentity.
-func (c *brentAdminServiceClient) DeletePrincipalIdentity(ctx context.Context, req *connect.Request[sdp_go.AdminDeletePrincipalIdentityRequest]) (*connect.Response[sdp_go.AdminDeletePrincipalIdentityResponse], error) {
+// DeletePrincipalIdentity calls until.AdminService.DeletePrincipalIdentity.
+func (c *untilAdminServiceClient) DeletePrincipalIdentity(ctx context.Context, req *connect.Request[sdp_go.AdminDeletePrincipalIdentityRequest]) (*connect.Response[sdp_go.AdminDeletePrincipalIdentityResponse], error) {
 	return c.deletePrincipalIdentity.CallUnary(ctx, req)
 }
 
-// SetPrincipalCredential calls brent.BrentAdminService.SetPrincipalCredential.
-func (c *brentAdminServiceClient) SetPrincipalCredential(ctx context.Context, req *connect.Request[sdp_go.AdminSetPrincipalCredentialRequest]) (*connect.Response[sdp_go.AdminSetPrincipalCredentialResponse], error) {
+// SetPrincipalCredential calls until.AdminService.SetPrincipalCredential.
+func (c *untilAdminServiceClient) SetPrincipalCredential(ctx context.Context, req *connect.Request[sdp_go.AdminSetPrincipalCredentialRequest]) (*connect.Response[sdp_go.AdminSetPrincipalCredentialResponse], error) {
 	return c.setPrincipalCredential.CallUnary(ctx, req)
 }
 
-// ListPrincipalCredentialConnections calls
-// brent.BrentAdminService.ListPrincipalCredentialConnections.
-func (c *brentAdminServiceClient) ListPrincipalCredentialConnections(ctx context.Context, req *connect.Request[sdp_go.AdminListPrincipalCredentialConnectionsRequest]) (*connect.Response[sdp_go.AdminListPrincipalCredentialConnectionsResponse], error) {
+// ListPrincipalCredentialConnections calls until.AdminService.ListPrincipalCredentialConnections.
+func (c *untilAdminServiceClient) ListPrincipalCredentialConnections(ctx context.Context, req *connect.Request[sdp_go.AdminListPrincipalCredentialConnectionsRequest]) (*connect.Response[sdp_go.AdminListPrincipalCredentialConnectionsResponse], error) {
 	return c.listPrincipalCredentialConnections.CallUnary(ctx, req)
 }
 
-// DeletePrincipalCredential calls brent.BrentAdminService.DeletePrincipalCredential.
-func (c *brentAdminServiceClient) DeletePrincipalCredential(ctx context.Context, req *connect.Request[sdp_go.AdminDeletePrincipalCredentialRequest]) (*connect.Response[sdp_go.AdminDeletePrincipalCredentialResponse], error) {
+// DeletePrincipalCredential calls until.AdminService.DeletePrincipalCredential.
+func (c *untilAdminServiceClient) DeletePrincipalCredential(ctx context.Context, req *connect.Request[sdp_go.AdminDeletePrincipalCredentialRequest]) (*connect.Response[sdp_go.AdminDeletePrincipalCredentialResponse], error) {
 	return c.deletePrincipalCredential.CallUnary(ctx, req)
 }
 
-// GetPullRequestTimeline calls brent.BrentAdminService.GetPullRequestTimeline.
-func (c *brentAdminServiceClient) GetPullRequestTimeline(ctx context.Context, req *connect.Request[sdp_go.GetPullRequestTimelineRequest]) (*connect.Response[sdp_go.GetPullRequestTimelineResponse], error) {
+// GetPullRequestTimeline calls until.AdminService.GetPullRequestTimeline.
+func (c *untilAdminServiceClient) GetPullRequestTimeline(ctx context.Context, req *connect.Request[sdp_go.GetPullRequestTimelineRequest]) (*connect.Response[sdp_go.GetPullRequestTimelineResponse], error) {
 	return c.getPullRequestTimeline.CallUnary(ctx, req)
 }
 
-// BrentAdminServiceHandler is an implementation of the brent.BrentAdminService service.
-type BrentAdminServiceHandler interface {
+// UntilAdminServiceHandler is an implementation of the until.AdminService service.
+type UntilAdminServiceHandler interface {
 	// Executes a workflow from a natural-language prompt. The server streams
 	// steps as the agent reasons, calls MCP tools, and produces a final result.
 	// The stream ends with either a CompletionStep or a terminal ErrorStep.
 	// Operator-only; gated on admin:write.
-	ExecuteWorkflow(context.Context, *connect.Request[sdp_go.ExecuteWorkflowRequest], *connect.ServerStream[sdp_go.ExecuteWorkflowResponse]) error
+	ExecuteLoop(context.Context, *connect.Request[sdp_go.ExecuteLoopRequest], *connect.ServerStream[sdp_go.ExecuteLoopResponse]) error
 	// Lists all tracked runs (both UI-initiated and webhook-triggered).
 	// Operator-only; gated on admin:read.
 	ListRuns(context.Context, *connect.Request[sdp_go.ListRunsRequest]) (*connect.Response[sdp_go.ListRunsResponse], error)
 	// Streams steps for a specific run. Replays buffered steps first, then
 	// streams live steps until the run completes or the client disconnects.
 	// Operator-only; gated on admin:read.
-	WatchRun(context.Context, *connect.Request[sdp_go.WatchRunRequest], *connect.ServerStream[sdp_go.ExecuteWorkflowResponse]) error
+	WatchRun(context.Context, *connect.Request[sdp_go.WatchRunRequest], *connect.ServerStream[sdp_go.ExecuteLoopResponse]) error
 	// Streams live capital-E Events for the caller's account. No history or
 	// replay: clients only receive events emitted after the stream starts.
 	// Operator-only; gated on admin:read.
@@ -2911,10 +2900,10 @@ type BrentAdminServiceHandler interface {
 	// Operator-only; gated on admin:write.
 	CancelRun(context.Context, *connect.Request[sdp_go.CancelRunRequest]) (*connect.Response[sdp_go.CancelRunResponse], error)
 	// Sends a follow-up question against a completed run's OpenAI context.
-	// The server streams the model's answer as ExecuteWorkflowResponse steps.
+	// The server streams the model's answer as ExecuteLoopResponse steps.
 	// Returns NotFound when the run has no stored response ID.
 	// Operator-only; gated on admin:write.
-	SendQuestion(context.Context, *connect.Request[sdp_go.SendQuestionRequest], *connect.ServerStream[sdp_go.ExecuteWorkflowResponse]) error
+	SendQuestion(context.Context, *connect.Request[sdp_go.SendQuestionRequest], *connect.ServerStream[sdp_go.ExecuteLoopResponse]) error
 	// Lists every non-deleted plan across every tenant. Operator-only; gated
 	// on admin:read (brent-area51 and staff Admin role).
 	//
@@ -2964,18 +2953,18 @@ type BrentAdminServiceHandler interface {
 	// Polls a temporary metrics comparison run. Cross-tenant operator endpoint
 	// gated on admin:read. Completed runs include sandbox-renderable HTML.
 	GetAccountMetricsComparisonRun(context.Context, *connect.Request[sdp_go.AdminGetAccountMetricsComparisonRunRequest]) (*connect.Response[sdp_go.AdminGetAccountMetricsComparisonRunResponse], error)
-	// Reads the Brent deviation settings (red_finding_kinds) for any account.
-	// This is the operator-facing twin of GetBrentSettings: it gates on
+	// Reads the Brent deviation settings (blocking_difference_tags) for any account.
+	// This is the operator-facing twin of GetPlanCheckSettings: it gates on
 	// admin:read and requires an explicit account_name, so the brent-area51
 	// account detail page can show a customer's settings without holding that
 	// customer's brent:read scope. account_name is required (no caller-account
 	// fallback).
-	GetAccountBrentSettings(context.Context, *connect.Request[sdp_go.AdminGetAccountBrentSettingsRequest]) (*connect.Response[sdp_go.GetBrentSettingsResponse], error)
-	// Updates the Brent deviation settings (red_finding_kinds) for any account.
-	// Operator-facing twin of UpdateBrentSettings: gates on admin:write and
-	// requires an explicit account_name. PATCH semantics — omit red_finding_kinds
+	GetAccountPlanCheckSettings(context.Context, *connect.Request[sdp_go.AdminGetAccountPlanCheckSettingsRequest]) (*connect.Response[sdp_go.GetPlanCheckSettingsResponse], error)
+	// Updates the Brent deviation settings (blocking_difference_tags) for any account.
+	// Operator-facing twin of UpdatePlanCheckSettings: gates on admin:write and
+	// requires an explicit account_name. PATCH semantics — omit blocking_difference_tags
 	// to leave it unchanged; pass an empty array to disable red on all kinds.
-	UpdateAccountBrentSettings(context.Context, *connect.Request[sdp_go.AdminUpdateAccountBrentSettingsRequest]) (*connect.Response[sdp_go.UpdateBrentSettingsResponse], error)
+	UpdateAccountPlanCheckSettings(context.Context, *connect.Request[sdp_go.AdminUpdateAccountPlanCheckSettingsRequest]) (*connect.Response[sdp_go.UpdatePlanCheckSettingsResponse], error)
 	// Reads a workspace's explicit peer-review policy (ENG-6046 / BRENT-824).
 	// Gates on admin:read and requires an explicit account_name (no
 	// caller-account fallback). Returns the persisted policy, active-human
@@ -3001,26 +2990,26 @@ type BrentAdminServiceHandler interface {
 	// Lists workflow definitions for the caller's account, ordered by name.
 	// Account-scoped: callers see only their own tenant's rows. Operator-only;
 	// gated on admin:read. Returns summary fields only (no body_template, no on_yaml);
-	// use GetWorkflow for the full definition.
-	ListWorkflows(context.Context, *connect.Request[sdp_go.ListWorkflowsRequest]) (*connect.Response[sdp_go.ListWorkflowsResponse], error)
+	// use GetLoop for the full definition.
+	ListLoops(context.Context, *connect.Request[sdp_go.ListLoopsRequest]) (*connect.Response[sdp_go.ListLoopsResponse], error)
 	// Fetches a single workflow definition by ID within the caller's account.
 	// Returns NotFound when the workflow is missing, soft-deleted, or owned by
-	// a different account. Same admin:read gate as ListWorkflows.
-	GetWorkflow(context.Context, *connect.Request[sdp_go.GetWorkflowRequest]) (*connect.Response[sdp_go.GetWorkflowResponse], error)
+	// a different account. Same admin:read gate as ListLoops.
+	GetLoop(context.Context, *connect.Request[sdp_go.GetLoopRequest]) (*connect.Response[sdp_go.GetLoopResponse], error)
 	// Lists workflow runs for the caller's account, newest first. Account-
 	// scoped; gated on admin:read. Supports cursor pagination (limit +
 	// after_cursor) and an optional workflow_name filter for the per-workflow
 	// run-list view.
-	ListWorkflowRuns(context.Context, *connect.Request[sdp_go.ListWorkflowRunsRequest]) (*connect.Response[sdp_go.ListWorkflowRunsResponse], error)
+	ListLoopRuns(context.Context, *connect.Request[sdp_go.ListLoopRunsRequest]) (*connect.Response[sdp_go.ListLoopRunsResponse], error)
 	// Fetches a single workflow run by ID within the caller's account. Returns
-	// the full WorkflowRun (including prompt and the typed Event payload that
-	// triggered it) plus an optional parent WorkflowSummary lookable up by
+	// the full LoopRun (including prompt and the typed Event payload that
+	// triggered it) plus an optional parent LoopSummary lookable up by
 	// (account_name, name). Same admin:read gate.
-	GetWorkflowRun(context.Context, *connect.Request[sdp_go.GetWorkflowRunRequest]) (*connect.Response[sdp_go.GetWorkflowRunResponse], error)
+	GetLoopRun(context.Context, *connect.Request[sdp_go.GetLoopRunRequest]) (*connect.Response[sdp_go.GetLoopRunResponse], error)
 	// Returns persisted steps for ancestor runs in the resumed_from_run_id chain
 	// (oldest first). The current run's live tail stays on WatchRun. Same
-	// admin:read gate as GetWorkflowRun.
-	GetWorkflowRunThreadHistory(context.Context, *connect.Request[sdp_go.GetWorkflowRunThreadHistoryRequest]) (*connect.Response[sdp_go.GetWorkflowRunThreadHistoryResponse], error)
+	// admin:read gate as GetLoopRun.
+	GetLoopRunThreadHistory(context.Context, *connect.Request[sdp_go.GetLoopRunThreadHistoryRequest]) (*connect.Response[sdp_go.GetLoopRunThreadHistoryResponse], error)
 	// Lists pull requests for the caller's tenant, sorted by updated_at DESC.
 	// Account-scoped: callers see only their own rows. Operator-only; gated on admin:read.
 	// The `state` filter accepts "" (default → open), "open", "closed"
@@ -3035,7 +3024,7 @@ type BrentAdminServiceHandler interface {
 	// Lists deviation analyses for a pull request, newest-first by started_at.
 	// Account-scoped: a pr_id from another tenant returns an empty list (not an
 	// error). Gated on admin:read.
-	ListDeviationAnalysesForPR(context.Context, *connect.Request[sdp_go.ListDeviationAnalysesForPRRequest]) (*connect.Response[sdp_go.ListDeviationAnalysesForPRResponse], error)
+	ListPlanChecksForPR(context.Context, *connect.Request[sdp_go.ListPlanChecksForPRRequest]) (*connect.Response[sdp_go.ListPlanChecksForPRResponse], error)
 	// Lists principals across every tenant for the Area51 debug UI. Operator-only;
 	// gated on admin:read. Summary fields only; use GetPrincipal for
 	// identities and bindings.
@@ -3073,524 +3062,524 @@ type BrentAdminServiceHandler interface {
 	GetPullRequestTimeline(context.Context, *connect.Request[sdp_go.GetPullRequestTimelineRequest]) (*connect.Response[sdp_go.GetPullRequestTimelineResponse], error)
 }
 
-// NewBrentAdminServiceHandler builds an HTTP handler from the service implementation. It returns
-// the path on which to mount the handler and the handler itself.
+// NewUntilAdminServiceHandler builds an HTTP handler from the service implementation. It returns the
+// path on which to mount the handler and the handler itself.
 //
 // By default, handlers support the Connect, gRPC, and gRPC-Web protocols with the binary Protobuf
 // and JSON codecs. They also support gzip compression.
-func NewBrentAdminServiceHandler(svc BrentAdminServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
-	brentAdminServiceMethods := sdp_go.File_brent_proto.Services().ByName("BrentAdminService").Methods()
-	brentAdminServiceExecuteWorkflowHandler := connect.NewServerStreamHandler(
-		BrentAdminServiceExecuteWorkflowProcedure,
-		svc.ExecuteWorkflow,
-		connect.WithSchema(brentAdminServiceMethods.ByName("ExecuteWorkflow")),
+func NewUntilAdminServiceHandler(svc UntilAdminServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
+	untilAdminServiceMethods := sdp_go.File_brent_proto.Services().ByName("AdminService").Methods()
+	untilAdminServiceExecuteLoopHandler := connect.NewServerStreamHandler(
+		UntilAdminServiceExecuteLoopProcedure,
+		svc.ExecuteLoop,
+		connect.WithSchema(untilAdminServiceMethods.ByName("ExecuteLoop")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceListRunsHandler := connect.NewUnaryHandler(
-		BrentAdminServiceListRunsProcedure,
+	untilAdminServiceListRunsHandler := connect.NewUnaryHandler(
+		UntilAdminServiceListRunsProcedure,
 		svc.ListRuns,
-		connect.WithSchema(brentAdminServiceMethods.ByName("ListRuns")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("ListRuns")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceWatchRunHandler := connect.NewServerStreamHandler(
-		BrentAdminServiceWatchRunProcedure,
+	untilAdminServiceWatchRunHandler := connect.NewServerStreamHandler(
+		UntilAdminServiceWatchRunProcedure,
 		svc.WatchRun,
-		connect.WithSchema(brentAdminServiceMethods.ByName("WatchRun")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("WatchRun")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceStreamEventsHandler := connect.NewServerStreamHandler(
-		BrentAdminServiceStreamEventsProcedure,
+	untilAdminServiceStreamEventsHandler := connect.NewServerStreamHandler(
+		UntilAdminServiceStreamEventsProcedure,
 		svc.StreamEvents,
-		connect.WithSchema(brentAdminServiceMethods.ByName("StreamEvents")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("StreamEvents")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceListEventsHandler := connect.NewUnaryHandler(
-		BrentAdminServiceListEventsProcedure,
+	untilAdminServiceListEventsHandler := connect.NewUnaryHandler(
+		UntilAdminServiceListEventsProcedure,
 		svc.ListEvents,
-		connect.WithSchema(brentAdminServiceMethods.ByName("ListEvents")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("ListEvents")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceCancelRunHandler := connect.NewUnaryHandler(
-		BrentAdminServiceCancelRunProcedure,
+	untilAdminServiceCancelRunHandler := connect.NewUnaryHandler(
+		UntilAdminServiceCancelRunProcedure,
 		svc.CancelRun,
-		connect.WithSchema(brentAdminServiceMethods.ByName("CancelRun")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("CancelRun")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceSendQuestionHandler := connect.NewServerStreamHandler(
-		BrentAdminServiceSendQuestionProcedure,
+	untilAdminServiceSendQuestionHandler := connect.NewServerStreamHandler(
+		UntilAdminServiceSendQuestionProcedure,
 		svc.SendQuestion,
-		connect.WithSchema(brentAdminServiceMethods.ByName("SendQuestion")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("SendQuestion")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceListPlansHandler := connect.NewUnaryHandler(
-		BrentAdminServiceListPlansProcedure,
+	untilAdminServiceListPlansHandler := connect.NewUnaryHandler(
+		UntilAdminServiceListPlansProcedure,
 		svc.ListPlans,
-		connect.WithSchema(brentAdminServiceMethods.ByName("ListPlans")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("ListPlans")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceGetPlanHandler := connect.NewUnaryHandler(
-		BrentAdminServiceGetPlanProcedure,
+	untilAdminServiceGetPlanHandler := connect.NewUnaryHandler(
+		UntilAdminServiceGetPlanProcedure,
 		svc.GetPlan,
-		connect.WithSchema(brentAdminServiceMethods.ByName("GetPlan")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("GetPlan")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceListReviewsHandler := connect.NewUnaryHandler(
-		BrentAdminServiceListReviewsProcedure,
+	untilAdminServiceListReviewsHandler := connect.NewUnaryHandler(
+		UntilAdminServiceListReviewsProcedure,
 		svc.ListReviews,
-		connect.WithSchema(brentAdminServiceMethods.ByName("ListReviews")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("ListReviews")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceGetReviewHandler := connect.NewUnaryHandler(
-		BrentAdminServiceGetReviewProcedure,
+	untilAdminServiceGetReviewHandler := connect.NewUnaryHandler(
+		UntilAdminServiceGetReviewProcedure,
 		svc.GetReview,
-		connect.WithSchema(brentAdminServiceMethods.ByName("GetReview")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("GetReview")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceListAccountsHandler := connect.NewUnaryHandler(
-		BrentAdminServiceListAccountsProcedure,
+	untilAdminServiceListAccountsHandler := connect.NewUnaryHandler(
+		UntilAdminServiceListAccountsProcedure,
 		svc.ListAccounts,
-		connect.WithSchema(brentAdminServiceMethods.ByName("ListAccounts")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("ListAccounts")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceGetAccountSummaryHandler := connect.NewUnaryHandler(
-		BrentAdminServiceGetAccountSummaryProcedure,
+	untilAdminServiceGetAccountSummaryHandler := connect.NewUnaryHandler(
+		UntilAdminServiceGetAccountSummaryProcedure,
 		svc.GetAccountSummary,
-		connect.WithSchema(brentAdminServiceMethods.ByName("GetAccountSummary")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("GetAccountSummary")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceGetAccountHealthAnalysisHandler := connect.NewUnaryHandler(
-		BrentAdminServiceGetAccountHealthAnalysisProcedure,
+	untilAdminServiceGetAccountHealthAnalysisHandler := connect.NewUnaryHandler(
+		UntilAdminServiceGetAccountHealthAnalysisProcedure,
 		svc.GetAccountHealthAnalysis,
-		connect.WithSchema(brentAdminServiceMethods.ByName("GetAccountHealthAnalysis")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("GetAccountHealthAnalysis")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceListAccountMetricReposHandler := connect.NewUnaryHandler(
-		BrentAdminServiceListAccountMetricReposProcedure,
+	untilAdminServiceListAccountMetricReposHandler := connect.NewUnaryHandler(
+		UntilAdminServiceListAccountMetricReposProcedure,
 		svc.ListAccountMetricRepos,
-		connect.WithSchema(brentAdminServiceMethods.ByName("ListAccountMetricRepos")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("ListAccountMetricRepos")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceStartAccountMetricsComparisonHandler := connect.NewUnaryHandler(
-		BrentAdminServiceStartAccountMetricsComparisonProcedure,
+	untilAdminServiceStartAccountMetricsComparisonHandler := connect.NewUnaryHandler(
+		UntilAdminServiceStartAccountMetricsComparisonProcedure,
 		svc.StartAccountMetricsComparison,
-		connect.WithSchema(brentAdminServiceMethods.ByName("StartAccountMetricsComparison")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("StartAccountMetricsComparison")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceGetAccountMetricsComparisonRunHandler := connect.NewUnaryHandler(
-		BrentAdminServiceGetAccountMetricsComparisonRunProcedure,
+	untilAdminServiceGetAccountMetricsComparisonRunHandler := connect.NewUnaryHandler(
+		UntilAdminServiceGetAccountMetricsComparisonRunProcedure,
 		svc.GetAccountMetricsComparisonRun,
-		connect.WithSchema(brentAdminServiceMethods.ByName("GetAccountMetricsComparisonRun")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("GetAccountMetricsComparisonRun")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceGetAccountBrentSettingsHandler := connect.NewUnaryHandler(
-		BrentAdminServiceGetAccountBrentSettingsProcedure,
-		svc.GetAccountBrentSettings,
-		connect.WithSchema(brentAdminServiceMethods.ByName("GetAccountBrentSettings")),
+	untilAdminServiceGetAccountPlanCheckSettingsHandler := connect.NewUnaryHandler(
+		UntilAdminServiceGetAccountPlanCheckSettingsProcedure,
+		svc.GetAccountPlanCheckSettings,
+		connect.WithSchema(untilAdminServiceMethods.ByName("GetAccountPlanCheckSettings")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceUpdateAccountBrentSettingsHandler := connect.NewUnaryHandler(
-		BrentAdminServiceUpdateAccountBrentSettingsProcedure,
-		svc.UpdateAccountBrentSettings,
-		connect.WithSchema(brentAdminServiceMethods.ByName("UpdateAccountBrentSettings")),
+	untilAdminServiceUpdateAccountPlanCheckSettingsHandler := connect.NewUnaryHandler(
+		UntilAdminServiceUpdateAccountPlanCheckSettingsProcedure,
+		svc.UpdateAccountPlanCheckSettings,
+		connect.WithSchema(untilAdminServiceMethods.ByName("UpdateAccountPlanCheckSettings")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceGetAccountReviewPolicyHandler := connect.NewUnaryHandler(
-		BrentAdminServiceGetAccountReviewPolicyProcedure,
+	untilAdminServiceGetAccountReviewPolicyHandler := connect.NewUnaryHandler(
+		UntilAdminServiceGetAccountReviewPolicyProcedure,
 		svc.GetAccountReviewPolicy,
-		connect.WithSchema(brentAdminServiceMethods.ByName("GetAccountReviewPolicy")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("GetAccountReviewPolicy")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceUpdateAccountReviewPolicyHandler := connect.NewUnaryHandler(
-		BrentAdminServiceUpdateAccountReviewPolicyProcedure,
+	untilAdminServiceUpdateAccountReviewPolicyHandler := connect.NewUnaryHandler(
+		UntilAdminServiceUpdateAccountReviewPolicyProcedure,
 		svc.UpdateAccountReviewPolicy,
-		connect.WithSchema(brentAdminServiceMethods.ByName("UpdateAccountReviewPolicy")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("UpdateAccountReviewPolicy")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceGetAccountLLMCredentialStatusHandler := connect.NewUnaryHandler(
-		BrentAdminServiceGetAccountLLMCredentialStatusProcedure,
+	untilAdminServiceGetAccountLLMCredentialStatusHandler := connect.NewUnaryHandler(
+		UntilAdminServiceGetAccountLLMCredentialStatusProcedure,
 		svc.GetAccountLLMCredentialStatus,
-		connect.WithSchema(brentAdminServiceMethods.ByName("GetAccountLLMCredentialStatus")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("GetAccountLLMCredentialStatus")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceListAccountIntegrationsHandler := connect.NewUnaryHandler(
-		BrentAdminServiceListAccountIntegrationsProcedure,
+	untilAdminServiceListAccountIntegrationsHandler := connect.NewUnaryHandler(
+		UntilAdminServiceListAccountIntegrationsProcedure,
 		svc.ListAccountIntegrations,
-		connect.WithSchema(brentAdminServiceMethods.ByName("ListAccountIntegrations")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("ListAccountIntegrations")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceListWorkflowsHandler := connect.NewUnaryHandler(
-		BrentAdminServiceListWorkflowsProcedure,
-		svc.ListWorkflows,
-		connect.WithSchema(brentAdminServiceMethods.ByName("ListWorkflows")),
+	untilAdminServiceListLoopsHandler := connect.NewUnaryHandler(
+		UntilAdminServiceListLoopsProcedure,
+		svc.ListLoops,
+		connect.WithSchema(untilAdminServiceMethods.ByName("ListLoops")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceGetWorkflowHandler := connect.NewUnaryHandler(
-		BrentAdminServiceGetWorkflowProcedure,
-		svc.GetWorkflow,
-		connect.WithSchema(brentAdminServiceMethods.ByName("GetWorkflow")),
+	untilAdminServiceGetLoopHandler := connect.NewUnaryHandler(
+		UntilAdminServiceGetLoopProcedure,
+		svc.GetLoop,
+		connect.WithSchema(untilAdminServiceMethods.ByName("GetLoop")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceListWorkflowRunsHandler := connect.NewUnaryHandler(
-		BrentAdminServiceListWorkflowRunsProcedure,
-		svc.ListWorkflowRuns,
-		connect.WithSchema(brentAdminServiceMethods.ByName("ListWorkflowRuns")),
+	untilAdminServiceListLoopRunsHandler := connect.NewUnaryHandler(
+		UntilAdminServiceListLoopRunsProcedure,
+		svc.ListLoopRuns,
+		connect.WithSchema(untilAdminServiceMethods.ByName("ListLoopRuns")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceGetWorkflowRunHandler := connect.NewUnaryHandler(
-		BrentAdminServiceGetWorkflowRunProcedure,
-		svc.GetWorkflowRun,
-		connect.WithSchema(brentAdminServiceMethods.ByName("GetWorkflowRun")),
+	untilAdminServiceGetLoopRunHandler := connect.NewUnaryHandler(
+		UntilAdminServiceGetLoopRunProcedure,
+		svc.GetLoopRun,
+		connect.WithSchema(untilAdminServiceMethods.ByName("GetLoopRun")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceGetWorkflowRunThreadHistoryHandler := connect.NewUnaryHandler(
-		BrentAdminServiceGetWorkflowRunThreadHistoryProcedure,
-		svc.GetWorkflowRunThreadHistory,
-		connect.WithSchema(brentAdminServiceMethods.ByName("GetWorkflowRunThreadHistory")),
+	untilAdminServiceGetLoopRunThreadHistoryHandler := connect.NewUnaryHandler(
+		UntilAdminServiceGetLoopRunThreadHistoryProcedure,
+		svc.GetLoopRunThreadHistory,
+		connect.WithSchema(untilAdminServiceMethods.ByName("GetLoopRunThreadHistory")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceListPullRequestsHandler := connect.NewUnaryHandler(
-		BrentAdminServiceListPullRequestsProcedure,
+	untilAdminServiceListPullRequestsHandler := connect.NewUnaryHandler(
+		UntilAdminServiceListPullRequestsProcedure,
 		svc.ListPullRequests,
-		connect.WithSchema(brentAdminServiceMethods.ByName("ListPullRequests")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("ListPullRequests")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceGetPullRequestByIDHandler := connect.NewUnaryHandler(
-		BrentAdminServiceGetPullRequestByIDProcedure,
+	untilAdminServiceGetPullRequestByIDHandler := connect.NewUnaryHandler(
+		UntilAdminServiceGetPullRequestByIDProcedure,
 		svc.GetPullRequestByID,
-		connect.WithSchema(brentAdminServiceMethods.ByName("GetPullRequestByID")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("GetPullRequestByID")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceListDeviationAnalysesForPRHandler := connect.NewUnaryHandler(
-		BrentAdminServiceListDeviationAnalysesForPRProcedure,
-		svc.ListDeviationAnalysesForPR,
-		connect.WithSchema(brentAdminServiceMethods.ByName("ListDeviationAnalysesForPR")),
+	untilAdminServiceListPlanChecksForPRHandler := connect.NewUnaryHandler(
+		UntilAdminServiceListPlanChecksForPRProcedure,
+		svc.ListPlanChecksForPR,
+		connect.WithSchema(untilAdminServiceMethods.ByName("ListPlanChecksForPR")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceListPrincipalsHandler := connect.NewUnaryHandler(
-		BrentAdminServiceListPrincipalsProcedure,
+	untilAdminServiceListPrincipalsHandler := connect.NewUnaryHandler(
+		UntilAdminServiceListPrincipalsProcedure,
 		svc.ListPrincipals,
-		connect.WithSchema(brentAdminServiceMethods.ByName("ListPrincipals")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("ListPrincipals")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceGetPrincipalHandler := connect.NewUnaryHandler(
-		BrentAdminServiceGetPrincipalProcedure,
+	untilAdminServiceGetPrincipalHandler := connect.NewUnaryHandler(
+		UntilAdminServiceGetPrincipalProcedure,
 		svc.GetPrincipal,
-		connect.WithSchema(brentAdminServiceMethods.ByName("GetPrincipal")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("GetPrincipal")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceUpsertPrincipalBindingHandler := connect.NewUnaryHandler(
-		BrentAdminServiceUpsertPrincipalBindingProcedure,
+	untilAdminServiceUpsertPrincipalBindingHandler := connect.NewUnaryHandler(
+		UntilAdminServiceUpsertPrincipalBindingProcedure,
 		svc.UpsertPrincipalBinding,
-		connect.WithSchema(brentAdminServiceMethods.ByName("UpsertPrincipalBinding")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("UpsertPrincipalBinding")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceDeletePrincipalBindingHandler := connect.NewUnaryHandler(
-		BrentAdminServiceDeletePrincipalBindingProcedure,
+	untilAdminServiceDeletePrincipalBindingHandler := connect.NewUnaryHandler(
+		UntilAdminServiceDeletePrincipalBindingProcedure,
 		svc.DeletePrincipalBinding,
-		connect.WithSchema(brentAdminServiceMethods.ByName("DeletePrincipalBinding")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("DeletePrincipalBinding")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceUpdatePrincipalHandler := connect.NewUnaryHandler(
-		BrentAdminServiceUpdatePrincipalProcedure,
+	untilAdminServiceUpdatePrincipalHandler := connect.NewUnaryHandler(
+		UntilAdminServiceUpdatePrincipalProcedure,
 		svc.UpdatePrincipal,
-		connect.WithSchema(brentAdminServiceMethods.ByName("UpdatePrincipal")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("UpdatePrincipal")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceCreatePrincipalIdentityHandler := connect.NewUnaryHandler(
-		BrentAdminServiceCreatePrincipalIdentityProcedure,
+	untilAdminServiceCreatePrincipalIdentityHandler := connect.NewUnaryHandler(
+		UntilAdminServiceCreatePrincipalIdentityProcedure,
 		svc.CreatePrincipalIdentity,
-		connect.WithSchema(brentAdminServiceMethods.ByName("CreatePrincipalIdentity")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("CreatePrincipalIdentity")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceDeletePrincipalIdentityHandler := connect.NewUnaryHandler(
-		BrentAdminServiceDeletePrincipalIdentityProcedure,
+	untilAdminServiceDeletePrincipalIdentityHandler := connect.NewUnaryHandler(
+		UntilAdminServiceDeletePrincipalIdentityProcedure,
 		svc.DeletePrincipalIdentity,
-		connect.WithSchema(brentAdminServiceMethods.ByName("DeletePrincipalIdentity")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("DeletePrincipalIdentity")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceSetPrincipalCredentialHandler := connect.NewUnaryHandler(
-		BrentAdminServiceSetPrincipalCredentialProcedure,
+	untilAdminServiceSetPrincipalCredentialHandler := connect.NewUnaryHandler(
+		UntilAdminServiceSetPrincipalCredentialProcedure,
 		svc.SetPrincipalCredential,
-		connect.WithSchema(brentAdminServiceMethods.ByName("SetPrincipalCredential")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("SetPrincipalCredential")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceListPrincipalCredentialConnectionsHandler := connect.NewUnaryHandler(
-		BrentAdminServiceListPrincipalCredentialConnectionsProcedure,
+	untilAdminServiceListPrincipalCredentialConnectionsHandler := connect.NewUnaryHandler(
+		UntilAdminServiceListPrincipalCredentialConnectionsProcedure,
 		svc.ListPrincipalCredentialConnections,
-		connect.WithSchema(brentAdminServiceMethods.ByName("ListPrincipalCredentialConnections")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("ListPrincipalCredentialConnections")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceDeletePrincipalCredentialHandler := connect.NewUnaryHandler(
-		BrentAdminServiceDeletePrincipalCredentialProcedure,
+	untilAdminServiceDeletePrincipalCredentialHandler := connect.NewUnaryHandler(
+		UntilAdminServiceDeletePrincipalCredentialProcedure,
 		svc.DeletePrincipalCredential,
-		connect.WithSchema(brentAdminServiceMethods.ByName("DeletePrincipalCredential")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("DeletePrincipalCredential")),
 		connect.WithHandlerOptions(opts...),
 	)
-	brentAdminServiceGetPullRequestTimelineHandler := connect.NewUnaryHandler(
-		BrentAdminServiceGetPullRequestTimelineProcedure,
+	untilAdminServiceGetPullRequestTimelineHandler := connect.NewUnaryHandler(
+		UntilAdminServiceGetPullRequestTimelineProcedure,
 		svc.GetPullRequestTimeline,
-		connect.WithSchema(brentAdminServiceMethods.ByName("GetPullRequestTimeline")),
+		connect.WithSchema(untilAdminServiceMethods.ByName("GetPullRequestTimeline")),
 		connect.WithHandlerOptions(opts...),
 	)
-	return "/brent.BrentAdminService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return "/until.AdminService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
-		case BrentAdminServiceExecuteWorkflowProcedure:
-			brentAdminServiceExecuteWorkflowHandler.ServeHTTP(w, r)
-		case BrentAdminServiceListRunsProcedure:
-			brentAdminServiceListRunsHandler.ServeHTTP(w, r)
-		case BrentAdminServiceWatchRunProcedure:
-			brentAdminServiceWatchRunHandler.ServeHTTP(w, r)
-		case BrentAdminServiceStreamEventsProcedure:
-			brentAdminServiceStreamEventsHandler.ServeHTTP(w, r)
-		case BrentAdminServiceListEventsProcedure:
-			brentAdminServiceListEventsHandler.ServeHTTP(w, r)
-		case BrentAdminServiceCancelRunProcedure:
-			brentAdminServiceCancelRunHandler.ServeHTTP(w, r)
-		case BrentAdminServiceSendQuestionProcedure:
-			brentAdminServiceSendQuestionHandler.ServeHTTP(w, r)
-		case BrentAdminServiceListPlansProcedure:
-			brentAdminServiceListPlansHandler.ServeHTTP(w, r)
-		case BrentAdminServiceGetPlanProcedure:
-			brentAdminServiceGetPlanHandler.ServeHTTP(w, r)
-		case BrentAdminServiceListReviewsProcedure:
-			brentAdminServiceListReviewsHandler.ServeHTTP(w, r)
-		case BrentAdminServiceGetReviewProcedure:
-			brentAdminServiceGetReviewHandler.ServeHTTP(w, r)
-		case BrentAdminServiceListAccountsProcedure:
-			brentAdminServiceListAccountsHandler.ServeHTTP(w, r)
-		case BrentAdminServiceGetAccountSummaryProcedure:
-			brentAdminServiceGetAccountSummaryHandler.ServeHTTP(w, r)
-		case BrentAdminServiceGetAccountHealthAnalysisProcedure:
-			brentAdminServiceGetAccountHealthAnalysisHandler.ServeHTTP(w, r)
-		case BrentAdminServiceListAccountMetricReposProcedure:
-			brentAdminServiceListAccountMetricReposHandler.ServeHTTP(w, r)
-		case BrentAdminServiceStartAccountMetricsComparisonProcedure:
-			brentAdminServiceStartAccountMetricsComparisonHandler.ServeHTTP(w, r)
-		case BrentAdminServiceGetAccountMetricsComparisonRunProcedure:
-			brentAdminServiceGetAccountMetricsComparisonRunHandler.ServeHTTP(w, r)
-		case BrentAdminServiceGetAccountBrentSettingsProcedure:
-			brentAdminServiceGetAccountBrentSettingsHandler.ServeHTTP(w, r)
-		case BrentAdminServiceUpdateAccountBrentSettingsProcedure:
-			brentAdminServiceUpdateAccountBrentSettingsHandler.ServeHTTP(w, r)
-		case BrentAdminServiceGetAccountReviewPolicyProcedure:
-			brentAdminServiceGetAccountReviewPolicyHandler.ServeHTTP(w, r)
-		case BrentAdminServiceUpdateAccountReviewPolicyProcedure:
-			brentAdminServiceUpdateAccountReviewPolicyHandler.ServeHTTP(w, r)
-		case BrentAdminServiceGetAccountLLMCredentialStatusProcedure:
-			brentAdminServiceGetAccountLLMCredentialStatusHandler.ServeHTTP(w, r)
-		case BrentAdminServiceListAccountIntegrationsProcedure:
-			brentAdminServiceListAccountIntegrationsHandler.ServeHTTP(w, r)
-		case BrentAdminServiceListWorkflowsProcedure:
-			brentAdminServiceListWorkflowsHandler.ServeHTTP(w, r)
-		case BrentAdminServiceGetWorkflowProcedure:
-			brentAdminServiceGetWorkflowHandler.ServeHTTP(w, r)
-		case BrentAdminServiceListWorkflowRunsProcedure:
-			brentAdminServiceListWorkflowRunsHandler.ServeHTTP(w, r)
-		case BrentAdminServiceGetWorkflowRunProcedure:
-			brentAdminServiceGetWorkflowRunHandler.ServeHTTP(w, r)
-		case BrentAdminServiceGetWorkflowRunThreadHistoryProcedure:
-			brentAdminServiceGetWorkflowRunThreadHistoryHandler.ServeHTTP(w, r)
-		case BrentAdminServiceListPullRequestsProcedure:
-			brentAdminServiceListPullRequestsHandler.ServeHTTP(w, r)
-		case BrentAdminServiceGetPullRequestByIDProcedure:
-			brentAdminServiceGetPullRequestByIDHandler.ServeHTTP(w, r)
-		case BrentAdminServiceListDeviationAnalysesForPRProcedure:
-			brentAdminServiceListDeviationAnalysesForPRHandler.ServeHTTP(w, r)
-		case BrentAdminServiceListPrincipalsProcedure:
-			brentAdminServiceListPrincipalsHandler.ServeHTTP(w, r)
-		case BrentAdminServiceGetPrincipalProcedure:
-			brentAdminServiceGetPrincipalHandler.ServeHTTP(w, r)
-		case BrentAdminServiceUpsertPrincipalBindingProcedure:
-			brentAdminServiceUpsertPrincipalBindingHandler.ServeHTTP(w, r)
-		case BrentAdminServiceDeletePrincipalBindingProcedure:
-			brentAdminServiceDeletePrincipalBindingHandler.ServeHTTP(w, r)
-		case BrentAdminServiceUpdatePrincipalProcedure:
-			brentAdminServiceUpdatePrincipalHandler.ServeHTTP(w, r)
-		case BrentAdminServiceCreatePrincipalIdentityProcedure:
-			brentAdminServiceCreatePrincipalIdentityHandler.ServeHTTP(w, r)
-		case BrentAdminServiceDeletePrincipalIdentityProcedure:
-			brentAdminServiceDeletePrincipalIdentityHandler.ServeHTTP(w, r)
-		case BrentAdminServiceSetPrincipalCredentialProcedure:
-			brentAdminServiceSetPrincipalCredentialHandler.ServeHTTP(w, r)
-		case BrentAdminServiceListPrincipalCredentialConnectionsProcedure:
-			brentAdminServiceListPrincipalCredentialConnectionsHandler.ServeHTTP(w, r)
-		case BrentAdminServiceDeletePrincipalCredentialProcedure:
-			brentAdminServiceDeletePrincipalCredentialHandler.ServeHTTP(w, r)
-		case BrentAdminServiceGetPullRequestTimelineProcedure:
-			brentAdminServiceGetPullRequestTimelineHandler.ServeHTTP(w, r)
+		case UntilAdminServiceExecuteLoopProcedure:
+			untilAdminServiceExecuteLoopHandler.ServeHTTP(w, r)
+		case UntilAdminServiceListRunsProcedure:
+			untilAdminServiceListRunsHandler.ServeHTTP(w, r)
+		case UntilAdminServiceWatchRunProcedure:
+			untilAdminServiceWatchRunHandler.ServeHTTP(w, r)
+		case UntilAdminServiceStreamEventsProcedure:
+			untilAdminServiceStreamEventsHandler.ServeHTTP(w, r)
+		case UntilAdminServiceListEventsProcedure:
+			untilAdminServiceListEventsHandler.ServeHTTP(w, r)
+		case UntilAdminServiceCancelRunProcedure:
+			untilAdminServiceCancelRunHandler.ServeHTTP(w, r)
+		case UntilAdminServiceSendQuestionProcedure:
+			untilAdminServiceSendQuestionHandler.ServeHTTP(w, r)
+		case UntilAdminServiceListPlansProcedure:
+			untilAdminServiceListPlansHandler.ServeHTTP(w, r)
+		case UntilAdminServiceGetPlanProcedure:
+			untilAdminServiceGetPlanHandler.ServeHTTP(w, r)
+		case UntilAdminServiceListReviewsProcedure:
+			untilAdminServiceListReviewsHandler.ServeHTTP(w, r)
+		case UntilAdminServiceGetReviewProcedure:
+			untilAdminServiceGetReviewHandler.ServeHTTP(w, r)
+		case UntilAdminServiceListAccountsProcedure:
+			untilAdminServiceListAccountsHandler.ServeHTTP(w, r)
+		case UntilAdminServiceGetAccountSummaryProcedure:
+			untilAdminServiceGetAccountSummaryHandler.ServeHTTP(w, r)
+		case UntilAdminServiceGetAccountHealthAnalysisProcedure:
+			untilAdminServiceGetAccountHealthAnalysisHandler.ServeHTTP(w, r)
+		case UntilAdminServiceListAccountMetricReposProcedure:
+			untilAdminServiceListAccountMetricReposHandler.ServeHTTP(w, r)
+		case UntilAdminServiceStartAccountMetricsComparisonProcedure:
+			untilAdminServiceStartAccountMetricsComparisonHandler.ServeHTTP(w, r)
+		case UntilAdminServiceGetAccountMetricsComparisonRunProcedure:
+			untilAdminServiceGetAccountMetricsComparisonRunHandler.ServeHTTP(w, r)
+		case UntilAdminServiceGetAccountPlanCheckSettingsProcedure:
+			untilAdminServiceGetAccountPlanCheckSettingsHandler.ServeHTTP(w, r)
+		case UntilAdminServiceUpdateAccountPlanCheckSettingsProcedure:
+			untilAdminServiceUpdateAccountPlanCheckSettingsHandler.ServeHTTP(w, r)
+		case UntilAdminServiceGetAccountReviewPolicyProcedure:
+			untilAdminServiceGetAccountReviewPolicyHandler.ServeHTTP(w, r)
+		case UntilAdminServiceUpdateAccountReviewPolicyProcedure:
+			untilAdminServiceUpdateAccountReviewPolicyHandler.ServeHTTP(w, r)
+		case UntilAdminServiceGetAccountLLMCredentialStatusProcedure:
+			untilAdminServiceGetAccountLLMCredentialStatusHandler.ServeHTTP(w, r)
+		case UntilAdminServiceListAccountIntegrationsProcedure:
+			untilAdminServiceListAccountIntegrationsHandler.ServeHTTP(w, r)
+		case UntilAdminServiceListLoopsProcedure:
+			untilAdminServiceListLoopsHandler.ServeHTTP(w, r)
+		case UntilAdminServiceGetLoopProcedure:
+			untilAdminServiceGetLoopHandler.ServeHTTP(w, r)
+		case UntilAdminServiceListLoopRunsProcedure:
+			untilAdminServiceListLoopRunsHandler.ServeHTTP(w, r)
+		case UntilAdminServiceGetLoopRunProcedure:
+			untilAdminServiceGetLoopRunHandler.ServeHTTP(w, r)
+		case UntilAdminServiceGetLoopRunThreadHistoryProcedure:
+			untilAdminServiceGetLoopRunThreadHistoryHandler.ServeHTTP(w, r)
+		case UntilAdminServiceListPullRequestsProcedure:
+			untilAdminServiceListPullRequestsHandler.ServeHTTP(w, r)
+		case UntilAdminServiceGetPullRequestByIDProcedure:
+			untilAdminServiceGetPullRequestByIDHandler.ServeHTTP(w, r)
+		case UntilAdminServiceListPlanChecksForPRProcedure:
+			untilAdminServiceListPlanChecksForPRHandler.ServeHTTP(w, r)
+		case UntilAdminServiceListPrincipalsProcedure:
+			untilAdminServiceListPrincipalsHandler.ServeHTTP(w, r)
+		case UntilAdminServiceGetPrincipalProcedure:
+			untilAdminServiceGetPrincipalHandler.ServeHTTP(w, r)
+		case UntilAdminServiceUpsertPrincipalBindingProcedure:
+			untilAdminServiceUpsertPrincipalBindingHandler.ServeHTTP(w, r)
+		case UntilAdminServiceDeletePrincipalBindingProcedure:
+			untilAdminServiceDeletePrincipalBindingHandler.ServeHTTP(w, r)
+		case UntilAdminServiceUpdatePrincipalProcedure:
+			untilAdminServiceUpdatePrincipalHandler.ServeHTTP(w, r)
+		case UntilAdminServiceCreatePrincipalIdentityProcedure:
+			untilAdminServiceCreatePrincipalIdentityHandler.ServeHTTP(w, r)
+		case UntilAdminServiceDeletePrincipalIdentityProcedure:
+			untilAdminServiceDeletePrincipalIdentityHandler.ServeHTTP(w, r)
+		case UntilAdminServiceSetPrincipalCredentialProcedure:
+			untilAdminServiceSetPrincipalCredentialHandler.ServeHTTP(w, r)
+		case UntilAdminServiceListPrincipalCredentialConnectionsProcedure:
+			untilAdminServiceListPrincipalCredentialConnectionsHandler.ServeHTTP(w, r)
+		case UntilAdminServiceDeletePrincipalCredentialProcedure:
+			untilAdminServiceDeletePrincipalCredentialHandler.ServeHTTP(w, r)
+		case UntilAdminServiceGetPullRequestTimelineProcedure:
+			untilAdminServiceGetPullRequestTimelineHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
 	})
 }
 
-// UnimplementedBrentAdminServiceHandler returns CodeUnimplemented from all methods.
-type UnimplementedBrentAdminServiceHandler struct{}
+// UnimplementedUntilAdminServiceHandler returns CodeUnimplemented from all methods.
+type UnimplementedUntilAdminServiceHandler struct{}
 
-func (UnimplementedBrentAdminServiceHandler) ExecuteWorkflow(context.Context, *connect.Request[sdp_go.ExecuteWorkflowRequest], *connect.ServerStream[sdp_go.ExecuteWorkflowResponse]) error {
-	return connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.ExecuteWorkflow is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) ExecuteLoop(context.Context, *connect.Request[sdp_go.ExecuteLoopRequest], *connect.ServerStream[sdp_go.ExecuteLoopResponse]) error {
+	return connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.ExecuteLoop is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) ListRuns(context.Context, *connect.Request[sdp_go.ListRunsRequest]) (*connect.Response[sdp_go.ListRunsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.ListRuns is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) ListRuns(context.Context, *connect.Request[sdp_go.ListRunsRequest]) (*connect.Response[sdp_go.ListRunsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.ListRuns is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) WatchRun(context.Context, *connect.Request[sdp_go.WatchRunRequest], *connect.ServerStream[sdp_go.ExecuteWorkflowResponse]) error {
-	return connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.WatchRun is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) WatchRun(context.Context, *connect.Request[sdp_go.WatchRunRequest], *connect.ServerStream[sdp_go.ExecuteLoopResponse]) error {
+	return connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.WatchRun is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) StreamEvents(context.Context, *connect.Request[sdp_go.StreamEventsRequest], *connect.ServerStream[sdp_go.StreamEventsResponse]) error {
-	return connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.StreamEvents is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) StreamEvents(context.Context, *connect.Request[sdp_go.StreamEventsRequest], *connect.ServerStream[sdp_go.StreamEventsResponse]) error {
+	return connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.StreamEvents is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) ListEvents(context.Context, *connect.Request[sdp_go.ListEventsRequest]) (*connect.Response[sdp_go.ListEventsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.ListEvents is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) ListEvents(context.Context, *connect.Request[sdp_go.ListEventsRequest]) (*connect.Response[sdp_go.ListEventsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.ListEvents is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) CancelRun(context.Context, *connect.Request[sdp_go.CancelRunRequest]) (*connect.Response[sdp_go.CancelRunResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.CancelRun is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) CancelRun(context.Context, *connect.Request[sdp_go.CancelRunRequest]) (*connect.Response[sdp_go.CancelRunResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.CancelRun is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) SendQuestion(context.Context, *connect.Request[sdp_go.SendQuestionRequest], *connect.ServerStream[sdp_go.ExecuteWorkflowResponse]) error {
-	return connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.SendQuestion is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) SendQuestion(context.Context, *connect.Request[sdp_go.SendQuestionRequest], *connect.ServerStream[sdp_go.ExecuteLoopResponse]) error {
+	return connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.SendQuestion is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) ListPlans(context.Context, *connect.Request[sdp_go.AdminListPlansRequest]) (*connect.Response[sdp_go.AdminListPlansResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.ListPlans is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) ListPlans(context.Context, *connect.Request[sdp_go.AdminListPlansRequest]) (*connect.Response[sdp_go.AdminListPlansResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.ListPlans is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) GetPlan(context.Context, *connect.Request[sdp_go.AdminGetPlanRequest]) (*connect.Response[sdp_go.AdminGetPlanResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.GetPlan is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) GetPlan(context.Context, *connect.Request[sdp_go.AdminGetPlanRequest]) (*connect.Response[sdp_go.AdminGetPlanResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.GetPlan is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) ListReviews(context.Context, *connect.Request[sdp_go.AdminListReviewsRequest]) (*connect.Response[sdp_go.AdminListReviewsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.ListReviews is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) ListReviews(context.Context, *connect.Request[sdp_go.AdminListReviewsRequest]) (*connect.Response[sdp_go.AdminListReviewsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.ListReviews is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) GetReview(context.Context, *connect.Request[sdp_go.AdminGetReviewRequest]) (*connect.Response[sdp_go.AdminGetReviewResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.GetReview is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) GetReview(context.Context, *connect.Request[sdp_go.AdminGetReviewRequest]) (*connect.Response[sdp_go.AdminGetReviewResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.GetReview is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) ListAccounts(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[sdp_go.AdminListAccountsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.ListAccounts is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) ListAccounts(context.Context, *connect.Request[emptypb.Empty]) (*connect.Response[sdp_go.AdminListAccountsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.ListAccounts is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) GetAccountSummary(context.Context, *connect.Request[sdp_go.AdminGetAccountSummaryRequest]) (*connect.Response[sdp_go.AdminGetAccountSummaryResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.GetAccountSummary is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) GetAccountSummary(context.Context, *connect.Request[sdp_go.AdminGetAccountSummaryRequest]) (*connect.Response[sdp_go.AdminGetAccountSummaryResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.GetAccountSummary is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) GetAccountHealthAnalysis(context.Context, *connect.Request[sdp_go.AdminGetAccountHealthAnalysisRequest]) (*connect.Response[sdp_go.AdminGetAccountHealthAnalysisResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.GetAccountHealthAnalysis is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) GetAccountHealthAnalysis(context.Context, *connect.Request[sdp_go.AdminGetAccountHealthAnalysisRequest]) (*connect.Response[sdp_go.AdminGetAccountHealthAnalysisResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.GetAccountHealthAnalysis is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) ListAccountMetricRepos(context.Context, *connect.Request[sdp_go.AdminListAccountMetricReposRequest]) (*connect.Response[sdp_go.AdminListAccountMetricReposResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.ListAccountMetricRepos is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) ListAccountMetricRepos(context.Context, *connect.Request[sdp_go.AdminListAccountMetricReposRequest]) (*connect.Response[sdp_go.AdminListAccountMetricReposResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.ListAccountMetricRepos is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) StartAccountMetricsComparison(context.Context, *connect.Request[sdp_go.AdminStartAccountMetricsComparisonRequest]) (*connect.Response[sdp_go.AdminStartAccountMetricsComparisonResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.StartAccountMetricsComparison is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) StartAccountMetricsComparison(context.Context, *connect.Request[sdp_go.AdminStartAccountMetricsComparisonRequest]) (*connect.Response[sdp_go.AdminStartAccountMetricsComparisonResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.StartAccountMetricsComparison is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) GetAccountMetricsComparisonRun(context.Context, *connect.Request[sdp_go.AdminGetAccountMetricsComparisonRunRequest]) (*connect.Response[sdp_go.AdminGetAccountMetricsComparisonRunResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.GetAccountMetricsComparisonRun is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) GetAccountMetricsComparisonRun(context.Context, *connect.Request[sdp_go.AdminGetAccountMetricsComparisonRunRequest]) (*connect.Response[sdp_go.AdminGetAccountMetricsComparisonRunResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.GetAccountMetricsComparisonRun is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) GetAccountBrentSettings(context.Context, *connect.Request[sdp_go.AdminGetAccountBrentSettingsRequest]) (*connect.Response[sdp_go.GetBrentSettingsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.GetAccountBrentSettings is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) GetAccountPlanCheckSettings(context.Context, *connect.Request[sdp_go.AdminGetAccountPlanCheckSettingsRequest]) (*connect.Response[sdp_go.GetPlanCheckSettingsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.GetAccountPlanCheckSettings is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) UpdateAccountBrentSettings(context.Context, *connect.Request[sdp_go.AdminUpdateAccountBrentSettingsRequest]) (*connect.Response[sdp_go.UpdateBrentSettingsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.UpdateAccountBrentSettings is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) UpdateAccountPlanCheckSettings(context.Context, *connect.Request[sdp_go.AdminUpdateAccountPlanCheckSettingsRequest]) (*connect.Response[sdp_go.UpdatePlanCheckSettingsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.UpdateAccountPlanCheckSettings is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) GetAccountReviewPolicy(context.Context, *connect.Request[sdp_go.AdminGetAccountReviewPolicyRequest]) (*connect.Response[sdp_go.AdminGetAccountReviewPolicyResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.GetAccountReviewPolicy is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) GetAccountReviewPolicy(context.Context, *connect.Request[sdp_go.AdminGetAccountReviewPolicyRequest]) (*connect.Response[sdp_go.AdminGetAccountReviewPolicyResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.GetAccountReviewPolicy is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) UpdateAccountReviewPolicy(context.Context, *connect.Request[sdp_go.AdminUpdateAccountReviewPolicyRequest]) (*connect.Response[sdp_go.AdminUpdateAccountReviewPolicyResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.UpdateAccountReviewPolicy is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) UpdateAccountReviewPolicy(context.Context, *connect.Request[sdp_go.AdminUpdateAccountReviewPolicyRequest]) (*connect.Response[sdp_go.AdminUpdateAccountReviewPolicyResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.UpdateAccountReviewPolicy is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) GetAccountLLMCredentialStatus(context.Context, *connect.Request[sdp_go.AdminGetAccountLLMCredentialStatusRequest]) (*connect.Response[sdp_go.AdminGetAccountLLMCredentialStatusResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.GetAccountLLMCredentialStatus is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) GetAccountLLMCredentialStatus(context.Context, *connect.Request[sdp_go.AdminGetAccountLLMCredentialStatusRequest]) (*connect.Response[sdp_go.AdminGetAccountLLMCredentialStatusResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.GetAccountLLMCredentialStatus is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) ListAccountIntegrations(context.Context, *connect.Request[sdp_go.AdminListAccountIntegrationsRequest]) (*connect.Response[sdp_go.AdminListAccountIntegrationsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.ListAccountIntegrations is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) ListAccountIntegrations(context.Context, *connect.Request[sdp_go.AdminListAccountIntegrationsRequest]) (*connect.Response[sdp_go.AdminListAccountIntegrationsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.ListAccountIntegrations is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) ListWorkflows(context.Context, *connect.Request[sdp_go.ListWorkflowsRequest]) (*connect.Response[sdp_go.ListWorkflowsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.ListWorkflows is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) ListLoops(context.Context, *connect.Request[sdp_go.ListLoopsRequest]) (*connect.Response[sdp_go.ListLoopsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.ListLoops is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) GetWorkflow(context.Context, *connect.Request[sdp_go.GetWorkflowRequest]) (*connect.Response[sdp_go.GetWorkflowResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.GetWorkflow is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) GetLoop(context.Context, *connect.Request[sdp_go.GetLoopRequest]) (*connect.Response[sdp_go.GetLoopResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.GetLoop is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) ListWorkflowRuns(context.Context, *connect.Request[sdp_go.ListWorkflowRunsRequest]) (*connect.Response[sdp_go.ListWorkflowRunsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.ListWorkflowRuns is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) ListLoopRuns(context.Context, *connect.Request[sdp_go.ListLoopRunsRequest]) (*connect.Response[sdp_go.ListLoopRunsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.ListLoopRuns is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) GetWorkflowRun(context.Context, *connect.Request[sdp_go.GetWorkflowRunRequest]) (*connect.Response[sdp_go.GetWorkflowRunResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.GetWorkflowRun is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) GetLoopRun(context.Context, *connect.Request[sdp_go.GetLoopRunRequest]) (*connect.Response[sdp_go.GetLoopRunResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.GetLoopRun is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) GetWorkflowRunThreadHistory(context.Context, *connect.Request[sdp_go.GetWorkflowRunThreadHistoryRequest]) (*connect.Response[sdp_go.GetWorkflowRunThreadHistoryResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.GetWorkflowRunThreadHistory is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) GetLoopRunThreadHistory(context.Context, *connect.Request[sdp_go.GetLoopRunThreadHistoryRequest]) (*connect.Response[sdp_go.GetLoopRunThreadHistoryResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.GetLoopRunThreadHistory is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) ListPullRequests(context.Context, *connect.Request[sdp_go.ListPullRequestsRequest]) (*connect.Response[sdp_go.ListPullRequestsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.ListPullRequests is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) ListPullRequests(context.Context, *connect.Request[sdp_go.ListPullRequestsRequest]) (*connect.Response[sdp_go.ListPullRequestsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.ListPullRequests is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) GetPullRequestByID(context.Context, *connect.Request[sdp_go.GetPullRequestByIDRequest]) (*connect.Response[sdp_go.GetPullRequestByIDResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.GetPullRequestByID is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) GetPullRequestByID(context.Context, *connect.Request[sdp_go.GetPullRequestByIDRequest]) (*connect.Response[sdp_go.GetPullRequestByIDResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.GetPullRequestByID is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) ListDeviationAnalysesForPR(context.Context, *connect.Request[sdp_go.ListDeviationAnalysesForPRRequest]) (*connect.Response[sdp_go.ListDeviationAnalysesForPRResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.ListDeviationAnalysesForPR is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) ListPlanChecksForPR(context.Context, *connect.Request[sdp_go.ListPlanChecksForPRRequest]) (*connect.Response[sdp_go.ListPlanChecksForPRResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.ListPlanChecksForPR is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) ListPrincipals(context.Context, *connect.Request[sdp_go.AdminListPrincipalsRequest]) (*connect.Response[sdp_go.AdminListPrincipalsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.ListPrincipals is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) ListPrincipals(context.Context, *connect.Request[sdp_go.AdminListPrincipalsRequest]) (*connect.Response[sdp_go.AdminListPrincipalsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.ListPrincipals is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) GetPrincipal(context.Context, *connect.Request[sdp_go.AdminGetPrincipalRequest]) (*connect.Response[sdp_go.AdminGetPrincipalResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.GetPrincipal is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) GetPrincipal(context.Context, *connect.Request[sdp_go.AdminGetPrincipalRequest]) (*connect.Response[sdp_go.AdminGetPrincipalResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.GetPrincipal is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) UpsertPrincipalBinding(context.Context, *connect.Request[sdp_go.AdminUpsertPrincipalBindingRequest]) (*connect.Response[sdp_go.AdminUpsertPrincipalBindingResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.UpsertPrincipalBinding is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) UpsertPrincipalBinding(context.Context, *connect.Request[sdp_go.AdminUpsertPrincipalBindingRequest]) (*connect.Response[sdp_go.AdminUpsertPrincipalBindingResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.UpsertPrincipalBinding is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) DeletePrincipalBinding(context.Context, *connect.Request[sdp_go.AdminDeletePrincipalBindingRequest]) (*connect.Response[sdp_go.AdminDeletePrincipalBindingResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.DeletePrincipalBinding is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) DeletePrincipalBinding(context.Context, *connect.Request[sdp_go.AdminDeletePrincipalBindingRequest]) (*connect.Response[sdp_go.AdminDeletePrincipalBindingResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.DeletePrincipalBinding is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) UpdatePrincipal(context.Context, *connect.Request[sdp_go.AdminUpdatePrincipalRequest]) (*connect.Response[sdp_go.AdminUpdatePrincipalResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.UpdatePrincipal is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) UpdatePrincipal(context.Context, *connect.Request[sdp_go.AdminUpdatePrincipalRequest]) (*connect.Response[sdp_go.AdminUpdatePrincipalResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.UpdatePrincipal is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) CreatePrincipalIdentity(context.Context, *connect.Request[sdp_go.AdminCreatePrincipalIdentityRequest]) (*connect.Response[sdp_go.AdminCreatePrincipalIdentityResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.CreatePrincipalIdentity is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) CreatePrincipalIdentity(context.Context, *connect.Request[sdp_go.AdminCreatePrincipalIdentityRequest]) (*connect.Response[sdp_go.AdminCreatePrincipalIdentityResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.CreatePrincipalIdentity is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) DeletePrincipalIdentity(context.Context, *connect.Request[sdp_go.AdminDeletePrincipalIdentityRequest]) (*connect.Response[sdp_go.AdminDeletePrincipalIdentityResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.DeletePrincipalIdentity is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) DeletePrincipalIdentity(context.Context, *connect.Request[sdp_go.AdminDeletePrincipalIdentityRequest]) (*connect.Response[sdp_go.AdminDeletePrincipalIdentityResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.DeletePrincipalIdentity is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) SetPrincipalCredential(context.Context, *connect.Request[sdp_go.AdminSetPrincipalCredentialRequest]) (*connect.Response[sdp_go.AdminSetPrincipalCredentialResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.SetPrincipalCredential is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) SetPrincipalCredential(context.Context, *connect.Request[sdp_go.AdminSetPrincipalCredentialRequest]) (*connect.Response[sdp_go.AdminSetPrincipalCredentialResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.SetPrincipalCredential is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) ListPrincipalCredentialConnections(context.Context, *connect.Request[sdp_go.AdminListPrincipalCredentialConnectionsRequest]) (*connect.Response[sdp_go.AdminListPrincipalCredentialConnectionsResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.ListPrincipalCredentialConnections is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) ListPrincipalCredentialConnections(context.Context, *connect.Request[sdp_go.AdminListPrincipalCredentialConnectionsRequest]) (*connect.Response[sdp_go.AdminListPrincipalCredentialConnectionsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.ListPrincipalCredentialConnections is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) DeletePrincipalCredential(context.Context, *connect.Request[sdp_go.AdminDeletePrincipalCredentialRequest]) (*connect.Response[sdp_go.AdminDeletePrincipalCredentialResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.DeletePrincipalCredential is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) DeletePrincipalCredential(context.Context, *connect.Request[sdp_go.AdminDeletePrincipalCredentialRequest]) (*connect.Response[sdp_go.AdminDeletePrincipalCredentialResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.DeletePrincipalCredential is not implemented"))
 }
 
-func (UnimplementedBrentAdminServiceHandler) GetPullRequestTimeline(context.Context, *connect.Request[sdp_go.GetPullRequestTimelineRequest]) (*connect.Response[sdp_go.GetPullRequestTimelineResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("brent.BrentAdminService.GetPullRequestTimeline is not implemented"))
+func (UnimplementedUntilAdminServiceHandler) GetPullRequestTimeline(context.Context, *connect.Request[sdp_go.GetPullRequestTimelineRequest]) (*connect.Response[sdp_go.GetPullRequestTimelineResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("until.AdminService.GetPullRequestTimeline is not implemented"))
 }
