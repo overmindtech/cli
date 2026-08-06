@@ -1,59 +1,158 @@
 package auth
 
 import (
+	"bytes"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 )
 
-func TestNewMCPOAuthMetadataHandler(t *testing.T) {
-	scopes := []string{"openid", "profile", "email", "offline_access", "admin:read"}
+func TestNewMCPOAuthMetadataHandler_RouteFamilyAliasContracts(t *testing.T) {
+	t.Parallel()
+
+	tests := []struct {
+		name                  string
+		issuer                string
+		registrationEndpoint  string
+		authorizationEndpoint string
+		tokenEndpoint         string
+		scopes                []string
+		aliases               []string
+		forbidden             []string
+	}{
+		{
+			name:                  "canonical Until",
+			issuer:                "https://until.example.com/oauth",
+			registrationEndpoint:  "https://until.example.com/oauth/register",
+			authorizationEndpoint: "https://until.example.com/oauth/authorize",
+			tokenEndpoint:         "https://until.example.com/oauth/token",
+			scopes:                []string{"account:read", "until:read", "until:write"},
+			aliases: []string{
+				"/.well-known/oauth-authorization-server/oauth",
+				"/oauth/.well-known/oauth-authorization-server",
+				"/.well-known/openid-configuration/oauth",
+				"/oauth/.well-known/openid-configuration",
+			},
+			forbidden: []string{"/brent/", "brent:read", "brent:write"},
+		},
+		{
+			name:                  "legacy Brent",
+			issuer:                "https://until.example.com/brent/oauth",
+			registrationEndpoint:  "https://until.example.com/brent/oauth/register",
+			authorizationEndpoint: "https://until.example.com/brent/oauth/authorize",
+			tokenEndpoint:         "https://until.example.com/brent/oauth/token",
+			scopes:                []string{"account:read", "brent:read", "brent:write"},
+			aliases: []string{
+				"/.well-known/oauth-authorization-server/brent/oauth",
+				"/brent/oauth/.well-known/oauth-authorization-server",
+				"/.well-known/openid-configuration/brent/oauth",
+				"/brent/oauth/.well-known/openid-configuration",
+			},
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			handler := NewMCPOAuthMetadataHandler(
+				"auth.example.com",
+				test.issuer,
+				test.registrationEndpoint,
+				test.scopes,
+				test.authorizationEndpoint,
+				test.tokenEndpoint,
+			)
+			mux := http.NewServeMux()
+			for _, alias := range test.aliases {
+				mux.Handle(alias, handler)
+			}
+
+			wantBody := map[string]any{
+				"issuer":                 test.issuer,
+				"authorization_endpoint": test.authorizationEndpoint,
+				"token_endpoint":         test.tokenEndpoint,
+				"registration_endpoint":  test.registrationEndpoint,
+				"jwks_uri":               "https://auth.example.com/.well-known/jwks.json",
+				"userinfo_endpoint":      "https://auth.example.com/userinfo",
+				"revocation_endpoint":    "https://auth.example.com/oauth/revoke",
+				"response_types_supported": []any{
+					"code",
+				},
+				"grant_types_supported": []any{
+					"authorization_code",
+					"refresh_token",
+				},
+				"code_challenge_methods_supported": []any{
+					"S256",
+				},
+				"token_endpoint_auth_methods_supported": []any{
+					"none",
+				},
+				"scopes_supported": stringsToAny(test.scopes),
+			}
+
+			var firstAliasBody []byte
+			for _, alias := range test.aliases {
+				rec := httptest.NewRecorder()
+				mux.ServeHTTP(rec, httptest.NewRequestWithContext(t.Context(), http.MethodGet, alias, nil))
+				if got, want := rec.Code, http.StatusOK; got != want {
+					t.Fatalf("%s status = %d, want %d", alias, got, want)
+				}
+				if got, want := rec.Header().Get("Content-Type"), "application/json"; got != want {
+					t.Errorf("%s Content-Type = %q, want %q", alias, got, want)
+				}
+
+				bodyBytes := rec.Body.Bytes()
+				if firstAliasBody == nil {
+					firstAliasBody = bytes.Clone(bodyBytes)
+				} else if !bytes.Equal(bodyBytes, firstAliasBody) {
+					t.Errorf("%s body differs byte-for-byte from first alias: got %q, want %q", alias, bodyBytes, firstAliasBody)
+				}
+
+				var body map[string]any
+				if err := json.Unmarshal(bodyBytes, &body); err != nil {
+					t.Fatalf("%s decode metadata: %v", alias, err)
+				}
+				if !reflect.DeepEqual(body, wantBody) {
+					t.Errorf("%s body = %#v, want %#v", alias, body, wantBody)
+				}
+				for _, forbidden := range test.forbidden {
+					if strings.Contains(string(bodyBytes), forbidden) {
+						t.Errorf("%s canonical body contains legacy value %q: %s", alias, forbidden, bodyBytes)
+					}
+				}
+			}
+		})
+	}
+}
+
+func TestNewMCPOAuthMetadataHandler_DefaultAuth0Endpoints(t *testing.T) {
+	t.Parallel()
+
 	handler := NewMCPOAuthMetadataHandler(
 		"auth.example.com",
 		"https://api.example.com/area51/oauth",
 		"https://api.example.com/area51/oauth/register",
-		scopes,
+		[]string{"openid"},
 		"",
 		"",
 	)
-
-	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/.well-known/oauth-authorization-server/area51/oauth", nil)
 	rec := httptest.NewRecorder()
-	handler.ServeHTTP(rec, req)
-
-	if rec.Code != http.StatusOK {
-		t.Fatalf("expected 200, got %d", rec.Code)
-	}
+	handler.ServeHTTP(rec, httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/metadata", nil))
 
 	var body map[string]any
 	if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
-		t.Fatalf("failed to decode metadata: %v", err)
+		t.Fatalf("decode metadata: %v", err)
 	}
-
-	if body["issuer"] != "https://api.example.com/area51/oauth" {
-		t.Errorf("unexpected issuer: %v", body["issuer"])
+	if got, want := body["authorization_endpoint"], "https://auth.example.com/authorize"; got != want {
+		t.Errorf("authorization_endpoint = %v, want %q", got, want)
 	}
-	if body["authorization_endpoint"] != "https://auth.example.com/authorize" {
-		t.Errorf("unexpected authorization_endpoint: %v", body["authorization_endpoint"])
-	}
-	if body["token_endpoint"] != "https://auth.example.com/oauth/token" {
-		t.Errorf("unexpected token_endpoint: %v", body["token_endpoint"])
-	}
-	if body["registration_endpoint"] != "https://api.example.com/area51/oauth/register" {
-		t.Errorf("unexpected registration_endpoint: %v", body["registration_endpoint"])
-	}
-	if body["jwks_uri"] != "https://auth.example.com/.well-known/jwks.json" {
-		t.Errorf("unexpected jwks_uri: %v", body["jwks_uri"])
-	}
-
-	scopesAny, ok := body["scopes_supported"].([]any)
-	if !ok {
-		t.Fatalf("scopes_supported is not an array: %T", body["scopes_supported"])
-	}
-	if len(scopesAny) != len(scopes) {
-		t.Errorf("expected %d scopes, got %d", len(scopes), len(scopesAny))
+	if got, want := body["token_endpoint"], "https://auth.example.com/oauth/token"; got != want {
+		t.Errorf("token_endpoint = %v, want %q", got, want)
 	}
 }
 
@@ -131,50 +230,69 @@ func TestNewMCPDCRHandler_FiltersNonLocalhostRedirects(t *testing.T) {
 	}
 }
 
-func TestNewMCPPRMHandler(t *testing.T) {
-	handler := NewMCPPRMHandler(
-		"https://api.example.com/area51/oauth",
-		"https://api.example.com/area51/mcp",
-		[]string{"admin:read"},
-	)
+func TestNewMCPPRMHandler_RouteFamilyContracts(t *testing.T) {
+	t.Parallel()
 
-	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/.well-known/oauth-protected-resource/area51/mcp", nil)
-	rec := httptest.NewRecorder()
-	handler.ServeHTTP(rec, req)
-
-	if rec.Code != http.StatusOK {
-		t.Fatalf("expected 200, got %d", rec.Code)
-	}
-
-	if ct := rec.Header().Get("Content-Type"); ct != "application/json" {
-		t.Errorf("expected Content-Type application/json, got %q", ct)
-	}
-
-	var body struct {
-		Resource               string   `json:"resource"`
-		AuthorizationServers   []string `json:"authorization_servers"`
-		ScopesSupported        []string `json:"scopes_supported"`
-		BearerMethodsSupported []string `json:"bearer_methods_supported"`
-		ClientID               string   `json:"client_id"`
-	}
-	if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
-		t.Fatalf("failed to decode PRM response: %v", err)
+	tests := []struct {
+		name                string
+		path                string
+		authorizationServer string
+		resource            string
+		scopes              []string
+		forbidden           []string
+	}{
+		{
+			name:                "canonical Until",
+			path:                "/.well-known/oauth-protected-resource/mcp",
+			authorizationServer: "https://until.example.com/oauth",
+			resource:            "https://until.example.com/mcp",
+			scopes:              []string{"account:read", "until:read", "until:write"},
+			forbidden:           []string{"/brent/", "brent:read", "brent:write"},
+		},
+		{
+			name:                "legacy Brent",
+			path:                "/.well-known/oauth-protected-resource/brent/mcp",
+			authorizationServer: "https://until.example.com/brent/oauth",
+			resource:            "https://until.example.com/brent/mcp",
+			scopes:              []string{"account:read", "brent:read", "brent:write"},
+		},
 	}
 
-	if body.Resource != "https://api.example.com/area51/mcp" {
-		t.Errorf("unexpected resource: %q", body.Resource)
-	}
-	if len(body.AuthorizationServers) != 1 || body.AuthorizationServers[0] != "https://api.example.com/area51/oauth" {
-		t.Errorf("unexpected authorization_servers: %v", body.AuthorizationServers)
-	}
-	if len(body.ScopesSupported) != 1 || body.ScopesSupported[0] != "admin:read" {
-		t.Errorf("unexpected scopes_supported: %v", body.ScopesSupported)
-	}
-	if len(body.BearerMethodsSupported) != 1 || body.BearerMethodsSupported[0] != "header" {
-		t.Errorf("unexpected bearer_methods_supported: %v", body.BearerMethodsSupported)
-	}
-	if body.ClientID != "" {
-		t.Errorf("expected no client_id in PRM, got %q", body.ClientID)
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			t.Parallel()
+
+			handler := NewMCPPRMHandler(test.authorizationServer, test.resource, test.scopes)
+			rec := httptest.NewRecorder()
+			handler.ServeHTTP(rec, httptest.NewRequestWithContext(t.Context(), http.MethodGet, test.path, nil))
+
+			if got, want := rec.Code, http.StatusOK; got != want {
+				t.Fatalf("status = %d, want %d", got, want)
+			}
+			if got, want := rec.Header().Get("Content-Type"), "application/json"; got != want {
+				t.Errorf("Content-Type = %q, want %q", got, want)
+			}
+
+			bodyBytes := rec.Body.Bytes()
+			var body map[string]any
+			if err := json.Unmarshal(bodyBytes, &body); err != nil {
+				t.Fatalf("decode PRM response: %v", err)
+			}
+			wantBody := map[string]any{
+				"resource":                 test.resource,
+				"authorization_servers":    []any{test.authorizationServer},
+				"scopes_supported":         stringsToAny(test.scopes),
+				"bearer_methods_supported": []any{"header"},
+			}
+			if !reflect.DeepEqual(body, wantBody) {
+				t.Errorf("body = %#v, want %#v", body, wantBody)
+			}
+			for _, forbidden := range test.forbidden {
+				if strings.Contains(string(bodyBytes), forbidden) {
+					t.Errorf("canonical body contains legacy value %q: %s", forbidden, bodyBytes)
+				}
+			}
+		})
 	}
 }
 
@@ -241,4 +359,12 @@ func TestIsLocalhostRedirect(t *testing.T) {
 			t.Errorf("IsLocalhostRedirect(%q) = %v, want %v", tt.uri, got, tt.want)
 		}
 	}
+}
+
+func stringsToAny(values []string) []any {
+	result := make([]any, 0, len(values))
+	for _, value := range values {
+		result = append(result, value)
+	}
+	return result
 }
