@@ -961,7 +961,7 @@ func (x *GetPullRequestByIDResponse) GetPullRequest() *PullRequest {
 	return nil
 }
 
-type ListDeviationAnalysesForPRRequest struct {
+type ListPlanChecksForPRRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// UUID of the pull request.
 	PrId string `protobuf:"bytes,1,opt,name=pr_id,json=prId,proto3" json:"pr_id,omitempty"`
@@ -972,20 +972,20 @@ type ListDeviationAnalysesForPRRequest struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListDeviationAnalysesForPRRequest) Reset() {
-	*x = ListDeviationAnalysesForPRRequest{}
+func (x *ListPlanChecksForPRRequest) Reset() {
+	*x = ListPlanChecksForPRRequest{}
 	mi := &file_brent_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListDeviationAnalysesForPRRequest) String() string {
+func (x *ListPlanChecksForPRRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListDeviationAnalysesForPRRequest) ProtoMessage() {}
+func (*ListPlanChecksForPRRequest) ProtoMessage() {}
 
-func (x *ListDeviationAnalysesForPRRequest) ProtoReflect() protoreflect.Message {
+func (x *ListPlanChecksForPRRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -997,46 +997,46 @@ func (x *ListDeviationAnalysesForPRRequest) ProtoReflect() protoreflect.Message 
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListDeviationAnalysesForPRRequest.ProtoReflect.Descriptor instead.
-func (*ListDeviationAnalysesForPRRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListPlanChecksForPRRequest.ProtoReflect.Descriptor instead.
+func (*ListPlanChecksForPRRequest) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *ListDeviationAnalysesForPRRequest) GetPrId() string {
+func (x *ListPlanChecksForPRRequest) GetPrId() string {
 	if x != nil {
 		return x.PrId
 	}
 	return ""
 }
 
-func (x *ListDeviationAnalysesForPRRequest) GetAccountName() string {
+func (x *ListPlanChecksForPRRequest) GetAccountName() string {
 	if x != nil {
 		return x.AccountName
 	}
 	return ""
 }
 
-type ListDeviationAnalysesForPRResponse struct {
-	state         protoimpl.MessageState      `protogen:"open.v1"`
-	Analyses      []*DeviationAnalysisSummary `protobuf:"bytes,1,rep,name=analyses,proto3" json:"analyses,omitempty"`
+type ListPlanChecksForPRResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Analyses      []*PlanCheckSummary    `protobuf:"bytes,1,rep,name=analyses,proto3" json:"analyses,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListDeviationAnalysesForPRResponse) Reset() {
-	*x = ListDeviationAnalysesForPRResponse{}
+func (x *ListPlanChecksForPRResponse) Reset() {
+	*x = ListPlanChecksForPRResponse{}
 	mi := &file_brent_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListDeviationAnalysesForPRResponse) String() string {
+func (x *ListPlanChecksForPRResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListDeviationAnalysesForPRResponse) ProtoMessage() {}
+func (*ListPlanChecksForPRResponse) ProtoMessage() {}
 
-func (x *ListDeviationAnalysesForPRResponse) ProtoReflect() protoreflect.Message {
+func (x *ListPlanChecksForPRResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1048,12 +1048,12 @@ func (x *ListDeviationAnalysesForPRResponse) ProtoReflect() protoreflect.Message
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListDeviationAnalysesForPRResponse.ProtoReflect.Descriptor instead.
-func (*ListDeviationAnalysesForPRResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListPlanChecksForPRResponse.ProtoReflect.Descriptor instead.
+func (*ListPlanChecksForPRResponse) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{5}
 }
 
-func (x *ListDeviationAnalysesForPRResponse) GetAnalyses() []*DeviationAnalysisSummary {
+func (x *ListPlanChecksForPRResponse) GetAnalyses() []*PlanCheckSummary {
 	if x != nil {
 		return x.Analyses
 	}
@@ -1345,7 +1345,7 @@ func (x *GetPullRequestTimelineResponse) GetWarnings() []*PullRequestTimelineWar
 
 // PullRequestSummary is the tenant-scoped list shape for the /pull-requests/
 // debug page. Account is always the JWT tenant (field retained for consistency
-// with PlanSummary / ReviewSummary / WorkflowSummary).
+// with PlanSummary / ReviewSummary / LoopSummary).
 type PullRequestSummary struct {
 	state        protoimpl.MessageState `protogen:"open.v1"`
 	PrId         string                 `protobuf:"bytes,1,opt,name=pr_id,json=prId,proto3" json:"pr_id,omitempty"`
@@ -1709,38 +1709,38 @@ func (x *PullRequest) GetLinkedPlanUuid() string {
 	return ""
 }
 
-// DeviationAnalysisSummary carries the analysis header plus all its findings.
-type DeviationAnalysisSummary struct {
+// PlanCheckSummary carries the analysis header plus all its findings.
+type PlanCheckSummary struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	AnalysisId    string                 `protobuf:"bytes,1,opt,name=analysis_id,json=analysisId,proto3" json:"analysis_id,omitempty"`
+	PlanCheckId   string                 `protobuf:"bytes,1,opt,name=plan_check_id,json=planCheckId,proto3" json:"plan_check_id,omitempty"`
 	AccountName   string                 `protobuf:"bytes,2,opt,name=account_name,json=accountName,proto3" json:"account_name,omitempty"`
 	PrId          string                 `protobuf:"bytes,3,opt,name=pr_id,json=prId,proto3" json:"pr_id,omitempty"`
 	PlanUuid      string                 `protobuf:"bytes,4,opt,name=plan_uuid,json=planUuid,proto3" json:"plan_uuid,omitempty"`
 	HeadSha       string                 `protobuf:"bytes,5,opt,name=head_sha,json=headSha,proto3" json:"head_sha,omitempty"`
-	WorkflowRunId string                 `protobuf:"bytes,6,opt,name=workflow_run_id,json=workflowRunId,proto3" json:"workflow_run_id,omitempty"`
+	LoopRunId     string                 `protobuf:"bytes,6,opt,name=loop_run_id,json=loopRunId,proto3" json:"loop_run_id,omitempty"`
 	FailureReason string                 `protobuf:"bytes,9,opt,name=failure_reason,json=failureReason,proto3" json:"failure_reason,omitempty"`
 	StartedAt     *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=started_at,json=startedAt,proto3" json:"started_at,omitempty"`
 	CompletedAt   *timestamppb.Timestamp `protobuf:"bytes,11,opt,name=completed_at,json=completedAt,proto3" json:"completed_at,omitempty"`
 	FailedAt      *timestamppb.Timestamp `protobuf:"bytes,12,opt,name=failed_at,json=failedAt,proto3" json:"failed_at,omitempty"`
-	Findings      []*DeviationFinding    `protobuf:"bytes,13,rep,name=findings,proto3" json:"findings,omitempty"`
+	Differences   []*PlanDifference      `protobuf:"bytes,13,rep,name=differences,proto3" json:"differences,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *DeviationAnalysisSummary) Reset() {
-	*x = DeviationAnalysisSummary{}
+func (x *PlanCheckSummary) Reset() {
+	*x = PlanCheckSummary{}
 	mi := &file_brent_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *DeviationAnalysisSummary) String() string {
+func (x *PlanCheckSummary) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*DeviationAnalysisSummary) ProtoMessage() {}
+func (*PlanCheckSummary) ProtoMessage() {}
 
-func (x *DeviationAnalysisSummary) ProtoReflect() protoreflect.Message {
+func (x *PlanCheckSummary) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1752,92 +1752,92 @@ func (x *DeviationAnalysisSummary) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use DeviationAnalysisSummary.ProtoReflect.Descriptor instead.
-func (*DeviationAnalysisSummary) Descriptor() ([]byte, []int) {
+// Deprecated: Use PlanCheckSummary.ProtoReflect.Descriptor instead.
+func (*PlanCheckSummary) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{12}
 }
 
-func (x *DeviationAnalysisSummary) GetAnalysisId() string {
+func (x *PlanCheckSummary) GetPlanCheckId() string {
 	if x != nil {
-		return x.AnalysisId
+		return x.PlanCheckId
 	}
 	return ""
 }
 
-func (x *DeviationAnalysisSummary) GetAccountName() string {
+func (x *PlanCheckSummary) GetAccountName() string {
 	if x != nil {
 		return x.AccountName
 	}
 	return ""
 }
 
-func (x *DeviationAnalysisSummary) GetPrId() string {
+func (x *PlanCheckSummary) GetPrId() string {
 	if x != nil {
 		return x.PrId
 	}
 	return ""
 }
 
-func (x *DeviationAnalysisSummary) GetPlanUuid() string {
+func (x *PlanCheckSummary) GetPlanUuid() string {
 	if x != nil {
 		return x.PlanUuid
 	}
 	return ""
 }
 
-func (x *DeviationAnalysisSummary) GetHeadSha() string {
+func (x *PlanCheckSummary) GetHeadSha() string {
 	if x != nil {
 		return x.HeadSha
 	}
 	return ""
 }
 
-func (x *DeviationAnalysisSummary) GetWorkflowRunId() string {
+func (x *PlanCheckSummary) GetLoopRunId() string {
 	if x != nil {
-		return x.WorkflowRunId
+		return x.LoopRunId
 	}
 	return ""
 }
 
-func (x *DeviationAnalysisSummary) GetFailureReason() string {
+func (x *PlanCheckSummary) GetFailureReason() string {
 	if x != nil {
 		return x.FailureReason
 	}
 	return ""
 }
 
-func (x *DeviationAnalysisSummary) GetStartedAt() *timestamppb.Timestamp {
+func (x *PlanCheckSummary) GetStartedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.StartedAt
 	}
 	return nil
 }
 
-func (x *DeviationAnalysisSummary) GetCompletedAt() *timestamppb.Timestamp {
+func (x *PlanCheckSummary) GetCompletedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.CompletedAt
 	}
 	return nil
 }
 
-func (x *DeviationAnalysisSummary) GetFailedAt() *timestamppb.Timestamp {
+func (x *PlanCheckSummary) GetFailedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.FailedAt
 	}
 	return nil
 }
 
-func (x *DeviationAnalysisSummary) GetFindings() []*DeviationFinding {
+func (x *PlanCheckSummary) GetDifferences() []*PlanDifference {
 	if x != nil {
-		return x.Findings
+		return x.Differences
 	}
 	return nil
 }
 
-// DeviationFinding is a single finding produced by the deviation-analysis agent.
-type DeviationFinding struct {
-	state     protoimpl.MessageState `protogen:"open.v1"`
-	FindingId string                 `protobuf:"bytes,1,opt,name=finding_id,json=findingId,proto3" json:"finding_id,omitempty"`
+// PlanDifference is a single finding produced by the deviation-analysis agent.
+type PlanDifference struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	PlanDifferenceId string                 `protobuf:"bytes,1,opt,name=plan_difference_id,json=planDifferenceId,proto3" json:"plan_difference_id,omitempty"`
 	// Tag per deviation-analysis-v2.md §2: Changed | Missing | Beyond | Scope.
 	Tag     string `protobuf:"bytes,2,opt,name=tag,proto3" json:"tag,omitempty"`
 	Summary string `protobuf:"bytes,3,opt,name=summary,proto3" json:"summary,omitempty"`
@@ -1867,20 +1867,20 @@ type DeviationFinding struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *DeviationFinding) Reset() {
-	*x = DeviationFinding{}
+func (x *PlanDifference) Reset() {
+	*x = PlanDifference{}
 	mi := &file_brent_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *DeviationFinding) String() string {
+func (x *PlanDifference) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*DeviationFinding) ProtoMessage() {}
+func (*PlanDifference) ProtoMessage() {}
 
-func (x *DeviationFinding) ProtoReflect() protoreflect.Message {
+func (x *PlanDifference) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -1892,135 +1892,135 @@ func (x *DeviationFinding) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use DeviationFinding.ProtoReflect.Descriptor instead.
-func (*DeviationFinding) Descriptor() ([]byte, []int) {
+// Deprecated: Use PlanDifference.ProtoReflect.Descriptor instead.
+func (*PlanDifference) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{13}
 }
 
-func (x *DeviationFinding) GetFindingId() string {
+func (x *PlanDifference) GetPlanDifferenceId() string {
 	if x != nil {
-		return x.FindingId
+		return x.PlanDifferenceId
 	}
 	return ""
 }
 
-func (x *DeviationFinding) GetTag() string {
+func (x *PlanDifference) GetTag() string {
 	if x != nil {
 		return x.Tag
 	}
 	return ""
 }
 
-func (x *DeviationFinding) GetSummary() string {
+func (x *PlanDifference) GetSummary() string {
 	if x != nil {
 		return x.Summary
 	}
 	return ""
 }
 
-func (x *DeviationFinding) GetAnchorPath() string {
+func (x *PlanDifference) GetAnchorPath() string {
 	if x != nil {
 		return x.AnchorPath
 	}
 	return ""
 }
 
-func (x *DeviationFinding) GetAnchorStartLine() int32 {
+func (x *PlanDifference) GetAnchorStartLine() int32 {
 	if x != nil {
 		return x.AnchorStartLine
 	}
 	return 0
 }
 
-func (x *DeviationFinding) GetAnchorEndLine() int32 {
+func (x *PlanDifference) GetAnchorEndLine() int32 {
 	if x != nil {
 		return x.AnchorEndLine
 	}
 	return 0
 }
 
-func (x *DeviationFinding) GetDetailsJson() string {
+func (x *PlanDifference) GetDetailsJson() string {
 	if x != nil {
 		return x.DetailsJson
 	}
 	return ""
 }
 
-func (x *DeviationFinding) GetResolved() bool {
+func (x *PlanDifference) GetResolved() bool {
 	if x != nil {
 		return x.Resolved
 	}
 	return false
 }
 
-func (x *DeviationFinding) GetResolvedAt() *timestamppb.Timestamp {
+func (x *PlanDifference) GetResolvedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.ResolvedAt
 	}
 	return nil
 }
 
-func (x *DeviationFinding) GetResolutionReason() string {
+func (x *PlanDifference) GetResolutionReason() string {
 	if x != nil {
 		return x.ResolutionReason
 	}
 	return ""
 }
 
-func (x *DeviationFinding) GetResolutionCommit() string {
+func (x *PlanDifference) GetResolutionCommit() string {
 	if x != nil {
 		return x.ResolutionCommit
 	}
 	return ""
 }
 
-func (x *DeviationFinding) GetAcknowledged() bool {
+func (x *PlanDifference) GetAcknowledged() bool {
 	if x != nil {
 		return x.Acknowledged
 	}
 	return false
 }
 
-func (x *DeviationFinding) GetAckSource() string {
+func (x *PlanDifference) GetAckSource() string {
 	if x != nil {
 		return x.AckSource
 	}
 	return ""
 }
 
-func (x *DeviationFinding) GetAckRef() string {
+func (x *PlanDifference) GetAckRef() string {
 	if x != nil {
 		return x.AckRef
 	}
 	return ""
 }
 
-func (x *DeviationFinding) GetAckReasoningQuote() string {
+func (x *PlanDifference) GetAckReasoningQuote() string {
 	if x != nil {
 		return x.AckReasoningQuote
 	}
 	return ""
 }
 
-func (x *DeviationFinding) GetSlug() string {
+func (x *PlanDifference) GetSlug() string {
 	if x != nil {
 		return x.Slug
 	}
 	return ""
 }
 
-// ExecuteWorkflowRequest initiates a workflow run.
-type ExecuteWorkflowRequest struct {
+// ExecuteLoopRequest initiates a workflow run.
+type ExecuteLoopRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Natural-language instructions for the agent.
 	// Example: "Look up ticket ENG-1234 in Linear, summarize it, post to #engineering in Slack"
-	WorkflowPrompt string `protobuf:"bytes,1,opt,name=workflow_prompt,json=workflowPrompt,proto3" json:"workflow_prompt,omitempty"`
+	LoopPrompt string `protobuf:"bytes,1,opt,name=loop_prompt,json=loopPrompt,proto3" json:"loop_prompt,omitempty"`
 	// Raw JSON of the triggering event (e.g. GitHub webhook payload).
 	// Empty for UI-initiated runs.
 	TriggerEventJson *string `protobuf:"bytes,2,opt,name=trigger_event_json,json=triggerEventJson,proto3,oneof" json:"trigger_event_json,omitempty"`
 	// Human-readable name for this run. Used as workflow_runs.name.
 	// Defaults to "Manual Run" on the backend if absent.
-	WorkflowName *string `protobuf:"bytes,6,opt,name=workflow_name,json=workflowName,proto3,oneof" json:"workflow_name,omitempty"`
+	LoopName *string `protobuf:"bytes,6,opt,name=loop_name,json=loopName,proto3,oneof" json:"loop_name,omitempty"`
 	// Optional operator override: run under this workspace/account instead of the
 	// caller's own account. Operator-only (already gated on admin:write). When
 	// empty, falls back to the caller's account, then "default". Lets operators
@@ -2031,20 +2031,20 @@ type ExecuteWorkflowRequest struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ExecuteWorkflowRequest) Reset() {
-	*x = ExecuteWorkflowRequest{}
+func (x *ExecuteLoopRequest) Reset() {
+	*x = ExecuteLoopRequest{}
 	mi := &file_brent_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ExecuteWorkflowRequest) String() string {
+func (x *ExecuteLoopRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ExecuteWorkflowRequest) ProtoMessage() {}
+func (*ExecuteLoopRequest) ProtoMessage() {}
 
-func (x *ExecuteWorkflowRequest) ProtoReflect() protoreflect.Message {
+func (x *ExecuteLoopRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -2056,33 +2056,33 @@ func (x *ExecuteWorkflowRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ExecuteWorkflowRequest.ProtoReflect.Descriptor instead.
-func (*ExecuteWorkflowRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExecuteLoopRequest.ProtoReflect.Descriptor instead.
+func (*ExecuteLoopRequest) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{14}
 }
 
-func (x *ExecuteWorkflowRequest) GetWorkflowPrompt() string {
+func (x *ExecuteLoopRequest) GetLoopPrompt() string {
 	if x != nil {
-		return x.WorkflowPrompt
+		return x.LoopPrompt
 	}
 	return ""
 }
 
-func (x *ExecuteWorkflowRequest) GetTriggerEventJson() string {
+func (x *ExecuteLoopRequest) GetTriggerEventJson() string {
 	if x != nil && x.TriggerEventJson != nil {
 		return *x.TriggerEventJson
 	}
 	return ""
 }
 
-func (x *ExecuteWorkflowRequest) GetWorkflowName() string {
-	if x != nil && x.WorkflowName != nil {
-		return *x.WorkflowName
+func (x *ExecuteLoopRequest) GetLoopName() string {
+	if x != nil && x.LoopName != nil {
+		return *x.LoopName
 	}
 	return ""
 }
 
-func (x *ExecuteWorkflowRequest) GetAccountName() string {
+func (x *ExecuteLoopRequest) GetAccountName() string {
 	if x != nil && x.AccountName != nil {
 		return *x.AccountName
 	}
@@ -2093,7 +2093,7 @@ type ListRunsRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Optional filter by workflow definition name (workflow_runs.name). Empty
 	// means no filter.
-	WorkflowName string `protobuf:"bytes,1,opt,name=workflow_name,json=workflowName,proto3" json:"workflow_name,omitempty"`
+	LoopName string `protobuf:"bytes,1,opt,name=loop_name,json=loopName,proto3" json:"loop_name,omitempty"`
 	// Optional filter by run status (pending, running, completed, failed,
 	// cancelled). Empty means no filter. Matches workflow_runs.status verbatim.
 	Status        string `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
@@ -2131,9 +2131,9 @@ func (*ListRunsRequest) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{15}
 }
 
-func (x *ListRunsRequest) GetWorkflowName() string {
+func (x *ListRunsRequest) GetLoopName() string {
 	if x != nil {
-		return x.WorkflowName
+		return x.LoopName
 	}
 	return ""
 }
@@ -2192,8 +2192,8 @@ func (x *ListRunsResponse) GetRuns() []*RunSummary {
 type RunSummary struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
 	Id               string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Status           RunStatus              `protobuf:"varint,2,opt,name=status,proto3,enum=brent.RunStatus" json:"status,omitempty"`
-	WorkflowPrompt   string                 `protobuf:"bytes,3,opt,name=workflow_prompt,json=workflowPrompt,proto3" json:"workflow_prompt,omitempty"`
+	Status           RunStatus              `protobuf:"varint,2,opt,name=status,proto3,enum=until.RunStatus" json:"status,omitempty"`
+	LoopPrompt       string                 `protobuf:"bytes,3,opt,name=loop_prompt,json=loopPrompt,proto3" json:"loop_prompt,omitempty"`
 	TriggerEventJson *string                `protobuf:"bytes,4,opt,name=trigger_event_json,json=triggerEventJson,proto3,oneof" json:"trigger_event_json,omitempty"`
 	StartedAt        *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=started_at,json=startedAt,proto3" json:"started_at,omitempty"`
 	CompletedAt      *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=completed_at,json=completedAt,proto3,oneof" json:"completed_at,omitempty"`
@@ -2248,9 +2248,9 @@ func (x *RunSummary) GetStatus() RunStatus {
 	return RunStatus_RUN_STATUS_UNSPECIFIED
 }
 
-func (x *RunSummary) GetWorkflowPrompt() string {
+func (x *RunSummary) GetLoopPrompt() string {
 	if x != nil {
-		return x.WorkflowPrompt
+		return x.LoopPrompt
 	}
 	return ""
 }
@@ -2848,7 +2848,7 @@ func (x *GetPullRequestResponse) GetPullRequest() *OpenPullRequest {
 	return nil
 }
 
-// OpenPullRequest is the summary info needed to drive an ExecuteWorkflow
+// OpenPullRequest is the summary info needed to drive an ExecuteLoop
 // call for a pull request.
 type OpenPullRequest struct {
 	state      protoimpl.MessageState `protogen:"open.v1"`
@@ -2959,9 +2959,9 @@ func (x *OpenPullRequest) GetUpdatedAt() *timestamppb.Timestamp {
 	return nil
 }
 
-// ExecuteWorkflowResponse is a single step in the execution stream.
+// ExecuteLoopResponse is a single step in the execution stream.
 // Each response carries a timestamp so the client can order steps.
-type ExecuteWorkflowResponse struct {
+type ExecuteLoopResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// When this step was produced by the server.
 	Timestamp *timestamppb.Timestamp `protobuf:"bytes,1,opt,name=timestamp,proto3" json:"timestamp,omitempty"`
@@ -2969,35 +2969,35 @@ type ExecuteWorkflowResponse struct {
 	//
 	// Types that are valid to be assigned to Step:
 	//
-	//	*ExecuteWorkflowResponse_Reasoning
-	//	*ExecuteWorkflowResponse_ToolCall
-	//	*ExecuteWorkflowResponse_ToolResult
-	//	*ExecuteWorkflowResponse_Completion
-	//	*ExecuteWorkflowResponse_Error
-	//	*ExecuteWorkflowResponse_Status
-	//	*ExecuteWorkflowResponse_RunStarted
-	//	*ExecuteWorkflowResponse_QaReady
-	//	*ExecuteWorkflowResponse_UserQuestion
-	//	*ExecuteWorkflowResponse_UserMessage
-	Step          isExecuteWorkflowResponse_Step `protobuf_oneof:"step"`
+	//	*ExecuteLoopResponse_Reasoning
+	//	*ExecuteLoopResponse_ToolCall
+	//	*ExecuteLoopResponse_ToolResult
+	//	*ExecuteLoopResponse_Completion
+	//	*ExecuteLoopResponse_Error
+	//	*ExecuteLoopResponse_Status
+	//	*ExecuteLoopResponse_RunStarted
+	//	*ExecuteLoopResponse_QaReady
+	//	*ExecuteLoopResponse_UserQuestion
+	//	*ExecuteLoopResponse_UserMessage
+	Step          isExecuteLoopResponse_Step `protobuf_oneof:"step"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ExecuteWorkflowResponse) Reset() {
-	*x = ExecuteWorkflowResponse{}
+func (x *ExecuteLoopResponse) Reset() {
+	*x = ExecuteLoopResponse{}
 	mi := &file_brent_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ExecuteWorkflowResponse) String() string {
+func (x *ExecuteLoopResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ExecuteWorkflowResponse) ProtoMessage() {}
+func (*ExecuteLoopResponse) ProtoMessage() {}
 
-func (x *ExecuteWorkflowResponse) ProtoReflect() protoreflect.Message {
+func (x *ExecuteLoopResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -3009,193 +3009,193 @@ func (x *ExecuteWorkflowResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ExecuteWorkflowResponse.ProtoReflect.Descriptor instead.
-func (*ExecuteWorkflowResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ExecuteLoopResponse.ProtoReflect.Descriptor instead.
+func (*ExecuteLoopResponse) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{30}
 }
 
-func (x *ExecuteWorkflowResponse) GetTimestamp() *timestamppb.Timestamp {
+func (x *ExecuteLoopResponse) GetTimestamp() *timestamppb.Timestamp {
 	if x != nil {
 		return x.Timestamp
 	}
 	return nil
 }
 
-func (x *ExecuteWorkflowResponse) GetStep() isExecuteWorkflowResponse_Step {
+func (x *ExecuteLoopResponse) GetStep() isExecuteLoopResponse_Step {
 	if x != nil {
 		return x.Step
 	}
 	return nil
 }
 
-func (x *ExecuteWorkflowResponse) GetReasoning() *ReasoningStep {
+func (x *ExecuteLoopResponse) GetReasoning() *ReasoningStep {
 	if x != nil {
-		if x, ok := x.Step.(*ExecuteWorkflowResponse_Reasoning); ok {
+		if x, ok := x.Step.(*ExecuteLoopResponse_Reasoning); ok {
 			return x.Reasoning
 		}
 	}
 	return nil
 }
 
-func (x *ExecuteWorkflowResponse) GetToolCall() *ToolCallStep {
+func (x *ExecuteLoopResponse) GetToolCall() *ToolCallStep {
 	if x != nil {
-		if x, ok := x.Step.(*ExecuteWorkflowResponse_ToolCall); ok {
+		if x, ok := x.Step.(*ExecuteLoopResponse_ToolCall); ok {
 			return x.ToolCall
 		}
 	}
 	return nil
 }
 
-func (x *ExecuteWorkflowResponse) GetToolResult() *ToolResultStep {
+func (x *ExecuteLoopResponse) GetToolResult() *ToolResultStep {
 	if x != nil {
-		if x, ok := x.Step.(*ExecuteWorkflowResponse_ToolResult); ok {
+		if x, ok := x.Step.(*ExecuteLoopResponse_ToolResult); ok {
 			return x.ToolResult
 		}
 	}
 	return nil
 }
 
-func (x *ExecuteWorkflowResponse) GetCompletion() *CompletionStep {
+func (x *ExecuteLoopResponse) GetCompletion() *CompletionStep {
 	if x != nil {
-		if x, ok := x.Step.(*ExecuteWorkflowResponse_Completion); ok {
+		if x, ok := x.Step.(*ExecuteLoopResponse_Completion); ok {
 			return x.Completion
 		}
 	}
 	return nil
 }
 
-func (x *ExecuteWorkflowResponse) GetError() *ErrorStep {
+func (x *ExecuteLoopResponse) GetError() *ErrorStep {
 	if x != nil {
-		if x, ok := x.Step.(*ExecuteWorkflowResponse_Error); ok {
+		if x, ok := x.Step.(*ExecuteLoopResponse_Error); ok {
 			return x.Error
 		}
 	}
 	return nil
 }
 
-func (x *ExecuteWorkflowResponse) GetStatus() *StatusStep {
+func (x *ExecuteLoopResponse) GetStatus() *StatusStep {
 	if x != nil {
-		if x, ok := x.Step.(*ExecuteWorkflowResponse_Status); ok {
+		if x, ok := x.Step.(*ExecuteLoopResponse_Status); ok {
 			return x.Status
 		}
 	}
 	return nil
 }
 
-func (x *ExecuteWorkflowResponse) GetRunStarted() *RunStartedStep {
+func (x *ExecuteLoopResponse) GetRunStarted() *RunStartedStep {
 	if x != nil {
-		if x, ok := x.Step.(*ExecuteWorkflowResponse_RunStarted); ok {
+		if x, ok := x.Step.(*ExecuteLoopResponse_RunStarted); ok {
 			return x.RunStarted
 		}
 	}
 	return nil
 }
 
-func (x *ExecuteWorkflowResponse) GetQaReady() *QAReadyStep {
+func (x *ExecuteLoopResponse) GetQaReady() *QAReadyStep {
 	if x != nil {
-		if x, ok := x.Step.(*ExecuteWorkflowResponse_QaReady); ok {
+		if x, ok := x.Step.(*ExecuteLoopResponse_QaReady); ok {
 			return x.QaReady
 		}
 	}
 	return nil
 }
 
-func (x *ExecuteWorkflowResponse) GetUserQuestion() *UserQuestionStep {
+func (x *ExecuteLoopResponse) GetUserQuestion() *UserQuestionStep {
 	if x != nil {
-		if x, ok := x.Step.(*ExecuteWorkflowResponse_UserQuestion); ok {
+		if x, ok := x.Step.(*ExecuteLoopResponse_UserQuestion); ok {
 			return x.UserQuestion
 		}
 	}
 	return nil
 }
 
-func (x *ExecuteWorkflowResponse) GetUserMessage() *UserMessageStep {
+func (x *ExecuteLoopResponse) GetUserMessage() *UserMessageStep {
 	if x != nil {
-		if x, ok := x.Step.(*ExecuteWorkflowResponse_UserMessage); ok {
+		if x, ok := x.Step.(*ExecuteLoopResponse_UserMessage); ok {
 			return x.UserMessage
 		}
 	}
 	return nil
 }
 
-type isExecuteWorkflowResponse_Step interface {
-	isExecuteWorkflowResponse_Step()
+type isExecuteLoopResponse_Step interface {
+	isExecuteLoopResponse_Step()
 }
 
-type ExecuteWorkflowResponse_Reasoning struct {
+type ExecuteLoopResponse_Reasoning struct {
 	// A chunk of the agent's reasoning / LLM output text.
 	Reasoning *ReasoningStep `protobuf:"bytes,10,opt,name=reasoning,proto3,oneof"`
 }
 
-type ExecuteWorkflowResponse_ToolCall struct {
+type ExecuteLoopResponse_ToolCall struct {
 	// The agent is calling a tool on an MCP server.
 	ToolCall *ToolCallStep `protobuf:"bytes,11,opt,name=tool_call,json=toolCall,proto3,oneof"`
 }
 
-type ExecuteWorkflowResponse_ToolResult struct {
+type ExecuteLoopResponse_ToolResult struct {
 	// The result returned from an MCP tool call.
 	ToolResult *ToolResultStep `protobuf:"bytes,12,opt,name=tool_result,json=toolResult,proto3,oneof"`
 }
 
-type ExecuteWorkflowResponse_Completion struct {
+type ExecuteLoopResponse_Completion struct {
 	// The agent finished successfully.
 	Completion *CompletionStep `protobuf:"bytes,13,opt,name=completion,proto3,oneof"`
 }
 
-type ExecuteWorkflowResponse_Error struct {
+type ExecuteLoopResponse_Error struct {
 	// A terminal error — the stream ends after this step.
 	Error *ErrorStep `protobuf:"bytes,14,opt,name=error,proto3,oneof"`
 }
 
-type ExecuteWorkflowResponse_Status struct {
+type ExecuteLoopResponse_Status struct {
 	// Operational progress (e.g. "Connecting to MCP servers...").
 	Status *StatusStep `protobuf:"bytes,15,opt,name=status,proto3,oneof"`
 }
 
-type ExecuteWorkflowResponse_RunStarted struct {
+type ExecuteLoopResponse_RunStarted struct {
 	// First step on a PR-context run; carries the server-assigned runId
 	// so the client can deep-link to the run via the sidebar. Not emitted
 	// on the webhook-triggered path.
 	RunStarted *RunStartedStep `protobuf:"bytes,16,opt,name=run_started,json=runStarted,proto3,oneof"`
 }
 
-type ExecuteWorkflowResponse_QaReady struct {
+type ExecuteLoopResponse_QaReady struct {
 	// Emitted after a run completes successfully to signal that Q&A
 	// questions can now be sent via the SendQuestion RPC.
 	QaReady *QAReadyStep `protobuf:"bytes,17,opt,name=qa_ready,json=qaReady,proto3,oneof"`
 }
 
-type ExecuteWorkflowResponse_UserQuestion struct {
+type ExecuteLoopResponse_UserQuestion struct {
 	// A follow-up question submitted by the user after a run enters Q&A mode.
 	UserQuestion *UserQuestionStep `protobuf:"bytes,18,opt,name=user_question,json=userQuestion,proto3,oneof"`
 }
 
-type ExecuteWorkflowResponse_UserMessage struct {
+type ExecuteLoopResponse_UserMessage struct {
 	// First user message sent to the LLM at run start. Captured as a step so
 	// it flows through the same persistence, streaming, and MCP-replay paths
 	// as every other timeline event.
 	UserMessage *UserMessageStep `protobuf:"bytes,19,opt,name=user_message,json=userMessage,proto3,oneof"`
 }
 
-func (*ExecuteWorkflowResponse_Reasoning) isExecuteWorkflowResponse_Step() {}
+func (*ExecuteLoopResponse_Reasoning) isExecuteLoopResponse_Step() {}
 
-func (*ExecuteWorkflowResponse_ToolCall) isExecuteWorkflowResponse_Step() {}
+func (*ExecuteLoopResponse_ToolCall) isExecuteLoopResponse_Step() {}
 
-func (*ExecuteWorkflowResponse_ToolResult) isExecuteWorkflowResponse_Step() {}
+func (*ExecuteLoopResponse_ToolResult) isExecuteLoopResponse_Step() {}
 
-func (*ExecuteWorkflowResponse_Completion) isExecuteWorkflowResponse_Step() {}
+func (*ExecuteLoopResponse_Completion) isExecuteLoopResponse_Step() {}
 
-func (*ExecuteWorkflowResponse_Error) isExecuteWorkflowResponse_Step() {}
+func (*ExecuteLoopResponse_Error) isExecuteLoopResponse_Step() {}
 
-func (*ExecuteWorkflowResponse_Status) isExecuteWorkflowResponse_Step() {}
+func (*ExecuteLoopResponse_Status) isExecuteLoopResponse_Step() {}
 
-func (*ExecuteWorkflowResponse_RunStarted) isExecuteWorkflowResponse_Step() {}
+func (*ExecuteLoopResponse_RunStarted) isExecuteLoopResponse_Step() {}
 
-func (*ExecuteWorkflowResponse_QaReady) isExecuteWorkflowResponse_Step() {}
+func (*ExecuteLoopResponse_QaReady) isExecuteLoopResponse_Step() {}
 
-func (*ExecuteWorkflowResponse_UserQuestion) isExecuteWorkflowResponse_Step() {}
+func (*ExecuteLoopResponse_UserQuestion) isExecuteLoopResponse_Step() {}
 
-func (*ExecuteWorkflowResponse_UserMessage) isExecuteWorkflowResponse_Step() {}
+func (*ExecuteLoopResponse_UserMessage) isExecuteLoopResponse_Step() {}
 
 // ReasoningStep carries a chunk of the agent's streaming output. Multiple
 // ReasoningSteps form the full reasoning trace when concatenated in order.
@@ -3544,7 +3544,7 @@ func (x *StatusStep) GetMessage() string {
 }
 
 // RunStartedStep is emitted as the first step on a streaming
-// ExecuteWorkflow invocation. It tells the client the server-side runId
+// ExecuteLoop invocation. It tells the client the server-side runId
 // so it can deep-link to the full stream via WatchRun. The
 // webhook-triggered path does not emit this step.
 type RunStartedStep struct {
@@ -3966,7 +3966,7 @@ type PlanSummary struct {
 	ProjectCode string `protobuf:"bytes,12,opt,name=project_code,json=projectCode,proto3" json:"project_code,omitempty"`
 	// Set when the plan has been soft-deleted.
 	DeletedAt *timestamppb.Timestamp `protobuf:"bytes,13,opt,name=deleted_at,json=deletedAt,proto3" json:"deleted_at,omitempty"`
-	// Aggregate review status for BrentAdminService.ListPlans display and
+	// Aggregate review status for AdminService.ListPlans display and
 	// filtering: none | requested | approved | rejected. Priority across
 	// non-deleted reviews: approved > rejected > requested > none. Mirrors
 	// review_status on AdminListPlansRequest. Interim operator-only slice —
@@ -6299,7 +6299,7 @@ func (x *AdminGetAccountSummaryRequest) GetAccountName() string {
 type AccountRunSummary struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// workflow_runs.external_id (UUID string); links to the run detail view.
-	WorkflowRunId string `protobuf:"bytes,1,opt,name=workflow_run_id,json=workflowRunId,proto3" json:"workflow_run_id,omitempty"`
+	LoopRunId string `protobuf:"bytes,1,opt,name=loop_run_id,json=loopRunId,proto3" json:"loop_run_id,omitempty"`
 	// Human-readable workflow run name.
 	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	// Run status: pending / running / completed / failed / cancelled.
@@ -6340,9 +6340,9 @@ func (*AccountRunSummary) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{79}
 }
 
-func (x *AccountRunSummary) GetWorkflowRunId() string {
+func (x *AccountRunSummary) GetLoopRunId() string {
 	if x != nil {
-		return x.WorkflowRunId
+		return x.LoopRunId
 	}
 	return ""
 }
@@ -6375,15 +6375,15 @@ type AdminGetAccountSummaryResponse struct {
 	state       protoimpl.MessageState `protogen:"open.v1"`
 	AccountName string                 `protobuf:"bytes,1,opt,name=account_name,json=accountName,proto3" json:"account_name,omitempty"`
 	// GitHub org login(s) connected to this account.
-	GithubOrgs       []string `protobuf:"bytes,2,rep,name=github_orgs,json=githubOrgs,proto3" json:"github_orgs,omitempty"`
-	SlackConnected   bool     `protobuf:"varint,3,opt,name=slack_connected,json=slackConnected,proto3" json:"slack_connected,omitempty"`
-	LinearConnected  bool     `protobuf:"varint,4,opt,name=linear_connected,json=linearConnected,proto3" json:"linear_connected,omitempty"`
-	PlanCount        int64    `protobuf:"varint,5,opt,name=plan_count,json=planCount,proto3" json:"plan_count,omitempty"`
-	ReviewCount      int64    `protobuf:"varint,6,opt,name=review_count,json=reviewCount,proto3" json:"review_count,omitempty"`
-	WorkflowRunCount int64    `protobuf:"varint,7,opt,name=workflow_run_count,json=workflowRunCount,proto3" json:"workflow_run_count,omitempty"`
+	GithubOrgs      []string `protobuf:"bytes,2,rep,name=github_orgs,json=githubOrgs,proto3" json:"github_orgs,omitempty"`
+	SlackConnected  bool     `protobuf:"varint,3,opt,name=slack_connected,json=slackConnected,proto3" json:"slack_connected,omitempty"`
+	LinearConnected bool     `protobuf:"varint,4,opt,name=linear_connected,json=linearConnected,proto3" json:"linear_connected,omitempty"`
+	PlanCount       int64    `protobuf:"varint,5,opt,name=plan_count,json=planCount,proto3" json:"plan_count,omitempty"`
+	ReviewCount     int64    `protobuf:"varint,6,opt,name=review_count,json=reviewCount,proto3" json:"review_count,omitempty"`
+	LoopRunCount    int64    `protobuf:"varint,7,opt,name=loop_run_count,json=loopRunCount,proto3" json:"loop_run_count,omitempty"`
 	// Subset of workflow_run_count whose status is 'failed'.
-	WorkflowRunErrorCount int64 `protobuf:"varint,8,opt,name=workflow_run_error_count,json=workflowRunErrorCount,proto3" json:"workflow_run_error_count,omitempty"`
-	PrCount               int64 `protobuf:"varint,9,opt,name=pr_count,json=prCount,proto3" json:"pr_count,omitempty"`
+	LoopRunErrorCount int64 `protobuf:"varint,8,opt,name=loop_run_error_count,json=loopRunErrorCount,proto3" json:"loop_run_error_count,omitempty"`
+	PrCount           int64 `protobuf:"varint,9,opt,name=pr_count,json=prCount,proto3" json:"pr_count,omitempty"`
 	// Most recent activity across the account's runs, plans, reviews, and PRs,
 	// collapsed to the latest workflow-run timestamp. Null when there has been
 	// no activity at all.
@@ -6470,16 +6470,16 @@ func (x *AdminGetAccountSummaryResponse) GetReviewCount() int64 {
 	return 0
 }
 
-func (x *AdminGetAccountSummaryResponse) GetWorkflowRunCount() int64 {
+func (x *AdminGetAccountSummaryResponse) GetLoopRunCount() int64 {
 	if x != nil {
-		return x.WorkflowRunCount
+		return x.LoopRunCount
 	}
 	return 0
 }
 
-func (x *AdminGetAccountSummaryResponse) GetWorkflowRunErrorCount() int64 {
+func (x *AdminGetAccountSummaryResponse) GetLoopRunErrorCount() int64 {
 	if x != nil {
-		return x.WorkflowRunErrorCount
+		return x.LoopRunErrorCount
 	}
 	return 0
 }
@@ -6836,7 +6836,7 @@ type AdminStartAccountMetricsComparisonRequest struct {
 	// Optional Linear team name. When empty, or when Linear is unavailable, the
 	// run continues GitHub-only and surfaces the reason in linear_status_detail.
 	LinearTeamName        string                 `protobuf:"bytes,7,opt,name=linear_team_name,json=linearTeamName,proto3" json:"linear_team_name,omitempty"`
-	ComparisonMode        MetricsComparisonMode  `protobuf:"varint,8,opt,name=comparison_mode,json=comparisonMode,proto3,enum=brent.MetricsComparisonMode" json:"comparison_mode,omitempty"`
+	ComparisonMode        MetricsComparisonMode  `protobuf:"varint,8,opt,name=comparison_mode,json=comparisonMode,proto3,enum=until.MetricsComparisonMode" json:"comparison_mode,omitempty"`
 	PlannedUnplannedStart *timestamppb.Timestamp `protobuf:"bytes,9,opt,name=planned_unplanned_start,json=plannedUnplannedStart,proto3" json:"planned_unplanned_start,omitempty"`
 	PlannedUnplannedEnd   *timestamppb.Timestamp `protobuf:"bytes,10,opt,name=planned_unplanned_end,json=plannedUnplannedEnd,proto3" json:"planned_unplanned_end,omitempty"`
 	unknownFields         protoimpl.UnknownFields
@@ -7207,7 +7207,7 @@ type AdminGetAccountMetricsComparisonRunResponse struct {
 	// the primary HTML report for compatibility; artifacts contains the
 	// mode-specific HTML report(s) plus structured JSON evidence.
 	Artifacts             []*MetricsComparisonArtifact `protobuf:"bytes,18,rep,name=artifacts,proto3" json:"artifacts,omitempty"`
-	ComparisonMode        MetricsComparisonMode        `protobuf:"varint,19,opt,name=comparison_mode,json=comparisonMode,proto3,enum=brent.MetricsComparisonMode" json:"comparison_mode,omitempty"`
+	ComparisonMode        MetricsComparisonMode        `protobuf:"varint,19,opt,name=comparison_mode,json=comparisonMode,proto3,enum=until.MetricsComparisonMode" json:"comparison_mode,omitempty"`
 	PlannedUnplannedStart *timestamppb.Timestamp       `protobuf:"bytes,20,opt,name=planned_unplanned_start,json=plannedUnplannedStart,proto3" json:"planned_unplanned_start,omitempty"`
 	PlannedUnplannedEnd   *timestamppb.Timestamp       `protobuf:"bytes,21,opt,name=planned_unplanned_end,json=plannedUnplannedEnd,proto3" json:"planned_unplanned_end,omitempty"`
 	unknownFields         protoimpl.UnknownFields
@@ -7448,14 +7448,14 @@ type Event struct {
 	//	*Event_PullRequestUnlinkedFromPlan
 	//	*Event_OrganisationAppInstallationUpserted
 	//	*Event_OrganisationAppInstallationDeleted
-	//	*Event_DeviationAnalysisStarted
-	//	*Event_DeviationAnalysisCompleted
-	//	*Event_DeviationAnalysisFailed
-	//	*Event_WorkflowRunQueued
-	//	*Event_WorkflowRunStarted
-	//	*Event_WorkflowRunCompleted
-	//	*Event_WorkflowRunFailed
-	//	*Event_WorkflowRunCancelled
+	//	*Event_PlanCheckStarted
+	//	*Event_PlanCheckCompleted
+	//	*Event_PlanCheckFailed
+	//	*Event_LoopRunQueued
+	//	*Event_LoopRunStarted
+	//	*Event_LoopRunCompleted
+	//	*Event_LoopRunFailed
+	//	*Event_LoopRunCancelled
 	//	*Event_ReviewNoEligibleReviewer
 	//	*Event_PrincipalCreated
 	//	*Event_PrincipalUpdated
@@ -7471,9 +7471,9 @@ type Event struct {
 	//	*Event_PlanRestored
 	//	*Event_LinearWebhook
 	//	*Event_PullRequestCommentCreated
-	//	*Event_DeviationFindingRecorded
-	//	*Event_DeviationFindingUpdated
-	//	*Event_DeviationFindingResolved
+	//	*Event_PlanDifferenceRecorded
+	//	*Event_PlanDifferenceUpdated
+	//	*Event_PlanDifferenceResolved
 	//	*Event_AgentRunDispatched
 	//	*Event_AgentRunStarted
 	//	*Event_AgentRunPullRequestMatched
@@ -7483,7 +7483,7 @@ type Event struct {
 	//	*Event_AgentRunCancelled
 	//	*Event_AgentRunGatePassed
 	//	*Event_PullRequestLinkedToAgentRun
-	//	*Event_WorkflowIngested
+	//	*Event_LoopIngested
 	//	*Event_PullRequestReviewRequested
 	//	*Event_PullRequestApproved
 	//	*Event_PullRequestChangesRequested
@@ -7506,8 +7506,8 @@ type Event struct {
 	//	*Event_WorkspaceMemberJoined
 	//	*Event_WorkspaceMemberLeft
 	//	*Event_ComposioTriggerMessage
-	//	*Event_DeviationFindingAcknowledged
-	//	*Event_DeviationFindingAcknowledgementCleared
+	//	*Event_PlanDifferenceAcknowledged
+	//	*Event_PlanDifferenceAcknowledgementCleared
 	//	*Event_PlanReviewPolicyDecided
 	//	*Event_ReviewRestored
 	//	*Event_WorkspaceReviewPolicyUpdated
@@ -7777,73 +7777,73 @@ func (x *Event) GetOrganisationAppInstallationDeleted() *OrganisationAppInstalla
 	return nil
 }
 
-func (x *Event) GetDeviationAnalysisStarted() *DeviationAnalysisStarted {
+func (x *Event) GetPlanCheckStarted() *PlanCheckStarted {
 	if x != nil {
-		if x, ok := x.Payload.(*Event_DeviationAnalysisStarted); ok {
-			return x.DeviationAnalysisStarted
+		if x, ok := x.Payload.(*Event_PlanCheckStarted); ok {
+			return x.PlanCheckStarted
 		}
 	}
 	return nil
 }
 
-func (x *Event) GetDeviationAnalysisCompleted() *DeviationAnalysisCompleted {
+func (x *Event) GetPlanCheckCompleted() *PlanCheckCompleted {
 	if x != nil {
-		if x, ok := x.Payload.(*Event_DeviationAnalysisCompleted); ok {
-			return x.DeviationAnalysisCompleted
+		if x, ok := x.Payload.(*Event_PlanCheckCompleted); ok {
+			return x.PlanCheckCompleted
 		}
 	}
 	return nil
 }
 
-func (x *Event) GetDeviationAnalysisFailed() *DeviationAnalysisFailed {
+func (x *Event) GetPlanCheckFailed() *PlanCheckFailed {
 	if x != nil {
-		if x, ok := x.Payload.(*Event_DeviationAnalysisFailed); ok {
-			return x.DeviationAnalysisFailed
+		if x, ok := x.Payload.(*Event_PlanCheckFailed); ok {
+			return x.PlanCheckFailed
 		}
 	}
 	return nil
 }
 
-func (x *Event) GetWorkflowRunQueued() *WorkflowRunQueued {
+func (x *Event) GetLoopRunQueued() *LoopRunQueued {
 	if x != nil {
-		if x, ok := x.Payload.(*Event_WorkflowRunQueued); ok {
-			return x.WorkflowRunQueued
+		if x, ok := x.Payload.(*Event_LoopRunQueued); ok {
+			return x.LoopRunQueued
 		}
 	}
 	return nil
 }
 
-func (x *Event) GetWorkflowRunStarted() *WorkflowRunStarted {
+func (x *Event) GetLoopRunStarted() *LoopRunStarted {
 	if x != nil {
-		if x, ok := x.Payload.(*Event_WorkflowRunStarted); ok {
-			return x.WorkflowRunStarted
+		if x, ok := x.Payload.(*Event_LoopRunStarted); ok {
+			return x.LoopRunStarted
 		}
 	}
 	return nil
 }
 
-func (x *Event) GetWorkflowRunCompleted() *WorkflowRunCompleted {
+func (x *Event) GetLoopRunCompleted() *LoopRunCompleted {
 	if x != nil {
-		if x, ok := x.Payload.(*Event_WorkflowRunCompleted); ok {
-			return x.WorkflowRunCompleted
+		if x, ok := x.Payload.(*Event_LoopRunCompleted); ok {
+			return x.LoopRunCompleted
 		}
 	}
 	return nil
 }
 
-func (x *Event) GetWorkflowRunFailed() *WorkflowRunFailed {
+func (x *Event) GetLoopRunFailed() *LoopRunFailed {
 	if x != nil {
-		if x, ok := x.Payload.(*Event_WorkflowRunFailed); ok {
-			return x.WorkflowRunFailed
+		if x, ok := x.Payload.(*Event_LoopRunFailed); ok {
+			return x.LoopRunFailed
 		}
 	}
 	return nil
 }
 
-func (x *Event) GetWorkflowRunCancelled() *WorkflowRunCancelled {
+func (x *Event) GetLoopRunCancelled() *LoopRunCancelled {
 	if x != nil {
-		if x, ok := x.Payload.(*Event_WorkflowRunCancelled); ok {
-			return x.WorkflowRunCancelled
+		if x, ok := x.Payload.(*Event_LoopRunCancelled); ok {
+			return x.LoopRunCancelled
 		}
 	}
 	return nil
@@ -7984,28 +7984,28 @@ func (x *Event) GetPullRequestCommentCreated() *PullRequestCommentCreated {
 	return nil
 }
 
-func (x *Event) GetDeviationFindingRecorded() *DeviationFindingRecorded {
+func (x *Event) GetPlanDifferenceRecorded() *PlanDifferenceRecorded {
 	if x != nil {
-		if x, ok := x.Payload.(*Event_DeviationFindingRecorded); ok {
-			return x.DeviationFindingRecorded
+		if x, ok := x.Payload.(*Event_PlanDifferenceRecorded); ok {
+			return x.PlanDifferenceRecorded
 		}
 	}
 	return nil
 }
 
-func (x *Event) GetDeviationFindingUpdated() *DeviationFindingUpdated {
+func (x *Event) GetPlanDifferenceUpdated() *PlanDifferenceUpdated {
 	if x != nil {
-		if x, ok := x.Payload.(*Event_DeviationFindingUpdated); ok {
-			return x.DeviationFindingUpdated
+		if x, ok := x.Payload.(*Event_PlanDifferenceUpdated); ok {
+			return x.PlanDifferenceUpdated
 		}
 	}
 	return nil
 }
 
-func (x *Event) GetDeviationFindingResolved() *DeviationFindingResolved {
+func (x *Event) GetPlanDifferenceResolved() *PlanDifferenceResolved {
 	if x != nil {
-		if x, ok := x.Payload.(*Event_DeviationFindingResolved); ok {
-			return x.DeviationFindingResolved
+		if x, ok := x.Payload.(*Event_PlanDifferenceResolved); ok {
+			return x.PlanDifferenceResolved
 		}
 	}
 	return nil
@@ -8092,10 +8092,10 @@ func (x *Event) GetPullRequestLinkedToAgentRun() *PullRequestLinkedToAgentRun {
 	return nil
 }
 
-func (x *Event) GetWorkflowIngested() *WorkflowIngested {
+func (x *Event) GetLoopIngested() *LoopIngested {
 	if x != nil {
-		if x, ok := x.Payload.(*Event_WorkflowIngested); ok {
-			return x.WorkflowIngested
+		if x, ok := x.Payload.(*Event_LoopIngested); ok {
+			return x.LoopIngested
 		}
 	}
 	return nil
@@ -8299,19 +8299,19 @@ func (x *Event) GetComposioTriggerMessage() *ComposioTriggerMessage {
 	return nil
 }
 
-func (x *Event) GetDeviationFindingAcknowledged() *DeviationFindingAcknowledged {
+func (x *Event) GetPlanDifferenceAcknowledged() *PlanDifferenceAcknowledged {
 	if x != nil {
-		if x, ok := x.Payload.(*Event_DeviationFindingAcknowledged); ok {
-			return x.DeviationFindingAcknowledged
+		if x, ok := x.Payload.(*Event_PlanDifferenceAcknowledged); ok {
+			return x.PlanDifferenceAcknowledged
 		}
 	}
 	return nil
 }
 
-func (x *Event) GetDeviationFindingAcknowledgementCleared() *DeviationFindingAcknowledgementCleared {
+func (x *Event) GetPlanDifferenceAcknowledgementCleared() *PlanDifferenceAcknowledgementCleared {
 	if x != nil {
-		if x, ok := x.Payload.(*Event_DeviationFindingAcknowledgementCleared); ok {
-			return x.DeviationFindingAcknowledgementCleared
+		if x, ok := x.Payload.(*Event_PlanDifferenceAcknowledgementCleared); ok {
+			return x.PlanDifferenceAcknowledgementCleared
 		}
 	}
 	return nil
@@ -8425,36 +8425,36 @@ type Event_OrganisationAppInstallationDeleted struct {
 	OrganisationAppInstallationDeleted *OrganisationAppInstallationDeleted `protobuf:"bytes,26,opt,name=organisation_app_installation_deleted,json=organisationAppInstallationDeleted,proto3,oneof"`
 }
 
-type Event_DeviationAnalysisStarted struct {
-	DeviationAnalysisStarted *DeviationAnalysisStarted `protobuf:"bytes,27,opt,name=deviation_analysis_started,json=deviationAnalysisStarted,proto3,oneof"`
+type Event_PlanCheckStarted struct {
+	PlanCheckStarted *PlanCheckStarted `protobuf:"bytes,27,opt,name=plan_check_started,json=planCheckStarted,proto3,oneof"`
 }
 
-type Event_DeviationAnalysisCompleted struct {
-	DeviationAnalysisCompleted *DeviationAnalysisCompleted `protobuf:"bytes,28,opt,name=deviation_analysis_completed,json=deviationAnalysisCompleted,proto3,oneof"`
+type Event_PlanCheckCompleted struct {
+	PlanCheckCompleted *PlanCheckCompleted `protobuf:"bytes,28,opt,name=plan_check_completed,json=planCheckCompleted,proto3,oneof"`
 }
 
-type Event_DeviationAnalysisFailed struct {
-	DeviationAnalysisFailed *DeviationAnalysisFailed `protobuf:"bytes,29,opt,name=deviation_analysis_failed,json=deviationAnalysisFailed,proto3,oneof"`
+type Event_PlanCheckFailed struct {
+	PlanCheckFailed *PlanCheckFailed `protobuf:"bytes,29,opt,name=plan_check_failed,json=planCheckFailed,proto3,oneof"`
 }
 
-type Event_WorkflowRunQueued struct {
-	WorkflowRunQueued *WorkflowRunQueued `protobuf:"bytes,30,opt,name=workflow_run_queued,json=workflowRunQueued,proto3,oneof"`
+type Event_LoopRunQueued struct {
+	LoopRunQueued *LoopRunQueued `protobuf:"bytes,30,opt,name=loop_run_queued,json=loopRunQueued,proto3,oneof"`
 }
 
-type Event_WorkflowRunStarted struct {
-	WorkflowRunStarted *WorkflowRunStarted `protobuf:"bytes,31,opt,name=workflow_run_started,json=workflowRunStarted,proto3,oneof"`
+type Event_LoopRunStarted struct {
+	LoopRunStarted *LoopRunStarted `protobuf:"bytes,31,opt,name=loop_run_started,json=loopRunStarted,proto3,oneof"`
 }
 
-type Event_WorkflowRunCompleted struct {
-	WorkflowRunCompleted *WorkflowRunCompleted `protobuf:"bytes,32,opt,name=workflow_run_completed,json=workflowRunCompleted,proto3,oneof"`
+type Event_LoopRunCompleted struct {
+	LoopRunCompleted *LoopRunCompleted `protobuf:"bytes,32,opt,name=loop_run_completed,json=loopRunCompleted,proto3,oneof"`
 }
 
-type Event_WorkflowRunFailed struct {
-	WorkflowRunFailed *WorkflowRunFailed `protobuf:"bytes,33,opt,name=workflow_run_failed,json=workflowRunFailed,proto3,oneof"`
+type Event_LoopRunFailed struct {
+	LoopRunFailed *LoopRunFailed `protobuf:"bytes,33,opt,name=loop_run_failed,json=loopRunFailed,proto3,oneof"`
 }
 
-type Event_WorkflowRunCancelled struct {
-	WorkflowRunCancelled *WorkflowRunCancelled `protobuf:"bytes,34,opt,name=workflow_run_cancelled,json=workflowRunCancelled,proto3,oneof"`
+type Event_LoopRunCancelled struct {
+	LoopRunCancelled *LoopRunCancelled `protobuf:"bytes,34,opt,name=loop_run_cancelled,json=loopRunCancelled,proto3,oneof"`
 }
 
 type Event_ReviewNoEligibleReviewer struct {
@@ -8532,16 +8532,16 @@ type Event_PullRequestCommentCreated struct {
 	PullRequestCommentCreated *PullRequestCommentCreated `protobuf:"bytes,49,opt,name=pull_request_comment_created,json=pullRequestCommentCreated,proto3,oneof"`
 }
 
-type Event_DeviationFindingRecorded struct {
-	DeviationFindingRecorded *DeviationFindingRecorded `protobuf:"bytes,50,opt,name=deviation_finding_recorded,json=deviationFindingRecorded,proto3,oneof"`
+type Event_PlanDifferenceRecorded struct {
+	PlanDifferenceRecorded *PlanDifferenceRecorded `protobuf:"bytes,50,opt,name=plan_difference_recorded,json=planDifferenceRecorded,proto3,oneof"`
 }
 
-type Event_DeviationFindingUpdated struct {
-	DeviationFindingUpdated *DeviationFindingUpdated `protobuf:"bytes,51,opt,name=deviation_finding_updated,json=deviationFindingUpdated,proto3,oneof"`
+type Event_PlanDifferenceUpdated struct {
+	PlanDifferenceUpdated *PlanDifferenceUpdated `protobuf:"bytes,51,opt,name=plan_difference_updated,json=planDifferenceUpdated,proto3,oneof"`
 }
 
-type Event_DeviationFindingResolved struct {
-	DeviationFindingResolved *DeviationFindingResolved `protobuf:"bytes,52,opt,name=deviation_finding_resolved,json=deviationFindingResolved,proto3,oneof"`
+type Event_PlanDifferenceResolved struct {
+	PlanDifferenceResolved *PlanDifferenceResolved `protobuf:"bytes,52,opt,name=plan_difference_resolved,json=planDifferenceResolved,proto3,oneof"`
 }
 
 type Event_AgentRunDispatched struct {
@@ -8580,11 +8580,11 @@ type Event_PullRequestLinkedToAgentRun struct {
 	PullRequestLinkedToAgentRun *PullRequestLinkedToAgentRun `protobuf:"bytes,60,opt,name=pull_request_linked_to_agent_run,json=pullRequestLinkedToAgentRun,proto3,oneof"`
 }
 
-type Event_WorkflowIngested struct {
-	// WorkflowIngested records the outcome of ingesting one
+type Event_LoopIngested struct {
+	// LoopIngested records the outcome of ingesting one
 	// .brent/workflows/*.md file. Internal audit trail only — must not
 	// appear in customer workflow on: docs (no workflow should match it).
-	WorkflowIngested *WorkflowIngested `protobuf:"bytes,61,opt,name=workflow_ingested,json=workflowIngested,proto3,oneof"`
+	LoopIngested *LoopIngested `protobuf:"bytes,61,opt,name=loop_ingested,json=loopIngested,proto3,oneof"`
 }
 
 type Event_PullRequestReviewRequested struct {
@@ -8701,12 +8701,12 @@ type Event_ComposioTriggerMessage struct {
 	ComposioTriggerMessage *ComposioTriggerMessage `protobuf:"bytes,87,opt,name=composio_trigger_message,json=composioTriggerMessage,proto3,oneof"`
 }
 
-type Event_DeviationFindingAcknowledged struct {
-	DeviationFindingAcknowledged *DeviationFindingAcknowledged `protobuf:"bytes,88,opt,name=deviation_finding_acknowledged,json=deviationFindingAcknowledged,proto3,oneof"`
+type Event_PlanDifferenceAcknowledged struct {
+	PlanDifferenceAcknowledged *PlanDifferenceAcknowledged `protobuf:"bytes,88,opt,name=plan_difference_acknowledged,json=planDifferenceAcknowledged,proto3,oneof"`
 }
 
-type Event_DeviationFindingAcknowledgementCleared struct {
-	DeviationFindingAcknowledgementCleared *DeviationFindingAcknowledgementCleared `protobuf:"bytes,89,opt,name=deviation_finding_acknowledgement_cleared,json=deviationFindingAcknowledgementCleared,proto3,oneof"`
+type Event_PlanDifferenceAcknowledgementCleared struct {
+	PlanDifferenceAcknowledgementCleared *PlanDifferenceAcknowledgementCleared `protobuf:"bytes,89,opt,name=plan_difference_acknowledgement_cleared,json=planDifferenceAcknowledgementCleared,proto3,oneof"`
 }
 
 type Event_PlanReviewPolicyDecided struct {
@@ -8768,21 +8768,21 @@ func (*Event_OrganisationAppInstallationUpserted) isEvent_Payload() {}
 
 func (*Event_OrganisationAppInstallationDeleted) isEvent_Payload() {}
 
-func (*Event_DeviationAnalysisStarted) isEvent_Payload() {}
+func (*Event_PlanCheckStarted) isEvent_Payload() {}
 
-func (*Event_DeviationAnalysisCompleted) isEvent_Payload() {}
+func (*Event_PlanCheckCompleted) isEvent_Payload() {}
 
-func (*Event_DeviationAnalysisFailed) isEvent_Payload() {}
+func (*Event_PlanCheckFailed) isEvent_Payload() {}
 
-func (*Event_WorkflowRunQueued) isEvent_Payload() {}
+func (*Event_LoopRunQueued) isEvent_Payload() {}
 
-func (*Event_WorkflowRunStarted) isEvent_Payload() {}
+func (*Event_LoopRunStarted) isEvent_Payload() {}
 
-func (*Event_WorkflowRunCompleted) isEvent_Payload() {}
+func (*Event_LoopRunCompleted) isEvent_Payload() {}
 
-func (*Event_WorkflowRunFailed) isEvent_Payload() {}
+func (*Event_LoopRunFailed) isEvent_Payload() {}
 
-func (*Event_WorkflowRunCancelled) isEvent_Payload() {}
+func (*Event_LoopRunCancelled) isEvent_Payload() {}
 
 func (*Event_ReviewNoEligibleReviewer) isEvent_Payload() {}
 
@@ -8814,11 +8814,11 @@ func (*Event_LinearWebhook) isEvent_Payload() {}
 
 func (*Event_PullRequestCommentCreated) isEvent_Payload() {}
 
-func (*Event_DeviationFindingRecorded) isEvent_Payload() {}
+func (*Event_PlanDifferenceRecorded) isEvent_Payload() {}
 
-func (*Event_DeviationFindingUpdated) isEvent_Payload() {}
+func (*Event_PlanDifferenceUpdated) isEvent_Payload() {}
 
-func (*Event_DeviationFindingResolved) isEvent_Payload() {}
+func (*Event_PlanDifferenceResolved) isEvent_Payload() {}
 
 func (*Event_AgentRunDispatched) isEvent_Payload() {}
 
@@ -8838,7 +8838,7 @@ func (*Event_AgentRunGatePassed) isEvent_Payload() {}
 
 func (*Event_PullRequestLinkedToAgentRun) isEvent_Payload() {}
 
-func (*Event_WorkflowIngested) isEvent_Payload() {}
+func (*Event_LoopIngested) isEvent_Payload() {}
 
 func (*Event_PullRequestReviewRequested) isEvent_Payload() {}
 
@@ -8884,9 +8884,9 @@ func (*Event_WorkspaceMemberLeft) isEvent_Payload() {}
 
 func (*Event_ComposioTriggerMessage) isEvent_Payload() {}
 
-func (*Event_DeviationFindingAcknowledged) isEvent_Payload() {}
+func (*Event_PlanDifferenceAcknowledged) isEvent_Payload() {}
 
-func (*Event_DeviationFindingAcknowledgementCleared) isEvent_Payload() {}
+func (*Event_PlanDifferenceAcknowledgementCleared) isEvent_Payload() {}
 
 func (*Event_PlanReviewPolicyDecided) isEvent_Payload() {}
 
@@ -9141,7 +9141,7 @@ type PlanUpdated struct {
 	// carried so workflow CEL reads plan.friendly_id without a lookup.
 	PlanFriendlyId string `protobuf:"bytes,4,opt,name=plan_friendly_id,json=planFriendlyId,proto3" json:"plan_friendly_id,omitempty"`
 	// Field names whose values changed in this update (e.g.
-	// ["title", "content"]). Workflows match on this to skip irrelevant
+	// ["title", "content"]). Loops match on this to skip irrelevant
 	// updates cheaply, e.g. `"content" in event.plan_updated.changed_fields`.
 	ChangedFields []string `protobuf:"bytes,2,rep,name=changed_fields,json=changedFields,proto3" json:"changed_fields,omitempty"`
 	// Previous values for the changed fields only, keyed by field name.
@@ -9607,7 +9607,7 @@ type ReviewSubmitted struct {
 	// carried so workflow CEL reads plan.friendly_id without a lookup.
 	PlanFriendlyId string `protobuf:"bytes,9,opt,name=plan_friendly_id,json=planFriendlyId,proto3" json:"plan_friendly_id,omitempty"`
 	// Verdict-driven status: "approved" or "rejected". Mirrors
-	// reviews.Review.Status. Workflows typically filter on this, e.g.
+	// reviews.Review.Status. Loops typically filter on this, e.g.
 	// `match: event.payload.status == "approved"`.
 	Status string `protobuf:"bytes,4,opt,name=status,proto3" json:"status,omitempty"`
 	// The reviewer's free-text verdict comment.
@@ -9708,7 +9708,7 @@ func (x *ReviewSubmitted) GetReviewerPrincipalId() string {
 //
 // The actor on the surrounding Event is the calling principal (the would-
 // be requester). The object reference points at the plan they tried to
-// route. Workflows can match on this to drop a soft notice into the SPA
+// route. Loops can match on this to drop a soft notice into the SPA
 // — "Invite a teammate" — rather than letting the failed tool call sit
 // silently in chat history.
 //
@@ -10461,7 +10461,7 @@ type WorkspaceMemberJoined struct {
 	PrincipalId   string                 `protobuf:"bytes,2,opt,name=principal_id,json=principalId,proto3" json:"principal_id,omitempty"`
 	DisplayName   string                 `protobuf:"bytes,3,opt,name=display_name,json=displayName,proto3" json:"display_name,omitempty"`
 	Role          string                 `protobuf:"bytes,4,opt,name=role,proto3" json:"role,omitempty"`                            // "member" | "admin"
-	Source        JoinSource             `protobuf:"varint,5,opt,name=source,proto3,enum=brent.JoinSource" json:"source,omitempty"` // JOIN_SOURCE_DOMAIN | JOIN_SOURCE_INVITE
+	Source        JoinSource             `protobuf:"varint,5,opt,name=source,proto3,enum=until.JoinSource" json:"source,omitempty"` // JOIN_SOURCE_DOMAIN | JOIN_SOURCE_INVITE
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -13533,35 +13533,35 @@ func (x *PullRequestCommentCreated) GetAuthorIsBot() bool {
 	return false
 }
 
-// DeviationAnalysisStarted fires when deviationanalyses.Store.BeginAnalysis
+// PlanCheckStarted fires when deviationanalyses.Store.BeginAnalysis
 // inserts a fresh analysis row (idempotent re-calls do not re-emit).
-type DeviationAnalysisStarted struct {
+type PlanCheckStarted struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
-	AnalysisId     string                 `protobuf:"bytes,1,opt,name=analysis_id,json=analysisId,proto3" json:"analysis_id,omitempty"`
+	PlanCheckId    string                 `protobuf:"bytes,1,opt,name=plan_check_id,json=planCheckId,proto3" json:"plan_check_id,omitempty"`
 	PrId           string                 `protobuf:"bytes,2,opt,name=pr_id,json=prId,proto3" json:"pr_id,omitempty"`
 	PlanUuid       string                 `protobuf:"bytes,3,opt,name=plan_uuid,json=planUuid,proto3" json:"plan_uuid,omitempty"`
 	PlanFriendlyId string                 `protobuf:"bytes,7,opt,name=plan_friendly_id,json=planFriendlyId,proto3" json:"plan_friendly_id,omitempty"`
 	HeadSha        string                 `protobuf:"bytes,4,opt,name=head_sha,json=headSha,proto3" json:"head_sha,omitempty"`
-	WorkflowRunId  string                 `protobuf:"bytes,5,opt,name=workflow_run_id,json=workflowRunId,proto3" json:"workflow_run_id,omitempty"`
+	LoopRunId      string                 `protobuf:"bytes,5,opt,name=loop_run_id,json=loopRunId,proto3" json:"loop_run_id,omitempty"`
 	StartedAt      *timestamppb.Timestamp `protobuf:"bytes,6,opt,name=started_at,json=startedAt,proto3" json:"started_at,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
 
-func (x *DeviationAnalysisStarted) Reset() {
-	*x = DeviationAnalysisStarted{}
+func (x *PlanCheckStarted) Reset() {
+	*x = PlanCheckStarted{}
 	mi := &file_brent_proto_msgTypes[144]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *DeviationAnalysisStarted) String() string {
+func (x *PlanCheckStarted) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*DeviationAnalysisStarted) ProtoMessage() {}
+func (*PlanCheckStarted) ProtoMessage() {}
 
-func (x *DeviationAnalysisStarted) ProtoReflect() protoreflect.Message {
+func (x *PlanCheckStarted) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[144]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -13573,64 +13573,64 @@ func (x *DeviationAnalysisStarted) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use DeviationAnalysisStarted.ProtoReflect.Descriptor instead.
-func (*DeviationAnalysisStarted) Descriptor() ([]byte, []int) {
+// Deprecated: Use PlanCheckStarted.ProtoReflect.Descriptor instead.
+func (*PlanCheckStarted) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{144}
 }
 
-func (x *DeviationAnalysisStarted) GetAnalysisId() string {
+func (x *PlanCheckStarted) GetPlanCheckId() string {
 	if x != nil {
-		return x.AnalysisId
+		return x.PlanCheckId
 	}
 	return ""
 }
 
-func (x *DeviationAnalysisStarted) GetPrId() string {
+func (x *PlanCheckStarted) GetPrId() string {
 	if x != nil {
 		return x.PrId
 	}
 	return ""
 }
 
-func (x *DeviationAnalysisStarted) GetPlanUuid() string {
+func (x *PlanCheckStarted) GetPlanUuid() string {
 	if x != nil {
 		return x.PlanUuid
 	}
 	return ""
 }
 
-func (x *DeviationAnalysisStarted) GetPlanFriendlyId() string {
+func (x *PlanCheckStarted) GetPlanFriendlyId() string {
 	if x != nil {
 		return x.PlanFriendlyId
 	}
 	return ""
 }
 
-func (x *DeviationAnalysisStarted) GetHeadSha() string {
+func (x *PlanCheckStarted) GetHeadSha() string {
 	if x != nil {
 		return x.HeadSha
 	}
 	return ""
 }
 
-func (x *DeviationAnalysisStarted) GetWorkflowRunId() string {
+func (x *PlanCheckStarted) GetLoopRunId() string {
 	if x != nil {
-		return x.WorkflowRunId
+		return x.LoopRunId
 	}
 	return ""
 }
 
-func (x *DeviationAnalysisStarted) GetStartedAt() *timestamppb.Timestamp {
+func (x *PlanCheckStarted) GetStartedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.StartedAt
 	}
 	return nil
 }
 
-// DeviationAnalysisCompleted fires when deviationanalyses.Store.CompleteAnalysis
+// PlanCheckCompleted fires when deviationanalyses.Store.CompleteAnalysis
 // commits. check_conclusion and findings carry the four-state model for
 // workflow branching (success | failure | neutral).
-type FindingSummary struct {
+type DifferenceSummary struct {
 	state             protoimpl.MessageState `protogen:"open.v1"`
 	Kind              string                 `protobuf:"bytes,1,opt,name=kind,proto3" json:"kind,omitempty"`
 	Acknowledged      bool                   `protobuf:"varint,2,opt,name=acknowledged,proto3" json:"acknowledged,omitempty"`
@@ -13641,20 +13641,20 @@ type FindingSummary struct {
 	sizeCache         protoimpl.SizeCache
 }
 
-func (x *FindingSummary) Reset() {
-	*x = FindingSummary{}
+func (x *DifferenceSummary) Reset() {
+	*x = DifferenceSummary{}
 	mi := &file_brent_proto_msgTypes[145]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *FindingSummary) String() string {
+func (x *DifferenceSummary) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*FindingSummary) ProtoMessage() {}
+func (*DifferenceSummary) ProtoMessage() {}
 
-func (x *FindingSummary) ProtoReflect() protoreflect.Message {
+func (x *DifferenceSummary) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[145]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -13666,76 +13666,76 @@ func (x *FindingSummary) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use FindingSummary.ProtoReflect.Descriptor instead.
-func (*FindingSummary) Descriptor() ([]byte, []int) {
+// Deprecated: Use DifferenceSummary.ProtoReflect.Descriptor instead.
+func (*DifferenceSummary) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{145}
 }
 
-func (x *FindingSummary) GetKind() string {
+func (x *DifferenceSummary) GetKind() string {
 	if x != nil {
 		return x.Kind
 	}
 	return ""
 }
 
-func (x *FindingSummary) GetAcknowledged() bool {
+func (x *DifferenceSummary) GetAcknowledged() bool {
 	if x != nil {
 		return x.Acknowledged
 	}
 	return false
 }
 
-func (x *FindingSummary) GetAckSource() string {
+func (x *DifferenceSummary) GetAckSource() string {
 	if x != nil {
 		return x.AckSource
 	}
 	return ""
 }
 
-func (x *FindingSummary) GetAckRef() string {
+func (x *DifferenceSummary) GetAckRef() string {
 	if x != nil {
 		return x.AckRef
 	}
 	return ""
 }
 
-func (x *FindingSummary) GetAckReasoningQuote() string {
+func (x *DifferenceSummary) GetAckReasoningQuote() string {
 	if x != nil {
 		return x.AckReasoningQuote
 	}
 	return ""
 }
 
-type DeviationAnalysisCompleted struct {
-	state                  protoimpl.MessageState `protogen:"open.v1"`
-	AnalysisId             string                 `protobuf:"bytes,1,opt,name=analysis_id,json=analysisId,proto3" json:"analysis_id,omitempty"`
-	PrId                   string                 `protobuf:"bytes,2,opt,name=pr_id,json=prId,proto3" json:"pr_id,omitempty"`
-	PlanUuid               string                 `protobuf:"bytes,3,opt,name=plan_uuid,json=planUuid,proto3" json:"plan_uuid,omitempty"`
-	PlanFriendlyId         string                 `protobuf:"bytes,12,opt,name=plan_friendly_id,json=planFriendlyId,proto3" json:"plan_friendly_id,omitempty"`
-	HeadSha                string                 `protobuf:"bytes,4,opt,name=head_sha,json=headSha,proto3" json:"head_sha,omitempty"`
-	FindingCountByTag      map[string]int64       `protobuf:"bytes,7,rep,name=finding_count_by_tag,json=findingCountByTag,proto3" json:"finding_count_by_tag,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
-	CompletedAt            *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=completed_at,json=completedAt,proto3" json:"completed_at,omitempty"`
-	CheckConclusion        string                 `protobuf:"bytes,9,opt,name=check_conclusion,json=checkConclusion,proto3" json:"check_conclusion,omitempty"`
-	AppliedRedFindingKinds []string               `protobuf:"bytes,10,rep,name=applied_red_finding_kinds,json=appliedRedFindingKinds,proto3" json:"applied_red_finding_kinds,omitempty"`
-	Findings               []*FindingSummary      `protobuf:"bytes,11,rep,name=findings,proto3" json:"findings,omitempty"`
-	unknownFields          protoimpl.UnknownFields
-	sizeCache              protoimpl.SizeCache
+type PlanCheckCompleted struct {
+	state                         protoimpl.MessageState `protogen:"open.v1"`
+	PlanCheckId                   string                 `protobuf:"bytes,1,opt,name=plan_check_id,json=planCheckId,proto3" json:"plan_check_id,omitempty"`
+	PrId                          string                 `protobuf:"bytes,2,opt,name=pr_id,json=prId,proto3" json:"pr_id,omitempty"`
+	PlanUuid                      string                 `protobuf:"bytes,3,opt,name=plan_uuid,json=planUuid,proto3" json:"plan_uuid,omitempty"`
+	PlanFriendlyId                string                 `protobuf:"bytes,12,opt,name=plan_friendly_id,json=planFriendlyId,proto3" json:"plan_friendly_id,omitempty"`
+	HeadSha                       string                 `protobuf:"bytes,4,opt,name=head_sha,json=headSha,proto3" json:"head_sha,omitempty"`
+	DifferenceCountByTag          map[string]int64       `protobuf:"bytes,7,rep,name=difference_count_by_tag,json=differenceCountByTag,proto3" json:"difference_count_by_tag,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"varint,2,opt,name=value"`
+	CompletedAt                   *timestamppb.Timestamp `protobuf:"bytes,8,opt,name=completed_at,json=completedAt,proto3" json:"completed_at,omitempty"`
+	PlanCheckOutcome              string                 `protobuf:"bytes,9,opt,name=plan_check_outcome,json=planCheckOutcome,proto3" json:"plan_check_outcome,omitempty"`
+	AppliedBlockingDifferenceTags []string               `protobuf:"bytes,10,rep,name=applied_blocking_difference_tags,json=appliedBlockingDifferenceTags,proto3" json:"applied_blocking_difference_tags,omitempty"`
+	Differences                   []*DifferenceSummary   `protobuf:"bytes,11,rep,name=differences,proto3" json:"differences,omitempty"`
+	unknownFields                 protoimpl.UnknownFields
+	sizeCache                     protoimpl.SizeCache
 }
 
-func (x *DeviationAnalysisCompleted) Reset() {
-	*x = DeviationAnalysisCompleted{}
+func (x *PlanCheckCompleted) Reset() {
+	*x = PlanCheckCompleted{}
 	mi := &file_brent_proto_msgTypes[146]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *DeviationAnalysisCompleted) String() string {
+func (x *PlanCheckCompleted) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*DeviationAnalysisCompleted) ProtoMessage() {}
+func (*PlanCheckCompleted) ProtoMessage() {}
 
-func (x *DeviationAnalysisCompleted) ProtoReflect() protoreflect.Message {
+func (x *PlanCheckCompleted) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[146]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -13747,85 +13747,85 @@ func (x *DeviationAnalysisCompleted) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use DeviationAnalysisCompleted.ProtoReflect.Descriptor instead.
-func (*DeviationAnalysisCompleted) Descriptor() ([]byte, []int) {
+// Deprecated: Use PlanCheckCompleted.ProtoReflect.Descriptor instead.
+func (*PlanCheckCompleted) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{146}
 }
 
-func (x *DeviationAnalysisCompleted) GetAnalysisId() string {
+func (x *PlanCheckCompleted) GetPlanCheckId() string {
 	if x != nil {
-		return x.AnalysisId
+		return x.PlanCheckId
 	}
 	return ""
 }
 
-func (x *DeviationAnalysisCompleted) GetPrId() string {
+func (x *PlanCheckCompleted) GetPrId() string {
 	if x != nil {
 		return x.PrId
 	}
 	return ""
 }
 
-func (x *DeviationAnalysisCompleted) GetPlanUuid() string {
+func (x *PlanCheckCompleted) GetPlanUuid() string {
 	if x != nil {
 		return x.PlanUuid
 	}
 	return ""
 }
 
-func (x *DeviationAnalysisCompleted) GetPlanFriendlyId() string {
+func (x *PlanCheckCompleted) GetPlanFriendlyId() string {
 	if x != nil {
 		return x.PlanFriendlyId
 	}
 	return ""
 }
 
-func (x *DeviationAnalysisCompleted) GetHeadSha() string {
+func (x *PlanCheckCompleted) GetHeadSha() string {
 	if x != nil {
 		return x.HeadSha
 	}
 	return ""
 }
 
-func (x *DeviationAnalysisCompleted) GetFindingCountByTag() map[string]int64 {
+func (x *PlanCheckCompleted) GetDifferenceCountByTag() map[string]int64 {
 	if x != nil {
-		return x.FindingCountByTag
+		return x.DifferenceCountByTag
 	}
 	return nil
 }
 
-func (x *DeviationAnalysisCompleted) GetCompletedAt() *timestamppb.Timestamp {
+func (x *PlanCheckCompleted) GetCompletedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.CompletedAt
 	}
 	return nil
 }
 
-func (x *DeviationAnalysisCompleted) GetCheckConclusion() string {
+func (x *PlanCheckCompleted) GetPlanCheckOutcome() string {
 	if x != nil {
-		return x.CheckConclusion
+		return x.PlanCheckOutcome
 	}
 	return ""
 }
 
-func (x *DeviationAnalysisCompleted) GetAppliedRedFindingKinds() []string {
+func (x *PlanCheckCompleted) GetAppliedBlockingDifferenceTags() []string {
 	if x != nil {
-		return x.AppliedRedFindingKinds
+		return x.AppliedBlockingDifferenceTags
 	}
 	return nil
 }
 
-func (x *DeviationAnalysisCompleted) GetFindings() []*FindingSummary {
+func (x *PlanCheckCompleted) GetDifferences() []*DifferenceSummary {
 	if x != nil {
-		return x.Findings
+		return x.Differences
 	}
 	return nil
 }
 
-// DeviationAnalysisFailed fires when deviationanalyses.Store.FailAnalysis commits.
-type DeviationAnalysisFailed struct {
+// PlanCheckFailed fires when deviationanalyses.Store.FailAnalysis commits.
+type PlanCheckFailed struct {
 	state          protoimpl.MessageState `protogen:"open.v1"`
-	AnalysisId     string                 `protobuf:"bytes,1,opt,name=analysis_id,json=analysisId,proto3" json:"analysis_id,omitempty"`
+	PlanCheckId    string                 `protobuf:"bytes,1,opt,name=plan_check_id,json=planCheckId,proto3" json:"plan_check_id,omitempty"`
 	PrId           string                 `protobuf:"bytes,2,opt,name=pr_id,json=prId,proto3" json:"pr_id,omitempty"`
 	PlanUuid       string                 `protobuf:"bytes,3,opt,name=plan_uuid,json=planUuid,proto3" json:"plan_uuid,omitempty"`
 	PlanFriendlyId string                 `protobuf:"bytes,7,opt,name=plan_friendly_id,json=planFriendlyId,proto3" json:"plan_friendly_id,omitempty"`
@@ -13836,20 +13836,20 @@ type DeviationAnalysisFailed struct {
 	sizeCache      protoimpl.SizeCache
 }
 
-func (x *DeviationAnalysisFailed) Reset() {
-	*x = DeviationAnalysisFailed{}
+func (x *PlanCheckFailed) Reset() {
+	*x = PlanCheckFailed{}
 	mi := &file_brent_proto_msgTypes[147]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *DeviationAnalysisFailed) String() string {
+func (x *PlanCheckFailed) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*DeviationAnalysisFailed) ProtoMessage() {}
+func (*PlanCheckFailed) ProtoMessage() {}
 
-func (x *DeviationAnalysisFailed) ProtoReflect() protoreflect.Message {
+func (x *PlanCheckFailed) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[147]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -13861,86 +13861,86 @@ func (x *DeviationAnalysisFailed) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use DeviationAnalysisFailed.ProtoReflect.Descriptor instead.
-func (*DeviationAnalysisFailed) Descriptor() ([]byte, []int) {
+// Deprecated: Use PlanCheckFailed.ProtoReflect.Descriptor instead.
+func (*PlanCheckFailed) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{147}
 }
 
-func (x *DeviationAnalysisFailed) GetAnalysisId() string {
+func (x *PlanCheckFailed) GetPlanCheckId() string {
 	if x != nil {
-		return x.AnalysisId
+		return x.PlanCheckId
 	}
 	return ""
 }
 
-func (x *DeviationAnalysisFailed) GetPrId() string {
+func (x *PlanCheckFailed) GetPrId() string {
 	if x != nil {
 		return x.PrId
 	}
 	return ""
 }
 
-func (x *DeviationAnalysisFailed) GetPlanUuid() string {
+func (x *PlanCheckFailed) GetPlanUuid() string {
 	if x != nil {
 		return x.PlanUuid
 	}
 	return ""
 }
 
-func (x *DeviationAnalysisFailed) GetPlanFriendlyId() string {
+func (x *PlanCheckFailed) GetPlanFriendlyId() string {
 	if x != nil {
 		return x.PlanFriendlyId
 	}
 	return ""
 }
 
-func (x *DeviationAnalysisFailed) GetHeadSha() string {
+func (x *PlanCheckFailed) GetHeadSha() string {
 	if x != nil {
 		return x.HeadSha
 	}
 	return ""
 }
 
-func (x *DeviationAnalysisFailed) GetReason() string {
+func (x *PlanCheckFailed) GetReason() string {
 	if x != nil {
 		return x.Reason
 	}
 	return ""
 }
 
-func (x *DeviationAnalysisFailed) GetFailedAt() *timestamppb.Timestamp {
+func (x *PlanCheckFailed) GetFailedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.FailedAt
 	}
 	return nil
 }
 
-// DeviationFindingRecorded fires when deviationanalyses.Store.RecordFinding commits.
-type DeviationFindingRecorded struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	FindingId     string                 `protobuf:"bytes,1,opt,name=finding_id,json=findingId,proto3" json:"finding_id,omitempty"`
-	AnalysisId    string                 `protobuf:"bytes,2,opt,name=analysis_id,json=analysisId,proto3" json:"analysis_id,omitempty"`
-	Tag           string                 `protobuf:"bytes,3,opt,name=tag,proto3" json:"tag,omitempty"`
-	Summary       string                 `protobuf:"bytes,4,opt,name=summary,proto3" json:"summary,omitempty"`
-	RecordedAt    *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=recorded_at,json=recordedAt,proto3" json:"recorded_at,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+// PlanDifferenceRecorded fires when deviationanalyses.Store.RecordFinding commits.
+type PlanDifferenceRecorded struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	PlanDifferenceId string                 `protobuf:"bytes,1,opt,name=plan_difference_id,json=planDifferenceId,proto3" json:"plan_difference_id,omitempty"`
+	PlanCheckId      string                 `protobuf:"bytes,2,opt,name=plan_check_id,json=planCheckId,proto3" json:"plan_check_id,omitempty"`
+	Tag              string                 `protobuf:"bytes,3,opt,name=tag,proto3" json:"tag,omitempty"`
+	Summary          string                 `protobuf:"bytes,4,opt,name=summary,proto3" json:"summary,omitempty"`
+	RecordedAt       *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=recorded_at,json=recordedAt,proto3" json:"recorded_at,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
 }
 
-func (x *DeviationFindingRecorded) Reset() {
-	*x = DeviationFindingRecorded{}
+func (x *PlanDifferenceRecorded) Reset() {
+	*x = PlanDifferenceRecorded{}
 	mi := &file_brent_proto_msgTypes[148]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *DeviationFindingRecorded) String() string {
+func (x *PlanDifferenceRecorded) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*DeviationFindingRecorded) ProtoMessage() {}
+func (*PlanDifferenceRecorded) ProtoMessage() {}
 
-func (x *DeviationFindingRecorded) ProtoReflect() protoreflect.Message {
+func (x *PlanDifferenceRecorded) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[148]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -13952,58 +13952,58 @@ func (x *DeviationFindingRecorded) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use DeviationFindingRecorded.ProtoReflect.Descriptor instead.
-func (*DeviationFindingRecorded) Descriptor() ([]byte, []int) {
+// Deprecated: Use PlanDifferenceRecorded.ProtoReflect.Descriptor instead.
+func (*PlanDifferenceRecorded) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{148}
 }
 
-func (x *DeviationFindingRecorded) GetFindingId() string {
+func (x *PlanDifferenceRecorded) GetPlanDifferenceId() string {
 	if x != nil {
-		return x.FindingId
+		return x.PlanDifferenceId
 	}
 	return ""
 }
 
-func (x *DeviationFindingRecorded) GetAnalysisId() string {
+func (x *PlanDifferenceRecorded) GetPlanCheckId() string {
 	if x != nil {
-		return x.AnalysisId
+		return x.PlanCheckId
 	}
 	return ""
 }
 
-func (x *DeviationFindingRecorded) GetTag() string {
+func (x *PlanDifferenceRecorded) GetTag() string {
 	if x != nil {
 		return x.Tag
 	}
 	return ""
 }
 
-func (x *DeviationFindingRecorded) GetSummary() string {
+func (x *PlanDifferenceRecorded) GetSummary() string {
 	if x != nil {
 		return x.Summary
 	}
 	return ""
 }
 
-func (x *DeviationFindingRecorded) GetRecordedAt() *timestamppb.Timestamp {
+func (x *PlanDifferenceRecorded) GetRecordedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.RecordedAt
 	}
 	return nil
 }
 
-// DeviationFindingUpdated fires when deviationanalyses.Store.UpdateFinding
+// PlanDifferenceUpdated fires when deviationanalyses.Store.UpdateFinding
 // commits. Routing snapshot fields (tag, summary) remain on the message;
 // field diffs use the uniform changed_fields / previous / after triple
 // (changed fields only). `after` captures post-update values at emission
 // time — not live finding state.
-type DeviationFindingUpdated struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	FindingId     string                 `protobuf:"bytes,1,opt,name=finding_id,json=findingId,proto3" json:"finding_id,omitempty"`
-	AnalysisId    string                 `protobuf:"bytes,2,opt,name=analysis_id,json=analysisId,proto3" json:"analysis_id,omitempty"`
-	Tag           string                 `protobuf:"bytes,3,opt,name=tag,proto3" json:"tag,omitempty"`
-	Summary       string                 `protobuf:"bytes,4,opt,name=summary,proto3" json:"summary,omitempty"`
-	ChangedFields []string               `protobuf:"bytes,5,rep,name=changed_fields,json=changedFields,proto3" json:"changed_fields,omitempty"`
+type PlanDifferenceUpdated struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	PlanDifferenceId string                 `protobuf:"bytes,1,opt,name=plan_difference_id,json=planDifferenceId,proto3" json:"plan_difference_id,omitempty"`
+	PlanCheckId      string                 `protobuf:"bytes,2,opt,name=plan_check_id,json=planCheckId,proto3" json:"plan_check_id,omitempty"`
+	Tag              string                 `protobuf:"bytes,3,opt,name=tag,proto3" json:"tag,omitempty"`
+	Summary          string                 `protobuf:"bytes,4,opt,name=summary,proto3" json:"summary,omitempty"`
+	ChangedFields    []string               `protobuf:"bytes,5,rep,name=changed_fields,json=changedFields,proto3" json:"changed_fields,omitempty"`
 	// Previous values for changed_fields only, keyed by field name.
 	Previous map[string]*structpb.Value `protobuf:"bytes,6,rep,name=previous,proto3" json:"previous,omitempty" protobuf_key:"bytes,1,opt,name=key" protobuf_val:"bytes,2,opt,name=value"`
 	// Post-update values for changed_fields only. Frozen at emission time.
@@ -14012,20 +14012,20 @@ type DeviationFindingUpdated struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *DeviationFindingUpdated) Reset() {
-	*x = DeviationFindingUpdated{}
+func (x *PlanDifferenceUpdated) Reset() {
+	*x = PlanDifferenceUpdated{}
 	mi := &file_brent_proto_msgTypes[149]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *DeviationFindingUpdated) String() string {
+func (x *PlanDifferenceUpdated) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*DeviationFindingUpdated) ProtoMessage() {}
+func (*PlanDifferenceUpdated) ProtoMessage() {}
 
-func (x *DeviationFindingUpdated) ProtoReflect() protoreflect.Message {
+func (x *PlanDifferenceUpdated) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[149]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -14037,65 +14037,65 @@ func (x *DeviationFindingUpdated) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use DeviationFindingUpdated.ProtoReflect.Descriptor instead.
-func (*DeviationFindingUpdated) Descriptor() ([]byte, []int) {
+// Deprecated: Use PlanDifferenceUpdated.ProtoReflect.Descriptor instead.
+func (*PlanDifferenceUpdated) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{149}
 }
 
-func (x *DeviationFindingUpdated) GetFindingId() string {
+func (x *PlanDifferenceUpdated) GetPlanDifferenceId() string {
 	if x != nil {
-		return x.FindingId
+		return x.PlanDifferenceId
 	}
 	return ""
 }
 
-func (x *DeviationFindingUpdated) GetAnalysisId() string {
+func (x *PlanDifferenceUpdated) GetPlanCheckId() string {
 	if x != nil {
-		return x.AnalysisId
+		return x.PlanCheckId
 	}
 	return ""
 }
 
-func (x *DeviationFindingUpdated) GetTag() string {
+func (x *PlanDifferenceUpdated) GetTag() string {
 	if x != nil {
 		return x.Tag
 	}
 	return ""
 }
 
-func (x *DeviationFindingUpdated) GetSummary() string {
+func (x *PlanDifferenceUpdated) GetSummary() string {
 	if x != nil {
 		return x.Summary
 	}
 	return ""
 }
 
-func (x *DeviationFindingUpdated) GetChangedFields() []string {
+func (x *PlanDifferenceUpdated) GetChangedFields() []string {
 	if x != nil {
 		return x.ChangedFields
 	}
 	return nil
 }
 
-func (x *DeviationFindingUpdated) GetPrevious() map[string]*structpb.Value {
+func (x *PlanDifferenceUpdated) GetPrevious() map[string]*structpb.Value {
 	if x != nil {
 		return x.Previous
 	}
 	return nil
 }
 
-func (x *DeviationFindingUpdated) GetAfter() map[string]*structpb.Value {
+func (x *PlanDifferenceUpdated) GetAfter() map[string]*structpb.Value {
 	if x != nil {
 		return x.After
 	}
 	return nil
 }
 
-// DeviationFindingResolved fires when deviationanalyses.Store.ResolveFinding commits.
-type DeviationFindingResolved struct {
+// PlanDifferenceResolved fires when deviationanalyses.Store.ResolveFinding commits.
+type PlanDifferenceResolved struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
-	FindingId        string                 `protobuf:"bytes,1,opt,name=finding_id,json=findingId,proto3" json:"finding_id,omitempty"`
-	AnalysisId       string                 `protobuf:"bytes,2,opt,name=analysis_id,json=analysisId,proto3" json:"analysis_id,omitempty"`
+	PlanDifferenceId string                 `protobuf:"bytes,1,opt,name=plan_difference_id,json=planDifferenceId,proto3" json:"plan_difference_id,omitempty"`
+	PlanCheckId      string                 `protobuf:"bytes,2,opt,name=plan_check_id,json=planCheckId,proto3" json:"plan_check_id,omitempty"`
 	Tag              string                 `protobuf:"bytes,3,opt,name=tag,proto3" json:"tag,omitempty"`
 	Reason           string                 `protobuf:"bytes,4,opt,name=reason,proto3" json:"reason,omitempty"`
 	ResolutionCommit string                 `protobuf:"bytes,5,opt,name=resolution_commit,json=resolutionCommit,proto3" json:"resolution_commit,omitempty"`
@@ -14104,20 +14104,20 @@ type DeviationFindingResolved struct {
 	sizeCache        protoimpl.SizeCache
 }
 
-func (x *DeviationFindingResolved) Reset() {
-	*x = DeviationFindingResolved{}
+func (x *PlanDifferenceResolved) Reset() {
+	*x = PlanDifferenceResolved{}
 	mi := &file_brent_proto_msgTypes[150]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *DeviationFindingResolved) String() string {
+func (x *PlanDifferenceResolved) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*DeviationFindingResolved) ProtoMessage() {}
+func (*PlanDifferenceResolved) ProtoMessage() {}
 
-func (x *DeviationFindingResolved) ProtoReflect() protoreflect.Message {
+func (x *PlanDifferenceResolved) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[150]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -14129,60 +14129,60 @@ func (x *DeviationFindingResolved) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use DeviationFindingResolved.ProtoReflect.Descriptor instead.
-func (*DeviationFindingResolved) Descriptor() ([]byte, []int) {
+// Deprecated: Use PlanDifferenceResolved.ProtoReflect.Descriptor instead.
+func (*PlanDifferenceResolved) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{150}
 }
 
-func (x *DeviationFindingResolved) GetFindingId() string {
+func (x *PlanDifferenceResolved) GetPlanDifferenceId() string {
 	if x != nil {
-		return x.FindingId
+		return x.PlanDifferenceId
 	}
 	return ""
 }
 
-func (x *DeviationFindingResolved) GetAnalysisId() string {
+func (x *PlanDifferenceResolved) GetPlanCheckId() string {
 	if x != nil {
-		return x.AnalysisId
+		return x.PlanCheckId
 	}
 	return ""
 }
 
-func (x *DeviationFindingResolved) GetTag() string {
+func (x *PlanDifferenceResolved) GetTag() string {
 	if x != nil {
 		return x.Tag
 	}
 	return ""
 }
 
-func (x *DeviationFindingResolved) GetReason() string {
+func (x *PlanDifferenceResolved) GetReason() string {
 	if x != nil {
 		return x.Reason
 	}
 	return ""
 }
 
-func (x *DeviationFindingResolved) GetResolutionCommit() string {
+func (x *PlanDifferenceResolved) GetResolutionCommit() string {
 	if x != nil {
 		return x.ResolutionCommit
 	}
 	return ""
 }
 
-func (x *DeviationFindingResolved) GetResolvedAt() *timestamppb.Timestamp {
+func (x *PlanDifferenceResolved) GetResolvedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.ResolvedAt
 	}
 	return nil
 }
 
-// DeviationFindingAcknowledged fires when a finding transitions from
+// PlanDifferenceAcknowledged fires when a finding transitions from
 // unacknowledged to acknowledged.
-type DeviationFindingAcknowledged struct {
-	state      protoimpl.MessageState `protogen:"open.v1"`
-	FindingId  string                 `protobuf:"bytes,1,opt,name=finding_id,json=findingId,proto3" json:"finding_id,omitempty"`
-	AnalysisId string                 `protobuf:"bytes,2,opt,name=analysis_id,json=analysisId,proto3" json:"analysis_id,omitempty"`
-	Tag        string                 `protobuf:"bytes,3,opt,name=tag,proto3" json:"tag,omitempty"`
+type PlanDifferenceAcknowledged struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	PlanDifferenceId string                 `protobuf:"bytes,1,opt,name=plan_difference_id,json=planDifferenceId,proto3" json:"plan_difference_id,omitempty"`
+	PlanCheckId      string                 `protobuf:"bytes,2,opt,name=plan_check_id,json=planCheckId,proto3" json:"plan_check_id,omitempty"`
+	Tag              string                 `protobuf:"bytes,3,opt,name=tag,proto3" json:"tag,omitempty"`
 	// Empty for legacy findings created before slug support.
 	Slug string `protobuf:"bytes,4,opt,name=slug,proto3" json:"slug,omitempty"`
 	// issue_comment | review_comment | commit_message | pr_description.
@@ -14194,20 +14194,20 @@ type DeviationFindingAcknowledged struct {
 	sizeCache         protoimpl.SizeCache
 }
 
-func (x *DeviationFindingAcknowledged) Reset() {
-	*x = DeviationFindingAcknowledged{}
+func (x *PlanDifferenceAcknowledged) Reset() {
+	*x = PlanDifferenceAcknowledged{}
 	mi := &file_brent_proto_msgTypes[151]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *DeviationFindingAcknowledged) String() string {
+func (x *PlanDifferenceAcknowledged) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*DeviationFindingAcknowledged) ProtoMessage() {}
+func (*PlanDifferenceAcknowledged) ProtoMessage() {}
 
-func (x *DeviationFindingAcknowledged) ProtoReflect() protoreflect.Message {
+func (x *PlanDifferenceAcknowledged) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[151]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -14219,75 +14219,75 @@ func (x *DeviationFindingAcknowledged) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use DeviationFindingAcknowledged.ProtoReflect.Descriptor instead.
-func (*DeviationFindingAcknowledged) Descriptor() ([]byte, []int) {
+// Deprecated: Use PlanDifferenceAcknowledged.ProtoReflect.Descriptor instead.
+func (*PlanDifferenceAcknowledged) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{151}
 }
 
-func (x *DeviationFindingAcknowledged) GetFindingId() string {
+func (x *PlanDifferenceAcknowledged) GetPlanDifferenceId() string {
 	if x != nil {
-		return x.FindingId
+		return x.PlanDifferenceId
 	}
 	return ""
 }
 
-func (x *DeviationFindingAcknowledged) GetAnalysisId() string {
+func (x *PlanDifferenceAcknowledged) GetPlanCheckId() string {
 	if x != nil {
-		return x.AnalysisId
+		return x.PlanCheckId
 	}
 	return ""
 }
 
-func (x *DeviationFindingAcknowledged) GetTag() string {
+func (x *PlanDifferenceAcknowledged) GetTag() string {
 	if x != nil {
 		return x.Tag
 	}
 	return ""
 }
 
-func (x *DeviationFindingAcknowledged) GetSlug() string {
+func (x *PlanDifferenceAcknowledged) GetSlug() string {
 	if x != nil {
 		return x.Slug
 	}
 	return ""
 }
 
-func (x *DeviationFindingAcknowledged) GetAckSource() string {
+func (x *PlanDifferenceAcknowledged) GetAckSource() string {
 	if x != nil {
 		return x.AckSource
 	}
 	return ""
 }
 
-func (x *DeviationFindingAcknowledged) GetAckRef() string {
+func (x *PlanDifferenceAcknowledged) GetAckRef() string {
 	if x != nil {
 		return x.AckRef
 	}
 	return ""
 }
 
-func (x *DeviationFindingAcknowledged) GetAckReasoningQuote() string {
+func (x *PlanDifferenceAcknowledged) GetAckReasoningQuote() string {
 	if x != nil {
 		return x.AckReasoningQuote
 	}
 	return ""
 }
 
-func (x *DeviationFindingAcknowledged) GetAcknowledgedAt() *timestamppb.Timestamp {
+func (x *PlanDifferenceAcknowledged) GetAcknowledgedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.AcknowledgedAt
 	}
 	return nil
 }
 
-// DeviationFindingAcknowledgementCleared fires when a finding transitions
+// PlanDifferenceAcknowledgementCleared fires when a finding transitions
 // from acknowledged to unacknowledged. Acknowledgement fields preserve the
 // provenance that was removed by the mutation.
-type DeviationFindingAcknowledgementCleared struct {
-	state      protoimpl.MessageState `protogen:"open.v1"`
-	FindingId  string                 `protobuf:"bytes,1,opt,name=finding_id,json=findingId,proto3" json:"finding_id,omitempty"`
-	AnalysisId string                 `protobuf:"bytes,2,opt,name=analysis_id,json=analysisId,proto3" json:"analysis_id,omitempty"`
-	Tag        string                 `protobuf:"bytes,3,opt,name=tag,proto3" json:"tag,omitempty"`
+type PlanDifferenceAcknowledgementCleared struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	PlanDifferenceId string                 `protobuf:"bytes,1,opt,name=plan_difference_id,json=planDifferenceId,proto3" json:"plan_difference_id,omitempty"`
+	PlanCheckId      string                 `protobuf:"bytes,2,opt,name=plan_check_id,json=planCheckId,proto3" json:"plan_check_id,omitempty"`
+	Tag              string                 `protobuf:"bytes,3,opt,name=tag,proto3" json:"tag,omitempty"`
 	// Empty for legacy findings created before slug support.
 	Slug              string                 `protobuf:"bytes,4,opt,name=slug,proto3" json:"slug,omitempty"`
 	AckSource         string                 `protobuf:"bytes,5,opt,name=ack_source,json=ackSource,proto3" json:"ack_source,omitempty"`
@@ -14298,20 +14298,20 @@ type DeviationFindingAcknowledgementCleared struct {
 	sizeCache         protoimpl.SizeCache
 }
 
-func (x *DeviationFindingAcknowledgementCleared) Reset() {
-	*x = DeviationFindingAcknowledgementCleared{}
+func (x *PlanDifferenceAcknowledgementCleared) Reset() {
+	*x = PlanDifferenceAcknowledgementCleared{}
 	mi := &file_brent_proto_msgTypes[152]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *DeviationFindingAcknowledgementCleared) String() string {
+func (x *PlanDifferenceAcknowledgementCleared) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*DeviationFindingAcknowledgementCleared) ProtoMessage() {}
+func (*PlanDifferenceAcknowledgementCleared) ProtoMessage() {}
 
-func (x *DeviationFindingAcknowledgementCleared) ProtoReflect() protoreflect.Message {
+func (x *PlanDifferenceAcknowledgementCleared) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[152]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -14323,61 +14323,61 @@ func (x *DeviationFindingAcknowledgementCleared) ProtoReflect() protoreflect.Mes
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use DeviationFindingAcknowledgementCleared.ProtoReflect.Descriptor instead.
-func (*DeviationFindingAcknowledgementCleared) Descriptor() ([]byte, []int) {
+// Deprecated: Use PlanDifferenceAcknowledgementCleared.ProtoReflect.Descriptor instead.
+func (*PlanDifferenceAcknowledgementCleared) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{152}
 }
 
-func (x *DeviationFindingAcknowledgementCleared) GetFindingId() string {
+func (x *PlanDifferenceAcknowledgementCleared) GetPlanDifferenceId() string {
 	if x != nil {
-		return x.FindingId
+		return x.PlanDifferenceId
 	}
 	return ""
 }
 
-func (x *DeviationFindingAcknowledgementCleared) GetAnalysisId() string {
+func (x *PlanDifferenceAcknowledgementCleared) GetPlanCheckId() string {
 	if x != nil {
-		return x.AnalysisId
+		return x.PlanCheckId
 	}
 	return ""
 }
 
-func (x *DeviationFindingAcknowledgementCleared) GetTag() string {
+func (x *PlanDifferenceAcknowledgementCleared) GetTag() string {
 	if x != nil {
 		return x.Tag
 	}
 	return ""
 }
 
-func (x *DeviationFindingAcknowledgementCleared) GetSlug() string {
+func (x *PlanDifferenceAcknowledgementCleared) GetSlug() string {
 	if x != nil {
 		return x.Slug
 	}
 	return ""
 }
 
-func (x *DeviationFindingAcknowledgementCleared) GetAckSource() string {
+func (x *PlanDifferenceAcknowledgementCleared) GetAckSource() string {
 	if x != nil {
 		return x.AckSource
 	}
 	return ""
 }
 
-func (x *DeviationFindingAcknowledgementCleared) GetAckRef() string {
+func (x *PlanDifferenceAcknowledgementCleared) GetAckRef() string {
 	if x != nil {
 		return x.AckRef
 	}
 	return ""
 }
 
-func (x *DeviationFindingAcknowledgementCleared) GetAckReasoningQuote() string {
+func (x *PlanDifferenceAcknowledgementCleared) GetAckReasoningQuote() string {
 	if x != nil {
 		return x.AckReasoningQuote
 	}
 	return ""
 }
 
-func (x *DeviationFindingAcknowledgementCleared) GetClearedAt() *timestamppb.Timestamp {
+func (x *PlanDifferenceAcknowledgementCleared) GetClearedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.ClearedAt
 	}
@@ -15049,38 +15049,38 @@ func (x *AgentRunAnnotated) GetPlanFriendlyId() string {
 	return ""
 }
 
-// WorkflowIngested fires when the workflow ingest worker finishes processing
+// LoopIngested fires when the workflow ingest worker finishes processing
 // one .brent/workflows/*.md file at a commit. outcome is "loaded",
 // "failed_parse", or "deleted" (string, not enum — CEL-matchable and
 // consistent with ReviewSubmitted.status). error carries the failure reason
 // when outcome is failed_parse; for deleted outcomes it is "removed_from_repo".
-type WorkflowIngested struct {
+type LoopIngested struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
 	SourceRepoFullName string                 `protobuf:"bytes,1,opt,name=source_repo_full_name,json=sourceRepoFullName,proto3" json:"source_repo_full_name,omitempty"`
 	SourcePath         string                 `protobuf:"bytes,2,opt,name=source_path,json=sourcePath,proto3" json:"source_path,omitempty"`
 	CommitSha          string                 `protobuf:"bytes,3,opt,name=commit_sha,json=commitSha,proto3" json:"commit_sha,omitempty"`
 	Outcome            string                 `protobuf:"bytes,4,opt,name=outcome,proto3" json:"outcome,omitempty"`
 	Error              string                 `protobuf:"bytes,5,opt,name=error,proto3" json:"error,omitempty"`
-	WorkflowExternalId *string                `protobuf:"bytes,6,opt,name=workflow_external_id,json=workflowExternalId,proto3,oneof" json:"workflow_external_id,omitempty"`
+	LoopExternalId     *string                `protobuf:"bytes,6,opt,name=loop_external_id,json=loopExternalId,proto3,oneof" json:"loop_external_id,omitempty"`
 	Name               *string                `protobuf:"bytes,7,opt,name=name,proto3,oneof" json:"name,omitempty"`
 	unknownFields      protoimpl.UnknownFields
 	sizeCache          protoimpl.SizeCache
 }
 
-func (x *WorkflowIngested) Reset() {
-	*x = WorkflowIngested{}
+func (x *LoopIngested) Reset() {
+	*x = LoopIngested{}
 	mi := &file_brent_proto_msgTypes[162]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *WorkflowIngested) String() string {
+func (x *LoopIngested) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*WorkflowIngested) ProtoMessage() {}
+func (*LoopIngested) ProtoMessage() {}
 
-func (x *WorkflowIngested) ProtoReflect() protoreflect.Message {
+func (x *LoopIngested) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[162]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -15092,65 +15092,65 @@ func (x *WorkflowIngested) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use WorkflowIngested.ProtoReflect.Descriptor instead.
-func (*WorkflowIngested) Descriptor() ([]byte, []int) {
+// Deprecated: Use LoopIngested.ProtoReflect.Descriptor instead.
+func (*LoopIngested) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{162}
 }
 
-func (x *WorkflowIngested) GetSourceRepoFullName() string {
+func (x *LoopIngested) GetSourceRepoFullName() string {
 	if x != nil {
 		return x.SourceRepoFullName
 	}
 	return ""
 }
 
-func (x *WorkflowIngested) GetSourcePath() string {
+func (x *LoopIngested) GetSourcePath() string {
 	if x != nil {
 		return x.SourcePath
 	}
 	return ""
 }
 
-func (x *WorkflowIngested) GetCommitSha() string {
+func (x *LoopIngested) GetCommitSha() string {
 	if x != nil {
 		return x.CommitSha
 	}
 	return ""
 }
 
-func (x *WorkflowIngested) GetOutcome() string {
+func (x *LoopIngested) GetOutcome() string {
 	if x != nil {
 		return x.Outcome
 	}
 	return ""
 }
 
-func (x *WorkflowIngested) GetError() string {
+func (x *LoopIngested) GetError() string {
 	if x != nil {
 		return x.Error
 	}
 	return ""
 }
 
-func (x *WorkflowIngested) GetWorkflowExternalId() string {
-	if x != nil && x.WorkflowExternalId != nil {
-		return *x.WorkflowExternalId
+func (x *LoopIngested) GetLoopExternalId() string {
+	if x != nil && x.LoopExternalId != nil {
+		return *x.LoopExternalId
 	}
 	return ""
 }
 
-func (x *WorkflowIngested) GetName() string {
+func (x *LoopIngested) GetName() string {
 	if x != nil && x.Name != nil {
 		return *x.Name
 	}
 	return ""
 }
 
-// WorkflowRunQueued fires when workflows.Store inserts a workflow_runs row.
-type WorkflowRunQueued struct {
+// LoopRunQueued fires when workflows.Store inserts a workflow_runs row.
+type LoopRunQueued struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	WorkflowRunId string                 `protobuf:"bytes,1,opt,name=workflow_run_id,json=workflowRunId,proto3" json:"workflow_run_id,omitempty"`
-	WorkflowName  string                 `protobuf:"bytes,2,opt,name=workflow_name,json=workflowName,proto3" json:"workflow_name,omitempty"`
+	LoopRunId     string                 `protobuf:"bytes,1,opt,name=loop_run_id,json=loopRunId,proto3" json:"loop_run_id,omitempty"`
+	LoopName      string                 `protobuf:"bytes,2,opt,name=loop_name,json=loopName,proto3" json:"loop_name,omitempty"`
 	AccountName   string                 `protobuf:"bytes,3,opt,name=account_name,json=accountName,proto3" json:"account_name,omitempty"`
 	PrId          string                 `protobuf:"bytes,4,opt,name=pr_id,json=prId,proto3" json:"pr_id,omitempty"`
 	HeadSha       string                 `protobuf:"bytes,5,opt,name=head_sha,json=headSha,proto3" json:"head_sha,omitempty"`
@@ -15159,20 +15159,20 @@ type WorkflowRunQueued struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *WorkflowRunQueued) Reset() {
-	*x = WorkflowRunQueued{}
+func (x *LoopRunQueued) Reset() {
+	*x = LoopRunQueued{}
 	mi := &file_brent_proto_msgTypes[163]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *WorkflowRunQueued) String() string {
+func (x *LoopRunQueued) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*WorkflowRunQueued) ProtoMessage() {}
+func (*LoopRunQueued) ProtoMessage() {}
 
-func (x *WorkflowRunQueued) ProtoReflect() protoreflect.Message {
+func (x *LoopRunQueued) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[163]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -15184,58 +15184,58 @@ func (x *WorkflowRunQueued) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use WorkflowRunQueued.ProtoReflect.Descriptor instead.
-func (*WorkflowRunQueued) Descriptor() ([]byte, []int) {
+// Deprecated: Use LoopRunQueued.ProtoReflect.Descriptor instead.
+func (*LoopRunQueued) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{163}
 }
 
-func (x *WorkflowRunQueued) GetWorkflowRunId() string {
+func (x *LoopRunQueued) GetLoopRunId() string {
 	if x != nil {
-		return x.WorkflowRunId
+		return x.LoopRunId
 	}
 	return ""
 }
 
-func (x *WorkflowRunQueued) GetWorkflowName() string {
+func (x *LoopRunQueued) GetLoopName() string {
 	if x != nil {
-		return x.WorkflowName
+		return x.LoopName
 	}
 	return ""
 }
 
-func (x *WorkflowRunQueued) GetAccountName() string {
+func (x *LoopRunQueued) GetAccountName() string {
 	if x != nil {
 		return x.AccountName
 	}
 	return ""
 }
 
-func (x *WorkflowRunQueued) GetPrId() string {
+func (x *LoopRunQueued) GetPrId() string {
 	if x != nil {
 		return x.PrId
 	}
 	return ""
 }
 
-func (x *WorkflowRunQueued) GetHeadSha() string {
+func (x *LoopRunQueued) GetHeadSha() string {
 	if x != nil {
 		return x.HeadSha
 	}
 	return ""
 }
 
-func (x *WorkflowRunQueued) GetQueuedAt() *timestamppb.Timestamp {
+func (x *LoopRunQueued) GetQueuedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.QueuedAt
 	}
 	return nil
 }
 
-// WorkflowRunStarted fires when a run transitions to running.
-type WorkflowRunStarted struct {
+// LoopRunStarted fires when a run transitions to running.
+type LoopRunStarted struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	WorkflowRunId string                 `protobuf:"bytes,1,opt,name=workflow_run_id,json=workflowRunId,proto3" json:"workflow_run_id,omitempty"`
-	WorkflowName  string                 `protobuf:"bytes,2,opt,name=workflow_name,json=workflowName,proto3" json:"workflow_name,omitempty"`
+	LoopRunId     string                 `protobuf:"bytes,1,opt,name=loop_run_id,json=loopRunId,proto3" json:"loop_run_id,omitempty"`
+	LoopName      string                 `protobuf:"bytes,2,opt,name=loop_name,json=loopName,proto3" json:"loop_name,omitempty"`
 	AccountName   string                 `protobuf:"bytes,3,opt,name=account_name,json=accountName,proto3" json:"account_name,omitempty"`
 	PrId          string                 `protobuf:"bytes,4,opt,name=pr_id,json=prId,proto3" json:"pr_id,omitempty"`
 	HeadSha       string                 `protobuf:"bytes,5,opt,name=head_sha,json=headSha,proto3" json:"head_sha,omitempty"`
@@ -15244,20 +15244,20 @@ type WorkflowRunStarted struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *WorkflowRunStarted) Reset() {
-	*x = WorkflowRunStarted{}
+func (x *LoopRunStarted) Reset() {
+	*x = LoopRunStarted{}
 	mi := &file_brent_proto_msgTypes[164]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *WorkflowRunStarted) String() string {
+func (x *LoopRunStarted) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*WorkflowRunStarted) ProtoMessage() {}
+func (*LoopRunStarted) ProtoMessage() {}
 
-func (x *WorkflowRunStarted) ProtoReflect() protoreflect.Message {
+func (x *LoopRunStarted) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[164]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -15269,58 +15269,58 @@ func (x *WorkflowRunStarted) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use WorkflowRunStarted.ProtoReflect.Descriptor instead.
-func (*WorkflowRunStarted) Descriptor() ([]byte, []int) {
+// Deprecated: Use LoopRunStarted.ProtoReflect.Descriptor instead.
+func (*LoopRunStarted) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{164}
 }
 
-func (x *WorkflowRunStarted) GetWorkflowRunId() string {
+func (x *LoopRunStarted) GetLoopRunId() string {
 	if x != nil {
-		return x.WorkflowRunId
+		return x.LoopRunId
 	}
 	return ""
 }
 
-func (x *WorkflowRunStarted) GetWorkflowName() string {
+func (x *LoopRunStarted) GetLoopName() string {
 	if x != nil {
-		return x.WorkflowName
+		return x.LoopName
 	}
 	return ""
 }
 
-func (x *WorkflowRunStarted) GetAccountName() string {
+func (x *LoopRunStarted) GetAccountName() string {
 	if x != nil {
 		return x.AccountName
 	}
 	return ""
 }
 
-func (x *WorkflowRunStarted) GetPrId() string {
+func (x *LoopRunStarted) GetPrId() string {
 	if x != nil {
 		return x.PrId
 	}
 	return ""
 }
 
-func (x *WorkflowRunStarted) GetHeadSha() string {
+func (x *LoopRunStarted) GetHeadSha() string {
 	if x != nil {
 		return x.HeadSha
 	}
 	return ""
 }
 
-func (x *WorkflowRunStarted) GetStartedAt() *timestamppb.Timestamp {
+func (x *LoopRunStarted) GetStartedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.StartedAt
 	}
 	return nil
 }
 
-// WorkflowRunCompleted fires when a run reaches completed terminal status.
-type WorkflowRunCompleted struct {
+// LoopRunCompleted fires when a run reaches completed terminal status.
+type LoopRunCompleted struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	WorkflowRunId string                 `protobuf:"bytes,1,opt,name=workflow_run_id,json=workflowRunId,proto3" json:"workflow_run_id,omitempty"`
-	WorkflowName  string                 `protobuf:"bytes,2,opt,name=workflow_name,json=workflowName,proto3" json:"workflow_name,omitempty"`
+	LoopRunId     string                 `protobuf:"bytes,1,opt,name=loop_run_id,json=loopRunId,proto3" json:"loop_run_id,omitempty"`
+	LoopName      string                 `protobuf:"bytes,2,opt,name=loop_name,json=loopName,proto3" json:"loop_name,omitempty"`
 	AccountName   string                 `protobuf:"bytes,3,opt,name=account_name,json=accountName,proto3" json:"account_name,omitempty"`
 	PrId          string                 `protobuf:"bytes,4,opt,name=pr_id,json=prId,proto3" json:"pr_id,omitempty"`
 	HeadSha       string                 `protobuf:"bytes,5,opt,name=head_sha,json=headSha,proto3" json:"head_sha,omitempty"`
@@ -15329,20 +15329,20 @@ type WorkflowRunCompleted struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *WorkflowRunCompleted) Reset() {
-	*x = WorkflowRunCompleted{}
+func (x *LoopRunCompleted) Reset() {
+	*x = LoopRunCompleted{}
 	mi := &file_brent_proto_msgTypes[165]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *WorkflowRunCompleted) String() string {
+func (x *LoopRunCompleted) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*WorkflowRunCompleted) ProtoMessage() {}
+func (*LoopRunCompleted) ProtoMessage() {}
 
-func (x *WorkflowRunCompleted) ProtoReflect() protoreflect.Message {
+func (x *LoopRunCompleted) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[165]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -15354,58 +15354,58 @@ func (x *WorkflowRunCompleted) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use WorkflowRunCompleted.ProtoReflect.Descriptor instead.
-func (*WorkflowRunCompleted) Descriptor() ([]byte, []int) {
+// Deprecated: Use LoopRunCompleted.ProtoReflect.Descriptor instead.
+func (*LoopRunCompleted) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{165}
 }
 
-func (x *WorkflowRunCompleted) GetWorkflowRunId() string {
+func (x *LoopRunCompleted) GetLoopRunId() string {
 	if x != nil {
-		return x.WorkflowRunId
+		return x.LoopRunId
 	}
 	return ""
 }
 
-func (x *WorkflowRunCompleted) GetWorkflowName() string {
+func (x *LoopRunCompleted) GetLoopName() string {
 	if x != nil {
-		return x.WorkflowName
+		return x.LoopName
 	}
 	return ""
 }
 
-func (x *WorkflowRunCompleted) GetAccountName() string {
+func (x *LoopRunCompleted) GetAccountName() string {
 	if x != nil {
 		return x.AccountName
 	}
 	return ""
 }
 
-func (x *WorkflowRunCompleted) GetPrId() string {
+func (x *LoopRunCompleted) GetPrId() string {
 	if x != nil {
 		return x.PrId
 	}
 	return ""
 }
 
-func (x *WorkflowRunCompleted) GetHeadSha() string {
+func (x *LoopRunCompleted) GetHeadSha() string {
 	if x != nil {
 		return x.HeadSha
 	}
 	return ""
 }
 
-func (x *WorkflowRunCompleted) GetCompletedAt() *timestamppb.Timestamp {
+func (x *LoopRunCompleted) GetCompletedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.CompletedAt
 	}
 	return nil
 }
 
-// WorkflowRunFailed fires when a run reaches failed terminal status.
-type WorkflowRunFailed struct {
+// LoopRunFailed fires when a run reaches failed terminal status.
+type LoopRunFailed struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	WorkflowRunId string                 `protobuf:"bytes,1,opt,name=workflow_run_id,json=workflowRunId,proto3" json:"workflow_run_id,omitempty"`
-	WorkflowName  string                 `protobuf:"bytes,2,opt,name=workflow_name,json=workflowName,proto3" json:"workflow_name,omitempty"`
+	LoopRunId     string                 `protobuf:"bytes,1,opt,name=loop_run_id,json=loopRunId,proto3" json:"loop_run_id,omitempty"`
+	LoopName      string                 `protobuf:"bytes,2,opt,name=loop_name,json=loopName,proto3" json:"loop_name,omitempty"`
 	AccountName   string                 `protobuf:"bytes,3,opt,name=account_name,json=accountName,proto3" json:"account_name,omitempty"`
 	PrId          string                 `protobuf:"bytes,4,opt,name=pr_id,json=prId,proto3" json:"pr_id,omitempty"`
 	HeadSha       string                 `protobuf:"bytes,5,opt,name=head_sha,json=headSha,proto3" json:"head_sha,omitempty"`
@@ -15415,20 +15415,20 @@ type WorkflowRunFailed struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *WorkflowRunFailed) Reset() {
-	*x = WorkflowRunFailed{}
+func (x *LoopRunFailed) Reset() {
+	*x = LoopRunFailed{}
 	mi := &file_brent_proto_msgTypes[166]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *WorkflowRunFailed) String() string {
+func (x *LoopRunFailed) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*WorkflowRunFailed) ProtoMessage() {}
+func (*LoopRunFailed) ProtoMessage() {}
 
-func (x *WorkflowRunFailed) ProtoReflect() protoreflect.Message {
+func (x *LoopRunFailed) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[166]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -15440,65 +15440,65 @@ func (x *WorkflowRunFailed) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use WorkflowRunFailed.ProtoReflect.Descriptor instead.
-func (*WorkflowRunFailed) Descriptor() ([]byte, []int) {
+// Deprecated: Use LoopRunFailed.ProtoReflect.Descriptor instead.
+func (*LoopRunFailed) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{166}
 }
 
-func (x *WorkflowRunFailed) GetWorkflowRunId() string {
+func (x *LoopRunFailed) GetLoopRunId() string {
 	if x != nil {
-		return x.WorkflowRunId
+		return x.LoopRunId
 	}
 	return ""
 }
 
-func (x *WorkflowRunFailed) GetWorkflowName() string {
+func (x *LoopRunFailed) GetLoopName() string {
 	if x != nil {
-		return x.WorkflowName
+		return x.LoopName
 	}
 	return ""
 }
 
-func (x *WorkflowRunFailed) GetAccountName() string {
+func (x *LoopRunFailed) GetAccountName() string {
 	if x != nil {
 		return x.AccountName
 	}
 	return ""
 }
 
-func (x *WorkflowRunFailed) GetPrId() string {
+func (x *LoopRunFailed) GetPrId() string {
 	if x != nil {
 		return x.PrId
 	}
 	return ""
 }
 
-func (x *WorkflowRunFailed) GetHeadSha() string {
+func (x *LoopRunFailed) GetHeadSha() string {
 	if x != nil {
 		return x.HeadSha
 	}
 	return ""
 }
 
-func (x *WorkflowRunFailed) GetErrorMessage() string {
+func (x *LoopRunFailed) GetErrorMessage() string {
 	if x != nil {
 		return x.ErrorMessage
 	}
 	return ""
 }
 
-func (x *WorkflowRunFailed) GetFailedAt() *timestamppb.Timestamp {
+func (x *LoopRunFailed) GetFailedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.FailedAt
 	}
 	return nil
 }
 
-// WorkflowRunCancelled fires when a run reaches cancelled terminal status.
-type WorkflowRunCancelled struct {
+// LoopRunCancelled fires when a run reaches cancelled terminal status.
+type LoopRunCancelled struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	WorkflowRunId string                 `protobuf:"bytes,1,opt,name=workflow_run_id,json=workflowRunId,proto3" json:"workflow_run_id,omitempty"`
-	WorkflowName  string                 `protobuf:"bytes,2,opt,name=workflow_name,json=workflowName,proto3" json:"workflow_name,omitempty"`
+	LoopRunId     string                 `protobuf:"bytes,1,opt,name=loop_run_id,json=loopRunId,proto3" json:"loop_run_id,omitempty"`
+	LoopName      string                 `protobuf:"bytes,2,opt,name=loop_name,json=loopName,proto3" json:"loop_name,omitempty"`
 	AccountName   string                 `protobuf:"bytes,3,opt,name=account_name,json=accountName,proto3" json:"account_name,omitempty"`
 	PrId          string                 `protobuf:"bytes,4,opt,name=pr_id,json=prId,proto3" json:"pr_id,omitempty"`
 	HeadSha       string                 `protobuf:"bytes,5,opt,name=head_sha,json=headSha,proto3" json:"head_sha,omitempty"`
@@ -15508,20 +15508,20 @@ type WorkflowRunCancelled struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *WorkflowRunCancelled) Reset() {
-	*x = WorkflowRunCancelled{}
+func (x *LoopRunCancelled) Reset() {
+	*x = LoopRunCancelled{}
 	mi := &file_brent_proto_msgTypes[167]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *WorkflowRunCancelled) String() string {
+func (x *LoopRunCancelled) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*WorkflowRunCancelled) ProtoMessage() {}
+func (*LoopRunCancelled) ProtoMessage() {}
 
-func (x *WorkflowRunCancelled) ProtoReflect() protoreflect.Message {
+func (x *LoopRunCancelled) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[167]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -15533,54 +15533,54 @@ func (x *WorkflowRunCancelled) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use WorkflowRunCancelled.ProtoReflect.Descriptor instead.
-func (*WorkflowRunCancelled) Descriptor() ([]byte, []int) {
+// Deprecated: Use LoopRunCancelled.ProtoReflect.Descriptor instead.
+func (*LoopRunCancelled) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{167}
 }
 
-func (x *WorkflowRunCancelled) GetWorkflowRunId() string {
+func (x *LoopRunCancelled) GetLoopRunId() string {
 	if x != nil {
-		return x.WorkflowRunId
+		return x.LoopRunId
 	}
 	return ""
 }
 
-func (x *WorkflowRunCancelled) GetWorkflowName() string {
+func (x *LoopRunCancelled) GetLoopName() string {
 	if x != nil {
-		return x.WorkflowName
+		return x.LoopName
 	}
 	return ""
 }
 
-func (x *WorkflowRunCancelled) GetAccountName() string {
+func (x *LoopRunCancelled) GetAccountName() string {
 	if x != nil {
 		return x.AccountName
 	}
 	return ""
 }
 
-func (x *WorkflowRunCancelled) GetPrId() string {
+func (x *LoopRunCancelled) GetPrId() string {
 	if x != nil {
 		return x.PrId
 	}
 	return ""
 }
 
-func (x *WorkflowRunCancelled) GetHeadSha() string {
+func (x *LoopRunCancelled) GetHeadSha() string {
 	if x != nil {
 		return x.HeadSha
 	}
 	return ""
 }
 
-func (x *WorkflowRunCancelled) GetCancelReason() string {
+func (x *LoopRunCancelled) GetCancelReason() string {
 	if x != nil {
 		return x.CancelReason
 	}
 	return ""
 }
 
-func (x *WorkflowRunCancelled) GetCancelledAt() *timestamppb.Timestamp {
+func (x *LoopRunCancelled) GetCancelledAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.CancelledAt
 	}
@@ -15687,7 +15687,7 @@ func (x *SlackWebhook) GetEventPayload() string {
 // Unmapped deliveries return a 404 from the webhook handler and no
 // event row is written (resolve-before-write).
 //
-// Workflow CEL: the environment exposes a synthetic decoded
+// Loop CEL: the environment exposes a synthetic decoded
 // event.linear_webhook.payload.* field (dyn) that mirrors the delivery
 // JSON body; the raw event_payload string is hidden from CEL — use the
 // decoded form for field access, same as GitHubWebhook.
@@ -15792,7 +15792,7 @@ func (x *LinearWebhook) GetEventPayload() string {
 // synthetic decoded payload.* map (see embedded_json option).
 type ComposioTriggerMessage struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// Webhook-Id header — unique per delivery/redelivery. Workflows key their
+	// Webhook-Id header — unique per delivery/redelivery. Loops key their
 	// thread on this; trigger_id is stable across deliveries and must not be a
 	// thread key.
 	DeliveryId string `protobuf:"bytes,1,opt,name=delivery_id,json=deliveryId,proto3" json:"delivery_id,omitempty"`
@@ -15884,7 +15884,7 @@ func (x *ComposioTriggerMessage) GetEventPayload() string {
 // delivery. event_payload is the signature-validated raw JSON body
 // (the same bytes ValidatePayload ran against). event_type is the
 // X-GitHub-Event header captured at the producer (e.g. "pull_request",
-// "check_suite", "push"). Workflow authors match the header via
+// "check_suite", "push"). Loop authors match the header via
 // event.github_webhook.event_type and the delivery body via the synthetic
 // decoded event.github_webhook.payload.* map (see embedded_json option —
 // the raw event_payload string is hidden from CEL). Decode is lazy and
@@ -15963,7 +15963,7 @@ func (x *GitHubWebhook) GetEventType() string {
 // authenticate via the per-install X-Gitlab-Token secret (issued at
 // ConnectGitLab time). event_payload is the secret-token-validated raw
 // JSON body. event_type is the X-Gitlab-Event header captured at the
-// producer (e.g. "Merge Request Hook", "Push Hook"). Workflow authors
+// producer (e.g. "Merge Request Hook", "Push Hook"). Loop authors
 // match via event.gitlab_webhook.event_type and the delivery body via
 // the synthetic decoded event.gitlab_webhook.payload.* map (see
 // embedded_json option — the raw event_payload string is hidden from CEL).
@@ -16188,7 +16188,7 @@ func (x *EmbeddedJsonCELFixture) GetDocument() string {
 
 // SlackMentionReceived is emitted by the slack/ aggregate's
 // eventTranslator when the Brent bot is @mentioned in a Slack message.
-// Workflow on: blocks match against the proto message name
+// Loop on: blocks match against the proto message name
 // "SlackMentionReceived" verbatim (see workflows.EventTypeName).
 type SlackMentionReceived struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -16214,7 +16214,7 @@ type SlackMentionReceived struct {
 	ThreadTs string `protobuf:"bytes,7,opt,name=thread_ts,json=threadTs,proto3" json:"thread_ts,omitempty"`
 	// mentioned_user_ids lists every Slack user ID found as a <@UXXXXXX>
 	// pattern in the message text, including the bot's own user ID.
-	// Workflow authors can filter the bot out via CEL if needed.
+	// Loop authors can filter the bot out via CEL if needed.
 	MentionedUserIds []string `protobuf:"bytes,8,rep,name=mentioned_user_ids,json=mentionedUserIds,proto3" json:"mentioned_user_ids,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
@@ -16517,7 +16517,7 @@ func (x *SlackReactionAdded) GetItemUserId() string {
 	return ""
 }
 
-type ListWorkflowsRequest struct {
+type ListLoopsRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Empty string = caller's account from JWT (backward compatible).
 	// When set, return only workflows for that account_name (admin filtering).
@@ -16526,20 +16526,20 @@ type ListWorkflowsRequest struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListWorkflowsRequest) Reset() {
-	*x = ListWorkflowsRequest{}
+func (x *ListLoopsRequest) Reset() {
+	*x = ListLoopsRequest{}
 	mi := &file_brent_proto_msgTypes[179]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListWorkflowsRequest) String() string {
+func (x *ListLoopsRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListWorkflowsRequest) ProtoMessage() {}
+func (*ListLoopsRequest) ProtoMessage() {}
 
-func (x *ListWorkflowsRequest) ProtoReflect() protoreflect.Message {
+func (x *ListLoopsRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[179]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -16551,39 +16551,39 @@ func (x *ListWorkflowsRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListWorkflowsRequest.ProtoReflect.Descriptor instead.
-func (*ListWorkflowsRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListLoopsRequest.ProtoReflect.Descriptor instead.
+func (*ListLoopsRequest) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{179}
 }
 
-func (x *ListWorkflowsRequest) GetAccountName() string {
+func (x *ListLoopsRequest) GetAccountName() string {
 	if x != nil {
 		return x.AccountName
 	}
 	return ""
 }
 
-type ListWorkflowsResponse struct {
+type ListLoopsResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Workflows     []*WorkflowSummary     `protobuf:"bytes,1,rep,name=workflows,proto3" json:"workflows,omitempty"`
+	Loops         []*LoopSummary         `protobuf:"bytes,1,rep,name=loops,proto3" json:"loops,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListWorkflowsResponse) Reset() {
-	*x = ListWorkflowsResponse{}
+func (x *ListLoopsResponse) Reset() {
+	*x = ListLoopsResponse{}
 	mi := &file_brent_proto_msgTypes[180]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListWorkflowsResponse) String() string {
+func (x *ListLoopsResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListWorkflowsResponse) ProtoMessage() {}
+func (*ListLoopsResponse) ProtoMessage() {}
 
-func (x *ListWorkflowsResponse) ProtoReflect() protoreflect.Message {
+func (x *ListLoopsResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[180]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -16595,24 +16595,24 @@ func (x *ListWorkflowsResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListWorkflowsResponse.ProtoReflect.Descriptor instead.
-func (*ListWorkflowsResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListLoopsResponse.ProtoReflect.Descriptor instead.
+func (*ListLoopsResponse) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{180}
 }
 
-func (x *ListWorkflowsResponse) GetWorkflows() []*WorkflowSummary {
+func (x *ListLoopsResponse) GetLoops() []*LoopSummary {
 	if x != nil {
-		return x.Workflows
+		return x.Loops
 	}
 	return nil
 }
 
-// WorkflowSummary carries the columns brent-area51 renders in the workflow
+// LoopSummary carries the columns brent-area51 renders in the workflow
 // list view. body_template and on_yaml are intentionally excluded — both can
 // run to multiple kB per row, and the list view only shows name + description
-// + provenance + the configured model. Use GetWorkflow to fetch the full
+// + provenance + the configured model. Use GetLoop to fetch the full
 // definition.
-type WorkflowSummary struct {
+type LoopSummary struct {
 	state              protoimpl.MessageState `protogen:"open.v1"`
 	Id                 string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	AccountName        string                 `protobuf:"bytes,2,opt,name=account_name,json=accountName,proto3" json:"account_name,omitempty"`
@@ -16633,20 +16633,20 @@ type WorkflowSummary struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *WorkflowSummary) Reset() {
-	*x = WorkflowSummary{}
+func (x *LoopSummary) Reset() {
+	*x = LoopSummary{}
 	mi := &file_brent_proto_msgTypes[181]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *WorkflowSummary) String() string {
+func (x *LoopSummary) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*WorkflowSummary) ProtoMessage() {}
+func (*LoopSummary) ProtoMessage() {}
 
-func (x *WorkflowSummary) ProtoReflect() protoreflect.Message {
+func (x *LoopSummary) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[181]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -16658,96 +16658,96 @@ func (x *WorkflowSummary) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use WorkflowSummary.ProtoReflect.Descriptor instead.
-func (*WorkflowSummary) Descriptor() ([]byte, []int) {
+// Deprecated: Use LoopSummary.ProtoReflect.Descriptor instead.
+func (*LoopSummary) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{181}
 }
 
-func (x *WorkflowSummary) GetId() string {
+func (x *LoopSummary) GetId() string {
 	if x != nil {
 		return x.Id
 	}
 	return ""
 }
 
-func (x *WorkflowSummary) GetAccountName() string {
+func (x *LoopSummary) GetAccountName() string {
 	if x != nil {
 		return x.AccountName
 	}
 	return ""
 }
 
-func (x *WorkflowSummary) GetName() string {
+func (x *LoopSummary) GetName() string {
 	if x != nil {
 		return x.Name
 	}
 	return ""
 }
 
-func (x *WorkflowSummary) GetDescription() string {
+func (x *LoopSummary) GetDescription() string {
 	if x != nil {
 		return x.Description
 	}
 	return ""
 }
 
-func (x *WorkflowSummary) GetSourceRepoFullName() string {
+func (x *LoopSummary) GetSourceRepoFullName() string {
 	if x != nil {
 		return x.SourceRepoFullName
 	}
 	return ""
 }
 
-func (x *WorkflowSummary) GetSourcePath() string {
+func (x *LoopSummary) GetSourcePath() string {
 	if x != nil {
 		return x.SourcePath
 	}
 	return ""
 }
 
-func (x *WorkflowSummary) GetSourceCommitSha() string {
+func (x *LoopSummary) GetSourceCommitSha() string {
 	if x != nil {
 		return x.SourceCommitSha
 	}
 	return ""
 }
 
-func (x *WorkflowSummary) GetCreatedAt() *timestamppb.Timestamp {
+func (x *LoopSummary) GetCreatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.CreatedAt
 	}
 	return nil
 }
 
-func (x *WorkflowSummary) GetUpdatedAt() *timestamppb.Timestamp {
+func (x *LoopSummary) GetUpdatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.UpdatedAt
 	}
 	return nil
 }
 
-func (x *WorkflowSummary) GetStatus() string {
+func (x *LoopSummary) GetStatus() string {
 	if x != nil {
 		return x.Status
 	}
 	return ""
 }
 
-func (x *WorkflowSummary) GetErrorMessage() string {
+func (x *LoopSummary) GetErrorMessage() string {
 	if x != nil {
 		return x.ErrorMessage
 	}
 	return ""
 }
 
-func (x *WorkflowSummary) GetModel() string {
+func (x *LoopSummary) GetModel() string {
 	if x != nil {
 		return x.Model
 	}
 	return ""
 }
 
-type GetWorkflowRequest struct {
+type GetLoopRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// UUID of the workflow to fetch.
 	Id            string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -16755,20 +16755,20 @@ type GetWorkflowRequest struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetWorkflowRequest) Reset() {
-	*x = GetWorkflowRequest{}
+func (x *GetLoopRequest) Reset() {
+	*x = GetLoopRequest{}
 	mi := &file_brent_proto_msgTypes[182]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetWorkflowRequest) String() string {
+func (x *GetLoopRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetWorkflowRequest) ProtoMessage() {}
+func (*GetLoopRequest) ProtoMessage() {}
 
-func (x *GetWorkflowRequest) ProtoReflect() protoreflect.Message {
+func (x *GetLoopRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[182]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -16780,39 +16780,39 @@ func (x *GetWorkflowRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetWorkflowRequest.ProtoReflect.Descriptor instead.
-func (*GetWorkflowRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetLoopRequest.ProtoReflect.Descriptor instead.
+func (*GetLoopRequest) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{182}
 }
 
-func (x *GetWorkflowRequest) GetId() string {
+func (x *GetLoopRequest) GetId() string {
 	if x != nil {
 		return x.Id
 	}
 	return ""
 }
 
-type GetWorkflowResponse struct {
+type GetLoopResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Workflow      *Workflow              `protobuf:"bytes,1,opt,name=workflow,proto3" json:"workflow,omitempty"`
+	Loop          *Loop                  `protobuf:"bytes,1,opt,name=loop,proto3" json:"loop,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetWorkflowResponse) Reset() {
-	*x = GetWorkflowResponse{}
+func (x *GetLoopResponse) Reset() {
+	*x = GetLoopResponse{}
 	mi := &file_brent_proto_msgTypes[183]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetWorkflowResponse) String() string {
+func (x *GetLoopResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetWorkflowResponse) ProtoMessage() {}
+func (*GetLoopResponse) ProtoMessage() {}
 
-func (x *GetWorkflowResponse) ProtoReflect() protoreflect.Message {
+func (x *GetLoopResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[183]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -16824,22 +16824,22 @@ func (x *GetWorkflowResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetWorkflowResponse.ProtoReflect.Descriptor instead.
-func (*GetWorkflowResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetLoopResponse.ProtoReflect.Descriptor instead.
+func (*GetLoopResponse) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{183}
 }
 
-func (x *GetWorkflowResponse) GetWorkflow() *Workflow {
+func (x *GetLoopResponse) GetLoop() *Loop {
 	if x != nil {
-		return x.Workflow
+		return x.Loop
 	}
 	return nil
 }
 
-// Workflow is the full workflow-definition aggregate as the debug UI and
-// MCP read tools consume it. Mirrors workflows.Workflow row-for-row;
-// adds body_template + on_yaml on top of WorkflowSummary.
-type Workflow struct {
+// Loop is the full workflow-definition aggregate as the debug UI and
+// MCP read tools consume it. Mirrors workflows.Loop row-for-row;
+// adds body_template + on_yaml on top of LoopSummary.
+type Loop struct {
 	state       protoimpl.MessageState `protogen:"open.v1"`
 	Id          string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	AccountName string                 `protobuf:"bytes,2,opt,name=account_name,json=accountName,proto3" json:"account_name,omitempty"`
@@ -16866,20 +16866,20 @@ type Workflow struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *Workflow) Reset() {
-	*x = Workflow{}
+func (x *Loop) Reset() {
+	*x = Loop{}
 	mi := &file_brent_proto_msgTypes[184]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *Workflow) String() string {
+func (x *Loop) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*Workflow) ProtoMessage() {}
+func (*Loop) ProtoMessage() {}
 
-func (x *Workflow) ProtoReflect() protoreflect.Message {
+func (x *Loop) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[184]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -16891,119 +16891,119 @@ func (x *Workflow) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use Workflow.ProtoReflect.Descriptor instead.
-func (*Workflow) Descriptor() ([]byte, []int) {
+// Deprecated: Use Loop.ProtoReflect.Descriptor instead.
+func (*Loop) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{184}
 }
 
-func (x *Workflow) GetId() string {
+func (x *Loop) GetId() string {
 	if x != nil {
 		return x.Id
 	}
 	return ""
 }
 
-func (x *Workflow) GetAccountName() string {
+func (x *Loop) GetAccountName() string {
 	if x != nil {
 		return x.AccountName
 	}
 	return ""
 }
 
-func (x *Workflow) GetName() string {
+func (x *Loop) GetName() string {
 	if x != nil {
 		return x.Name
 	}
 	return ""
 }
 
-func (x *Workflow) GetDescription() string {
+func (x *Loop) GetDescription() string {
 	if x != nil {
 		return x.Description
 	}
 	return ""
 }
 
-func (x *Workflow) GetOnYaml() string {
+func (x *Loop) GetOnYaml() string {
 	if x != nil {
 		return x.OnYaml
 	}
 	return ""
 }
 
-func (x *Workflow) GetBodyTemplate() string {
+func (x *Loop) GetBodyTemplate() string {
 	if x != nil {
 		return x.BodyTemplate
 	}
 	return ""
 }
 
-func (x *Workflow) GetSourceRepoFullName() string {
+func (x *Loop) GetSourceRepoFullName() string {
 	if x != nil {
 		return x.SourceRepoFullName
 	}
 	return ""
 }
 
-func (x *Workflow) GetSourcePath() string {
+func (x *Loop) GetSourcePath() string {
 	if x != nil {
 		return x.SourcePath
 	}
 	return ""
 }
 
-func (x *Workflow) GetSourceCommitSha() string {
+func (x *Loop) GetSourceCommitSha() string {
 	if x != nil {
 		return x.SourceCommitSha
 	}
 	return ""
 }
 
-func (x *Workflow) GetCreatedAt() *timestamppb.Timestamp {
+func (x *Loop) GetCreatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.CreatedAt
 	}
 	return nil
 }
 
-func (x *Workflow) GetUpdatedAt() *timestamppb.Timestamp {
+func (x *Loop) GetUpdatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.UpdatedAt
 	}
 	return nil
 }
 
-func (x *Workflow) GetStatus() string {
+func (x *Loop) GetStatus() string {
 	if x != nil {
 		return x.Status
 	}
 	return ""
 }
 
-func (x *Workflow) GetErrorMessage() string {
+func (x *Loop) GetErrorMessage() string {
 	if x != nil {
 		return x.ErrorMessage
 	}
 	return ""
 }
 
-func (x *Workflow) GetModel() string {
+func (x *Loop) GetModel() string {
 	if x != nil {
 		return x.Model
 	}
 	return ""
 }
 
-type ListWorkflowRunsRequest struct {
+type ListLoopRunsRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Optional filter by workflow definition name. When set, only runs whose
 	// workflow_runs.name column matches are returned. Mirrors the
 	// (account_name, name) tuple linking workflow_runs to workflows; no FK
 	// column exists.
-	WorkflowName string `protobuf:"bytes,1,opt,name=workflow_name,json=workflowName,proto3" json:"workflow_name,omitempty"`
+	LoopName string `protobuf:"bytes,1,opt,name=loop_name,json=loopName,proto3" json:"loop_name,omitempty"`
 	// Soft cap on result count. Server clamps to [1, 200]; 0 means default 50.
 	Limit uint32 `protobuf:"varint,2,opt,name=limit,proto3" json:"limit,omitempty"`
-	// Opaque cursor token from a prior ListWorkflowRunsResponse.next_cursor.
+	// Opaque cursor token from a prior ListLoopRunsResponse.next_cursor.
 	// Empty string means "start from newest". Cursor encodes the (created_at,
 	// external_id) tuple of the last row of the previous page.
 	AfterCursor string `protobuf:"bytes,3,opt,name=after_cursor,json=afterCursor,proto3" json:"after_cursor,omitempty"`
@@ -17019,20 +17019,20 @@ type ListWorkflowRunsRequest struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListWorkflowRunsRequest) Reset() {
-	*x = ListWorkflowRunsRequest{}
+func (x *ListLoopRunsRequest) Reset() {
+	*x = ListLoopRunsRequest{}
 	mi := &file_brent_proto_msgTypes[185]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListWorkflowRunsRequest) String() string {
+func (x *ListLoopRunsRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListWorkflowRunsRequest) ProtoMessage() {}
+func (*ListLoopRunsRequest) ProtoMessage() {}
 
-func (x *ListWorkflowRunsRequest) ProtoReflect() protoreflect.Message {
+func (x *ListLoopRunsRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[185]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -17044,49 +17044,49 @@ func (x *ListWorkflowRunsRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListWorkflowRunsRequest.ProtoReflect.Descriptor instead.
-func (*ListWorkflowRunsRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListLoopRunsRequest.ProtoReflect.Descriptor instead.
+func (*ListLoopRunsRequest) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{185}
 }
 
-func (x *ListWorkflowRunsRequest) GetWorkflowName() string {
+func (x *ListLoopRunsRequest) GetLoopName() string {
 	if x != nil {
-		return x.WorkflowName
+		return x.LoopName
 	}
 	return ""
 }
 
-func (x *ListWorkflowRunsRequest) GetLimit() uint32 {
+func (x *ListLoopRunsRequest) GetLimit() uint32 {
 	if x != nil {
 		return x.Limit
 	}
 	return 0
 }
 
-func (x *ListWorkflowRunsRequest) GetAfterCursor() string {
+func (x *ListLoopRunsRequest) GetAfterCursor() string {
 	if x != nil {
 		return x.AfterCursor
 	}
 	return ""
 }
 
-func (x *ListWorkflowRunsRequest) GetStatus() string {
+func (x *ListLoopRunsRequest) GetStatus() string {
 	if x != nil {
 		return x.Status
 	}
 	return ""
 }
 
-func (x *ListWorkflowRunsRequest) GetAccountName() string {
+func (x *ListLoopRunsRequest) GetAccountName() string {
 	if x != nil {
 		return x.AccountName
 	}
 	return ""
 }
 
-type ListWorkflowRunsResponse struct {
+type ListLoopRunsResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	Runs  []*WorkflowRunSummary  `protobuf:"bytes,1,rep,name=runs,proto3" json:"runs,omitempty"`
+	Runs  []*LoopRunSummary      `protobuf:"bytes,1,rep,name=runs,proto3" json:"runs,omitempty"`
 	// Set when more rows exist beyond the current page. Pass this verbatim
 	// as the next request's after_cursor.
 	NextCursor    string `protobuf:"bytes,2,opt,name=next_cursor,json=nextCursor,proto3" json:"next_cursor,omitempty"`
@@ -17094,20 +17094,20 @@ type ListWorkflowRunsResponse struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *ListWorkflowRunsResponse) Reset() {
-	*x = ListWorkflowRunsResponse{}
+func (x *ListLoopRunsResponse) Reset() {
+	*x = ListLoopRunsResponse{}
 	mi := &file_brent_proto_msgTypes[186]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *ListWorkflowRunsResponse) String() string {
+func (x *ListLoopRunsResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*ListWorkflowRunsResponse) ProtoMessage() {}
+func (*ListLoopRunsResponse) ProtoMessage() {}
 
-func (x *ListWorkflowRunsResponse) ProtoReflect() protoreflect.Message {
+func (x *ListLoopRunsResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[186]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -17119,29 +17119,29 @@ func (x *ListWorkflowRunsResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use ListWorkflowRunsResponse.ProtoReflect.Descriptor instead.
-func (*ListWorkflowRunsResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use ListLoopRunsResponse.ProtoReflect.Descriptor instead.
+func (*ListLoopRunsResponse) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{186}
 }
 
-func (x *ListWorkflowRunsResponse) GetRuns() []*WorkflowRunSummary {
+func (x *ListLoopRunsResponse) GetRuns() []*LoopRunSummary {
 	if x != nil {
 		return x.Runs
 	}
 	return nil
 }
 
-func (x *ListWorkflowRunsResponse) GetNextCursor() string {
+func (x *ListLoopRunsResponse) GetNextCursor() string {
 	if x != nil {
 		return x.NextCursor
 	}
 	return ""
 }
 
-// WorkflowRunSummary carries the columns the run-list view renders.
+// LoopRunSummary carries the columns the run-list view renders.
 // Excludes prompt and the (potentially large) triggering_event_payload —
-// fetch the full run via GetWorkflowRun.
-type WorkflowRunSummary struct {
+// fetch the full run via GetLoopRun.
+type LoopRunSummary struct {
 	state       protoimpl.MessageState `protogen:"open.v1"`
 	Id          string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	AccountName string                 `protobuf:"bytes,2,opt,name=account_name,json=accountName,proto3" json:"account_name,omitempty"`
@@ -17160,11 +17160,11 @@ type WorkflowRunSummary struct {
 	// "GitHubWebhook"). Empty for legacy / imperative runs.
 	TriggeringEventType string `protobuf:"bytes,12,opt,name=triggering_event_type,json=triggeringEventType,proto3" json:"triggering_event_type,omitempty"`
 	// SHA of the workflows row at trigger time; provenance breadcrumb.
-	WorkflowSourceCommitSha string                 `protobuf:"bytes,13,opt,name=workflow_source_commit_sha,json=workflowSourceCommitSha,proto3" json:"workflow_source_commit_sha,omitempty"`
-	StartedAt               *timestamppb.Timestamp `protobuf:"bytes,14,opt,name=started_at,json=startedAt,proto3,oneof" json:"started_at,omitempty"`
-	CompletedAt             *timestamppb.Timestamp `protobuf:"bytes,15,opt,name=completed_at,json=completedAt,proto3,oneof" json:"completed_at,omitempty"`
-	CreatedAt               *timestamppb.Timestamp `protobuf:"bytes,16,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt               *timestamppb.Timestamp `protobuf:"bytes,17,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	LoopSourceCommitSha string                 `protobuf:"bytes,13,opt,name=loop_source_commit_sha,json=loopSourceCommitSha,proto3" json:"loop_source_commit_sha,omitempty"`
+	StartedAt           *timestamppb.Timestamp `protobuf:"bytes,14,opt,name=started_at,json=startedAt,proto3,oneof" json:"started_at,omitempty"`
+	CompletedAt         *timestamppb.Timestamp `protobuf:"bytes,15,opt,name=completed_at,json=completedAt,proto3,oneof" json:"completed_at,omitempty"`
+	CreatedAt           *timestamppb.Timestamp `protobuf:"bytes,16,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt           *timestamppb.Timestamp `protobuf:"bytes,17,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	// Thread key computed from the triggering event. Empty when the
 	// workflow has no thread.key expression.
 	ThreadKey *string `protobuf:"bytes,18,opt,name=thread_key,json=threadKey,proto3,oneof" json:"thread_key,omitempty"`
@@ -17178,7 +17178,7 @@ type WorkflowRunSummary struct {
 	PlanUuid *string `protobuf:"bytes,21,opt,name=plan_uuid,json=planUuid,proto3,oneof" json:"plan_uuid,omitempty"`
 	// workflows.external_id for navigation to /workflows/$workflowId. Unset when
 	// the parent workflow definition cannot be resolved.
-	WorkflowId *string `protobuf:"bytes,22,opt,name=workflow_id,json=workflowId,proto3,oneof" json:"workflow_id,omitempty"`
+	LoopId *string `protobuf:"bytes,22,opt,name=loop_id,json=loopId,proto3,oneof" json:"loop_id,omitempty"`
 	// pull_requests.external_id when the run is PR-attributed.
 	PrId *string `protobuf:"bytes,23,opt,name=pr_id,json=prId,proto3,oneof" json:"pr_id,omitempty"`
 	// Denormalised from pull_requests when pr_id is set (e.g.
@@ -17187,26 +17187,26 @@ type WorkflowRunSummary struct {
 	PrNumber       *int32  `protobuf:"varint,25,opt,name=pr_number,json=prNumber,proto3,oneof" json:"pr_number,omitempty"`
 	// OpenAI model snapshotted onto workflow_runs at enqueue; empty means the
 	// run used the default (gpt-5.4). Distinct from the parent workflow
-	// definition's configured model (WorkflowSummary.model).
+	// definition's configured model (LoopSummary.model).
 	Model         string `protobuf:"bytes,26,opt,name=model,proto3" json:"model,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *WorkflowRunSummary) Reset() {
-	*x = WorkflowRunSummary{}
+func (x *LoopRunSummary) Reset() {
+	*x = LoopRunSummary{}
 	mi := &file_brent_proto_msgTypes[187]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *WorkflowRunSummary) String() string {
+func (x *LoopRunSummary) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*WorkflowRunSummary) ProtoMessage() {}
+func (*LoopRunSummary) ProtoMessage() {}
 
-func (x *WorkflowRunSummary) ProtoReflect() protoreflect.Message {
+func (x *LoopRunSummary) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[187]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -17218,200 +17218,200 @@ func (x *WorkflowRunSummary) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use WorkflowRunSummary.ProtoReflect.Descriptor instead.
-func (*WorkflowRunSummary) Descriptor() ([]byte, []int) {
+// Deprecated: Use LoopRunSummary.ProtoReflect.Descriptor instead.
+func (*LoopRunSummary) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{187}
 }
 
-func (x *WorkflowRunSummary) GetId() string {
+func (x *LoopRunSummary) GetId() string {
 	if x != nil {
 		return x.Id
 	}
 	return ""
 }
 
-func (x *WorkflowRunSummary) GetAccountName() string {
+func (x *LoopRunSummary) GetAccountName() string {
 	if x != nil {
 		return x.AccountName
 	}
 	return ""
 }
 
-func (x *WorkflowRunSummary) GetName() string {
+func (x *LoopRunSummary) GetName() string {
 	if x != nil {
 		return x.Name
 	}
 	return ""
 }
 
-func (x *WorkflowRunSummary) GetDescription() string {
+func (x *LoopRunSummary) GetDescription() string {
 	if x != nil {
 		return x.Description
 	}
 	return ""
 }
 
-func (x *WorkflowRunSummary) GetStatus() string {
+func (x *LoopRunSummary) GetStatus() string {
 	if x != nil {
 		return x.Status
 	}
 	return ""
 }
 
-func (x *WorkflowRunSummary) GetTriggerKind() string {
+func (x *LoopRunSummary) GetTriggerKind() string {
 	if x != nil {
 		return x.TriggerKind
 	}
 	return ""
 }
 
-func (x *WorkflowRunSummary) GetPlanFriendlyId() string {
+func (x *LoopRunSummary) GetPlanFriendlyId() string {
 	if x != nil && x.PlanFriendlyId != nil {
 		return *x.PlanFriendlyId
 	}
 	return ""
 }
 
-func (x *WorkflowRunSummary) GetReviewId() string {
+func (x *LoopRunSummary) GetReviewId() string {
 	if x != nil && x.ReviewId != nil {
 		return *x.ReviewId
 	}
 	return ""
 }
 
-func (x *WorkflowRunSummary) GetErrorMessage() string {
+func (x *LoopRunSummary) GetErrorMessage() string {
 	if x != nil && x.ErrorMessage != nil {
 		return *x.ErrorMessage
 	}
 	return ""
 }
 
-func (x *WorkflowRunSummary) GetTriggeringEventType() string {
+func (x *LoopRunSummary) GetTriggeringEventType() string {
 	if x != nil {
 		return x.TriggeringEventType
 	}
 	return ""
 }
 
-func (x *WorkflowRunSummary) GetWorkflowSourceCommitSha() string {
+func (x *LoopRunSummary) GetLoopSourceCommitSha() string {
 	if x != nil {
-		return x.WorkflowSourceCommitSha
+		return x.LoopSourceCommitSha
 	}
 	return ""
 }
 
-func (x *WorkflowRunSummary) GetStartedAt() *timestamppb.Timestamp {
+func (x *LoopRunSummary) GetStartedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.StartedAt
 	}
 	return nil
 }
 
-func (x *WorkflowRunSummary) GetCompletedAt() *timestamppb.Timestamp {
+func (x *LoopRunSummary) GetCompletedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.CompletedAt
 	}
 	return nil
 }
 
-func (x *WorkflowRunSummary) GetCreatedAt() *timestamppb.Timestamp {
+func (x *LoopRunSummary) GetCreatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.CreatedAt
 	}
 	return nil
 }
 
-func (x *WorkflowRunSummary) GetUpdatedAt() *timestamppb.Timestamp {
+func (x *LoopRunSummary) GetUpdatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.UpdatedAt
 	}
 	return nil
 }
 
-func (x *WorkflowRunSummary) GetThreadKey() string {
+func (x *LoopRunSummary) GetThreadKey() string {
 	if x != nil && x.ThreadKey != nil {
 		return *x.ThreadKey
 	}
 	return ""
 }
 
-func (x *WorkflowRunSummary) GetPreviousResponseId() string {
+func (x *LoopRunSummary) GetPreviousResponseId() string {
 	if x != nil {
 		return x.PreviousResponseId
 	}
 	return ""
 }
 
-func (x *WorkflowRunSummary) GetResumedFromRunId() string {
+func (x *LoopRunSummary) GetResumedFromRunId() string {
 	if x != nil && x.ResumedFromRunId != nil {
 		return *x.ResumedFromRunId
 	}
 	return ""
 }
 
-func (x *WorkflowRunSummary) GetPlanUuid() string {
+func (x *LoopRunSummary) GetPlanUuid() string {
 	if x != nil && x.PlanUuid != nil {
 		return *x.PlanUuid
 	}
 	return ""
 }
 
-func (x *WorkflowRunSummary) GetWorkflowId() string {
-	if x != nil && x.WorkflowId != nil {
-		return *x.WorkflowId
+func (x *LoopRunSummary) GetLoopId() string {
+	if x != nil && x.LoopId != nil {
+		return *x.LoopId
 	}
 	return ""
 }
 
-func (x *WorkflowRunSummary) GetPrId() string {
+func (x *LoopRunSummary) GetPrId() string {
 	if x != nil && x.PrId != nil {
 		return *x.PrId
 	}
 	return ""
 }
 
-func (x *WorkflowRunSummary) GetPrRepoFullName() string {
+func (x *LoopRunSummary) GetPrRepoFullName() string {
 	if x != nil && x.PrRepoFullName != nil {
 		return *x.PrRepoFullName
 	}
 	return ""
 }
 
-func (x *WorkflowRunSummary) GetPrNumber() int32 {
+func (x *LoopRunSummary) GetPrNumber() int32 {
 	if x != nil && x.PrNumber != nil {
 		return *x.PrNumber
 	}
 	return 0
 }
 
-func (x *WorkflowRunSummary) GetModel() string {
+func (x *LoopRunSummary) GetModel() string {
 	if x != nil {
 		return x.Model
 	}
 	return ""
 }
 
-type GetWorkflowRunRequest struct {
+type GetLoopRunRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetWorkflowRunRequest) Reset() {
-	*x = GetWorkflowRunRequest{}
+func (x *GetLoopRunRequest) Reset() {
+	*x = GetLoopRunRequest{}
 	mi := &file_brent_proto_msgTypes[188]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetWorkflowRunRequest) String() string {
+func (x *GetLoopRunRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetWorkflowRunRequest) ProtoMessage() {}
+func (*GetLoopRunRequest) ProtoMessage() {}
 
-func (x *GetWorkflowRunRequest) ProtoReflect() protoreflect.Message {
+func (x *GetLoopRunRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[188]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -17423,19 +17423,19 @@ func (x *GetWorkflowRunRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetWorkflowRunRequest.ProtoReflect.Descriptor instead.
-func (*GetWorkflowRunRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetLoopRunRequest.ProtoReflect.Descriptor instead.
+func (*GetLoopRunRequest) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{188}
 }
 
-func (x *GetWorkflowRunRequest) GetId() string {
+func (x *GetLoopRunRequest) GetId() string {
 	if x != nil {
 		return x.Id
 	}
 	return ""
 }
 
-type GetWorkflowRunThreadHistoryRequest struct {
+type GetLoopRunThreadHistoryRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// external_id of the current workflow run (ancestors only in the response).
 	Id            string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
@@ -17443,20 +17443,20 @@ type GetWorkflowRunThreadHistoryRequest struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetWorkflowRunThreadHistoryRequest) Reset() {
-	*x = GetWorkflowRunThreadHistoryRequest{}
+func (x *GetLoopRunThreadHistoryRequest) Reset() {
+	*x = GetLoopRunThreadHistoryRequest{}
 	mi := &file_brent_proto_msgTypes[189]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetWorkflowRunThreadHistoryRequest) String() string {
+func (x *GetLoopRunThreadHistoryRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetWorkflowRunThreadHistoryRequest) ProtoMessage() {}
+func (*GetLoopRunThreadHistoryRequest) ProtoMessage() {}
 
-func (x *GetWorkflowRunThreadHistoryRequest) ProtoReflect() protoreflect.Message {
+func (x *GetLoopRunThreadHistoryRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[189]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -17468,40 +17468,40 @@ func (x *GetWorkflowRunThreadHistoryRequest) ProtoReflect() protoreflect.Message
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetWorkflowRunThreadHistoryRequest.ProtoReflect.Descriptor instead.
-func (*GetWorkflowRunThreadHistoryRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetLoopRunThreadHistoryRequest.ProtoReflect.Descriptor instead.
+func (*GetLoopRunThreadHistoryRequest) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{189}
 }
 
-func (x *GetWorkflowRunThreadHistoryRequest) GetId() string {
+func (x *GetLoopRunThreadHistoryRequest) GetId() string {
 	if x != nil {
 		return x.Id
 	}
 	return ""
 }
 
-type WorkflowRunThreadSegment struct {
-	state         protoimpl.MessageState     `protogen:"open.v1"`
-	Run           *WorkflowRunSummary        `protobuf:"bytes,1,opt,name=run,proto3" json:"run,omitempty"`
-	Steps         []*ExecuteWorkflowResponse `protobuf:"bytes,2,rep,name=steps,proto3" json:"steps,omitempty"`
+type LoopRunThreadSegment struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Run           *LoopRunSummary        `protobuf:"bytes,1,opt,name=run,proto3" json:"run,omitempty"`
+	Steps         []*ExecuteLoopResponse `protobuf:"bytes,2,rep,name=steps,proto3" json:"steps,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *WorkflowRunThreadSegment) Reset() {
-	*x = WorkflowRunThreadSegment{}
+func (x *LoopRunThreadSegment) Reset() {
+	*x = LoopRunThreadSegment{}
 	mi := &file_brent_proto_msgTypes[190]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *WorkflowRunThreadSegment) String() string {
+func (x *LoopRunThreadSegment) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*WorkflowRunThreadSegment) ProtoMessage() {}
+func (*LoopRunThreadSegment) ProtoMessage() {}
 
-func (x *WorkflowRunThreadSegment) ProtoReflect() protoreflect.Message {
+func (x *LoopRunThreadSegment) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[190]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -17513,49 +17513,49 @@ func (x *WorkflowRunThreadSegment) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use WorkflowRunThreadSegment.ProtoReflect.Descriptor instead.
-func (*WorkflowRunThreadSegment) Descriptor() ([]byte, []int) {
+// Deprecated: Use LoopRunThreadSegment.ProtoReflect.Descriptor instead.
+func (*LoopRunThreadSegment) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{190}
 }
 
-func (x *WorkflowRunThreadSegment) GetRun() *WorkflowRunSummary {
+func (x *LoopRunThreadSegment) GetRun() *LoopRunSummary {
 	if x != nil {
 		return x.Run
 	}
 	return nil
 }
 
-func (x *WorkflowRunThreadSegment) GetSteps() []*ExecuteWorkflowResponse {
+func (x *LoopRunThreadSegment) GetSteps() []*ExecuteLoopResponse {
 	if x != nil {
 		return x.Steps
 	}
 	return nil
 }
 
-type GetWorkflowRunThreadHistoryResponse struct {
+type GetLoopRunThreadHistoryResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Ancestor runs only, oldest segment first. Current run steps use WatchRun.
-	Segments []*WorkflowRunThreadSegment `protobuf:"bytes,1,rep,name=segments,proto3" json:"segments,omitempty"`
+	Segments []*LoopRunThreadSegment `protobuf:"bytes,1,rep,name=segments,proto3" json:"segments,omitempty"`
 	// True when chain depth or per-run step caps were hit.
 	Truncated     bool `protobuf:"varint,2,opt,name=truncated,proto3" json:"truncated,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetWorkflowRunThreadHistoryResponse) Reset() {
-	*x = GetWorkflowRunThreadHistoryResponse{}
+func (x *GetLoopRunThreadHistoryResponse) Reset() {
+	*x = GetLoopRunThreadHistoryResponse{}
 	mi := &file_brent_proto_msgTypes[191]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetWorkflowRunThreadHistoryResponse) String() string {
+func (x *GetLoopRunThreadHistoryResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetWorkflowRunThreadHistoryResponse) ProtoMessage() {}
+func (*GetLoopRunThreadHistoryResponse) ProtoMessage() {}
 
-func (x *GetWorkflowRunThreadHistoryResponse) ProtoReflect() protoreflect.Message {
+func (x *GetLoopRunThreadHistoryResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[191]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -17567,50 +17567,50 @@ func (x *GetWorkflowRunThreadHistoryResponse) ProtoReflect() protoreflect.Messag
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetWorkflowRunThreadHistoryResponse.ProtoReflect.Descriptor instead.
-func (*GetWorkflowRunThreadHistoryResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetLoopRunThreadHistoryResponse.ProtoReflect.Descriptor instead.
+func (*GetLoopRunThreadHistoryResponse) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{191}
 }
 
-func (x *GetWorkflowRunThreadHistoryResponse) GetSegments() []*WorkflowRunThreadSegment {
+func (x *GetLoopRunThreadHistoryResponse) GetSegments() []*LoopRunThreadSegment {
 	if x != nil {
 		return x.Segments
 	}
 	return nil
 }
 
-func (x *GetWorkflowRunThreadHistoryResponse) GetTruncated() bool {
+func (x *GetLoopRunThreadHistoryResponse) GetTruncated() bool {
 	if x != nil {
 		return x.Truncated
 	}
 	return false
 }
 
-type GetWorkflowRunResponse struct {
+type GetLoopRunResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	Run   *WorkflowRun           `protobuf:"bytes,1,opt,name=run,proto3" json:"run,omitempty"`
+	Run   *LoopRun               `protobuf:"bytes,1,opt,name=run,proto3" json:"run,omitempty"`
 	// Set when the parent workflow definition is resolvable by
 	// (account_name, name). Unset for legacy / imperative runs whose name
 	// doesn't match any active workflows row (e.g. one-shot manual runs).
-	Workflow      *WorkflowSummary `protobuf:"bytes,2,opt,name=workflow,proto3,oneof" json:"workflow,omitempty"`
+	Loop          *LoopSummary `protobuf:"bytes,2,opt,name=loop,proto3,oneof" json:"loop,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetWorkflowRunResponse) Reset() {
-	*x = GetWorkflowRunResponse{}
+func (x *GetLoopRunResponse) Reset() {
+	*x = GetLoopRunResponse{}
 	mi := &file_brent_proto_msgTypes[192]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetWorkflowRunResponse) String() string {
+func (x *GetLoopRunResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetWorkflowRunResponse) ProtoMessage() {}
+func (*GetLoopRunResponse) ProtoMessage() {}
 
-func (x *GetWorkflowRunResponse) ProtoReflect() protoreflect.Message {
+func (x *GetLoopRunResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[192]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -17622,29 +17622,29 @@ func (x *GetWorkflowRunResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetWorkflowRunResponse.ProtoReflect.Descriptor instead.
-func (*GetWorkflowRunResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetLoopRunResponse.ProtoReflect.Descriptor instead.
+func (*GetLoopRunResponse) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{192}
 }
 
-func (x *GetWorkflowRunResponse) GetRun() *WorkflowRun {
+func (x *GetLoopRunResponse) GetRun() *LoopRun {
 	if x != nil {
 		return x.Run
 	}
 	return nil
 }
 
-func (x *GetWorkflowRunResponse) GetWorkflow() *WorkflowSummary {
+func (x *GetLoopRunResponse) GetLoop() *LoopSummary {
 	if x != nil {
-		return x.Workflow
+		return x.Loop
 	}
 	return nil
 }
 
-// WorkflowRun is the full run row as the debug UI and MCP tools consume it.
-// Carries everything in WorkflowRunSummary plus prompt + the typed Event
+// LoopRun is the full run row as the debug UI and MCP tools consume it.
+// Carries everything in LoopRunSummary plus prompt + the typed Event
 // payload that triggered it + low-level diagnostic fields.
-type WorkflowRun struct {
+type LoopRun struct {
 	state       protoimpl.MessageState `protogen:"open.v1"`
 	Id          string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	AccountName string                 `protobuf:"bytes,2,opt,name=account_name,json=accountName,proto3" json:"account_name,omitempty"`
@@ -17656,14 +17656,14 @@ type WorkflowRun struct {
 	PlanFriendlyId *string `protobuf:"bytes,8,opt,name=plan_friendly_id,json=planFriendlyId,proto3,oneof" json:"plan_friendly_id,omitempty"`
 	ReviewId       *string `protobuf:"bytes,9,opt,name=review_id,json=reviewId,proto3,oneof" json:"review_id,omitempty"`
 	// Set only on failure; carries the human-readable error message. Same
-	// semantics as WorkflowRunSummary.error_message.
-	ErrorMessage            *string                `protobuf:"bytes,11,opt,name=error_message,json=errorMessage,proto3,oneof" json:"error_message,omitempty"`
-	TriggeringEventType     string                 `protobuf:"bytes,12,opt,name=triggering_event_type,json=triggeringEventType,proto3" json:"triggering_event_type,omitempty"`
-	WorkflowSourceCommitSha string                 `protobuf:"bytes,13,opt,name=workflow_source_commit_sha,json=workflowSourceCommitSha,proto3" json:"workflow_source_commit_sha,omitempty"`
-	StartedAt               *timestamppb.Timestamp `protobuf:"bytes,14,opt,name=started_at,json=startedAt,proto3,oneof" json:"started_at,omitempty"`
-	CompletedAt             *timestamppb.Timestamp `protobuf:"bytes,15,opt,name=completed_at,json=completedAt,proto3,oneof" json:"completed_at,omitempty"`
-	CreatedAt               *timestamppb.Timestamp `protobuf:"bytes,16,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt               *timestamppb.Timestamp `protobuf:"bytes,17,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	// semantics as LoopRunSummary.error_message.
+	ErrorMessage        *string                `protobuf:"bytes,11,opt,name=error_message,json=errorMessage,proto3,oneof" json:"error_message,omitempty"`
+	TriggeringEventType string                 `protobuf:"bytes,12,opt,name=triggering_event_type,json=triggeringEventType,proto3" json:"triggering_event_type,omitempty"`
+	LoopSourceCommitSha string                 `protobuf:"bytes,13,opt,name=loop_source_commit_sha,json=loopSourceCommitSha,proto3" json:"loop_source_commit_sha,omitempty"`
+	StartedAt           *timestamppb.Timestamp `protobuf:"bytes,14,opt,name=started_at,json=startedAt,proto3,oneof" json:"started_at,omitempty"`
+	CompletedAt         *timestamppb.Timestamp `protobuf:"bytes,15,opt,name=completed_at,json=completedAt,proto3,oneof" json:"completed_at,omitempty"`
+	CreatedAt           *timestamppb.Timestamp `protobuf:"bytes,16,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	UpdatedAt           *timestamppb.Timestamp `protobuf:"bytes,17,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	// The full agent prompt for this run. Empty for state-transition workflows
 	// that use registered prompts at run time.
 	Prompt string `protobuf:"bytes,18,opt,name=prompt,proto3" json:"prompt,omitempty"`
@@ -17693,26 +17693,26 @@ type WorkflowRun struct {
 	PrId *string `protobuf:"bytes,28,opt,name=pr_id,json=prId,proto3,oneof" json:"pr_id,omitempty"`
 	// OpenAI model snapshotted onto workflow_runs at enqueue; empty means the
 	// run used the default (gpt-5.4). Distinct from the parent workflow
-	// definition's configured model when GetWorkflowRun.workflow is set.
+	// definition's configured model when GetLoopRun.workflow is set.
 	Model         string `protobuf:"bytes,29,opt,name=model,proto3" json:"model,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *WorkflowRun) Reset() {
-	*x = WorkflowRun{}
+func (x *LoopRun) Reset() {
+	*x = LoopRun{}
 	mi := &file_brent_proto_msgTypes[193]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *WorkflowRun) String() string {
+func (x *LoopRun) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*WorkflowRun) ProtoMessage() {}
+func (*LoopRun) ProtoMessage() {}
 
-func (x *WorkflowRun) ProtoReflect() protoreflect.Message {
+func (x *LoopRun) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[193]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -17724,187 +17724,187 @@ func (x *WorkflowRun) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use WorkflowRun.ProtoReflect.Descriptor instead.
-func (*WorkflowRun) Descriptor() ([]byte, []int) {
+// Deprecated: Use LoopRun.ProtoReflect.Descriptor instead.
+func (*LoopRun) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{193}
 }
 
-func (x *WorkflowRun) GetId() string {
+func (x *LoopRun) GetId() string {
 	if x != nil {
 		return x.Id
 	}
 	return ""
 }
 
-func (x *WorkflowRun) GetAccountName() string {
+func (x *LoopRun) GetAccountName() string {
 	if x != nil {
 		return x.AccountName
 	}
 	return ""
 }
 
-func (x *WorkflowRun) GetName() string {
+func (x *LoopRun) GetName() string {
 	if x != nil {
 		return x.Name
 	}
 	return ""
 }
 
-func (x *WorkflowRun) GetDescription() string {
+func (x *LoopRun) GetDescription() string {
 	if x != nil {
 		return x.Description
 	}
 	return ""
 }
 
-func (x *WorkflowRun) GetStatus() string {
+func (x *LoopRun) GetStatus() string {
 	if x != nil {
 		return x.Status
 	}
 	return ""
 }
 
-func (x *WorkflowRun) GetTriggerKind() string {
+func (x *LoopRun) GetTriggerKind() string {
 	if x != nil {
 		return x.TriggerKind
 	}
 	return ""
 }
 
-func (x *WorkflowRun) GetPlanFriendlyId() string {
+func (x *LoopRun) GetPlanFriendlyId() string {
 	if x != nil && x.PlanFriendlyId != nil {
 		return *x.PlanFriendlyId
 	}
 	return ""
 }
 
-func (x *WorkflowRun) GetReviewId() string {
+func (x *LoopRun) GetReviewId() string {
 	if x != nil && x.ReviewId != nil {
 		return *x.ReviewId
 	}
 	return ""
 }
 
-func (x *WorkflowRun) GetErrorMessage() string {
+func (x *LoopRun) GetErrorMessage() string {
 	if x != nil && x.ErrorMessage != nil {
 		return *x.ErrorMessage
 	}
 	return ""
 }
 
-func (x *WorkflowRun) GetTriggeringEventType() string {
+func (x *LoopRun) GetTriggeringEventType() string {
 	if x != nil {
 		return x.TriggeringEventType
 	}
 	return ""
 }
 
-func (x *WorkflowRun) GetWorkflowSourceCommitSha() string {
+func (x *LoopRun) GetLoopSourceCommitSha() string {
 	if x != nil {
-		return x.WorkflowSourceCommitSha
+		return x.LoopSourceCommitSha
 	}
 	return ""
 }
 
-func (x *WorkflowRun) GetStartedAt() *timestamppb.Timestamp {
+func (x *LoopRun) GetStartedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.StartedAt
 	}
 	return nil
 }
 
-func (x *WorkflowRun) GetCompletedAt() *timestamppb.Timestamp {
+func (x *LoopRun) GetCompletedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.CompletedAt
 	}
 	return nil
 }
 
-func (x *WorkflowRun) GetCreatedAt() *timestamppb.Timestamp {
+func (x *LoopRun) GetCreatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.CreatedAt
 	}
 	return nil
 }
 
-func (x *WorkflowRun) GetUpdatedAt() *timestamppb.Timestamp {
+func (x *LoopRun) GetUpdatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.UpdatedAt
 	}
 	return nil
 }
 
-func (x *WorkflowRun) GetPrompt() string {
+func (x *LoopRun) GetPrompt() string {
 	if x != nil {
 		return x.Prompt
 	}
 	return ""
 }
 
-func (x *WorkflowRun) GetBrentVersion() string {
+func (x *LoopRun) GetBrentVersion() string {
 	if x != nil {
 		return x.BrentVersion
 	}
 	return ""
 }
 
-func (x *WorkflowRun) GetResponseId() string {
+func (x *LoopRun) GetResponseId() string {
 	if x != nil {
 		return x.ResponseId
 	}
 	return ""
 }
 
-func (x *WorkflowRun) GetCancelRequested() bool {
+func (x *LoopRun) GetCancelRequested() bool {
 	if x != nil {
 		return x.CancelRequested
 	}
 	return false
 }
 
-func (x *WorkflowRun) GetTriggeringEventPayload() *Event {
+func (x *LoopRun) GetTriggeringEventPayload() *Event {
 	if x != nil {
 		return x.TriggeringEventPayload
 	}
 	return nil
 }
 
-func (x *WorkflowRun) GetThreadKey() string {
+func (x *LoopRun) GetThreadKey() string {
 	if x != nil && x.ThreadKey != nil {
 		return *x.ThreadKey
 	}
 	return ""
 }
 
-func (x *WorkflowRun) GetPreviousResponseId() string {
+func (x *LoopRun) GetPreviousResponseId() string {
 	if x != nil {
 		return x.PreviousResponseId
 	}
 	return ""
 }
 
-func (x *WorkflowRun) GetResumedFromRunId() string {
+func (x *LoopRun) GetResumedFromRunId() string {
 	if x != nil && x.ResumedFromRunId != nil {
 		return *x.ResumedFromRunId
 	}
 	return ""
 }
 
-func (x *WorkflowRun) GetPlanUuid() string {
+func (x *LoopRun) GetPlanUuid() string {
 	if x != nil && x.PlanUuid != nil {
 		return *x.PlanUuid
 	}
 	return ""
 }
 
-func (x *WorkflowRun) GetPrId() string {
+func (x *LoopRun) GetPrId() string {
 	if x != nil && x.PrId != nil {
 		return *x.PrId
 	}
 	return ""
 }
 
-func (x *WorkflowRun) GetModel() string {
+func (x *LoopRun) GetModel() string {
 	if x != nil {
 		return x.Model
 	}
@@ -17949,7 +17949,7 @@ func (*GetPrincipalStatusRequest) Descriptor() ([]byte, []int) {
 
 type GetPrincipalStatusResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	State PrincipalStatusState   `protobuf:"varint,1,opt,name=state,proto3,enum=brent.PrincipalStatusState" json:"state,omitempty"`
+	State PrincipalStatusState   `protobuf:"varint,1,opt,name=state,proto3,enum=until.PrincipalStatusState" json:"state,omitempty"`
 	// Populated when state = READY. Omitted when NEEDS_ONBOARDING.
 	Principal *Principal `protobuf:"bytes,2,opt,name=principal,proto3,oneof" json:"principal,omitempty"`
 	// Populated when state = READY. One entry per supported provider.
@@ -18011,8 +18011,8 @@ func (x *GetPrincipalStatusResponse) GetIntegrations() []*IntegrationStatus {
 
 type GetIntegrationConnectURLRequest struct {
 	state    protoimpl.MessageState `protogen:"open.v1"`
-	Provider IntegrationProvider    `protobuf:"varint,1,opt,name=provider,proto3,enum=brent.IntegrationProvider" json:"provider,omitempty"`
-	Intent   IntegrationIntent      `protobuf:"varint,2,opt,name=intent,proto3,enum=brent.IntegrationIntent" json:"intent,omitempty"`
+	Provider IntegrationProvider    `protobuf:"varint,1,opt,name=provider,proto3,enum=until.IntegrationProvider" json:"provider,omitempty"`
+	Intent   IntegrationIntent      `protobuf:"varint,2,opt,name=intent,proto3,enum=until.IntegrationIntent" json:"intent,omitempty"`
 	// Instance discriminator for aggregator providers (e.g. the Composio toolkit
 	// slug for MCP_AGGREGATOR). Required when provider needs per-instance routing;
 	// ignored by single-instance providers (GitHub/Linear/Slack).
@@ -18118,7 +18118,7 @@ func (x *GetIntegrationConnectURLResponse) GetUrl() string {
 
 type DisconnectIntegrationRequest struct {
 	state    protoimpl.MessageState `protogen:"open.v1"`
-	Provider IntegrationProvider    `protobuf:"varint,1,opt,name=provider,proto3,enum=brent.IntegrationProvider" json:"provider,omitempty"`
+	Provider IntegrationProvider    `protobuf:"varint,1,opt,name=provider,proto3,enum=until.IntegrationProvider" json:"provider,omitempty"`
 	// Instance discriminator for aggregator providers (the Composio toolkit slug
 	// for MCP_AGGREGATOR) and a compatibility endpoint slug for BYO HTTP MCP.
 	// Required for MCP_AGGREGATOR; ignored by other single-instance providers.
@@ -18708,7 +18708,7 @@ func (x *GitHubPendingInstall) GetRequestedBy() string {
 
 type IntegrationStatus struct {
 	state    protoimpl.MessageState `protogen:"open.v1"`
-	Provider IntegrationProvider    `protobuf:"varint,1,opt,name=provider,proto3,enum=brent.IntegrationProvider" json:"provider,omitempty"`
+	Provider IntegrationProvider    `protobuf:"varint,1,opt,name=provider,proto3,enum=until.IntegrationProvider" json:"provider,omitempty"`
 	// Tenant has completed the provider org/workspace install OAuth flow.
 	OrgInstalled bool `protobuf:"varint,2,opt,name=org_installed,json=orgInstalled,proto3" json:"org_installed,omitempty"`
 	// Caller has a verified principal_bindings row for this provider kind.
@@ -18723,7 +18723,7 @@ type IntegrationStatus struct {
 	ManageUrl string `protobuf:"bytes,6,opt,name=manage_url,json=manageUrl,proto3" json:"manage_url,omitempty"`
 	// Coarse readiness for Integrations UI (button state / spinner / healthy / fix-me).
 	// Always set (never UNSPECIFIED) for every IntegrationStatus from GetPrincipalStatus.
-	Status IntegrationConnectionStatus `protobuf:"varint,7,opt,name=status,proto3,enum=brent.IntegrationConnectionStatus" json:"status,omitempty"`
+	Status IntegrationConnectionStatus `protobuf:"varint,7,opt,name=status,proto3,enum=until.IntegrationConnectionStatus" json:"status,omitempty"`
 	// Short label (a few words, max 32 chars) for the current status.
 	// Examples: "Not connected", "Connected", "Awaiting approval", "Needs reconnect".
 	Summary string `protobuf:"bytes,8,opt,name=summary,proto3" json:"summary,omitempty"`
@@ -18870,7 +18870,7 @@ func (*GetWorkspaceIntegrationRolesRequest) Descriptor() ([]byte, []int) {
 type GetWorkspaceIntegrationRolesResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Chosen source-control provider, or UNSPECIFIED if not yet configured.
-	GitProvider IntegrationProvider `protobuf:"varint,1,opt,name=git_provider,json=gitProvider,proto3,enum=brent.IntegrationProvider" json:"git_provider,omitempty"`
+	GitProvider IntegrationProvider `protobuf:"varint,1,opt,name=git_provider,json=gitProvider,proto3,enum=until.IntegrationProvider" json:"git_provider,omitempty"`
 	// Present when the workspace has a connected install for the current
 	// git_provider and the registry can build a safe manage URL.
 	GitManageUrl  string `protobuf:"bytes,4,opt,name=git_manage_url,json=gitManageUrl,proto3" json:"git_manage_url,omitempty"`
@@ -18927,7 +18927,7 @@ type SetWorkspaceIntegrationRolesRequest struct {
 	// git_provider UNSPECIFIED is rejected once a git provider has ever been set
 	// OR while a git install is connected (cannot clear required role without
 	// disconnect).
-	GitProvider   IntegrationProvider `protobuf:"varint,1,opt,name=git_provider,json=gitProvider,proto3,enum=brent.IntegrationProvider" json:"git_provider,omitempty"`
+	GitProvider   IntegrationProvider `protobuf:"varint,1,opt,name=git_provider,json=gitProvider,proto3,enum=until.IntegrationProvider" json:"git_provider,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -18971,7 +18971,7 @@ func (x *SetWorkspaceIntegrationRolesRequest) GetGitProvider() IntegrationProvid
 
 type SetWorkspaceIntegrationRolesResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	GitProvider   IntegrationProvider    `protobuf:"varint,1,opt,name=git_provider,json=gitProvider,proto3,enum=brent.IntegrationProvider" json:"git_provider,omitempty"`
+	GitProvider   IntegrationProvider    `protobuf:"varint,1,opt,name=git_provider,json=gitProvider,proto3,enum=until.IntegrationProvider" json:"git_provider,omitempty"`
 	GitManageUrl  string                 `protobuf:"bytes,4,opt,name=git_manage_url,json=gitManageUrl,proto3" json:"git_manage_url,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -19450,7 +19450,7 @@ func (*DiscoverLoginRecoveryCandidatesRequest) Descriptor() ([]byte, []int) {
 // workspace IDs, names, roles, members, email, Auth0 user IDs, or tokens.
 type LoginRecoveryCandidate struct {
 	state                protoimpl.MessageState `protogen:"open.v1"`
-	Provider             LoginProvider          `protobuf:"varint,1,opt,name=provider,proto3,enum=brent.LoginProvider" json:"provider,omitempty"`
+	Provider             LoginProvider          `protobuf:"varint,1,opt,name=provider,proto3,enum=until.LoginProvider" json:"provider,omitempty"`
 	Auth0Connection      string                 `protobuf:"bytes,2,opt,name=auth0_connection,json=auth0Connection,proto3" json:"auth0_connection,omitempty"`
 	ActiveWorkspaceCount uint32                 `protobuf:"varint,3,opt,name=active_workspace_count,json=activeWorkspaceCount,proto3" json:"active_workspace_count,omitempty"`
 	unknownFields        protoimpl.UnknownFields
@@ -19513,7 +19513,7 @@ type DiscoverLoginRecoveryCandidatesResponse struct {
 	// The caller's arriving provider when it is one of the supported social
 	// providers; UNSPECIFIED (with empty candidates) when the arriving
 	// connection is unsupported.
-	ArrivingProvider LoginProvider             `protobuf:"varint,1,opt,name=arriving_provider,json=arrivingProvider,proto3,enum=brent.LoginProvider" json:"arriving_provider,omitempty"`
+	ArrivingProvider LoginProvider             `protobuf:"varint,1,opt,name=arriving_provider,json=arrivingProvider,proto3,enum=until.LoginProvider" json:"arriving_provider,omitempty"`
 	Candidates       []*LoginRecoveryCandidate `protobuf:"bytes,2,rep,name=candidates,proto3" json:"candidates,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
@@ -19828,7 +19828,7 @@ type JoinableWorkspace struct {
 	CreatedByName  string                     `protobuf:"bytes,6,opt,name=created_by_name,json=createdByName,proto3" json:"created_by_name,omitempty"`  // creator's live display name; empty if the creator has left
 	MemberPreviews []*JoinableWorkspaceMember `protobuf:"bytes,7,rep,name=member_previews,json=memberPreviews,proto3" json:"member_previews,omitempty"` // up to 3 active human members
 	MemberCount    uint32                     `protobuf:"varint,8,opt,name=member_count,json=memberCount,proto3" json:"member_count,omitempty"`         // total active human members (drives "+N")
-	Source         JoinSource                 `protobuf:"varint,9,opt,name=source,proto3,enum=brent.JoinSource" json:"source,omitempty"`                // why this workspace is joinable (DOMAIN or INVITE)
+	Source         JoinSource                 `protobuf:"varint,9,opt,name=source,proto3,enum=until.JoinSource" json:"source,omitempty"`                // why this workspace is joinable (DOMAIN or INVITE)
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
 }
@@ -21711,7 +21711,7 @@ func (x *CreateInvitationsRequest) GetRole() string {
 type InvitationResult struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Email         string                 `protobuf:"bytes,1,opt,name=email,proto3" json:"email,omitempty"`
-	Status        InvitationResultStatus `protobuf:"varint,2,opt,name=status,proto3,enum=brent.InvitationResultStatus" json:"status,omitempty"`
+	Status        InvitationResultStatus `protobuf:"varint,2,opt,name=status,proto3,enum=until.InvitationResultStatus" json:"status,omitempty"`
 	AcceptUrl     string                 `protobuf:"bytes,3,opt,name=accept_url,json=acceptUrl,proto3" json:"accept_url,omitempty"`          // set when status == CREATED
 	ErrorMessage  string                 `protobuf:"bytes,4,opt,name=error_message,json=errorMessage,proto3" json:"error_message,omitempty"` // set when status != CREATED
 	unknownFields protoimpl.UnknownFields
@@ -22004,7 +22004,7 @@ type WorkspaceMember struct {
 	Role        string                 `protobuf:"bytes,4,opt,name=role,proto3" json:"role,omitempty"`
 	// Deprecated: Marked as deprecated in brent.proto.
 	Status string               `protobuf:"bytes,5,opt,name=status,proto3" json:"status,omitempty"`
-	State  WorkspaceMemberState `protobuf:"varint,6,opt,name=state,proto3,enum=brent.WorkspaceMemberState" json:"state,omitempty"`
+	State  WorkspaceMemberState `protobuf:"varint,6,opt,name=state,proto3,enum=until.WorkspaceMemberState" json:"state,omitempty"`
 	// Auth0/IdP profile picture when the member has synced; absent/empty → initials.
 	PictureUrl    *string `protobuf:"bytes,7,opt,name=picture_url,json=pictureUrl,proto3,oneof" json:"picture_url,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -22513,7 +22513,7 @@ func (x *GetInvitationRequest) GetToken() string {
 
 type GetInvitationResponse struct {
 	state                protoimpl.MessageState `protogen:"open.v1"`
-	Status               InvitationStatus       `protobuf:"varint,1,opt,name=status,proto3,enum=brent.InvitationStatus" json:"status,omitempty"`
+	Status               InvitationStatus       `protobuf:"varint,1,opt,name=status,proto3,enum=until.InvitationStatus" json:"status,omitempty"`
 	WorkspaceId          string                 `protobuf:"bytes,2,opt,name=workspace_id,json=workspaceId,proto3" json:"workspace_id,omitempty"`
 	Slug                 string                 `protobuf:"bytes,3,opt,name=slug,proto3" json:"slug,omitempty"`
 	WorkspaceDisplayName string                 `protobuf:"bytes,4,opt,name=workspace_display_name,json=workspaceDisplayName,proto3" json:"workspace_display_name,omitempty"`
@@ -23414,27 +23414,27 @@ func (x *Binding) GetSubject() string {
 	return ""
 }
 
-type RedFindingKindsPatch struct {
+type BlockingDifferenceTagsPatch struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Kinds         []string               `protobuf:"bytes,1,rep,name=kinds,proto3" json:"kinds,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *RedFindingKindsPatch) Reset() {
-	*x = RedFindingKindsPatch{}
+func (x *BlockingDifferenceTagsPatch) Reset() {
+	*x = BlockingDifferenceTagsPatch{}
 	mi := &file_brent_proto_msgTypes[301]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *RedFindingKindsPatch) String() string {
+func (x *BlockingDifferenceTagsPatch) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*RedFindingKindsPatch) ProtoMessage() {}
+func (*BlockingDifferenceTagsPatch) ProtoMessage() {}
 
-func (x *RedFindingKindsPatch) ProtoReflect() protoreflect.Message {
+func (x *BlockingDifferenceTagsPatch) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[301]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -23446,39 +23446,39 @@ func (x *RedFindingKindsPatch) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use RedFindingKindsPatch.ProtoReflect.Descriptor instead.
-func (*RedFindingKindsPatch) Descriptor() ([]byte, []int) {
+// Deprecated: Use BlockingDifferenceTagsPatch.ProtoReflect.Descriptor instead.
+func (*BlockingDifferenceTagsPatch) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{301}
 }
 
-func (x *RedFindingKindsPatch) GetKinds() []string {
+func (x *BlockingDifferenceTagsPatch) GetKinds() []string {
 	if x != nil {
 		return x.Kinds
 	}
 	return nil
 }
 
-type GetBrentSettingsRequest struct {
+type GetPlanCheckSettingsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AccountName   string                 `protobuf:"bytes,1,opt,name=account_name,json=accountName,proto3" json:"account_name,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *GetBrentSettingsRequest) Reset() {
-	*x = GetBrentSettingsRequest{}
+func (x *GetPlanCheckSettingsRequest) Reset() {
+	*x = GetPlanCheckSettingsRequest{}
 	mi := &file_brent_proto_msgTypes[302]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetBrentSettingsRequest) String() string {
+func (x *GetPlanCheckSettingsRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetBrentSettingsRequest) ProtoMessage() {}
+func (*GetPlanCheckSettingsRequest) ProtoMessage() {}
 
-func (x *GetBrentSettingsRequest) ProtoReflect() protoreflect.Message {
+func (x *GetPlanCheckSettingsRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[302]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -23490,41 +23490,41 @@ func (x *GetBrentSettingsRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetBrentSettingsRequest.ProtoReflect.Descriptor instead.
-func (*GetBrentSettingsRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetPlanCheckSettingsRequest.ProtoReflect.Descriptor instead.
+func (*GetPlanCheckSettingsRequest) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{302}
 }
 
-func (x *GetBrentSettingsRequest) GetAccountName() string {
+func (x *GetPlanCheckSettingsRequest) GetAccountName() string {
 	if x != nil {
 		return x.AccountName
 	}
 	return ""
 }
 
-type GetBrentSettingsResponse struct {
-	state                    protoimpl.MessageState `protogen:"open.v1"`
-	RedFindingKinds          []string               `protobuf:"bytes,1,rep,name=red_finding_kinds,json=redFindingKinds,proto3" json:"red_finding_kinds,omitempty"`
-	RedFindingKindsUpdatedBy string                 `protobuf:"bytes,2,opt,name=red_finding_kinds_updated_by,json=redFindingKindsUpdatedBy,proto3" json:"red_finding_kinds_updated_by,omitempty"`
-	RedFindingKindsUpdatedAt *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=red_finding_kinds_updated_at,json=redFindingKindsUpdatedAt,proto3" json:"red_finding_kinds_updated_at,omitempty"`
-	unknownFields            protoimpl.UnknownFields
-	sizeCache                protoimpl.SizeCache
+type GetPlanCheckSettingsResponse struct {
+	state                           protoimpl.MessageState `protogen:"open.v1"`
+	BlockingDifferenceTags          []string               `protobuf:"bytes,1,rep,name=blocking_difference_tags,json=blockingDifferenceTags,proto3" json:"blocking_difference_tags,omitempty"`
+	BlockingDifferenceTagsUpdatedBy string                 `protobuf:"bytes,2,opt,name=blocking_difference_tags_updated_by,json=blockingDifferenceTagsUpdatedBy,proto3" json:"blocking_difference_tags_updated_by,omitempty"`
+	BlockingDifferenceTagsUpdatedAt *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=blocking_difference_tags_updated_at,json=blockingDifferenceTagsUpdatedAt,proto3" json:"blocking_difference_tags_updated_at,omitempty"`
+	unknownFields                   protoimpl.UnknownFields
+	sizeCache                       protoimpl.SizeCache
 }
 
-func (x *GetBrentSettingsResponse) Reset() {
-	*x = GetBrentSettingsResponse{}
+func (x *GetPlanCheckSettingsResponse) Reset() {
+	*x = GetPlanCheckSettingsResponse{}
 	mi := &file_brent_proto_msgTypes[303]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *GetBrentSettingsResponse) String() string {
+func (x *GetPlanCheckSettingsResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*GetBrentSettingsResponse) ProtoMessage() {}
+func (*GetPlanCheckSettingsResponse) ProtoMessage() {}
 
-func (x *GetBrentSettingsResponse) ProtoReflect() protoreflect.Message {
+func (x *GetPlanCheckSettingsResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[303]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -23536,54 +23536,54 @@ func (x *GetBrentSettingsResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use GetBrentSettingsResponse.ProtoReflect.Descriptor instead.
-func (*GetBrentSettingsResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetPlanCheckSettingsResponse.ProtoReflect.Descriptor instead.
+func (*GetPlanCheckSettingsResponse) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{303}
 }
 
-func (x *GetBrentSettingsResponse) GetRedFindingKinds() []string {
+func (x *GetPlanCheckSettingsResponse) GetBlockingDifferenceTags() []string {
 	if x != nil {
-		return x.RedFindingKinds
+		return x.BlockingDifferenceTags
 	}
 	return nil
 }
 
-func (x *GetBrentSettingsResponse) GetRedFindingKindsUpdatedBy() string {
+func (x *GetPlanCheckSettingsResponse) GetBlockingDifferenceTagsUpdatedBy() string {
 	if x != nil {
-		return x.RedFindingKindsUpdatedBy
+		return x.BlockingDifferenceTagsUpdatedBy
 	}
 	return ""
 }
 
-func (x *GetBrentSettingsResponse) GetRedFindingKindsUpdatedAt() *timestamppb.Timestamp {
+func (x *GetPlanCheckSettingsResponse) GetBlockingDifferenceTagsUpdatedAt() *timestamppb.Timestamp {
 	if x != nil {
-		return x.RedFindingKindsUpdatedAt
+		return x.BlockingDifferenceTagsUpdatedAt
 	}
 	return nil
 }
 
-type UpdateBrentSettingsRequest struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	AccountName     string                 `protobuf:"bytes,1,opt,name=account_name,json=accountName,proto3" json:"account_name,omitempty"`
-	RedFindingKinds *RedFindingKindsPatch  `protobuf:"bytes,2,opt,name=red_finding_kinds,json=redFindingKinds,proto3,oneof" json:"red_finding_kinds,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+type UpdatePlanCheckSettingsRequest struct {
+	state                  protoimpl.MessageState       `protogen:"open.v1"`
+	AccountName            string                       `protobuf:"bytes,1,opt,name=account_name,json=accountName,proto3" json:"account_name,omitempty"`
+	BlockingDifferenceTags *BlockingDifferenceTagsPatch `protobuf:"bytes,2,opt,name=blocking_difference_tags,json=blockingDifferenceTags,proto3,oneof" json:"blocking_difference_tags,omitempty"`
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
-func (x *UpdateBrentSettingsRequest) Reset() {
-	*x = UpdateBrentSettingsRequest{}
+func (x *UpdatePlanCheckSettingsRequest) Reset() {
+	*x = UpdatePlanCheckSettingsRequest{}
 	mi := &file_brent_proto_msgTypes[304]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *UpdateBrentSettingsRequest) String() string {
+func (x *UpdatePlanCheckSettingsRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*UpdateBrentSettingsRequest) ProtoMessage() {}
+func (*UpdatePlanCheckSettingsRequest) ProtoMessage() {}
 
-func (x *UpdateBrentSettingsRequest) ProtoReflect() protoreflect.Message {
+func (x *UpdatePlanCheckSettingsRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[304]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -23595,48 +23595,48 @@ func (x *UpdateBrentSettingsRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use UpdateBrentSettingsRequest.ProtoReflect.Descriptor instead.
-func (*UpdateBrentSettingsRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use UpdatePlanCheckSettingsRequest.ProtoReflect.Descriptor instead.
+func (*UpdatePlanCheckSettingsRequest) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{304}
 }
 
-func (x *UpdateBrentSettingsRequest) GetAccountName() string {
+func (x *UpdatePlanCheckSettingsRequest) GetAccountName() string {
 	if x != nil {
 		return x.AccountName
 	}
 	return ""
 }
 
-func (x *UpdateBrentSettingsRequest) GetRedFindingKinds() *RedFindingKindsPatch {
+func (x *UpdatePlanCheckSettingsRequest) GetBlockingDifferenceTags() *BlockingDifferenceTagsPatch {
 	if x != nil {
-		return x.RedFindingKinds
+		return x.BlockingDifferenceTags
 	}
 	return nil
 }
 
-type UpdateBrentSettingsResponse struct {
-	state                    protoimpl.MessageState `protogen:"open.v1"`
-	RedFindingKinds          []string               `protobuf:"bytes,1,rep,name=red_finding_kinds,json=redFindingKinds,proto3" json:"red_finding_kinds,omitempty"`
-	RedFindingKindsUpdatedBy string                 `protobuf:"bytes,2,opt,name=red_finding_kinds_updated_by,json=redFindingKindsUpdatedBy,proto3" json:"red_finding_kinds_updated_by,omitempty"`
-	RedFindingKindsUpdatedAt *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=red_finding_kinds_updated_at,json=redFindingKindsUpdatedAt,proto3" json:"red_finding_kinds_updated_at,omitempty"`
-	unknownFields            protoimpl.UnknownFields
-	sizeCache                protoimpl.SizeCache
+type UpdatePlanCheckSettingsResponse struct {
+	state                           protoimpl.MessageState `protogen:"open.v1"`
+	BlockingDifferenceTags          []string               `protobuf:"bytes,1,rep,name=blocking_difference_tags,json=blockingDifferenceTags,proto3" json:"blocking_difference_tags,omitempty"`
+	BlockingDifferenceTagsUpdatedBy string                 `protobuf:"bytes,2,opt,name=blocking_difference_tags_updated_by,json=blockingDifferenceTagsUpdatedBy,proto3" json:"blocking_difference_tags_updated_by,omitempty"`
+	BlockingDifferenceTagsUpdatedAt *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=blocking_difference_tags_updated_at,json=blockingDifferenceTagsUpdatedAt,proto3" json:"blocking_difference_tags_updated_at,omitempty"`
+	unknownFields                   protoimpl.UnknownFields
+	sizeCache                       protoimpl.SizeCache
 }
 
-func (x *UpdateBrentSettingsResponse) Reset() {
-	*x = UpdateBrentSettingsResponse{}
+func (x *UpdatePlanCheckSettingsResponse) Reset() {
+	*x = UpdatePlanCheckSettingsResponse{}
 	mi := &file_brent_proto_msgTypes[305]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *UpdateBrentSettingsResponse) String() string {
+func (x *UpdatePlanCheckSettingsResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*UpdateBrentSettingsResponse) ProtoMessage() {}
+func (*UpdatePlanCheckSettingsResponse) ProtoMessage() {}
 
-func (x *UpdateBrentSettingsResponse) ProtoReflect() protoreflect.Message {
+func (x *UpdatePlanCheckSettingsResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[305]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -23648,56 +23648,56 @@ func (x *UpdateBrentSettingsResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use UpdateBrentSettingsResponse.ProtoReflect.Descriptor instead.
-func (*UpdateBrentSettingsResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use UpdatePlanCheckSettingsResponse.ProtoReflect.Descriptor instead.
+func (*UpdatePlanCheckSettingsResponse) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{305}
 }
 
-func (x *UpdateBrentSettingsResponse) GetRedFindingKinds() []string {
+func (x *UpdatePlanCheckSettingsResponse) GetBlockingDifferenceTags() []string {
 	if x != nil {
-		return x.RedFindingKinds
+		return x.BlockingDifferenceTags
 	}
 	return nil
 }
 
-func (x *UpdateBrentSettingsResponse) GetRedFindingKindsUpdatedBy() string {
+func (x *UpdatePlanCheckSettingsResponse) GetBlockingDifferenceTagsUpdatedBy() string {
 	if x != nil {
-		return x.RedFindingKindsUpdatedBy
+		return x.BlockingDifferenceTagsUpdatedBy
 	}
 	return ""
 }
 
-func (x *UpdateBrentSettingsResponse) GetRedFindingKindsUpdatedAt() *timestamppb.Timestamp {
+func (x *UpdatePlanCheckSettingsResponse) GetBlockingDifferenceTagsUpdatedAt() *timestamppb.Timestamp {
 	if x != nil {
-		return x.RedFindingKindsUpdatedAt
+		return x.BlockingDifferenceTagsUpdatedAt
 	}
 	return nil
 }
 
-// AdminGetAccountBrentSettingsRequest selects the account whose Brent settings
+// AdminGetAccountPlanCheckSettingsRequest selects the account whose Brent settings
 // an operator wants to read. account_name is required (operator endpoint, no
-// caller-account fallback). Reuses GetBrentSettingsResponse for the result.
-type AdminGetAccountBrentSettingsRequest struct {
+// caller-account fallback). Reuses GetPlanCheckSettingsResponse for the result.
+type AdminGetAccountPlanCheckSettingsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AccountName   string                 `protobuf:"bytes,1,opt,name=account_name,json=accountName,proto3" json:"account_name,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *AdminGetAccountBrentSettingsRequest) Reset() {
-	*x = AdminGetAccountBrentSettingsRequest{}
+func (x *AdminGetAccountPlanCheckSettingsRequest) Reset() {
+	*x = AdminGetAccountPlanCheckSettingsRequest{}
 	mi := &file_brent_proto_msgTypes[306]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *AdminGetAccountBrentSettingsRequest) String() string {
+func (x *AdminGetAccountPlanCheckSettingsRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AdminGetAccountBrentSettingsRequest) ProtoMessage() {}
+func (*AdminGetAccountPlanCheckSettingsRequest) ProtoMessage() {}
 
-func (x *AdminGetAccountBrentSettingsRequest) ProtoReflect() protoreflect.Message {
+func (x *AdminGetAccountPlanCheckSettingsRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[306]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -23709,43 +23709,43 @@ func (x *AdminGetAccountBrentSettingsRequest) ProtoReflect() protoreflect.Messag
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AdminGetAccountBrentSettingsRequest.ProtoReflect.Descriptor instead.
-func (*AdminGetAccountBrentSettingsRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use AdminGetAccountPlanCheckSettingsRequest.ProtoReflect.Descriptor instead.
+func (*AdminGetAccountPlanCheckSettingsRequest) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{306}
 }
 
-func (x *AdminGetAccountBrentSettingsRequest) GetAccountName() string {
+func (x *AdminGetAccountPlanCheckSettingsRequest) GetAccountName() string {
 	if x != nil {
 		return x.AccountName
 	}
 	return ""
 }
 
-// AdminUpdateAccountBrentSettingsRequest selects the account whose Brent
+// AdminUpdateAccountPlanCheckSettingsRequest selects the account whose Brent
 // settings an operator wants to change. account_name is required. Reuses
-// UpdateBrentSettingsResponse for the result.
-type AdminUpdateAccountBrentSettingsRequest struct {
-	state           protoimpl.MessageState `protogen:"open.v1"`
-	AccountName     string                 `protobuf:"bytes,1,opt,name=account_name,json=accountName,proto3" json:"account_name,omitempty"`
-	RedFindingKinds *RedFindingKindsPatch  `protobuf:"bytes,2,opt,name=red_finding_kinds,json=redFindingKinds,proto3,oneof" json:"red_finding_kinds,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+// UpdatePlanCheckSettingsResponse for the result.
+type AdminUpdateAccountPlanCheckSettingsRequest struct {
+	state                  protoimpl.MessageState       `protogen:"open.v1"`
+	AccountName            string                       `protobuf:"bytes,1,opt,name=account_name,json=accountName,proto3" json:"account_name,omitempty"`
+	BlockingDifferenceTags *BlockingDifferenceTagsPatch `protobuf:"bytes,2,opt,name=blocking_difference_tags,json=blockingDifferenceTags,proto3,oneof" json:"blocking_difference_tags,omitempty"`
+	unknownFields          protoimpl.UnknownFields
+	sizeCache              protoimpl.SizeCache
 }
 
-func (x *AdminUpdateAccountBrentSettingsRequest) Reset() {
-	*x = AdminUpdateAccountBrentSettingsRequest{}
+func (x *AdminUpdateAccountPlanCheckSettingsRequest) Reset() {
+	*x = AdminUpdateAccountPlanCheckSettingsRequest{}
 	mi := &file_brent_proto_msgTypes[307]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *AdminUpdateAccountBrentSettingsRequest) String() string {
+func (x *AdminUpdateAccountPlanCheckSettingsRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*AdminUpdateAccountBrentSettingsRequest) ProtoMessage() {}
+func (*AdminUpdateAccountPlanCheckSettingsRequest) ProtoMessage() {}
 
-func (x *AdminUpdateAccountBrentSettingsRequest) ProtoReflect() protoreflect.Message {
+func (x *AdminUpdateAccountPlanCheckSettingsRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_brent_proto_msgTypes[307]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -23757,21 +23757,21 @@ func (x *AdminUpdateAccountBrentSettingsRequest) ProtoReflect() protoreflect.Mes
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use AdminUpdateAccountBrentSettingsRequest.ProtoReflect.Descriptor instead.
-func (*AdminUpdateAccountBrentSettingsRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use AdminUpdateAccountPlanCheckSettingsRequest.ProtoReflect.Descriptor instead.
+func (*AdminUpdateAccountPlanCheckSettingsRequest) Descriptor() ([]byte, []int) {
 	return file_brent_proto_rawDescGZIP(), []int{307}
 }
 
-func (x *AdminUpdateAccountBrentSettingsRequest) GetAccountName() string {
+func (x *AdminUpdateAccountPlanCheckSettingsRequest) GetAccountName() string {
 	if x != nil {
 		return x.AccountName
 	}
 	return ""
 }
 
-func (x *AdminUpdateAccountBrentSettingsRequest) GetRedFindingKinds() *RedFindingKindsPatch {
+func (x *AdminUpdateAccountPlanCheckSettingsRequest) GetBlockingDifferenceTags() *BlockingDifferenceTagsPatch {
 	if x != nil {
-		return x.RedFindingKinds
+		return x.BlockingDifferenceTags
 	}
 	return nil
 }
@@ -23826,7 +23826,7 @@ func (x *AdminGetAccountReviewPolicyRequest) GetAccountName() string {
 // attribution metadata for operator triage.
 type AdminGetAccountReviewPolicyResponse struct {
 	state                     protoimpl.MessageState `protogen:"open.v1"`
-	Policy                    WorkspaceReviewPolicy  `protobuf:"varint,1,opt,name=policy,proto3,enum=brent.WorkspaceReviewPolicy" json:"policy,omitempty"`
+	Policy                    WorkspaceReviewPolicy  `protobuf:"varint,1,opt,name=policy,proto3,enum=until.WorkspaceReviewPolicy" json:"policy,omitempty"`
 	ActiveHumanPrincipalCount int32                  `protobuf:"varint,2,opt,name=active_human_principal_count,json=activeHumanPrincipalCount,proto3" json:"active_human_principal_count,omitempty"`
 	// Principal UUID that last updated the policy; empty when set by
 	// creation/migration rather than an operator.
@@ -23899,7 +23899,7 @@ func (x *AdminGetAccountReviewPolicyResponse) GetUpdatedAt() *timestamppb.Timest
 type AdminUpdateAccountReviewPolicyRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AccountName   string                 `protobuf:"bytes,1,opt,name=account_name,json=accountName,proto3" json:"account_name,omitempty"`
-	Policy        WorkspaceReviewPolicy  `protobuf:"varint,2,opt,name=policy,proto3,enum=brent.WorkspaceReviewPolicy" json:"policy,omitempty"`
+	Policy        WorkspaceReviewPolicy  `protobuf:"varint,2,opt,name=policy,proto3,enum=until.WorkspaceReviewPolicy" json:"policy,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -23952,7 +23952,7 @@ func (x *AdminUpdateAccountReviewPolicyRequest) GetPolicy() WorkspaceReviewPolic
 // successful update (or idempotent no-op).
 type AdminUpdateAccountReviewPolicyResponse struct {
 	state                     protoimpl.MessageState `protogen:"open.v1"`
-	Policy                    WorkspaceReviewPolicy  `protobuf:"varint,1,opt,name=policy,proto3,enum=brent.WorkspaceReviewPolicy" json:"policy,omitempty"`
+	Policy                    WorkspaceReviewPolicy  `protobuf:"varint,1,opt,name=policy,proto3,enum=until.WorkspaceReviewPolicy" json:"policy,omitempty"`
 	ActiveHumanPrincipalCount int32                  `protobuf:"varint,2,opt,name=active_human_principal_count,json=activeHumanPrincipalCount,proto3" json:"active_human_principal_count,omitempty"`
 	UpdatedBy                 string                 `protobuf:"bytes,3,opt,name=updated_by,json=updatedBy,proto3" json:"updated_by,omitempty"`
 	UpdatedAt                 *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
@@ -24181,7 +24181,7 @@ func (x *AdminListAccountIntegrationsRequest) GetAccountName() string {
 // AdminAccountIntegrationInstall is one organisation_app_installations row with
 // credential-presence flags and the shared readiness triple. Metadata only —
 // never secrets. install_id is an Area51-only exception for operator debugging
-// (customer OrganisationAppInstallation.ID does not cross BrentService).
+// (customer OrganisationAppInstallation.ID does not cross WorkspaceService).
 type AdminAccountIntegrationInstall struct {
 	state               protoimpl.MessageState `protogen:"open.v1"`
 	InstallId           int64                  `protobuf:"varint,1,opt,name=install_id,json=installId,proto3" json:"install_id,omitempty"` // Area51-only; synthetic PK for operator debugging
@@ -24194,7 +24194,7 @@ type AdminAccountIntegrationInstall struct {
 	HasSigningToken     bool                   `protobuf:"varint,8,opt,name=has_signing_token,json=hasSigningToken,proto3" json:"has_signing_token,omitempty"`    // config.signing_token_ciphertext present (GitLab)
 	HasWebhookSecret    bool                   `protobuf:"varint,9,opt,name=has_webhook_secret,json=hasWebhookSecret,proto3" json:"has_webhook_secret,omitempty"` // config.webhook_secret_ciphertext present (GitLab)
 	// Same readiness contract as IntegrationStatus (ENG-5869); buf.validate limits apply.
-	Status        IntegrationConnectionStatus `protobuf:"varint,10,opt,name=status,proto3,enum=brent.IntegrationConnectionStatus" json:"status,omitempty"`
+	Status        IntegrationConnectionStatus `protobuf:"varint,10,opt,name=status,proto3,enum=until.IntegrationConnectionStatus" json:"status,omitempty"`
 	Summary       string                      `protobuf:"bytes,11,opt,name=summary,proto3" json:"summary,omitempty"`
 	Detail        string                      `protobuf:"bytes,12,opt,name=detail,proto3" json:"detail,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -24320,9 +24320,9 @@ func (x *AdminAccountIntegrationInstall) GetDetail() string {
 type AdminListAccountIntegrationsResponse struct {
 	state             protoimpl.MessageState            `protogen:"open.v1"`
 	Installs          []*AdminAccountIntegrationInstall `protobuf:"bytes,1,rep,name=installs,proto3" json:"installs,omitempty"`
-	GitProvider       IntegrationProvider               `protobuf:"varint,2,opt,name=git_provider,json=gitProvider,proto3,enum=brent.IntegrationProvider" json:"git_provider,omitempty"`
-	TicketingProvider IntegrationProvider               `protobuf:"varint,3,opt,name=ticketing_provider,json=ticketingProvider,proto3,enum=brent.IntegrationProvider" json:"ticketing_provider,omitempty"`
-	MessagingProvider IntegrationProvider               `protobuf:"varint,4,opt,name=messaging_provider,json=messagingProvider,proto3,enum=brent.IntegrationProvider" json:"messaging_provider,omitempty"`
+	GitProvider       IntegrationProvider               `protobuf:"varint,2,opt,name=git_provider,json=gitProvider,proto3,enum=until.IntegrationProvider" json:"git_provider,omitempty"`
+	TicketingProvider IntegrationProvider               `protobuf:"varint,3,opt,name=ticketing_provider,json=ticketingProvider,proto3,enum=until.IntegrationProvider" json:"ticketing_provider,omitempty"`
+	MessagingProvider IntegrationProvider               `protobuf:"varint,4,opt,name=messaging_provider,json=messagingProvider,proto3,enum=until.IntegrationProvider" json:"messaging_provider,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
 }
@@ -24482,10 +24482,10 @@ type IntegrationCatalogueEntry struct {
 	NewlyAdded          bool     `protobuf:"varint,7,opt,name=newly_added,json=newlyAdded,proto3" json:"newly_added,omitempty"`
 	// Whether the caller's account has this entry connected/installed.
 	Connected bool                       `protobuf:"varint,8,opt,name=connected,proto3" json:"connected,omitempty"`
-	Source    IntegrationCatalogueSource `protobuf:"varint,9,opt,name=source,proto3,enum=brent.IntegrationCatalogueSource" json:"source,omitempty"`
+	Source    IntegrationCatalogueSource `protobuf:"varint,9,opt,name=source,proto3,enum=until.IntegrationCatalogueSource" json:"source,omitempty"`
 	// Set for first-party entries so the picker can render "Already configured"
 	// and a Manage deep-link; INTEGRATION_PROVIDER_UNSPECIFIED otherwise.
-	Provider IntegrationProvider `protobuf:"varint,10,opt,name=provider,proto3,enum=brent.IntegrationProvider" json:"provider,omitempty"`
+	Provider IntegrationProvider `protobuf:"varint,10,opt,name=provider,proto3,enum=until.IntegrationProvider" json:"provider,omitempty"`
 	AutoRank int32               `protobuf:"varint,11,opt,name=auto_rank,json=autoRank,proto3" json:"auto_rank,omitempty"`
 	// When the install was created. Set for connected BYO HTTP MCP endpoint
 	// cards; unset for catalogue/builtin rows that are not installed instances.
@@ -24727,7 +24727,7 @@ var file_brent_proto_extTypes = []protoimpl.ExtensionInfo{
 		ExtendedType:  (*descriptorpb.FieldOptions)(nil),
 		ExtensionType: (*bool)(nil),
 		Field:         50001,
-		Name:          "brent.embedded_json",
+		Name:          "until.embedded_json",
 		Tag:           "varint,50001,opt,name=embedded_json",
 		Filename:      "brent.proto",
 	},
@@ -24743,26 +24743,26 @@ var File_brent_proto protoreflect.FileDescriptor
 
 const file_brent_proto_rawDesc = "" +
 	"\n" +
-	"\vbrent.proto\x12\x05brent\x1a\x1bbuf/validate/validate.proto\x1a google/protobuf/descriptor.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x80\x01\n" +
+	"\vbrent.proto\x12\x05until\x1a\x1bbuf/validate/validate.proto\x1a google/protobuf/descriptor.proto\x1a\x1bgoogle/protobuf/empty.proto\x1a\x1cgoogle/protobuf/struct.proto\x1a\x1fgoogle/protobuf/timestamp.proto\"\x80\x01\n" +
 	"\x17ListPullRequestsRequest\x12\x14\n" +
 	"\x05state\x18\x01 \x01(\tR\x05state\x12\x14\n" +
 	"\x05limit\x18\x02 \x01(\rR\x05limit\x12\x16\n" +
 	"\x06offset\x18\x03 \x01(\rR\x06offset\x12!\n" +
 	"\faccount_name\x18\x04 \x01(\tR\vaccountName\"{\n" +
 	"\x18ListPullRequestsResponse\x12>\n" +
-	"\rpull_requests\x18\x01 \x03(\v2\x19.brent.PullRequestSummaryR\fpullRequests\x12\x1f\n" +
+	"\rpull_requests\x18\x01 \x03(\v2\x19.until.PullRequestSummaryR\fpullRequests\x12\x1f\n" +
 	"\vtotal_count\x18\x02 \x01(\rR\n" +
 	"totalCount\"S\n" +
 	"\x19GetPullRequestByIDRequest\x12\x13\n" +
 	"\x05pr_id\x18\x01 \x01(\tR\x04prId\x12!\n" +
 	"\faccount_name\x18\x02 \x01(\tR\vaccountName\"S\n" +
 	"\x1aGetPullRequestByIDResponse\x125\n" +
-	"\fpull_request\x18\x01 \x01(\v2\x12.brent.PullRequestR\vpullRequest\"[\n" +
-	"!ListDeviationAnalysesForPRRequest\x12\x13\n" +
+	"\fpull_request\x18\x01 \x01(\v2\x12.until.PullRequestR\vpullRequest\"T\n" +
+	"\x1aListPlanChecksForPRRequest\x12\x13\n" +
 	"\x05pr_id\x18\x01 \x01(\tR\x04prId\x12!\n" +
-	"\faccount_name\x18\x02 \x01(\tR\vaccountName\"a\n" +
-	"\"ListDeviationAnalysesForPRResponse\x12;\n" +
-	"\banalyses\x18\x01 \x03(\v2\x1f.brent.DeviationAnalysisSummaryR\banalyses\"W\n" +
+	"\faccount_name\x18\x02 \x01(\tR\vaccountName\"R\n" +
+	"\x1bListPlanChecksForPRResponse\x123\n" +
+	"\banalyses\x18\x01 \x03(\v2\x17.until.PlanCheckSummaryR\banalyses\"W\n" +
 	"\x1dGetPullRequestTimelineRequest\x12\x13\n" +
 	"\x05pr_id\x18\x01 \x01(\tR\x04prId\x12!\n" +
 	"\faccount_name\x18\x02 \x01(\tR\vaccountName\"\xd5\x02\n" +
@@ -24783,9 +24783,9 @@ const file_brent_proto_rawDesc = "" +
 	"\x04code\x18\x01 \x01(\tR\x04code\x12\x18\n" +
 	"\amessage\x18\x02 \x01(\tR\amessage\"\xd2\x01\n" +
 	"\x1eGetPullRequestTimelineResponse\x125\n" +
-	"\fpull_request\x18\x01 \x01(\v2\x12.brent.PullRequestR\vpullRequest\x12:\n" +
-	"\x06events\x18\x02 \x03(\v2\".brent.PullRequestTimelineEventRowR\x06events\x12=\n" +
-	"\bwarnings\x18\x03 \x03(\v2!.brent.PullRequestTimelineWarningR\bwarnings\"\xf5\x03\n" +
+	"\fpull_request\x18\x01 \x01(\v2\x12.until.PullRequestR\vpullRequest\x12:\n" +
+	"\x06events\x18\x02 \x03(\v2\".until.PullRequestTimelineEventRowR\x06events\x12=\n" +
+	"\bwarnings\x18\x03 \x03(\v2!.until.PullRequestTimelineWarningR\bwarnings\"\xf5\x03\n" +
 	"\x12PullRequestSummary\x12\x13\n" +
 	"\x05pr_id\x18\x01 \x01(\tR\x04prId\x12!\n" +
 	"\faccount_name\x18\x02 \x01(\tR\vaccountName\x12$\n" +
@@ -24831,26 +24831,24 @@ const file_brent_proto_rawDesc = "" +
 	"\x11linked_plan_title\x18\x14 \x01(\tR\x0flinkedPlanTitle\x12\x1f\n" +
 	"\vlink_reason\x18\x15 \x01(\tR\n" +
 	"linkReason\x12(\n" +
-	"\x10linked_plan_uuid\x18\x16 \x01(\tR\x0elinkedPlanUuid\"\x83\x04\n" +
-	"\x18DeviationAnalysisSummary\x12\x1f\n" +
-	"\vanalysis_id\x18\x01 \x01(\tR\n" +
-	"analysisId\x12!\n" +
+	"\x10linked_plan_uuid\x18\x16 \x01(\tR\x0elinkedPlanUuid\"\xfa\x03\n" +
+	"\x10PlanCheckSummary\x12\"\n" +
+	"\rplan_check_id\x18\x01 \x01(\tR\vplanCheckId\x12!\n" +
 	"\faccount_name\x18\x02 \x01(\tR\vaccountName\x12\x13\n" +
 	"\x05pr_id\x18\x03 \x01(\tR\x04prId\x12\x1b\n" +
 	"\tplan_uuid\x18\x04 \x01(\tR\bplanUuid\x12\x19\n" +
-	"\bhead_sha\x18\x05 \x01(\tR\aheadSha\x12&\n" +
-	"\x0fworkflow_run_id\x18\x06 \x01(\tR\rworkflowRunId\x12%\n" +
+	"\bhead_sha\x18\x05 \x01(\tR\aheadSha\x12\x1e\n" +
+	"\vloop_run_id\x18\x06 \x01(\tR\tloopRunId\x12%\n" +
 	"\x0efailure_reason\x18\t \x01(\tR\rfailureReason\x129\n" +
 	"\n" +
 	"started_at\x18\n" +
 	" \x01(\v2\x1a.google.protobuf.TimestampR\tstartedAt\x12=\n" +
 	"\fcompleted_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\vcompletedAt\x127\n" +
-	"\tfailed_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\bfailedAt\x123\n" +
-	"\bfindings\x18\r \x03(\v2\x17.brent.DeviationFindingR\bfindingsJ\x04\b\a\x10\bJ\x04\b\b\x10\tR\averdictR\n" +
-	"summary_md\"\xc8\x04\n" +
-	"\x10DeviationFinding\x12\x1d\n" +
-	"\n" +
-	"finding_id\x18\x01 \x01(\tR\tfindingId\x12\x10\n" +
+	"\tfailed_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\bfailedAt\x127\n" +
+	"\vdifferences\x18\r \x03(\v2\x15.until.PlanDifferenceR\vdifferencesJ\x04\b\a\x10\bJ\x04\b\b\x10\tR\averdictR\n" +
+	"summary_md\"\xd5\x04\n" +
+	"\x0ePlanDifference\x12,\n" +
+	"\x12plan_difference_id\x18\x01 \x01(\tR\x10planDifferenceId\x12\x10\n" +
 	"\x03tag\x18\x02 \x01(\tR\x03tag\x12\x18\n" +
 	"\asummary\x18\x03 \x01(\tR\asummary\x12\x1f\n" +
 	"\vanchor_path\x18\x04 \x01(\tR\n" +
@@ -24869,26 +24867,29 @@ const file_brent_proto_rawDesc = "" +
 	"ack_source\x18\r \x01(\tR\tackSource\x12\x17\n" +
 	"\aack_ref\x18\x0e \x01(\tR\x06ackRef\x12.\n" +
 	"\x13ack_reasoning_quote\x18\x0f \x01(\tR\x11ackReasoningQuote\x12\x12\n" +
-	"\x04slug\x18\x10 \x01(\tR\x04slug\"\xd0\x02\n" +
-	"\x16ExecuteWorkflowRequest\x12'\n" +
-	"\x0fworkflow_prompt\x18\x01 \x01(\tR\x0eworkflowPrompt\x121\n" +
-	"\x12trigger_event_json\x18\x02 \x01(\tH\x00R\x10triggerEventJson\x88\x01\x01\x12(\n" +
-	"\rworkflow_name\x18\x06 \x01(\tH\x01R\fworkflowName\x88\x01\x01\x12&\n" +
+	"\x04slug\x18\x10 \x01(\tR\x04slug\"\xb8\x02\n" +
+	"\x12ExecuteLoopRequest\x12\x1f\n" +
+	"\vloop_prompt\x18\x01 \x01(\tR\n" +
+	"loopPrompt\x121\n" +
+	"\x12trigger_event_json\x18\x02 \x01(\tH\x00R\x10triggerEventJson\x88\x01\x01\x12 \n" +
+	"\tloop_name\x18\x06 \x01(\tH\x01R\bloopName\x88\x01\x01\x12&\n" +
 	"\faccount_name\x18\a \x01(\tH\x02R\vaccountName\x88\x01\x01B\x15\n" +
-	"\x13_trigger_event_jsonB\x10\n" +
-	"\x0e_workflow_nameB\x0f\n" +
+	"\x13_trigger_event_jsonB\f\n" +
+	"\n" +
+	"_loop_nameB\x0f\n" +
 	"\r_account_nameJ\x04\b\x03\x10\x04J\x04\b\x04\x10\x05J\x04\b\x05\x10\x06R\n" +
-	"pr_contextR\x18custom_preamble_templateR\x16custom_shared_workflow\"N\n" +
-	"\x0fListRunsRequest\x12#\n" +
-	"\rworkflow_name\x18\x01 \x01(\tR\fworkflowName\x12\x16\n" +
+	"pr_contextR\x18custom_preamble_templateR\x16custom_shared_workflow\"F\n" +
+	"\x0fListRunsRequest\x12\x1b\n" +
+	"\tloop_name\x18\x01 \x01(\tR\bloopName\x12\x16\n" +
 	"\x06status\x18\x02 \x01(\tR\x06status\"9\n" +
 	"\x10ListRunsResponse\x12%\n" +
-	"\x04runs\x18\x01 \x03(\v2\x11.brent.RunSummaryR\x04runs\"\x9f\x03\n" +
+	"\x04runs\x18\x01 \x03(\v2\x11.until.RunSummaryR\x04runs\"\x97\x03\n" +
 	"\n" +
 	"RunSummary\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12(\n" +
-	"\x06status\x18\x02 \x01(\x0e2\x10.brent.RunStatusR\x06status\x12'\n" +
-	"\x0fworkflow_prompt\x18\x03 \x01(\tR\x0eworkflowPrompt\x121\n" +
+	"\x06status\x18\x02 \x01(\x0e2\x10.until.RunStatusR\x06status\x12\x1f\n" +
+	"\vloop_prompt\x18\x03 \x01(\tR\n" +
+	"loopPrompt\x121\n" +
 	"\x12trigger_event_json\x18\x04 \x01(\tH\x00R\x10triggerEventJson\x88\x01\x01\x129\n" +
 	"\n" +
 	"started_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tstartedAt\x12B\n" +
@@ -24902,7 +24903,7 @@ const file_brent_proto_rawDesc = "" +
 	"\x06run_id\x18\x01 \x01(\tR\x05runId\"\x15\n" +
 	"\x13StreamEventsRequest\":\n" +
 	"\x14StreamEventsResponse\x12\"\n" +
-	"\x05event\x18\x01 \x01(\v2\f.brent.EventR\x05event\"\xcc\x02\n" +
+	"\x05event\x18\x01 \x01(\v2\f.until.EventR\x05event\"\xcc\x02\n" +
 	"\x11ListEventsRequest\x12!\n" +
 	"\faccount_name\x18\x01 \x01(\tR\vaccountName\x12?\n" +
 	"\roccurred_from\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\foccurredFrom\x12;\n" +
@@ -24916,7 +24917,7 @@ const file_brent_proto_rawDesc = "" +
 	"\x05limit\x18\a \x01(\rR\x05limit\x12!\n" +
 	"\fafter_cursor\x18\b \x01(\tR\vafterCursor\"[\n" +
 	"\x12ListEventsResponse\x12$\n" +
-	"\x06events\x18\x01 \x03(\v2\f.brent.EventR\x06events\x12\x1f\n" +
+	"\x06events\x18\x01 \x03(\v2\f.until.EventR\x06events\x12\x1f\n" +
 	"\vnext_cursor\x18\x02 \x01(\tR\n" +
 	"nextCursor\")\n" +
 	"\x10CancelRunRequest\x12\x15\n" +
@@ -24926,14 +24927,14 @@ const file_brent_proto_rawDesc = "" +
 	"\x05limit\x18\x01 \x01(\rR\x05limit\x12\x16\n" +
 	"\x06offset\x18\x02 \x01(\rR\x06offset\"|\n" +
 	"\x1cListOpenPullRequestsResponse\x12;\n" +
-	"\rpull_requests\x18\x01 \x03(\v2\x16.brent.OpenPullRequestR\fpullRequests\x12\x1f\n" +
+	"\rpull_requests\x18\x01 \x03(\v2\x16.until.OpenPullRequestR\fpullRequests\x12\x1f\n" +
 	"\vtotal_count\x18\x02 \x01(\rR\n" +
 	"totalCount\"C\n" +
 	"\x15GetPullRequestRequest\x12\x12\n" +
 	"\x04repo\x18\x01 \x01(\tR\x04repo\x12\x16\n" +
 	"\x06number\x18\x02 \x01(\x05R\x06number\"S\n" +
 	"\x16GetPullRequestResponse\x129\n" +
-	"\fpull_request\x18\x01 \x01(\v2\x16.brent.OpenPullRequestR\vpullRequest\"\xb5\x02\n" +
+	"\fpull_request\x18\x01 \x01(\v2\x16.until.OpenPullRequestR\vpullRequest\"\xb5\x02\n" +
 	"\x0fOpenPullRequest\x12\x12\n" +
 	"\x04repo\x18\x01 \x01(\tR\x04repo\x12\x16\n" +
 	"\x06number\x18\x02 \x01(\x05R\x06number\x12\x14\n" +
@@ -24947,24 +24948,24 @@ const file_brent_proto_rawDesc = "" +
 	"\x05state\x18\t \x01(\tR\x05state\x129\n" +
 	"\n" +
 	"updated_at\x18\n" +
-	" \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAtJ\x04\b\b\x10\tR\x14latest_ci_conclusion\"\xf7\x04\n" +
-	"\x17ExecuteWorkflowResponse\x128\n" +
+	" \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAtJ\x04\b\b\x10\tR\x14latest_ci_conclusion\"\xf3\x04\n" +
+	"\x13ExecuteLoopResponse\x128\n" +
 	"\ttimestamp\x18\x01 \x01(\v2\x1a.google.protobuf.TimestampR\ttimestamp\x124\n" +
 	"\treasoning\x18\n" +
-	" \x01(\v2\x14.brent.ReasoningStepH\x00R\treasoning\x122\n" +
-	"\ttool_call\x18\v \x01(\v2\x13.brent.ToolCallStepH\x00R\btoolCall\x128\n" +
-	"\vtool_result\x18\f \x01(\v2\x15.brent.ToolResultStepH\x00R\n" +
+	" \x01(\v2\x14.until.ReasoningStepH\x00R\treasoning\x122\n" +
+	"\ttool_call\x18\v \x01(\v2\x13.until.ToolCallStepH\x00R\btoolCall\x128\n" +
+	"\vtool_result\x18\f \x01(\v2\x15.until.ToolResultStepH\x00R\n" +
 	"toolResult\x127\n" +
 	"\n" +
-	"completion\x18\r \x01(\v2\x15.brent.CompletionStepH\x00R\n" +
+	"completion\x18\r \x01(\v2\x15.until.CompletionStepH\x00R\n" +
 	"completion\x12(\n" +
-	"\x05error\x18\x0e \x01(\v2\x10.brent.ErrorStepH\x00R\x05error\x12+\n" +
-	"\x06status\x18\x0f \x01(\v2\x11.brent.StatusStepH\x00R\x06status\x128\n" +
-	"\vrun_started\x18\x10 \x01(\v2\x15.brent.RunStartedStepH\x00R\n" +
+	"\x05error\x18\x0e \x01(\v2\x10.until.ErrorStepH\x00R\x05error\x12+\n" +
+	"\x06status\x18\x0f \x01(\v2\x11.until.StatusStepH\x00R\x06status\x128\n" +
+	"\vrun_started\x18\x10 \x01(\v2\x15.until.RunStartedStepH\x00R\n" +
 	"runStarted\x12/\n" +
-	"\bqa_ready\x18\x11 \x01(\v2\x12.brent.QAReadyStepH\x00R\aqaReady\x12>\n" +
-	"\ruser_question\x18\x12 \x01(\v2\x17.brent.UserQuestionStepH\x00R\fuserQuestion\x12;\n" +
-	"\fuser_message\x18\x13 \x01(\v2\x16.brent.UserMessageStepH\x00R\vuserMessageB\x06\n" +
+	"\bqa_ready\x18\x11 \x01(\v2\x12.until.QAReadyStepH\x00R\aqaReady\x12>\n" +
+	"\ruser_question\x18\x12 \x01(\v2\x17.until.UserQuestionStepH\x00R\fuserQuestion\x12;\n" +
+	"\fuser_message\x18\x13 \x01(\v2\x16.until.UserMessageStepH\x00R\vuserMessageB\x06\n" +
 	"\x04step\")\n" +
 	"\rReasoningStep\x12\x18\n" +
 	"\acontent\x18\x01 \x01(\tR\acontent\"\x8b\x01\n" +
@@ -25006,7 +25007,7 @@ const file_brent_proto_rawDesc = "" +
 	"\rreview_status\x18\x05 \x01(\tR\freviewStatus\x12\x1c\n" +
 	"\tlifecycle\x18\x06 \x01(\tR\tlifecycle\"c\n" +
 	"\x16AdminListPlansResponse\x12(\n" +
-	"\x05plans\x18\x01 \x03(\v2\x12.brent.PlanSummaryR\x05plans\x12\x1f\n" +
+	"\x05plans\x18\x01 \x03(\v2\x12.until.PlanSummaryR\x05plans\x12\x1f\n" +
 	"\vtotal_count\x18\x02 \x01(\rR\n" +
 	"totalCount\"\xa0\x06\n" +
 	"\vPlanSummary\x12\x1f\n" +
@@ -25035,9 +25036,9 @@ const file_brent_proto_rawDesc = "" +
 	"\x13AdminGetPlanRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"\xc5\x01\n" +
 	"\x14AdminGetPlanResponse\x12\x1f\n" +
-	"\x04plan\x18\x01 \x01(\v2\v.brent.PlanR\x04plan\x12=\n" +
-	"\x0frelated_reviews\x18\x02 \x03(\v2\x14.brent.ReviewSummaryR\x0erelatedReviews\x12M\n" +
-	"\x15related_pull_requests\x18\x03 \x03(\v2\x19.brent.PullRequestSummaryR\x13relatedPullRequests\"\xd3\x05\n" +
+	"\x04plan\x18\x01 \x01(\v2\v.until.PlanR\x04plan\x12=\n" +
+	"\x0frelated_reviews\x18\x02 \x03(\v2\x14.until.ReviewSummaryR\x0erelatedReviews\x12M\n" +
+	"\x15related_pull_requests\x18\x03 \x03(\v2\x19.until.PullRequestSummaryR\x13relatedPullRequests\"\xd3\x05\n" +
 	"\x04Plan\x12\x1f\n" +
 	"\vfriendly_id\x18\x01 \x01(\tR\n" +
 	"friendlyId\x12!\n" +
@@ -25067,7 +25068,7 @@ const file_brent_proto_rawDesc = "" +
 	"\x06offset\x18\x05 \x01(\x05R\x06offset\"p\n" +
 	"\x1bAdminListPrincipalsResponse\x120\n" +
 	"\n" +
-	"principals\x18\x01 \x03(\v2\x10.brent.PrincipalR\n" +
+	"principals\x18\x01 \x03(\v2\x10.until.PrincipalR\n" +
 	"principals\x12\x1f\n" +
 	"\vtotal_count\x18\x02 \x01(\x05R\n" +
 	"totalCount\";\n" +
@@ -25075,11 +25076,11 @@ const file_brent_proto_rawDesc = "" +
 	"\vexternal_id\x18\x01 \x01(\tR\n" +
 	"externalId\"\xb1\x01\n" +
 	"\x19AdminGetPrincipalResponse\x12.\n" +
-	"\tprincipal\x18\x01 \x01(\v2\x10.brent.PrincipalR\tprincipal\x128\n" +
+	"\tprincipal\x18\x01 \x01(\v2\x10.until.PrincipalR\tprincipal\x128\n" +
 	"\n" +
-	"identities\x18\x02 \x03(\v2\x18.brent.PrincipalIdentityR\n" +
+	"identities\x18\x02 \x03(\v2\x18.until.PrincipalIdentityR\n" +
 	"identities\x12*\n" +
-	"\bbindings\x18\x03 \x03(\v2\x0e.brent.BindingR\bbindings\"\x83\x02\n" +
+	"\bbindings\x18\x03 \x03(\v2\x0e.until.BindingR\bbindings\"\x83\x02\n" +
 	"\x11PrincipalIdentity\x12\x1f\n" +
 	"\vexternal_id\x18\x01 \x01(\tR\n" +
 	"externalId\x12!\n" +
@@ -25096,7 +25097,7 @@ const file_brent_proto_rawDesc = "" +
 	"\bprovider\x18\x03 \x01(\tR\bprovider\x12\x16\n" +
 	"\x06handle\x18\x04 \x01(\tR\x06handle\"O\n" +
 	"#AdminUpsertPrincipalBindingResponse\x12(\n" +
-	"\abinding\x18\x01 \x01(\v2\x0e.brent.BindingR\abinding\"h\n" +
+	"\abinding\x18\x01 \x01(\v2\x0e.until.BindingR\abinding\"h\n" +
 	"\"AdminDeletePrincipalBindingRequest\x12!\n" +
 	"\faccount_name\x18\x01 \x01(\tR\vaccountName\x12\x1f\n" +
 	"\vexternal_id\x18\x02 \x01(\tR\n" +
@@ -25111,14 +25112,14 @@ const file_brent_proto_rawDesc = "" +
 	"\r_display_nameB\t\n" +
 	"\a_status\"N\n" +
 	"\x1cAdminUpdatePrincipalResponse\x12.\n" +
-	"\tprincipal\x18\x01 \x01(\v2\x10.brent.PrincipalR\tprincipal\"\xa1\x01\n" +
+	"\tprincipal\x18\x01 \x01(\v2\x10.until.PrincipalR\tprincipal\"\xa1\x01\n" +
 	"#AdminCreatePrincipalIdentityRequest\x12!\n" +
 	"\faccount_name\x18\x01 \x01(\tR\vaccountName\x12!\n" +
 	"\fprincipal_id\x18\x02 \x01(\tR\vprincipalId\x12\x1a\n" +
 	"\bprovider\x18\x03 \x01(\tR\bprovider\x12\x18\n" +
 	"\asubject\x18\x04 \x01(\tR\asubject\"\\\n" +
 	"$AdminCreatePrincipalIdentityResponse\x124\n" +
-	"\bidentity\x18\x01 \x01(\v2\x18.brent.PrincipalIdentityR\bidentity\"i\n" +
+	"\bidentity\x18\x01 \x01(\v2\x18.until.PrincipalIdentityR\bidentity\"i\n" +
 	"#AdminDeletePrincipalIdentityRequest\x12!\n" +
 	"\faccount_name\x18\x01 \x01(\tR\vaccountName\x12\x1f\n" +
 	"\vexternal_id\x18\x02 \x01(\tR\n" +
@@ -25136,7 +25137,7 @@ const file_brent_proto_rawDesc = "" +
 	"\faccount_name\x18\x01 \x01(\tR\vaccountName\x12\x1a\n" +
 	"\bprovider\x18\x02 \x01(\tR\bprovider\"y\n" +
 	"/AdminListPrincipalCredentialConnectionsResponse\x12F\n" +
-	"\vconnections\x18\x01 \x03(\v2$.brent.PrincipalCredentialConnectionR\vconnections\"\xce\x02\n" +
+	"\vconnections\x18\x01 \x03(\v2$.until.PrincipalCredentialConnectionR\vconnections\"\xce\x02\n" +
 	"\x1dPrincipalCredentialConnection\x12!\n" +
 	"\fprincipal_id\x18\x01 \x01(\tR\vprincipalId\x12\x1a\n" +
 	"\bprovider\x18\x02 \x01(\tR\bprovider\x12\x1c\n" +
@@ -25155,7 +25156,7 @@ const file_brent_proto_rawDesc = "" +
 	"\x17AdminListReviewsRequest\x12!\n" +
 	"\faccount_name\x18\x01 \x01(\tR\vaccountName\"J\n" +
 	"\x18AdminListReviewsResponse\x12.\n" +
-	"\areviews\x18\x01 \x03(\v2\x14.brent.ReviewSummaryR\areviews\"\xdb\x06\n" +
+	"\areviews\x18\x01 \x03(\v2\x14.until.ReviewSummaryR\areviews\"\xdb\x06\n" +
 	"\rReviewSummary\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12(\n" +
 	"\x10plan_friendly_id\x18\x02 \x01(\tR\x0eplanFriendlyId\x12!\n" +
@@ -25175,8 +25176,8 @@ const file_brent_proto_rawDesc = "" +
 	"\x15AdminGetReviewRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"u\n" +
 	"\x16AdminGetReviewResponse\x12%\n" +
-	"\x06review\x18\x01 \x01(\v2\r.brent.ReviewR\x06review\x12+\n" +
-	"\x04plan\x18\x02 \x01(\v2\x12.brent.PlanSummaryH\x00R\x04plan\x88\x01\x01B\a\n" +
+	"\x06review\x18\x01 \x01(\v2\r.until.ReviewR\x06review\x12+\n" +
+	"\x04plan\x18\x02 \x01(\v2\x12.until.PlanSummaryH\x00R\x04plan\x88\x01\x01B\a\n" +
 	"\x05_plan\"\xd6\a\n" +
 	"\x06Review\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12(\n" +
@@ -25204,15 +25205,15 @@ const file_brent_proto_rawDesc = "" +
 	"\x04slug\x18\x03 \x01(\tR\x04slug\x12!\n" +
 	"\fdisplay_name\x18\x04 \x01(\tR\vdisplayName\"N\n" +
 	"\x19AdminListAccountsResponse\x121\n" +
-	"\baccounts\x18\x01 \x03(\v2\x15.brent.AccountSummaryR\baccounts\"B\n" +
+	"\baccounts\x18\x01 \x03(\v2\x15.until.AccountSummaryR\baccounts\"B\n" +
 	"\x1dAdminGetAccountSummaryRequest\x12!\n" +
-	"\faccount_name\x18\x01 \x01(\tR\vaccountName\"\xa2\x01\n" +
-	"\x11AccountRunSummary\x12&\n" +
-	"\x0fworkflow_run_id\x18\x01 \x01(\tR\rworkflowRunId\x12\x12\n" +
+	"\faccount_name\x18\x01 \x01(\tR\vaccountName\"\x9a\x01\n" +
+	"\x11AccountRunSummary\x12\x1e\n" +
+	"\vloop_run_id\x18\x01 \x01(\tR\tloopRunId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x16\n" +
 	"\x06status\x18\x03 \x01(\tR\x06status\x129\n" +
 	"\n" +
-	"started_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tstartedAt\"\xcc\x04\n" +
+	"started_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tstartedAt\"\xbc\x04\n" +
 	"\x1eAdminGetAccountSummaryResponse\x12!\n" +
 	"\faccount_name\x18\x01 \x01(\tR\vaccountName\x12\x1f\n" +
 	"\vgithub_orgs\x18\x02 \x03(\tR\n" +
@@ -25221,12 +25222,12 @@ const file_brent_proto_rawDesc = "" +
 	"\x10linear_connected\x18\x04 \x01(\bR\x0flinearConnected\x12\x1d\n" +
 	"\n" +
 	"plan_count\x18\x05 \x01(\x03R\tplanCount\x12!\n" +
-	"\freview_count\x18\x06 \x01(\x03R\vreviewCount\x12,\n" +
-	"\x12workflow_run_count\x18\a \x01(\x03R\x10workflowRunCount\x127\n" +
-	"\x18workflow_run_error_count\x18\b \x01(\x03R\x15workflowRunErrorCount\x12\x19\n" +
+	"\freview_count\x18\x06 \x01(\x03R\vreviewCount\x12$\n" +
+	"\x0eloop_run_count\x18\a \x01(\x03R\floopRunCount\x12/\n" +
+	"\x14loop_run_error_count\x18\b \x01(\x03R\x11loopRunErrorCount\x12\x19\n" +
 	"\bpr_count\x18\t \x01(\x03R\aprCount\x12@\n" +
 	"\x0elast_active_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\flastActiveAt\x129\n" +
-	"\vrecent_runs\x18\f \x03(\v2\x18.brent.AccountRunSummaryR\n" +
+	"\vrecent_runs\x18\f \x03(\v2\x18.until.AccountRunSummaryR\n" +
 	"recentRuns\x12\x12\n" +
 	"\x04slug\x18\r \x01(\tR\x04slug\x12!\n" +
 	"\fdisplay_name\x18\x0e \x01(\tR\vdisplayNameJ\x04\b\n" +
@@ -25238,7 +25239,7 @@ const file_brent_proto_rawDesc = "" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x16\n" +
 	"\x06detail\x18\x03 \x01(\tR\x06detail\"\x9d\x01\n" +
 	"%AdminGetAccountHealthAnalysisResponse\x127\n" +
-	"\bfindings\x18\x01 \x03(\v2\x1b.brent.AccountHealthFindingR\bfindings\x12;\n" +
+	"\bfindings\x18\x01 \x03(\v2\x1b.until.AccountHealthFindingR\bfindings\x12;\n" +
 	"\vcomputed_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"computedAt\"G\n" +
 	"\"AdminListAccountMetricReposRequest\x12!\n" +
@@ -25247,7 +25248,7 @@ const file_brent_proto_rawDesc = "" +
 	"\tfull_name\x18\x01 \x01(\tR\bfullName\x12\x1a\n" +
 	"\barchived\x18\x02 \x01(\bR\barchived\"U\n" +
 	"#AdminListAccountMetricReposResponse\x12.\n" +
-	"\x05repos\x18\x01 \x03(\v2\x18.brent.AccountMetricRepoR\x05repos\"\xf9\x04\n" +
+	"\x05repos\x18\x01 \x03(\v2\x18.until.AccountMetricRepoR\x05repos\"\xf9\x04\n" +
 	")AdminStartAccountMetricsComparisonRequest\x12!\n" +
 	"\faccount_name\x18\x01 \x01(\tR\vaccountName\x12$\n" +
 	"\x0erepo_full_name\x18\x02 \x01(\tR\frepoFullName\x12=\n" +
@@ -25258,7 +25259,7 @@ const file_brent_proto_rawDesc = "" +
 	"afterStart\x127\n" +
 	"\tafter_end\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\bafterEnd\x12(\n" +
 	"\x10linear_team_name\x18\a \x01(\tR\x0elinearTeamName\x12E\n" +
-	"\x0fcomparison_mode\x18\b \x01(\x0e2\x1c.brent.MetricsComparisonModeR\x0ecomparisonMode\x12R\n" +
+	"\x0fcomparison_mode\x18\b \x01(\x0e2\x1c.until.MetricsComparisonModeR\x0ecomparisonMode\x12R\n" +
 	"\x17planned_unplanned_start\x18\t \x01(\v2\x1a.google.protobuf.TimestampR\x15plannedUnplannedStart\x12N\n" +
 	"\x15planned_unplanned_end\x18\n" +
 	" \x01(\v2\x1a.google.protobuf.TimestampR\x13plannedUnplannedEnd\"C\n" +
@@ -25292,7 +25293,7 @@ const file_brent_proto_rawDesc = "" +
 	" \x01(\v2\x1a.google.protobuf.TimestampR\vcompletedAt\x12\x1f\n" +
 	"\vreport_html\x18\v \x01(\tR\n" +
 	"reportHtml\x12<\n" +
-	"\bheadline\x18\f \x03(\v2 .brent.MetricsComparisonHeadlineR\bheadline\x12=\n" +
+	"\bheadline\x18\f \x03(\v2 .until.MetricsComparisonHeadlineR\bheadline\x12=\n" +
 	"\fbefore_start\x18\r \x01(\v2\x1a.google.protobuf.TimestampR\vbeforeStart\x129\n" +
 	"\n" +
 	"before_end\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampR\tbeforeEnd\x12;\n" +
@@ -25300,17 +25301,17 @@ const file_brent_proto_rawDesc = "" +
 	"afterStart\x127\n" +
 	"\tafter_end\x18\x10 \x01(\v2\x1a.google.protobuf.TimestampR\bafterEnd\x12'\n" +
 	"\x0fcomparison_json\x18\x11 \x01(\tR\x0ecomparisonJson\x12>\n" +
-	"\tartifacts\x18\x12 \x03(\v2 .brent.MetricsComparisonArtifactR\tartifacts\x12E\n" +
-	"\x0fcomparison_mode\x18\x13 \x01(\x0e2\x1c.brent.MetricsComparisonModeR\x0ecomparisonMode\x12R\n" +
+	"\tartifacts\x18\x12 \x03(\v2 .until.MetricsComparisonArtifactR\tartifacts\x12E\n" +
+	"\x0fcomparison_mode\x18\x13 \x01(\x0e2\x1c.until.MetricsComparisonModeR\x0ecomparisonMode\x12R\n" +
 	"\x17planned_unplanned_start\x18\x14 \x01(\v2\x1a.google.protobuf.TimestampR\x15plannedUnplannedStart\x12N\n" +
-	"\x15planned_unplanned_end\x18\x15 \x01(\v2\x1a.google.protobuf.TimestampR\x13plannedUnplannedEnd\"\xf99\n" +
+	"\x15planned_unplanned_end\x18\x15 \x01(\v2\x1a.google.protobuf.TimestampR\x13plannedUnplannedEnd\"\xcb8\n" +
 	"\x05Event\x12\x19\n" +
 	"\bevent_id\x18\x01 \x01(\tR\aeventId\x12;\n" +
 	"\voccurred_at\x18\x02 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"occurredAt\x12!\n" +
 	"\faccount_name\x18\x03 \x01(\tR\vaccountName\x12\"\n" +
-	"\x05actor\x18\x04 \x01(\v2\f.brent.ActorR\x05actor\x123\n" +
-	"\x06object\x18\x05 \x01(\v2\x16.brent.ObjectReferenceH\x01R\x06object\x88\x01\x01\x12+\n" +
+	"\x05actor\x18\x04 \x01(\v2\f.until.ActorR\x05actor\x123\n" +
+	"\x06object\x18\x05 \x01(\v2\x16.until.ObjectReferenceH\x01R\x06object\x88\x01\x01\x12+\n" +
 	"\x0fsource_repo_url\x18\x06 \x01(\tH\x02R\rsourceRepoUrl\x88\x01\x01\x12\x1e\n" +
 	"\btrace_id\x18\a \x01(\tH\x03R\atraceId\x88\x01\x01\x12\x1c\n" +
 	"\aspan_id\x18\b \x01(\tH\x04R\x06spanId\x88\x01\x01\x123\n" +
@@ -25318,87 +25319,87 @@ const file_brent_proto_rawDesc = "" +
 	"\vreceived_at\x18H \x01(\v2\x1a.google.protobuf.TimestampR\n" +
 	"receivedAt\x127\n" +
 	"\fplan_created\x18\n" +
-	" \x01(\v2\x12.brent.PlanCreatedH\x00R\vplanCreated\x127\n" +
-	"\fplan_updated\x18\v \x01(\v2\x12.brent.PlanUpdatedH\x00R\vplanUpdated\x127\n" +
-	"\fplan_deleted\x18\f \x01(\v2\x12.brent.PlanDeletedH\x00R\vplanDeleted\x12C\n" +
-	"\x10review_requested\x18\r \x01(\v2\x16.brent.ReviewRequestedH\x00R\x0freviewRequested\x12C\n" +
-	"\x10review_submitted\x18\x0e \x01(\v2\x16.brent.ReviewSubmittedH\x00R\x0freviewSubmitted\x12)\n" +
-	"\x05other\x18\x0f \x01(\v2\x11.brent.OtherEventH\x00R\x05other\x12=\n" +
-	"\x0egithub_webhook\x18\x10 \x01(\v2\x14.brent.GitHubWebhookH\x00R\rgithubWebhook\x12B\n" +
-	"\rslack_mention\x18\x11 \x01(\v2\x1b.brent.SlackMentionReceivedH\x00R\fslackMention\x12B\n" +
-	"\x0eslack_reaction\x18\x12 \x01(\v2\x19.brent.SlackReactionAddedH\x00R\rslackReaction\x12J\n" +
-	"\x13pull_request_opened\x18\x13 \x01(\v2\x18.brent.PullRequestOpenedH\x00R\x11pullRequestOpened\x12\\\n" +
-	"\x19pull_request_synchronized\x18\x14 \x01(\v2\x1e.brent.PullRequestSynchronizedH\x00R\x17pullRequestSynchronized\x12M\n" +
-	"\x14pull_request_updated\x18\x15 \x01(\v2\x19.brent.PullRequestUpdatedH\x00R\x12pullRequestUpdated\x12J\n" +
-	"\x13pull_request_closed\x18\x16 \x01(\v2\x18.brent.PullRequestClosedH\x00R\x11pullRequestClosed\x12^\n" +
-	"\x1bpull_request_linked_to_plan\x18\x17 \x01(\v2\x1e.brent.PullRequestLinkedToPlanH\x00R\x17pullRequestLinkedToPlan\x12j\n" +
-	"\x1fpull_request_unlinked_from_plan\x18\x18 \x01(\v2\".brent.PullRequestUnlinkedFromPlanH\x00R\x1bpullRequestUnlinkedFromPlan\x12\x81\x01\n" +
-	"&organisation_app_installation_upserted\x18\x19 \x01(\v2*.brent.OrganisationAppInstallationUpsertedH\x00R#organisationAppInstallationUpserted\x12~\n" +
-	"%organisation_app_installation_deleted\x18\x1a \x01(\v2).brent.OrganisationAppInstallationDeletedH\x00R\"organisationAppInstallationDeleted\x12_\n" +
-	"\x1adeviation_analysis_started\x18\x1b \x01(\v2\x1f.brent.DeviationAnalysisStartedH\x00R\x18deviationAnalysisStarted\x12e\n" +
-	"\x1cdeviation_analysis_completed\x18\x1c \x01(\v2!.brent.DeviationAnalysisCompletedH\x00R\x1adeviationAnalysisCompleted\x12\\\n" +
-	"\x19deviation_analysis_failed\x18\x1d \x01(\v2\x1e.brent.DeviationAnalysisFailedH\x00R\x17deviationAnalysisFailed\x12J\n" +
-	"\x13workflow_run_queued\x18\x1e \x01(\v2\x18.brent.WorkflowRunQueuedH\x00R\x11workflowRunQueued\x12M\n" +
-	"\x14workflow_run_started\x18\x1f \x01(\v2\x19.brent.WorkflowRunStartedH\x00R\x12workflowRunStarted\x12S\n" +
-	"\x16workflow_run_completed\x18  \x01(\v2\x1b.brent.WorkflowRunCompletedH\x00R\x14workflowRunCompleted\x12J\n" +
-	"\x13workflow_run_failed\x18! \x01(\v2\x18.brent.WorkflowRunFailedH\x00R\x11workflowRunFailed\x12S\n" +
-	"\x16workflow_run_cancelled\x18\" \x01(\v2\x1b.brent.WorkflowRunCancelledH\x00R\x14workflowRunCancelled\x12`\n" +
-	"\x1breview_no_eligible_reviewer\x18# \x01(\v2\x1f.brent.ReviewNoEligibleReviewerH\x00R\x18reviewNoEligibleReviewer\x12F\n" +
-	"\x11principal_created\x18$ \x01(\v2\x17.brent.PrincipalCreatedH\x00R\x10principalCreated\x12F\n" +
-	"\x11principal_updated\x18% \x01(\v2\x17.brent.PrincipalUpdatedH\x00R\x10principalUpdated\x12O\n" +
-	"\x14principal_tombstoned\x18& \x01(\v2\x1a.brent.PrincipalTombstonedH\x00R\x13principalTombstoned\x12C\n" +
-	"\x10identity_created\x18' \x01(\v2\x16.brent.IdentityCreatedH\x00R\x0fidentityCreated\x12C\n" +
-	"\x10identity_deleted\x18( \x01(\v2\x16.brent.IdentityDeletedH\x00R\x0fidentityDeleted\x12@\n" +
-	"\x0fbinding_created\x18) \x01(\v2\x15.brent.BindingCreatedH\x00R\x0ebindingCreated\x12@\n" +
-	"\x0fbinding_updated\x18* \x01(\v2\x15.brent.BindingUpdatedH\x00R\x0ebindingUpdated\x12@\n" +
-	"\x0fbinding_deleted\x18+ \x01(\v2\x15.brent.BindingDeletedH\x00R\x0ebindingDeleted\x12T\n" +
-	"\x17review_drive_by_started\x18, \x01(\v2\x1b.brent.ReviewDriveByStartedH\x00R\x14reviewDriveByStarted\x12:\n" +
-	"\rslack_webhook\x18- \x01(\v2\x13.brent.SlackWebhookH\x00R\fslackWebhook\x12=\n" +
-	"\x0ereview_deleted\x18. \x01(\v2\x14.brent.ReviewDeletedH\x00R\rreviewDeleted\x12:\n" +
-	"\rplan_restored\x18/ \x01(\v2\x13.brent.PlanRestoredH\x00R\fplanRestored\x12=\n" +
-	"\x0elinear_webhook\x180 \x01(\v2\x14.brent.LinearWebhookH\x00R\rlinearWebhook\x12c\n" +
-	"\x1cpull_request_comment_created\x181 \x01(\v2 .brent.PullRequestCommentCreatedH\x00R\x19pullRequestCommentCreated\x12_\n" +
-	"\x1adeviation_finding_recorded\x182 \x01(\v2\x1f.brent.DeviationFindingRecordedH\x00R\x18deviationFindingRecorded\x12\\\n" +
-	"\x19deviation_finding_updated\x183 \x01(\v2\x1e.brent.DeviationFindingUpdatedH\x00R\x17deviationFindingUpdated\x12_\n" +
-	"\x1adeviation_finding_resolved\x184 \x01(\v2\x1f.brent.DeviationFindingResolvedH\x00R\x18deviationFindingResolved\x12M\n" +
-	"\x14agent_run_dispatched\x185 \x01(\v2\x19.brent.AgentRunDispatchedH\x00R\x12agentRunDispatched\x12D\n" +
-	"\x11agent_run_started\x186 \x01(\v2\x16.brent.AgentRunStartedH\x00R\x0fagentRunStarted\x12g\n" +
-	"\x1eagent_run_pull_request_matched\x187 \x01(\v2!.brent.AgentRunPullRequestMatchedH\x00R\x1aagentRunPullRequestMatched\x12^\n" +
-	"\x1bagent_run_flagged_needs_you\x188 \x01(\v2\x1e.brent.AgentRunFlaggedNeedsYouH\x00R\x17agentRunFlaggedNeedsYou\x12A\n" +
-	"\x10agent_run_merged\x189 \x01(\v2\x15.brent.AgentRunMergedH\x00R\x0eagentRunMerged\x12G\n" +
-	"\x12agent_run_declined\x18: \x01(\v2\x17.brent.AgentRunDeclinedH\x00R\x10agentRunDeclined\x12J\n" +
-	"\x13agent_run_cancelled\x18; \x01(\v2\x18.brent.AgentRunCancelledH\x00R\x11agentRunCancelled\x12N\n" +
-	"\x15agent_run_gate_passed\x18J \x01(\v2\x19.brent.AgentRunGatePassedH\x00R\x12agentRunGatePassed\x12k\n" +
-	" pull_request_linked_to_agent_run\x18< \x01(\v2\".brent.PullRequestLinkedToAgentRunH\x00R\x1bpullRequestLinkedToAgentRun\x12F\n" +
-	"\x11workflow_ingested\x18= \x01(\v2\x17.brent.WorkflowIngestedH\x00R\x10workflowIngested\x12f\n" +
-	"\x1dpull_request_review_requested\x18? \x01(\v2!.brent.PullRequestReviewRequestedH\x00R\x1apullRequestReviewRequested\x12P\n" +
-	"\x15pull_request_approved\x18@ \x01(\v2\x1a.brent.PullRequestApprovedH\x00R\x13pullRequestApproved\x12i\n" +
-	"\x1epull_request_changes_requested\x18A \x01(\v2\".brent.PullRequestChangesRequestedH\x00R\x1bpullRequestChangesRequested\x12f\n" +
-	"\x1dpull_request_review_dismissed\x18B \x01(\v2!.brent.PullRequestReviewDismissedH\x00R\x1apullRequestReviewDismissed\x12O\n" +
-	"\x14credential_connected\x18C \x01(\v2\x1a.brent.CredentialConnectedH\x00R\x13credentialConnected\x12I\n" +
-	"\x12credential_revoked\x18D \x01(\v2\x18.brent.CredentialRevokedH\x00R\x11credentialRevoked\x12J\n" +
-	"\x13agent_run_annotated\x18E \x01(\v2\x18.brent.AgentRunAnnotatedH\x00R\x11agentRunAnnotated\x12F\n" +
-	"\x11workspace_created\x18G \x01(\v2\x17.brent.WorkspaceCreatedH\x00R\x10workspaceCreated\x12v\n" +
-	"#mcp_grant_workspace_binding_changed\x18I \x01(\v2&.brent.MCPGrantWorkspaceBindingChangedH\x00R\x1fmcpGrantWorkspaceBindingChanged\x12k\n" +
-	"\x1eworkspace_onboarding_completed\x18K \x01(\v2#.brent.WorkspaceOnboardingCompletedH\x00R\x1cworkspaceOnboardingCompleted\x12F\n" +
-	"\x11workspace_renamed\x18L \x01(\v2\x17.brent.WorkspaceRenamedH\x00R\x10workspaceRenamed\x12F\n" +
-	"\x11workspace_deleted\x18M \x01(\v2\x17.brent.WorkspaceDeletedH\x00R\x10workspaceDeleted\x12`\n" +
-	"\x1bapproved_email_domain_added\x18N \x01(\v2\x1f.brent.ApprovedEmailDomainAddedH\x00R\x18approvedEmailDomainAdded\x12i\n" +
-	"\x1eapproved_email_domain_verified\x18O \x01(\v2\".brent.ApprovedEmailDomainVerifiedH\x00R\x1bapprovedEmailDomainVerified\x12f\n" +
-	"\x1dapproved_email_domain_deleted\x18P \x01(\v2!.brent.ApprovedEmailDomainDeletedH\x00R\x1aapprovedEmailDomainDeleted\x12=\n" +
-	"\x0egitlab_webhook\x18Q \x01(\v2\x14.brent.GitLabWebhookH\x00R\rgitlabWebhook\x12u\n" +
-	"\"workspace_llm_credential_connected\x18R \x01(\v2&.brent.WorkspaceLLMCredentialConnectedH\x00R\x1fworkspaceLlmCredentialConnected\x12o\n" +
-	" workspace_llm_credential_revoked\x18S \x01(\v2$.brent.WorkspaceLLMCredentialRevokedH\x00R\x1dworkspaceLlmCredentialRevoked\x12F\n" +
-	"\x11bitbucket_webhook\x18T \x01(\v2\x17.brent.BitbucketWebhookH\x00R\x10bitbucketWebhook\x12V\n" +
-	"\x17workspace_member_joined\x18U \x01(\v2\x1c.brent.WorkspaceMemberJoinedH\x00R\x15workspaceMemberJoined\x12P\n" +
-	"\x15workspace_member_left\x18V \x01(\v2\x1a.brent.WorkspaceMemberLeftH\x00R\x13workspaceMemberLeft\x12Y\n" +
-	"\x18composio_trigger_message\x18W \x01(\v2\x1d.brent.ComposioTriggerMessageH\x00R\x16composioTriggerMessage\x12k\n" +
-	"\x1edeviation_finding_acknowledged\x18X \x01(\v2#.brent.DeviationFindingAcknowledgedH\x00R\x1cdeviationFindingAcknowledged\x12\x8a\x01\n" +
-	")deviation_finding_acknowledgement_cleared\x18Y \x01(\v2-.brent.DeviationFindingAcknowledgementClearedH\x00R&deviationFindingAcknowledgementCleared\x12]\n" +
-	"\x1aplan_review_policy_decided\x18Z \x01(\v2\x1e.brent.PlanReviewPolicyDecidedH\x00R\x17planReviewPolicyDecided\x12@\n" +
-	"\x0freview_restored\x18[ \x01(\v2\x15.brent.ReviewRestoredH\x00R\x0ereviewRestored\x12l\n" +
-	"\x1fworkspace_review_policy_updated\x18\\ \x01(\v2#.brent.WorkspaceReviewPolicyUpdatedH\x00R\x1cworkspaceReviewPolicyUpdated\x12S\n" +
-	"\x16unknown_stored_payload\x18F \x01(\v2\x1b.brent.UnknownStoredPayloadH\x00R\x14unknownStoredPayloadB\t\n" +
+	" \x01(\v2\x12.until.PlanCreatedH\x00R\vplanCreated\x127\n" +
+	"\fplan_updated\x18\v \x01(\v2\x12.until.PlanUpdatedH\x00R\vplanUpdated\x127\n" +
+	"\fplan_deleted\x18\f \x01(\v2\x12.until.PlanDeletedH\x00R\vplanDeleted\x12C\n" +
+	"\x10review_requested\x18\r \x01(\v2\x16.until.ReviewRequestedH\x00R\x0freviewRequested\x12C\n" +
+	"\x10review_submitted\x18\x0e \x01(\v2\x16.until.ReviewSubmittedH\x00R\x0freviewSubmitted\x12)\n" +
+	"\x05other\x18\x0f \x01(\v2\x11.until.OtherEventH\x00R\x05other\x12=\n" +
+	"\x0egithub_webhook\x18\x10 \x01(\v2\x14.until.GitHubWebhookH\x00R\rgithubWebhook\x12B\n" +
+	"\rslack_mention\x18\x11 \x01(\v2\x1b.until.SlackMentionReceivedH\x00R\fslackMention\x12B\n" +
+	"\x0eslack_reaction\x18\x12 \x01(\v2\x19.until.SlackReactionAddedH\x00R\rslackReaction\x12J\n" +
+	"\x13pull_request_opened\x18\x13 \x01(\v2\x18.until.PullRequestOpenedH\x00R\x11pullRequestOpened\x12\\\n" +
+	"\x19pull_request_synchronized\x18\x14 \x01(\v2\x1e.until.PullRequestSynchronizedH\x00R\x17pullRequestSynchronized\x12M\n" +
+	"\x14pull_request_updated\x18\x15 \x01(\v2\x19.until.PullRequestUpdatedH\x00R\x12pullRequestUpdated\x12J\n" +
+	"\x13pull_request_closed\x18\x16 \x01(\v2\x18.until.PullRequestClosedH\x00R\x11pullRequestClosed\x12^\n" +
+	"\x1bpull_request_linked_to_plan\x18\x17 \x01(\v2\x1e.until.PullRequestLinkedToPlanH\x00R\x17pullRequestLinkedToPlan\x12j\n" +
+	"\x1fpull_request_unlinked_from_plan\x18\x18 \x01(\v2\".until.PullRequestUnlinkedFromPlanH\x00R\x1bpullRequestUnlinkedFromPlan\x12\x81\x01\n" +
+	"&organisation_app_installation_upserted\x18\x19 \x01(\v2*.until.OrganisationAppInstallationUpsertedH\x00R#organisationAppInstallationUpserted\x12~\n" +
+	"%organisation_app_installation_deleted\x18\x1a \x01(\v2).until.OrganisationAppInstallationDeletedH\x00R\"organisationAppInstallationDeleted\x12G\n" +
+	"\x12plan_check_started\x18\x1b \x01(\v2\x17.until.PlanCheckStartedH\x00R\x10planCheckStarted\x12M\n" +
+	"\x14plan_check_completed\x18\x1c \x01(\v2\x19.until.PlanCheckCompletedH\x00R\x12planCheckCompleted\x12D\n" +
+	"\x11plan_check_failed\x18\x1d \x01(\v2\x16.until.PlanCheckFailedH\x00R\x0fplanCheckFailed\x12>\n" +
+	"\x0floop_run_queued\x18\x1e \x01(\v2\x14.until.LoopRunQueuedH\x00R\rloopRunQueued\x12A\n" +
+	"\x10loop_run_started\x18\x1f \x01(\v2\x15.until.LoopRunStartedH\x00R\x0eloopRunStarted\x12G\n" +
+	"\x12loop_run_completed\x18  \x01(\v2\x17.until.LoopRunCompletedH\x00R\x10loopRunCompleted\x12>\n" +
+	"\x0floop_run_failed\x18! \x01(\v2\x14.until.LoopRunFailedH\x00R\rloopRunFailed\x12G\n" +
+	"\x12loop_run_cancelled\x18\" \x01(\v2\x17.until.LoopRunCancelledH\x00R\x10loopRunCancelled\x12`\n" +
+	"\x1breview_no_eligible_reviewer\x18# \x01(\v2\x1f.until.ReviewNoEligibleReviewerH\x00R\x18reviewNoEligibleReviewer\x12F\n" +
+	"\x11principal_created\x18$ \x01(\v2\x17.until.PrincipalCreatedH\x00R\x10principalCreated\x12F\n" +
+	"\x11principal_updated\x18% \x01(\v2\x17.until.PrincipalUpdatedH\x00R\x10principalUpdated\x12O\n" +
+	"\x14principal_tombstoned\x18& \x01(\v2\x1a.until.PrincipalTombstonedH\x00R\x13principalTombstoned\x12C\n" +
+	"\x10identity_created\x18' \x01(\v2\x16.until.IdentityCreatedH\x00R\x0fidentityCreated\x12C\n" +
+	"\x10identity_deleted\x18( \x01(\v2\x16.until.IdentityDeletedH\x00R\x0fidentityDeleted\x12@\n" +
+	"\x0fbinding_created\x18) \x01(\v2\x15.until.BindingCreatedH\x00R\x0ebindingCreated\x12@\n" +
+	"\x0fbinding_updated\x18* \x01(\v2\x15.until.BindingUpdatedH\x00R\x0ebindingUpdated\x12@\n" +
+	"\x0fbinding_deleted\x18+ \x01(\v2\x15.until.BindingDeletedH\x00R\x0ebindingDeleted\x12T\n" +
+	"\x17review_drive_by_started\x18, \x01(\v2\x1b.until.ReviewDriveByStartedH\x00R\x14reviewDriveByStarted\x12:\n" +
+	"\rslack_webhook\x18- \x01(\v2\x13.until.SlackWebhookH\x00R\fslackWebhook\x12=\n" +
+	"\x0ereview_deleted\x18. \x01(\v2\x14.until.ReviewDeletedH\x00R\rreviewDeleted\x12:\n" +
+	"\rplan_restored\x18/ \x01(\v2\x13.until.PlanRestoredH\x00R\fplanRestored\x12=\n" +
+	"\x0elinear_webhook\x180 \x01(\v2\x14.until.LinearWebhookH\x00R\rlinearWebhook\x12c\n" +
+	"\x1cpull_request_comment_created\x181 \x01(\v2 .until.PullRequestCommentCreatedH\x00R\x19pullRequestCommentCreated\x12Y\n" +
+	"\x18plan_difference_recorded\x182 \x01(\v2\x1d.until.PlanDifferenceRecordedH\x00R\x16planDifferenceRecorded\x12V\n" +
+	"\x17plan_difference_updated\x183 \x01(\v2\x1c.until.PlanDifferenceUpdatedH\x00R\x15planDifferenceUpdated\x12Y\n" +
+	"\x18plan_difference_resolved\x184 \x01(\v2\x1d.until.PlanDifferenceResolvedH\x00R\x16planDifferenceResolved\x12M\n" +
+	"\x14agent_run_dispatched\x185 \x01(\v2\x19.until.AgentRunDispatchedH\x00R\x12agentRunDispatched\x12D\n" +
+	"\x11agent_run_started\x186 \x01(\v2\x16.until.AgentRunStartedH\x00R\x0fagentRunStarted\x12g\n" +
+	"\x1eagent_run_pull_request_matched\x187 \x01(\v2!.until.AgentRunPullRequestMatchedH\x00R\x1aagentRunPullRequestMatched\x12^\n" +
+	"\x1bagent_run_flagged_needs_you\x188 \x01(\v2\x1e.until.AgentRunFlaggedNeedsYouH\x00R\x17agentRunFlaggedNeedsYou\x12A\n" +
+	"\x10agent_run_merged\x189 \x01(\v2\x15.until.AgentRunMergedH\x00R\x0eagentRunMerged\x12G\n" +
+	"\x12agent_run_declined\x18: \x01(\v2\x17.until.AgentRunDeclinedH\x00R\x10agentRunDeclined\x12J\n" +
+	"\x13agent_run_cancelled\x18; \x01(\v2\x18.until.AgentRunCancelledH\x00R\x11agentRunCancelled\x12N\n" +
+	"\x15agent_run_gate_passed\x18J \x01(\v2\x19.until.AgentRunGatePassedH\x00R\x12agentRunGatePassed\x12k\n" +
+	" pull_request_linked_to_agent_run\x18< \x01(\v2\".until.PullRequestLinkedToAgentRunH\x00R\x1bpullRequestLinkedToAgentRun\x12:\n" +
+	"\rloop_ingested\x18= \x01(\v2\x13.until.LoopIngestedH\x00R\floopIngested\x12f\n" +
+	"\x1dpull_request_review_requested\x18? \x01(\v2!.until.PullRequestReviewRequestedH\x00R\x1apullRequestReviewRequested\x12P\n" +
+	"\x15pull_request_approved\x18@ \x01(\v2\x1a.until.PullRequestApprovedH\x00R\x13pullRequestApproved\x12i\n" +
+	"\x1epull_request_changes_requested\x18A \x01(\v2\".until.PullRequestChangesRequestedH\x00R\x1bpullRequestChangesRequested\x12f\n" +
+	"\x1dpull_request_review_dismissed\x18B \x01(\v2!.until.PullRequestReviewDismissedH\x00R\x1apullRequestReviewDismissed\x12O\n" +
+	"\x14credential_connected\x18C \x01(\v2\x1a.until.CredentialConnectedH\x00R\x13credentialConnected\x12I\n" +
+	"\x12credential_revoked\x18D \x01(\v2\x18.until.CredentialRevokedH\x00R\x11credentialRevoked\x12J\n" +
+	"\x13agent_run_annotated\x18E \x01(\v2\x18.until.AgentRunAnnotatedH\x00R\x11agentRunAnnotated\x12F\n" +
+	"\x11workspace_created\x18G \x01(\v2\x17.until.WorkspaceCreatedH\x00R\x10workspaceCreated\x12v\n" +
+	"#mcp_grant_workspace_binding_changed\x18I \x01(\v2&.until.MCPGrantWorkspaceBindingChangedH\x00R\x1fmcpGrantWorkspaceBindingChanged\x12k\n" +
+	"\x1eworkspace_onboarding_completed\x18K \x01(\v2#.until.WorkspaceOnboardingCompletedH\x00R\x1cworkspaceOnboardingCompleted\x12F\n" +
+	"\x11workspace_renamed\x18L \x01(\v2\x17.until.WorkspaceRenamedH\x00R\x10workspaceRenamed\x12F\n" +
+	"\x11workspace_deleted\x18M \x01(\v2\x17.until.WorkspaceDeletedH\x00R\x10workspaceDeleted\x12`\n" +
+	"\x1bapproved_email_domain_added\x18N \x01(\v2\x1f.until.ApprovedEmailDomainAddedH\x00R\x18approvedEmailDomainAdded\x12i\n" +
+	"\x1eapproved_email_domain_verified\x18O \x01(\v2\".until.ApprovedEmailDomainVerifiedH\x00R\x1bapprovedEmailDomainVerified\x12f\n" +
+	"\x1dapproved_email_domain_deleted\x18P \x01(\v2!.until.ApprovedEmailDomainDeletedH\x00R\x1aapprovedEmailDomainDeleted\x12=\n" +
+	"\x0egitlab_webhook\x18Q \x01(\v2\x14.until.GitLabWebhookH\x00R\rgitlabWebhook\x12u\n" +
+	"\"workspace_llm_credential_connected\x18R \x01(\v2&.until.WorkspaceLLMCredentialConnectedH\x00R\x1fworkspaceLlmCredentialConnected\x12o\n" +
+	" workspace_llm_credential_revoked\x18S \x01(\v2$.until.WorkspaceLLMCredentialRevokedH\x00R\x1dworkspaceLlmCredentialRevoked\x12F\n" +
+	"\x11bitbucket_webhook\x18T \x01(\v2\x17.until.BitbucketWebhookH\x00R\x10bitbucketWebhook\x12V\n" +
+	"\x17workspace_member_joined\x18U \x01(\v2\x1c.until.WorkspaceMemberJoinedH\x00R\x15workspaceMemberJoined\x12P\n" +
+	"\x15workspace_member_left\x18V \x01(\v2\x1a.until.WorkspaceMemberLeftH\x00R\x13workspaceMemberLeft\x12Y\n" +
+	"\x18composio_trigger_message\x18W \x01(\v2\x1d.until.ComposioTriggerMessageH\x00R\x16composioTriggerMessage\x12e\n" +
+	"\x1cplan_difference_acknowledged\x18X \x01(\v2!.until.PlanDifferenceAcknowledgedH\x00R\x1aplanDifferenceAcknowledged\x12\x84\x01\n" +
+	"'plan_difference_acknowledgement_cleared\x18Y \x01(\v2+.until.PlanDifferenceAcknowledgementClearedH\x00R$planDifferenceAcknowledgementCleared\x12]\n" +
+	"\x1aplan_review_policy_decided\x18Z \x01(\v2\x1e.until.PlanReviewPolicyDecidedH\x00R\x17planReviewPolicyDecided\x12@\n" +
+	"\x0freview_restored\x18[ \x01(\v2\x15.until.ReviewRestoredH\x00R\x0ereviewRestored\x12l\n" +
+	"\x1fworkspace_review_policy_updated\x18\\ \x01(\v2#.until.WorkspaceReviewPolicyUpdatedH\x00R\x1cworkspaceReviewPolicyUpdated\x12S\n" +
+	"\x16unknown_stored_payload\x18F \x01(\v2\x1b.until.UnknownStoredPayloadH\x00R\x14unknownStoredPayloadB\t\n" +
 	"\apayloadB\t\n" +
 	"\a_objectB\x12\n" +
 	"\x10_source_repo_urlB\v\n" +
@@ -25423,8 +25424,8 @@ const file_brent_proto_rawDesc = "" +
 	"\tplan_uuid\x18\x01 \x01(\tR\bplanUuid\x12(\n" +
 	"\x10plan_friendly_id\x18\x04 \x01(\tR\x0eplanFriendlyId\x12%\n" +
 	"\x0echanged_fields\x18\x02 \x03(\tR\rchangedFields\x12<\n" +
-	"\bprevious\x18\x03 \x03(\v2 .brent.PlanUpdated.PreviousEntryR\bprevious\x123\n" +
-	"\x05after\x18\x05 \x03(\v2\x1d.brent.PlanUpdated.AfterEntryR\x05after\x1aS\n" +
+	"\bprevious\x18\x03 \x03(\v2 .until.PlanUpdated.PreviousEntryR\bprevious\x123\n" +
+	"\x05after\x18\x05 \x03(\v2\x1d.until.PlanUpdated.AfterEntryR\x05after\x1aS\n" +
 	"\rPreviousEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12,\n" +
 	"\x05value\x18\x02 \x01(\v2\x16.google.protobuf.ValueR\x05value:\x028\x01\x1aP\n" +
@@ -25489,8 +25490,8 @@ const file_brent_proto_rawDesc = "" +
 	"\x10PrincipalUpdated\x12!\n" +
 	"\fprincipal_id\x18\x01 \x01(\tR\vprincipalId\x12%\n" +
 	"\x0echanged_fields\x18\x02 \x03(\tR\rchangedFields\x12A\n" +
-	"\bprevious\x18\x03 \x03(\v2%.brent.PrincipalUpdated.PreviousEntryR\bprevious\x128\n" +
-	"\x05after\x18\x04 \x03(\v2\".brent.PrincipalUpdated.AfterEntryR\x05after\x1aS\n" +
+	"\bprevious\x18\x03 \x03(\v2%.until.PrincipalUpdated.PreviousEntryR\bprevious\x128\n" +
+	"\x05after\x18\x04 \x03(\v2\".until.PrincipalUpdated.AfterEntryR\x05after\x1aS\n" +
 	"\rPreviousEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12,\n" +
 	"\x05value\x18\x02 \x01(\v2\x16.google.protobuf.ValueR\x05value:\x028\x01\x1aP\n" +
@@ -25525,7 +25526,7 @@ const file_brent_proto_rawDesc = "" +
 	"\fprincipal_id\x18\x02 \x01(\tR\vprincipalId\x12!\n" +
 	"\fdisplay_name\x18\x03 \x01(\tR\vdisplayName\x12\x12\n" +
 	"\x04role\x18\x04 \x01(\tR\x04role\x12)\n" +
-	"\x06source\x18\x05 \x01(\x0e2\x11.brent.JoinSourceR\x06source\"~\n" +
+	"\x06source\x18\x05 \x01(\x0e2\x11.until.JoinSourceR\x06source\"~\n" +
 	"\x13WorkspaceMemberLeft\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12!\n" +
 	"\fprincipal_id\x18\x02 \x01(\tR\vprincipalId\x12!\n" +
@@ -25579,8 +25580,8 @@ const file_brent_proto_rawDesc = "" +
 	"binding_id\x18\x01 \x01(\tR\tbindingId\x12!\n" +
 	"\fprincipal_id\x18\x02 \x01(\tR\vprincipalId\x12%\n" +
 	"\x0echanged_fields\x18\x03 \x03(\tR\rchangedFields\x12?\n" +
-	"\bprevious\x18\x04 \x03(\v2#.brent.BindingUpdated.PreviousEntryR\bprevious\x126\n" +
-	"\x05after\x18\x05 \x03(\v2 .brent.BindingUpdated.AfterEntryR\x05after\x1aS\n" +
+	"\bprevious\x18\x04 \x03(\v2#.until.BindingUpdated.PreviousEntryR\bprevious\x126\n" +
+	"\x05after\x18\x05 \x03(\v2 .until.BindingUpdated.AfterEntryR\x05after\x1aS\n" +
 	"\rPreviousEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12,\n" +
 	"\x05value\x18\x02 \x01(\v2\x16.google.protobuf.ValueR\x05value:\x028\x01\x1aP\n" +
@@ -25616,7 +25617,7 @@ const file_brent_proto_rawDesc = "" +
 	"\x06source\x18\x01 \x01(\tR\x06source\x12\x1d\n" +
 	"\n" +
 	"event_kind\x18\x02 \x01(\tR\teventKind\x125\n" +
-	"\x06fields\x18\x03 \x03(\v2\x1d.brent.OtherEvent.FieldsEntryR\x06fields\x1a9\n" +
+	"\x06fields\x18\x03 \x03(\v2\x1d.until.OtherEvent.FieldsEntryR\x06fields\x1a9\n" +
 	"\vFieldsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\tR\x05value:\x028\x01\"\x88\x01\n" +
@@ -25683,8 +25684,8 @@ const file_brent_proto_rawDesc = "" +
 	"\vlink_reason\x18\x0f \x01(\tR\n" +
 	"linkReason\x12(\n" +
 	"\x10plan_friendly_id\x18\x10 \x01(\tR\x0eplanFriendlyId\x12C\n" +
-	"\bprevious\x18\x11 \x03(\v2'.brent.PullRequestUpdated.PreviousEntryR\bprevious\x12:\n" +
-	"\x05after\x18\x12 \x03(\v2$.brent.PullRequestUpdated.AfterEntryR\x05after\x1aS\n" +
+	"\bprevious\x18\x11 \x03(\v2'.until.PullRequestUpdated.PreviousEntryR\bprevious\x12:\n" +
+	"\x05after\x18\x12 \x03(\v2$.until.PullRequestUpdated.AfterEntryR\x05after\x1aS\n" +
 	"\rPreviousEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12,\n" +
 	"\x05value\x18\x02 \x01(\v2\x16.google.protobuf.ValueR\x05value:\x028\x01\x1aP\n" +
@@ -25839,103 +25840,90 @@ const file_brent_proto_rawDesc = "" +
 	"\x06action\x18\b \x01(\tR\x06action\x12\x16\n" +
 	"\x06author\x18\t \x01(\tR\x06author\x12\"\n" +
 	"\rauthor_is_bot\x18\n" +
-	" \x01(\bR\vauthorIsBot\"\x95\x02\n" +
-	"\x18DeviationAnalysisStarted\x12\x1f\n" +
-	"\vanalysis_id\x18\x01 \x01(\tR\n" +
-	"analysisId\x12\x13\n" +
+	" \x01(\bR\vauthorIsBot\"\x88\x02\n" +
+	"\x10PlanCheckStarted\x12\"\n" +
+	"\rplan_check_id\x18\x01 \x01(\tR\vplanCheckId\x12\x13\n" +
 	"\x05pr_id\x18\x02 \x01(\tR\x04prId\x12\x1b\n" +
 	"\tplan_uuid\x18\x03 \x01(\tR\bplanUuid\x12(\n" +
 	"\x10plan_friendly_id\x18\a \x01(\tR\x0eplanFriendlyId\x12\x19\n" +
-	"\bhead_sha\x18\x04 \x01(\tR\aheadSha\x12&\n" +
-	"\x0fworkflow_run_id\x18\x05 \x01(\tR\rworkflowRunId\x129\n" +
+	"\bhead_sha\x18\x04 \x01(\tR\aheadSha\x12\x1e\n" +
+	"\vloop_run_id\x18\x05 \x01(\tR\tloopRunId\x129\n" +
 	"\n" +
-	"started_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tstartedAt\"\xb0\x01\n" +
-	"\x0eFindingSummary\x12\x12\n" +
+	"started_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tstartedAt\"\xb3\x01\n" +
+	"\x11DifferenceSummary\x12\x12\n" +
 	"\x04kind\x18\x01 \x01(\tR\x04kind\x12\"\n" +
 	"\facknowledged\x18\x02 \x01(\bR\facknowledged\x12\x1d\n" +
 	"\n" +
 	"ack_source\x18\x03 \x01(\tR\tackSource\x12\x17\n" +
 	"\aack_ref\x18\x04 \x01(\tR\x06ackRef\x12.\n" +
-	"\x13ack_reasoning_quote\x18\x05 \x01(\tR\x11ackReasoningQuote\"\xde\x04\n" +
-	"\x1aDeviationAnalysisCompleted\x12\x1f\n" +
-	"\vanalysis_id\x18\x01 \x01(\tR\n" +
-	"analysisId\x12\x13\n" +
+	"\x13ack_reasoning_quote\x18\x05 \x01(\tR\x11ackReasoningQuote\"\xf7\x04\n" +
+	"\x12PlanCheckCompleted\x12\"\n" +
+	"\rplan_check_id\x18\x01 \x01(\tR\vplanCheckId\x12\x13\n" +
 	"\x05pr_id\x18\x02 \x01(\tR\x04prId\x12\x1b\n" +
 	"\tplan_uuid\x18\x03 \x01(\tR\bplanUuid\x12(\n" +
 	"\x10plan_friendly_id\x18\f \x01(\tR\x0eplanFriendlyId\x12\x19\n" +
-	"\bhead_sha\x18\x04 \x01(\tR\aheadSha\x12i\n" +
-	"\x14finding_count_by_tag\x18\a \x03(\v28.brent.DeviationAnalysisCompleted.FindingCountByTagEntryR\x11findingCountByTag\x12=\n" +
-	"\fcompleted_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\vcompletedAt\x12)\n" +
-	"\x10check_conclusion\x18\t \x01(\tR\x0fcheckConclusion\x129\n" +
-	"\x19applied_red_finding_kinds\x18\n" +
-	" \x03(\tR\x16appliedRedFindingKinds\x121\n" +
-	"\bfindings\x18\v \x03(\v2\x15.brent.FindingSummaryR\bfindings\x1aD\n" +
-	"\x16FindingCountByTagEntry\x12\x10\n" +
+	"\bhead_sha\x18\x04 \x01(\tR\aheadSha\x12j\n" +
+	"\x17difference_count_by_tag\x18\a \x03(\v23.until.PlanCheckCompleted.DifferenceCountByTagEntryR\x14differenceCountByTag\x12=\n" +
+	"\fcompleted_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\vcompletedAt\x12,\n" +
+	"\x12plan_check_outcome\x18\t \x01(\tR\x10planCheckOutcome\x12G\n" +
+	" applied_blocking_difference_tags\x18\n" +
+	" \x03(\tR\x1dappliedBlockingDifferenceTags\x12:\n" +
+	"\vdifferences\x18\v \x03(\v2\x18.until.DifferenceSummaryR\vdifferences\x1aG\n" +
+	"\x19DifferenceCountByTagEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\x03R\x05value:\x028\x01J\x04\b\x05\x10\x06J\x04\b\x06\x10\aR\averdictR\n" +
-	"summary_md\"\x82\x02\n" +
-	"\x17DeviationAnalysisFailed\x12\x1f\n" +
-	"\vanalysis_id\x18\x01 \x01(\tR\n" +
-	"analysisId\x12\x13\n" +
+	"summary_md\"\xfd\x01\n" +
+	"\x0fPlanCheckFailed\x12\"\n" +
+	"\rplan_check_id\x18\x01 \x01(\tR\vplanCheckId\x12\x13\n" +
 	"\x05pr_id\x18\x02 \x01(\tR\x04prId\x12\x1b\n" +
 	"\tplan_uuid\x18\x03 \x01(\tR\bplanUuid\x12(\n" +
 	"\x10plan_friendly_id\x18\a \x01(\tR\x0eplanFriendlyId\x12\x19\n" +
 	"\bhead_sha\x18\x04 \x01(\tR\aheadSha\x12\x16\n" +
 	"\x06reason\x18\x05 \x01(\tR\x06reason\x127\n" +
-	"\tfailed_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\bfailedAt\"\xc3\x01\n" +
-	"\x18DeviationFindingRecorded\x12\x1d\n" +
-	"\n" +
-	"finding_id\x18\x01 \x01(\tR\tfindingId\x12\x1f\n" +
-	"\vanalysis_id\x18\x02 \x01(\tR\n" +
-	"analysisId\x12\x10\n" +
+	"\tfailed_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\bfailedAt\"\xd3\x01\n" +
+	"\x16PlanDifferenceRecorded\x12,\n" +
+	"\x12plan_difference_id\x18\x01 \x01(\tR\x10planDifferenceId\x12\"\n" +
+	"\rplan_check_id\x18\x02 \x01(\tR\vplanCheckId\x12\x10\n" +
 	"\x03tag\x18\x03 \x01(\tR\x03tag\x12\x18\n" +
 	"\asummary\x18\x04 \x01(\tR\asummary\x12;\n" +
 	"\vrecorded_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"recordedAt\"\xde\x03\n" +
-	"\x17DeviationFindingUpdated\x12\x1d\n" +
-	"\n" +
-	"finding_id\x18\x01 \x01(\tR\tfindingId\x12\x1f\n" +
-	"\vanalysis_id\x18\x02 \x01(\tR\n" +
-	"analysisId\x12\x10\n" +
+	"recordedAt\"\xea\x03\n" +
+	"\x15PlanDifferenceUpdated\x12,\n" +
+	"\x12plan_difference_id\x18\x01 \x01(\tR\x10planDifferenceId\x12\"\n" +
+	"\rplan_check_id\x18\x02 \x01(\tR\vplanCheckId\x12\x10\n" +
 	"\x03tag\x18\x03 \x01(\tR\x03tag\x12\x18\n" +
 	"\asummary\x18\x04 \x01(\tR\asummary\x12%\n" +
-	"\x0echanged_fields\x18\x05 \x03(\tR\rchangedFields\x12H\n" +
-	"\bprevious\x18\x06 \x03(\v2,.brent.DeviationFindingUpdated.PreviousEntryR\bprevious\x12?\n" +
-	"\x05after\x18\a \x03(\v2).brent.DeviationFindingUpdated.AfterEntryR\x05after\x1aS\n" +
+	"\x0echanged_fields\x18\x05 \x03(\tR\rchangedFields\x12F\n" +
+	"\bprevious\x18\x06 \x03(\v2*.until.PlanDifferenceUpdated.PreviousEntryR\bprevious\x12=\n" +
+	"\x05after\x18\a \x03(\v2'.until.PlanDifferenceUpdated.AfterEntryR\x05after\x1aS\n" +
 	"\rPreviousEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12,\n" +
 	"\x05value\x18\x02 \x01(\v2\x16.google.protobuf.ValueR\x05value:\x028\x01\x1aP\n" +
 	"\n" +
 	"AfterEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12,\n" +
-	"\x05value\x18\x02 \x01(\v2\x16.google.protobuf.ValueR\x05value:\x028\x01\"\xee\x01\n" +
-	"\x18DeviationFindingResolved\x12\x1d\n" +
-	"\n" +
-	"finding_id\x18\x01 \x01(\tR\tfindingId\x12\x1f\n" +
-	"\vanalysis_id\x18\x02 \x01(\tR\n" +
-	"analysisId\x12\x10\n" +
+	"\x05value\x18\x02 \x01(\v2\x16.google.protobuf.ValueR\x05value:\x028\x01\"\xfe\x01\n" +
+	"\x16PlanDifferenceResolved\x12,\n" +
+	"\x12plan_difference_id\x18\x01 \x01(\tR\x10planDifferenceId\x12\"\n" +
+	"\rplan_check_id\x18\x02 \x01(\tR\vplanCheckId\x12\x10\n" +
 	"\x03tag\x18\x03 \x01(\tR\x03tag\x12\x16\n" +
 	"\x06reason\x18\x04 \x01(\tR\x06reason\x12+\n" +
 	"\x11resolution_commit\x18\x05 \x01(\tR\x10resolutionCommit\x12;\n" +
 	"\vresolved_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
-	"resolvedAt\"\xb1\x02\n" +
-	"\x1cDeviationFindingAcknowledged\x12\x1d\n" +
-	"\n" +
-	"finding_id\x18\x01 \x01(\tR\tfindingId\x12\x1f\n" +
-	"\vanalysis_id\x18\x02 \x01(\tR\n" +
-	"analysisId\x12\x10\n" +
+	"resolvedAt\"\xc1\x02\n" +
+	"\x1aPlanDifferenceAcknowledged\x12,\n" +
+	"\x12plan_difference_id\x18\x01 \x01(\tR\x10planDifferenceId\x12\"\n" +
+	"\rplan_check_id\x18\x02 \x01(\tR\vplanCheckId\x12\x10\n" +
 	"\x03tag\x18\x03 \x01(\tR\x03tag\x12\x12\n" +
 	"\x04slug\x18\x04 \x01(\tR\x04slug\x12\x1d\n" +
 	"\n" +
 	"ack_source\x18\x05 \x01(\tR\tackSource\x12\x17\n" +
 	"\aack_ref\x18\x06 \x01(\tR\x06ackRef\x12.\n" +
 	"\x13ack_reasoning_quote\x18\a \x01(\tR\x11ackReasoningQuote\x12C\n" +
-	"\x0facknowledged_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\x0eacknowledgedAt\"\xb1\x02\n" +
-	"&DeviationFindingAcknowledgementCleared\x12\x1d\n" +
-	"\n" +
-	"finding_id\x18\x01 \x01(\tR\tfindingId\x12\x1f\n" +
-	"\vanalysis_id\x18\x02 \x01(\tR\n" +
-	"analysisId\x12\x10\n" +
+	"\x0facknowledged_at\x18\b \x01(\v2\x1a.google.protobuf.TimestampR\x0eacknowledgedAt\"\xc1\x02\n" +
+	"$PlanDifferenceAcknowledgementCleared\x12,\n" +
+	"\x12plan_difference_id\x18\x01 \x01(\tR\x10planDifferenceId\x12\"\n" +
+	"\rplan_check_id\x18\x02 \x01(\tR\vplanCheckId\x12\x10\n" +
 	"\x03tag\x18\x03 \x01(\tR\x03tag\x12\x12\n" +
 	"\x04slug\x18\x04 \x01(\tR\x04slug\x12\x1d\n" +
 	"\n" +
@@ -25994,52 +25982,52 @@ const file_brent_proto_rawDesc = "" +
 	"\x13author_principal_id\x18\x03 \x01(\tR\x11authorPrincipalId\x12\x1a\n" +
 	"\bprovider\x18\x04 \x01(\tR\bprovider\x12\x1b\n" +
 	"\tplan_uuid\x18\x05 \x01(\tR\bplanUuid\x12(\n" +
-	"\x10plan_friendly_id\x18\x06 \x01(\tR\x0eplanFriendlyId\"\xa7\x02\n" +
-	"\x10WorkflowIngested\x121\n" +
+	"\x10plan_friendly_id\x18\x06 \x01(\tR\x0eplanFriendlyId\"\x97\x02\n" +
+	"\fLoopIngested\x121\n" +
 	"\x15source_repo_full_name\x18\x01 \x01(\tR\x12sourceRepoFullName\x12\x1f\n" +
 	"\vsource_path\x18\x02 \x01(\tR\n" +
 	"sourcePath\x12\x1d\n" +
 	"\n" +
 	"commit_sha\x18\x03 \x01(\tR\tcommitSha\x12\x18\n" +
 	"\aoutcome\x18\x04 \x01(\tR\aoutcome\x12\x14\n" +
-	"\x05error\x18\x05 \x01(\tR\x05error\x125\n" +
-	"\x14workflow_external_id\x18\x06 \x01(\tH\x00R\x12workflowExternalId\x88\x01\x01\x12\x17\n" +
-	"\x04name\x18\a \x01(\tH\x01R\x04name\x88\x01\x01B\x17\n" +
-	"\x15_workflow_external_idB\a\n" +
-	"\x05_name\"\xec\x01\n" +
-	"\x11WorkflowRunQueued\x12&\n" +
-	"\x0fworkflow_run_id\x18\x01 \x01(\tR\rworkflowRunId\x12#\n" +
-	"\rworkflow_name\x18\x02 \x01(\tR\fworkflowName\x12!\n" +
+	"\x05error\x18\x05 \x01(\tR\x05error\x12-\n" +
+	"\x10loop_external_id\x18\x06 \x01(\tH\x00R\x0eloopExternalId\x88\x01\x01\x12\x17\n" +
+	"\x04name\x18\a \x01(\tH\x01R\x04name\x88\x01\x01B\x13\n" +
+	"\x11_loop_external_idB\a\n" +
+	"\x05_name\"\xd8\x01\n" +
+	"\rLoopRunQueued\x12\x1e\n" +
+	"\vloop_run_id\x18\x01 \x01(\tR\tloopRunId\x12\x1b\n" +
+	"\tloop_name\x18\x02 \x01(\tR\bloopName\x12!\n" +
 	"\faccount_name\x18\x03 \x01(\tR\vaccountName\x12\x13\n" +
 	"\x05pr_id\x18\x04 \x01(\tR\x04prId\x12\x19\n" +
 	"\bhead_sha\x18\x05 \x01(\tR\aheadSha\x127\n" +
-	"\tqueued_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\bqueuedAt\"\xef\x01\n" +
-	"\x12WorkflowRunStarted\x12&\n" +
-	"\x0fworkflow_run_id\x18\x01 \x01(\tR\rworkflowRunId\x12#\n" +
-	"\rworkflow_name\x18\x02 \x01(\tR\fworkflowName\x12!\n" +
+	"\tqueued_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\bqueuedAt\"\xdb\x01\n" +
+	"\x0eLoopRunStarted\x12\x1e\n" +
+	"\vloop_run_id\x18\x01 \x01(\tR\tloopRunId\x12\x1b\n" +
+	"\tloop_name\x18\x02 \x01(\tR\bloopName\x12!\n" +
 	"\faccount_name\x18\x03 \x01(\tR\vaccountName\x12\x13\n" +
 	"\x05pr_id\x18\x04 \x01(\tR\x04prId\x12\x19\n" +
 	"\bhead_sha\x18\x05 \x01(\tR\aheadSha\x129\n" +
 	"\n" +
-	"started_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tstartedAt\"\xf5\x01\n" +
-	"\x14WorkflowRunCompleted\x12&\n" +
-	"\x0fworkflow_run_id\x18\x01 \x01(\tR\rworkflowRunId\x12#\n" +
-	"\rworkflow_name\x18\x02 \x01(\tR\fworkflowName\x12!\n" +
+	"started_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tstartedAt\"\xe1\x01\n" +
+	"\x10LoopRunCompleted\x12\x1e\n" +
+	"\vloop_run_id\x18\x01 \x01(\tR\tloopRunId\x12\x1b\n" +
+	"\tloop_name\x18\x02 \x01(\tR\bloopName\x12!\n" +
 	"\faccount_name\x18\x03 \x01(\tR\vaccountName\x12\x13\n" +
 	"\x05pr_id\x18\x04 \x01(\tR\x04prId\x12\x19\n" +
 	"\bhead_sha\x18\x05 \x01(\tR\aheadSha\x12=\n" +
-	"\fcompleted_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\vcompletedAt\"\x91\x02\n" +
-	"\x11WorkflowRunFailed\x12&\n" +
-	"\x0fworkflow_run_id\x18\x01 \x01(\tR\rworkflowRunId\x12#\n" +
-	"\rworkflow_name\x18\x02 \x01(\tR\fworkflowName\x12!\n" +
+	"\fcompleted_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\vcompletedAt\"\xfd\x01\n" +
+	"\rLoopRunFailed\x12\x1e\n" +
+	"\vloop_run_id\x18\x01 \x01(\tR\tloopRunId\x12\x1b\n" +
+	"\tloop_name\x18\x02 \x01(\tR\bloopName\x12!\n" +
 	"\faccount_name\x18\x03 \x01(\tR\vaccountName\x12\x13\n" +
 	"\x05pr_id\x18\x04 \x01(\tR\x04prId\x12\x19\n" +
 	"\bhead_sha\x18\x05 \x01(\tR\aheadSha\x12#\n" +
 	"\rerror_message\x18\x06 \x01(\tR\ferrorMessage\x127\n" +
-	"\tfailed_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\bfailedAt\"\x9a\x02\n" +
-	"\x14WorkflowRunCancelled\x12&\n" +
-	"\x0fworkflow_run_id\x18\x01 \x01(\tR\rworkflowRunId\x12#\n" +
-	"\rworkflow_name\x18\x02 \x01(\tR\fworkflowName\x12!\n" +
+	"\tfailed_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\bfailedAt\"\x86\x02\n" +
+	"\x10LoopRunCancelled\x12\x1e\n" +
+	"\vloop_run_id\x18\x01 \x01(\tR\tloopRunId\x12\x1b\n" +
+	"\tloop_name\x18\x02 \x01(\tR\bloopName\x12!\n" +
 	"\faccount_name\x18\x03 \x01(\tR\vaccountName\x12\x13\n" +
 	"\x05pr_id\x18\x04 \x01(\tR\x04prId\x12\x19\n" +
 	"\bhead_sha\x18\x05 \x01(\tR\aheadSha\x12#\n" +
@@ -26120,12 +26108,12 @@ const file_brent_proto_rawDesc = "" +
 	"message_ts\x18\x04 \x01(\tR\tmessageTs\x12\x1a\n" +
 	"\breaction\x18\x05 \x01(\tR\breaction\x12 \n" +
 	"\fitem_user_id\x18\x06 \x01(\tR\n" +
-	"itemUserId\"9\n" +
-	"\x14ListWorkflowsRequest\x12!\n" +
-	"\faccount_name\x18\x01 \x01(\tR\vaccountName\"M\n" +
-	"\x15ListWorkflowsResponse\x124\n" +
-	"\tworkflows\x18\x01 \x03(\v2\x16.brent.WorkflowSummaryR\tworkflows\"\xc3\x03\n" +
-	"\x0fWorkflowSummary\x12\x0e\n" +
+	"itemUserId\"5\n" +
+	"\x10ListLoopsRequest\x12!\n" +
+	"\faccount_name\x18\x01 \x01(\tR\vaccountName\"=\n" +
+	"\x11ListLoopsResponse\x12(\n" +
+	"\x05loops\x18\x01 \x03(\v2\x12.until.LoopSummaryR\x05loops\"\xbf\x03\n" +
+	"\vLoopSummary\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12!\n" +
 	"\faccount_name\x18\x02 \x01(\tR\vaccountName\x12\x12\n" +
 	"\x04name\x18\x03 \x01(\tR\x04name\x12 \n" +
@@ -26141,12 +26129,12 @@ const file_brent_proto_rawDesc = "" +
 	"\x06status\x18\n" +
 	" \x01(\tR\x06status\x12#\n" +
 	"\rerror_message\x18\v \x01(\tR\ferrorMessage\x12\x14\n" +
-	"\x05model\x18\f \x01(\tR\x05model\"$\n" +
-	"\x12GetWorkflowRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\"B\n" +
-	"\x13GetWorkflowResponse\x12+\n" +
-	"\bworkflow\x18\x01 \x01(\v2\x0f.brent.WorkflowR\bworkflow\"\xfa\x03\n" +
-	"\bWorkflow\x12\x0e\n" +
+	"\x05model\x18\f \x01(\tR\x05model\" \n" +
+	"\x0eGetLoopRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"2\n" +
+	"\x0fGetLoopResponse\x12\x1f\n" +
+	"\x04loop\x18\x01 \x01(\v2\v.until.LoopR\x04loop\"\xf6\x03\n" +
+	"\x04Loop\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12!\n" +
 	"\faccount_name\x18\x02 \x01(\tR\vaccountName\x12\x12\n" +
 	"\x04name\x18\x03 \x01(\tR\x04name\x12 \n" +
@@ -26164,18 +26152,18 @@ const file_brent_proto_rawDesc = "" +
 	"updated_at\x18\v \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12\x16\n" +
 	"\x06status\x18\f \x01(\tR\x06status\x12#\n" +
 	"\rerror_message\x18\r \x01(\tR\ferrorMessage\x12\x14\n" +
-	"\x05model\x18\x0e \x01(\tR\x05model\"\xb2\x01\n" +
-	"\x17ListWorkflowRunsRequest\x12#\n" +
-	"\rworkflow_name\x18\x01 \x01(\tR\fworkflowName\x12\x14\n" +
+	"\x05model\x18\x0e \x01(\tR\x05model\"\xa6\x01\n" +
+	"\x13ListLoopRunsRequest\x12\x1b\n" +
+	"\tloop_name\x18\x01 \x01(\tR\bloopName\x12\x14\n" +
 	"\x05limit\x18\x02 \x01(\rR\x05limit\x12!\n" +
 	"\fafter_cursor\x18\x03 \x01(\tR\vafterCursor\x12\x16\n" +
 	"\x06status\x18\x04 \x01(\tR\x06status\x12!\n" +
-	"\faccount_name\x18\x05 \x01(\tR\vaccountName\"j\n" +
-	"\x18ListWorkflowRunsResponse\x12-\n" +
-	"\x04runs\x18\x01 \x03(\v2\x19.brent.WorkflowRunSummaryR\x04runs\x12\x1f\n" +
+	"\faccount_name\x18\x05 \x01(\tR\vaccountName\"b\n" +
+	"\x14ListLoopRunsResponse\x12)\n" +
+	"\x04runs\x18\x01 \x03(\v2\x15.until.LoopRunSummaryR\x04runs\x12\x1f\n" +
 	"\vnext_cursor\x18\x02 \x01(\tR\n" +
-	"nextCursor\"\xdd\t\n" +
-	"\x12WorkflowRunSummary\x12\x0e\n" +
+	"nextCursor\"\xc5\t\n" +
+	"\x0eLoopRunSummary\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12!\n" +
 	"\faccount_name\x18\x02 \x01(\tR\vaccountName\x12\x12\n" +
 	"\x04name\x18\x04 \x01(\tR\x04name\x12 \n" +
@@ -26185,8 +26173,8 @@ const file_brent_proto_rawDesc = "" +
 	"\x10plan_friendly_id\x18\b \x01(\tH\x00R\x0eplanFriendlyId\x88\x01\x01\x12 \n" +
 	"\treview_id\x18\t \x01(\tH\x01R\breviewId\x88\x01\x01\x12(\n" +
 	"\rerror_message\x18\v \x01(\tH\x02R\ferrorMessage\x88\x01\x01\x122\n" +
-	"\x15triggering_event_type\x18\f \x01(\tR\x13triggeringEventType\x12;\n" +
-	"\x1aworkflow_source_commit_sha\x18\r \x01(\tR\x17workflowSourceCommitSha\x12>\n" +
+	"\x15triggering_event_type\x18\f \x01(\tR\x13triggeringEventType\x123\n" +
+	"\x16loop_source_commit_sha\x18\r \x01(\tR\x13loopSourceCommitSha\x12>\n" +
 	"\n" +
 	"started_at\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampH\x03R\tstartedAt\x88\x01\x01\x12B\n" +
 	"\fcompleted_at\x18\x0f \x01(\v2\x1a.google.protobuf.TimestampH\x04R\vcompletedAt\x88\x01\x01\x129\n" +
@@ -26198,9 +26186,8 @@ const file_brent_proto_rawDesc = "" +
 	"thread_key\x18\x12 \x01(\tH\x05R\tthreadKey\x88\x01\x01\x120\n" +
 	"\x14previous_response_id\x18\x13 \x01(\tR\x12previousResponseId\x122\n" +
 	"\x13resumed_from_run_id\x18\x14 \x01(\tH\x06R\x10resumedFromRunId\x88\x01\x01\x12 \n" +
-	"\tplan_uuid\x18\x15 \x01(\tH\aR\bplanUuid\x88\x01\x01\x12$\n" +
-	"\vworkflow_id\x18\x16 \x01(\tH\bR\n" +
-	"workflowId\x88\x01\x01\x12\x18\n" +
+	"\tplan_uuid\x18\x15 \x01(\tH\aR\bplanUuid\x88\x01\x01\x12\x1c\n" +
+	"\aloop_id\x18\x16 \x01(\tH\bR\x06loopId\x88\x01\x01\x12\x18\n" +
 	"\x05pr_id\x18\x17 \x01(\tH\tR\x04prId\x88\x01\x01\x12.\n" +
 	"\x11pr_repo_full_name\x18\x18 \x01(\tH\n" +
 	"R\x0eprRepoFullName\x88\x01\x01\x12 \n" +
@@ -26215,29 +26202,30 @@ const file_brent_proto_rawDesc = "" +
 	"\v_thread_keyB\x16\n" +
 	"\x14_resumed_from_run_idB\f\n" +
 	"\n" +
-	"_plan_uuidB\x0e\n" +
-	"\f_workflow_idB\b\n" +
+	"_plan_uuidB\n" +
+	"\n" +
+	"\b_loop_idB\b\n" +
 	"\x06_pr_idB\x14\n" +
 	"\x12_pr_repo_full_nameB\f\n" +
 	"\n" +
 	"_pr_numberJ\x04\b\x03\x10\x04J\x04\b\n" +
-	"\x10\vR\rworkflow_kindR\x06pr_key\"'\n" +
-	"\x15GetWorkflowRunRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\"4\n" +
-	"\"GetWorkflowRunThreadHistoryRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\"}\n" +
-	"\x18WorkflowRunThreadSegment\x12+\n" +
-	"\x03run\x18\x01 \x01(\v2\x19.brent.WorkflowRunSummaryR\x03run\x124\n" +
-	"\x05steps\x18\x02 \x03(\v2\x1e.brent.ExecuteWorkflowResponseR\x05steps\"\x80\x01\n" +
-	"#GetWorkflowRunThreadHistoryResponse\x12;\n" +
-	"\bsegments\x18\x01 \x03(\v2\x1f.brent.WorkflowRunThreadSegmentR\bsegments\x12\x1c\n" +
-	"\ttruncated\x18\x02 \x01(\bR\ttruncated\"\x84\x01\n" +
-	"\x16GetWorkflowRunResponse\x12$\n" +
-	"\x03run\x18\x01 \x01(\v2\x12.brent.WorkflowRunR\x03run\x127\n" +
-	"\bworkflow\x18\x02 \x01(\v2\x16.brent.WorkflowSummaryH\x00R\bworkflow\x88\x01\x01B\v\n" +
-	"\t_workflow\"\xad\n" +
+	"\x10\vR\rworkflow_kindR\x06pr_key\"#\n" +
+	"\x11GetLoopRunRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"0\n" +
+	"\x1eGetLoopRunThreadHistoryRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"q\n" +
+	"\x14LoopRunThreadSegment\x12'\n" +
+	"\x03run\x18\x01 \x01(\v2\x15.until.LoopRunSummaryR\x03run\x120\n" +
+	"\x05steps\x18\x02 \x03(\v2\x1a.until.ExecuteLoopResponseR\x05steps\"x\n" +
+	"\x1fGetLoopRunThreadHistoryResponse\x127\n" +
+	"\bsegments\x18\x01 \x03(\v2\x1b.until.LoopRunThreadSegmentR\bsegments\x12\x1c\n" +
+	"\ttruncated\x18\x02 \x01(\bR\ttruncated\"l\n" +
+	"\x12GetLoopRunResponse\x12 \n" +
+	"\x03run\x18\x01 \x01(\v2\x0e.until.LoopRunR\x03run\x12+\n" +
+	"\x04loop\x18\x02 \x01(\v2\x12.until.LoopSummaryH\x00R\x04loop\x88\x01\x01B\a\n" +
+	"\x05_loop\"\xa1\n" +
 	"\n" +
-	"\vWorkflowRun\x12\x0e\n" +
+	"\aLoopRun\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12!\n" +
 	"\faccount_name\x18\x02 \x01(\tR\vaccountName\x12\x12\n" +
 	"\x04name\x18\x04 \x01(\tR\x04name\x12 \n" +
@@ -26247,8 +26235,8 @@ const file_brent_proto_rawDesc = "" +
 	"\x10plan_friendly_id\x18\b \x01(\tH\x00R\x0eplanFriendlyId\x88\x01\x01\x12 \n" +
 	"\treview_id\x18\t \x01(\tH\x01R\breviewId\x88\x01\x01\x12(\n" +
 	"\rerror_message\x18\v \x01(\tH\x02R\ferrorMessage\x88\x01\x01\x122\n" +
-	"\x15triggering_event_type\x18\f \x01(\tR\x13triggeringEventType\x12;\n" +
-	"\x1aworkflow_source_commit_sha\x18\r \x01(\tR\x17workflowSourceCommitSha\x12>\n" +
+	"\x15triggering_event_type\x18\f \x01(\tR\x13triggeringEventType\x123\n" +
+	"\x16loop_source_commit_sha\x18\r \x01(\tR\x13loopSourceCommitSha\x12>\n" +
 	"\n" +
 	"started_at\x18\x0e \x01(\v2\x1a.google.protobuf.TimestampH\x03R\tstartedAt\x88\x01\x01\x12B\n" +
 	"\fcompleted_at\x18\x0f \x01(\v2\x1a.google.protobuf.TimestampH\x04R\vcompletedAt\x88\x01\x01\x129\n" +
@@ -26261,7 +26249,7 @@ const file_brent_proto_rawDesc = "" +
 	"\vresponse_id\x18\x15 \x01(\tR\n" +
 	"responseId\x12)\n" +
 	"\x10cancel_requested\x18\x16 \x01(\bR\x0fcancelRequested\x12K\n" +
-	"\x18triggering_event_payload\x18\x17 \x01(\v2\f.brent.EventH\x05R\x16triggeringEventPayload\x88\x01\x01\x12\"\n" +
+	"\x18triggering_event_payload\x18\x17 \x01(\v2\f.until.EventH\x05R\x16triggeringEventPayload\x88\x01\x01\x12\"\n" +
 	"\n" +
 	"thread_key\x18\x18 \x01(\tH\x06R\tthreadKey\x88\x01\x01\x120\n" +
 	"\x14previous_response_id\x18\x19 \x01(\tR\x12previousResponseId\x122\n" +
@@ -26284,19 +26272,19 @@ const file_brent_proto_rawDesc = "" +
 	"\x10\vJ\x04\b\x13\x10\x14R\rworkflow_kindR\x06pr_keyR\bhead_sha\"\x1b\n" +
 	"\x19GetPrincipalStatusRequest\"\xe5\x01\n" +
 	"\x1aGetPrincipalStatusResponse\x121\n" +
-	"\x05state\x18\x01 \x01(\x0e2\x1b.brent.PrincipalStatusStateR\x05state\x123\n" +
-	"\tprincipal\x18\x02 \x01(\v2\x10.brent.PrincipalH\x00R\tprincipal\x88\x01\x01\x12<\n" +
-	"\fintegrations\x18\x03 \x03(\v2\x18.brent.IntegrationStatusR\fintegrationsB\f\n" +
+	"\x05state\x18\x01 \x01(\x0e2\x1b.until.PrincipalStatusStateR\x05state\x123\n" +
+	"\tprincipal\x18\x02 \x01(\v2\x10.until.PrincipalH\x00R\tprincipal\x88\x01\x01\x12<\n" +
+	"\fintegrations\x18\x03 \x03(\v2\x18.until.IntegrationStatusR\fintegrationsB\f\n" +
 	"\n" +
 	"_principalJ\x04\b\x04\x10\x05R\rpreferred_ide\"\xb0\x01\n" +
 	"\x1fGetIntegrationConnectURLRequest\x126\n" +
-	"\bprovider\x18\x01 \x01(\x0e2\x1a.brent.IntegrationProviderR\bprovider\x120\n" +
-	"\x06intent\x18\x02 \x01(\x0e2\x18.brent.IntegrationIntentR\x06intent\x12#\n" +
+	"\bprovider\x18\x01 \x01(\x0e2\x1a.until.IntegrationProviderR\bprovider\x120\n" +
+	"\x06intent\x18\x02 \x01(\x0e2\x18.until.IntegrationIntentR\x06intent\x12#\n" +
 	"\rinstance_slug\x18\x03 \x01(\tR\finstanceSlug\"4\n" +
 	" GetIntegrationConnectURLResponse\x12\x10\n" +
 	"\x03url\x18\x01 \x01(\tR\x03url\"\x9c\x01\n" +
 	"\x1cDisconnectIntegrationRequest\x126\n" +
-	"\bprovider\x18\x01 \x01(\x0e2\x1a.brent.IntegrationProviderR\bprovider\x12#\n" +
+	"\bprovider\x18\x01 \x01(\x0e2\x1a.until.IntegrationProviderR\bprovider\x12#\n" +
 	"\rinstance_slug\x18\x02 \x01(\tR\finstanceSlug\x12\x1f\n" +
 	"\vinstance_id\x18\x03 \x01(\tR\n" +
 	"instanceId\"\x1f\n" +
@@ -26331,27 +26319,27 @@ const file_brent_proto_rawDesc = "" +
 	"\frequested_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\vrequestedAt\x12!\n" +
 	"\frequested_by\x18\x04 \x01(\tR\vrequestedBy\"\xc2\x03\n" +
 	"\x11IntegrationStatus\x126\n" +
-	"\bprovider\x18\x01 \x01(\x0e2\x1a.brent.IntegrationProviderR\bprovider\x12#\n" +
+	"\bprovider\x18\x01 \x01(\x0e2\x1a.until.IntegrationProviderR\bprovider\x12#\n" +
 	"\rorg_installed\x18\x02 \x01(\bR\forgInstalled\x12\x1d\n" +
 	"\n" +
 	"user_bound\x18\x03 \x01(\bR\tuserBound\x12B\n" +
-	"\x0egithub_pending\x18\x04 \x03(\v2\x1b.brent.GitHubPendingInstallR\rgithubPending\x12=\n" +
+	"\x0egithub_pending\x18\x04 \x03(\v2\x1b.until.GitHubPendingInstallR\rgithubPending\x12=\n" +
 	"\fconnected_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\vconnectedAt\x12\x1d\n" +
 	"\n" +
 	"manage_url\x18\x06 \x01(\tR\tmanageUrl\x12F\n" +
-	"\x06status\x18\a \x01(\x0e2\".brent.IntegrationConnectionStatusB\n" +
+	"\x06status\x18\a \x01(\x0e2\".until.IntegrationConnectionStatusB\n" +
 	"\xbaH\a\x82\x01\x04\x10\x01 \x00R\x06status\x12#\n" +
 	"\asummary\x18\b \x01(\tB\t\xbaH\x06r\x04\x10\x01\x18 R\asummary\x12\"\n" +
 	"\x06detail\x18\t \x01(\tB\n" +
 	"\xbaH\ar\x05\x10\x01\x18\xa0\x01R\x06detail\"%\n" +
 	"#GetWorkspaceIntegrationRolesRequest\"\xbf\x01\n" +
 	"$GetWorkspaceIntegrationRolesResponse\x12=\n" +
-	"\fgit_provider\x18\x01 \x01(\x0e2\x1a.brent.IntegrationProviderR\vgitProvider\x12$\n" +
+	"\fgit_provider\x18\x01 \x01(\x0e2\x1a.until.IntegrationProviderR\vgitProvider\x12$\n" +
 	"\x0egit_manage_url\x18\x04 \x01(\tR\fgitManageUrlJ\x04\b\x02\x10\x03J\x04\b\x03\x10\x04R\x12ticketing_providerR\x12messaging_provider\"\x98\x01\n" +
 	"#SetWorkspaceIntegrationRolesRequest\x12=\n" +
-	"\fgit_provider\x18\x01 \x01(\x0e2\x1a.brent.IntegrationProviderR\vgitProviderJ\x04\b\x02\x10\x03J\x04\b\x03\x10\x04R\x12ticketing_providerR\x12messaging_provider\"\xbf\x01\n" +
+	"\fgit_provider\x18\x01 \x01(\x0e2\x1a.until.IntegrationProviderR\vgitProviderJ\x04\b\x02\x10\x03J\x04\b\x03\x10\x04R\x12ticketing_providerR\x12messaging_provider\"\xbf\x01\n" +
 	"$SetWorkspaceIntegrationRolesResponse\x12=\n" +
-	"\fgit_provider\x18\x01 \x01(\x0e2\x1a.brent.IntegrationProviderR\vgitProvider\x12$\n" +
+	"\fgit_provider\x18\x01 \x01(\x0e2\x1a.until.IntegrationProviderR\vgitProvider\x12$\n" +
 	"\x0egit_manage_url\x18\x04 \x01(\tR\fgitManageUrlJ\x04\b\x02\x10\x03J\x04\b\x03\x10\x04R\x12ticketing_providerR\x12messaging_provider\"\xca\x02\n" +
 	"\tPrincipal\x12\x1f\n" +
 	"\vexternal_id\x18\x01 \x01(\tR\n" +
@@ -26383,33 +26371,33 @@ const file_brent_proto_rawDesc = "" +
 	"\x16CreateWorkspaceRequest\x12!\n" +
 	"\fdisplay_name\x18\x01 \x01(\tR\vdisplayName\"I\n" +
 	"\x17CreateWorkspaceResponse\x12.\n" +
-	"\tworkspace\x18\x01 \x01(\v2\x10.brent.WorkspaceR\tworkspace\"\x19\n" +
+	"\tworkspace\x18\x01 \x01(\v2\x10.until.WorkspaceR\tworkspace\"\x19\n" +
 	"\x17ListMyWorkspacesRequest\"L\n" +
 	"\x18ListMyWorkspacesResponse\x120\n" +
 	"\n" +
-	"workspaces\x18\x01 \x03(\v2\x10.brent.WorkspaceR\n" +
+	"workspaces\x18\x01 \x03(\v2\x10.until.WorkspaceR\n" +
 	"workspaces\"(\n" +
 	"&DiscoverLoginRecoveryCandidatesRequest\"\xab\x01\n" +
 	"\x16LoginRecoveryCandidate\x120\n" +
-	"\bprovider\x18\x01 \x01(\x0e2\x14.brent.LoginProviderR\bprovider\x12)\n" +
+	"\bprovider\x18\x01 \x01(\x0e2\x14.until.LoginProviderR\bprovider\x12)\n" +
 	"\x10auth0_connection\x18\x02 \x01(\tR\x0fauth0Connection\x124\n" +
 	"\x16active_workspace_count\x18\x03 \x01(\rR\x14activeWorkspaceCount\"\xab\x01\n" +
 	"'DiscoverLoginRecoveryCandidatesResponse\x12A\n" +
-	"\x11arriving_provider\x18\x01 \x01(\x0e2\x14.brent.LoginProviderR\x10arrivingProvider\x12=\n" +
+	"\x11arriving_provider\x18\x01 \x01(\x0e2\x14.until.LoginProviderR\x10arrivingProvider\x12=\n" +
 	"\n" +
-	"candidates\x18\x02 \x03(\v2\x1d.brent.LoginRecoveryCandidateR\n" +
+	"candidates\x18\x02 \x03(\v2\x1d.until.LoginRecoveryCandidateR\n" +
 	"candidates\";\n" +
 	"\x16RenameWorkspaceRequest\x12!\n" +
 	"\fdisplay_name\x18\x01 \x01(\tR\vdisplayName\"I\n" +
 	"\x17RenameWorkspaceResponse\x12.\n" +
-	"\tworkspace\x18\x01 \x01(\v2\x10.brent.WorkspaceR\tworkspace\";\n" +
+	"\tworkspace\x18\x01 \x01(\v2\x10.until.WorkspaceR\tworkspace\";\n" +
 	"\x16DeleteWorkspaceRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\"\x19\n" +
 	"\x17DeleteWorkspaceResponse\"\x1f\n" +
 	"\x1dListJoinableWorkspacesRequest\"Z\n" +
 	"\x1eListJoinableWorkspacesResponse\x128\n" +
 	"\n" +
-	"workspaces\x18\x01 \x03(\v2\x18.brent.JoinableWorkspaceR\n" +
+	"workspaces\x18\x01 \x03(\v2\x18.until.JoinableWorkspaceR\n" +
 	"workspaces\"\x9d\x03\n" +
 	"\x11JoinableWorkspace\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x12\n" +
@@ -26420,9 +26408,9 @@ const file_brent_proto_rawDesc = "" +
 	"\n" +
 	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12&\n" +
 	"\x0fcreated_by_name\x18\x06 \x01(\tR\rcreatedByName\x12G\n" +
-	"\x0fmember_previews\x18\a \x03(\v2\x1e.brent.JoinableWorkspaceMemberR\x0ememberPreviews\x12!\n" +
+	"\x0fmember_previews\x18\a \x03(\v2\x1e.until.JoinableWorkspaceMemberR\x0ememberPreviews\x12!\n" +
 	"\fmember_count\x18\b \x01(\rR\vmemberCount\x12)\n" +
-	"\x06source\x18\t \x01(\x0e2\x11.brent.JoinSourceR\x06sourceB\x0e\n" +
+	"\x06source\x18\t \x01(\x0e2\x11.until.JoinSourceR\x06sourceB\x0e\n" +
 	"\f_picture_url\"r\n" +
 	"\x17JoinableWorkspaceMember\x12!\n" +
 	"\fdisplay_name\x18\x01 \x01(\tR\vdisplayName\x12$\n" +
@@ -26432,7 +26420,7 @@ const file_brent_proto_rawDesc = "" +
 	"\x14JoinWorkspaceRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\"G\n" +
 	"\x15JoinWorkspaceResponse\x12.\n" +
-	"\tworkspace\x18\x01 \x01(\v2\x10.brent.WorkspaceR\tworkspace\"\xe7\x01\n" +
+	"\tworkspace\x18\x01 \x01(\v2\x10.until.WorkspaceR\tworkspace\"\xe7\x01\n" +
 	"\x13ApprovedEmailDomain\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x16\n" +
 	"\x06domain\x18\x02 \x01(\tR\x06domain\x12\x1a\n" +
@@ -26443,17 +26431,17 @@ const file_brent_proto_rawDesc = "" +
 	"\x12verification_email\x18\x06 \x01(\tR\x11verificationEmail\"!\n" +
 	"\x1fListApprovedEmailDomainsRequest\"X\n" +
 	" ListApprovedEmailDomainsResponse\x124\n" +
-	"\adomains\x18\x01 \x03(\v2\x1a.brent.ApprovedEmailDomainR\adomains\"f\n" +
+	"\adomains\x18\x01 \x03(\v2\x1a.until.ApprovedEmailDomainR\adomains\"f\n" +
 	"\x1dAddApprovedEmailDomainRequest\x12\x16\n" +
 	"\x06domain\x18\x01 \x01(\tR\x06domain\x12-\n" +
 	"\x12verification_email\x18\x02 \x01(\tR\x11verificationEmail\"T\n" +
 	"\x1eAddApprovedEmailDomainResponse\x122\n" +
-	"\x06domain\x18\x01 \x01(\v2\x1a.brent.ApprovedEmailDomainR\x06domain\"F\n" +
+	"\x06domain\x18\x01 \x01(\v2\x1a.until.ApprovedEmailDomainR\x06domain\"F\n" +
 	" VerifyApprovedEmailDomainRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04code\x18\x02 \x01(\tR\x04code\"W\n" +
 	"!VerifyApprovedEmailDomainResponse\x122\n" +
-	"\x06domain\x18\x01 \x01(\v2\x1a.brent.ApprovedEmailDomainR\x06domain\"6\n" +
+	"\x06domain\x18\x01 \x01(\v2\x1a.until.ApprovedEmailDomainR\x06domain\"6\n" +
 	"$ResendApprovedEmailDomainCodeRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"'\n" +
 	"%ResendApprovedEmailDomainCodeResponse\" \n" +
@@ -26472,12 +26460,12 @@ const file_brent_proto_rawDesc = "" +
 	"&GetWorkspaceLLMCredentialStatusRequest\x12\x1a\n" +
 	"\bprovider\x18\x01 \x01(\tR\bprovider\"f\n" +
 	"'GetWorkspaceLLMCredentialStatusResponse\x12;\n" +
-	"\x06status\x18\x01 \x01(\v2#.brent.WorkspaceLLMCredentialStatusR\x06status\"V\n" +
+	"\x06status\x18\x01 \x01(\v2#.until.WorkspaceLLMCredentialStatusR\x06status\"V\n" +
 	" SetWorkspaceLLMCredentialRequest\x12\x1a\n" +
 	"\bprovider\x18\x01 \x01(\tR\bprovider\x12\x16\n" +
 	"\x06secret\x18\x02 \x01(\tR\x06secret\"\x8f\x01\n" +
 	"!SetWorkspaceLLMCredentialResponse\x12;\n" +
-	"\x06status\x18\x01 \x01(\v2#.brent.WorkspaceLLMCredentialStatusR\x06status\x12-\n" +
+	"\x06status\x18\x01 \x01(\v2#.until.WorkspaceLLMCredentialStatusR\x06status\x12-\n" +
 	"\x12validation_warning\x18\x02 \x01(\tR\x11validationWarning\"A\n" +
 	"#DeleteWorkspaceLLMCredentialRequest\x12\x1a\n" +
 	"\bprovider\x18\x01 \x01(\tR\bprovider\"&\n" +
@@ -26488,22 +26476,22 @@ const file_brent_proto_rawDesc = "" +
 	"\x11last_validated_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\x0flastValidatedAt\"$\n" +
 	"\"GetMyCursorCredentialStatusRequest\"^\n" +
 	"#GetMyCursorCredentialStatusResponse\x127\n" +
-	"\x06status\x18\x01 \x01(\v2\x1f.brent.MyCursorCredentialStatusR\x06status\"6\n" +
+	"\x06status\x18\x01 \x01(\v2\x1f.until.MyCursorCredentialStatusR\x06status\"6\n" +
 	"\x1cSetMyCursorCredentialRequest\x12\x16\n" +
 	"\x06secret\x18\x01 \x01(\tR\x06secret\"X\n" +
 	"\x1dSetMyCursorCredentialResponse\x127\n" +
-	"\x06status\x18\x01 \x01(\v2\x1f.brent.MyCursorCredentialStatusR\x06status\"!\n" +
+	"\x06status\x18\x01 \x01(\v2\x1f.until.MyCursorCredentialStatusR\x06status\"!\n" +
 	"\x1fDeleteMyCursorCredentialRequest\"\"\n" +
 	" DeleteMyCursorCredentialResponse\"A\n" +
 	"\x1eUpdateWorkspaceBrandingRequest\x12\x1f\n" +
 	"\vtheme_color\x18\x01 \x01(\tR\n" +
 	"themeColor\"Q\n" +
 	"\x1fUpdateWorkspaceBrandingResponse\x12.\n" +
-	"\tworkspace\x18\x01 \x01(\v2\x10.brent.WorkspaceR\tworkspace\"G\n" +
+	"\tworkspace\x18\x01 \x01(\v2\x10.until.WorkspaceR\tworkspace\"G\n" +
 	"\"CompleteWorkspaceOnboardingRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\"U\n" +
 	"#CompleteWorkspaceOnboardingResponse\x12.\n" +
-	"\tworkspace\x18\x01 \x01(\v2\x10.brent.WorkspaceR\tworkspace\"f\n" +
+	"\tworkspace\x18\x01 \x01(\v2\x10.until.WorkspaceR\tworkspace\"f\n" +
 	"\x17CreateInvitationRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\x12\x14\n" +
 	"\x05email\x18\x02 \x01(\tR\x05email\x12\x12\n" +
@@ -26521,27 +26509,27 @@ const file_brent_proto_rawDesc = "" +
 	"\x04role\x18\x03 \x01(\tR\x04role\"\xa3\x01\n" +
 	"\x10InvitationResult\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x125\n" +
-	"\x06status\x18\x02 \x01(\x0e2\x1d.brent.InvitationResultStatusR\x06status\x12\x1d\n" +
+	"\x06status\x18\x02 \x01(\x0e2\x1d.until.InvitationResultStatusR\x06status\x12\x1d\n" +
 	"\n" +
 	"accept_url\x18\x03 \x01(\tR\tacceptUrl\x12#\n" +
 	"\rerror_message\x18\x04 \x01(\tR\ferrorMessage\"N\n" +
 	"\x19CreateInvitationsResponse\x121\n" +
-	"\aresults\x18\x01 \x03(\v2\x17.brent.InvitationResultR\aresults\"/\n" +
+	"\aresults\x18\x01 \x03(\v2\x17.until.InvitationResultR\aresults\"/\n" +
 	"\x17AcceptInvitationRequest\x12\x14\n" +
 	"\x05token\x18\x01 \x01(\tR\x05token\"J\n" +
 	"\x18AcceptInvitationResponse\x12.\n" +
-	"\tworkspace\x18\x01 \x01(\v2\x10.brent.WorkspaceR\tworkspace\"@\n" +
+	"\tworkspace\x18\x01 \x01(\v2\x10.until.WorkspaceR\tworkspace\"@\n" +
 	"\x1bListWorkspaceMembersRequest\x12!\n" +
 	"\fworkspace_id\x18\x01 \x01(\tR\vworkspaceId\"P\n" +
 	"\x1cListWorkspaceMembersResponse\x120\n" +
-	"\amembers\x18\x01 \x03(\v2\x16.brent.WorkspaceMemberR\amembers\"\x86\x02\n" +
+	"\amembers\x18\x01 \x03(\v2\x16.until.WorkspaceMemberR\amembers\"\x86\x02\n" +
 	"\x0fWorkspaceMember\x12!\n" +
 	"\fprincipal_id\x18\x01 \x01(\tR\vprincipalId\x12!\n" +
 	"\fdisplay_name\x18\x02 \x01(\tR\vdisplayName\x12\x14\n" +
 	"\x05email\x18\x03 \x01(\tR\x05email\x12\x12\n" +
 	"\x04role\x18\x04 \x01(\tR\x04role\x12\x1a\n" +
 	"\x06status\x18\x05 \x01(\tB\x02\x18\x01R\x06status\x121\n" +
-	"\x05state\x18\x06 \x01(\x0e2\x1b.brent.WorkspaceMemberStateR\x05state\x12$\n" +
+	"\x05state\x18\x06 \x01(\x0e2\x1b.until.WorkspaceMemberStateR\x05state\x12$\n" +
 	"\vpicture_url\x18\a \x01(\tH\x00R\n" +
 	"pictureUrl\x88\x01\x01B\x0e\n" +
 	"\f_picture_url\"_\n" +
@@ -26569,7 +26557,7 @@ const file_brent_proto_rawDesc = "" +
 	"\x14GetInvitationRequest\x12\x14\n" +
 	"\x05token\x18\x01 \x01(\tR\x05token\"\xc9\x02\n" +
 	"\x15GetInvitationResponse\x12/\n" +
-	"\x06status\x18\x01 \x01(\x0e2\x17.brent.InvitationStatusR\x06status\x12!\n" +
+	"\x06status\x18\x01 \x01(\x0e2\x17.until.InvitationStatusR\x06status\x12!\n" +
 	"\fworkspace_id\x18\x02 \x01(\tR\vworkspaceId\x12\x12\n" +
 	"\x04slug\x18\x03 \x01(\tR\x04slug\x124\n" +
 	"\x16workspace_display_name\x18\x04 \x01(\tR\x14workspaceDisplayName\x12$\n" +
@@ -26583,31 +26571,31 @@ const file_brent_proto_rawDesc = "" +
 	"\bprovider\x18\x01 \x01(\tR\bprovider\x12\x16\n" +
 	"\x06handle\x18\x02 \x01(\tR\x06handleJ\x04\b\x03\x10\x04R\fcapabilities\"K\n" +
 	"\x1fUpsertMyVerifiedBindingResponse\x12(\n" +
-	"\abinding\x18\x01 \x01(\v2\x0e.brent.BindingR\abinding\"?\n" +
+	"\abinding\x18\x01 \x01(\v2\x0e.until.BindingR\abinding\"?\n" +
 	"\x1aUpdateMyDisplayNameRequest\x12!\n" +
 	"\fdisplay_name\x18\x01 \x01(\tR\vdisplayName\"M\n" +
 	"\x1bUpdateMyDisplayNameResponse\x12.\n" +
-	"\tprincipal\x18\x01 \x01(\v2\x10.brent.PrincipalR\tprincipal\"\x17\n" +
+	"\tprincipal\x18\x01 \x01(\v2\x10.until.PrincipalR\tprincipal\"\x17\n" +
 	"\x15ListMyBindingsRequest\"D\n" +
 	"\x16ListMyBindingsResponse\x12*\n" +
-	"\bbindings\x18\x01 \x03(\v2\x0e.brent.BindingR\bbindings\"\xc7\x01\n" +
+	"\bbindings\x18\x01 \x03(\v2\x0e.until.BindingR\bbindings\"\xc7\x01\n" +
 	"\x17NotificationPreferences\x12Q\n" +
-	"\vpreferences\x18\x01 \x03(\v2/.brent.NotificationPreferences.PreferencesEntryR\vpreferences\x1aY\n" +
+	"\vpreferences\x18\x01 \x03(\v2/.until.NotificationPreferences.PreferencesEntryR\vpreferences\x1aY\n" +
 	"\x10PreferencesEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12/\n" +
-	"\x05value\x18\x02 \x01(\v2\x19.brent.ChannelPreferencesR\x05value:\x028\x01\"\x96\x01\n" +
+	"\x05value\x18\x02 \x01(\v2\x19.until.ChannelPreferencesR\x05value:\x028\x01\"\x96\x01\n" +
 	"\x12ChannelPreferences\x12C\n" +
-	"\bchannels\x18\x01 \x03(\v2'.brent.ChannelPreferences.ChannelsEntryR\bchannels\x1a;\n" +
+	"\bchannels\x18\x01 \x03(\v2'.until.ChannelPreferences.ChannelsEntryR\bchannels\x1a;\n" +
 	"\rChannelsEntry\x12\x10\n" +
 	"\x03key\x18\x01 \x01(\tR\x03key\x12\x14\n" +
 	"\x05value\x18\x02 \x01(\bR\x05value:\x028\x01\"%\n" +
 	"#GetMyNotificationPreferencesRequest\"h\n" +
 	"$GetMyNotificationPreferencesResponse\x12@\n" +
-	"\vpreferences\x18\x01 \x01(\v2\x1e.brent.NotificationPreferencesR\vpreferences\"j\n" +
+	"\vpreferences\x18\x01 \x01(\v2\x1e.until.NotificationPreferencesR\vpreferences\"j\n" +
 	"&UpdateMyNotificationPreferencesRequest\x12@\n" +
-	"\vpreferences\x18\x01 \x01(\v2\x1e.brent.NotificationPreferencesR\vpreferences\"k\n" +
+	"\vpreferences\x18\x01 \x01(\v2\x1e.until.NotificationPreferencesR\vpreferences\"k\n" +
 	"'UpdateMyNotificationPreferencesResponse\x12@\n" +
-	"\vpreferences\x18\x01 \x01(\v2\x1e.brent.NotificationPreferencesR\vpreferences\"k\n" +
+	"\vpreferences\x18\x01 \x01(\v2\x1e.until.NotificationPreferencesR\vpreferences\"k\n" +
 	"!RegisterMyPushSubscriptionRequest\x12\x1a\n" +
 	"\bendpoint\x18\x01 \x01(\tR\bendpoint\x12\x16\n" +
 	"\x06p256dh\x18\x02 \x01(\tR\x06p256dh\x12\x12\n" +
@@ -26627,33 +26615,33 @@ const file_brent_proto_rawDesc = "" +
 	"created_at\x18\x06 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x129\n" +
 	"\n" +
 	"updated_at\x18\a \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12\x18\n" +
-	"\asubject\x18\b \x01(\tR\asubjectJ\x04\b\x05\x10\x06R\fcapabilities\",\n" +
-	"\x14RedFindingKindsPatch\x12\x14\n" +
-	"\x05kinds\x18\x01 \x03(\tR\x05kinds\"<\n" +
-	"\x17GetBrentSettingsRequest\x12!\n" +
-	"\faccount_name\x18\x01 \x01(\tR\vaccountName\"\xe2\x01\n" +
-	"\x18GetBrentSettingsResponse\x12*\n" +
-	"\x11red_finding_kinds\x18\x01 \x03(\tR\x0fredFindingKinds\x12>\n" +
-	"\x1cred_finding_kinds_updated_by\x18\x02 \x01(\tR\x18redFindingKindsUpdatedBy\x12Z\n" +
-	"\x1cred_finding_kinds_updated_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\x18redFindingKindsUpdatedAt\"\xa3\x01\n" +
-	"\x1aUpdateBrentSettingsRequest\x12!\n" +
-	"\faccount_name\x18\x01 \x01(\tR\vaccountName\x12L\n" +
-	"\x11red_finding_kinds\x18\x02 \x01(\v2\x1b.brent.RedFindingKindsPatchH\x00R\x0fredFindingKinds\x88\x01\x01B\x14\n" +
-	"\x12_red_finding_kinds\"\xe5\x01\n" +
-	"\x1bUpdateBrentSettingsResponse\x12*\n" +
-	"\x11red_finding_kinds\x18\x01 \x03(\tR\x0fredFindingKinds\x12>\n" +
-	"\x1cred_finding_kinds_updated_by\x18\x02 \x01(\tR\x18redFindingKindsUpdatedBy\x12Z\n" +
-	"\x1cred_finding_kinds_updated_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\x18redFindingKindsUpdatedAt\"H\n" +
-	"#AdminGetAccountBrentSettingsRequest\x12!\n" +
-	"\faccount_name\x18\x01 \x01(\tR\vaccountName\"\xaf\x01\n" +
-	"&AdminUpdateAccountBrentSettingsRequest\x12!\n" +
-	"\faccount_name\x18\x01 \x01(\tR\vaccountName\x12L\n" +
-	"\x11red_finding_kinds\x18\x02 \x01(\v2\x1b.brent.RedFindingKindsPatchH\x00R\x0fredFindingKinds\x88\x01\x01B\x14\n" +
-	"\x12_red_finding_kinds\"G\n" +
+	"\asubject\x18\b \x01(\tR\asubjectJ\x04\b\x05\x10\x06R\fcapabilities\"3\n" +
+	"\x1bBlockingDifferenceTagsPatch\x12\x14\n" +
+	"\x05kinds\x18\x01 \x03(\tR\x05kinds\"@\n" +
+	"\x1bGetPlanCheckSettingsRequest\x12!\n" +
+	"\faccount_name\x18\x01 \x01(\tR\vaccountName\"\x90\x02\n" +
+	"\x1cGetPlanCheckSettingsResponse\x128\n" +
+	"\x18blocking_difference_tags\x18\x01 \x03(\tR\x16blockingDifferenceTags\x12L\n" +
+	"#blocking_difference_tags_updated_by\x18\x02 \x01(\tR\x1fblockingDifferenceTagsUpdatedBy\x12h\n" +
+	"#blocking_difference_tags_updated_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\x1fblockingDifferenceTagsUpdatedAt\"\xc3\x01\n" +
+	"\x1eUpdatePlanCheckSettingsRequest\x12!\n" +
+	"\faccount_name\x18\x01 \x01(\tR\vaccountName\x12a\n" +
+	"\x18blocking_difference_tags\x18\x02 \x01(\v2\".until.BlockingDifferenceTagsPatchH\x00R\x16blockingDifferenceTags\x88\x01\x01B\x1b\n" +
+	"\x19_blocking_difference_tags\"\x93\x02\n" +
+	"\x1fUpdatePlanCheckSettingsResponse\x128\n" +
+	"\x18blocking_difference_tags\x18\x01 \x03(\tR\x16blockingDifferenceTags\x12L\n" +
+	"#blocking_difference_tags_updated_by\x18\x02 \x01(\tR\x1fblockingDifferenceTagsUpdatedBy\x12h\n" +
+	"#blocking_difference_tags_updated_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\x1fblockingDifferenceTagsUpdatedAt\"L\n" +
+	"'AdminGetAccountPlanCheckSettingsRequest\x12!\n" +
+	"\faccount_name\x18\x01 \x01(\tR\vaccountName\"\xcf\x01\n" +
+	"*AdminUpdateAccountPlanCheckSettingsRequest\x12!\n" +
+	"\faccount_name\x18\x01 \x01(\tR\vaccountName\x12a\n" +
+	"\x18blocking_difference_tags\x18\x02 \x01(\v2\".until.BlockingDifferenceTagsPatchH\x00R\x16blockingDifferenceTags\x88\x01\x01B\x1b\n" +
+	"\x19_blocking_difference_tags\"G\n" +
 	"\"AdminGetAccountReviewPolicyRequest\x12!\n" +
 	"\faccount_name\x18\x01 \x01(\tR\vaccountName\"\xf6\x01\n" +
 	"#AdminGetAccountReviewPolicyResponse\x124\n" +
-	"\x06policy\x18\x01 \x01(\x0e2\x1c.brent.WorkspaceReviewPolicyR\x06policy\x12?\n" +
+	"\x06policy\x18\x01 \x01(\x0e2\x1c.until.WorkspaceReviewPolicyR\x06policy\x12?\n" +
 	"\x1cactive_human_principal_count\x18\x02 \x01(\x05R\x19activeHumanPrincipalCount\x12\x1d\n" +
 	"\n" +
 	"updated_by\x18\x03 \x01(\tR\tupdatedBy\x129\n" +
@@ -26661,9 +26649,9 @@ const file_brent_proto_rawDesc = "" +
 	"updated_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\x80\x01\n" +
 	"%AdminUpdateAccountReviewPolicyRequest\x12!\n" +
 	"\faccount_name\x18\x01 \x01(\tR\vaccountName\x124\n" +
-	"\x06policy\x18\x02 \x01(\x0e2\x1c.brent.WorkspaceReviewPolicyR\x06policy\"\xf9\x01\n" +
+	"\x06policy\x18\x02 \x01(\x0e2\x1c.until.WorkspaceReviewPolicyR\x06policy\"\xf9\x01\n" +
 	"&AdminUpdateAccountReviewPolicyResponse\x124\n" +
-	"\x06policy\x18\x01 \x01(\x0e2\x1c.brent.WorkspaceReviewPolicyR\x06policy\x12?\n" +
+	"\x06policy\x18\x01 \x01(\x0e2\x1c.until.WorkspaceReviewPolicyR\x06policy\x12?\n" +
 	"\x1cactive_human_principal_count\x18\x02 \x01(\x05R\x19activeHumanPrincipalCount\x12\x1d\n" +
 	"\n" +
 	"updated_by\x18\x03 \x01(\tR\tupdatedBy\x129\n" +
@@ -26673,7 +26661,7 @@ const file_brent_proto_rawDesc = "" +
 	"\faccount_name\x18\x01 \x01(\tR\vaccountName\x12\x1a\n" +
 	"\bprovider\x18\x02 \x01(\tR\bprovider\"\x94\x01\n" +
 	"*AdminGetAccountLLMCredentialStatusResponse\x12;\n" +
-	"\x06status\x18\x01 \x01(\v2#.brent.WorkspaceLLMCredentialStatusR\x06status\x12)\n" +
+	"\x06status\x18\x01 \x01(\v2#.until.WorkspaceLLMCredentialStatusR\x06status\x12)\n" +
 	"\x11key_source_in_use\x18\x02 \x01(\tR\x0ekeySourceInUse\"H\n" +
 	"#AdminListAccountIntegrationsRequest\x12!\n" +
 	"\faccount_name\x18\x01 \x01(\tR\vaccountName\"\xb2\x04\n" +
@@ -26691,19 +26679,19 @@ const file_brent_proto_rawDesc = "" +
 	"\x11has_signing_token\x18\b \x01(\bR\x0fhasSigningToken\x12,\n" +
 	"\x12has_webhook_secret\x18\t \x01(\bR\x10hasWebhookSecret\x12F\n" +
 	"\x06status\x18\n" +
-	" \x01(\x0e2\".brent.IntegrationConnectionStatusB\n" +
+	" \x01(\x0e2\".until.IntegrationConnectionStatusB\n" +
 	"\xbaH\a\x82\x01\x04\x10\x01 \x00R\x06status\x12#\n" +
 	"\asummary\x18\v \x01(\tB\t\xbaH\x06r\x04\x10\x01\x18 R\asummary\x12\"\n" +
 	"\x06detail\x18\f \x01(\tB\n" +
 	"\xbaH\ar\x05\x10\x01\x18\xa0\x01R\x06detail\"\xbe\x02\n" +
 	"$AdminListAccountIntegrationsResponse\x12A\n" +
-	"\binstalls\x18\x01 \x03(\v2%.brent.AdminAccountIntegrationInstallR\binstalls\x12=\n" +
-	"\fgit_provider\x18\x02 \x01(\x0e2\x1a.brent.IntegrationProviderR\vgitProvider\x12I\n" +
-	"\x12ticketing_provider\x18\x03 \x01(\x0e2\x1a.brent.IntegrationProviderR\x11ticketingProvider\x12I\n" +
-	"\x12messaging_provider\x18\x04 \x01(\x0e2\x1a.brent.IntegrationProviderR\x11messagingProvider\"!\n" +
+	"\binstalls\x18\x01 \x03(\v2%.until.AdminAccountIntegrationInstallR\binstalls\x12=\n" +
+	"\fgit_provider\x18\x02 \x01(\x0e2\x1a.until.IntegrationProviderR\vgitProvider\x12I\n" +
+	"\x12ticketing_provider\x18\x03 \x01(\x0e2\x1a.until.IntegrationProviderR\x11ticketingProvider\x12I\n" +
+	"\x12messaging_provider\x18\x04 \x01(\x0e2\x1a.until.IntegrationProviderR\x11messagingProvider\"!\n" +
 	"\x1fListIntegrationCatalogueRequest\"^\n" +
 	" ListIntegrationCatalogueResponse\x12:\n" +
-	"\aentries\x18\x01 \x03(\v2 .brent.IntegrationCatalogueEntryR\aentries\"\x94\x04\n" +
+	"\aentries\x18\x01 \x03(\v2 .until.IntegrationCatalogueEntryR\aentries\"\x94\x04\n" +
 	"\x19IntegrationCatalogueEntry\x12\x1b\n" +
 	"\tstable_id\x18\x01 \x01(\tR\bstableId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1a\n" +
@@ -26714,9 +26702,9 @@ const file_brent_proto_rawDesc = "" +
 	"\vnewly_added\x18\a \x01(\bR\n" +
 	"newlyAdded\x12\x1c\n" +
 	"\tconnected\x18\b \x01(\bR\tconnected\x129\n" +
-	"\x06source\x18\t \x01(\x0e2!.brent.IntegrationCatalogueSourceR\x06source\x126\n" +
+	"\x06source\x18\t \x01(\x0e2!.until.IntegrationCatalogueSourceR\x06source\x126\n" +
 	"\bprovider\x18\n" +
-	" \x01(\x0e2\x1a.brent.IntegrationProviderR\bprovider\x12\x1b\n" +
+	" \x01(\x0e2\x1a.until.IntegrationProviderR\bprovider\x12\x1b\n" +
 	"\tauto_rank\x18\v \x01(\x05R\bautoRank\x129\n" +
 	"\n" +
 	"created_at\x18\f \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12\x1f\n" +
@@ -26799,105 +26787,106 @@ const file_brent_proto_rawDesc = "" +
 	"(INTEGRATION_CATALOGUE_SOURCE_UNSPECIFIED\x10\x00\x12,\n" +
 	"(INTEGRATION_CATALOGUE_SOURCE_FIRST_PARTY\x10\x01\x12$\n" +
 	" INTEGRATION_CATALOGUE_SOURCE_BYO\x10\x02\x12/\n" +
-	"+INTEGRATION_CATALOGUE_SOURCE_MCP_AGGREGATOR\x10\x032\xa4(\n" +
-	"\fBrentService\x12_\n" +
-	"\x14ListOpenPullRequests\x12\".brent.ListOpenPullRequestsRequest\x1a#.brent.ListOpenPullRequestsResponse\x12M\n" +
-	"\x0eGetPullRequest\x12\x1c.brent.GetPullRequestRequest\x1a\x1d.brent.GetPullRequestResponse\x12Y\n" +
-	"\x12GetPrincipalStatus\x12 .brent.GetPrincipalStatusRequest\x1a!.brent.GetPrincipalStatusResponse\x12J\n" +
-	"\rGetPlanPrompt\x12\x1b.brent.GetPlanPromptRequest\x1a\x1c.brent.GetPlanPromptResponse\x12k\n" +
-	"\x18GetIntegrationConnectURL\x12&.brent.GetIntegrationConnectURLRequest\x1a'.brent.GetIntegrationConnectURLResponse\x12b\n" +
-	"\x15DisconnectIntegration\x12#.brent.DisconnectIntegrationRequest\x1a$.brent.DisconnectIntegrationResponse\x12V\n" +
-	"\x11ConnectByoHttpMcp\x12\x1f.brent.ConnectByoHttpMcpRequest\x1a .brent.ConnectByoHttpMcpResponse\x12\\\n" +
-	"\x13GetGitLabConnection\x12!.brent.GetGitLabConnectionRequest\x1a\".brent.GetGitLabConnectionResponse\x12J\n" +
-	"\rConnectGitLab\x12\x1b.brent.ConnectGitLabRequest\x1a\x1c.brent.ConnectGitLabResponse\x12e\n" +
-	"\x16SaveGitLabSigningToken\x12$.brent.SaveGitLabSigningTokenRequest\x1a%.brent.SaveGitLabSigningTokenResponse\x12h\n" +
-	"\x17UpsertMyVerifiedBinding\x12%.brent.UpsertMyVerifiedBindingRequest\x1a&.brent.UpsertMyVerifiedBindingResponse\x12M\n" +
-	"\x0eListMyBindings\x12\x1c.brent.ListMyBindingsRequest\x1a\x1d.brent.ListMyBindingsResponse\x12w\n" +
-	"\x1cGetMyNotificationPreferences\x12*.brent.GetMyNotificationPreferencesRequest\x1a+.brent.GetMyNotificationPreferencesResponse\x12\x80\x01\n" +
-	"\x1fUpdateMyNotificationPreferences\x12-.brent.UpdateMyNotificationPreferencesRequest\x1a..brent.UpdateMyNotificationPreferencesResponse\x12q\n" +
-	"\x1aRegisterMyPushSubscription\x12(.brent.RegisterMyPushSubscriptionRequest\x1a).brent.RegisterMyPushSubscriptionResponse\x12\\\n" +
-	"\x13GetWebPushPublicKey\x12!.brent.GetWebPushPublicKeyRequest\x1a\".brent.GetWebPushPublicKeyResponse\x12\\\n" +
-	"\x13UpdateMyDisplayName\x12!.brent.UpdateMyDisplayNameRequest\x1a\".brent.UpdateMyDisplayNameResponse\x12S\n" +
-	"\x10GetBrentSettings\x12\x1e.brent.GetBrentSettingsRequest\x1a\x1f.brent.GetBrentSettingsResponse\x12\\\n" +
-	"\x13UpdateBrentSettings\x12!.brent.UpdateBrentSettingsRequest\x1a\".brent.UpdateBrentSettingsResponse\x12k\n" +
-	"\x18ListIntegrationCatalogue\x12&.brent.ListIntegrationCatalogueRequest\x1a'.brent.ListIntegrationCatalogueResponse\x12P\n" +
-	"\x0fCreateWorkspace\x12\x1d.brent.CreateWorkspaceRequest\x1a\x1e.brent.CreateWorkspaceResponse\x12S\n" +
-	"\x10ListMyWorkspaces\x12\x1e.brent.ListMyWorkspacesRequest\x1a\x1f.brent.ListMyWorkspacesResponse\x12\x80\x01\n" +
-	"\x1fDiscoverLoginRecoveryCandidates\x12-.brent.DiscoverLoginRecoveryCandidatesRequest\x1a..brent.DiscoverLoginRecoveryCandidatesResponse\x12P\n" +
-	"\x0fRenameWorkspace\x12\x1d.brent.RenameWorkspaceRequest\x1a\x1e.brent.RenameWorkspaceResponse\x12h\n" +
-	"\x17UpdateWorkspaceBranding\x12%.brent.UpdateWorkspaceBrandingRequest\x1a&.brent.UpdateWorkspaceBrandingResponse\x12t\n" +
-	"\x1bCompleteWorkspaceOnboarding\x12).brent.CompleteWorkspaceOnboardingRequest\x1a*.brent.CompleteWorkspaceOnboardingResponse\x12P\n" +
-	"\x0fDeleteWorkspace\x12\x1d.brent.DeleteWorkspaceRequest\x1a\x1e.brent.DeleteWorkspaceResponse\x12e\n" +
-	"\x16ListJoinableWorkspaces\x12$.brent.ListJoinableWorkspacesRequest\x1a%.brent.ListJoinableWorkspacesResponse\x12J\n" +
-	"\rJoinWorkspace\x12\x1b.brent.JoinWorkspaceRequest\x1a\x1c.brent.JoinWorkspaceResponse\x12S\n" +
-	"\x10CreateInvitation\x12\x1e.brent.CreateInvitationRequest\x1a\x1f.brent.CreateInvitationResponse\x12V\n" +
-	"\x11CreateInvitations\x12\x1f.brent.CreateInvitationsRequest\x1a .brent.CreateInvitationsResponse\x12S\n" +
-	"\x10AcceptInvitation\x12\x1e.brent.AcceptInvitationRequest\x1a\x1f.brent.AcceptInvitationResponse\x12_\n" +
-	"\x14ListWorkspaceMembers\x12\".brent.ListWorkspaceMembersRequest\x1a#.brent.ListWorkspaceMembersResponse\x12S\n" +
-	"\x10ResendInvitation\x12\x1e.brent.ResendInvitationRequest\x1a\x1f.brent.ResendInvitationResponse\x12S\n" +
-	"\x10RevokeInvitation\x12\x1e.brent.RevokeInvitationRequest\x1a\x1f.brent.RevokeInvitationResponse\x12b\n" +
-	"\x15RemoveWorkspaceMember\x12#.brent.RemoveWorkspaceMemberRequest\x1a$.brent.RemoveWorkspaceMemberResponse\x12n\n" +
-	"\x19UpdateWorkspaceMemberRole\x12'.brent.UpdateWorkspaceMemberRoleRequest\x1a(.brent.UpdateWorkspaceMemberRoleResponse\x12k\n" +
-	"\x18ListApprovedEmailDomains\x12&.brent.ListApprovedEmailDomainsRequest\x1a'.brent.ListApprovedEmailDomainsResponse\x12e\n" +
-	"\x16AddApprovedEmailDomain\x12$.brent.AddApprovedEmailDomainRequest\x1a%.brent.AddApprovedEmailDomainResponse\x12n\n" +
-	"\x19VerifyApprovedEmailDomain\x12'.brent.VerifyApprovedEmailDomainRequest\x1a(.brent.VerifyApprovedEmailDomainResponse\x12z\n" +
-	"\x1dResendApprovedEmailDomainCode\x12+.brent.ResendApprovedEmailDomainCodeRequest\x1a,.brent.ResendApprovedEmailDomainCodeResponse\x12n\n" +
-	"\x19DeleteApprovedEmailDomain\x12'.brent.DeleteApprovedEmailDomainRequest\x1a(.brent.DeleteApprovedEmailDomainResponse\x12\x80\x01\n" +
-	"\x1fGetWorkspaceLLMCredentialStatus\x12-.brent.GetWorkspaceLLMCredentialStatusRequest\x1a..brent.GetWorkspaceLLMCredentialStatusResponse\x12n\n" +
-	"\x19SetWorkspaceLLMCredential\x12'.brent.SetWorkspaceLLMCredentialRequest\x1a(.brent.SetWorkspaceLLMCredentialResponse\x12w\n" +
-	"\x1cDeleteWorkspaceLLMCredential\x12*.brent.DeleteWorkspaceLLMCredentialRequest\x1a+.brent.DeleteWorkspaceLLMCredentialResponse\x12t\n" +
-	"\x1bGetMyCursorCredentialStatus\x12).brent.GetMyCursorCredentialStatusRequest\x1a*.brent.GetMyCursorCredentialStatusResponse\x12b\n" +
-	"\x15SetMyCursorCredential\x12#.brent.SetMyCursorCredentialRequest\x1a$.brent.SetMyCursorCredentialResponse\x12k\n" +
-	"\x18DeleteMyCursorCredential\x12&.brent.DeleteMyCursorCredentialRequest\x1a'.brent.DeleteMyCursorCredentialResponse\x12w\n" +
-	"\x1cGetWorkspaceIntegrationRoles\x12*.brent.GetWorkspaceIntegrationRolesRequest\x1a+.brent.GetWorkspaceIntegrationRolesResponse\x12w\n" +
-	"\x1cSetWorkspaceIntegrationRoles\x12*.brent.SetWorkspaceIntegrationRolesRequest\x1a+.brent.SetWorkspaceIntegrationRolesResponse\x12h\n" +
-	"\x17ResendVerificationEmail\x12%.brent.ResendVerificationEmailRequest\x1a&.brent.ResendVerificationEmailResponse2`\n" +
-	"\x12BrentPublicService\x12J\n" +
-	"\rGetInvitation\x12\x1b.brent.GetInvitationRequest\x1a\x1c.brent.GetInvitationResponse2\x9b \n" +
-	"\x11BrentAdminService\x12R\n" +
-	"\x0fExecuteWorkflow\x12\x1d.brent.ExecuteWorkflowRequest\x1a\x1e.brent.ExecuteWorkflowResponse0\x01\x12;\n" +
-	"\bListRuns\x12\x16.brent.ListRunsRequest\x1a\x17.brent.ListRunsResponse\x12D\n" +
-	"\bWatchRun\x12\x16.brent.WatchRunRequest\x1a\x1e.brent.ExecuteWorkflowResponse0\x01\x12I\n" +
-	"\fStreamEvents\x12\x1a.brent.StreamEventsRequest\x1a\x1b.brent.StreamEventsResponse0\x01\x12A\n" +
+	"+INTEGRATION_CATALOGUE_SOURCE_MCP_AGGREGATOR\x10\x032\xc0(\n" +
+	"\x10WorkspaceService\x12_\n" +
+	"\x14ListOpenPullRequests\x12\".until.ListOpenPullRequestsRequest\x1a#.until.ListOpenPullRequestsResponse\x12M\n" +
+	"\x0eGetPullRequest\x12\x1c.until.GetPullRequestRequest\x1a\x1d.until.GetPullRequestResponse\x12Y\n" +
+	"\x12GetPrincipalStatus\x12 .until.GetPrincipalStatusRequest\x1a!.until.GetPrincipalStatusResponse\x12J\n" +
+	"\rGetPlanPrompt\x12\x1b.until.GetPlanPromptRequest\x1a\x1c.until.GetPlanPromptResponse\x12k\n" +
+	"\x18GetIntegrationConnectURL\x12&.until.GetIntegrationConnectURLRequest\x1a'.until.GetIntegrationConnectURLResponse\x12b\n" +
+	"\x15DisconnectIntegration\x12#.until.DisconnectIntegrationRequest\x1a$.until.DisconnectIntegrationResponse\x12V\n" +
+	"\x11ConnectByoHttpMcp\x12\x1f.until.ConnectByoHttpMcpRequest\x1a .until.ConnectByoHttpMcpResponse\x12\\\n" +
+	"\x13GetGitLabConnection\x12!.until.GetGitLabConnectionRequest\x1a\".until.GetGitLabConnectionResponse\x12J\n" +
+	"\rConnectGitLab\x12\x1b.until.ConnectGitLabRequest\x1a\x1c.until.ConnectGitLabResponse\x12e\n" +
+	"\x16SaveGitLabSigningToken\x12$.until.SaveGitLabSigningTokenRequest\x1a%.until.SaveGitLabSigningTokenResponse\x12h\n" +
+	"\x17UpsertMyVerifiedBinding\x12%.until.UpsertMyVerifiedBindingRequest\x1a&.until.UpsertMyVerifiedBindingResponse\x12M\n" +
+	"\x0eListMyBindings\x12\x1c.until.ListMyBindingsRequest\x1a\x1d.until.ListMyBindingsResponse\x12w\n" +
+	"\x1cGetMyNotificationPreferences\x12*.until.GetMyNotificationPreferencesRequest\x1a+.until.GetMyNotificationPreferencesResponse\x12\x80\x01\n" +
+	"\x1fUpdateMyNotificationPreferences\x12-.until.UpdateMyNotificationPreferencesRequest\x1a..until.UpdateMyNotificationPreferencesResponse\x12q\n" +
+	"\x1aRegisterMyPushSubscription\x12(.until.RegisterMyPushSubscriptionRequest\x1a).until.RegisterMyPushSubscriptionResponse\x12\\\n" +
+	"\x13GetWebPushPublicKey\x12!.until.GetWebPushPublicKeyRequest\x1a\".until.GetWebPushPublicKeyResponse\x12\\\n" +
+	"\x13UpdateMyDisplayName\x12!.until.UpdateMyDisplayNameRequest\x1a\".until.UpdateMyDisplayNameResponse\x12_\n" +
+	"\x14GetPlanCheckSettings\x12\".until.GetPlanCheckSettingsRequest\x1a#.until.GetPlanCheckSettingsResponse\x12h\n" +
+	"\x17UpdatePlanCheckSettings\x12%.until.UpdatePlanCheckSettingsRequest\x1a&.until.UpdatePlanCheckSettingsResponse\x12k\n" +
+	"\x18ListIntegrationCatalogue\x12&.until.ListIntegrationCatalogueRequest\x1a'.until.ListIntegrationCatalogueResponse\x12P\n" +
+	"\x0fCreateWorkspace\x12\x1d.until.CreateWorkspaceRequest\x1a\x1e.until.CreateWorkspaceResponse\x12S\n" +
+	"\x10ListMyWorkspaces\x12\x1e.until.ListMyWorkspacesRequest\x1a\x1f.until.ListMyWorkspacesResponse\x12\x80\x01\n" +
+	"\x1fDiscoverLoginRecoveryCandidates\x12-.until.DiscoverLoginRecoveryCandidatesRequest\x1a..until.DiscoverLoginRecoveryCandidatesResponse\x12P\n" +
+	"\x0fRenameWorkspace\x12\x1d.until.RenameWorkspaceRequest\x1a\x1e.until.RenameWorkspaceResponse\x12h\n" +
+	"\x17UpdateWorkspaceBranding\x12%.until.UpdateWorkspaceBrandingRequest\x1a&.until.UpdateWorkspaceBrandingResponse\x12t\n" +
+	"\x1bCompleteWorkspaceOnboarding\x12).until.CompleteWorkspaceOnboardingRequest\x1a*.until.CompleteWorkspaceOnboardingResponse\x12P\n" +
+	"\x0fDeleteWorkspace\x12\x1d.until.DeleteWorkspaceRequest\x1a\x1e.until.DeleteWorkspaceResponse\x12e\n" +
+	"\x16ListJoinableWorkspaces\x12$.until.ListJoinableWorkspacesRequest\x1a%.until.ListJoinableWorkspacesResponse\x12J\n" +
+	"\rJoinWorkspace\x12\x1b.until.JoinWorkspaceRequest\x1a\x1c.until.JoinWorkspaceResponse\x12S\n" +
+	"\x10CreateInvitation\x12\x1e.until.CreateInvitationRequest\x1a\x1f.until.CreateInvitationResponse\x12V\n" +
+	"\x11CreateInvitations\x12\x1f.until.CreateInvitationsRequest\x1a .until.CreateInvitationsResponse\x12S\n" +
+	"\x10AcceptInvitation\x12\x1e.until.AcceptInvitationRequest\x1a\x1f.until.AcceptInvitationResponse\x12_\n" +
+	"\x14ListWorkspaceMembers\x12\".until.ListWorkspaceMembersRequest\x1a#.until.ListWorkspaceMembersResponse\x12S\n" +
+	"\x10ResendInvitation\x12\x1e.until.ResendInvitationRequest\x1a\x1f.until.ResendInvitationResponse\x12S\n" +
+	"\x10RevokeInvitation\x12\x1e.until.RevokeInvitationRequest\x1a\x1f.until.RevokeInvitationResponse\x12b\n" +
+	"\x15RemoveWorkspaceMember\x12#.until.RemoveWorkspaceMemberRequest\x1a$.until.RemoveWorkspaceMemberResponse\x12n\n" +
+	"\x19UpdateWorkspaceMemberRole\x12'.until.UpdateWorkspaceMemberRoleRequest\x1a(.until.UpdateWorkspaceMemberRoleResponse\x12k\n" +
+	"\x18ListApprovedEmailDomains\x12&.until.ListApprovedEmailDomainsRequest\x1a'.until.ListApprovedEmailDomainsResponse\x12e\n" +
+	"\x16AddApprovedEmailDomain\x12$.until.AddApprovedEmailDomainRequest\x1a%.until.AddApprovedEmailDomainResponse\x12n\n" +
+	"\x19VerifyApprovedEmailDomain\x12'.until.VerifyApprovedEmailDomainRequest\x1a(.until.VerifyApprovedEmailDomainResponse\x12z\n" +
+	"\x1dResendApprovedEmailDomainCode\x12+.until.ResendApprovedEmailDomainCodeRequest\x1a,.until.ResendApprovedEmailDomainCodeResponse\x12n\n" +
+	"\x19DeleteApprovedEmailDomain\x12'.until.DeleteApprovedEmailDomainRequest\x1a(.until.DeleteApprovedEmailDomainResponse\x12\x80\x01\n" +
+	"\x1fGetWorkspaceLLMCredentialStatus\x12-.until.GetWorkspaceLLMCredentialStatusRequest\x1a..until.GetWorkspaceLLMCredentialStatusResponse\x12n\n" +
+	"\x19SetWorkspaceLLMCredential\x12'.until.SetWorkspaceLLMCredentialRequest\x1a(.until.SetWorkspaceLLMCredentialResponse\x12w\n" +
+	"\x1cDeleteWorkspaceLLMCredential\x12*.until.DeleteWorkspaceLLMCredentialRequest\x1a+.until.DeleteWorkspaceLLMCredentialResponse\x12t\n" +
+	"\x1bGetMyCursorCredentialStatus\x12).until.GetMyCursorCredentialStatusRequest\x1a*.until.GetMyCursorCredentialStatusResponse\x12b\n" +
+	"\x15SetMyCursorCredential\x12#.until.SetMyCursorCredentialRequest\x1a$.until.SetMyCursorCredentialResponse\x12k\n" +
+	"\x18DeleteMyCursorCredential\x12&.until.DeleteMyCursorCredentialRequest\x1a'.until.DeleteMyCursorCredentialResponse\x12w\n" +
+	"\x1cGetWorkspaceIntegrationRoles\x12*.until.GetWorkspaceIntegrationRolesRequest\x1a+.until.GetWorkspaceIntegrationRolesResponse\x12w\n" +
+	"\x1cSetWorkspaceIntegrationRoles\x12*.until.SetWorkspaceIntegrationRolesRequest\x1a+.until.SetWorkspaceIntegrationRolesResponse\x12h\n" +
+	"\x17ResendVerificationEmail\x12%.until.ResendVerificationEmailRequest\x1a&.until.ResendVerificationEmailResponse2[\n" +
+	"\rPublicService\x12J\n" +
+	"\rGetInvitation\x12\x1b.until.GetInvitationRequest\x1a\x1c.until.GetInvitationResponse2\xc9\x1f\n" +
+	"\fAdminService\x12F\n" +
+	"\vExecuteLoop\x12\x19.until.ExecuteLoopRequest\x1a\x1a.until.ExecuteLoopResponse0\x01\x12;\n" +
+	"\bListRuns\x12\x16.until.ListRunsRequest\x1a\x17.until.ListRunsResponse\x12@\n" +
+	"\bWatchRun\x12\x16.until.WatchRunRequest\x1a\x1a.until.ExecuteLoopResponse0\x01\x12I\n" +
+	"\fStreamEvents\x12\x1a.until.StreamEventsRequest\x1a\x1b.until.StreamEventsResponse0\x01\x12A\n" +
 	"\n" +
-	"ListEvents\x12\x18.brent.ListEventsRequest\x1a\x19.brent.ListEventsResponse\x12>\n" +
-	"\tCancelRun\x12\x17.brent.CancelRunRequest\x1a\x18.brent.CancelRunResponse\x12L\n" +
-	"\fSendQuestion\x12\x1a.brent.SendQuestionRequest\x1a\x1e.brent.ExecuteWorkflowResponse0\x01\x12H\n" +
-	"\tListPlans\x12\x1c.brent.AdminListPlansRequest\x1a\x1d.brent.AdminListPlansResponse\x12B\n" +
-	"\aGetPlan\x12\x1a.brent.AdminGetPlanRequest\x1a\x1b.brent.AdminGetPlanResponse\x12N\n" +
-	"\vListReviews\x12\x1e.brent.AdminListReviewsRequest\x1a\x1f.brent.AdminListReviewsResponse\x12H\n" +
-	"\tGetReview\x12\x1c.brent.AdminGetReviewRequest\x1a\x1d.brent.AdminGetReviewResponse\x12H\n" +
-	"\fListAccounts\x12\x16.google.protobuf.Empty\x1a .brent.AdminListAccountsResponse\x12`\n" +
-	"\x11GetAccountSummary\x12$.brent.AdminGetAccountSummaryRequest\x1a%.brent.AdminGetAccountSummaryResponse\x12u\n" +
-	"\x18GetAccountHealthAnalysis\x12+.brent.AdminGetAccountHealthAnalysisRequest\x1a,.brent.AdminGetAccountHealthAnalysisResponse\x12o\n" +
-	"\x16ListAccountMetricRepos\x12).brent.AdminListAccountMetricReposRequest\x1a*.brent.AdminListAccountMetricReposResponse\x12\x84\x01\n" +
-	"\x1dStartAccountMetricsComparison\x120.brent.AdminStartAccountMetricsComparisonRequest\x1a1.brent.AdminStartAccountMetricsComparisonResponse\x12\x87\x01\n" +
-	"\x1eGetAccountMetricsComparisonRun\x121.brent.AdminGetAccountMetricsComparisonRunRequest\x1a2.brent.AdminGetAccountMetricsComparisonRunResponse\x12f\n" +
-	"\x17GetAccountBrentSettings\x12*.brent.AdminGetAccountBrentSettingsRequest\x1a\x1f.brent.GetBrentSettingsResponse\x12o\n" +
-	"\x1aUpdateAccountBrentSettings\x12-.brent.AdminUpdateAccountBrentSettingsRequest\x1a\".brent.UpdateBrentSettingsResponse\x12o\n" +
-	"\x16GetAccountReviewPolicy\x12).brent.AdminGetAccountReviewPolicyRequest\x1a*.brent.AdminGetAccountReviewPolicyResponse\x12x\n" +
-	"\x19UpdateAccountReviewPolicy\x12,.brent.AdminUpdateAccountReviewPolicyRequest\x1a-.brent.AdminUpdateAccountReviewPolicyResponse\x12\x84\x01\n" +
-	"\x1dGetAccountLLMCredentialStatus\x120.brent.AdminGetAccountLLMCredentialStatusRequest\x1a1.brent.AdminGetAccountLLMCredentialStatusResponse\x12r\n" +
-	"\x17ListAccountIntegrations\x12*.brent.AdminListAccountIntegrationsRequest\x1a+.brent.AdminListAccountIntegrationsResponse\x12J\n" +
-	"\rListWorkflows\x12\x1b.brent.ListWorkflowsRequest\x1a\x1c.brent.ListWorkflowsResponse\x12D\n" +
-	"\vGetWorkflow\x12\x19.brent.GetWorkflowRequest\x1a\x1a.brent.GetWorkflowResponse\x12S\n" +
-	"\x10ListWorkflowRuns\x12\x1e.brent.ListWorkflowRunsRequest\x1a\x1f.brent.ListWorkflowRunsResponse\x12M\n" +
-	"\x0eGetWorkflowRun\x12\x1c.brent.GetWorkflowRunRequest\x1a\x1d.brent.GetWorkflowRunResponse\x12t\n" +
-	"\x1bGetWorkflowRunThreadHistory\x12).brent.GetWorkflowRunThreadHistoryRequest\x1a*.brent.GetWorkflowRunThreadHistoryResponse\x12S\n" +
-	"\x10ListPullRequests\x12\x1e.brent.ListPullRequestsRequest\x1a\x1f.brent.ListPullRequestsResponse\x12Y\n" +
-	"\x12GetPullRequestByID\x12 .brent.GetPullRequestByIDRequest\x1a!.brent.GetPullRequestByIDResponse\x12q\n" +
-	"\x1aListDeviationAnalysesForPR\x12(.brent.ListDeviationAnalysesForPRRequest\x1a).brent.ListDeviationAnalysesForPRResponse\x12W\n" +
-	"\x0eListPrincipals\x12!.brent.AdminListPrincipalsRequest\x1a\".brent.AdminListPrincipalsResponse\x12Q\n" +
-	"\fGetPrincipal\x12\x1f.brent.AdminGetPrincipalRequest\x1a .brent.AdminGetPrincipalResponse\x12o\n" +
-	"\x16UpsertPrincipalBinding\x12).brent.AdminUpsertPrincipalBindingRequest\x1a*.brent.AdminUpsertPrincipalBindingResponse\x12o\n" +
-	"\x16DeletePrincipalBinding\x12).brent.AdminDeletePrincipalBindingRequest\x1a*.brent.AdminDeletePrincipalBindingResponse\x12Z\n" +
-	"\x0fUpdatePrincipal\x12\".brent.AdminUpdatePrincipalRequest\x1a#.brent.AdminUpdatePrincipalResponse\x12r\n" +
-	"\x17CreatePrincipalIdentity\x12*.brent.AdminCreatePrincipalIdentityRequest\x1a+.brent.AdminCreatePrincipalIdentityResponse\x12r\n" +
-	"\x17DeletePrincipalIdentity\x12*.brent.AdminDeletePrincipalIdentityRequest\x1a+.brent.AdminDeletePrincipalIdentityResponse\x12o\n" +
-	"\x16SetPrincipalCredential\x12).brent.AdminSetPrincipalCredentialRequest\x1a*.brent.AdminSetPrincipalCredentialResponse\x12\x93\x01\n" +
-	"\"ListPrincipalCredentialConnections\x125.brent.AdminListPrincipalCredentialConnectionsRequest\x1a6.brent.AdminListPrincipalCredentialConnectionsResponse\x12x\n" +
-	"\x19DeletePrincipalCredential\x12,.brent.AdminDeletePrincipalCredentialRequest\x1a-.brent.AdminDeletePrincipalCredentialResponse\x12e\n" +
-	"\x16GetPullRequestTimeline\x12$.brent.GetPullRequestTimelineRequest\x1a%.brent.GetPullRequestTimelineResponse:D\n" +
+	"ListEvents\x12\x18.until.ListEventsRequest\x1a\x19.until.ListEventsResponse\x12>\n" +
+	"\tCancelRun\x12\x17.until.CancelRunRequest\x1a\x18.until.CancelRunResponse\x12H\n" +
+	"\fSendQuestion\x12\x1a.until.SendQuestionRequest\x1a\x1a.until.ExecuteLoopResponse0\x01\x12H\n" +
+	"\tListPlans\x12\x1c.until.AdminListPlansRequest\x1a\x1d.until.AdminListPlansResponse\x12B\n" +
+	"\aGetPlan\x12\x1a.until.AdminGetPlanRequest\x1a\x1b.until.AdminGetPlanResponse\x12N\n" +
+	"\vListReviews\x12\x1e.until.AdminListReviewsRequest\x1a\x1f.until.AdminListReviewsResponse\x12H\n" +
+	"\tGetReview\x12\x1c.until.AdminGetReviewRequest\x1a\x1d.until.AdminGetReviewResponse\x12H\n" +
+	"\fListAccounts\x12\x16.google.protobuf.Empty\x1a .until.AdminListAccountsResponse\x12`\n" +
+	"\x11GetAccountSummary\x12$.until.AdminGetAccountSummaryRequest\x1a%.until.AdminGetAccountSummaryResponse\x12u\n" +
+	"\x18GetAccountHealthAnalysis\x12+.until.AdminGetAccountHealthAnalysisRequest\x1a,.until.AdminGetAccountHealthAnalysisResponse\x12o\n" +
+	"\x16ListAccountMetricRepos\x12).until.AdminListAccountMetricReposRequest\x1a*.until.AdminListAccountMetricReposResponse\x12\x84\x01\n" +
+	"\x1dStartAccountMetricsComparison\x120.until.AdminStartAccountMetricsComparisonRequest\x1a1.until.AdminStartAccountMetricsComparisonResponse\x12\x87\x01\n" +
+	"\x1eGetAccountMetricsComparisonRun\x121.until.AdminGetAccountMetricsComparisonRunRequest\x1a2.until.AdminGetAccountMetricsComparisonRunResponse\x12r\n" +
+	"\x1bGetAccountPlanCheckSettings\x12..until.AdminGetAccountPlanCheckSettingsRequest\x1a#.until.GetPlanCheckSettingsResponse\x12{\n" +
+	"\x1eUpdateAccountPlanCheckSettings\x121.until.AdminUpdateAccountPlanCheckSettingsRequest\x1a&.until.UpdatePlanCheckSettingsResponse\x12o\n" +
+	"\x16GetAccountReviewPolicy\x12).until.AdminGetAccountReviewPolicyRequest\x1a*.until.AdminGetAccountReviewPolicyResponse\x12x\n" +
+	"\x19UpdateAccountReviewPolicy\x12,.until.AdminUpdateAccountReviewPolicyRequest\x1a-.until.AdminUpdateAccountReviewPolicyResponse\x12\x84\x01\n" +
+	"\x1dGetAccountLLMCredentialStatus\x120.until.AdminGetAccountLLMCredentialStatusRequest\x1a1.until.AdminGetAccountLLMCredentialStatusResponse\x12r\n" +
+	"\x17ListAccountIntegrations\x12*.until.AdminListAccountIntegrationsRequest\x1a+.until.AdminListAccountIntegrationsResponse\x12>\n" +
+	"\tListLoops\x12\x17.until.ListLoopsRequest\x1a\x18.until.ListLoopsResponse\x128\n" +
+	"\aGetLoop\x12\x15.until.GetLoopRequest\x1a\x16.until.GetLoopResponse\x12G\n" +
+	"\fListLoopRuns\x12\x1a.until.ListLoopRunsRequest\x1a\x1b.until.ListLoopRunsResponse\x12A\n" +
+	"\n" +
+	"GetLoopRun\x12\x18.until.GetLoopRunRequest\x1a\x19.until.GetLoopRunResponse\x12h\n" +
+	"\x17GetLoopRunThreadHistory\x12%.until.GetLoopRunThreadHistoryRequest\x1a&.until.GetLoopRunThreadHistoryResponse\x12S\n" +
+	"\x10ListPullRequests\x12\x1e.until.ListPullRequestsRequest\x1a\x1f.until.ListPullRequestsResponse\x12Y\n" +
+	"\x12GetPullRequestByID\x12 .until.GetPullRequestByIDRequest\x1a!.until.GetPullRequestByIDResponse\x12\\\n" +
+	"\x13ListPlanChecksForPR\x12!.until.ListPlanChecksForPRRequest\x1a\".until.ListPlanChecksForPRResponse\x12W\n" +
+	"\x0eListPrincipals\x12!.until.AdminListPrincipalsRequest\x1a\".until.AdminListPrincipalsResponse\x12Q\n" +
+	"\fGetPrincipal\x12\x1f.until.AdminGetPrincipalRequest\x1a .until.AdminGetPrincipalResponse\x12o\n" +
+	"\x16UpsertPrincipalBinding\x12).until.AdminUpsertPrincipalBindingRequest\x1a*.until.AdminUpsertPrincipalBindingResponse\x12o\n" +
+	"\x16DeletePrincipalBinding\x12).until.AdminDeletePrincipalBindingRequest\x1a*.until.AdminDeletePrincipalBindingResponse\x12Z\n" +
+	"\x0fUpdatePrincipal\x12\".until.AdminUpdatePrincipalRequest\x1a#.until.AdminUpdatePrincipalResponse\x12r\n" +
+	"\x17CreatePrincipalIdentity\x12*.until.AdminCreatePrincipalIdentityRequest\x1a+.until.AdminCreatePrincipalIdentityResponse\x12r\n" +
+	"\x17DeletePrincipalIdentity\x12*.until.AdminDeletePrincipalIdentityRequest\x1a+.until.AdminDeletePrincipalIdentityResponse\x12o\n" +
+	"\x16SetPrincipalCredential\x12).until.AdminSetPrincipalCredentialRequest\x1a*.until.AdminSetPrincipalCredentialResponse\x12\x93\x01\n" +
+	"\"ListPrincipalCredentialConnections\x125.until.AdminListPrincipalCredentialConnectionsRequest\x1a6.until.AdminListPrincipalCredentialConnectionsResponse\x12x\n" +
+	"\x19DeletePrincipalCredential\x12,.until.AdminDeletePrincipalCredentialRequest\x1a-.until.AdminDeletePrincipalCredentialResponse\x12e\n" +
+	"\x16GetPullRequestTimeline\x12$.until.GetPullRequestTimelineRequest\x1a%.until.GetPullRequestTimelineResponse:D\n" +
 	"\rembedded_json\x12\x1d.google.protobuf.FieldOptions\x18ц\x03 \x01(\bR\fembeddedJsonB1Z/github.com/overmindtech/workspace/go/sdp-go;sdpb\x06proto3"
 
 var (
@@ -26915,867 +26904,867 @@ func file_brent_proto_rawDescGZIP() []byte {
 var file_brent_proto_enumTypes = make([]protoimpl.EnumInfo, 13)
 var file_brent_proto_msgTypes = make([]protoimpl.MessageInfo, 336)
 var file_brent_proto_goTypes = []any{
-	(RunStatus)(0),                                          // 0: brent.RunStatus
-	(MetricsComparisonMode)(0),                              // 1: brent.MetricsComparisonMode
-	(PrincipalStatusState)(0),                               // 2: brent.PrincipalStatusState
-	(IntegrationProvider)(0),                                // 3: brent.IntegrationProvider
-	(IntegrationIntent)(0),                                  // 4: brent.IntegrationIntent
-	(IntegrationConnectionStatus)(0),                        // 5: brent.IntegrationConnectionStatus
-	(LoginProvider)(0),                                      // 6: brent.LoginProvider
-	(JoinSource)(0),                                         // 7: brent.JoinSource
-	(InvitationStatus)(0),                                   // 8: brent.InvitationStatus
-	(InvitationResultStatus)(0),                             // 9: brent.InvitationResultStatus
-	(WorkspaceMemberState)(0),                               // 10: brent.WorkspaceMemberState
-	(WorkspaceReviewPolicy)(0),                              // 11: brent.WorkspaceReviewPolicy
-	(IntegrationCatalogueSource)(0),                         // 12: brent.IntegrationCatalogueSource
-	(*ListPullRequestsRequest)(nil),                         // 13: brent.ListPullRequestsRequest
-	(*ListPullRequestsResponse)(nil),                        // 14: brent.ListPullRequestsResponse
-	(*GetPullRequestByIDRequest)(nil),                       // 15: brent.GetPullRequestByIDRequest
-	(*GetPullRequestByIDResponse)(nil),                      // 16: brent.GetPullRequestByIDResponse
-	(*ListDeviationAnalysesForPRRequest)(nil),               // 17: brent.ListDeviationAnalysesForPRRequest
-	(*ListDeviationAnalysesForPRResponse)(nil),              // 18: brent.ListDeviationAnalysesForPRResponse
-	(*GetPullRequestTimelineRequest)(nil),                   // 19: brent.GetPullRequestTimelineRequest
-	(*PullRequestTimelineEventRow)(nil),                     // 20: brent.PullRequestTimelineEventRow
-	(*PullRequestTimelineWarning)(nil),                      // 21: brent.PullRequestTimelineWarning
-	(*GetPullRequestTimelineResponse)(nil),                  // 22: brent.GetPullRequestTimelineResponse
-	(*PullRequestSummary)(nil),                              // 23: brent.PullRequestSummary
-	(*PullRequest)(nil),                                     // 24: brent.PullRequest
-	(*DeviationAnalysisSummary)(nil),                        // 25: brent.DeviationAnalysisSummary
-	(*DeviationFinding)(nil),                                // 26: brent.DeviationFinding
-	(*ExecuteWorkflowRequest)(nil),                          // 27: brent.ExecuteWorkflowRequest
-	(*ListRunsRequest)(nil),                                 // 28: brent.ListRunsRequest
-	(*ListRunsResponse)(nil),                                // 29: brent.ListRunsResponse
-	(*RunSummary)(nil),                                      // 30: brent.RunSummary
-	(*WatchRunRequest)(nil),                                 // 31: brent.WatchRunRequest
-	(*StreamEventsRequest)(nil),                             // 32: brent.StreamEventsRequest
-	(*StreamEventsResponse)(nil),                            // 33: brent.StreamEventsResponse
-	(*ListEventsRequest)(nil),                               // 34: brent.ListEventsRequest
-	(*ListEventsResponse)(nil),                              // 35: brent.ListEventsResponse
-	(*CancelRunRequest)(nil),                                // 36: brent.CancelRunRequest
-	(*CancelRunResponse)(nil),                               // 37: brent.CancelRunResponse
-	(*ListOpenPullRequestsRequest)(nil),                     // 38: brent.ListOpenPullRequestsRequest
-	(*ListOpenPullRequestsResponse)(nil),                    // 39: brent.ListOpenPullRequestsResponse
-	(*GetPullRequestRequest)(nil),                           // 40: brent.GetPullRequestRequest
-	(*GetPullRequestResponse)(nil),                          // 41: brent.GetPullRequestResponse
-	(*OpenPullRequest)(nil),                                 // 42: brent.OpenPullRequest
-	(*ExecuteWorkflowResponse)(nil),                         // 43: brent.ExecuteWorkflowResponse
-	(*ReasoningStep)(nil),                                   // 44: brent.ReasoningStep
-	(*ToolCallStep)(nil),                                    // 45: brent.ToolCallStep
-	(*ToolResultStep)(nil),                                  // 46: brent.ToolResultStep
-	(*CompletionStep)(nil),                                  // 47: brent.CompletionStep
-	(*ErrorStep)(nil),                                       // 48: brent.ErrorStep
-	(*StatusStep)(nil),                                      // 49: brent.StatusStep
-	(*RunStartedStep)(nil),                                  // 50: brent.RunStartedStep
-	(*QAReadyStep)(nil),                                     // 51: brent.QAReadyStep
-	(*UserQuestionStep)(nil),                                // 52: brent.UserQuestionStep
-	(*UserMessageStep)(nil),                                 // 53: brent.UserMessageStep
-	(*SendQuestionRequest)(nil),                             // 54: brent.SendQuestionRequest
-	(*AdminListPlansRequest)(nil),                           // 55: brent.AdminListPlansRequest
-	(*AdminListPlansResponse)(nil),                          // 56: brent.AdminListPlansResponse
-	(*PlanSummary)(nil),                                     // 57: brent.PlanSummary
-	(*AdminGetPlanRequest)(nil),                             // 58: brent.AdminGetPlanRequest
-	(*AdminGetPlanResponse)(nil),                            // 59: brent.AdminGetPlanResponse
-	(*Plan)(nil),                                            // 60: brent.Plan
-	(*AdminListPrincipalsRequest)(nil),                      // 61: brent.AdminListPrincipalsRequest
-	(*AdminListPrincipalsResponse)(nil),                     // 62: brent.AdminListPrincipalsResponse
-	(*AdminGetPrincipalRequest)(nil),                        // 63: brent.AdminGetPrincipalRequest
-	(*AdminGetPrincipalResponse)(nil),                       // 64: brent.AdminGetPrincipalResponse
-	(*PrincipalIdentity)(nil),                               // 65: brent.PrincipalIdentity
-	(*AdminUpsertPrincipalBindingRequest)(nil),              // 66: brent.AdminUpsertPrincipalBindingRequest
-	(*AdminUpsertPrincipalBindingResponse)(nil),             // 67: brent.AdminUpsertPrincipalBindingResponse
-	(*AdminDeletePrincipalBindingRequest)(nil),              // 68: brent.AdminDeletePrincipalBindingRequest
-	(*AdminDeletePrincipalBindingResponse)(nil),             // 69: brent.AdminDeletePrincipalBindingResponse
-	(*AdminUpdatePrincipalRequest)(nil),                     // 70: brent.AdminUpdatePrincipalRequest
-	(*AdminUpdatePrincipalResponse)(nil),                    // 71: brent.AdminUpdatePrincipalResponse
-	(*AdminCreatePrincipalIdentityRequest)(nil),             // 72: brent.AdminCreatePrincipalIdentityRequest
-	(*AdminCreatePrincipalIdentityResponse)(nil),            // 73: brent.AdminCreatePrincipalIdentityResponse
-	(*AdminDeletePrincipalIdentityRequest)(nil),             // 74: brent.AdminDeletePrincipalIdentityRequest
-	(*AdminDeletePrincipalIdentityResponse)(nil),            // 75: brent.AdminDeletePrincipalIdentityResponse
-	(*AdminSetPrincipalCredentialRequest)(nil),              // 76: brent.AdminSetPrincipalCredentialRequest
-	(*AdminSetPrincipalCredentialResponse)(nil),             // 77: brent.AdminSetPrincipalCredentialResponse
-	(*AdminListPrincipalCredentialConnectionsRequest)(nil),  // 78: brent.AdminListPrincipalCredentialConnectionsRequest
-	(*AdminListPrincipalCredentialConnectionsResponse)(nil), // 79: brent.AdminListPrincipalCredentialConnectionsResponse
-	(*PrincipalCredentialConnection)(nil),                   // 80: brent.PrincipalCredentialConnection
-	(*AdminDeletePrincipalCredentialRequest)(nil),           // 81: brent.AdminDeletePrincipalCredentialRequest
-	(*AdminDeletePrincipalCredentialResponse)(nil),          // 82: brent.AdminDeletePrincipalCredentialResponse
-	(*AdminListReviewsRequest)(nil),                         // 83: brent.AdminListReviewsRequest
-	(*AdminListReviewsResponse)(nil),                        // 84: brent.AdminListReviewsResponse
-	(*ReviewSummary)(nil),                                   // 85: brent.ReviewSummary
-	(*AdminGetReviewRequest)(nil),                           // 86: brent.AdminGetReviewRequest
-	(*AdminGetReviewResponse)(nil),                          // 87: brent.AdminGetReviewResponse
-	(*Review)(nil),                                          // 88: brent.Review
-	(*AccountSummary)(nil),                                  // 89: brent.AccountSummary
-	(*AdminListAccountsResponse)(nil),                       // 90: brent.AdminListAccountsResponse
-	(*AdminGetAccountSummaryRequest)(nil),                   // 91: brent.AdminGetAccountSummaryRequest
-	(*AccountRunSummary)(nil),                               // 92: brent.AccountRunSummary
-	(*AdminGetAccountSummaryResponse)(nil),                  // 93: brent.AdminGetAccountSummaryResponse
-	(*AdminGetAccountHealthAnalysisRequest)(nil),            // 94: brent.AdminGetAccountHealthAnalysisRequest
-	(*AccountHealthFinding)(nil),                            // 95: brent.AccountHealthFinding
-	(*AdminGetAccountHealthAnalysisResponse)(nil),           // 96: brent.AdminGetAccountHealthAnalysisResponse
-	(*AdminListAccountMetricReposRequest)(nil),              // 97: brent.AdminListAccountMetricReposRequest
-	(*AccountMetricRepo)(nil),                               // 98: brent.AccountMetricRepo
-	(*AdminListAccountMetricReposResponse)(nil),             // 99: brent.AdminListAccountMetricReposResponse
-	(*AdminStartAccountMetricsComparisonRequest)(nil),       // 100: brent.AdminStartAccountMetricsComparisonRequest
-	(*AdminStartAccountMetricsComparisonResponse)(nil),      // 101: brent.AdminStartAccountMetricsComparisonResponse
-	(*AdminGetAccountMetricsComparisonRunRequest)(nil),      // 102: brent.AdminGetAccountMetricsComparisonRunRequest
-	(*MetricsComparisonHeadline)(nil),                       // 103: brent.MetricsComparisonHeadline
-	(*MetricsComparisonArtifact)(nil),                       // 104: brent.MetricsComparisonArtifact
-	(*AdminGetAccountMetricsComparisonRunResponse)(nil),     // 105: brent.AdminGetAccountMetricsComparisonRunResponse
-	(*Event)(nil),                                           // 106: brent.Event
-	(*Actor)(nil),                                           // 107: brent.Actor
-	(*ObjectReference)(nil),                                 // 108: brent.ObjectReference
-	(*PlanCreated)(nil),                                     // 109: brent.PlanCreated
-	(*PlanUpdated)(nil),                                     // 110: brent.PlanUpdated
-	(*PlanDeleted)(nil),                                     // 111: brent.PlanDeleted
-	(*ReviewDeleted)(nil),                                   // 112: brent.ReviewDeleted
-	(*ReviewRestored)(nil),                                  // 113: brent.ReviewRestored
-	(*PlanRestored)(nil),                                    // 114: brent.PlanRestored
-	(*ReviewRequested)(nil),                                 // 115: brent.ReviewRequested
-	(*ReviewSubmitted)(nil),                                 // 116: brent.ReviewSubmitted
-	(*ReviewNoEligibleReviewer)(nil),                        // 117: brent.ReviewNoEligibleReviewer
-	(*PlanReviewPolicyDecided)(nil),                         // 118: brent.PlanReviewPolicyDecided
-	(*WorkspaceReviewPolicyUpdated)(nil),                    // 119: brent.WorkspaceReviewPolicyUpdated
-	(*PrincipalCreated)(nil),                                // 120: brent.PrincipalCreated
-	(*PrincipalUpdated)(nil),                                // 121: brent.PrincipalUpdated
-	(*PrincipalTombstoned)(nil),                             // 122: brent.PrincipalTombstoned
-	(*WorkspaceCreated)(nil),                                // 123: brent.WorkspaceCreated
-	(*WorkspaceOnboardingCompleted)(nil),                    // 124: brent.WorkspaceOnboardingCompleted
-	(*WorkspaceRenamed)(nil),                                // 125: brent.WorkspaceRenamed
-	(*WorkspaceDeleted)(nil),                                // 126: brent.WorkspaceDeleted
-	(*WorkspaceMemberJoined)(nil),                           // 127: brent.WorkspaceMemberJoined
-	(*WorkspaceMemberLeft)(nil),                             // 128: brent.WorkspaceMemberLeft
-	(*ApprovedEmailDomainAdded)(nil),                        // 129: brent.ApprovedEmailDomainAdded
-	(*ApprovedEmailDomainVerified)(nil),                     // 130: brent.ApprovedEmailDomainVerified
-	(*ApprovedEmailDomainDeleted)(nil),                      // 131: brent.ApprovedEmailDomainDeleted
-	(*MCPGrantWorkspaceBindingChanged)(nil),                 // 132: brent.MCPGrantWorkspaceBindingChanged
-	(*IdentityCreated)(nil),                                 // 133: brent.IdentityCreated
-	(*IdentityDeleted)(nil),                                 // 134: brent.IdentityDeleted
-	(*BindingCreated)(nil),                                  // 135: brent.BindingCreated
-	(*BindingUpdated)(nil),                                  // 136: brent.BindingUpdated
-	(*BindingDeleted)(nil),                                  // 137: brent.BindingDeleted
-	(*CredentialConnected)(nil),                             // 138: brent.CredentialConnected
-	(*CredentialRevoked)(nil),                               // 139: brent.CredentialRevoked
-	(*WorkspaceLLMCredentialConnected)(nil),                 // 140: brent.WorkspaceLLMCredentialConnected
-	(*WorkspaceLLMCredentialRevoked)(nil),                   // 141: brent.WorkspaceLLMCredentialRevoked
-	(*ReviewDriveByStarted)(nil),                            // 142: brent.ReviewDriveByStarted
-	(*OtherEvent)(nil),                                      // 143: brent.OtherEvent
-	(*UnknownStoredPayload)(nil),                            // 144: brent.UnknownStoredPayload
-	(*PullRequestOpened)(nil),                               // 145: brent.PullRequestOpened
-	(*PullRequestSynchronized)(nil),                         // 146: brent.PullRequestSynchronized
-	(*PullRequestUpdated)(nil),                              // 147: brent.PullRequestUpdated
-	(*PullRequestClosed)(nil),                               // 148: brent.PullRequestClosed
-	(*PullRequestLinkedToPlan)(nil),                         // 149: brent.PullRequestLinkedToPlan
-	(*PullRequestUnlinkedFromPlan)(nil),                     // 150: brent.PullRequestUnlinkedFromPlan
-	(*PullRequestLinkedToAgentRun)(nil),                     // 151: brent.PullRequestLinkedToAgentRun
-	(*PullRequestReviewRequested)(nil),                      // 152: brent.PullRequestReviewRequested
-	(*PullRequestApproved)(nil),                             // 153: brent.PullRequestApproved
-	(*PullRequestChangesRequested)(nil),                     // 154: brent.PullRequestChangesRequested
-	(*PullRequestReviewDismissed)(nil),                      // 155: brent.PullRequestReviewDismissed
-	(*PullRequestCommentCreated)(nil),                       // 156: brent.PullRequestCommentCreated
-	(*DeviationAnalysisStarted)(nil),                        // 157: brent.DeviationAnalysisStarted
-	(*FindingSummary)(nil),                                  // 158: brent.FindingSummary
-	(*DeviationAnalysisCompleted)(nil),                      // 159: brent.DeviationAnalysisCompleted
-	(*DeviationAnalysisFailed)(nil),                         // 160: brent.DeviationAnalysisFailed
-	(*DeviationFindingRecorded)(nil),                        // 161: brent.DeviationFindingRecorded
-	(*DeviationFindingUpdated)(nil),                         // 162: brent.DeviationFindingUpdated
-	(*DeviationFindingResolved)(nil),                        // 163: brent.DeviationFindingResolved
-	(*DeviationFindingAcknowledged)(nil),                    // 164: brent.DeviationFindingAcknowledged
-	(*DeviationFindingAcknowledgementCleared)(nil),          // 165: brent.DeviationFindingAcknowledgementCleared
-	(*AgentRunDispatched)(nil),                              // 166: brent.AgentRunDispatched
-	(*AgentRunStarted)(nil),                                 // 167: brent.AgentRunStarted
-	(*AgentRunPullRequestMatched)(nil),                      // 168: brent.AgentRunPullRequestMatched
-	(*AgentRunFlaggedNeedsYou)(nil),                         // 169: brent.AgentRunFlaggedNeedsYou
-	(*AgentRunGatePassed)(nil),                              // 170: brent.AgentRunGatePassed
-	(*AgentRunMerged)(nil),                                  // 171: brent.AgentRunMerged
-	(*AgentRunCancelled)(nil),                               // 172: brent.AgentRunCancelled
-	(*AgentRunDeclined)(nil),                                // 173: brent.AgentRunDeclined
-	(*AgentRunAnnotated)(nil),                               // 174: brent.AgentRunAnnotated
-	(*WorkflowIngested)(nil),                                // 175: brent.WorkflowIngested
-	(*WorkflowRunQueued)(nil),                               // 176: brent.WorkflowRunQueued
-	(*WorkflowRunStarted)(nil),                              // 177: brent.WorkflowRunStarted
-	(*WorkflowRunCompleted)(nil),                            // 178: brent.WorkflowRunCompleted
-	(*WorkflowRunFailed)(nil),                               // 179: brent.WorkflowRunFailed
-	(*WorkflowRunCancelled)(nil),                            // 180: brent.WorkflowRunCancelled
-	(*SlackWebhook)(nil),                                    // 181: brent.SlackWebhook
-	(*LinearWebhook)(nil),                                   // 182: brent.LinearWebhook
-	(*ComposioTriggerMessage)(nil),                          // 183: brent.ComposioTriggerMessage
-	(*GitHubWebhook)(nil),                                   // 184: brent.GitHubWebhook
-	(*GitLabWebhook)(nil),                                   // 185: brent.GitLabWebhook
-	(*BitbucketWebhook)(nil),                                // 186: brent.BitbucketWebhook
-	(*EmbeddedJsonCELFixture)(nil),                          // 187: brent.EmbeddedJsonCELFixture
-	(*SlackMentionReceived)(nil),                            // 188: brent.SlackMentionReceived
-	(*OrganisationAppInstallationUpserted)(nil),             // 189: brent.OrganisationAppInstallationUpserted
-	(*OrganisationAppInstallationDeleted)(nil),              // 190: brent.OrganisationAppInstallationDeleted
-	(*SlackReactionAdded)(nil),                              // 191: brent.SlackReactionAdded
-	(*ListWorkflowsRequest)(nil),                            // 192: brent.ListWorkflowsRequest
-	(*ListWorkflowsResponse)(nil),                           // 193: brent.ListWorkflowsResponse
-	(*WorkflowSummary)(nil),                                 // 194: brent.WorkflowSummary
-	(*GetWorkflowRequest)(nil),                              // 195: brent.GetWorkflowRequest
-	(*GetWorkflowResponse)(nil),                             // 196: brent.GetWorkflowResponse
-	(*Workflow)(nil),                                        // 197: brent.Workflow
-	(*ListWorkflowRunsRequest)(nil),                         // 198: brent.ListWorkflowRunsRequest
-	(*ListWorkflowRunsResponse)(nil),                        // 199: brent.ListWorkflowRunsResponse
-	(*WorkflowRunSummary)(nil),                              // 200: brent.WorkflowRunSummary
-	(*GetWorkflowRunRequest)(nil),                           // 201: brent.GetWorkflowRunRequest
-	(*GetWorkflowRunThreadHistoryRequest)(nil),              // 202: brent.GetWorkflowRunThreadHistoryRequest
-	(*WorkflowRunThreadSegment)(nil),                        // 203: brent.WorkflowRunThreadSegment
-	(*GetWorkflowRunThreadHistoryResponse)(nil),             // 204: brent.GetWorkflowRunThreadHistoryResponse
-	(*GetWorkflowRunResponse)(nil),                          // 205: brent.GetWorkflowRunResponse
-	(*WorkflowRun)(nil),                                     // 206: brent.WorkflowRun
-	(*GetPrincipalStatusRequest)(nil),                       // 207: brent.GetPrincipalStatusRequest
-	(*GetPrincipalStatusResponse)(nil),                      // 208: brent.GetPrincipalStatusResponse
-	(*GetIntegrationConnectURLRequest)(nil),                 // 209: brent.GetIntegrationConnectURLRequest
-	(*GetIntegrationConnectURLResponse)(nil),                // 210: brent.GetIntegrationConnectURLResponse
-	(*DisconnectIntegrationRequest)(nil),                    // 211: brent.DisconnectIntegrationRequest
-	(*DisconnectIntegrationResponse)(nil),                   // 212: brent.DisconnectIntegrationResponse
-	(*ConnectByoHttpMcpRequest)(nil),                        // 213: brent.ConnectByoHttpMcpRequest
-	(*ConnectByoHttpMcpResponse)(nil),                       // 214: brent.ConnectByoHttpMcpResponse
-	(*GetGitLabConnectionRequest)(nil),                      // 215: brent.GetGitLabConnectionRequest
-	(*GetGitLabConnectionResponse)(nil),                     // 216: brent.GetGitLabConnectionResponse
-	(*ConnectGitLabRequest)(nil),                            // 217: brent.ConnectGitLabRequest
-	(*ConnectGitLabResponse)(nil),                           // 218: brent.ConnectGitLabResponse
-	(*SaveGitLabSigningTokenRequest)(nil),                   // 219: brent.SaveGitLabSigningTokenRequest
-	(*SaveGitLabSigningTokenResponse)(nil),                  // 220: brent.SaveGitLabSigningTokenResponse
-	(*GitHubPendingInstall)(nil),                            // 221: brent.GitHubPendingInstall
-	(*IntegrationStatus)(nil),                               // 222: brent.IntegrationStatus
-	(*GetWorkspaceIntegrationRolesRequest)(nil),             // 223: brent.GetWorkspaceIntegrationRolesRequest
-	(*GetWorkspaceIntegrationRolesResponse)(nil),            // 224: brent.GetWorkspaceIntegrationRolesResponse
-	(*SetWorkspaceIntegrationRolesRequest)(nil),             // 225: brent.SetWorkspaceIntegrationRolesRequest
-	(*SetWorkspaceIntegrationRolesResponse)(nil),            // 226: brent.SetWorkspaceIntegrationRolesResponse
-	(*Principal)(nil),                                       // 227: brent.Principal
-	(*Workspace)(nil),                                       // 228: brent.Workspace
-	(*CreateWorkspaceRequest)(nil),                          // 229: brent.CreateWorkspaceRequest
-	(*CreateWorkspaceResponse)(nil),                         // 230: brent.CreateWorkspaceResponse
-	(*ListMyWorkspacesRequest)(nil),                         // 231: brent.ListMyWorkspacesRequest
-	(*ListMyWorkspacesResponse)(nil),                        // 232: brent.ListMyWorkspacesResponse
-	(*DiscoverLoginRecoveryCandidatesRequest)(nil),          // 233: brent.DiscoverLoginRecoveryCandidatesRequest
-	(*LoginRecoveryCandidate)(nil),                          // 234: brent.LoginRecoveryCandidate
-	(*DiscoverLoginRecoveryCandidatesResponse)(nil),         // 235: brent.DiscoverLoginRecoveryCandidatesResponse
-	(*RenameWorkspaceRequest)(nil),                          // 236: brent.RenameWorkspaceRequest
-	(*RenameWorkspaceResponse)(nil),                         // 237: brent.RenameWorkspaceResponse
-	(*DeleteWorkspaceRequest)(nil),                          // 238: brent.DeleteWorkspaceRequest
-	(*DeleteWorkspaceResponse)(nil),                         // 239: brent.DeleteWorkspaceResponse
-	(*ListJoinableWorkspacesRequest)(nil),                   // 240: brent.ListJoinableWorkspacesRequest
-	(*ListJoinableWorkspacesResponse)(nil),                  // 241: brent.ListJoinableWorkspacesResponse
-	(*JoinableWorkspace)(nil),                               // 242: brent.JoinableWorkspace
-	(*JoinableWorkspaceMember)(nil),                         // 243: brent.JoinableWorkspaceMember
-	(*JoinWorkspaceRequest)(nil),                            // 244: brent.JoinWorkspaceRequest
-	(*JoinWorkspaceResponse)(nil),                           // 245: brent.JoinWorkspaceResponse
-	(*ApprovedEmailDomain)(nil),                             // 246: brent.ApprovedEmailDomain
-	(*ListApprovedEmailDomainsRequest)(nil),                 // 247: brent.ListApprovedEmailDomainsRequest
-	(*ListApprovedEmailDomainsResponse)(nil),                // 248: brent.ListApprovedEmailDomainsResponse
-	(*AddApprovedEmailDomainRequest)(nil),                   // 249: brent.AddApprovedEmailDomainRequest
-	(*AddApprovedEmailDomainResponse)(nil),                  // 250: brent.AddApprovedEmailDomainResponse
-	(*VerifyApprovedEmailDomainRequest)(nil),                // 251: brent.VerifyApprovedEmailDomainRequest
-	(*VerifyApprovedEmailDomainResponse)(nil),               // 252: brent.VerifyApprovedEmailDomainResponse
-	(*ResendApprovedEmailDomainCodeRequest)(nil),            // 253: brent.ResendApprovedEmailDomainCodeRequest
-	(*ResendApprovedEmailDomainCodeResponse)(nil),           // 254: brent.ResendApprovedEmailDomainCodeResponse
-	(*ResendVerificationEmailRequest)(nil),                  // 255: brent.ResendVerificationEmailRequest
-	(*ResendVerificationEmailResponse)(nil),                 // 256: brent.ResendVerificationEmailResponse
-	(*DeleteApprovedEmailDomainRequest)(nil),                // 257: brent.DeleteApprovedEmailDomainRequest
-	(*DeleteApprovedEmailDomainResponse)(nil),               // 258: brent.DeleteApprovedEmailDomainResponse
-	(*WorkspaceLLMCredentialStatus)(nil),                    // 259: brent.WorkspaceLLMCredentialStatus
-	(*GetWorkspaceLLMCredentialStatusRequest)(nil),          // 260: brent.GetWorkspaceLLMCredentialStatusRequest
-	(*GetWorkspaceLLMCredentialStatusResponse)(nil),         // 261: brent.GetWorkspaceLLMCredentialStatusResponse
-	(*SetWorkspaceLLMCredentialRequest)(nil),                // 262: brent.SetWorkspaceLLMCredentialRequest
-	(*SetWorkspaceLLMCredentialResponse)(nil),               // 263: brent.SetWorkspaceLLMCredentialResponse
-	(*DeleteWorkspaceLLMCredentialRequest)(nil),             // 264: brent.DeleteWorkspaceLLMCredentialRequest
-	(*DeleteWorkspaceLLMCredentialResponse)(nil),            // 265: brent.DeleteWorkspaceLLMCredentialResponse
-	(*MyCursorCredentialStatus)(nil),                        // 266: brent.MyCursorCredentialStatus
-	(*GetMyCursorCredentialStatusRequest)(nil),              // 267: brent.GetMyCursorCredentialStatusRequest
-	(*GetMyCursorCredentialStatusResponse)(nil),             // 268: brent.GetMyCursorCredentialStatusResponse
-	(*SetMyCursorCredentialRequest)(nil),                    // 269: brent.SetMyCursorCredentialRequest
-	(*SetMyCursorCredentialResponse)(nil),                   // 270: brent.SetMyCursorCredentialResponse
-	(*DeleteMyCursorCredentialRequest)(nil),                 // 271: brent.DeleteMyCursorCredentialRequest
-	(*DeleteMyCursorCredentialResponse)(nil),                // 272: brent.DeleteMyCursorCredentialResponse
-	(*UpdateWorkspaceBrandingRequest)(nil),                  // 273: brent.UpdateWorkspaceBrandingRequest
-	(*UpdateWorkspaceBrandingResponse)(nil),                 // 274: brent.UpdateWorkspaceBrandingResponse
-	(*CompleteWorkspaceOnboardingRequest)(nil),              // 275: brent.CompleteWorkspaceOnboardingRequest
-	(*CompleteWorkspaceOnboardingResponse)(nil),             // 276: brent.CompleteWorkspaceOnboardingResponse
-	(*CreateInvitationRequest)(nil),                         // 277: brent.CreateInvitationRequest
-	(*CreateInvitationResponse)(nil),                        // 278: brent.CreateInvitationResponse
-	(*CreateInvitationsRequest)(nil),                        // 279: brent.CreateInvitationsRequest
-	(*InvitationResult)(nil),                                // 280: brent.InvitationResult
-	(*CreateInvitationsResponse)(nil),                       // 281: brent.CreateInvitationsResponse
-	(*AcceptInvitationRequest)(nil),                         // 282: brent.AcceptInvitationRequest
-	(*AcceptInvitationResponse)(nil),                        // 283: brent.AcceptInvitationResponse
-	(*ListWorkspaceMembersRequest)(nil),                     // 284: brent.ListWorkspaceMembersRequest
-	(*ListWorkspaceMembersResponse)(nil),                    // 285: brent.ListWorkspaceMembersResponse
-	(*WorkspaceMember)(nil),                                 // 286: brent.WorkspaceMember
-	(*ResendInvitationRequest)(nil),                         // 287: brent.ResendInvitationRequest
-	(*ResendInvitationResponse)(nil),                        // 288: brent.ResendInvitationResponse
-	(*RevokeInvitationRequest)(nil),                         // 289: brent.RevokeInvitationRequest
-	(*RevokeInvitationResponse)(nil),                        // 290: brent.RevokeInvitationResponse
-	(*RemoveWorkspaceMemberRequest)(nil),                    // 291: brent.RemoveWorkspaceMemberRequest
-	(*RemoveWorkspaceMemberResponse)(nil),                   // 292: brent.RemoveWorkspaceMemberResponse
-	(*UpdateWorkspaceMemberRoleRequest)(nil),                // 293: brent.UpdateWorkspaceMemberRoleRequest
-	(*UpdateWorkspaceMemberRoleResponse)(nil),               // 294: brent.UpdateWorkspaceMemberRoleResponse
-	(*GetInvitationRequest)(nil),                            // 295: brent.GetInvitationRequest
-	(*GetInvitationResponse)(nil),                           // 296: brent.GetInvitationResponse
-	(*UpsertMyVerifiedBindingRequest)(nil),                  // 297: brent.UpsertMyVerifiedBindingRequest
-	(*UpsertMyVerifiedBindingResponse)(nil),                 // 298: brent.UpsertMyVerifiedBindingResponse
-	(*UpdateMyDisplayNameRequest)(nil),                      // 299: brent.UpdateMyDisplayNameRequest
-	(*UpdateMyDisplayNameResponse)(nil),                     // 300: brent.UpdateMyDisplayNameResponse
-	(*ListMyBindingsRequest)(nil),                           // 301: brent.ListMyBindingsRequest
-	(*ListMyBindingsResponse)(nil),                          // 302: brent.ListMyBindingsResponse
-	(*NotificationPreferences)(nil),                         // 303: brent.NotificationPreferences
-	(*ChannelPreferences)(nil),                              // 304: brent.ChannelPreferences
-	(*GetMyNotificationPreferencesRequest)(nil),             // 305: brent.GetMyNotificationPreferencesRequest
-	(*GetMyNotificationPreferencesResponse)(nil),            // 306: brent.GetMyNotificationPreferencesResponse
-	(*UpdateMyNotificationPreferencesRequest)(nil),          // 307: brent.UpdateMyNotificationPreferencesRequest
-	(*UpdateMyNotificationPreferencesResponse)(nil),         // 308: brent.UpdateMyNotificationPreferencesResponse
-	(*RegisterMyPushSubscriptionRequest)(nil),               // 309: brent.RegisterMyPushSubscriptionRequest
-	(*RegisterMyPushSubscriptionResponse)(nil),              // 310: brent.RegisterMyPushSubscriptionResponse
-	(*GetWebPushPublicKeyRequest)(nil),                      // 311: brent.GetWebPushPublicKeyRequest
-	(*GetWebPushPublicKeyResponse)(nil),                     // 312: brent.GetWebPushPublicKeyResponse
-	(*Binding)(nil),                                         // 313: brent.Binding
-	(*RedFindingKindsPatch)(nil),                            // 314: brent.RedFindingKindsPatch
-	(*GetBrentSettingsRequest)(nil),                         // 315: brent.GetBrentSettingsRequest
-	(*GetBrentSettingsResponse)(nil),                        // 316: brent.GetBrentSettingsResponse
-	(*UpdateBrentSettingsRequest)(nil),                      // 317: brent.UpdateBrentSettingsRequest
-	(*UpdateBrentSettingsResponse)(nil),                     // 318: brent.UpdateBrentSettingsResponse
-	(*AdminGetAccountBrentSettingsRequest)(nil),             // 319: brent.AdminGetAccountBrentSettingsRequest
-	(*AdminUpdateAccountBrentSettingsRequest)(nil),          // 320: brent.AdminUpdateAccountBrentSettingsRequest
-	(*AdminGetAccountReviewPolicyRequest)(nil),              // 321: brent.AdminGetAccountReviewPolicyRequest
-	(*AdminGetAccountReviewPolicyResponse)(nil),             // 322: brent.AdminGetAccountReviewPolicyResponse
-	(*AdminUpdateAccountReviewPolicyRequest)(nil),           // 323: brent.AdminUpdateAccountReviewPolicyRequest
-	(*AdminUpdateAccountReviewPolicyResponse)(nil),          // 324: brent.AdminUpdateAccountReviewPolicyResponse
-	(*AdminGetAccountLLMCredentialStatusRequest)(nil),       // 325: brent.AdminGetAccountLLMCredentialStatusRequest
-	(*AdminGetAccountLLMCredentialStatusResponse)(nil),      // 326: brent.AdminGetAccountLLMCredentialStatusResponse
-	(*AdminListAccountIntegrationsRequest)(nil),             // 327: brent.AdminListAccountIntegrationsRequest
-	(*AdminAccountIntegrationInstall)(nil),                  // 328: brent.AdminAccountIntegrationInstall
-	(*AdminListAccountIntegrationsResponse)(nil),            // 329: brent.AdminListAccountIntegrationsResponse
-	(*ListIntegrationCatalogueRequest)(nil),                 // 330: brent.ListIntegrationCatalogueRequest
-	(*ListIntegrationCatalogueResponse)(nil),                // 331: brent.ListIntegrationCatalogueResponse
-	(*IntegrationCatalogueEntry)(nil),                       // 332: brent.IntegrationCatalogueEntry
-	(*GetPlanPromptRequest)(nil),                            // 333: brent.GetPlanPromptRequest
-	(*GetPlanPromptResponse)(nil),                           // 334: brent.GetPlanPromptResponse
-	nil,                                                     // 335: brent.PlanUpdated.PreviousEntry
-	nil,                                                     // 336: brent.PlanUpdated.AfterEntry
-	nil,                                                     // 337: brent.PrincipalUpdated.PreviousEntry
-	nil,                                                     // 338: brent.PrincipalUpdated.AfterEntry
-	nil,                                                     // 339: brent.BindingUpdated.PreviousEntry
-	nil,                                                     // 340: brent.BindingUpdated.AfterEntry
-	nil,                                                     // 341: brent.OtherEvent.FieldsEntry
-	nil,                                                     // 342: brent.PullRequestUpdated.PreviousEntry
-	nil,                                                     // 343: brent.PullRequestUpdated.AfterEntry
-	nil,                                                     // 344: brent.DeviationAnalysisCompleted.FindingCountByTagEntry
-	nil,                                                     // 345: brent.DeviationFindingUpdated.PreviousEntry
-	nil,                                                     // 346: brent.DeviationFindingUpdated.AfterEntry
-	nil,                                                     // 347: brent.NotificationPreferences.PreferencesEntry
-	nil,                                                     // 348: brent.ChannelPreferences.ChannelsEntry
+	(RunStatus)(0),                                          // 0: until.RunStatus
+	(MetricsComparisonMode)(0),                              // 1: until.MetricsComparisonMode
+	(PrincipalStatusState)(0),                               // 2: until.PrincipalStatusState
+	(IntegrationProvider)(0),                                // 3: until.IntegrationProvider
+	(IntegrationIntent)(0),                                  // 4: until.IntegrationIntent
+	(IntegrationConnectionStatus)(0),                        // 5: until.IntegrationConnectionStatus
+	(LoginProvider)(0),                                      // 6: until.LoginProvider
+	(JoinSource)(0),                                         // 7: until.JoinSource
+	(InvitationStatus)(0),                                   // 8: until.InvitationStatus
+	(InvitationResultStatus)(0),                             // 9: until.InvitationResultStatus
+	(WorkspaceMemberState)(0),                               // 10: until.WorkspaceMemberState
+	(WorkspaceReviewPolicy)(0),                              // 11: until.WorkspaceReviewPolicy
+	(IntegrationCatalogueSource)(0),                         // 12: until.IntegrationCatalogueSource
+	(*ListPullRequestsRequest)(nil),                         // 13: until.ListPullRequestsRequest
+	(*ListPullRequestsResponse)(nil),                        // 14: until.ListPullRequestsResponse
+	(*GetPullRequestByIDRequest)(nil),                       // 15: until.GetPullRequestByIDRequest
+	(*GetPullRequestByIDResponse)(nil),                      // 16: until.GetPullRequestByIDResponse
+	(*ListPlanChecksForPRRequest)(nil),                      // 17: until.ListPlanChecksForPRRequest
+	(*ListPlanChecksForPRResponse)(nil),                     // 18: until.ListPlanChecksForPRResponse
+	(*GetPullRequestTimelineRequest)(nil),                   // 19: until.GetPullRequestTimelineRequest
+	(*PullRequestTimelineEventRow)(nil),                     // 20: until.PullRequestTimelineEventRow
+	(*PullRequestTimelineWarning)(nil),                      // 21: until.PullRequestTimelineWarning
+	(*GetPullRequestTimelineResponse)(nil),                  // 22: until.GetPullRequestTimelineResponse
+	(*PullRequestSummary)(nil),                              // 23: until.PullRequestSummary
+	(*PullRequest)(nil),                                     // 24: until.PullRequest
+	(*PlanCheckSummary)(nil),                                // 25: until.PlanCheckSummary
+	(*PlanDifference)(nil),                                  // 26: until.PlanDifference
+	(*ExecuteLoopRequest)(nil),                              // 27: until.ExecuteLoopRequest
+	(*ListRunsRequest)(nil),                                 // 28: until.ListRunsRequest
+	(*ListRunsResponse)(nil),                                // 29: until.ListRunsResponse
+	(*RunSummary)(nil),                                      // 30: until.RunSummary
+	(*WatchRunRequest)(nil),                                 // 31: until.WatchRunRequest
+	(*StreamEventsRequest)(nil),                             // 32: until.StreamEventsRequest
+	(*StreamEventsResponse)(nil),                            // 33: until.StreamEventsResponse
+	(*ListEventsRequest)(nil),                               // 34: until.ListEventsRequest
+	(*ListEventsResponse)(nil),                              // 35: until.ListEventsResponse
+	(*CancelRunRequest)(nil),                                // 36: until.CancelRunRequest
+	(*CancelRunResponse)(nil),                               // 37: until.CancelRunResponse
+	(*ListOpenPullRequestsRequest)(nil),                     // 38: until.ListOpenPullRequestsRequest
+	(*ListOpenPullRequestsResponse)(nil),                    // 39: until.ListOpenPullRequestsResponse
+	(*GetPullRequestRequest)(nil),                           // 40: until.GetPullRequestRequest
+	(*GetPullRequestResponse)(nil),                          // 41: until.GetPullRequestResponse
+	(*OpenPullRequest)(nil),                                 // 42: until.OpenPullRequest
+	(*ExecuteLoopResponse)(nil),                             // 43: until.ExecuteLoopResponse
+	(*ReasoningStep)(nil),                                   // 44: until.ReasoningStep
+	(*ToolCallStep)(nil),                                    // 45: until.ToolCallStep
+	(*ToolResultStep)(nil),                                  // 46: until.ToolResultStep
+	(*CompletionStep)(nil),                                  // 47: until.CompletionStep
+	(*ErrorStep)(nil),                                       // 48: until.ErrorStep
+	(*StatusStep)(nil),                                      // 49: until.StatusStep
+	(*RunStartedStep)(nil),                                  // 50: until.RunStartedStep
+	(*QAReadyStep)(nil),                                     // 51: until.QAReadyStep
+	(*UserQuestionStep)(nil),                                // 52: until.UserQuestionStep
+	(*UserMessageStep)(nil),                                 // 53: until.UserMessageStep
+	(*SendQuestionRequest)(nil),                             // 54: until.SendQuestionRequest
+	(*AdminListPlansRequest)(nil),                           // 55: until.AdminListPlansRequest
+	(*AdminListPlansResponse)(nil),                          // 56: until.AdminListPlansResponse
+	(*PlanSummary)(nil),                                     // 57: until.PlanSummary
+	(*AdminGetPlanRequest)(nil),                             // 58: until.AdminGetPlanRequest
+	(*AdminGetPlanResponse)(nil),                            // 59: until.AdminGetPlanResponse
+	(*Plan)(nil),                                            // 60: until.Plan
+	(*AdminListPrincipalsRequest)(nil),                      // 61: until.AdminListPrincipalsRequest
+	(*AdminListPrincipalsResponse)(nil),                     // 62: until.AdminListPrincipalsResponse
+	(*AdminGetPrincipalRequest)(nil),                        // 63: until.AdminGetPrincipalRequest
+	(*AdminGetPrincipalResponse)(nil),                       // 64: until.AdminGetPrincipalResponse
+	(*PrincipalIdentity)(nil),                               // 65: until.PrincipalIdentity
+	(*AdminUpsertPrincipalBindingRequest)(nil),              // 66: until.AdminUpsertPrincipalBindingRequest
+	(*AdminUpsertPrincipalBindingResponse)(nil),             // 67: until.AdminUpsertPrincipalBindingResponse
+	(*AdminDeletePrincipalBindingRequest)(nil),              // 68: until.AdminDeletePrincipalBindingRequest
+	(*AdminDeletePrincipalBindingResponse)(nil),             // 69: until.AdminDeletePrincipalBindingResponse
+	(*AdminUpdatePrincipalRequest)(nil),                     // 70: until.AdminUpdatePrincipalRequest
+	(*AdminUpdatePrincipalResponse)(nil),                    // 71: until.AdminUpdatePrincipalResponse
+	(*AdminCreatePrincipalIdentityRequest)(nil),             // 72: until.AdminCreatePrincipalIdentityRequest
+	(*AdminCreatePrincipalIdentityResponse)(nil),            // 73: until.AdminCreatePrincipalIdentityResponse
+	(*AdminDeletePrincipalIdentityRequest)(nil),             // 74: until.AdminDeletePrincipalIdentityRequest
+	(*AdminDeletePrincipalIdentityResponse)(nil),            // 75: until.AdminDeletePrincipalIdentityResponse
+	(*AdminSetPrincipalCredentialRequest)(nil),              // 76: until.AdminSetPrincipalCredentialRequest
+	(*AdminSetPrincipalCredentialResponse)(nil),             // 77: until.AdminSetPrincipalCredentialResponse
+	(*AdminListPrincipalCredentialConnectionsRequest)(nil),  // 78: until.AdminListPrincipalCredentialConnectionsRequest
+	(*AdminListPrincipalCredentialConnectionsResponse)(nil), // 79: until.AdminListPrincipalCredentialConnectionsResponse
+	(*PrincipalCredentialConnection)(nil),                   // 80: until.PrincipalCredentialConnection
+	(*AdminDeletePrincipalCredentialRequest)(nil),           // 81: until.AdminDeletePrincipalCredentialRequest
+	(*AdminDeletePrincipalCredentialResponse)(nil),          // 82: until.AdminDeletePrincipalCredentialResponse
+	(*AdminListReviewsRequest)(nil),                         // 83: until.AdminListReviewsRequest
+	(*AdminListReviewsResponse)(nil),                        // 84: until.AdminListReviewsResponse
+	(*ReviewSummary)(nil),                                   // 85: until.ReviewSummary
+	(*AdminGetReviewRequest)(nil),                           // 86: until.AdminGetReviewRequest
+	(*AdminGetReviewResponse)(nil),                          // 87: until.AdminGetReviewResponse
+	(*Review)(nil),                                          // 88: until.Review
+	(*AccountSummary)(nil),                                  // 89: until.AccountSummary
+	(*AdminListAccountsResponse)(nil),                       // 90: until.AdminListAccountsResponse
+	(*AdminGetAccountSummaryRequest)(nil),                   // 91: until.AdminGetAccountSummaryRequest
+	(*AccountRunSummary)(nil),                               // 92: until.AccountRunSummary
+	(*AdminGetAccountSummaryResponse)(nil),                  // 93: until.AdminGetAccountSummaryResponse
+	(*AdminGetAccountHealthAnalysisRequest)(nil),            // 94: until.AdminGetAccountHealthAnalysisRequest
+	(*AccountHealthFinding)(nil),                            // 95: until.AccountHealthFinding
+	(*AdminGetAccountHealthAnalysisResponse)(nil),           // 96: until.AdminGetAccountHealthAnalysisResponse
+	(*AdminListAccountMetricReposRequest)(nil),              // 97: until.AdminListAccountMetricReposRequest
+	(*AccountMetricRepo)(nil),                               // 98: until.AccountMetricRepo
+	(*AdminListAccountMetricReposResponse)(nil),             // 99: until.AdminListAccountMetricReposResponse
+	(*AdminStartAccountMetricsComparisonRequest)(nil),       // 100: until.AdminStartAccountMetricsComparisonRequest
+	(*AdminStartAccountMetricsComparisonResponse)(nil),      // 101: until.AdminStartAccountMetricsComparisonResponse
+	(*AdminGetAccountMetricsComparisonRunRequest)(nil),      // 102: until.AdminGetAccountMetricsComparisonRunRequest
+	(*MetricsComparisonHeadline)(nil),                       // 103: until.MetricsComparisonHeadline
+	(*MetricsComparisonArtifact)(nil),                       // 104: until.MetricsComparisonArtifact
+	(*AdminGetAccountMetricsComparisonRunResponse)(nil),     // 105: until.AdminGetAccountMetricsComparisonRunResponse
+	(*Event)(nil),                                           // 106: until.Event
+	(*Actor)(nil),                                           // 107: until.Actor
+	(*ObjectReference)(nil),                                 // 108: until.ObjectReference
+	(*PlanCreated)(nil),                                     // 109: until.PlanCreated
+	(*PlanUpdated)(nil),                                     // 110: until.PlanUpdated
+	(*PlanDeleted)(nil),                                     // 111: until.PlanDeleted
+	(*ReviewDeleted)(nil),                                   // 112: until.ReviewDeleted
+	(*ReviewRestored)(nil),                                  // 113: until.ReviewRestored
+	(*PlanRestored)(nil),                                    // 114: until.PlanRestored
+	(*ReviewRequested)(nil),                                 // 115: until.ReviewRequested
+	(*ReviewSubmitted)(nil),                                 // 116: until.ReviewSubmitted
+	(*ReviewNoEligibleReviewer)(nil),                        // 117: until.ReviewNoEligibleReviewer
+	(*PlanReviewPolicyDecided)(nil),                         // 118: until.PlanReviewPolicyDecided
+	(*WorkspaceReviewPolicyUpdated)(nil),                    // 119: until.WorkspaceReviewPolicyUpdated
+	(*PrincipalCreated)(nil),                                // 120: until.PrincipalCreated
+	(*PrincipalUpdated)(nil),                                // 121: until.PrincipalUpdated
+	(*PrincipalTombstoned)(nil),                             // 122: until.PrincipalTombstoned
+	(*WorkspaceCreated)(nil),                                // 123: until.WorkspaceCreated
+	(*WorkspaceOnboardingCompleted)(nil),                    // 124: until.WorkspaceOnboardingCompleted
+	(*WorkspaceRenamed)(nil),                                // 125: until.WorkspaceRenamed
+	(*WorkspaceDeleted)(nil),                                // 126: until.WorkspaceDeleted
+	(*WorkspaceMemberJoined)(nil),                           // 127: until.WorkspaceMemberJoined
+	(*WorkspaceMemberLeft)(nil),                             // 128: until.WorkspaceMemberLeft
+	(*ApprovedEmailDomainAdded)(nil),                        // 129: until.ApprovedEmailDomainAdded
+	(*ApprovedEmailDomainVerified)(nil),                     // 130: until.ApprovedEmailDomainVerified
+	(*ApprovedEmailDomainDeleted)(nil),                      // 131: until.ApprovedEmailDomainDeleted
+	(*MCPGrantWorkspaceBindingChanged)(nil),                 // 132: until.MCPGrantWorkspaceBindingChanged
+	(*IdentityCreated)(nil),                                 // 133: until.IdentityCreated
+	(*IdentityDeleted)(nil),                                 // 134: until.IdentityDeleted
+	(*BindingCreated)(nil),                                  // 135: until.BindingCreated
+	(*BindingUpdated)(nil),                                  // 136: until.BindingUpdated
+	(*BindingDeleted)(nil),                                  // 137: until.BindingDeleted
+	(*CredentialConnected)(nil),                             // 138: until.CredentialConnected
+	(*CredentialRevoked)(nil),                               // 139: until.CredentialRevoked
+	(*WorkspaceLLMCredentialConnected)(nil),                 // 140: until.WorkspaceLLMCredentialConnected
+	(*WorkspaceLLMCredentialRevoked)(nil),                   // 141: until.WorkspaceLLMCredentialRevoked
+	(*ReviewDriveByStarted)(nil),                            // 142: until.ReviewDriveByStarted
+	(*OtherEvent)(nil),                                      // 143: until.OtherEvent
+	(*UnknownStoredPayload)(nil),                            // 144: until.UnknownStoredPayload
+	(*PullRequestOpened)(nil),                               // 145: until.PullRequestOpened
+	(*PullRequestSynchronized)(nil),                         // 146: until.PullRequestSynchronized
+	(*PullRequestUpdated)(nil),                              // 147: until.PullRequestUpdated
+	(*PullRequestClosed)(nil),                               // 148: until.PullRequestClosed
+	(*PullRequestLinkedToPlan)(nil),                         // 149: until.PullRequestLinkedToPlan
+	(*PullRequestUnlinkedFromPlan)(nil),                     // 150: until.PullRequestUnlinkedFromPlan
+	(*PullRequestLinkedToAgentRun)(nil),                     // 151: until.PullRequestLinkedToAgentRun
+	(*PullRequestReviewRequested)(nil),                      // 152: until.PullRequestReviewRequested
+	(*PullRequestApproved)(nil),                             // 153: until.PullRequestApproved
+	(*PullRequestChangesRequested)(nil),                     // 154: until.PullRequestChangesRequested
+	(*PullRequestReviewDismissed)(nil),                      // 155: until.PullRequestReviewDismissed
+	(*PullRequestCommentCreated)(nil),                       // 156: until.PullRequestCommentCreated
+	(*PlanCheckStarted)(nil),                                // 157: until.PlanCheckStarted
+	(*DifferenceSummary)(nil),                               // 158: until.DifferenceSummary
+	(*PlanCheckCompleted)(nil),                              // 159: until.PlanCheckCompleted
+	(*PlanCheckFailed)(nil),                                 // 160: until.PlanCheckFailed
+	(*PlanDifferenceRecorded)(nil),                          // 161: until.PlanDifferenceRecorded
+	(*PlanDifferenceUpdated)(nil),                           // 162: until.PlanDifferenceUpdated
+	(*PlanDifferenceResolved)(nil),                          // 163: until.PlanDifferenceResolved
+	(*PlanDifferenceAcknowledged)(nil),                      // 164: until.PlanDifferenceAcknowledged
+	(*PlanDifferenceAcknowledgementCleared)(nil),            // 165: until.PlanDifferenceAcknowledgementCleared
+	(*AgentRunDispatched)(nil),                              // 166: until.AgentRunDispatched
+	(*AgentRunStarted)(nil),                                 // 167: until.AgentRunStarted
+	(*AgentRunPullRequestMatched)(nil),                      // 168: until.AgentRunPullRequestMatched
+	(*AgentRunFlaggedNeedsYou)(nil),                         // 169: until.AgentRunFlaggedNeedsYou
+	(*AgentRunGatePassed)(nil),                              // 170: until.AgentRunGatePassed
+	(*AgentRunMerged)(nil),                                  // 171: until.AgentRunMerged
+	(*AgentRunCancelled)(nil),                               // 172: until.AgentRunCancelled
+	(*AgentRunDeclined)(nil),                                // 173: until.AgentRunDeclined
+	(*AgentRunAnnotated)(nil),                               // 174: until.AgentRunAnnotated
+	(*LoopIngested)(nil),                                    // 175: until.LoopIngested
+	(*LoopRunQueued)(nil),                                   // 176: until.LoopRunQueued
+	(*LoopRunStarted)(nil),                                  // 177: until.LoopRunStarted
+	(*LoopRunCompleted)(nil),                                // 178: until.LoopRunCompleted
+	(*LoopRunFailed)(nil),                                   // 179: until.LoopRunFailed
+	(*LoopRunCancelled)(nil),                                // 180: until.LoopRunCancelled
+	(*SlackWebhook)(nil),                                    // 181: until.SlackWebhook
+	(*LinearWebhook)(nil),                                   // 182: until.LinearWebhook
+	(*ComposioTriggerMessage)(nil),                          // 183: until.ComposioTriggerMessage
+	(*GitHubWebhook)(nil),                                   // 184: until.GitHubWebhook
+	(*GitLabWebhook)(nil),                                   // 185: until.GitLabWebhook
+	(*BitbucketWebhook)(nil),                                // 186: until.BitbucketWebhook
+	(*EmbeddedJsonCELFixture)(nil),                          // 187: until.EmbeddedJsonCELFixture
+	(*SlackMentionReceived)(nil),                            // 188: until.SlackMentionReceived
+	(*OrganisationAppInstallationUpserted)(nil),             // 189: until.OrganisationAppInstallationUpserted
+	(*OrganisationAppInstallationDeleted)(nil),              // 190: until.OrganisationAppInstallationDeleted
+	(*SlackReactionAdded)(nil),                              // 191: until.SlackReactionAdded
+	(*ListLoopsRequest)(nil),                                // 192: until.ListLoopsRequest
+	(*ListLoopsResponse)(nil),                               // 193: until.ListLoopsResponse
+	(*LoopSummary)(nil),                                     // 194: until.LoopSummary
+	(*GetLoopRequest)(nil),                                  // 195: until.GetLoopRequest
+	(*GetLoopResponse)(nil),                                 // 196: until.GetLoopResponse
+	(*Loop)(nil),                                            // 197: until.Loop
+	(*ListLoopRunsRequest)(nil),                             // 198: until.ListLoopRunsRequest
+	(*ListLoopRunsResponse)(nil),                            // 199: until.ListLoopRunsResponse
+	(*LoopRunSummary)(nil),                                  // 200: until.LoopRunSummary
+	(*GetLoopRunRequest)(nil),                               // 201: until.GetLoopRunRequest
+	(*GetLoopRunThreadHistoryRequest)(nil),                  // 202: until.GetLoopRunThreadHistoryRequest
+	(*LoopRunThreadSegment)(nil),                            // 203: until.LoopRunThreadSegment
+	(*GetLoopRunThreadHistoryResponse)(nil),                 // 204: until.GetLoopRunThreadHistoryResponse
+	(*GetLoopRunResponse)(nil),                              // 205: until.GetLoopRunResponse
+	(*LoopRun)(nil),                                         // 206: until.LoopRun
+	(*GetPrincipalStatusRequest)(nil),                       // 207: until.GetPrincipalStatusRequest
+	(*GetPrincipalStatusResponse)(nil),                      // 208: until.GetPrincipalStatusResponse
+	(*GetIntegrationConnectURLRequest)(nil),                 // 209: until.GetIntegrationConnectURLRequest
+	(*GetIntegrationConnectURLResponse)(nil),                // 210: until.GetIntegrationConnectURLResponse
+	(*DisconnectIntegrationRequest)(nil),                    // 211: until.DisconnectIntegrationRequest
+	(*DisconnectIntegrationResponse)(nil),                   // 212: until.DisconnectIntegrationResponse
+	(*ConnectByoHttpMcpRequest)(nil),                        // 213: until.ConnectByoHttpMcpRequest
+	(*ConnectByoHttpMcpResponse)(nil),                       // 214: until.ConnectByoHttpMcpResponse
+	(*GetGitLabConnectionRequest)(nil),                      // 215: until.GetGitLabConnectionRequest
+	(*GetGitLabConnectionResponse)(nil),                     // 216: until.GetGitLabConnectionResponse
+	(*ConnectGitLabRequest)(nil),                            // 217: until.ConnectGitLabRequest
+	(*ConnectGitLabResponse)(nil),                           // 218: until.ConnectGitLabResponse
+	(*SaveGitLabSigningTokenRequest)(nil),                   // 219: until.SaveGitLabSigningTokenRequest
+	(*SaveGitLabSigningTokenResponse)(nil),                  // 220: until.SaveGitLabSigningTokenResponse
+	(*GitHubPendingInstall)(nil),                            // 221: until.GitHubPendingInstall
+	(*IntegrationStatus)(nil),                               // 222: until.IntegrationStatus
+	(*GetWorkspaceIntegrationRolesRequest)(nil),             // 223: until.GetWorkspaceIntegrationRolesRequest
+	(*GetWorkspaceIntegrationRolesResponse)(nil),            // 224: until.GetWorkspaceIntegrationRolesResponse
+	(*SetWorkspaceIntegrationRolesRequest)(nil),             // 225: until.SetWorkspaceIntegrationRolesRequest
+	(*SetWorkspaceIntegrationRolesResponse)(nil),            // 226: until.SetWorkspaceIntegrationRolesResponse
+	(*Principal)(nil),                                       // 227: until.Principal
+	(*Workspace)(nil),                                       // 228: until.Workspace
+	(*CreateWorkspaceRequest)(nil),                          // 229: until.CreateWorkspaceRequest
+	(*CreateWorkspaceResponse)(nil),                         // 230: until.CreateWorkspaceResponse
+	(*ListMyWorkspacesRequest)(nil),                         // 231: until.ListMyWorkspacesRequest
+	(*ListMyWorkspacesResponse)(nil),                        // 232: until.ListMyWorkspacesResponse
+	(*DiscoverLoginRecoveryCandidatesRequest)(nil),          // 233: until.DiscoverLoginRecoveryCandidatesRequest
+	(*LoginRecoveryCandidate)(nil),                          // 234: until.LoginRecoveryCandidate
+	(*DiscoverLoginRecoveryCandidatesResponse)(nil),         // 235: until.DiscoverLoginRecoveryCandidatesResponse
+	(*RenameWorkspaceRequest)(nil),                          // 236: until.RenameWorkspaceRequest
+	(*RenameWorkspaceResponse)(nil),                         // 237: until.RenameWorkspaceResponse
+	(*DeleteWorkspaceRequest)(nil),                          // 238: until.DeleteWorkspaceRequest
+	(*DeleteWorkspaceResponse)(nil),                         // 239: until.DeleteWorkspaceResponse
+	(*ListJoinableWorkspacesRequest)(nil),                   // 240: until.ListJoinableWorkspacesRequest
+	(*ListJoinableWorkspacesResponse)(nil),                  // 241: until.ListJoinableWorkspacesResponse
+	(*JoinableWorkspace)(nil),                               // 242: until.JoinableWorkspace
+	(*JoinableWorkspaceMember)(nil),                         // 243: until.JoinableWorkspaceMember
+	(*JoinWorkspaceRequest)(nil),                            // 244: until.JoinWorkspaceRequest
+	(*JoinWorkspaceResponse)(nil),                           // 245: until.JoinWorkspaceResponse
+	(*ApprovedEmailDomain)(nil),                             // 246: until.ApprovedEmailDomain
+	(*ListApprovedEmailDomainsRequest)(nil),                 // 247: until.ListApprovedEmailDomainsRequest
+	(*ListApprovedEmailDomainsResponse)(nil),                // 248: until.ListApprovedEmailDomainsResponse
+	(*AddApprovedEmailDomainRequest)(nil),                   // 249: until.AddApprovedEmailDomainRequest
+	(*AddApprovedEmailDomainResponse)(nil),                  // 250: until.AddApprovedEmailDomainResponse
+	(*VerifyApprovedEmailDomainRequest)(nil),                // 251: until.VerifyApprovedEmailDomainRequest
+	(*VerifyApprovedEmailDomainResponse)(nil),               // 252: until.VerifyApprovedEmailDomainResponse
+	(*ResendApprovedEmailDomainCodeRequest)(nil),            // 253: until.ResendApprovedEmailDomainCodeRequest
+	(*ResendApprovedEmailDomainCodeResponse)(nil),           // 254: until.ResendApprovedEmailDomainCodeResponse
+	(*ResendVerificationEmailRequest)(nil),                  // 255: until.ResendVerificationEmailRequest
+	(*ResendVerificationEmailResponse)(nil),                 // 256: until.ResendVerificationEmailResponse
+	(*DeleteApprovedEmailDomainRequest)(nil),                // 257: until.DeleteApprovedEmailDomainRequest
+	(*DeleteApprovedEmailDomainResponse)(nil),               // 258: until.DeleteApprovedEmailDomainResponse
+	(*WorkspaceLLMCredentialStatus)(nil),                    // 259: until.WorkspaceLLMCredentialStatus
+	(*GetWorkspaceLLMCredentialStatusRequest)(nil),          // 260: until.GetWorkspaceLLMCredentialStatusRequest
+	(*GetWorkspaceLLMCredentialStatusResponse)(nil),         // 261: until.GetWorkspaceLLMCredentialStatusResponse
+	(*SetWorkspaceLLMCredentialRequest)(nil),                // 262: until.SetWorkspaceLLMCredentialRequest
+	(*SetWorkspaceLLMCredentialResponse)(nil),               // 263: until.SetWorkspaceLLMCredentialResponse
+	(*DeleteWorkspaceLLMCredentialRequest)(nil),             // 264: until.DeleteWorkspaceLLMCredentialRequest
+	(*DeleteWorkspaceLLMCredentialResponse)(nil),            // 265: until.DeleteWorkspaceLLMCredentialResponse
+	(*MyCursorCredentialStatus)(nil),                        // 266: until.MyCursorCredentialStatus
+	(*GetMyCursorCredentialStatusRequest)(nil),              // 267: until.GetMyCursorCredentialStatusRequest
+	(*GetMyCursorCredentialStatusResponse)(nil),             // 268: until.GetMyCursorCredentialStatusResponse
+	(*SetMyCursorCredentialRequest)(nil),                    // 269: until.SetMyCursorCredentialRequest
+	(*SetMyCursorCredentialResponse)(nil),                   // 270: until.SetMyCursorCredentialResponse
+	(*DeleteMyCursorCredentialRequest)(nil),                 // 271: until.DeleteMyCursorCredentialRequest
+	(*DeleteMyCursorCredentialResponse)(nil),                // 272: until.DeleteMyCursorCredentialResponse
+	(*UpdateWorkspaceBrandingRequest)(nil),                  // 273: until.UpdateWorkspaceBrandingRequest
+	(*UpdateWorkspaceBrandingResponse)(nil),                 // 274: until.UpdateWorkspaceBrandingResponse
+	(*CompleteWorkspaceOnboardingRequest)(nil),              // 275: until.CompleteWorkspaceOnboardingRequest
+	(*CompleteWorkspaceOnboardingResponse)(nil),             // 276: until.CompleteWorkspaceOnboardingResponse
+	(*CreateInvitationRequest)(nil),                         // 277: until.CreateInvitationRequest
+	(*CreateInvitationResponse)(nil),                        // 278: until.CreateInvitationResponse
+	(*CreateInvitationsRequest)(nil),                        // 279: until.CreateInvitationsRequest
+	(*InvitationResult)(nil),                                // 280: until.InvitationResult
+	(*CreateInvitationsResponse)(nil),                       // 281: until.CreateInvitationsResponse
+	(*AcceptInvitationRequest)(nil),                         // 282: until.AcceptInvitationRequest
+	(*AcceptInvitationResponse)(nil),                        // 283: until.AcceptInvitationResponse
+	(*ListWorkspaceMembersRequest)(nil),                     // 284: until.ListWorkspaceMembersRequest
+	(*ListWorkspaceMembersResponse)(nil),                    // 285: until.ListWorkspaceMembersResponse
+	(*WorkspaceMember)(nil),                                 // 286: until.WorkspaceMember
+	(*ResendInvitationRequest)(nil),                         // 287: until.ResendInvitationRequest
+	(*ResendInvitationResponse)(nil),                        // 288: until.ResendInvitationResponse
+	(*RevokeInvitationRequest)(nil),                         // 289: until.RevokeInvitationRequest
+	(*RevokeInvitationResponse)(nil),                        // 290: until.RevokeInvitationResponse
+	(*RemoveWorkspaceMemberRequest)(nil),                    // 291: until.RemoveWorkspaceMemberRequest
+	(*RemoveWorkspaceMemberResponse)(nil),                   // 292: until.RemoveWorkspaceMemberResponse
+	(*UpdateWorkspaceMemberRoleRequest)(nil),                // 293: until.UpdateWorkspaceMemberRoleRequest
+	(*UpdateWorkspaceMemberRoleResponse)(nil),               // 294: until.UpdateWorkspaceMemberRoleResponse
+	(*GetInvitationRequest)(nil),                            // 295: until.GetInvitationRequest
+	(*GetInvitationResponse)(nil),                           // 296: until.GetInvitationResponse
+	(*UpsertMyVerifiedBindingRequest)(nil),                  // 297: until.UpsertMyVerifiedBindingRequest
+	(*UpsertMyVerifiedBindingResponse)(nil),                 // 298: until.UpsertMyVerifiedBindingResponse
+	(*UpdateMyDisplayNameRequest)(nil),                      // 299: until.UpdateMyDisplayNameRequest
+	(*UpdateMyDisplayNameResponse)(nil),                     // 300: until.UpdateMyDisplayNameResponse
+	(*ListMyBindingsRequest)(nil),                           // 301: until.ListMyBindingsRequest
+	(*ListMyBindingsResponse)(nil),                          // 302: until.ListMyBindingsResponse
+	(*NotificationPreferences)(nil),                         // 303: until.NotificationPreferences
+	(*ChannelPreferences)(nil),                              // 304: until.ChannelPreferences
+	(*GetMyNotificationPreferencesRequest)(nil),             // 305: until.GetMyNotificationPreferencesRequest
+	(*GetMyNotificationPreferencesResponse)(nil),            // 306: until.GetMyNotificationPreferencesResponse
+	(*UpdateMyNotificationPreferencesRequest)(nil),          // 307: until.UpdateMyNotificationPreferencesRequest
+	(*UpdateMyNotificationPreferencesResponse)(nil),         // 308: until.UpdateMyNotificationPreferencesResponse
+	(*RegisterMyPushSubscriptionRequest)(nil),               // 309: until.RegisterMyPushSubscriptionRequest
+	(*RegisterMyPushSubscriptionResponse)(nil),              // 310: until.RegisterMyPushSubscriptionResponse
+	(*GetWebPushPublicKeyRequest)(nil),                      // 311: until.GetWebPushPublicKeyRequest
+	(*GetWebPushPublicKeyResponse)(nil),                     // 312: until.GetWebPushPublicKeyResponse
+	(*Binding)(nil),                                         // 313: until.Binding
+	(*BlockingDifferenceTagsPatch)(nil),                     // 314: until.BlockingDifferenceTagsPatch
+	(*GetPlanCheckSettingsRequest)(nil),                     // 315: until.GetPlanCheckSettingsRequest
+	(*GetPlanCheckSettingsResponse)(nil),                    // 316: until.GetPlanCheckSettingsResponse
+	(*UpdatePlanCheckSettingsRequest)(nil),                  // 317: until.UpdatePlanCheckSettingsRequest
+	(*UpdatePlanCheckSettingsResponse)(nil),                 // 318: until.UpdatePlanCheckSettingsResponse
+	(*AdminGetAccountPlanCheckSettingsRequest)(nil),         // 319: until.AdminGetAccountPlanCheckSettingsRequest
+	(*AdminUpdateAccountPlanCheckSettingsRequest)(nil),      // 320: until.AdminUpdateAccountPlanCheckSettingsRequest
+	(*AdminGetAccountReviewPolicyRequest)(nil),              // 321: until.AdminGetAccountReviewPolicyRequest
+	(*AdminGetAccountReviewPolicyResponse)(nil),             // 322: until.AdminGetAccountReviewPolicyResponse
+	(*AdminUpdateAccountReviewPolicyRequest)(nil),           // 323: until.AdminUpdateAccountReviewPolicyRequest
+	(*AdminUpdateAccountReviewPolicyResponse)(nil),          // 324: until.AdminUpdateAccountReviewPolicyResponse
+	(*AdminGetAccountLLMCredentialStatusRequest)(nil),       // 325: until.AdminGetAccountLLMCredentialStatusRequest
+	(*AdminGetAccountLLMCredentialStatusResponse)(nil),      // 326: until.AdminGetAccountLLMCredentialStatusResponse
+	(*AdminListAccountIntegrationsRequest)(nil),             // 327: until.AdminListAccountIntegrationsRequest
+	(*AdminAccountIntegrationInstall)(nil),                  // 328: until.AdminAccountIntegrationInstall
+	(*AdminListAccountIntegrationsResponse)(nil),            // 329: until.AdminListAccountIntegrationsResponse
+	(*ListIntegrationCatalogueRequest)(nil),                 // 330: until.ListIntegrationCatalogueRequest
+	(*ListIntegrationCatalogueResponse)(nil),                // 331: until.ListIntegrationCatalogueResponse
+	(*IntegrationCatalogueEntry)(nil),                       // 332: until.IntegrationCatalogueEntry
+	(*GetPlanPromptRequest)(nil),                            // 333: until.GetPlanPromptRequest
+	(*GetPlanPromptResponse)(nil),                           // 334: until.GetPlanPromptResponse
+	nil,                                                     // 335: until.PlanUpdated.PreviousEntry
+	nil,                                                     // 336: until.PlanUpdated.AfterEntry
+	nil,                                                     // 337: until.PrincipalUpdated.PreviousEntry
+	nil,                                                     // 338: until.PrincipalUpdated.AfterEntry
+	nil,                                                     // 339: until.BindingUpdated.PreviousEntry
+	nil,                                                     // 340: until.BindingUpdated.AfterEntry
+	nil,                                                     // 341: until.OtherEvent.FieldsEntry
+	nil,                                                     // 342: until.PullRequestUpdated.PreviousEntry
+	nil,                                                     // 343: until.PullRequestUpdated.AfterEntry
+	nil,                                                     // 344: until.PlanCheckCompleted.DifferenceCountByTagEntry
+	nil,                                                     // 345: until.PlanDifferenceUpdated.PreviousEntry
+	nil,                                                     // 346: until.PlanDifferenceUpdated.AfterEntry
+	nil,                                                     // 347: until.NotificationPreferences.PreferencesEntry
+	nil,                                                     // 348: until.ChannelPreferences.ChannelsEntry
 	(*timestamppb.Timestamp)(nil),                           // 349: google.protobuf.Timestamp
 	(*structpb.Value)(nil),                                  // 350: google.protobuf.Value
 	(*descriptorpb.FieldOptions)(nil),                       // 351: google.protobuf.FieldOptions
 	(*emptypb.Empty)(nil),                                   // 352: google.protobuf.Empty
 }
 var file_brent_proto_depIdxs = []int32{
-	23,  // 0: brent.ListPullRequestsResponse.pull_requests:type_name -> brent.PullRequestSummary
-	24,  // 1: brent.GetPullRequestByIDResponse.pull_request:type_name -> brent.PullRequest
-	25,  // 2: brent.ListDeviationAnalysesForPRResponse.analyses:type_name -> brent.DeviationAnalysisSummary
-	349, // 3: brent.PullRequestTimelineEventRow.occurred_at:type_name -> google.protobuf.Timestamp
-	24,  // 4: brent.GetPullRequestTimelineResponse.pull_request:type_name -> brent.PullRequest
-	20,  // 5: brent.GetPullRequestTimelineResponse.events:type_name -> brent.PullRequestTimelineEventRow
-	21,  // 6: brent.GetPullRequestTimelineResponse.warnings:type_name -> brent.PullRequestTimelineWarning
-	349, // 7: brent.PullRequestSummary.updated_at:type_name -> google.protobuf.Timestamp
-	349, // 8: brent.PullRequest.created_at:type_name -> google.protobuf.Timestamp
-	349, // 9: brent.PullRequest.updated_at:type_name -> google.protobuf.Timestamp
-	349, // 10: brent.PullRequest.closed_at:type_name -> google.protobuf.Timestamp
-	349, // 11: brent.DeviationAnalysisSummary.started_at:type_name -> google.protobuf.Timestamp
-	349, // 12: brent.DeviationAnalysisSummary.completed_at:type_name -> google.protobuf.Timestamp
-	349, // 13: brent.DeviationAnalysisSummary.failed_at:type_name -> google.protobuf.Timestamp
-	26,  // 14: brent.DeviationAnalysisSummary.findings:type_name -> brent.DeviationFinding
-	349, // 15: brent.DeviationFinding.resolved_at:type_name -> google.protobuf.Timestamp
-	30,  // 16: brent.ListRunsResponse.runs:type_name -> brent.RunSummary
-	0,   // 17: brent.RunSummary.status:type_name -> brent.RunStatus
-	349, // 18: brent.RunSummary.started_at:type_name -> google.protobuf.Timestamp
-	349, // 19: brent.RunSummary.completed_at:type_name -> google.protobuf.Timestamp
-	106, // 20: brent.StreamEventsResponse.event:type_name -> brent.Event
-	349, // 21: brent.ListEventsRequest.occurred_from:type_name -> google.protobuf.Timestamp
-	349, // 22: brent.ListEventsRequest.occurred_to:type_name -> google.protobuf.Timestamp
-	106, // 23: brent.ListEventsResponse.events:type_name -> brent.Event
-	42,  // 24: brent.ListOpenPullRequestsResponse.pull_requests:type_name -> brent.OpenPullRequest
-	42,  // 25: brent.GetPullRequestResponse.pull_request:type_name -> brent.OpenPullRequest
-	349, // 26: brent.OpenPullRequest.updated_at:type_name -> google.protobuf.Timestamp
-	349, // 27: brent.ExecuteWorkflowResponse.timestamp:type_name -> google.protobuf.Timestamp
-	44,  // 28: brent.ExecuteWorkflowResponse.reasoning:type_name -> brent.ReasoningStep
-	45,  // 29: brent.ExecuteWorkflowResponse.tool_call:type_name -> brent.ToolCallStep
-	46,  // 30: brent.ExecuteWorkflowResponse.tool_result:type_name -> brent.ToolResultStep
-	47,  // 31: brent.ExecuteWorkflowResponse.completion:type_name -> brent.CompletionStep
-	48,  // 32: brent.ExecuteWorkflowResponse.error:type_name -> brent.ErrorStep
-	49,  // 33: brent.ExecuteWorkflowResponse.status:type_name -> brent.StatusStep
-	50,  // 34: brent.ExecuteWorkflowResponse.run_started:type_name -> brent.RunStartedStep
-	51,  // 35: brent.ExecuteWorkflowResponse.qa_ready:type_name -> brent.QAReadyStep
-	52,  // 36: brent.ExecuteWorkflowResponse.user_question:type_name -> brent.UserQuestionStep
-	53,  // 37: brent.ExecuteWorkflowResponse.user_message:type_name -> brent.UserMessageStep
-	57,  // 38: brent.AdminListPlansResponse.plans:type_name -> brent.PlanSummary
-	349, // 39: brent.PlanSummary.created_at:type_name -> google.protobuf.Timestamp
-	349, // 40: brent.PlanSummary.updated_at:type_name -> google.protobuf.Timestamp
-	349, // 41: brent.PlanSummary.deleted_at:type_name -> google.protobuf.Timestamp
-	349, // 42: brent.PlanSummary.lifecycle_stage_updated_at:type_name -> google.protobuf.Timestamp
-	60,  // 43: brent.AdminGetPlanResponse.plan:type_name -> brent.Plan
-	85,  // 44: brent.AdminGetPlanResponse.related_reviews:type_name -> brent.ReviewSummary
-	23,  // 45: brent.AdminGetPlanResponse.related_pull_requests:type_name -> brent.PullRequestSummary
-	349, // 46: brent.Plan.created_at:type_name -> google.protobuf.Timestamp
-	349, // 47: brent.Plan.updated_at:type_name -> google.protobuf.Timestamp
-	349, // 48: brent.Plan.lifecycle_stage_updated_at:type_name -> google.protobuf.Timestamp
-	227, // 49: brent.AdminListPrincipalsResponse.principals:type_name -> brent.Principal
-	227, // 50: brent.AdminGetPrincipalResponse.principal:type_name -> brent.Principal
-	65,  // 51: brent.AdminGetPrincipalResponse.identities:type_name -> brent.PrincipalIdentity
-	313, // 52: brent.AdminGetPrincipalResponse.bindings:type_name -> brent.Binding
-	349, // 53: brent.PrincipalIdentity.created_at:type_name -> google.protobuf.Timestamp
-	349, // 54: brent.PrincipalIdentity.updated_at:type_name -> google.protobuf.Timestamp
-	313, // 55: brent.AdminUpsertPrincipalBindingResponse.binding:type_name -> brent.Binding
-	227, // 56: brent.AdminUpdatePrincipalResponse.principal:type_name -> brent.Principal
-	65,  // 57: brent.AdminCreatePrincipalIdentityResponse.identity:type_name -> brent.PrincipalIdentity
-	80,  // 58: brent.AdminListPrincipalCredentialConnectionsResponse.connections:type_name -> brent.PrincipalCredentialConnection
-	349, // 59: brent.PrincipalCredentialConnection.last_validated_at:type_name -> google.protobuf.Timestamp
-	85,  // 60: brent.AdminListReviewsResponse.reviews:type_name -> brent.ReviewSummary
-	349, // 61: brent.ReviewSummary.requested_at:type_name -> google.protobuf.Timestamp
-	349, // 62: brent.ReviewSummary.decided_at:type_name -> google.protobuf.Timestamp
-	88,  // 63: brent.AdminGetReviewResponse.review:type_name -> brent.Review
-	57,  // 64: brent.AdminGetReviewResponse.plan:type_name -> brent.PlanSummary
-	349, // 65: brent.Review.requested_at:type_name -> google.protobuf.Timestamp
-	349, // 66: brent.Review.decided_at:type_name -> google.protobuf.Timestamp
-	349, // 67: brent.Review.created_at:type_name -> google.protobuf.Timestamp
-	349, // 68: brent.Review.updated_at:type_name -> google.protobuf.Timestamp
-	89,  // 69: brent.AdminListAccountsResponse.accounts:type_name -> brent.AccountSummary
-	349, // 70: brent.AccountRunSummary.started_at:type_name -> google.protobuf.Timestamp
-	349, // 71: brent.AdminGetAccountSummaryResponse.last_active_at:type_name -> google.protobuf.Timestamp
-	92,  // 72: brent.AdminGetAccountSummaryResponse.recent_runs:type_name -> brent.AccountRunSummary
-	95,  // 73: brent.AdminGetAccountHealthAnalysisResponse.findings:type_name -> brent.AccountHealthFinding
-	349, // 74: brent.AdminGetAccountHealthAnalysisResponse.computed_at:type_name -> google.protobuf.Timestamp
-	98,  // 75: brent.AdminListAccountMetricReposResponse.repos:type_name -> brent.AccountMetricRepo
-	349, // 76: brent.AdminStartAccountMetricsComparisonRequest.before_start:type_name -> google.protobuf.Timestamp
-	349, // 77: brent.AdminStartAccountMetricsComparisonRequest.before_end:type_name -> google.protobuf.Timestamp
-	349, // 78: brent.AdminStartAccountMetricsComparisonRequest.after_start:type_name -> google.protobuf.Timestamp
-	349, // 79: brent.AdminStartAccountMetricsComparisonRequest.after_end:type_name -> google.protobuf.Timestamp
-	1,   // 80: brent.AdminStartAccountMetricsComparisonRequest.comparison_mode:type_name -> brent.MetricsComparisonMode
-	349, // 81: brent.AdminStartAccountMetricsComparisonRequest.planned_unplanned_start:type_name -> google.protobuf.Timestamp
-	349, // 82: brent.AdminStartAccountMetricsComparisonRequest.planned_unplanned_end:type_name -> google.protobuf.Timestamp
-	349, // 83: brent.AdminGetAccountMetricsComparisonRunResponse.started_at:type_name -> google.protobuf.Timestamp
-	349, // 84: brent.AdminGetAccountMetricsComparisonRunResponse.completed_at:type_name -> google.protobuf.Timestamp
-	103, // 85: brent.AdminGetAccountMetricsComparisonRunResponse.headline:type_name -> brent.MetricsComparisonHeadline
-	349, // 86: brent.AdminGetAccountMetricsComparisonRunResponse.before_start:type_name -> google.protobuf.Timestamp
-	349, // 87: brent.AdminGetAccountMetricsComparisonRunResponse.before_end:type_name -> google.protobuf.Timestamp
-	349, // 88: brent.AdminGetAccountMetricsComparisonRunResponse.after_start:type_name -> google.protobuf.Timestamp
-	349, // 89: brent.AdminGetAccountMetricsComparisonRunResponse.after_end:type_name -> google.protobuf.Timestamp
-	104, // 90: brent.AdminGetAccountMetricsComparisonRunResponse.artifacts:type_name -> brent.MetricsComparisonArtifact
-	1,   // 91: brent.AdminGetAccountMetricsComparisonRunResponse.comparison_mode:type_name -> brent.MetricsComparisonMode
-	349, // 92: brent.AdminGetAccountMetricsComparisonRunResponse.planned_unplanned_start:type_name -> google.protobuf.Timestamp
-	349, // 93: brent.AdminGetAccountMetricsComparisonRunResponse.planned_unplanned_end:type_name -> google.protobuf.Timestamp
-	349, // 94: brent.Event.occurred_at:type_name -> google.protobuf.Timestamp
-	107, // 95: brent.Event.actor:type_name -> brent.Actor
-	108, // 96: brent.Event.object:type_name -> brent.ObjectReference
-	349, // 97: brent.Event.received_at:type_name -> google.protobuf.Timestamp
-	109, // 98: brent.Event.plan_created:type_name -> brent.PlanCreated
-	110, // 99: brent.Event.plan_updated:type_name -> brent.PlanUpdated
-	111, // 100: brent.Event.plan_deleted:type_name -> brent.PlanDeleted
-	115, // 101: brent.Event.review_requested:type_name -> brent.ReviewRequested
-	116, // 102: brent.Event.review_submitted:type_name -> brent.ReviewSubmitted
-	143, // 103: brent.Event.other:type_name -> brent.OtherEvent
-	184, // 104: brent.Event.github_webhook:type_name -> brent.GitHubWebhook
-	188, // 105: brent.Event.slack_mention:type_name -> brent.SlackMentionReceived
-	191, // 106: brent.Event.slack_reaction:type_name -> brent.SlackReactionAdded
-	145, // 107: brent.Event.pull_request_opened:type_name -> brent.PullRequestOpened
-	146, // 108: brent.Event.pull_request_synchronized:type_name -> brent.PullRequestSynchronized
-	147, // 109: brent.Event.pull_request_updated:type_name -> brent.PullRequestUpdated
-	148, // 110: brent.Event.pull_request_closed:type_name -> brent.PullRequestClosed
-	149, // 111: brent.Event.pull_request_linked_to_plan:type_name -> brent.PullRequestLinkedToPlan
-	150, // 112: brent.Event.pull_request_unlinked_from_plan:type_name -> brent.PullRequestUnlinkedFromPlan
-	189, // 113: brent.Event.organisation_app_installation_upserted:type_name -> brent.OrganisationAppInstallationUpserted
-	190, // 114: brent.Event.organisation_app_installation_deleted:type_name -> brent.OrganisationAppInstallationDeleted
-	157, // 115: brent.Event.deviation_analysis_started:type_name -> brent.DeviationAnalysisStarted
-	159, // 116: brent.Event.deviation_analysis_completed:type_name -> brent.DeviationAnalysisCompleted
-	160, // 117: brent.Event.deviation_analysis_failed:type_name -> brent.DeviationAnalysisFailed
-	176, // 118: brent.Event.workflow_run_queued:type_name -> brent.WorkflowRunQueued
-	177, // 119: brent.Event.workflow_run_started:type_name -> brent.WorkflowRunStarted
-	178, // 120: brent.Event.workflow_run_completed:type_name -> brent.WorkflowRunCompleted
-	179, // 121: brent.Event.workflow_run_failed:type_name -> brent.WorkflowRunFailed
-	180, // 122: brent.Event.workflow_run_cancelled:type_name -> brent.WorkflowRunCancelled
-	117, // 123: brent.Event.review_no_eligible_reviewer:type_name -> brent.ReviewNoEligibleReviewer
-	120, // 124: brent.Event.principal_created:type_name -> brent.PrincipalCreated
-	121, // 125: brent.Event.principal_updated:type_name -> brent.PrincipalUpdated
-	122, // 126: brent.Event.principal_tombstoned:type_name -> brent.PrincipalTombstoned
-	133, // 127: brent.Event.identity_created:type_name -> brent.IdentityCreated
-	134, // 128: brent.Event.identity_deleted:type_name -> brent.IdentityDeleted
-	135, // 129: brent.Event.binding_created:type_name -> brent.BindingCreated
-	136, // 130: brent.Event.binding_updated:type_name -> brent.BindingUpdated
-	137, // 131: brent.Event.binding_deleted:type_name -> brent.BindingDeleted
-	142, // 132: brent.Event.review_drive_by_started:type_name -> brent.ReviewDriveByStarted
-	181, // 133: brent.Event.slack_webhook:type_name -> brent.SlackWebhook
-	112, // 134: brent.Event.review_deleted:type_name -> brent.ReviewDeleted
-	114, // 135: brent.Event.plan_restored:type_name -> brent.PlanRestored
-	182, // 136: brent.Event.linear_webhook:type_name -> brent.LinearWebhook
-	156, // 137: brent.Event.pull_request_comment_created:type_name -> brent.PullRequestCommentCreated
-	161, // 138: brent.Event.deviation_finding_recorded:type_name -> brent.DeviationFindingRecorded
-	162, // 139: brent.Event.deviation_finding_updated:type_name -> brent.DeviationFindingUpdated
-	163, // 140: brent.Event.deviation_finding_resolved:type_name -> brent.DeviationFindingResolved
-	166, // 141: brent.Event.agent_run_dispatched:type_name -> brent.AgentRunDispatched
-	167, // 142: brent.Event.agent_run_started:type_name -> brent.AgentRunStarted
-	168, // 143: brent.Event.agent_run_pull_request_matched:type_name -> brent.AgentRunPullRequestMatched
-	169, // 144: brent.Event.agent_run_flagged_needs_you:type_name -> brent.AgentRunFlaggedNeedsYou
-	171, // 145: brent.Event.agent_run_merged:type_name -> brent.AgentRunMerged
-	173, // 146: brent.Event.agent_run_declined:type_name -> brent.AgentRunDeclined
-	172, // 147: brent.Event.agent_run_cancelled:type_name -> brent.AgentRunCancelled
-	170, // 148: brent.Event.agent_run_gate_passed:type_name -> brent.AgentRunGatePassed
-	151, // 149: brent.Event.pull_request_linked_to_agent_run:type_name -> brent.PullRequestLinkedToAgentRun
-	175, // 150: brent.Event.workflow_ingested:type_name -> brent.WorkflowIngested
-	152, // 151: brent.Event.pull_request_review_requested:type_name -> brent.PullRequestReviewRequested
-	153, // 152: brent.Event.pull_request_approved:type_name -> brent.PullRequestApproved
-	154, // 153: brent.Event.pull_request_changes_requested:type_name -> brent.PullRequestChangesRequested
-	155, // 154: brent.Event.pull_request_review_dismissed:type_name -> brent.PullRequestReviewDismissed
-	138, // 155: brent.Event.credential_connected:type_name -> brent.CredentialConnected
-	139, // 156: brent.Event.credential_revoked:type_name -> brent.CredentialRevoked
-	174, // 157: brent.Event.agent_run_annotated:type_name -> brent.AgentRunAnnotated
-	123, // 158: brent.Event.workspace_created:type_name -> brent.WorkspaceCreated
-	132, // 159: brent.Event.mcp_grant_workspace_binding_changed:type_name -> brent.MCPGrantWorkspaceBindingChanged
-	124, // 160: brent.Event.workspace_onboarding_completed:type_name -> brent.WorkspaceOnboardingCompleted
-	125, // 161: brent.Event.workspace_renamed:type_name -> brent.WorkspaceRenamed
-	126, // 162: brent.Event.workspace_deleted:type_name -> brent.WorkspaceDeleted
-	129, // 163: brent.Event.approved_email_domain_added:type_name -> brent.ApprovedEmailDomainAdded
-	130, // 164: brent.Event.approved_email_domain_verified:type_name -> brent.ApprovedEmailDomainVerified
-	131, // 165: brent.Event.approved_email_domain_deleted:type_name -> brent.ApprovedEmailDomainDeleted
-	185, // 166: brent.Event.gitlab_webhook:type_name -> brent.GitLabWebhook
-	140, // 167: brent.Event.workspace_llm_credential_connected:type_name -> brent.WorkspaceLLMCredentialConnected
-	141, // 168: brent.Event.workspace_llm_credential_revoked:type_name -> brent.WorkspaceLLMCredentialRevoked
-	186, // 169: brent.Event.bitbucket_webhook:type_name -> brent.BitbucketWebhook
-	127, // 170: brent.Event.workspace_member_joined:type_name -> brent.WorkspaceMemberJoined
-	128, // 171: brent.Event.workspace_member_left:type_name -> brent.WorkspaceMemberLeft
-	183, // 172: brent.Event.composio_trigger_message:type_name -> brent.ComposioTriggerMessage
-	164, // 173: brent.Event.deviation_finding_acknowledged:type_name -> brent.DeviationFindingAcknowledged
-	165, // 174: brent.Event.deviation_finding_acknowledgement_cleared:type_name -> brent.DeviationFindingAcknowledgementCleared
-	118, // 175: brent.Event.plan_review_policy_decided:type_name -> brent.PlanReviewPolicyDecided
-	113, // 176: brent.Event.review_restored:type_name -> brent.ReviewRestored
-	119, // 177: brent.Event.workspace_review_policy_updated:type_name -> brent.WorkspaceReviewPolicyUpdated
-	144, // 178: brent.Event.unknown_stored_payload:type_name -> brent.UnknownStoredPayload
-	335, // 179: brent.PlanUpdated.previous:type_name -> brent.PlanUpdated.PreviousEntry
-	336, // 180: brent.PlanUpdated.after:type_name -> brent.PlanUpdated.AfterEntry
-	349, // 181: brent.ReviewSubmitted.decided_at:type_name -> google.protobuf.Timestamp
-	337, // 182: brent.PrincipalUpdated.previous:type_name -> brent.PrincipalUpdated.PreviousEntry
-	338, // 183: brent.PrincipalUpdated.after:type_name -> brent.PrincipalUpdated.AfterEntry
-	7,   // 184: brent.WorkspaceMemberJoined.source:type_name -> brent.JoinSource
-	339, // 185: brent.BindingUpdated.previous:type_name -> brent.BindingUpdated.PreviousEntry
-	340, // 186: brent.BindingUpdated.after:type_name -> brent.BindingUpdated.AfterEntry
-	341, // 187: brent.OtherEvent.fields:type_name -> brent.OtherEvent.FieldsEntry
-	342, // 188: brent.PullRequestUpdated.previous:type_name -> brent.PullRequestUpdated.PreviousEntry
-	343, // 189: brent.PullRequestUpdated.after:type_name -> brent.PullRequestUpdated.AfterEntry
-	349, // 190: brent.DeviationAnalysisStarted.started_at:type_name -> google.protobuf.Timestamp
-	344, // 191: brent.DeviationAnalysisCompleted.finding_count_by_tag:type_name -> brent.DeviationAnalysisCompleted.FindingCountByTagEntry
-	349, // 192: brent.DeviationAnalysisCompleted.completed_at:type_name -> google.protobuf.Timestamp
-	158, // 193: brent.DeviationAnalysisCompleted.findings:type_name -> brent.FindingSummary
-	349, // 194: brent.DeviationAnalysisFailed.failed_at:type_name -> google.protobuf.Timestamp
-	349, // 195: brent.DeviationFindingRecorded.recorded_at:type_name -> google.protobuf.Timestamp
-	345, // 196: brent.DeviationFindingUpdated.previous:type_name -> brent.DeviationFindingUpdated.PreviousEntry
-	346, // 197: brent.DeviationFindingUpdated.after:type_name -> brent.DeviationFindingUpdated.AfterEntry
-	349, // 198: brent.DeviationFindingResolved.resolved_at:type_name -> google.protobuf.Timestamp
-	349, // 199: brent.DeviationFindingAcknowledged.acknowledged_at:type_name -> google.protobuf.Timestamp
-	349, // 200: brent.DeviationFindingAcknowledgementCleared.cleared_at:type_name -> google.protobuf.Timestamp
-	349, // 201: brent.WorkflowRunQueued.queued_at:type_name -> google.protobuf.Timestamp
-	349, // 202: brent.WorkflowRunStarted.started_at:type_name -> google.protobuf.Timestamp
-	349, // 203: brent.WorkflowRunCompleted.completed_at:type_name -> google.protobuf.Timestamp
-	349, // 204: brent.WorkflowRunFailed.failed_at:type_name -> google.protobuf.Timestamp
-	349, // 205: brent.WorkflowRunCancelled.cancelled_at:type_name -> google.protobuf.Timestamp
-	194, // 206: brent.ListWorkflowsResponse.workflows:type_name -> brent.WorkflowSummary
-	349, // 207: brent.WorkflowSummary.created_at:type_name -> google.protobuf.Timestamp
-	349, // 208: brent.WorkflowSummary.updated_at:type_name -> google.protobuf.Timestamp
-	197, // 209: brent.GetWorkflowResponse.workflow:type_name -> brent.Workflow
-	349, // 210: brent.Workflow.created_at:type_name -> google.protobuf.Timestamp
-	349, // 211: brent.Workflow.updated_at:type_name -> google.protobuf.Timestamp
-	200, // 212: brent.ListWorkflowRunsResponse.runs:type_name -> brent.WorkflowRunSummary
-	349, // 213: brent.WorkflowRunSummary.started_at:type_name -> google.protobuf.Timestamp
-	349, // 214: brent.WorkflowRunSummary.completed_at:type_name -> google.protobuf.Timestamp
-	349, // 215: brent.WorkflowRunSummary.created_at:type_name -> google.protobuf.Timestamp
-	349, // 216: brent.WorkflowRunSummary.updated_at:type_name -> google.protobuf.Timestamp
-	200, // 217: brent.WorkflowRunThreadSegment.run:type_name -> brent.WorkflowRunSummary
-	43,  // 218: brent.WorkflowRunThreadSegment.steps:type_name -> brent.ExecuteWorkflowResponse
-	203, // 219: brent.GetWorkflowRunThreadHistoryResponse.segments:type_name -> brent.WorkflowRunThreadSegment
-	206, // 220: brent.GetWorkflowRunResponse.run:type_name -> brent.WorkflowRun
-	194, // 221: brent.GetWorkflowRunResponse.workflow:type_name -> brent.WorkflowSummary
-	349, // 222: brent.WorkflowRun.started_at:type_name -> google.protobuf.Timestamp
-	349, // 223: brent.WorkflowRun.completed_at:type_name -> google.protobuf.Timestamp
-	349, // 224: brent.WorkflowRun.created_at:type_name -> google.protobuf.Timestamp
-	349, // 225: brent.WorkflowRun.updated_at:type_name -> google.protobuf.Timestamp
-	106, // 226: brent.WorkflowRun.triggering_event_payload:type_name -> brent.Event
-	2,   // 227: brent.GetPrincipalStatusResponse.state:type_name -> brent.PrincipalStatusState
-	227, // 228: brent.GetPrincipalStatusResponse.principal:type_name -> brent.Principal
-	222, // 229: brent.GetPrincipalStatusResponse.integrations:type_name -> brent.IntegrationStatus
-	3,   // 230: brent.GetIntegrationConnectURLRequest.provider:type_name -> brent.IntegrationProvider
-	4,   // 231: brent.GetIntegrationConnectURLRequest.intent:type_name -> brent.IntegrationIntent
-	3,   // 232: brent.DisconnectIntegrationRequest.provider:type_name -> brent.IntegrationProvider
-	349, // 233: brent.GetGitLabConnectionResponse.connected_at:type_name -> google.protobuf.Timestamp
-	349, // 234: brent.GitHubPendingInstall.requested_at:type_name -> google.protobuf.Timestamp
-	3,   // 235: brent.IntegrationStatus.provider:type_name -> brent.IntegrationProvider
-	221, // 236: brent.IntegrationStatus.github_pending:type_name -> brent.GitHubPendingInstall
-	349, // 237: brent.IntegrationStatus.connected_at:type_name -> google.protobuf.Timestamp
-	5,   // 238: brent.IntegrationStatus.status:type_name -> brent.IntegrationConnectionStatus
-	3,   // 239: brent.GetWorkspaceIntegrationRolesResponse.git_provider:type_name -> brent.IntegrationProvider
-	3,   // 240: brent.SetWorkspaceIntegrationRolesRequest.git_provider:type_name -> brent.IntegrationProvider
-	3,   // 241: brent.SetWorkspaceIntegrationRolesResponse.git_provider:type_name -> brent.IntegrationProvider
-	349, // 242: brent.Principal.created_at:type_name -> google.protobuf.Timestamp
-	349, // 243: brent.Principal.updated_at:type_name -> google.protobuf.Timestamp
-	228, // 244: brent.CreateWorkspaceResponse.workspace:type_name -> brent.Workspace
-	228, // 245: brent.ListMyWorkspacesResponse.workspaces:type_name -> brent.Workspace
-	6,   // 246: brent.LoginRecoveryCandidate.provider:type_name -> brent.LoginProvider
-	6,   // 247: brent.DiscoverLoginRecoveryCandidatesResponse.arriving_provider:type_name -> brent.LoginProvider
-	234, // 248: brent.DiscoverLoginRecoveryCandidatesResponse.candidates:type_name -> brent.LoginRecoveryCandidate
-	228, // 249: brent.RenameWorkspaceResponse.workspace:type_name -> brent.Workspace
-	242, // 250: brent.ListJoinableWorkspacesResponse.workspaces:type_name -> brent.JoinableWorkspace
-	349, // 251: brent.JoinableWorkspace.created_at:type_name -> google.protobuf.Timestamp
-	243, // 252: brent.JoinableWorkspace.member_previews:type_name -> brent.JoinableWorkspaceMember
-	7,   // 253: brent.JoinableWorkspace.source:type_name -> brent.JoinSource
-	228, // 254: brent.JoinWorkspaceResponse.workspace:type_name -> brent.Workspace
-	349, // 255: brent.ApprovedEmailDomain.created_at:type_name -> google.protobuf.Timestamp
-	246, // 256: brent.ListApprovedEmailDomainsResponse.domains:type_name -> brent.ApprovedEmailDomain
-	246, // 257: brent.AddApprovedEmailDomainResponse.domain:type_name -> brent.ApprovedEmailDomain
-	246, // 258: brent.VerifyApprovedEmailDomainResponse.domain:type_name -> brent.ApprovedEmailDomain
-	349, // 259: brent.WorkspaceLLMCredentialStatus.last_validated_at:type_name -> google.protobuf.Timestamp
-	349, // 260: brent.WorkspaceLLMCredentialStatus.updated_at:type_name -> google.protobuf.Timestamp
-	259, // 261: brent.GetWorkspaceLLMCredentialStatusResponse.status:type_name -> brent.WorkspaceLLMCredentialStatus
-	259, // 262: brent.SetWorkspaceLLMCredentialResponse.status:type_name -> brent.WorkspaceLLMCredentialStatus
-	349, // 263: brent.MyCursorCredentialStatus.last_validated_at:type_name -> google.protobuf.Timestamp
-	266, // 264: brent.GetMyCursorCredentialStatusResponse.status:type_name -> brent.MyCursorCredentialStatus
-	266, // 265: brent.SetMyCursorCredentialResponse.status:type_name -> brent.MyCursorCredentialStatus
-	228, // 266: brent.UpdateWorkspaceBrandingResponse.workspace:type_name -> brent.Workspace
-	228, // 267: brent.CompleteWorkspaceOnboardingResponse.workspace:type_name -> brent.Workspace
-	349, // 268: brent.CreateInvitationResponse.expires_at:type_name -> google.protobuf.Timestamp
-	9,   // 269: brent.InvitationResult.status:type_name -> brent.InvitationResultStatus
-	280, // 270: brent.CreateInvitationsResponse.results:type_name -> brent.InvitationResult
-	228, // 271: brent.AcceptInvitationResponse.workspace:type_name -> brent.Workspace
-	286, // 272: brent.ListWorkspaceMembersResponse.members:type_name -> brent.WorkspaceMember
-	10,  // 273: brent.WorkspaceMember.state:type_name -> brent.WorkspaceMemberState
-	349, // 274: brent.ResendInvitationResponse.expires_at:type_name -> google.protobuf.Timestamp
-	8,   // 275: brent.GetInvitationResponse.status:type_name -> brent.InvitationStatus
-	313, // 276: brent.UpsertMyVerifiedBindingResponse.binding:type_name -> brent.Binding
-	227, // 277: brent.UpdateMyDisplayNameResponse.principal:type_name -> brent.Principal
-	313, // 278: brent.ListMyBindingsResponse.bindings:type_name -> brent.Binding
-	347, // 279: brent.NotificationPreferences.preferences:type_name -> brent.NotificationPreferences.PreferencesEntry
-	348, // 280: brent.ChannelPreferences.channels:type_name -> brent.ChannelPreferences.ChannelsEntry
-	303, // 281: brent.GetMyNotificationPreferencesResponse.preferences:type_name -> brent.NotificationPreferences
-	303, // 282: brent.UpdateMyNotificationPreferencesRequest.preferences:type_name -> brent.NotificationPreferences
-	303, // 283: brent.UpdateMyNotificationPreferencesResponse.preferences:type_name -> brent.NotificationPreferences
-	349, // 284: brent.Binding.created_at:type_name -> google.protobuf.Timestamp
-	349, // 285: brent.Binding.updated_at:type_name -> google.protobuf.Timestamp
-	349, // 286: brent.GetBrentSettingsResponse.red_finding_kinds_updated_at:type_name -> google.protobuf.Timestamp
-	314, // 287: brent.UpdateBrentSettingsRequest.red_finding_kinds:type_name -> brent.RedFindingKindsPatch
-	349, // 288: brent.UpdateBrentSettingsResponse.red_finding_kinds_updated_at:type_name -> google.protobuf.Timestamp
-	314, // 289: brent.AdminUpdateAccountBrentSettingsRequest.red_finding_kinds:type_name -> brent.RedFindingKindsPatch
-	11,  // 290: brent.AdminGetAccountReviewPolicyResponse.policy:type_name -> brent.WorkspaceReviewPolicy
-	349, // 291: brent.AdminGetAccountReviewPolicyResponse.updated_at:type_name -> google.protobuf.Timestamp
-	11,  // 292: brent.AdminUpdateAccountReviewPolicyRequest.policy:type_name -> brent.WorkspaceReviewPolicy
-	11,  // 293: brent.AdminUpdateAccountReviewPolicyResponse.policy:type_name -> brent.WorkspaceReviewPolicy
-	349, // 294: brent.AdminUpdateAccountReviewPolicyResponse.updated_at:type_name -> google.protobuf.Timestamp
-	259, // 295: brent.AdminGetAccountLLMCredentialStatusResponse.status:type_name -> brent.WorkspaceLLMCredentialStatus
-	349, // 296: brent.AdminAccountIntegrationInstall.created_at:type_name -> google.protobuf.Timestamp
-	5,   // 297: brent.AdminAccountIntegrationInstall.status:type_name -> brent.IntegrationConnectionStatus
-	328, // 298: brent.AdminListAccountIntegrationsResponse.installs:type_name -> brent.AdminAccountIntegrationInstall
-	3,   // 299: brent.AdminListAccountIntegrationsResponse.git_provider:type_name -> brent.IntegrationProvider
-	3,   // 300: brent.AdminListAccountIntegrationsResponse.ticketing_provider:type_name -> brent.IntegrationProvider
-	3,   // 301: brent.AdminListAccountIntegrationsResponse.messaging_provider:type_name -> brent.IntegrationProvider
-	332, // 302: brent.ListIntegrationCatalogueResponse.entries:type_name -> brent.IntegrationCatalogueEntry
-	12,  // 303: brent.IntegrationCatalogueEntry.source:type_name -> brent.IntegrationCatalogueSource
-	3,   // 304: brent.IntegrationCatalogueEntry.provider:type_name -> brent.IntegrationProvider
-	349, // 305: brent.IntegrationCatalogueEntry.created_at:type_name -> google.protobuf.Timestamp
-	350, // 306: brent.PlanUpdated.PreviousEntry.value:type_name -> google.protobuf.Value
-	350, // 307: brent.PlanUpdated.AfterEntry.value:type_name -> google.protobuf.Value
-	350, // 308: brent.PrincipalUpdated.PreviousEntry.value:type_name -> google.protobuf.Value
-	350, // 309: brent.PrincipalUpdated.AfterEntry.value:type_name -> google.protobuf.Value
-	350, // 310: brent.BindingUpdated.PreviousEntry.value:type_name -> google.protobuf.Value
-	350, // 311: brent.BindingUpdated.AfterEntry.value:type_name -> google.protobuf.Value
-	350, // 312: brent.PullRequestUpdated.PreviousEntry.value:type_name -> google.protobuf.Value
-	350, // 313: brent.PullRequestUpdated.AfterEntry.value:type_name -> google.protobuf.Value
-	350, // 314: brent.DeviationFindingUpdated.PreviousEntry.value:type_name -> google.protobuf.Value
-	350, // 315: brent.DeviationFindingUpdated.AfterEntry.value:type_name -> google.protobuf.Value
-	304, // 316: brent.NotificationPreferences.PreferencesEntry.value:type_name -> brent.ChannelPreferences
-	351, // 317: brent.embedded_json:extendee -> google.protobuf.FieldOptions
-	38,  // 318: brent.BrentService.ListOpenPullRequests:input_type -> brent.ListOpenPullRequestsRequest
-	40,  // 319: brent.BrentService.GetPullRequest:input_type -> brent.GetPullRequestRequest
-	207, // 320: brent.BrentService.GetPrincipalStatus:input_type -> brent.GetPrincipalStatusRequest
-	333, // 321: brent.BrentService.GetPlanPrompt:input_type -> brent.GetPlanPromptRequest
-	209, // 322: brent.BrentService.GetIntegrationConnectURL:input_type -> brent.GetIntegrationConnectURLRequest
-	211, // 323: brent.BrentService.DisconnectIntegration:input_type -> brent.DisconnectIntegrationRequest
-	213, // 324: brent.BrentService.ConnectByoHttpMcp:input_type -> brent.ConnectByoHttpMcpRequest
-	215, // 325: brent.BrentService.GetGitLabConnection:input_type -> brent.GetGitLabConnectionRequest
-	217, // 326: brent.BrentService.ConnectGitLab:input_type -> brent.ConnectGitLabRequest
-	219, // 327: brent.BrentService.SaveGitLabSigningToken:input_type -> brent.SaveGitLabSigningTokenRequest
-	297, // 328: brent.BrentService.UpsertMyVerifiedBinding:input_type -> brent.UpsertMyVerifiedBindingRequest
-	301, // 329: brent.BrentService.ListMyBindings:input_type -> brent.ListMyBindingsRequest
-	305, // 330: brent.BrentService.GetMyNotificationPreferences:input_type -> brent.GetMyNotificationPreferencesRequest
-	307, // 331: brent.BrentService.UpdateMyNotificationPreferences:input_type -> brent.UpdateMyNotificationPreferencesRequest
-	309, // 332: brent.BrentService.RegisterMyPushSubscription:input_type -> brent.RegisterMyPushSubscriptionRequest
-	311, // 333: brent.BrentService.GetWebPushPublicKey:input_type -> brent.GetWebPushPublicKeyRequest
-	299, // 334: brent.BrentService.UpdateMyDisplayName:input_type -> brent.UpdateMyDisplayNameRequest
-	315, // 335: brent.BrentService.GetBrentSettings:input_type -> brent.GetBrentSettingsRequest
-	317, // 336: brent.BrentService.UpdateBrentSettings:input_type -> brent.UpdateBrentSettingsRequest
-	330, // 337: brent.BrentService.ListIntegrationCatalogue:input_type -> brent.ListIntegrationCatalogueRequest
-	229, // 338: brent.BrentService.CreateWorkspace:input_type -> brent.CreateWorkspaceRequest
-	231, // 339: brent.BrentService.ListMyWorkspaces:input_type -> brent.ListMyWorkspacesRequest
-	233, // 340: brent.BrentService.DiscoverLoginRecoveryCandidates:input_type -> brent.DiscoverLoginRecoveryCandidatesRequest
-	236, // 341: brent.BrentService.RenameWorkspace:input_type -> brent.RenameWorkspaceRequest
-	273, // 342: brent.BrentService.UpdateWorkspaceBranding:input_type -> brent.UpdateWorkspaceBrandingRequest
-	275, // 343: brent.BrentService.CompleteWorkspaceOnboarding:input_type -> brent.CompleteWorkspaceOnboardingRequest
-	238, // 344: brent.BrentService.DeleteWorkspace:input_type -> brent.DeleteWorkspaceRequest
-	240, // 345: brent.BrentService.ListJoinableWorkspaces:input_type -> brent.ListJoinableWorkspacesRequest
-	244, // 346: brent.BrentService.JoinWorkspace:input_type -> brent.JoinWorkspaceRequest
-	277, // 347: brent.BrentService.CreateInvitation:input_type -> brent.CreateInvitationRequest
-	279, // 348: brent.BrentService.CreateInvitations:input_type -> brent.CreateInvitationsRequest
-	282, // 349: brent.BrentService.AcceptInvitation:input_type -> brent.AcceptInvitationRequest
-	284, // 350: brent.BrentService.ListWorkspaceMembers:input_type -> brent.ListWorkspaceMembersRequest
-	287, // 351: brent.BrentService.ResendInvitation:input_type -> brent.ResendInvitationRequest
-	289, // 352: brent.BrentService.RevokeInvitation:input_type -> brent.RevokeInvitationRequest
-	291, // 353: brent.BrentService.RemoveWorkspaceMember:input_type -> brent.RemoveWorkspaceMemberRequest
-	293, // 354: brent.BrentService.UpdateWorkspaceMemberRole:input_type -> brent.UpdateWorkspaceMemberRoleRequest
-	247, // 355: brent.BrentService.ListApprovedEmailDomains:input_type -> brent.ListApprovedEmailDomainsRequest
-	249, // 356: brent.BrentService.AddApprovedEmailDomain:input_type -> brent.AddApprovedEmailDomainRequest
-	251, // 357: brent.BrentService.VerifyApprovedEmailDomain:input_type -> brent.VerifyApprovedEmailDomainRequest
-	253, // 358: brent.BrentService.ResendApprovedEmailDomainCode:input_type -> brent.ResendApprovedEmailDomainCodeRequest
-	257, // 359: brent.BrentService.DeleteApprovedEmailDomain:input_type -> brent.DeleteApprovedEmailDomainRequest
-	260, // 360: brent.BrentService.GetWorkspaceLLMCredentialStatus:input_type -> brent.GetWorkspaceLLMCredentialStatusRequest
-	262, // 361: brent.BrentService.SetWorkspaceLLMCredential:input_type -> brent.SetWorkspaceLLMCredentialRequest
-	264, // 362: brent.BrentService.DeleteWorkspaceLLMCredential:input_type -> brent.DeleteWorkspaceLLMCredentialRequest
-	267, // 363: brent.BrentService.GetMyCursorCredentialStatus:input_type -> brent.GetMyCursorCredentialStatusRequest
-	269, // 364: brent.BrentService.SetMyCursorCredential:input_type -> brent.SetMyCursorCredentialRequest
-	271, // 365: brent.BrentService.DeleteMyCursorCredential:input_type -> brent.DeleteMyCursorCredentialRequest
-	223, // 366: brent.BrentService.GetWorkspaceIntegrationRoles:input_type -> brent.GetWorkspaceIntegrationRolesRequest
-	225, // 367: brent.BrentService.SetWorkspaceIntegrationRoles:input_type -> brent.SetWorkspaceIntegrationRolesRequest
-	255, // 368: brent.BrentService.ResendVerificationEmail:input_type -> brent.ResendVerificationEmailRequest
-	295, // 369: brent.BrentPublicService.GetInvitation:input_type -> brent.GetInvitationRequest
-	27,  // 370: brent.BrentAdminService.ExecuteWorkflow:input_type -> brent.ExecuteWorkflowRequest
-	28,  // 371: brent.BrentAdminService.ListRuns:input_type -> brent.ListRunsRequest
-	31,  // 372: brent.BrentAdminService.WatchRun:input_type -> brent.WatchRunRequest
-	32,  // 373: brent.BrentAdminService.StreamEvents:input_type -> brent.StreamEventsRequest
-	34,  // 374: brent.BrentAdminService.ListEvents:input_type -> brent.ListEventsRequest
-	36,  // 375: brent.BrentAdminService.CancelRun:input_type -> brent.CancelRunRequest
-	54,  // 376: brent.BrentAdminService.SendQuestion:input_type -> brent.SendQuestionRequest
-	55,  // 377: brent.BrentAdminService.ListPlans:input_type -> brent.AdminListPlansRequest
-	58,  // 378: brent.BrentAdminService.GetPlan:input_type -> brent.AdminGetPlanRequest
-	83,  // 379: brent.BrentAdminService.ListReviews:input_type -> brent.AdminListReviewsRequest
-	86,  // 380: brent.BrentAdminService.GetReview:input_type -> brent.AdminGetReviewRequest
-	352, // 381: brent.BrentAdminService.ListAccounts:input_type -> google.protobuf.Empty
-	91,  // 382: brent.BrentAdminService.GetAccountSummary:input_type -> brent.AdminGetAccountSummaryRequest
-	94,  // 383: brent.BrentAdminService.GetAccountHealthAnalysis:input_type -> brent.AdminGetAccountHealthAnalysisRequest
-	97,  // 384: brent.BrentAdminService.ListAccountMetricRepos:input_type -> brent.AdminListAccountMetricReposRequest
-	100, // 385: brent.BrentAdminService.StartAccountMetricsComparison:input_type -> brent.AdminStartAccountMetricsComparisonRequest
-	102, // 386: brent.BrentAdminService.GetAccountMetricsComparisonRun:input_type -> brent.AdminGetAccountMetricsComparisonRunRequest
-	319, // 387: brent.BrentAdminService.GetAccountBrentSettings:input_type -> brent.AdminGetAccountBrentSettingsRequest
-	320, // 388: brent.BrentAdminService.UpdateAccountBrentSettings:input_type -> brent.AdminUpdateAccountBrentSettingsRequest
-	321, // 389: brent.BrentAdminService.GetAccountReviewPolicy:input_type -> brent.AdminGetAccountReviewPolicyRequest
-	323, // 390: brent.BrentAdminService.UpdateAccountReviewPolicy:input_type -> brent.AdminUpdateAccountReviewPolicyRequest
-	325, // 391: brent.BrentAdminService.GetAccountLLMCredentialStatus:input_type -> brent.AdminGetAccountLLMCredentialStatusRequest
-	327, // 392: brent.BrentAdminService.ListAccountIntegrations:input_type -> brent.AdminListAccountIntegrationsRequest
-	192, // 393: brent.BrentAdminService.ListWorkflows:input_type -> brent.ListWorkflowsRequest
-	195, // 394: brent.BrentAdminService.GetWorkflow:input_type -> brent.GetWorkflowRequest
-	198, // 395: brent.BrentAdminService.ListWorkflowRuns:input_type -> brent.ListWorkflowRunsRequest
-	201, // 396: brent.BrentAdminService.GetWorkflowRun:input_type -> brent.GetWorkflowRunRequest
-	202, // 397: brent.BrentAdminService.GetWorkflowRunThreadHistory:input_type -> brent.GetWorkflowRunThreadHistoryRequest
-	13,  // 398: brent.BrentAdminService.ListPullRequests:input_type -> brent.ListPullRequestsRequest
-	15,  // 399: brent.BrentAdminService.GetPullRequestByID:input_type -> brent.GetPullRequestByIDRequest
-	17,  // 400: brent.BrentAdminService.ListDeviationAnalysesForPR:input_type -> brent.ListDeviationAnalysesForPRRequest
-	61,  // 401: brent.BrentAdminService.ListPrincipals:input_type -> brent.AdminListPrincipalsRequest
-	63,  // 402: brent.BrentAdminService.GetPrincipal:input_type -> brent.AdminGetPrincipalRequest
-	66,  // 403: brent.BrentAdminService.UpsertPrincipalBinding:input_type -> brent.AdminUpsertPrincipalBindingRequest
-	68,  // 404: brent.BrentAdminService.DeletePrincipalBinding:input_type -> brent.AdminDeletePrincipalBindingRequest
-	70,  // 405: brent.BrentAdminService.UpdatePrincipal:input_type -> brent.AdminUpdatePrincipalRequest
-	72,  // 406: brent.BrentAdminService.CreatePrincipalIdentity:input_type -> brent.AdminCreatePrincipalIdentityRequest
-	74,  // 407: brent.BrentAdminService.DeletePrincipalIdentity:input_type -> brent.AdminDeletePrincipalIdentityRequest
-	76,  // 408: brent.BrentAdminService.SetPrincipalCredential:input_type -> brent.AdminSetPrincipalCredentialRequest
-	78,  // 409: brent.BrentAdminService.ListPrincipalCredentialConnections:input_type -> brent.AdminListPrincipalCredentialConnectionsRequest
-	81,  // 410: brent.BrentAdminService.DeletePrincipalCredential:input_type -> brent.AdminDeletePrincipalCredentialRequest
-	19,  // 411: brent.BrentAdminService.GetPullRequestTimeline:input_type -> brent.GetPullRequestTimelineRequest
-	39,  // 412: brent.BrentService.ListOpenPullRequests:output_type -> brent.ListOpenPullRequestsResponse
-	41,  // 413: brent.BrentService.GetPullRequest:output_type -> brent.GetPullRequestResponse
-	208, // 414: brent.BrentService.GetPrincipalStatus:output_type -> brent.GetPrincipalStatusResponse
-	334, // 415: brent.BrentService.GetPlanPrompt:output_type -> brent.GetPlanPromptResponse
-	210, // 416: brent.BrentService.GetIntegrationConnectURL:output_type -> brent.GetIntegrationConnectURLResponse
-	212, // 417: brent.BrentService.DisconnectIntegration:output_type -> brent.DisconnectIntegrationResponse
-	214, // 418: brent.BrentService.ConnectByoHttpMcp:output_type -> brent.ConnectByoHttpMcpResponse
-	216, // 419: brent.BrentService.GetGitLabConnection:output_type -> brent.GetGitLabConnectionResponse
-	218, // 420: brent.BrentService.ConnectGitLab:output_type -> brent.ConnectGitLabResponse
-	220, // 421: brent.BrentService.SaveGitLabSigningToken:output_type -> brent.SaveGitLabSigningTokenResponse
-	298, // 422: brent.BrentService.UpsertMyVerifiedBinding:output_type -> brent.UpsertMyVerifiedBindingResponse
-	302, // 423: brent.BrentService.ListMyBindings:output_type -> brent.ListMyBindingsResponse
-	306, // 424: brent.BrentService.GetMyNotificationPreferences:output_type -> brent.GetMyNotificationPreferencesResponse
-	308, // 425: brent.BrentService.UpdateMyNotificationPreferences:output_type -> brent.UpdateMyNotificationPreferencesResponse
-	310, // 426: brent.BrentService.RegisterMyPushSubscription:output_type -> brent.RegisterMyPushSubscriptionResponse
-	312, // 427: brent.BrentService.GetWebPushPublicKey:output_type -> brent.GetWebPushPublicKeyResponse
-	300, // 428: brent.BrentService.UpdateMyDisplayName:output_type -> brent.UpdateMyDisplayNameResponse
-	316, // 429: brent.BrentService.GetBrentSettings:output_type -> brent.GetBrentSettingsResponse
-	318, // 430: brent.BrentService.UpdateBrentSettings:output_type -> brent.UpdateBrentSettingsResponse
-	331, // 431: brent.BrentService.ListIntegrationCatalogue:output_type -> brent.ListIntegrationCatalogueResponse
-	230, // 432: brent.BrentService.CreateWorkspace:output_type -> brent.CreateWorkspaceResponse
-	232, // 433: brent.BrentService.ListMyWorkspaces:output_type -> brent.ListMyWorkspacesResponse
-	235, // 434: brent.BrentService.DiscoverLoginRecoveryCandidates:output_type -> brent.DiscoverLoginRecoveryCandidatesResponse
-	237, // 435: brent.BrentService.RenameWorkspace:output_type -> brent.RenameWorkspaceResponse
-	274, // 436: brent.BrentService.UpdateWorkspaceBranding:output_type -> brent.UpdateWorkspaceBrandingResponse
-	276, // 437: brent.BrentService.CompleteWorkspaceOnboarding:output_type -> brent.CompleteWorkspaceOnboardingResponse
-	239, // 438: brent.BrentService.DeleteWorkspace:output_type -> brent.DeleteWorkspaceResponse
-	241, // 439: brent.BrentService.ListJoinableWorkspaces:output_type -> brent.ListJoinableWorkspacesResponse
-	245, // 440: brent.BrentService.JoinWorkspace:output_type -> brent.JoinWorkspaceResponse
-	278, // 441: brent.BrentService.CreateInvitation:output_type -> brent.CreateInvitationResponse
-	281, // 442: brent.BrentService.CreateInvitations:output_type -> brent.CreateInvitationsResponse
-	283, // 443: brent.BrentService.AcceptInvitation:output_type -> brent.AcceptInvitationResponse
-	285, // 444: brent.BrentService.ListWorkspaceMembers:output_type -> brent.ListWorkspaceMembersResponse
-	288, // 445: brent.BrentService.ResendInvitation:output_type -> brent.ResendInvitationResponse
-	290, // 446: brent.BrentService.RevokeInvitation:output_type -> brent.RevokeInvitationResponse
-	292, // 447: brent.BrentService.RemoveWorkspaceMember:output_type -> brent.RemoveWorkspaceMemberResponse
-	294, // 448: brent.BrentService.UpdateWorkspaceMemberRole:output_type -> brent.UpdateWorkspaceMemberRoleResponse
-	248, // 449: brent.BrentService.ListApprovedEmailDomains:output_type -> brent.ListApprovedEmailDomainsResponse
-	250, // 450: brent.BrentService.AddApprovedEmailDomain:output_type -> brent.AddApprovedEmailDomainResponse
-	252, // 451: brent.BrentService.VerifyApprovedEmailDomain:output_type -> brent.VerifyApprovedEmailDomainResponse
-	254, // 452: brent.BrentService.ResendApprovedEmailDomainCode:output_type -> brent.ResendApprovedEmailDomainCodeResponse
-	258, // 453: brent.BrentService.DeleteApprovedEmailDomain:output_type -> brent.DeleteApprovedEmailDomainResponse
-	261, // 454: brent.BrentService.GetWorkspaceLLMCredentialStatus:output_type -> brent.GetWorkspaceLLMCredentialStatusResponse
-	263, // 455: brent.BrentService.SetWorkspaceLLMCredential:output_type -> brent.SetWorkspaceLLMCredentialResponse
-	265, // 456: brent.BrentService.DeleteWorkspaceLLMCredential:output_type -> brent.DeleteWorkspaceLLMCredentialResponse
-	268, // 457: brent.BrentService.GetMyCursorCredentialStatus:output_type -> brent.GetMyCursorCredentialStatusResponse
-	270, // 458: brent.BrentService.SetMyCursorCredential:output_type -> brent.SetMyCursorCredentialResponse
-	272, // 459: brent.BrentService.DeleteMyCursorCredential:output_type -> brent.DeleteMyCursorCredentialResponse
-	224, // 460: brent.BrentService.GetWorkspaceIntegrationRoles:output_type -> brent.GetWorkspaceIntegrationRolesResponse
-	226, // 461: brent.BrentService.SetWorkspaceIntegrationRoles:output_type -> brent.SetWorkspaceIntegrationRolesResponse
-	256, // 462: brent.BrentService.ResendVerificationEmail:output_type -> brent.ResendVerificationEmailResponse
-	296, // 463: brent.BrentPublicService.GetInvitation:output_type -> brent.GetInvitationResponse
-	43,  // 464: brent.BrentAdminService.ExecuteWorkflow:output_type -> brent.ExecuteWorkflowResponse
-	29,  // 465: brent.BrentAdminService.ListRuns:output_type -> brent.ListRunsResponse
-	43,  // 466: brent.BrentAdminService.WatchRun:output_type -> brent.ExecuteWorkflowResponse
-	33,  // 467: brent.BrentAdminService.StreamEvents:output_type -> brent.StreamEventsResponse
-	35,  // 468: brent.BrentAdminService.ListEvents:output_type -> brent.ListEventsResponse
-	37,  // 469: brent.BrentAdminService.CancelRun:output_type -> brent.CancelRunResponse
-	43,  // 470: brent.BrentAdminService.SendQuestion:output_type -> brent.ExecuteWorkflowResponse
-	56,  // 471: brent.BrentAdminService.ListPlans:output_type -> brent.AdminListPlansResponse
-	59,  // 472: brent.BrentAdminService.GetPlan:output_type -> brent.AdminGetPlanResponse
-	84,  // 473: brent.BrentAdminService.ListReviews:output_type -> brent.AdminListReviewsResponse
-	87,  // 474: brent.BrentAdminService.GetReview:output_type -> brent.AdminGetReviewResponse
-	90,  // 475: brent.BrentAdminService.ListAccounts:output_type -> brent.AdminListAccountsResponse
-	93,  // 476: brent.BrentAdminService.GetAccountSummary:output_type -> brent.AdminGetAccountSummaryResponse
-	96,  // 477: brent.BrentAdminService.GetAccountHealthAnalysis:output_type -> brent.AdminGetAccountHealthAnalysisResponse
-	99,  // 478: brent.BrentAdminService.ListAccountMetricRepos:output_type -> brent.AdminListAccountMetricReposResponse
-	101, // 479: brent.BrentAdminService.StartAccountMetricsComparison:output_type -> brent.AdminStartAccountMetricsComparisonResponse
-	105, // 480: brent.BrentAdminService.GetAccountMetricsComparisonRun:output_type -> brent.AdminGetAccountMetricsComparisonRunResponse
-	316, // 481: brent.BrentAdminService.GetAccountBrentSettings:output_type -> brent.GetBrentSettingsResponse
-	318, // 482: brent.BrentAdminService.UpdateAccountBrentSettings:output_type -> brent.UpdateBrentSettingsResponse
-	322, // 483: brent.BrentAdminService.GetAccountReviewPolicy:output_type -> brent.AdminGetAccountReviewPolicyResponse
-	324, // 484: brent.BrentAdminService.UpdateAccountReviewPolicy:output_type -> brent.AdminUpdateAccountReviewPolicyResponse
-	326, // 485: brent.BrentAdminService.GetAccountLLMCredentialStatus:output_type -> brent.AdminGetAccountLLMCredentialStatusResponse
-	329, // 486: brent.BrentAdminService.ListAccountIntegrations:output_type -> brent.AdminListAccountIntegrationsResponse
-	193, // 487: brent.BrentAdminService.ListWorkflows:output_type -> brent.ListWorkflowsResponse
-	196, // 488: brent.BrentAdminService.GetWorkflow:output_type -> brent.GetWorkflowResponse
-	199, // 489: brent.BrentAdminService.ListWorkflowRuns:output_type -> brent.ListWorkflowRunsResponse
-	205, // 490: brent.BrentAdminService.GetWorkflowRun:output_type -> brent.GetWorkflowRunResponse
-	204, // 491: brent.BrentAdminService.GetWorkflowRunThreadHistory:output_type -> brent.GetWorkflowRunThreadHistoryResponse
-	14,  // 492: brent.BrentAdminService.ListPullRequests:output_type -> brent.ListPullRequestsResponse
-	16,  // 493: brent.BrentAdminService.GetPullRequestByID:output_type -> brent.GetPullRequestByIDResponse
-	18,  // 494: brent.BrentAdminService.ListDeviationAnalysesForPR:output_type -> brent.ListDeviationAnalysesForPRResponse
-	62,  // 495: brent.BrentAdminService.ListPrincipals:output_type -> brent.AdminListPrincipalsResponse
-	64,  // 496: brent.BrentAdminService.GetPrincipal:output_type -> brent.AdminGetPrincipalResponse
-	67,  // 497: brent.BrentAdminService.UpsertPrincipalBinding:output_type -> brent.AdminUpsertPrincipalBindingResponse
-	69,  // 498: brent.BrentAdminService.DeletePrincipalBinding:output_type -> brent.AdminDeletePrincipalBindingResponse
-	71,  // 499: brent.BrentAdminService.UpdatePrincipal:output_type -> brent.AdminUpdatePrincipalResponse
-	73,  // 500: brent.BrentAdminService.CreatePrincipalIdentity:output_type -> brent.AdminCreatePrincipalIdentityResponse
-	75,  // 501: brent.BrentAdminService.DeletePrincipalIdentity:output_type -> brent.AdminDeletePrincipalIdentityResponse
-	77,  // 502: brent.BrentAdminService.SetPrincipalCredential:output_type -> brent.AdminSetPrincipalCredentialResponse
-	79,  // 503: brent.BrentAdminService.ListPrincipalCredentialConnections:output_type -> brent.AdminListPrincipalCredentialConnectionsResponse
-	82,  // 504: brent.BrentAdminService.DeletePrincipalCredential:output_type -> brent.AdminDeletePrincipalCredentialResponse
-	22,  // 505: brent.BrentAdminService.GetPullRequestTimeline:output_type -> brent.GetPullRequestTimelineResponse
+	23,  // 0: until.ListPullRequestsResponse.pull_requests:type_name -> until.PullRequestSummary
+	24,  // 1: until.GetPullRequestByIDResponse.pull_request:type_name -> until.PullRequest
+	25,  // 2: until.ListPlanChecksForPRResponse.analyses:type_name -> until.PlanCheckSummary
+	349, // 3: until.PullRequestTimelineEventRow.occurred_at:type_name -> google.protobuf.Timestamp
+	24,  // 4: until.GetPullRequestTimelineResponse.pull_request:type_name -> until.PullRequest
+	20,  // 5: until.GetPullRequestTimelineResponse.events:type_name -> until.PullRequestTimelineEventRow
+	21,  // 6: until.GetPullRequestTimelineResponse.warnings:type_name -> until.PullRequestTimelineWarning
+	349, // 7: until.PullRequestSummary.updated_at:type_name -> google.protobuf.Timestamp
+	349, // 8: until.PullRequest.created_at:type_name -> google.protobuf.Timestamp
+	349, // 9: until.PullRequest.updated_at:type_name -> google.protobuf.Timestamp
+	349, // 10: until.PullRequest.closed_at:type_name -> google.protobuf.Timestamp
+	349, // 11: until.PlanCheckSummary.started_at:type_name -> google.protobuf.Timestamp
+	349, // 12: until.PlanCheckSummary.completed_at:type_name -> google.protobuf.Timestamp
+	349, // 13: until.PlanCheckSummary.failed_at:type_name -> google.protobuf.Timestamp
+	26,  // 14: until.PlanCheckSummary.differences:type_name -> until.PlanDifference
+	349, // 15: until.PlanDifference.resolved_at:type_name -> google.protobuf.Timestamp
+	30,  // 16: until.ListRunsResponse.runs:type_name -> until.RunSummary
+	0,   // 17: until.RunSummary.status:type_name -> until.RunStatus
+	349, // 18: until.RunSummary.started_at:type_name -> google.protobuf.Timestamp
+	349, // 19: until.RunSummary.completed_at:type_name -> google.protobuf.Timestamp
+	106, // 20: until.StreamEventsResponse.event:type_name -> until.Event
+	349, // 21: until.ListEventsRequest.occurred_from:type_name -> google.protobuf.Timestamp
+	349, // 22: until.ListEventsRequest.occurred_to:type_name -> google.protobuf.Timestamp
+	106, // 23: until.ListEventsResponse.events:type_name -> until.Event
+	42,  // 24: until.ListOpenPullRequestsResponse.pull_requests:type_name -> until.OpenPullRequest
+	42,  // 25: until.GetPullRequestResponse.pull_request:type_name -> until.OpenPullRequest
+	349, // 26: until.OpenPullRequest.updated_at:type_name -> google.protobuf.Timestamp
+	349, // 27: until.ExecuteLoopResponse.timestamp:type_name -> google.protobuf.Timestamp
+	44,  // 28: until.ExecuteLoopResponse.reasoning:type_name -> until.ReasoningStep
+	45,  // 29: until.ExecuteLoopResponse.tool_call:type_name -> until.ToolCallStep
+	46,  // 30: until.ExecuteLoopResponse.tool_result:type_name -> until.ToolResultStep
+	47,  // 31: until.ExecuteLoopResponse.completion:type_name -> until.CompletionStep
+	48,  // 32: until.ExecuteLoopResponse.error:type_name -> until.ErrorStep
+	49,  // 33: until.ExecuteLoopResponse.status:type_name -> until.StatusStep
+	50,  // 34: until.ExecuteLoopResponse.run_started:type_name -> until.RunStartedStep
+	51,  // 35: until.ExecuteLoopResponse.qa_ready:type_name -> until.QAReadyStep
+	52,  // 36: until.ExecuteLoopResponse.user_question:type_name -> until.UserQuestionStep
+	53,  // 37: until.ExecuteLoopResponse.user_message:type_name -> until.UserMessageStep
+	57,  // 38: until.AdminListPlansResponse.plans:type_name -> until.PlanSummary
+	349, // 39: until.PlanSummary.created_at:type_name -> google.protobuf.Timestamp
+	349, // 40: until.PlanSummary.updated_at:type_name -> google.protobuf.Timestamp
+	349, // 41: until.PlanSummary.deleted_at:type_name -> google.protobuf.Timestamp
+	349, // 42: until.PlanSummary.lifecycle_stage_updated_at:type_name -> google.protobuf.Timestamp
+	60,  // 43: until.AdminGetPlanResponse.plan:type_name -> until.Plan
+	85,  // 44: until.AdminGetPlanResponse.related_reviews:type_name -> until.ReviewSummary
+	23,  // 45: until.AdminGetPlanResponse.related_pull_requests:type_name -> until.PullRequestSummary
+	349, // 46: until.Plan.created_at:type_name -> google.protobuf.Timestamp
+	349, // 47: until.Plan.updated_at:type_name -> google.protobuf.Timestamp
+	349, // 48: until.Plan.lifecycle_stage_updated_at:type_name -> google.protobuf.Timestamp
+	227, // 49: until.AdminListPrincipalsResponse.principals:type_name -> until.Principal
+	227, // 50: until.AdminGetPrincipalResponse.principal:type_name -> until.Principal
+	65,  // 51: until.AdminGetPrincipalResponse.identities:type_name -> until.PrincipalIdentity
+	313, // 52: until.AdminGetPrincipalResponse.bindings:type_name -> until.Binding
+	349, // 53: until.PrincipalIdentity.created_at:type_name -> google.protobuf.Timestamp
+	349, // 54: until.PrincipalIdentity.updated_at:type_name -> google.protobuf.Timestamp
+	313, // 55: until.AdminUpsertPrincipalBindingResponse.binding:type_name -> until.Binding
+	227, // 56: until.AdminUpdatePrincipalResponse.principal:type_name -> until.Principal
+	65,  // 57: until.AdminCreatePrincipalIdentityResponse.identity:type_name -> until.PrincipalIdentity
+	80,  // 58: until.AdminListPrincipalCredentialConnectionsResponse.connections:type_name -> until.PrincipalCredentialConnection
+	349, // 59: until.PrincipalCredentialConnection.last_validated_at:type_name -> google.protobuf.Timestamp
+	85,  // 60: until.AdminListReviewsResponse.reviews:type_name -> until.ReviewSummary
+	349, // 61: until.ReviewSummary.requested_at:type_name -> google.protobuf.Timestamp
+	349, // 62: until.ReviewSummary.decided_at:type_name -> google.protobuf.Timestamp
+	88,  // 63: until.AdminGetReviewResponse.review:type_name -> until.Review
+	57,  // 64: until.AdminGetReviewResponse.plan:type_name -> until.PlanSummary
+	349, // 65: until.Review.requested_at:type_name -> google.protobuf.Timestamp
+	349, // 66: until.Review.decided_at:type_name -> google.protobuf.Timestamp
+	349, // 67: until.Review.created_at:type_name -> google.protobuf.Timestamp
+	349, // 68: until.Review.updated_at:type_name -> google.protobuf.Timestamp
+	89,  // 69: until.AdminListAccountsResponse.accounts:type_name -> until.AccountSummary
+	349, // 70: until.AccountRunSummary.started_at:type_name -> google.protobuf.Timestamp
+	349, // 71: until.AdminGetAccountSummaryResponse.last_active_at:type_name -> google.protobuf.Timestamp
+	92,  // 72: until.AdminGetAccountSummaryResponse.recent_runs:type_name -> until.AccountRunSummary
+	95,  // 73: until.AdminGetAccountHealthAnalysisResponse.findings:type_name -> until.AccountHealthFinding
+	349, // 74: until.AdminGetAccountHealthAnalysisResponse.computed_at:type_name -> google.protobuf.Timestamp
+	98,  // 75: until.AdminListAccountMetricReposResponse.repos:type_name -> until.AccountMetricRepo
+	349, // 76: until.AdminStartAccountMetricsComparisonRequest.before_start:type_name -> google.protobuf.Timestamp
+	349, // 77: until.AdminStartAccountMetricsComparisonRequest.before_end:type_name -> google.protobuf.Timestamp
+	349, // 78: until.AdminStartAccountMetricsComparisonRequest.after_start:type_name -> google.protobuf.Timestamp
+	349, // 79: until.AdminStartAccountMetricsComparisonRequest.after_end:type_name -> google.protobuf.Timestamp
+	1,   // 80: until.AdminStartAccountMetricsComparisonRequest.comparison_mode:type_name -> until.MetricsComparisonMode
+	349, // 81: until.AdminStartAccountMetricsComparisonRequest.planned_unplanned_start:type_name -> google.protobuf.Timestamp
+	349, // 82: until.AdminStartAccountMetricsComparisonRequest.planned_unplanned_end:type_name -> google.protobuf.Timestamp
+	349, // 83: until.AdminGetAccountMetricsComparisonRunResponse.started_at:type_name -> google.protobuf.Timestamp
+	349, // 84: until.AdminGetAccountMetricsComparisonRunResponse.completed_at:type_name -> google.protobuf.Timestamp
+	103, // 85: until.AdminGetAccountMetricsComparisonRunResponse.headline:type_name -> until.MetricsComparisonHeadline
+	349, // 86: until.AdminGetAccountMetricsComparisonRunResponse.before_start:type_name -> google.protobuf.Timestamp
+	349, // 87: until.AdminGetAccountMetricsComparisonRunResponse.before_end:type_name -> google.protobuf.Timestamp
+	349, // 88: until.AdminGetAccountMetricsComparisonRunResponse.after_start:type_name -> google.protobuf.Timestamp
+	349, // 89: until.AdminGetAccountMetricsComparisonRunResponse.after_end:type_name -> google.protobuf.Timestamp
+	104, // 90: until.AdminGetAccountMetricsComparisonRunResponse.artifacts:type_name -> until.MetricsComparisonArtifact
+	1,   // 91: until.AdminGetAccountMetricsComparisonRunResponse.comparison_mode:type_name -> until.MetricsComparisonMode
+	349, // 92: until.AdminGetAccountMetricsComparisonRunResponse.planned_unplanned_start:type_name -> google.protobuf.Timestamp
+	349, // 93: until.AdminGetAccountMetricsComparisonRunResponse.planned_unplanned_end:type_name -> google.protobuf.Timestamp
+	349, // 94: until.Event.occurred_at:type_name -> google.protobuf.Timestamp
+	107, // 95: until.Event.actor:type_name -> until.Actor
+	108, // 96: until.Event.object:type_name -> until.ObjectReference
+	349, // 97: until.Event.received_at:type_name -> google.protobuf.Timestamp
+	109, // 98: until.Event.plan_created:type_name -> until.PlanCreated
+	110, // 99: until.Event.plan_updated:type_name -> until.PlanUpdated
+	111, // 100: until.Event.plan_deleted:type_name -> until.PlanDeleted
+	115, // 101: until.Event.review_requested:type_name -> until.ReviewRequested
+	116, // 102: until.Event.review_submitted:type_name -> until.ReviewSubmitted
+	143, // 103: until.Event.other:type_name -> until.OtherEvent
+	184, // 104: until.Event.github_webhook:type_name -> until.GitHubWebhook
+	188, // 105: until.Event.slack_mention:type_name -> until.SlackMentionReceived
+	191, // 106: until.Event.slack_reaction:type_name -> until.SlackReactionAdded
+	145, // 107: until.Event.pull_request_opened:type_name -> until.PullRequestOpened
+	146, // 108: until.Event.pull_request_synchronized:type_name -> until.PullRequestSynchronized
+	147, // 109: until.Event.pull_request_updated:type_name -> until.PullRequestUpdated
+	148, // 110: until.Event.pull_request_closed:type_name -> until.PullRequestClosed
+	149, // 111: until.Event.pull_request_linked_to_plan:type_name -> until.PullRequestLinkedToPlan
+	150, // 112: until.Event.pull_request_unlinked_from_plan:type_name -> until.PullRequestUnlinkedFromPlan
+	189, // 113: until.Event.organisation_app_installation_upserted:type_name -> until.OrganisationAppInstallationUpserted
+	190, // 114: until.Event.organisation_app_installation_deleted:type_name -> until.OrganisationAppInstallationDeleted
+	157, // 115: until.Event.plan_check_started:type_name -> until.PlanCheckStarted
+	159, // 116: until.Event.plan_check_completed:type_name -> until.PlanCheckCompleted
+	160, // 117: until.Event.plan_check_failed:type_name -> until.PlanCheckFailed
+	176, // 118: until.Event.loop_run_queued:type_name -> until.LoopRunQueued
+	177, // 119: until.Event.loop_run_started:type_name -> until.LoopRunStarted
+	178, // 120: until.Event.loop_run_completed:type_name -> until.LoopRunCompleted
+	179, // 121: until.Event.loop_run_failed:type_name -> until.LoopRunFailed
+	180, // 122: until.Event.loop_run_cancelled:type_name -> until.LoopRunCancelled
+	117, // 123: until.Event.review_no_eligible_reviewer:type_name -> until.ReviewNoEligibleReviewer
+	120, // 124: until.Event.principal_created:type_name -> until.PrincipalCreated
+	121, // 125: until.Event.principal_updated:type_name -> until.PrincipalUpdated
+	122, // 126: until.Event.principal_tombstoned:type_name -> until.PrincipalTombstoned
+	133, // 127: until.Event.identity_created:type_name -> until.IdentityCreated
+	134, // 128: until.Event.identity_deleted:type_name -> until.IdentityDeleted
+	135, // 129: until.Event.binding_created:type_name -> until.BindingCreated
+	136, // 130: until.Event.binding_updated:type_name -> until.BindingUpdated
+	137, // 131: until.Event.binding_deleted:type_name -> until.BindingDeleted
+	142, // 132: until.Event.review_drive_by_started:type_name -> until.ReviewDriveByStarted
+	181, // 133: until.Event.slack_webhook:type_name -> until.SlackWebhook
+	112, // 134: until.Event.review_deleted:type_name -> until.ReviewDeleted
+	114, // 135: until.Event.plan_restored:type_name -> until.PlanRestored
+	182, // 136: until.Event.linear_webhook:type_name -> until.LinearWebhook
+	156, // 137: until.Event.pull_request_comment_created:type_name -> until.PullRequestCommentCreated
+	161, // 138: until.Event.plan_difference_recorded:type_name -> until.PlanDifferenceRecorded
+	162, // 139: until.Event.plan_difference_updated:type_name -> until.PlanDifferenceUpdated
+	163, // 140: until.Event.plan_difference_resolved:type_name -> until.PlanDifferenceResolved
+	166, // 141: until.Event.agent_run_dispatched:type_name -> until.AgentRunDispatched
+	167, // 142: until.Event.agent_run_started:type_name -> until.AgentRunStarted
+	168, // 143: until.Event.agent_run_pull_request_matched:type_name -> until.AgentRunPullRequestMatched
+	169, // 144: until.Event.agent_run_flagged_needs_you:type_name -> until.AgentRunFlaggedNeedsYou
+	171, // 145: until.Event.agent_run_merged:type_name -> until.AgentRunMerged
+	173, // 146: until.Event.agent_run_declined:type_name -> until.AgentRunDeclined
+	172, // 147: until.Event.agent_run_cancelled:type_name -> until.AgentRunCancelled
+	170, // 148: until.Event.agent_run_gate_passed:type_name -> until.AgentRunGatePassed
+	151, // 149: until.Event.pull_request_linked_to_agent_run:type_name -> until.PullRequestLinkedToAgentRun
+	175, // 150: until.Event.loop_ingested:type_name -> until.LoopIngested
+	152, // 151: until.Event.pull_request_review_requested:type_name -> until.PullRequestReviewRequested
+	153, // 152: until.Event.pull_request_approved:type_name -> until.PullRequestApproved
+	154, // 153: until.Event.pull_request_changes_requested:type_name -> until.PullRequestChangesRequested
+	155, // 154: until.Event.pull_request_review_dismissed:type_name -> until.PullRequestReviewDismissed
+	138, // 155: until.Event.credential_connected:type_name -> until.CredentialConnected
+	139, // 156: until.Event.credential_revoked:type_name -> until.CredentialRevoked
+	174, // 157: until.Event.agent_run_annotated:type_name -> until.AgentRunAnnotated
+	123, // 158: until.Event.workspace_created:type_name -> until.WorkspaceCreated
+	132, // 159: until.Event.mcp_grant_workspace_binding_changed:type_name -> until.MCPGrantWorkspaceBindingChanged
+	124, // 160: until.Event.workspace_onboarding_completed:type_name -> until.WorkspaceOnboardingCompleted
+	125, // 161: until.Event.workspace_renamed:type_name -> until.WorkspaceRenamed
+	126, // 162: until.Event.workspace_deleted:type_name -> until.WorkspaceDeleted
+	129, // 163: until.Event.approved_email_domain_added:type_name -> until.ApprovedEmailDomainAdded
+	130, // 164: until.Event.approved_email_domain_verified:type_name -> until.ApprovedEmailDomainVerified
+	131, // 165: until.Event.approved_email_domain_deleted:type_name -> until.ApprovedEmailDomainDeleted
+	185, // 166: until.Event.gitlab_webhook:type_name -> until.GitLabWebhook
+	140, // 167: until.Event.workspace_llm_credential_connected:type_name -> until.WorkspaceLLMCredentialConnected
+	141, // 168: until.Event.workspace_llm_credential_revoked:type_name -> until.WorkspaceLLMCredentialRevoked
+	186, // 169: until.Event.bitbucket_webhook:type_name -> until.BitbucketWebhook
+	127, // 170: until.Event.workspace_member_joined:type_name -> until.WorkspaceMemberJoined
+	128, // 171: until.Event.workspace_member_left:type_name -> until.WorkspaceMemberLeft
+	183, // 172: until.Event.composio_trigger_message:type_name -> until.ComposioTriggerMessage
+	164, // 173: until.Event.plan_difference_acknowledged:type_name -> until.PlanDifferenceAcknowledged
+	165, // 174: until.Event.plan_difference_acknowledgement_cleared:type_name -> until.PlanDifferenceAcknowledgementCleared
+	118, // 175: until.Event.plan_review_policy_decided:type_name -> until.PlanReviewPolicyDecided
+	113, // 176: until.Event.review_restored:type_name -> until.ReviewRestored
+	119, // 177: until.Event.workspace_review_policy_updated:type_name -> until.WorkspaceReviewPolicyUpdated
+	144, // 178: until.Event.unknown_stored_payload:type_name -> until.UnknownStoredPayload
+	335, // 179: until.PlanUpdated.previous:type_name -> until.PlanUpdated.PreviousEntry
+	336, // 180: until.PlanUpdated.after:type_name -> until.PlanUpdated.AfterEntry
+	349, // 181: until.ReviewSubmitted.decided_at:type_name -> google.protobuf.Timestamp
+	337, // 182: until.PrincipalUpdated.previous:type_name -> until.PrincipalUpdated.PreviousEntry
+	338, // 183: until.PrincipalUpdated.after:type_name -> until.PrincipalUpdated.AfterEntry
+	7,   // 184: until.WorkspaceMemberJoined.source:type_name -> until.JoinSource
+	339, // 185: until.BindingUpdated.previous:type_name -> until.BindingUpdated.PreviousEntry
+	340, // 186: until.BindingUpdated.after:type_name -> until.BindingUpdated.AfterEntry
+	341, // 187: until.OtherEvent.fields:type_name -> until.OtherEvent.FieldsEntry
+	342, // 188: until.PullRequestUpdated.previous:type_name -> until.PullRequestUpdated.PreviousEntry
+	343, // 189: until.PullRequestUpdated.after:type_name -> until.PullRequestUpdated.AfterEntry
+	349, // 190: until.PlanCheckStarted.started_at:type_name -> google.protobuf.Timestamp
+	344, // 191: until.PlanCheckCompleted.difference_count_by_tag:type_name -> until.PlanCheckCompleted.DifferenceCountByTagEntry
+	349, // 192: until.PlanCheckCompleted.completed_at:type_name -> google.protobuf.Timestamp
+	158, // 193: until.PlanCheckCompleted.differences:type_name -> until.DifferenceSummary
+	349, // 194: until.PlanCheckFailed.failed_at:type_name -> google.protobuf.Timestamp
+	349, // 195: until.PlanDifferenceRecorded.recorded_at:type_name -> google.protobuf.Timestamp
+	345, // 196: until.PlanDifferenceUpdated.previous:type_name -> until.PlanDifferenceUpdated.PreviousEntry
+	346, // 197: until.PlanDifferenceUpdated.after:type_name -> until.PlanDifferenceUpdated.AfterEntry
+	349, // 198: until.PlanDifferenceResolved.resolved_at:type_name -> google.protobuf.Timestamp
+	349, // 199: until.PlanDifferenceAcknowledged.acknowledged_at:type_name -> google.protobuf.Timestamp
+	349, // 200: until.PlanDifferenceAcknowledgementCleared.cleared_at:type_name -> google.protobuf.Timestamp
+	349, // 201: until.LoopRunQueued.queued_at:type_name -> google.protobuf.Timestamp
+	349, // 202: until.LoopRunStarted.started_at:type_name -> google.protobuf.Timestamp
+	349, // 203: until.LoopRunCompleted.completed_at:type_name -> google.protobuf.Timestamp
+	349, // 204: until.LoopRunFailed.failed_at:type_name -> google.protobuf.Timestamp
+	349, // 205: until.LoopRunCancelled.cancelled_at:type_name -> google.protobuf.Timestamp
+	194, // 206: until.ListLoopsResponse.loops:type_name -> until.LoopSummary
+	349, // 207: until.LoopSummary.created_at:type_name -> google.protobuf.Timestamp
+	349, // 208: until.LoopSummary.updated_at:type_name -> google.protobuf.Timestamp
+	197, // 209: until.GetLoopResponse.loop:type_name -> until.Loop
+	349, // 210: until.Loop.created_at:type_name -> google.protobuf.Timestamp
+	349, // 211: until.Loop.updated_at:type_name -> google.protobuf.Timestamp
+	200, // 212: until.ListLoopRunsResponse.runs:type_name -> until.LoopRunSummary
+	349, // 213: until.LoopRunSummary.started_at:type_name -> google.protobuf.Timestamp
+	349, // 214: until.LoopRunSummary.completed_at:type_name -> google.protobuf.Timestamp
+	349, // 215: until.LoopRunSummary.created_at:type_name -> google.protobuf.Timestamp
+	349, // 216: until.LoopRunSummary.updated_at:type_name -> google.protobuf.Timestamp
+	200, // 217: until.LoopRunThreadSegment.run:type_name -> until.LoopRunSummary
+	43,  // 218: until.LoopRunThreadSegment.steps:type_name -> until.ExecuteLoopResponse
+	203, // 219: until.GetLoopRunThreadHistoryResponse.segments:type_name -> until.LoopRunThreadSegment
+	206, // 220: until.GetLoopRunResponse.run:type_name -> until.LoopRun
+	194, // 221: until.GetLoopRunResponse.loop:type_name -> until.LoopSummary
+	349, // 222: until.LoopRun.started_at:type_name -> google.protobuf.Timestamp
+	349, // 223: until.LoopRun.completed_at:type_name -> google.protobuf.Timestamp
+	349, // 224: until.LoopRun.created_at:type_name -> google.protobuf.Timestamp
+	349, // 225: until.LoopRun.updated_at:type_name -> google.protobuf.Timestamp
+	106, // 226: until.LoopRun.triggering_event_payload:type_name -> until.Event
+	2,   // 227: until.GetPrincipalStatusResponse.state:type_name -> until.PrincipalStatusState
+	227, // 228: until.GetPrincipalStatusResponse.principal:type_name -> until.Principal
+	222, // 229: until.GetPrincipalStatusResponse.integrations:type_name -> until.IntegrationStatus
+	3,   // 230: until.GetIntegrationConnectURLRequest.provider:type_name -> until.IntegrationProvider
+	4,   // 231: until.GetIntegrationConnectURLRequest.intent:type_name -> until.IntegrationIntent
+	3,   // 232: until.DisconnectIntegrationRequest.provider:type_name -> until.IntegrationProvider
+	349, // 233: until.GetGitLabConnectionResponse.connected_at:type_name -> google.protobuf.Timestamp
+	349, // 234: until.GitHubPendingInstall.requested_at:type_name -> google.protobuf.Timestamp
+	3,   // 235: until.IntegrationStatus.provider:type_name -> until.IntegrationProvider
+	221, // 236: until.IntegrationStatus.github_pending:type_name -> until.GitHubPendingInstall
+	349, // 237: until.IntegrationStatus.connected_at:type_name -> google.protobuf.Timestamp
+	5,   // 238: until.IntegrationStatus.status:type_name -> until.IntegrationConnectionStatus
+	3,   // 239: until.GetWorkspaceIntegrationRolesResponse.git_provider:type_name -> until.IntegrationProvider
+	3,   // 240: until.SetWorkspaceIntegrationRolesRequest.git_provider:type_name -> until.IntegrationProvider
+	3,   // 241: until.SetWorkspaceIntegrationRolesResponse.git_provider:type_name -> until.IntegrationProvider
+	349, // 242: until.Principal.created_at:type_name -> google.protobuf.Timestamp
+	349, // 243: until.Principal.updated_at:type_name -> google.protobuf.Timestamp
+	228, // 244: until.CreateWorkspaceResponse.workspace:type_name -> until.Workspace
+	228, // 245: until.ListMyWorkspacesResponse.workspaces:type_name -> until.Workspace
+	6,   // 246: until.LoginRecoveryCandidate.provider:type_name -> until.LoginProvider
+	6,   // 247: until.DiscoverLoginRecoveryCandidatesResponse.arriving_provider:type_name -> until.LoginProvider
+	234, // 248: until.DiscoverLoginRecoveryCandidatesResponse.candidates:type_name -> until.LoginRecoveryCandidate
+	228, // 249: until.RenameWorkspaceResponse.workspace:type_name -> until.Workspace
+	242, // 250: until.ListJoinableWorkspacesResponse.workspaces:type_name -> until.JoinableWorkspace
+	349, // 251: until.JoinableWorkspace.created_at:type_name -> google.protobuf.Timestamp
+	243, // 252: until.JoinableWorkspace.member_previews:type_name -> until.JoinableWorkspaceMember
+	7,   // 253: until.JoinableWorkspace.source:type_name -> until.JoinSource
+	228, // 254: until.JoinWorkspaceResponse.workspace:type_name -> until.Workspace
+	349, // 255: until.ApprovedEmailDomain.created_at:type_name -> google.protobuf.Timestamp
+	246, // 256: until.ListApprovedEmailDomainsResponse.domains:type_name -> until.ApprovedEmailDomain
+	246, // 257: until.AddApprovedEmailDomainResponse.domain:type_name -> until.ApprovedEmailDomain
+	246, // 258: until.VerifyApprovedEmailDomainResponse.domain:type_name -> until.ApprovedEmailDomain
+	349, // 259: until.WorkspaceLLMCredentialStatus.last_validated_at:type_name -> google.protobuf.Timestamp
+	349, // 260: until.WorkspaceLLMCredentialStatus.updated_at:type_name -> google.protobuf.Timestamp
+	259, // 261: until.GetWorkspaceLLMCredentialStatusResponse.status:type_name -> until.WorkspaceLLMCredentialStatus
+	259, // 262: until.SetWorkspaceLLMCredentialResponse.status:type_name -> until.WorkspaceLLMCredentialStatus
+	349, // 263: until.MyCursorCredentialStatus.last_validated_at:type_name -> google.protobuf.Timestamp
+	266, // 264: until.GetMyCursorCredentialStatusResponse.status:type_name -> until.MyCursorCredentialStatus
+	266, // 265: until.SetMyCursorCredentialResponse.status:type_name -> until.MyCursorCredentialStatus
+	228, // 266: until.UpdateWorkspaceBrandingResponse.workspace:type_name -> until.Workspace
+	228, // 267: until.CompleteWorkspaceOnboardingResponse.workspace:type_name -> until.Workspace
+	349, // 268: until.CreateInvitationResponse.expires_at:type_name -> google.protobuf.Timestamp
+	9,   // 269: until.InvitationResult.status:type_name -> until.InvitationResultStatus
+	280, // 270: until.CreateInvitationsResponse.results:type_name -> until.InvitationResult
+	228, // 271: until.AcceptInvitationResponse.workspace:type_name -> until.Workspace
+	286, // 272: until.ListWorkspaceMembersResponse.members:type_name -> until.WorkspaceMember
+	10,  // 273: until.WorkspaceMember.state:type_name -> until.WorkspaceMemberState
+	349, // 274: until.ResendInvitationResponse.expires_at:type_name -> google.protobuf.Timestamp
+	8,   // 275: until.GetInvitationResponse.status:type_name -> until.InvitationStatus
+	313, // 276: until.UpsertMyVerifiedBindingResponse.binding:type_name -> until.Binding
+	227, // 277: until.UpdateMyDisplayNameResponse.principal:type_name -> until.Principal
+	313, // 278: until.ListMyBindingsResponse.bindings:type_name -> until.Binding
+	347, // 279: until.NotificationPreferences.preferences:type_name -> until.NotificationPreferences.PreferencesEntry
+	348, // 280: until.ChannelPreferences.channels:type_name -> until.ChannelPreferences.ChannelsEntry
+	303, // 281: until.GetMyNotificationPreferencesResponse.preferences:type_name -> until.NotificationPreferences
+	303, // 282: until.UpdateMyNotificationPreferencesRequest.preferences:type_name -> until.NotificationPreferences
+	303, // 283: until.UpdateMyNotificationPreferencesResponse.preferences:type_name -> until.NotificationPreferences
+	349, // 284: until.Binding.created_at:type_name -> google.protobuf.Timestamp
+	349, // 285: until.Binding.updated_at:type_name -> google.protobuf.Timestamp
+	349, // 286: until.GetPlanCheckSettingsResponse.blocking_difference_tags_updated_at:type_name -> google.protobuf.Timestamp
+	314, // 287: until.UpdatePlanCheckSettingsRequest.blocking_difference_tags:type_name -> until.BlockingDifferenceTagsPatch
+	349, // 288: until.UpdatePlanCheckSettingsResponse.blocking_difference_tags_updated_at:type_name -> google.protobuf.Timestamp
+	314, // 289: until.AdminUpdateAccountPlanCheckSettingsRequest.blocking_difference_tags:type_name -> until.BlockingDifferenceTagsPatch
+	11,  // 290: until.AdminGetAccountReviewPolicyResponse.policy:type_name -> until.WorkspaceReviewPolicy
+	349, // 291: until.AdminGetAccountReviewPolicyResponse.updated_at:type_name -> google.protobuf.Timestamp
+	11,  // 292: until.AdminUpdateAccountReviewPolicyRequest.policy:type_name -> until.WorkspaceReviewPolicy
+	11,  // 293: until.AdminUpdateAccountReviewPolicyResponse.policy:type_name -> until.WorkspaceReviewPolicy
+	349, // 294: until.AdminUpdateAccountReviewPolicyResponse.updated_at:type_name -> google.protobuf.Timestamp
+	259, // 295: until.AdminGetAccountLLMCredentialStatusResponse.status:type_name -> until.WorkspaceLLMCredentialStatus
+	349, // 296: until.AdminAccountIntegrationInstall.created_at:type_name -> google.protobuf.Timestamp
+	5,   // 297: until.AdminAccountIntegrationInstall.status:type_name -> until.IntegrationConnectionStatus
+	328, // 298: until.AdminListAccountIntegrationsResponse.installs:type_name -> until.AdminAccountIntegrationInstall
+	3,   // 299: until.AdminListAccountIntegrationsResponse.git_provider:type_name -> until.IntegrationProvider
+	3,   // 300: until.AdminListAccountIntegrationsResponse.ticketing_provider:type_name -> until.IntegrationProvider
+	3,   // 301: until.AdminListAccountIntegrationsResponse.messaging_provider:type_name -> until.IntegrationProvider
+	332, // 302: until.ListIntegrationCatalogueResponse.entries:type_name -> until.IntegrationCatalogueEntry
+	12,  // 303: until.IntegrationCatalogueEntry.source:type_name -> until.IntegrationCatalogueSource
+	3,   // 304: until.IntegrationCatalogueEntry.provider:type_name -> until.IntegrationProvider
+	349, // 305: until.IntegrationCatalogueEntry.created_at:type_name -> google.protobuf.Timestamp
+	350, // 306: until.PlanUpdated.PreviousEntry.value:type_name -> google.protobuf.Value
+	350, // 307: until.PlanUpdated.AfterEntry.value:type_name -> google.protobuf.Value
+	350, // 308: until.PrincipalUpdated.PreviousEntry.value:type_name -> google.protobuf.Value
+	350, // 309: until.PrincipalUpdated.AfterEntry.value:type_name -> google.protobuf.Value
+	350, // 310: until.BindingUpdated.PreviousEntry.value:type_name -> google.protobuf.Value
+	350, // 311: until.BindingUpdated.AfterEntry.value:type_name -> google.protobuf.Value
+	350, // 312: until.PullRequestUpdated.PreviousEntry.value:type_name -> google.protobuf.Value
+	350, // 313: until.PullRequestUpdated.AfterEntry.value:type_name -> google.protobuf.Value
+	350, // 314: until.PlanDifferenceUpdated.PreviousEntry.value:type_name -> google.protobuf.Value
+	350, // 315: until.PlanDifferenceUpdated.AfterEntry.value:type_name -> google.protobuf.Value
+	304, // 316: until.NotificationPreferences.PreferencesEntry.value:type_name -> until.ChannelPreferences
+	351, // 317: until.embedded_json:extendee -> google.protobuf.FieldOptions
+	38,  // 318: until.WorkspaceService.ListOpenPullRequests:input_type -> until.ListOpenPullRequestsRequest
+	40,  // 319: until.WorkspaceService.GetPullRequest:input_type -> until.GetPullRequestRequest
+	207, // 320: until.WorkspaceService.GetPrincipalStatus:input_type -> until.GetPrincipalStatusRequest
+	333, // 321: until.WorkspaceService.GetPlanPrompt:input_type -> until.GetPlanPromptRequest
+	209, // 322: until.WorkspaceService.GetIntegrationConnectURL:input_type -> until.GetIntegrationConnectURLRequest
+	211, // 323: until.WorkspaceService.DisconnectIntegration:input_type -> until.DisconnectIntegrationRequest
+	213, // 324: until.WorkspaceService.ConnectByoHttpMcp:input_type -> until.ConnectByoHttpMcpRequest
+	215, // 325: until.WorkspaceService.GetGitLabConnection:input_type -> until.GetGitLabConnectionRequest
+	217, // 326: until.WorkspaceService.ConnectGitLab:input_type -> until.ConnectGitLabRequest
+	219, // 327: until.WorkspaceService.SaveGitLabSigningToken:input_type -> until.SaveGitLabSigningTokenRequest
+	297, // 328: until.WorkspaceService.UpsertMyVerifiedBinding:input_type -> until.UpsertMyVerifiedBindingRequest
+	301, // 329: until.WorkspaceService.ListMyBindings:input_type -> until.ListMyBindingsRequest
+	305, // 330: until.WorkspaceService.GetMyNotificationPreferences:input_type -> until.GetMyNotificationPreferencesRequest
+	307, // 331: until.WorkspaceService.UpdateMyNotificationPreferences:input_type -> until.UpdateMyNotificationPreferencesRequest
+	309, // 332: until.WorkspaceService.RegisterMyPushSubscription:input_type -> until.RegisterMyPushSubscriptionRequest
+	311, // 333: until.WorkspaceService.GetWebPushPublicKey:input_type -> until.GetWebPushPublicKeyRequest
+	299, // 334: until.WorkspaceService.UpdateMyDisplayName:input_type -> until.UpdateMyDisplayNameRequest
+	315, // 335: until.WorkspaceService.GetPlanCheckSettings:input_type -> until.GetPlanCheckSettingsRequest
+	317, // 336: until.WorkspaceService.UpdatePlanCheckSettings:input_type -> until.UpdatePlanCheckSettingsRequest
+	330, // 337: until.WorkspaceService.ListIntegrationCatalogue:input_type -> until.ListIntegrationCatalogueRequest
+	229, // 338: until.WorkspaceService.CreateWorkspace:input_type -> until.CreateWorkspaceRequest
+	231, // 339: until.WorkspaceService.ListMyWorkspaces:input_type -> until.ListMyWorkspacesRequest
+	233, // 340: until.WorkspaceService.DiscoverLoginRecoveryCandidates:input_type -> until.DiscoverLoginRecoveryCandidatesRequest
+	236, // 341: until.WorkspaceService.RenameWorkspace:input_type -> until.RenameWorkspaceRequest
+	273, // 342: until.WorkspaceService.UpdateWorkspaceBranding:input_type -> until.UpdateWorkspaceBrandingRequest
+	275, // 343: until.WorkspaceService.CompleteWorkspaceOnboarding:input_type -> until.CompleteWorkspaceOnboardingRequest
+	238, // 344: until.WorkspaceService.DeleteWorkspace:input_type -> until.DeleteWorkspaceRequest
+	240, // 345: until.WorkspaceService.ListJoinableWorkspaces:input_type -> until.ListJoinableWorkspacesRequest
+	244, // 346: until.WorkspaceService.JoinWorkspace:input_type -> until.JoinWorkspaceRequest
+	277, // 347: until.WorkspaceService.CreateInvitation:input_type -> until.CreateInvitationRequest
+	279, // 348: until.WorkspaceService.CreateInvitations:input_type -> until.CreateInvitationsRequest
+	282, // 349: until.WorkspaceService.AcceptInvitation:input_type -> until.AcceptInvitationRequest
+	284, // 350: until.WorkspaceService.ListWorkspaceMembers:input_type -> until.ListWorkspaceMembersRequest
+	287, // 351: until.WorkspaceService.ResendInvitation:input_type -> until.ResendInvitationRequest
+	289, // 352: until.WorkspaceService.RevokeInvitation:input_type -> until.RevokeInvitationRequest
+	291, // 353: until.WorkspaceService.RemoveWorkspaceMember:input_type -> until.RemoveWorkspaceMemberRequest
+	293, // 354: until.WorkspaceService.UpdateWorkspaceMemberRole:input_type -> until.UpdateWorkspaceMemberRoleRequest
+	247, // 355: until.WorkspaceService.ListApprovedEmailDomains:input_type -> until.ListApprovedEmailDomainsRequest
+	249, // 356: until.WorkspaceService.AddApprovedEmailDomain:input_type -> until.AddApprovedEmailDomainRequest
+	251, // 357: until.WorkspaceService.VerifyApprovedEmailDomain:input_type -> until.VerifyApprovedEmailDomainRequest
+	253, // 358: until.WorkspaceService.ResendApprovedEmailDomainCode:input_type -> until.ResendApprovedEmailDomainCodeRequest
+	257, // 359: until.WorkspaceService.DeleteApprovedEmailDomain:input_type -> until.DeleteApprovedEmailDomainRequest
+	260, // 360: until.WorkspaceService.GetWorkspaceLLMCredentialStatus:input_type -> until.GetWorkspaceLLMCredentialStatusRequest
+	262, // 361: until.WorkspaceService.SetWorkspaceLLMCredential:input_type -> until.SetWorkspaceLLMCredentialRequest
+	264, // 362: until.WorkspaceService.DeleteWorkspaceLLMCredential:input_type -> until.DeleteWorkspaceLLMCredentialRequest
+	267, // 363: until.WorkspaceService.GetMyCursorCredentialStatus:input_type -> until.GetMyCursorCredentialStatusRequest
+	269, // 364: until.WorkspaceService.SetMyCursorCredential:input_type -> until.SetMyCursorCredentialRequest
+	271, // 365: until.WorkspaceService.DeleteMyCursorCredential:input_type -> until.DeleteMyCursorCredentialRequest
+	223, // 366: until.WorkspaceService.GetWorkspaceIntegrationRoles:input_type -> until.GetWorkspaceIntegrationRolesRequest
+	225, // 367: until.WorkspaceService.SetWorkspaceIntegrationRoles:input_type -> until.SetWorkspaceIntegrationRolesRequest
+	255, // 368: until.WorkspaceService.ResendVerificationEmail:input_type -> until.ResendVerificationEmailRequest
+	295, // 369: until.PublicService.GetInvitation:input_type -> until.GetInvitationRequest
+	27,  // 370: until.AdminService.ExecuteLoop:input_type -> until.ExecuteLoopRequest
+	28,  // 371: until.AdminService.ListRuns:input_type -> until.ListRunsRequest
+	31,  // 372: until.AdminService.WatchRun:input_type -> until.WatchRunRequest
+	32,  // 373: until.AdminService.StreamEvents:input_type -> until.StreamEventsRequest
+	34,  // 374: until.AdminService.ListEvents:input_type -> until.ListEventsRequest
+	36,  // 375: until.AdminService.CancelRun:input_type -> until.CancelRunRequest
+	54,  // 376: until.AdminService.SendQuestion:input_type -> until.SendQuestionRequest
+	55,  // 377: until.AdminService.ListPlans:input_type -> until.AdminListPlansRequest
+	58,  // 378: until.AdminService.GetPlan:input_type -> until.AdminGetPlanRequest
+	83,  // 379: until.AdminService.ListReviews:input_type -> until.AdminListReviewsRequest
+	86,  // 380: until.AdminService.GetReview:input_type -> until.AdminGetReviewRequest
+	352, // 381: until.AdminService.ListAccounts:input_type -> google.protobuf.Empty
+	91,  // 382: until.AdminService.GetAccountSummary:input_type -> until.AdminGetAccountSummaryRequest
+	94,  // 383: until.AdminService.GetAccountHealthAnalysis:input_type -> until.AdminGetAccountHealthAnalysisRequest
+	97,  // 384: until.AdminService.ListAccountMetricRepos:input_type -> until.AdminListAccountMetricReposRequest
+	100, // 385: until.AdminService.StartAccountMetricsComparison:input_type -> until.AdminStartAccountMetricsComparisonRequest
+	102, // 386: until.AdminService.GetAccountMetricsComparisonRun:input_type -> until.AdminGetAccountMetricsComparisonRunRequest
+	319, // 387: until.AdminService.GetAccountPlanCheckSettings:input_type -> until.AdminGetAccountPlanCheckSettingsRequest
+	320, // 388: until.AdminService.UpdateAccountPlanCheckSettings:input_type -> until.AdminUpdateAccountPlanCheckSettingsRequest
+	321, // 389: until.AdminService.GetAccountReviewPolicy:input_type -> until.AdminGetAccountReviewPolicyRequest
+	323, // 390: until.AdminService.UpdateAccountReviewPolicy:input_type -> until.AdminUpdateAccountReviewPolicyRequest
+	325, // 391: until.AdminService.GetAccountLLMCredentialStatus:input_type -> until.AdminGetAccountLLMCredentialStatusRequest
+	327, // 392: until.AdminService.ListAccountIntegrations:input_type -> until.AdminListAccountIntegrationsRequest
+	192, // 393: until.AdminService.ListLoops:input_type -> until.ListLoopsRequest
+	195, // 394: until.AdminService.GetLoop:input_type -> until.GetLoopRequest
+	198, // 395: until.AdminService.ListLoopRuns:input_type -> until.ListLoopRunsRequest
+	201, // 396: until.AdminService.GetLoopRun:input_type -> until.GetLoopRunRequest
+	202, // 397: until.AdminService.GetLoopRunThreadHistory:input_type -> until.GetLoopRunThreadHistoryRequest
+	13,  // 398: until.AdminService.ListPullRequests:input_type -> until.ListPullRequestsRequest
+	15,  // 399: until.AdminService.GetPullRequestByID:input_type -> until.GetPullRequestByIDRequest
+	17,  // 400: until.AdminService.ListPlanChecksForPR:input_type -> until.ListPlanChecksForPRRequest
+	61,  // 401: until.AdminService.ListPrincipals:input_type -> until.AdminListPrincipalsRequest
+	63,  // 402: until.AdminService.GetPrincipal:input_type -> until.AdminGetPrincipalRequest
+	66,  // 403: until.AdminService.UpsertPrincipalBinding:input_type -> until.AdminUpsertPrincipalBindingRequest
+	68,  // 404: until.AdminService.DeletePrincipalBinding:input_type -> until.AdminDeletePrincipalBindingRequest
+	70,  // 405: until.AdminService.UpdatePrincipal:input_type -> until.AdminUpdatePrincipalRequest
+	72,  // 406: until.AdminService.CreatePrincipalIdentity:input_type -> until.AdminCreatePrincipalIdentityRequest
+	74,  // 407: until.AdminService.DeletePrincipalIdentity:input_type -> until.AdminDeletePrincipalIdentityRequest
+	76,  // 408: until.AdminService.SetPrincipalCredential:input_type -> until.AdminSetPrincipalCredentialRequest
+	78,  // 409: until.AdminService.ListPrincipalCredentialConnections:input_type -> until.AdminListPrincipalCredentialConnectionsRequest
+	81,  // 410: until.AdminService.DeletePrincipalCredential:input_type -> until.AdminDeletePrincipalCredentialRequest
+	19,  // 411: until.AdminService.GetPullRequestTimeline:input_type -> until.GetPullRequestTimelineRequest
+	39,  // 412: until.WorkspaceService.ListOpenPullRequests:output_type -> until.ListOpenPullRequestsResponse
+	41,  // 413: until.WorkspaceService.GetPullRequest:output_type -> until.GetPullRequestResponse
+	208, // 414: until.WorkspaceService.GetPrincipalStatus:output_type -> until.GetPrincipalStatusResponse
+	334, // 415: until.WorkspaceService.GetPlanPrompt:output_type -> until.GetPlanPromptResponse
+	210, // 416: until.WorkspaceService.GetIntegrationConnectURL:output_type -> until.GetIntegrationConnectURLResponse
+	212, // 417: until.WorkspaceService.DisconnectIntegration:output_type -> until.DisconnectIntegrationResponse
+	214, // 418: until.WorkspaceService.ConnectByoHttpMcp:output_type -> until.ConnectByoHttpMcpResponse
+	216, // 419: until.WorkspaceService.GetGitLabConnection:output_type -> until.GetGitLabConnectionResponse
+	218, // 420: until.WorkspaceService.ConnectGitLab:output_type -> until.ConnectGitLabResponse
+	220, // 421: until.WorkspaceService.SaveGitLabSigningToken:output_type -> until.SaveGitLabSigningTokenResponse
+	298, // 422: until.WorkspaceService.UpsertMyVerifiedBinding:output_type -> until.UpsertMyVerifiedBindingResponse
+	302, // 423: until.WorkspaceService.ListMyBindings:output_type -> until.ListMyBindingsResponse
+	306, // 424: until.WorkspaceService.GetMyNotificationPreferences:output_type -> until.GetMyNotificationPreferencesResponse
+	308, // 425: until.WorkspaceService.UpdateMyNotificationPreferences:output_type -> until.UpdateMyNotificationPreferencesResponse
+	310, // 426: until.WorkspaceService.RegisterMyPushSubscription:output_type -> until.RegisterMyPushSubscriptionResponse
+	312, // 427: until.WorkspaceService.GetWebPushPublicKey:output_type -> until.GetWebPushPublicKeyResponse
+	300, // 428: until.WorkspaceService.UpdateMyDisplayName:output_type -> until.UpdateMyDisplayNameResponse
+	316, // 429: until.WorkspaceService.GetPlanCheckSettings:output_type -> until.GetPlanCheckSettingsResponse
+	318, // 430: until.WorkspaceService.UpdatePlanCheckSettings:output_type -> until.UpdatePlanCheckSettingsResponse
+	331, // 431: until.WorkspaceService.ListIntegrationCatalogue:output_type -> until.ListIntegrationCatalogueResponse
+	230, // 432: until.WorkspaceService.CreateWorkspace:output_type -> until.CreateWorkspaceResponse
+	232, // 433: until.WorkspaceService.ListMyWorkspaces:output_type -> until.ListMyWorkspacesResponse
+	235, // 434: until.WorkspaceService.DiscoverLoginRecoveryCandidates:output_type -> until.DiscoverLoginRecoveryCandidatesResponse
+	237, // 435: until.WorkspaceService.RenameWorkspace:output_type -> until.RenameWorkspaceResponse
+	274, // 436: until.WorkspaceService.UpdateWorkspaceBranding:output_type -> until.UpdateWorkspaceBrandingResponse
+	276, // 437: until.WorkspaceService.CompleteWorkspaceOnboarding:output_type -> until.CompleteWorkspaceOnboardingResponse
+	239, // 438: until.WorkspaceService.DeleteWorkspace:output_type -> until.DeleteWorkspaceResponse
+	241, // 439: until.WorkspaceService.ListJoinableWorkspaces:output_type -> until.ListJoinableWorkspacesResponse
+	245, // 440: until.WorkspaceService.JoinWorkspace:output_type -> until.JoinWorkspaceResponse
+	278, // 441: until.WorkspaceService.CreateInvitation:output_type -> until.CreateInvitationResponse
+	281, // 442: until.WorkspaceService.CreateInvitations:output_type -> until.CreateInvitationsResponse
+	283, // 443: until.WorkspaceService.AcceptInvitation:output_type -> until.AcceptInvitationResponse
+	285, // 444: until.WorkspaceService.ListWorkspaceMembers:output_type -> until.ListWorkspaceMembersResponse
+	288, // 445: until.WorkspaceService.ResendInvitation:output_type -> until.ResendInvitationResponse
+	290, // 446: until.WorkspaceService.RevokeInvitation:output_type -> until.RevokeInvitationResponse
+	292, // 447: until.WorkspaceService.RemoveWorkspaceMember:output_type -> until.RemoveWorkspaceMemberResponse
+	294, // 448: until.WorkspaceService.UpdateWorkspaceMemberRole:output_type -> until.UpdateWorkspaceMemberRoleResponse
+	248, // 449: until.WorkspaceService.ListApprovedEmailDomains:output_type -> until.ListApprovedEmailDomainsResponse
+	250, // 450: until.WorkspaceService.AddApprovedEmailDomain:output_type -> until.AddApprovedEmailDomainResponse
+	252, // 451: until.WorkspaceService.VerifyApprovedEmailDomain:output_type -> until.VerifyApprovedEmailDomainResponse
+	254, // 452: until.WorkspaceService.ResendApprovedEmailDomainCode:output_type -> until.ResendApprovedEmailDomainCodeResponse
+	258, // 453: until.WorkspaceService.DeleteApprovedEmailDomain:output_type -> until.DeleteApprovedEmailDomainResponse
+	261, // 454: until.WorkspaceService.GetWorkspaceLLMCredentialStatus:output_type -> until.GetWorkspaceLLMCredentialStatusResponse
+	263, // 455: until.WorkspaceService.SetWorkspaceLLMCredential:output_type -> until.SetWorkspaceLLMCredentialResponse
+	265, // 456: until.WorkspaceService.DeleteWorkspaceLLMCredential:output_type -> until.DeleteWorkspaceLLMCredentialResponse
+	268, // 457: until.WorkspaceService.GetMyCursorCredentialStatus:output_type -> until.GetMyCursorCredentialStatusResponse
+	270, // 458: until.WorkspaceService.SetMyCursorCredential:output_type -> until.SetMyCursorCredentialResponse
+	272, // 459: until.WorkspaceService.DeleteMyCursorCredential:output_type -> until.DeleteMyCursorCredentialResponse
+	224, // 460: until.WorkspaceService.GetWorkspaceIntegrationRoles:output_type -> until.GetWorkspaceIntegrationRolesResponse
+	226, // 461: until.WorkspaceService.SetWorkspaceIntegrationRoles:output_type -> until.SetWorkspaceIntegrationRolesResponse
+	256, // 462: until.WorkspaceService.ResendVerificationEmail:output_type -> until.ResendVerificationEmailResponse
+	296, // 463: until.PublicService.GetInvitation:output_type -> until.GetInvitationResponse
+	43,  // 464: until.AdminService.ExecuteLoop:output_type -> until.ExecuteLoopResponse
+	29,  // 465: until.AdminService.ListRuns:output_type -> until.ListRunsResponse
+	43,  // 466: until.AdminService.WatchRun:output_type -> until.ExecuteLoopResponse
+	33,  // 467: until.AdminService.StreamEvents:output_type -> until.StreamEventsResponse
+	35,  // 468: until.AdminService.ListEvents:output_type -> until.ListEventsResponse
+	37,  // 469: until.AdminService.CancelRun:output_type -> until.CancelRunResponse
+	43,  // 470: until.AdminService.SendQuestion:output_type -> until.ExecuteLoopResponse
+	56,  // 471: until.AdminService.ListPlans:output_type -> until.AdminListPlansResponse
+	59,  // 472: until.AdminService.GetPlan:output_type -> until.AdminGetPlanResponse
+	84,  // 473: until.AdminService.ListReviews:output_type -> until.AdminListReviewsResponse
+	87,  // 474: until.AdminService.GetReview:output_type -> until.AdminGetReviewResponse
+	90,  // 475: until.AdminService.ListAccounts:output_type -> until.AdminListAccountsResponse
+	93,  // 476: until.AdminService.GetAccountSummary:output_type -> until.AdminGetAccountSummaryResponse
+	96,  // 477: until.AdminService.GetAccountHealthAnalysis:output_type -> until.AdminGetAccountHealthAnalysisResponse
+	99,  // 478: until.AdminService.ListAccountMetricRepos:output_type -> until.AdminListAccountMetricReposResponse
+	101, // 479: until.AdminService.StartAccountMetricsComparison:output_type -> until.AdminStartAccountMetricsComparisonResponse
+	105, // 480: until.AdminService.GetAccountMetricsComparisonRun:output_type -> until.AdminGetAccountMetricsComparisonRunResponse
+	316, // 481: until.AdminService.GetAccountPlanCheckSettings:output_type -> until.GetPlanCheckSettingsResponse
+	318, // 482: until.AdminService.UpdateAccountPlanCheckSettings:output_type -> until.UpdatePlanCheckSettingsResponse
+	322, // 483: until.AdminService.GetAccountReviewPolicy:output_type -> until.AdminGetAccountReviewPolicyResponse
+	324, // 484: until.AdminService.UpdateAccountReviewPolicy:output_type -> until.AdminUpdateAccountReviewPolicyResponse
+	326, // 485: until.AdminService.GetAccountLLMCredentialStatus:output_type -> until.AdminGetAccountLLMCredentialStatusResponse
+	329, // 486: until.AdminService.ListAccountIntegrations:output_type -> until.AdminListAccountIntegrationsResponse
+	193, // 487: until.AdminService.ListLoops:output_type -> until.ListLoopsResponse
+	196, // 488: until.AdminService.GetLoop:output_type -> until.GetLoopResponse
+	199, // 489: until.AdminService.ListLoopRuns:output_type -> until.ListLoopRunsResponse
+	205, // 490: until.AdminService.GetLoopRun:output_type -> until.GetLoopRunResponse
+	204, // 491: until.AdminService.GetLoopRunThreadHistory:output_type -> until.GetLoopRunThreadHistoryResponse
+	14,  // 492: until.AdminService.ListPullRequests:output_type -> until.ListPullRequestsResponse
+	16,  // 493: until.AdminService.GetPullRequestByID:output_type -> until.GetPullRequestByIDResponse
+	18,  // 494: until.AdminService.ListPlanChecksForPR:output_type -> until.ListPlanChecksForPRResponse
+	62,  // 495: until.AdminService.ListPrincipals:output_type -> until.AdminListPrincipalsResponse
+	64,  // 496: until.AdminService.GetPrincipal:output_type -> until.AdminGetPrincipalResponse
+	67,  // 497: until.AdminService.UpsertPrincipalBinding:output_type -> until.AdminUpsertPrincipalBindingResponse
+	69,  // 498: until.AdminService.DeletePrincipalBinding:output_type -> until.AdminDeletePrincipalBindingResponse
+	71,  // 499: until.AdminService.UpdatePrincipal:output_type -> until.AdminUpdatePrincipalResponse
+	73,  // 500: until.AdminService.CreatePrincipalIdentity:output_type -> until.AdminCreatePrincipalIdentityResponse
+	75,  // 501: until.AdminService.DeletePrincipalIdentity:output_type -> until.AdminDeletePrincipalIdentityResponse
+	77,  // 502: until.AdminService.SetPrincipalCredential:output_type -> until.AdminSetPrincipalCredentialResponse
+	79,  // 503: until.AdminService.ListPrincipalCredentialConnections:output_type -> until.AdminListPrincipalCredentialConnectionsResponse
+	82,  // 504: until.AdminService.DeletePrincipalCredential:output_type -> until.AdminDeletePrincipalCredentialResponse
+	22,  // 505: until.AdminService.GetPullRequestTimeline:output_type -> until.GetPullRequestTimelineResponse
 	412, // [412:506] is the sub-list for method output_type
 	318, // [318:412] is the sub-list for method input_type
 	318, // [318:318] is the sub-list for extension type_name
@@ -27791,16 +27780,16 @@ func file_brent_proto_init() {
 	file_brent_proto_msgTypes[14].OneofWrappers = []any{}
 	file_brent_proto_msgTypes[17].OneofWrappers = []any{}
 	file_brent_proto_msgTypes[30].OneofWrappers = []any{
-		(*ExecuteWorkflowResponse_Reasoning)(nil),
-		(*ExecuteWorkflowResponse_ToolCall)(nil),
-		(*ExecuteWorkflowResponse_ToolResult)(nil),
-		(*ExecuteWorkflowResponse_Completion)(nil),
-		(*ExecuteWorkflowResponse_Error)(nil),
-		(*ExecuteWorkflowResponse_Status)(nil),
-		(*ExecuteWorkflowResponse_RunStarted)(nil),
-		(*ExecuteWorkflowResponse_QaReady)(nil),
-		(*ExecuteWorkflowResponse_UserQuestion)(nil),
-		(*ExecuteWorkflowResponse_UserMessage)(nil),
+		(*ExecuteLoopResponse_Reasoning)(nil),
+		(*ExecuteLoopResponse_ToolCall)(nil),
+		(*ExecuteLoopResponse_ToolResult)(nil),
+		(*ExecuteLoopResponse_Completion)(nil),
+		(*ExecuteLoopResponse_Error)(nil),
+		(*ExecuteLoopResponse_Status)(nil),
+		(*ExecuteLoopResponse_RunStarted)(nil),
+		(*ExecuteLoopResponse_QaReady)(nil),
+		(*ExecuteLoopResponse_UserQuestion)(nil),
+		(*ExecuteLoopResponse_UserMessage)(nil),
 	}
 	file_brent_proto_msgTypes[57].OneofWrappers = []any{}
 	file_brent_proto_msgTypes[72].OneofWrappers = []any{}
@@ -27824,14 +27813,14 @@ func file_brent_proto_init() {
 		(*Event_PullRequestUnlinkedFromPlan)(nil),
 		(*Event_OrganisationAppInstallationUpserted)(nil),
 		(*Event_OrganisationAppInstallationDeleted)(nil),
-		(*Event_DeviationAnalysisStarted)(nil),
-		(*Event_DeviationAnalysisCompleted)(nil),
-		(*Event_DeviationAnalysisFailed)(nil),
-		(*Event_WorkflowRunQueued)(nil),
-		(*Event_WorkflowRunStarted)(nil),
-		(*Event_WorkflowRunCompleted)(nil),
-		(*Event_WorkflowRunFailed)(nil),
-		(*Event_WorkflowRunCancelled)(nil),
+		(*Event_PlanCheckStarted)(nil),
+		(*Event_PlanCheckCompleted)(nil),
+		(*Event_PlanCheckFailed)(nil),
+		(*Event_LoopRunQueued)(nil),
+		(*Event_LoopRunStarted)(nil),
+		(*Event_LoopRunCompleted)(nil),
+		(*Event_LoopRunFailed)(nil),
+		(*Event_LoopRunCancelled)(nil),
 		(*Event_ReviewNoEligibleReviewer)(nil),
 		(*Event_PrincipalCreated)(nil),
 		(*Event_PrincipalUpdated)(nil),
@@ -27847,9 +27836,9 @@ func file_brent_proto_init() {
 		(*Event_PlanRestored)(nil),
 		(*Event_LinearWebhook)(nil),
 		(*Event_PullRequestCommentCreated)(nil),
-		(*Event_DeviationFindingRecorded)(nil),
-		(*Event_DeviationFindingUpdated)(nil),
-		(*Event_DeviationFindingResolved)(nil),
+		(*Event_PlanDifferenceRecorded)(nil),
+		(*Event_PlanDifferenceUpdated)(nil),
+		(*Event_PlanDifferenceResolved)(nil),
 		(*Event_AgentRunDispatched)(nil),
 		(*Event_AgentRunStarted)(nil),
 		(*Event_AgentRunPullRequestMatched)(nil),
@@ -27859,7 +27848,7 @@ func file_brent_proto_init() {
 		(*Event_AgentRunCancelled)(nil),
 		(*Event_AgentRunGatePassed)(nil),
 		(*Event_PullRequestLinkedToAgentRun)(nil),
-		(*Event_WorkflowIngested)(nil),
+		(*Event_LoopIngested)(nil),
 		(*Event_PullRequestReviewRequested)(nil),
 		(*Event_PullRequestApproved)(nil),
 		(*Event_PullRequestChangesRequested)(nil),
@@ -27882,8 +27871,8 @@ func file_brent_proto_init() {
 		(*Event_WorkspaceMemberJoined)(nil),
 		(*Event_WorkspaceMemberLeft)(nil),
 		(*Event_ComposioTriggerMessage)(nil),
-		(*Event_DeviationFindingAcknowledged)(nil),
-		(*Event_DeviationFindingAcknowledgementCleared)(nil),
+		(*Event_PlanDifferenceAcknowledged)(nil),
+		(*Event_PlanDifferenceAcknowledgementCleared)(nil),
 		(*Event_PlanReviewPolicyDecided)(nil),
 		(*Event_ReviewRestored)(nil),
 		(*Event_WorkspaceReviewPolicyUpdated)(nil),
