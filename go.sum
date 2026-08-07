@@ -30,8 +30,8 @@ cloud.google.com/go/auth/oauth2adapt v0.2.8 h1:keo8NaayQZ6wimpNSmW5OPc283g65QNIi
 cloud.google.com/go/auth/oauth2adapt v0.2.8/go.mod h1:XQ9y31RkqZCcwJWNSx2Xvric3RrU88hAYYbjDWYDL+c=
 cloud.google.com/go/bigquery v1.79.0 h1:+tW6oRuP/4dOgdl/p32on0+3OktVQtU+veOMxhjoOhE=
 cloud.google.com/go/bigquery v1.79.0/go.mod h1:QTt5tgZxqqvZs3dOZKpvriGqy+CdvY9LyetirFZRPOE=
-cloud.google.com/go/bigtable v1.51.0 h1:AZh/vDoRdn8cz+CbdUjx/ajQGqit831Wo8dtIWsfNTY=
-cloud.google.com/go/bigtable v1.51.0/go.mod h1:PL9WVm/o2ET/MDj6i1Zt7eNW7YNY0iFOmSHTVvLdPmo=
+cloud.google.com/go/bigtable v1.52.0 h1:8DS8rq5Mn3XmPqXD/vk+1lyqcWJ4hs+0Hh8Ruqroj+U=
+cloud.google.com/go/bigtable v1.52.0/go.mod h1:51/CYIIpOoGrZ6koxZ9F5MFMwhtluPPeh0BvCJjl5RQ=
 cloud.google.com/go/certificatemanager v1.15.0 h1:PwljEZlI3lZgoFUG0pnIBNOwrQUaAP+gS0ZahTwUZBA=
 cloud.google.com/go/certificatemanager v1.15.0/go.mod h1:8dfGG2/TbUpCNqsCF/TIMOGV0OVvU6nhkZWTU4MmCXU=
 cloud.google.com/go/compute v1.65.0 h1:K0a3NRvazE7sZn5qswwI6BtlaZv1fgR5wFop5LZCLz8=
@@ -1114,8 +1114,8 @@ gomodules.xyz/jsonpatch/v2 v2.5.0 h1:JELs8RLM12qJGXU4u/TO3V25KW8GreMKl9pdkk14RM0
 gomodules.xyz/jsonpatch/v2 v2.5.0/go.mod h1:AH3dM2RI6uoBZxn3LVrfvJ3E0/9dG4cSrbuBJT4moAY=
 gonum.org/v1/gonum v0.17.0 h1:VbpOemQlsSMrYmn7T2OUvQ4dqxQXU+ouZFQsZOx50z4=
 gonum.org/v1/gonum v0.17.0/go.mod h1:El3tOrEuMpv2UdMrbNlKEh9vd86bmQ6vqIcDwxEOc1E=
-google.golang.org/api v0.291.0 h1:wfPbbY+mr9c7wZLqqzrHJLft/q8iFKREd6IgTBUene0=
-google.golang.org/api v0.291.0/go.mod h1:at7kwWbuonglBFEBoeMDAV1bguHqL3qf0BHFsv3coa0=
+google.golang.org/api v0.292.0 h1:Ewiwo/GTtiaPZSNAZQUcWLh8AYDEoPmIXyJfeoTSMHU=
+google.golang.org/api v0.292.0/go.mod h1:07kjmMnFGm2RQuCza2EZM/5N68G/fVvFb1xKjWqoFA0=
 google.golang.org/appengine v1.1.0/go.mod h1:EbEs0AVv82hx2wNQdGPgUI5lhzA/G0D9YwlJXL52JkM=
 google.golang.org/appengine v1.6.8 h1:IhEN5q69dyKagZPYMSdIjS2HqprW324FRQZJcGqPAsM=
 google.golang.org/appengine v1.6.8/go.mod h1:1jJ3jBArFh5pcgW8gCtRJnepW8FzD1V44FJffLiz/Ds=
