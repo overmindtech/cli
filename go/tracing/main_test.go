@@ -17,9 +17,38 @@ import (
 )
 
 func TestTracingResource(t *testing.T) {
-	resource := tracingResource("test-component")
+	resource := tracingResource("test-component", initConfig{})
 	if resource == nil {
 		t.Error("Could not initialize tracing resource. Check the log!")
+	}
+}
+
+func TestTracingResourceLegacyServiceName(t *testing.T) {
+	res := tracingResource("until-backend", initConfig{legacyServiceName: "brent-backend"})
+	if res == nil {
+		t.Fatal("expected resource")
+	}
+	attrs := res.Attributes()
+	var sawService, sawLegacy bool
+	for _, a := range attrs {
+		switch string(a.Key) {
+		case "service.name":
+			sawService = true
+			if a.Value.AsString() != "until-backend" {
+				t.Errorf("service.name = %q want until-backend", a.Value.AsString())
+			}
+		case "service.name.legacy":
+			sawLegacy = true
+			if a.Value.AsString() != "brent-backend" {
+				t.Errorf("service.name.legacy = %q want brent-backend", a.Value.AsString())
+			}
+		}
+	}
+	if !sawService {
+		t.Error("missing service.name")
+	}
+	if !sawLegacy {
+		t.Error("missing service.name.legacy")
 	}
 }
 

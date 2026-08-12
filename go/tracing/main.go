@@ -53,19 +53,18 @@ var (
 	commit  = "none"
 )
 
-var (
-	tracer = otel.GetTracerProvider().Tracer(
-		instrumentationName,
-		trace.WithInstrumentationVersion(version),
-		trace.WithInstrumentationAttributes(
-			attribute.String("build.commit", commit),
-		),
-		trace.WithSchemaURL(semconv.SchemaURL),
-	)
-)
+var instrumentationTracerOpts = []trace.TracerOption{
+	trace.WithInstrumentationVersion(version),
+	trace.WithInstrumentationAttributes(
+		attribute.String("build.commit", commit),
+	),
+	trace.WithSchemaURL(semconv.SchemaURL),
+}
 
+// Tracer returns a tracer from the current global TracerProvider. Looked up on
+// each call so post-init provider wrappers (e.g. telemetrydual) still apply.
 func Tracer() trace.Tracer {
-	return tracer
+	return otel.GetTracerProvider().Tracer(instrumentationName, instrumentationTracerOpts...)
 }
 
 // hasGitDir returns true if the current directory or any parent directory contains a .git directory
@@ -99,7 +98,34 @@ func hasGitDir() bool {
 	return false // No .git directory found
 }
 
-func tracingResource(component string) *resource.Resource {
+// InitOption configures InitTracer / InitTracerWithUpstreams.
+type InitOption func(*initConfig)
+
+type initConfig struct {
+	legacyServiceName string
+	wrapProvider      func(trace.TracerProvider) trace.TracerProvider
+}
+
+// WithLegacyServiceName sets resource attribute service.name.legacy alongside
+// the primary service.name. Used during Until rename dual-write (ENG-6154).
+// Only brent-backend / until-backend should pass this; other services must omit it.
+func WithLegacyServiceName(name string) InitOption {
+	return func(c *initConfig) {
+		c.legacyServiceName = name
+	}
+}
+
+// WithTracerProviderWrapper wraps the SDK TracerProvider before the first
+// otel.SetTracerProvider call. OpenTelemetry only rebinds package-init
+// tracers on the first SetTracerProvider, so dual-emit wrappers (ENG-6154)
+// must be applied here rather than via a second SetTracerProvider.
+func WithTracerProviderWrapper(wrap func(trace.TracerProvider) trace.TracerProvider) InitOption {
+	return func(c *initConfig) {
+		c.wrapProvider = wrap
+	}
+}
+
+func tracingResource(component string, cfg initConfig) *resource.Resource {
 	// Identify your application using resource detection
 	resources := []*resource.Resource{}
 
@@ -122,7 +148,8 @@ func tracingResource(component string) *resource.Resource {
 	// 	detectors = append(detectors, eks.NewResourceDetector())
 	// }
 
-	hostRes, err := resource.New(context.Background(),
+	hostRes, err := resource.New(
+		context.Background(),
 		resource.WithHost(),
 		resource.WithOS(),
 		resource.WithProcess(),
@@ -135,14 +162,20 @@ func tracingResource(component string) *resource.Resource {
 	}
 	resources = append(resources, hostRes)
 
-	localRes, err := resource.New(context.Background(),
+	localAttrs := []attribute.KeyValue{
+		semconv.ServiceNameKey.String(component),
+		semconv.ServiceVersionKey.String(version),
+		attribute.String("build.commit", commit),
+	}
+	if cfg.legacyServiceName != "" {
+		localAttrs = append(localAttrs, attribute.String("service.name.legacy", cfg.legacyServiceName))
+	}
+
+	localRes, err := resource.New(
+		context.Background(),
 		resource.WithSchemaURL(semconv.SchemaURL),
 		// Add your own custom attributes to identify your application
-		resource.WithAttributes(
-			semconv.ServiceNameKey.String(component),
-			semconv.ServiceVersionKey.String(version),
-			attribute.String("build.commit", commit),
-		),
+		resource.WithAttributes(localAttrs...),
 	)
 	if err != nil {
 		log.WithError(err).Error("error initialising local resource")
@@ -152,7 +185,6 @@ func tracingResource(component string) *resource.Resource {
 
 	conv := schema.NewConverter(schema.DefaultClient)
 	res, err := conv.MergeResources(context.Background(), semconv.SchemaURL, resources...)
-
 	if err != nil {
 		log.WithError(err).Error("error merging resource")
 		return nil
@@ -197,6 +229,12 @@ func sentryEnvironmentFromViper() string {
 
 // InitTracerWithUpstreams initialises the tracer with uploading directly to Honeycomb and sentry if `honeycombApiKey` and `sentryDSN` is set respectively. `component` is used as the service name.
 func InitTracerWithUpstreams(component, honeycombApiKey, sentryDSN string, opts ...otlptracehttp.Option) error {
+	return InitTracerWithUpstreamsAndInitOptions(component, honeycombApiKey, sentryDSN, nil, opts...)
+}
+
+// InitTracerWithUpstreamsAndInitOptions is like InitTracerWithUpstreams but applies
+// InitOption values (e.g. WithLegacyServiceName) when building the resource.
+func InitTracerWithUpstreamsAndInitOptions(component, honeycombApiKey, sentryDSN string, initOpts []InitOption, opts ...otlptracehttp.Option) error {
 	if sentryDSN != "" {
 		environment := sentryEnvironmentFromViper()
 		err := sentry.Init(sentry.ClientOptions{
@@ -219,7 +257,8 @@ func InitTracerWithUpstreams(component, honeycombApiKey, sentryDSN string, opts 
 	}
 
 	if honeycombApiKey != "" {
-		opts = append(opts,
+		opts = append(
+			opts,
 			otlptracehttp.WithEndpoint("api.honeycomb.io"),
 			otlptracehttp.WithHeaders(map[string]string{"x-honeycomb-team": honeycombApiKey}),
 		)
@@ -227,13 +266,14 @@ func InitTracerWithUpstreams(component, honeycombApiKey, sentryDSN string, opts 
 		// If no Honeycomb API key is provided, use the hardcoded OTLP collector
 		// endpoint, which is provided by the otel-collector service in the otel
 		// namespace. Since this a node-local service, it does not use TLS.
-		opts = append(opts,
+		opts = append(
+			opts,
 			otlptracehttp.WithEndpoint("otelcol-node-opentelemetry-collector.otel.svc.cluster.local:4318"),
 			otlptracehttp.WithInsecure(),
 		)
 	}
 
-	return InitTracer(component, opts...)
+	return InitTracerWithInitOptions(component, initOpts, opts...)
 }
 
 // batcherOpts are the shared BatchSpanProcessor options applied to every
@@ -256,14 +296,25 @@ var batcherOpts = []sdktrace.BatchSpanProcessorOption{
 }
 
 func InitTracer(component string, opts ...otlptracehttp.Option) error {
+	return InitTracerWithInitOptions(component, nil, opts...)
+}
+
+// InitTracerWithInitOptions initialises tracing with optional InitOption values
+// (e.g. WithLegacyServiceName for ENG-6154 dual-write).
+func InitTracerWithInitOptions(component string, initOpts []InitOption, opts ...otlptracehttp.Option) error {
 	otel.SetErrorHandler(logrusOtelErrorHandler{})
+
+	var cfg initConfig
+	for _, o := range initOpts {
+		o(&cfg)
+	}
 
 	otlpExp, err := otlptrace.New(context.Background(), otlptracehttp.NewClient(opts...))
 	if err != nil {
 		return fmt.Errorf("creating OTLP trace exporter: %w", err)
 	}
 
-	res := tracingResource(component)
+	res := tracingResource(component, cfg)
 
 	tracerOpts := []sdktrace.TracerProviderOption{
 		sdktrace.WithBatcher(otlpExp, batcherOpts...),
@@ -278,7 +329,11 @@ func InitTracer(component string, opts ...otlptracehttp.Option) error {
 	}
 	tp = sdktrace.NewTracerProvider(tracerOpts...)
 
-	otel.SetTracerProvider(tp)
+	provider := trace.TracerProvider(tp)
+	if cfg.wrapProvider != nil {
+		provider = cfg.wrapProvider(provider)
+	}
+	otel.SetTracerProvider(provider)
 
 	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 	return nil
