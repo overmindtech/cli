@@ -162,7 +162,7 @@ require (
 	github.com/nats-io/nats.go v1.53.1
 	github.com/nats-io/nkeys v0.4.16
 	github.com/neo4j/neo4j-go-driver/v6 v6.2.0
-	github.com/onsi/ginkgo/v2 v2.32.0
+	github.com/onsi/ginkgo/v2 v2.32.1
 	github.com/onsi/gomega v1.42.1
 	github.com/openai/openai-go/v3 v3.50.0
 	github.com/openrdap/rdap v0.10.1
