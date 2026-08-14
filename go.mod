@@ -19,15 +19,15 @@ replace github.com/go-git/go-git/v5 => github.com/go-git/go-git/v5 v5.19.2
 replace github.com/hamba/avro/v2 => github.com/iskorotkov/avro/v2 v2.33.1
 
 // CVE-2026-46599, CVE-2026-42500: gonum pins golang.org/x/image v0.25.0; force patched release.
-replace golang.org/x/image => golang.org/x/image v0.44.0
+replace golang.org/x/image => golang.org/x/image v0.45.0
 
 require (
 	atomicgo.dev/keyboard v0.2.10
-	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.11-20260709200747-435963d16310.1
+	buf.build/gen/go/bufbuild/protovalidate/protocolbuffers/go v1.36.12-20260709200747-435963d16310.1
 	buf.build/gen/go/depot/api/connectrpc/go v1.20.0-20260805103418-70b5c163d960.1
-	buf.build/gen/go/depot/api/protocolbuffers/go v1.36.11-20260805103418-70b5c163d960.1
-	buf.build/go/protovalidate v1.2.0
-	charm.land/lipgloss/v2 v2.0.5
+	buf.build/gen/go/depot/api/protocolbuffers/go v1.36.12-20260805103418-70b5c163d960.1
+	buf.build/go/protovalidate v1.3.0
+	charm.land/lipgloss/v2 v2.0.6
 	cloud.google.com/go/aiplatform v1.126.0
 	cloud.google.com/go/auth v0.22.0
 	cloud.google.com/go/auth/oauth2adapt v0.2.8
@@ -172,7 +172,7 @@ require (
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/posthog/posthog-go v1.23.0
 	github.com/qhenkart/anthropic-tokenizer-go v0.0.0-20231011194518-5519949e0faf
-	github.com/resend/resend-go/v3 v3.12.0
+	github.com/resend/resend-go/v3 v3.13.0
 	github.com/riverqueue/river v0.43.0
 	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.43.0
 	github.com/riverqueue/river/rivertype v0.43.0
@@ -180,7 +180,7 @@ require (
 	github.com/rs/cors v1.11.1
 	github.com/samber/slog-logrus/v2 v2.5.4
 	github.com/sashabaranov/go-openai v1.42.0
-	github.com/sirupsen/logrus v1.9.4
+	github.com/sirupsen/logrus v1.10.0
 	github.com/slack-go/slack v0.27.0
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8
 	github.com/spf13/cobra v1.10.2
@@ -194,7 +194,7 @@ require (
 	github.com/uptrace/opentelemetry-go-extra/otellogrus v0.3.2
 	github.com/xiam/dig v0.0.0-20191116195832-893b5fb5093b
 	github.com/zclconf/go-cty v1.19.0
-	gitlab.com/gitlab-org/api/client-go/v2 v2.56.0
+	gitlab.com/gitlab-org/api/client-go/v2 v2.58.0
 	go.etcd.io/bbolt v1.5.0
 	go.opentelemetry.io/contrib/detectors/aws/ec2/v2 v2.0.0-20250901115419-474a7992e57c
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.70.0
@@ -209,7 +209,7 @@ require (
 	go.uber.org/goleak v1.3.0
 	go.uber.org/mock v0.6.0
 	go.yaml.in/yaml/v3 v3.0.5
-	golang.org/x/net v0.57.0
+	golang.org/x/net v0.58.0
 	golang.org/x/oauth2 v0.36.0
 	golang.org/x/sync v0.22.0
 	golang.org/x/text v0.41.0
@@ -277,8 +277,8 @@ require (
 	github.com/cespare/xxhash/v2 v2.3.0 // indirect
 	github.com/charmbracelet/colorprofile v0.4.3 // indirect
 	github.com/charmbracelet/lipgloss v1.1.1-0.20250404203927-76690c660834 // indirect; being pulled by glamour, this will be resolved in https://github.com/charmbracelet/glamour/pull/408
-	github.com/charmbracelet/ultraviolet v0.0.0-20251205161215-1948445e3318 // indirect
-	github.com/charmbracelet/x/ansi v0.11.7 // indirect
+	github.com/charmbracelet/ultraviolet v0.0.0-20260811164956-006e29f97886 // indirect
+	github.com/charmbracelet/x/ansi v0.11.8 // indirect
 	github.com/charmbracelet/x/cellbuf v0.0.15 // indirect
 	github.com/charmbracelet/x/exp/slice v0.0.0-20250417172821-98fd948af1b1 // indirect
 	github.com/charmbracelet/x/term v0.2.2 // indirect
@@ -374,11 +374,11 @@ require (
 	github.com/lestrrat-go/jwx/v3 v3.0.13 // indirect
 	github.com/lestrrat-go/option v1.0.1 // indirect
 	github.com/lestrrat-go/option/v2 v2.0.0 // indirect
-	github.com/lucasb-eyer/go-colorful v1.4.0 // indirect
+	github.com/lucasb-eyer/go-colorful v1.4.1 // indirect
 	github.com/mailru/easyjson v0.9.0 // indirect
 	github.com/mattn/go-colorable v0.1.14 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
-	github.com/mattn/go-runewidth v0.0.23 // indirect
+	github.com/mattn/go-runewidth v0.0.24 // indirect
 	github.com/microcosm-cc/bluemonday v1.0.27 // indirect
 	github.com/minio/highwayhash v1.0.4 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
@@ -475,6 +475,6 @@ require (
 	sigs.k8s.io/yaml v1.6.0 // indirect
 )
 
-require golang.org/x/image v0.44.0
+require golang.org/x/image v0.45.0
 
 require github.com/SherClockHolmes/webpush-go v1.4.0
