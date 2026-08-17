@@ -77,7 +77,7 @@ func TestSentryEnvironment_AbsentHoneycombUsesRunMode(t *testing.T) {
 
 // TestSentryEnvironmentFromViper_BrentConfigurationPath exercises the real
 // Brent wiring after BRENT-651: empty cobra default, BindEnv for
-// BRENT_BACKEND_HONEYCOMB_ENVIRONMENT, and BindFlagsToViper's rule of skipping
+// UNTIL_BACKEND_HONEYCOMB_ENVIRONMENT, and BindFlagsToViper's rule of skipping
 // empty unbound defaults. AWS overlays set the env var; local runs do not.
 func TestSentryEnvironmentFromViper_BrentConfigurationPath(t *testing.T) {
 	tests := []struct {
@@ -128,11 +128,11 @@ func TestSentryEnvironmentFromViper_BrentConfigurationPath(t *testing.T) {
 			t.Cleanup(viper.Reset)
 
 			if tc.envValue != "" {
-				t.Setenv("BRENT_BACKEND_HONEYCOMB_ENVIRONMENT", tc.envValue)
+				t.Setenv("UNTIL_BACKEND_HONEYCOMB_ENVIRONMENT", tc.envValue)
 			}
 
 			viper.Set("run-mode", tc.runMode)
-			if err := viper.BindEnv("honeycomb-environment", "BRENT_BACKEND_HONEYCOMB_ENVIRONMENT"); err != nil {
+			if err := viper.BindEnv("honeycomb-environment", "UNTIL_BACKEND_HONEYCOMB_ENVIRONMENT"); err != nil {
 				t.Fatalf("BindEnv: %v", err)
 			}
 

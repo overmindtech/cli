@@ -174,7 +174,7 @@ var tp *sdktrace.TracerProvider
 // so an unconfigured local/test/release process keeps the run-mode mapping
 // below; ServerConfig still defaults empty HoneycombEnvironment to "dev" for
 // audit-event trace URLs. AWS dogfood/prod overlays set
-// BRENT_BACKEND_HONEYCOMB_ENVIRONMENT and therefore label Sentry correctly
+// UNTIL_BACKEND_HONEYCOMB_ENVIRONMENT and therefore label Sentry correctly
 // even when run-mode is release.
 func sentryEnvironment(runMode, honeycombEnvironment string) string {
 	if env := strings.TrimSpace(honeycombEnvironment); env != "" {
