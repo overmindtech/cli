@@ -2,14 +2,13 @@ package tracing
 
 import (
 	"context"
+	_ "embed"
 	"fmt"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
-
-	_ "embed"
 
 	"github.com/MrAlias/otel-schema-utils/schema"
 	"github.com/getsentry/sentry-go"
@@ -62,7 +61,7 @@ var instrumentationTracerOpts = []trace.TracerOption{
 }
 
 // Tracer returns a tracer from the current global TracerProvider. Looked up on
-// each call so post-init provider wrappers (e.g. telemetrydual) still apply.
+// each call so tests that swap the global provider still see the new one.
 func Tracer() trace.Tracer {
 	return otel.GetTracerProvider().Tracer(instrumentationName, instrumentationTracerOpts...)
 }
@@ -101,31 +100,9 @@ func hasGitDir() bool {
 // InitOption configures InitTracer / InitTracerWithUpstreams.
 type InitOption func(*initConfig)
 
-type initConfig struct {
-	legacyServiceName string
-	wrapProvider      func(trace.TracerProvider) trace.TracerProvider
-}
+type initConfig struct{}
 
-// WithLegacyServiceName sets resource attribute service.name.legacy alongside
-// the primary service.name. Used during Until rename dual-write (ENG-6154).
-// Only brent-backend / until-backend should pass this; other services must omit it.
-func WithLegacyServiceName(name string) InitOption {
-	return func(c *initConfig) {
-		c.legacyServiceName = name
-	}
-}
-
-// WithTracerProviderWrapper wraps the SDK TracerProvider before the first
-// otel.SetTracerProvider call. OpenTelemetry only rebinds package-init
-// tracers on the first SetTracerProvider, so dual-emit wrappers (ENG-6154)
-// must be applied here rather than via a second SetTracerProvider.
-func WithTracerProviderWrapper(wrap func(trace.TracerProvider) trace.TracerProvider) InitOption {
-	return func(c *initConfig) {
-		c.wrapProvider = wrap
-	}
-}
-
-func tracingResource(component string, cfg initConfig) *resource.Resource {
+func tracingResource(component string, _ initConfig) *resource.Resource {
 	// Identify your application using resource detection
 	resources := []*resource.Resource{}
 
@@ -166,9 +143,6 @@ func tracingResource(component string, cfg initConfig) *resource.Resource {
 		semconv.ServiceNameKey.String(component),
 		semconv.ServiceVersionKey.String(version),
 		attribute.String("build.commit", commit),
-	}
-	if cfg.legacyServiceName != "" {
-		localAttrs = append(localAttrs, attribute.String("service.name.legacy", cfg.legacyServiceName))
 	}
 
 	localRes, err := resource.New(
@@ -233,7 +207,7 @@ func InitTracerWithUpstreams(component, honeycombApiKey, sentryDSN string, opts 
 }
 
 // InitTracerWithUpstreamsAndInitOptions is like InitTracerWithUpstreams but applies
-// InitOption values (e.g. WithLegacyServiceName) when building the resource.
+// InitOption values when building the resource.
 func InitTracerWithUpstreamsAndInitOptions(component, honeycombApiKey, sentryDSN string, initOpts []InitOption, opts ...otlptracehttp.Option) error {
 	if sentryDSN != "" {
 		environment := sentryEnvironmentFromViper()
@@ -299,8 +273,7 @@ func InitTracer(component string, opts ...otlptracehttp.Option) error {
 	return InitTracerWithInitOptions(component, nil, opts...)
 }
 
-// InitTracerWithInitOptions initialises tracing with optional InitOption values
-// (e.g. WithLegacyServiceName for ENG-6154 dual-write).
+// InitTracerWithInitOptions initialises tracing with optional InitOption values.
 func InitTracerWithInitOptions(component string, initOpts []InitOption, opts ...otlptracehttp.Option) error {
 	otel.SetErrorHandler(logrusOtelErrorHandler{})
 
@@ -329,11 +302,7 @@ func InitTracerWithInitOptions(component string, initOpts []InitOption, opts ...
 	}
 	tp = sdktrace.NewTracerProvider(tracerOpts...)
 
-	provider := trace.TracerProvider(tp)
-	if cfg.wrapProvider != nil {
-		provider = cfg.wrapProvider(provider)
-	}
-	otel.SetTracerProvider(provider)
+	otel.SetTracerProvider(tp)
 
 	otel.SetTextMapPropagator(propagation.NewCompositeTextMapPropagator(propagation.TraceContext{}, propagation.Baggage{}))
 	return nil

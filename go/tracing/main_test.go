@@ -23,35 +23,6 @@ func TestTracingResource(t *testing.T) {
 	}
 }
 
-func TestTracingResourceLegacyServiceName(t *testing.T) {
-	res := tracingResource("until-backend", initConfig{legacyServiceName: "brent-backend"})
-	if res == nil {
-		t.Fatal("expected resource")
-	}
-	attrs := res.Attributes()
-	var sawService, sawLegacy bool
-	for _, a := range attrs {
-		switch string(a.Key) {
-		case "service.name":
-			sawService = true
-			if a.Value.AsString() != "until-backend" {
-				t.Errorf("service.name = %q want until-backend", a.Value.AsString())
-			}
-		case "service.name.legacy":
-			sawLegacy = true
-			if a.Value.AsString() != "brent-backend" {
-				t.Errorf("service.name.legacy = %q want brent-backend", a.Value.AsString())
-			}
-		}
-	}
-	if !sawService {
-		t.Error("missing service.name")
-	}
-	if !sawLegacy {
-		t.Error("missing service.name.legacy")
-	}
-}
-
 func TestShutdownProvider(t *testing.T) {
 	exp := tracetest.NewInMemoryExporter()
 
@@ -115,7 +86,8 @@ func TestBatcherOpts(t *testing.T) {
 func TestInitTracerSetsErrorHandler(t *testing.T) {
 	// Use a deliberately broken endpoint so the exporter creation succeeds
 	// but no actual spans are shipped.
-	err := InitTracer("test-component",
+	err := InitTracer(
+		"test-component",
 		otlptracehttp.WithEndpoint("localhost:0"),
 		otlptracehttp.WithInsecure(),
 	)
