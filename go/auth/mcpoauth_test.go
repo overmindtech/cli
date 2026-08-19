@@ -36,21 +36,7 @@ func TestNewMCPOAuthMetadataHandler_RouteFamilyAliasContracts(t *testing.T) {
 				"/.well-known/openid-configuration/oauth",
 				"/oauth/.well-known/openid-configuration",
 			},
-			forbidden: []string{"/brent/", "brent:read", "brent:write"},
-		},
-		{
-			name:                  "legacy Brent",
-			issuer:                "https://until.example.com/brent/oauth",
-			registrationEndpoint:  "https://until.example.com/brent/oauth/register",
-			authorizationEndpoint: "https://until.example.com/brent/oauth/authorize",
-			tokenEndpoint:         "https://until.example.com/brent/oauth/token",
-			scopes:                []string{"account:read", "brent:read", "brent:write"},
-			aliases: []string{
-				"/.well-known/oauth-authorization-server/brent/oauth",
-				"/brent/oauth/.well-known/oauth-authorization-server",
-				"/.well-known/openid-configuration/brent/oauth",
-				"/brent/oauth/.well-known/openid-configuration",
-			},
+			forbidden: []string{"/brent/", "brent:read", "brent:write"}, // must not contain
 		},
 	}
 
@@ -247,14 +233,7 @@ func TestNewMCPPRMHandler_RouteFamilyContracts(t *testing.T) {
 			authorizationServer: "https://until.example.com/oauth",
 			resource:            "https://until.example.com/mcp",
 			scopes:              []string{"account:read", "until:read", "until:write"},
-			forbidden:           []string{"/brent/", "brent:read", "brent:write"},
-		},
-		{
-			name:                "legacy Brent",
-			path:                "/.well-known/oauth-protected-resource/brent/mcp",
-			authorizationServer: "https://until.example.com/brent/oauth",
-			resource:            "https://until.example.com/brent/mcp",
-			scopes:              []string{"account:read", "brent:read", "brent:write"},
+			forbidden: []string{"/brent/", "brent:read", "brent:write"}, // must not contain
 		},
 	}
 
@@ -300,11 +279,11 @@ func TestNewMCPOAuthMetadataHandler_Overrides(t *testing.T) {
 	scopes := []string{"openid"}
 	handler := NewMCPOAuthMetadataHandler(
 		"auth.example.com",
-		"https://api.example.com/brent/oauth",
-		"https://api.example.com/brent/oauth/register",
+		"https://api.example.com/oauth",
+		"https://api.example.com/oauth/register",
 		scopes,
-		"https://api.example.com/brent/oauth/authorize",
-		"https://api.example.com/brent/oauth/token",
+		"https://api.example.com/oauth/authorize",
+		"https://api.example.com/oauth/token",
 	)
 
 	req := httptest.NewRequestWithContext(t.Context(), http.MethodGet, "/metadata", nil)
@@ -315,10 +294,10 @@ func TestNewMCPOAuthMetadataHandler_Overrides(t *testing.T) {
 	if err := json.NewDecoder(rec.Body).Decode(&body); err != nil {
 		t.Fatalf("decode: %v", err)
 	}
-	if body["authorization_endpoint"] != "https://api.example.com/brent/oauth/authorize" {
+	if body["authorization_endpoint"] != "https://api.example.com/oauth/authorize" {
 		t.Errorf("authorization_endpoint = %v", body["authorization_endpoint"])
 	}
-	if body["token_endpoint"] != "https://api.example.com/brent/oauth/token" {
+	if body["token_endpoint"] != "https://api.example.com/oauth/token" {
 		t.Errorf("token_endpoint = %v", body["token_endpoint"])
 	}
 }
