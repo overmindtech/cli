@@ -170,7 +170,7 @@ var tp *sdktrace.TracerProvider
 
 // sentryEnvironment chooses the Sentry environment label.
 //
-// A non-empty honeycombEnvironment wins. Brent's cobra flag defaults to empty
+// A non-empty honeycombEnvironment wins. Until-backend's cobra flag defaults to empty
 // so an unconfigured local/test/release process keeps the run-mode mapping
 // below; ServerConfig still defaults empty HoneycombEnvironment to "dev" for
 // audit-event trace URLs. AWS dogfood/prod overlays set

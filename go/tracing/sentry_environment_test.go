@@ -65,7 +65,7 @@ func TestSentryEnvironment_AbsentHoneycombUsesRunMode(t *testing.T) {
 	for _, tc := range tests {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			// Empty honeycombEnvironment models Brent's empty cobra default
+			// Empty honeycombEnvironment models Until-backend's empty cobra default
 			// (or a service that never registers the key).
 			got := sentryEnvironment(tc.runMode, "")
 			if got != tc.want {
@@ -76,7 +76,7 @@ func TestSentryEnvironment_AbsentHoneycombUsesRunMode(t *testing.T) {
 }
 
 // TestSentryEnvironmentFromViper_BrentConfigurationPath exercises the real
-// Brent wiring after BRENT-651: empty cobra default, BindEnv for
+// Until-backend wiring: empty cobra default, BindEnv for
 // UNTIL_BACKEND_HONEYCOMB_ENVIRONMENT, and BindFlagsToViper's rule of skipping
 // empty unbound defaults. AWS overlays set the env var; local runs do not.
 func TestSentryEnvironmentFromViper_BrentConfigurationPath(t *testing.T) {
@@ -136,8 +136,8 @@ func TestSentryEnvironmentFromViper_BrentConfigurationPath(t *testing.T) {
 				t.Fatalf("BindEnv: %v", err)
 			}
 
-			fs := pflag.NewFlagSet("brent-backend", pflag.ContinueOnError)
-			// Match services/brent-backend/cmd/root.go: empty default so an
+			fs := pflag.NewFlagSet("until-backend", pflag.ContinueOnError)
+			// Match services/until-backend/cmd/root.go: empty default so an
 			// unbound flag is not treated as an explicit honeycomb env.
 			fs.String("honeycomb-environment", "", "Honeycomb environment slug")
 			args := []string{}
