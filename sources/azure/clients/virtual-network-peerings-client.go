@@ -3,7 +3,7 @@ package clients
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v11"
 )
 
 //go:generate mockgen -destination=../shared/mocks/mock_virtual_network_peerings_client.go -package=mocks -source=virtual-network-peerings-client.go

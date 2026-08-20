@@ -3,7 +3,7 @@ package clients
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v11"
 )
 
 //go:generate mockgen -destination=../shared/mocks/mock_local_network_gateways_client.go -package=mocks -source=local-network-gateways-client.go

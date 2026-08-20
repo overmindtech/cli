@@ -10,7 +10,7 @@ import (
 	"time"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/azcore"
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v9"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v11"
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/resources/armresources/v4"
 	log "github.com/sirupsen/logrus"
 
@@ -81,7 +81,7 @@ func TestNetworkVirtualNetworkGatewayConnectionIntegration(t *testing.T) {
 	var setupCompleted bool
 
 	t.Run("Setup", func(t *testing.T) {
-		ctx, cancel := context.WithTimeout(t.Context(), 55*time.Minute)
+		ctx, cancel := context.WithTimeout(t.Context(), 15*time.Minute)
 		defer cancel()
 
 		err := createResourceGroup(ctx, rgClient, integrationTestResourceGroup, integrationTestLocation)
@@ -119,14 +119,38 @@ func TestNetworkVirtualNetworkGatewayConnectionIntegration(t *testing.T) {
 			t.Fatalf("Failed waiting for local gateway: %v", err)
 		}
 
-		err = createVPNGateway(ctx, vpnGatewayClient, subscriptionID, integrationTestResourceGroup, integrationTestVPNGatewayName, integrationTestVPNVNetName, integrationTestVPNSubnetName, integrationTestVPNPublicIPName, integrationTestLocation)
-		if err != nil {
-			t.Fatalf("Failed to create VPN gateway: %v", err)
-		}
-
-		err = waitForVPNGatewayAvailable(ctx, vpnGatewayClient, integrationTestResourceGroup, integrationTestVPNGatewayName)
-		if err != nil {
-			t.Fatalf("Failed waiting for VPN gateway: %v", err)
+		existingGW, err := vpnGatewayClient.Get(ctx, integrationTestResourceGroup, integrationTestVPNGatewayName, nil)
+		if err == nil {
+			if existingGW.Properties != nil && existingGW.Properties.ProvisioningState != nil {
+				state := *existingGW.Properties.ProvisioningState
+				if state == armnetwork.ProvisioningStateSucceeded {
+					log.Printf("VPN gateway %s already exists and is ready, skipping creation", integrationTestVPNGatewayName)
+				} else {
+					log.Printf("VPN gateway %s exists but in state %s, waiting for it to be ready", integrationTestVPNGatewayName, state)
+					err = waitForVPNGatewayAvailable(ctx, vpnGatewayClient, integrationTestResourceGroup, integrationTestVPNGatewayName)
+					if err != nil {
+						t.Fatalf("Failed waiting for existing VPN gateway to be ready: %v", err)
+					}
+				}
+			} else {
+				log.Printf("VPN gateway %s already exists, verifying availability", integrationTestVPNGatewayName)
+				err = waitForVPNGatewayAvailable(ctx, vpnGatewayClient, integrationTestResourceGroup, integrationTestVPNGatewayName)
+				if err != nil {
+					t.Fatalf("Failed waiting for VPN gateway to be available: %v", err)
+				}
+			}
+		} else {
+			var respErr *azcore.ResponseError
+			if errors.As(err, &respErr) && respErr.StatusCode == http.StatusNotFound {
+				// VPN gateway creation takes 20-45 minutes, which exceeds the PR CI timeout.
+				// Full provisioning runs in the weekly azure-integration-tests workflow.
+				log.Printf("VPN gateway %s does not exist", integrationTestVPNGatewayName)
+				log.Printf("VPN gateway creation takes 20-45 minutes, which exceeds the PR CI timeout.")
+				log.Printf("Required resources should be ready: subnet %s and public IP %s", integrationTestVPNSubnetName, integrationTestVPNPublicIPName)
+				t.Skipf("VPN gateway %s does not exist. Please create it first (takes 20-45 minutes) or ensure it exists in 'Succeeded' state before running integration tests", integrationTestVPNGatewayName)
+			} else {
+				t.Fatalf("Failed to check VPN gateway existence: %v", err)
+			}
 		}
 
 		err = createVPNConnection(ctx, vpnConnectionsClient, subscriptionID, integrationTestResourceGroup, integrationTestVPNConnectionName, integrationTestVPNGatewayName, integrationTestVPNLocalGWName, integrationTestLocation)
@@ -143,6 +167,16 @@ func TestNetworkVirtualNetworkGatewayConnectionIntegration(t *testing.T) {
 	})
 
 	t.Run("Run", func(t *testing.T) {
+		ctx := t.Context()
+		_, checkErr := vpnConnectionsClient.Get(ctx, integrationTestResourceGroup, integrationTestVPNConnectionName, nil)
+		if checkErr != nil {
+			var respErr *azcore.ResponseError
+			if errors.As(checkErr, &respErr) && respErr.StatusCode == http.StatusNotFound {
+				t.Skipf("VPN connection %s does not exist (Setup may have been skipped). Skipping Run tests.", integrationTestVPNConnectionName)
+			}
+			t.Fatalf("Failed preflight check for VPN connection %s: %v", integrationTestVPNConnectionName, checkErr)
+		}
+
 		if !setupCompleted {
 			t.Skip("Skipping Run: Setup did not complete successfully")
 		}
@@ -555,71 +589,6 @@ func waitForVPNLocalGatewayAvailable(ctx context.Context, client *armnetwork.Loc
 	}
 
 	return fmt.Errorf("timeout waiting for local network gateway %s", gatewayName)
-}
-
-func createVPNGateway(ctx context.Context, client *armnetwork.VirtualNetworkGatewaysClient, subscriptionID, resourceGroupName, gatewayName, vnetName, subnetName, pipName, location string) error {
-	existingGW, err := client.Get(ctx, resourceGroupName, gatewayName, nil)
-	if err == nil && existingGW.Properties != nil {
-		log.Printf("VPN gateway %s already exists, skipping creation", gatewayName)
-		return nil
-	}
-
-	subnetID := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/virtualNetworks/%s/subnets/%s",
-		subscriptionID, resourceGroupName, vnetName, subnetName)
-	pipID := fmt.Sprintf("/subscriptions/%s/resourceGroups/%s/providers/Microsoft.Network/publicIPAddresses/%s",
-		subscriptionID, resourceGroupName, pipName)
-
-	gatewayTypeVPN := armnetwork.VirtualNetworkGatewayTypeVPN
-	vpnTypeRouteBased := armnetwork.VPNTypeRouteBased
-	skuNameVPNGw1AZ := armnetwork.VirtualNetworkGatewaySKUNameVPNGw1AZ
-	skuTierVPNGw1AZ := armnetwork.VirtualNetworkGatewaySKUTierVPNGw1AZ
-	allocMethodDynamic := armnetwork.IPAllocationMethodDynamic
-	poller, err := client.BeginCreateOrUpdate(ctx, resourceGroupName, gatewayName, armnetwork.VirtualNetworkGateway{
-		Location: &location,
-		Properties: &armnetwork.VirtualNetworkGatewayPropertiesFormat{
-			GatewayType: &gatewayTypeVPN,
-			VPNType:     &vpnTypeRouteBased,
-			SKU: &armnetwork.VirtualNetworkGatewaySKU{
-				Name: &skuNameVPNGw1AZ,
-				Tier: &skuTierVPNGw1AZ,
-			},
-			IPConfigurations: []*armnetwork.VirtualNetworkGatewayIPConfiguration{
-				{
-					Name: new("default"),
-					Properties: &armnetwork.VirtualNetworkGatewayIPConfigurationPropertiesFormat{
-						PrivateIPAllocationMethod: &allocMethodDynamic,
-						Subnet: &armnetwork.SubResource{
-							ID: &subnetID,
-						},
-						PublicIPAddress: &armnetwork.SubResource{
-							ID: &pipID,
-						},
-					},
-				},
-			},
-		},
-		Tags: map[string]*string{
-			"purpose": new("overmind-integration-tests"),
-			"test":    new("network-virtual-network-gateway-connection"),
-		},
-	}, nil)
-	if err != nil {
-		var respErr *azcore.ResponseError
-		if errors.As(err, &respErr) && respErr.StatusCode == http.StatusConflict {
-			log.Printf("VPN gateway %s already exists (conflict), skipping creation", gatewayName)
-			return nil
-		}
-		return fmt.Errorf("failed to begin creating VPN gateway: %w", err)
-	}
-
-	log.Printf("VPN gateway %s creation started, this may take 20-45 minutes...", gatewayName)
-	_, err = poller.PollUntilDone(ctx, nil)
-	if err != nil {
-		return fmt.Errorf("failed to create VPN gateway: %w", err)
-	}
-
-	log.Printf("VPN gateway %s created successfully", gatewayName)
-	return nil
 }
 
 func waitForVPNGatewayAvailable(ctx context.Context, client *armnetwork.VirtualNetworkGatewaysClient, resourceGroupName, gatewayName string) error {

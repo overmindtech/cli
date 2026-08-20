@@ -3,7 +3,7 @@ package clients
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos/v3"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos/v4"
 )
 
 //go:generate mockgen -destination=../shared/mocks/mock_documentdb_private_endpoint_connection_client.go -package=mocks -source=documentdb-private-endpoint-connection-client.go

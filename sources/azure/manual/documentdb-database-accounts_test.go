@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos/v3"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/cosmos/armcosmos/v4"
 	"go.uber.org/mock/gomock"
 
 	"github.com/overmindtech/cli/go/discovery"
@@ -389,7 +389,7 @@ func createAzureCosmosDBAccount(accountName, provisioningState, subscriptionID, 
 		},
 		Identity: &armcosmos.ManagedServiceIdentity{
 			Type: new(armcosmos.ResourceIdentityTypeUserAssigned),
-			UserAssignedIdentities: map[string]*armcosmos.Components1Jq1T4ISchemasManagedserviceidentityPropertiesUserassignedidentitiesAdditionalproperties{
+			UserAssignedIdentities: map[string]*armcosmos.ManagedServiceIdentityUserAssignedIdentities{
 				"/subscriptions/" + subscriptionID + "/resourceGroups/" + resourceGroup + "/providers/Microsoft.ManagedIdentity/userAssignedIdentities/test-identity": {},
 				"/subscriptions/" + subscriptionID + "/resourceGroups/identity-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/test-identity-diff-rg":   {},
 			},
@@ -440,7 +440,7 @@ func createAzureCosmosDBAccountCrossRG(accountName, provisioningState, subscript
 		},
 		Identity: &armcosmos.ManagedServiceIdentity{
 			Type: new(armcosmos.ResourceIdentityTypeUserAssigned),
-			UserAssignedIdentities: map[string]*armcosmos.Components1Jq1T4ISchemasManagedserviceidentityPropertiesUserassignedidentitiesAdditionalproperties{
+			UserAssignedIdentities: map[string]*armcosmos.ManagedServiceIdentityUserAssignedIdentities{
 				"/subscriptions/" + subscriptionID + "/resourceGroups/identity-rg/providers/Microsoft.ManagedIdentity/userAssignedIdentities/test-identity": {},
 			},
 		},
