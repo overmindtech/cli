@@ -130,7 +130,7 @@ require (
 	github.com/go-jose/go-jose/v4 v4.1.4
 	github.com/google/btree v1.1.3
 	github.com/google/cel-go v0.31.0
-	github.com/google/go-github/v88 v88.0.0
+	github.com/google/go-github/v90 v90.0.0
 	github.com/google/jsonschema-go v0.4.3 // indirect
 	github.com/google/uuid v1.6.0
 	github.com/googleapis/gax-go/v2 v2.23.0
@@ -326,6 +326,7 @@ require (
 	github.com/google/flatbuffers v23.5.26+incompatible // indirect
 	github.com/google/gnostic-models v0.7.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
+	github.com/google/go-github/v88 v88.0.0 // indirect
 	github.com/google/go-querystring v1.2.0 // indirect
 	github.com/google/go-tpm v0.9.8 // indirect
 	github.com/google/pprof v0.0.0-20260402051712-545e8a4df936 // indirect
