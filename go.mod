@@ -84,7 +84,7 @@ require (
 	github.com/akedrou/textdiff v0.1.0
 	github.com/anthropics/anthropic-sdk-go v0.2.0-alpha.4
 	github.com/antihax/optional v1.0.0
-	github.com/auth0/go-auth0/v2 v2.14.0
+	github.com/auth0/go-auth0/v3 v3.3.0
 	github.com/auth0/go-jwt-middleware/v3 v3.3.0
 	github.com/aws/aws-sdk-go-v2 v1.43.5
 	github.com/aws/aws-sdk-go-v2/config v1.32.36
@@ -130,7 +130,7 @@ require (
 	github.com/google/btree v1.1.3
 	github.com/google/cel-go v0.31.0
 	github.com/google/go-github/v88 v88.0.0
-	github.com/google/jsonschema-go v0.4.3
+	github.com/google/jsonschema-go v0.4.3 // indirect
 	github.com/google/uuid v1.6.0
 	github.com/googleapis/gax-go/v2 v2.23.0
 	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
@@ -186,7 +186,7 @@ require (
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
 	github.com/spf13/viper v1.21.0
-	github.com/stretchr/testify v1.11.1
+	github.com/stretchr/testify v1.12.0
 	github.com/stripe/stripe-go/v84 v84.4.1
 	github.com/tidwall/gjson v1.19.0
 	github.com/tiktoken-go/tokenizer v0.8.1
@@ -289,7 +289,7 @@ require (
 	github.com/cloudflare/circl v1.6.3 // indirect
 	github.com/cncf/xds/go v0.0.0-20260202195803-dba9d589def2 // indirect
 	github.com/containerd/console v1.0.5 // indirect
-	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.0 // indirect
+	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.4.1 // indirect
 	github.com/dlclark/regexp2 v1.11.5 // indirect
 	github.com/dlclark/regexp2/v2 v2.5.1 // indirect
 	github.com/dylibso/observe-sdk/go v0.0.0-20240828172851-9145d8ad07e1 // indirect
@@ -316,7 +316,7 @@ require (
 	github.com/go-task/slim-sprig/v3 v3.0.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.4.0 // indirect
 	github.com/gobwas/glob v0.2.3 // indirect
-	github.com/goccy/go-json v0.10.5 // indirect
+	github.com/goccy/go-json v0.10.6 // indirect
 	github.com/golang-jwt/jwt/v4 v4.5.2 // indirect
 	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
@@ -370,7 +370,7 @@ require (
 	github.com/lestrrat-go/httprc v1.0.6 // indirect
 	github.com/lestrrat-go/httprc/v3 v3.0.3 // indirect
 	github.com/lestrrat-go/iter v1.0.2 // indirect
-	github.com/lestrrat-go/jwx/v2 v2.1.6 // indirect
+	github.com/lestrrat-go/jwx/v2 v2.1.7 // indirect
 	github.com/lestrrat-go/jwx/v3 v3.0.13 // indirect
 	github.com/lestrrat-go/option v1.0.1 // indirect
 	github.com/lestrrat-go/option/v2 v2.0.0 // indirect
