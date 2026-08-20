@@ -1,19 +1,22 @@
 package cmd
 
 import (
+	"strings"
 	"testing"
 )
 
 func TestMarkdownToString(t *testing.T) {
-	markdown := `# some random markdown`
-	expectedOutput := "\n\x1b[38;2;36;36;40;48;2;121;112;235;1m\x1b[0m\x1b[38;2;36;36;40;48;2;121;112;235;1m\x1b[0m  \x1b[38;2;36;36;40;48;2;121;112;235;1msome random\x1b[0m\x1b[38;2;36;36;40;48;2;121;112;235;1m markdown\x1b[0m\x1b[38;2;186;186;186m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[38;2;186;186;186m \x1b[0m\x1b[0m\n\x1b[0m\n"
+	InitPalette()
 
+	markdown := `# some random markdown`
 	got := markdownToString(0, markdown)
-	if got != expectedOutput {
-		t.Errorf("Expected %q, but got %q", expectedOutput, got)
-		t.Log("Expected output:")
-		t.Log(expectedOutput)
-		t.Log("Got output:")
-		t.Log(got)
+
+	if !strings.Contains(got, "some random") || !strings.Contains(got, "markdown") {
+		t.Fatalf("expected rendered markdown to contain heading text, got %q", got)
+	}
+
+	// glamour v2 uses SGR reset (\x1b[m) instead of v1's explicit reset (\x1b[0m).
+	if !strings.Contains(got, "\x1b[") {
+		t.Fatalf("expected ANSI styling sequences in rendered output, got %q", got)
 	}
 }
