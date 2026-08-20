@@ -12,7 +12,7 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
-	"github.com/cenkalti/backoff/v5"
+	"github.com/cenkalti/backoff/v7"
 	"github.com/getsentry/sentry-go"
 	"github.com/google/uuid"
 	"github.com/nats-io/nats.go"
