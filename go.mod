@@ -188,7 +188,7 @@ require (
 	github.com/spf13/pflag v1.0.10
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.12.0
-	github.com/stripe/stripe-go/v84 v84.4.1
+	github.com/stripe/stripe-go/v86 v86.3.0
 	github.com/tidwall/gjson v1.19.0
 	github.com/tiktoken-go/tokenizer v0.8.1
 	github.com/ttacon/chalk v0.0.0-20160626202418-22c06c80ed31
