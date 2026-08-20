@@ -21,7 +21,7 @@ jobs:
         uses: 1password/install-cli-action@v4.1.0
 
       - name: Load GPG secrets from 1Password
-        uses: 1password/load-secrets-action@v4.1.1
+        uses: 1password/load-secrets-action@v5.0.1
         with:
           export-env: true
         env:
@@ -38,7 +38,7 @@ jobs:
           passphrase: ${{ env.PASSPHRASE }}
 
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           go-version-file: go.mod
 
