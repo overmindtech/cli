@@ -6,8 +6,8 @@ import (
 	"image/color"
 	"os"
 
-	"github.com/charmbracelet/glamour"
-	"github.com/charmbracelet/glamour/ansi"
+	"charm.land/glamour/v2"
+	"charm.land/glamour/v2/ansi"
 	lipgloss "charm.land/lipgloss/v2"
 )
 
