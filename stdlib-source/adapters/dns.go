@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/cenkalti/backoff/v5"
+	"github.com/cenkalti/backoff/v7"
 	"github.com/miekg/dns"
 	"github.com/overmindtech/cli/go/sdp-go"
 	"github.com/overmindtech/cli/go/sdpcache"
@@ -343,6 +343,9 @@ func (d *DNSAdapter) retryDNSQuery(ctx context.Context, queryFn func(context.Con
 		attribute.String("ovm.dns.server", server),
 	)
 	if err != nil {
+		if re := backoff.AsRetryError(err); re != nil && errors.Is(re.Cause, backoff.ErrPermanent) {
+			return nil, re.LastErr
+		}
 		return nil, err
 	}
 
