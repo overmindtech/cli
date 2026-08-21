@@ -1,5 +1,5 @@
 # Build the source binary
-FROM golang:1.26.6-alpine3.23 AS builder
+FROM golang:1.27.0-alpine3.23 AS builder
 ARG TARGETOS
 ARG TARGETARCH
 ARG BUILD_VERSION
