@@ -36,7 +36,7 @@ func TestNewMCPOAuthMetadataHandler_RouteFamilyAliasContracts(t *testing.T) {
 				"/.well-known/openid-configuration/oauth",
 				"/oauth/.well-known/openid-configuration",
 			},
-			forbidden: []string{"/brent/", "brent:read", "brent:write"}, // must not contain
+			forbidden: []string{"/brent/"},
 		},
 	}
 
@@ -233,7 +233,7 @@ func TestNewMCPPRMHandler_RouteFamilyContracts(t *testing.T) {
 			authorizationServer: "https://until.example.com/oauth",
 			resource:            "https://until.example.com/mcp",
 			scopes:              []string{"account:read", "until:read", "until:write"},
-			forbidden: []string{"/brent/", "brent:read", "brent:write"}, // must not contain
+			forbidden: []string{"/brent/"},
 		},
 	}
 

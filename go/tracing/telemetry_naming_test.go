@@ -10,7 +10,7 @@ import (
 	"testing"
 )
 
-// TestNoNewBrentTelemetryLiterals ensures that new brent.* or ovm.brent.*
+// TestNoLegacyBrentTelemetryLiterals ensures that new brent.* or ovm.brent.*
 // telemetry identifiers are not introduced in Go source after the dual-write
 // wrapper removal (ENG-6186).
 //
@@ -21,11 +21,11 @@ import (
 //   - Log field keys: WithField("key", ...)
 //   - Span attributes: span.SetAttributes(attribute.String("key", ...))
 //
-// Non-telemetry identifiers (River job names, URLs, file paths, package
-// references, proto field comments) are explicitly allowlisted.
+// Non-telemetry identifiers (URLs, file paths, package references, proto
+// field comments) are explicitly allowlisted.
 //
 // See: ENG-6197, ENG-6186
-func TestNoNewBrentTelemetryLiterals(t *testing.T) {
+func TestNoLegacyBrentTelemetryLiterals(t *testing.T) {
 	t.Parallel()
 
 	// Pattern matching string literals containing "brent." or "ovm.brent."
@@ -48,24 +48,12 @@ func TestNoNewBrentTelemetryLiterals(t *testing.T) {
 	}
 
 	// Allowlist of non-telemetry brent.* identifiers that may remain.
-	// These are NOT telemetry keys and are allowed to stay:
 	allowlist := []string{
-		// River job kinds (internal worker names, not telemetry)
-		`"brent.workflow_ingest"`,
-		`"brent.bitbucket_workflow_ingest"`,
-		`"brent.pr_workflow_check"`,
-		`"brent.plan_link_check_sync"`,
-		`"brent.check_run_sync"`,
-		`"brent.bitbucket_pr_open_comment_sync"`,
-		`"brent.bitbucket_comment_sync"`,
-		`"brent.smoke_test"`,
-
 		// Test fixture URLs (not actual telemetry emission)
-		`"https://brent.example`,
-		`"http://brent.example`,
+		`"https://until.example`,
+		`"http://until.example`,
 
 		// Proto field comments describing legacy attribute keys
-		// (the comment itself is not a telemetry emission)
 		`"ovm.brent.llm.keySource"`,
 
 		// File paths and directory references
@@ -86,12 +74,8 @@ func TestNoNewBrentTelemetryLiterals(t *testing.T) {
 		// Legacy plan ID prefixes in tests/docs (not telemetry)
 		`"BRENT-"`,
 
-		// Span attribute used in old test assertions checking for legacy keys
-		`"brent.events.eventId"`,
-		`"brent.invitations.SendInviteEmail"`,
-
 		// Test assertions checking for absence of brent prefix
-		`"brent."`,  // Used in strings.HasPrefix checks in tests
+		`"brent."`, // Used in strings.HasPrefix checks in tests
 	}
 
 	var failures []string
@@ -150,7 +134,7 @@ func TestNoNewBrentTelemetryLiterals(t *testing.T) {
 				// Check if this match is in a telemetry context
 				if isTelemetryContext(line, telemetryPatterns) {
 					relPath, _ := filepath.Rel("../..", path)
-					failures = append(failures, 
+					failures = append(failures,
 						formatViolation(relPath, lineNum, match, line))
 				}
 			}
@@ -166,7 +150,7 @@ func TestNoNewBrentTelemetryLiterals(t *testing.T) {
 	if len(failures) > 0 {
 		t.Errorf("Found %d new brent.*/ovm.brent.* telemetry literal(s):\n\n%s\n\n"+
 			"After ENG-6186, all telemetry must use until.*/ovm.until.* naming.\n"+
-			"Non-telemetry identifiers (River job names, test URLs, file paths) "+
+			"Non-telemetry identifiers (test URLs, file paths) "+
 			"should be added to the allowlist in go/tracing/telemetry_naming_test.go "+
 			"with a comment explaining why they are not telemetry.",
 			len(failures),
@@ -203,7 +187,7 @@ func formatViolation(path string, lineNum int, match, line string) string {
 	if idx := strings.Index(trimmed, "//"); idx > 0 {
 		trimmed = strings.TrimSpace(trimmed[:idx])
 	}
-	
+
 	return trimmed +
 		"\n    → " + path + ":" + formatLineNum(lineNum) +
 		"\n    → Found disallowed telemetry literal: " + match
