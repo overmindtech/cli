@@ -92,7 +92,6 @@ func (t *ecsTestClient) DescribeTasks(ctx context.Context, params *ecs.DescribeT
 							Name: new("simple-app"),
 						},
 					},
-					InferenceAcceleratorOverrides: []types.InferenceAcceleratorOverride{},
 				},
 				PullStartedAt:     new(time.Now()),
 				PullStoppedAt:     new(time.Now()),
