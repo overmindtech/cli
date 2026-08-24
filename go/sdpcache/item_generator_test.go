@@ -6,7 +6,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/overmindtech/cli/go/sdp-go"
-	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
 
@@ -114,9 +113,7 @@ func GenerateRandomItem() *sdp.Item {
 				Scope: scope,
 				UUID:  queryUuid[:],
 			},
-			Timestamp:             timestamppb.New(time.Now()),
-			SourceDuration:        durationpb.New(time.Millisecond * time.Duration(rand.Int63())),
-			SourceDurationPerItem: durationpb.New(time.Millisecond * time.Duration(rand.Int63())),
+			Timestamp: timestamppb.New(time.Now()),
 		},
 		Tags:   tags,
 		Health: &health,

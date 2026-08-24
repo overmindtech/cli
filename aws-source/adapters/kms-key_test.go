@@ -15,17 +15,17 @@ type kmsTestClient struct{}
 func (t kmsTestClient) DescribeKey(ctx context.Context, params *kms.DescribeKeyInput, optFns ...func(*kms.Options)) (*kms.DescribeKeyOutput, error) {
 	return &kms.DescribeKeyOutput{
 		KeyMetadata: &types.KeyMetadata{
-			AWSAccountId:          new("846764612917"),
-			KeyId:                 new("b8a9477d-836c-491f-857e-07937918959b"),
-			Arn:                   new("arn:aws:kms:us-west-2:846764612917:key/b8a9477d-836c-491f-857e-07937918959b"),
-			CreationDate:          new(time.Date(2017, 6, 30, 21, 44, 32, 140000000, time.UTC)),
-			Enabled:               true,
-			Description:           new("Default KMS key that protects my S3 objects when no other key is defined"),
-			KeyUsage:              types.KeyUsageTypeEncryptDecrypt,
-			KeyState:              types.KeyStateEnabled,
-			Origin:                types.OriginTypeAwsKms,
-			KeyManager:            types.KeyManagerTypeAws,
-			CustomerMasterKeySpec: types.CustomerMasterKeySpecSymmetricDefault,
+			AWSAccountId: new("846764612917"),
+			KeyId:        new("b8a9477d-836c-491f-857e-07937918959b"),
+			Arn:          new("arn:aws:kms:us-west-2:846764612917:key/b8a9477d-836c-491f-857e-07937918959b"),
+			CreationDate: new(time.Date(2017, 6, 30, 21, 44, 32, 140000000, time.UTC)),
+			Enabled:      true,
+			Description:  new("Default KMS key that protects my S3 objects when no other key is defined"),
+			KeyUsage:     types.KeyUsageTypeEncryptDecrypt,
+			KeyState:     types.KeyStateEnabled,
+			Origin:       types.OriginTypeAwsKms,
+			KeyManager:   types.KeyManagerTypeAws,
+			KeySpec:      types.KeySpecSymmetricDefault,
 			EncryptionAlgorithms: []types.EncryptionAlgorithmSpec{
 				types.EncryptionAlgorithmSpecSymmetricDefault,
 			},

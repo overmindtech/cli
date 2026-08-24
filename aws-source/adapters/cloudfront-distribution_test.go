@@ -193,38 +193,11 @@ func (t TestCloudFrontClient) GetDistribution(ctx context.Context, params *cloud
 					ViewerProtocolPolicy:    types.ViewerProtocolPolicyHttpsOnly,
 					CachePolicyId:           new("test-cache-policy-id"), // link
 					Compress:                new(true),
-					DefaultTTL:              new(int64(1)),
-					FieldLevelEncryptionId:  new("test-field-level-encryption-id"), // link
-					MaxTTL:                  new(int64(1)),
-					MinTTL:                  new(int64(1)),
+					FieldLevelEncryptionId:  new("test-field-level-encryption-id"),                                  // link
 					OriginRequestPolicyId:   new("test-origin-request-policy-id"),                                   // link
 					RealtimeLogConfigArn:    new("arn:aws:logs:us-east-1:123456789012:realtime-log-config/test-id"), // link
 					ResponseHeadersPolicyId: new("test-response-headers-policy-id"),                                 // link
 					SmoothStreaming:         new(true),
-					ForwardedValues: &types.ForwardedValues{
-						Cookies: &types.CookiePreference{
-							Forward: types.ItemSelectionWhitelist,
-							WhitelistedNames: &types.CookieNames{
-								Quantity: new(int32(1)),
-								Items: []string{
-									"cooke_123",
-								},
-							},
-						},
-						QueryString: new(true),
-						Headers: &types.Headers{
-							Quantity: new(int32(1)),
-							Items: []string{
-								"X-Customer-Header",
-							},
-						},
-						QueryStringCacheKeys: &types.QueryStringCacheKeys{
-							Quantity: new(int32(1)),
-							Items: []string{
-								"test-query-string-cache-key",
-							},
-						},
-					},
 					FunctionAssociations: &types.FunctionAssociations{
 						Quantity: new(int32(1)),
 						Items: []types.FunctionAssociation{
@@ -326,8 +299,6 @@ func (t TestCloudFrontClient) GetDistribution(ctx context.Context, params *cloud
 				},
 				ViewerCertificate: &types.ViewerCertificate{
 					ACMCertificateArn:            new("arn:aws:acm:us-east-1:123456789012:certificate/test-id"), // link
-					Certificate:                  new("test-certificate"),
-					CertificateSource:            types.CertificateSourceAcm,
 					CloudFrontDefaultCertificate: new(true),
 					IAMCertificateId:             new("test-iam-certificate-id"), // link
 					MinimumProtocolVersion:       types.MinimumProtocolVersion(types.SslProtocolSSLv3),

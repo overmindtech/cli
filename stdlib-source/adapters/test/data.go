@@ -3,10 +3,8 @@ package test
 import (
 	"fmt"
 	"sync/atomic"
-	"time"
 
 	"github.com/overmindtech/cli/go/sdp-go"
-	"google.golang.org/protobuf/types/known/durationpb"
 	"google.golang.org/protobuf/types/known/structpb"
 	"google.golang.org/protobuf/types/known/timestamppb"
 )
@@ -75,11 +73,9 @@ func createTestItem(typ, value string) *sdp.Item {
 			},
 		},
 		Metadata: &sdp.Metadata{
-			SourceName:            fmt.Sprintf("test-%v-adapter", typ),
-			Timestamp:             timestamppb.Now(),
-			SourceDuration:        durationpb.New(time.Second),
-			SourceDurationPerItem: durationpb.New(time.Second),
-			Hidden:                true,
+			SourceName: fmt.Sprintf("test-%v-adapter", typ),
+			Timestamp:  timestamppb.Now(),
+			Hidden:     true,
 		},
 		Scope: "test",
 		// TODO(LIQs): delete empty data

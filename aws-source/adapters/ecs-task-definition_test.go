@@ -180,7 +180,6 @@ func (t *ecsTestClient) DescribeTaskDefinition(ctx context.Context, params *ecs.
 				SizeInGiB: 1,
 			},
 			ExecutionRoleArn:        new("arn:aws:iam:us-east-2:123456789012:role/foo"), // link
-			InferenceAccelerators:   []types.InferenceAccelerator{},
 			IpcMode:                 types.IpcModeHost,
 			Memory:                  new("memory"),
 			NetworkMode:             types.NetworkModeAwsvpc,
