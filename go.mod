@@ -27,6 +27,7 @@ require (
 	buf.build/gen/go/depot/api/connectrpc/go v1.20.0-20260805103418-70b5c163d960.1
 	buf.build/gen/go/depot/api/protocolbuffers/go v1.36.12-20260805103418-70b5c163d960.1
 	buf.build/go/protovalidate v1.3.0
+	cel.dev/cel-go v0.32.0
 	charm.land/glamour/v2 v2.0.1
 	charm.land/lipgloss/v2 v2.0.6
 	cloud.google.com/go/aiplatform v1.126.0
@@ -129,7 +130,6 @@ require (
 	github.com/getsentry/sentry-go v0.48.0
 	github.com/go-jose/go-jose/v4 v4.1.4
 	github.com/google/btree v1.1.3
-	github.com/google/cel-go v0.31.0
 	github.com/google/go-github/v90 v90.0.0
 	github.com/google/jsonschema-go v0.4.3 // indirect
 	github.com/google/uuid v1.6.0
@@ -322,6 +322,7 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.5.2 // indirect
 	github.com/golang-jwt/jwt/v5 v5.3.1 // indirect
 	github.com/golang/protobuf v1.5.4 // indirect
+	github.com/google/cel-go v0.31.0 // indirect
 	github.com/google/flatbuffers v23.5.26+incompatible // indirect
 	github.com/google/gnostic-models v0.7.0 // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
