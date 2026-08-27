@@ -159,7 +159,7 @@ require (
 	github.com/modelcontextprotocol/go-sdk v1.7.0
 	github.com/muesli/reflow v0.3.0
 	github.com/nats-io/jwt/v2 v2.8.2
-	github.com/nats-io/nats-server/v2 v2.14.5
+	github.com/nats-io/nats-server/v2 v2.14.6
 	github.com/nats-io/nats.go v1.53.1
 	github.com/nats-io/nkeys v0.4.16
 	github.com/neo4j/neo4j-go-driver/v6 v6.2.0
