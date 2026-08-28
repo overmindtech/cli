@@ -62,9 +62,7 @@ func newMockVirtualNetworkLinksPager(_ *gomock.Controller, items []*armprivatedn
 	return &mockVirtualNetworkLinksPager{
 		pages: []armprivatedns.VirtualNetworkLinksClientListResponse{
 			{
-				VirtualNetworkLinkListResult: armprivatedns.VirtualNetworkLinkListResult{
-					Value: items,
-				},
+				Value: items,
 			},
 		},
 	}

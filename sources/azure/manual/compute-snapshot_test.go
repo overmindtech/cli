@@ -680,9 +680,7 @@ func (m *mockSnapshotsPager) NextPage(ctx context.Context) (armcompute.Snapshots
 	if m.index >= len(m.items) {
 		m.more = false
 		return armcompute.SnapshotsClientListByResourceGroupResponse{
-			SnapshotList: armcompute.SnapshotList{
-				Value: []*armcompute.Snapshot{},
-			},
+			Value: []*armcompute.Snapshot{},
 		}, nil
 	}
 
@@ -691,8 +689,6 @@ func (m *mockSnapshotsPager) NextPage(ctx context.Context) (armcompute.Snapshots
 	m.more = m.index < len(m.items)
 
 	return armcompute.SnapshotsClientListByResourceGroupResponse{
-		SnapshotList: armcompute.SnapshotList{
-			Value: []*armcompute.Snapshot{item},
-		},
+		Value: []*armcompute.Snapshot{item},
 	}, nil
 }

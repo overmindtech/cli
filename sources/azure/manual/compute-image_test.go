@@ -606,9 +606,7 @@ func (m *mockImagesPager) NextPage(ctx context.Context) (armcompute.ImagesClient
 	if m.index >= len(m.items) {
 		m.more = false
 		return armcompute.ImagesClientListByResourceGroupResponse{
-			ImageListResult: armcompute.ImageListResult{
-				Value: []*armcompute.Image{},
-			},
+			Value: []*armcompute.Image{},
 		}, nil
 	}
 
@@ -617,9 +615,7 @@ func (m *mockImagesPager) NextPage(ctx context.Context) (armcompute.ImagesClient
 	m.more = m.index < len(m.items)
 
 	return armcompute.ImagesClientListByResourceGroupResponse{
-		ImageListResult: armcompute.ImageListResult{
-			Value: []*armcompute.Image{item},
-		},
+		Value: []*armcompute.Image{item},
 	}, nil
 }
 

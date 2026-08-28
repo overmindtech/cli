@@ -390,9 +390,7 @@ func (m *mockCapacityReservationGroupsPager) NextPage(ctx context.Context) (armc
 	if m.index >= len(m.items) {
 		m.more = false
 		return armcompute.CapacityReservationGroupsClientListByResourceGroupResponse{
-			CapacityReservationGroupListResult: armcompute.CapacityReservationGroupListResult{
-				Value: []*armcompute.CapacityReservationGroup{},
-			},
+			Value: []*armcompute.CapacityReservationGroup{},
 		}, nil
 	}
 
@@ -401,9 +399,7 @@ func (m *mockCapacityReservationGroupsPager) NextPage(ctx context.Context) (armc
 	m.more = m.index < len(m.items)
 
 	return armcompute.CapacityReservationGroupsClientListByResourceGroupResponse{
-		CapacityReservationGroupListResult: armcompute.CapacityReservationGroupListResult{
-			Value: []*armcompute.CapacityReservationGroup{item},
-		},
+		Value: []*armcompute.CapacityReservationGroup{item},
 	}, nil
 }
 

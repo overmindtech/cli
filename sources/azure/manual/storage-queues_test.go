@@ -153,23 +153,21 @@ func TestStorageQueues(t *testing.T) {
 		mockPager := &mockQueuesPager{
 			pages: []armstorage.QueueClientListResponse{
 				{
-					ListQueueResource: armstorage.ListQueueResource{
-						Value: []*armstorage.ListQueue{
-							{
-								ID:   queue1.ID,
-								Name: queue1.Name,
-								Type: queue1.Type,
-								QueueProperties: &armstorage.ListQueueProperties{
-									Metadata: queue1.QueueProperties.Metadata,
-								},
+					Value: []*armstorage.ListQueue{
+						{
+							ID:   queue1.ID,
+							Name: queue1.Name,
+							Type: queue1.Type,
+							QueueProperties: &armstorage.ListQueueProperties{
+								Metadata: queue1.QueueProperties.Metadata,
 							},
-							{
-								ID:   queue2.ID,
-								Name: queue2.Name,
-								Type: queue2.Type,
-								QueueProperties: &armstorage.ListQueueProperties{
-									Metadata: queue2.QueueProperties.Metadata,
-								},
+						},
+						{
+							ID:   queue2.ID,
+							Name: queue2.Name,
+							Type: queue2.Type,
+							QueueProperties: &armstorage.ListQueueProperties{
+								Metadata: queue2.QueueProperties.Metadata,
 							},
 						},
 					},
@@ -231,19 +229,17 @@ func TestStorageQueues(t *testing.T) {
 		mockPager := &mockQueuesPager{
 			pages: []armstorage.QueueClientListResponse{
 				{
-					ListQueueResource: armstorage.ListQueueResource{
-						Value: []*armstorage.ListQueue{
-							{
-								// Queue with nil name should be skipped
-								Name: nil,
-							},
-							{
-								ID:   validQueue.ID,
-								Name: validQueue.Name,
-								Type: validQueue.Type,
-								QueueProperties: &armstorage.ListQueueProperties{
-									Metadata: validQueue.QueueProperties.Metadata,
-								},
+					Value: []*armstorage.ListQueue{
+						{
+							// Queue with nil name should be skipped
+							Name: nil,
+						},
+						{
+							ID:   validQueue.ID,
+							Name: validQueue.Name,
+							Type: validQueue.Type,
+							QueueProperties: &armstorage.ListQueueProperties{
+								Metadata: validQueue.QueueProperties.Metadata,
 							},
 						},
 					},

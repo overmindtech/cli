@@ -222,8 +222,7 @@ func getImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope s
 
 	if err != nil {
 		err = WrapAWSError(err)
-		var queryErr *sdp.QueryError
-		if errors.As(err, &queryErr) {
+		if queryErr, ok := errors.AsType[*sdp.QueryError](err); ok {
 			// Cache not-found errors and other non-retryable errors
 			if queryErr.GetErrorType() == sdp.QueryError_NOTFOUND || !CanRetry(queryErr) {
 				cache.StoreUnavailableItem(ctx, err, CacheDuration, ck)
@@ -233,9 +232,7 @@ func getImpl(ctx context.Context, cache sdpcache.Cache, client S3Client, scope s
 	}
 
 	bucket := Bucket{
-		Bucket: types.Bucket{
-			Name: bucketName,
-		},
+		Name:                    bucketName,
 		GetBucketLocationOutput: *location,
 	}
 

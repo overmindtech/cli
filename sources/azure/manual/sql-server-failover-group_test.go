@@ -196,9 +196,7 @@ func TestSqlServerFailoverGroup(t *testing.T) {
 		mockPager := &mockSqlFailoverGroupsPager{
 			pages: []armsql.FailoverGroupsClientListByServerResponse{
 				{
-					FailoverGroupListResult: armsql.FailoverGroupListResult{
-						Value: []*armsql.FailoverGroup{failoverGroup1, failoverGroup2},
-					},
+					Value: []*armsql.FailoverGroup{failoverGroup1, failoverGroup2},
 				},
 			},
 		}
@@ -244,9 +242,7 @@ func TestSqlServerFailoverGroup(t *testing.T) {
 		mockPager := &mockSqlFailoverGroupsPager{
 			pages: []armsql.FailoverGroupsClientListByServerResponse{
 				{
-					FailoverGroupListResult: armsql.FailoverGroupListResult{
-						Value: []*armsql.FailoverGroup{failoverGroup1, failoverGroup2},
-					},
+					Value: []*armsql.FailoverGroup{failoverGroup1, failoverGroup2},
 				},
 			},
 		}
@@ -332,9 +328,7 @@ func TestSqlServerFailoverGroup(t *testing.T) {
 		mockPager := &mockSqlFailoverGroupsPager{
 			pages: []armsql.FailoverGroupsClientListByServerResponse{
 				{
-					FailoverGroupListResult: armsql.FailoverGroupListResult{
-						Value: []*armsql.FailoverGroup{failoverGroup1, failoverGroup2},
-					},
+					Value: []*armsql.FailoverGroup{failoverGroup1, failoverGroup2},
 				},
 			},
 		}

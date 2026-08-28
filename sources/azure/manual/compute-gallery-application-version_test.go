@@ -332,9 +332,7 @@ func TestComputeGalleryApplicationVersion(t *testing.T) {
 		mockClient := mocks.NewMockGalleryApplicationVersionsClient(ctrl)
 		pages := []armcompute.GalleryApplicationVersionsClientListByGalleryApplicationResponse{
 			{
-				GalleryApplicationVersionList: armcompute.GalleryApplicationVersionList{
-					Value: []*armcompute.GalleryApplicationVersion{v1, v2},
-				},
+				Value: []*armcompute.GalleryApplicationVersion{v1, v2},
 			},
 		}
 		mockPager := &mockGalleryApplicationVersionsPager{pages: pages}

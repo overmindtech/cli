@@ -175,9 +175,7 @@ func TestAuthorizationRoleAssignment(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armauthorization.RoleAssignmentsClientListForResourceGroupResponse{
-					RoleAssignmentListResult: armauthorization.RoleAssignmentListResult{
-						Value: []*armauthorization.RoleAssignment{roleAssignment1, roleAssignment2},
-					},
+					Value: []*armauthorization.RoleAssignment{roleAssignment1, roleAssignment2},
 				}, nil),
 			mockPager.EXPECT().More().Return(false),
 		)
@@ -283,9 +281,7 @@ func TestAuthorizationRoleAssignment(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armauthorization.RoleAssignmentsClientListForResourceGroupResponse{
-					RoleAssignmentListResult: armauthorization.RoleAssignmentListResult{
-						Value: []*armauthorization.RoleAssignment{roleAssignment1, roleAssignment2},
-					},
+					Value: []*armauthorization.RoleAssignment{roleAssignment1, roleAssignment2},
 				}, nil),
 		)
 

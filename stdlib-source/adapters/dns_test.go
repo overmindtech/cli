@@ -173,8 +173,7 @@ func TestDnsGet(t *testing.T) {
 			t.Error("expected error but got nil")
 		}
 
-		var e *sdp.QueryError
-		if !errors.As(err, &e) {
+		if _, ok := errors.AsType[*sdp.QueryError](err); !ok {
 			t.Errorf("expected error type to be *sdp.QueryError, got %T", err)
 		}
 	})
@@ -232,8 +231,7 @@ func TestDnsGet(t *testing.T) {
 			t.Error("expected error but got nil")
 		}
 
-		var e *sdp.QueryError
-		if !errors.As(err, &e) {
+		if _, ok := errors.AsType[*sdp.QueryError](err); !ok {
 			t.Errorf("expected error type to be *sdp.QueryError, got %T", err)
 		}
 	})

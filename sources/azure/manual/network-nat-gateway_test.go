@@ -298,18 +298,14 @@ func (m *mockNatGatewaysPager) NextPage(ctx context.Context) (armnetwork.NatGate
 	if m.index >= len(m.items) {
 		m.more = false
 		return armnetwork.NatGatewaysClientListResponse{
-			NatGatewayListResult: armnetwork.NatGatewayListResult{
-				Value: []*armnetwork.NatGateway{},
-			},
+			Value: []*armnetwork.NatGateway{},
 		}, nil
 	}
 	item := m.items[m.index]
 	m.index++
 	m.more = m.index < len(m.items)
 	return armnetwork.NatGatewaysClientListResponse{
-		NatGatewayListResult: armnetwork.NatGatewayListResult{
-			Value: []*armnetwork.NatGateway{item},
-		},
+		Value: []*armnetwork.NatGateway{item},
 	}, nil
 }
 

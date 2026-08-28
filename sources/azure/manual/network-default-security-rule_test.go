@@ -153,9 +153,7 @@ func TestNetworkDefaultSecurityRule(t *testing.T) {
 		mockPager := &mockDefaultSecurityRulesPager{
 			pages: []armnetwork.DefaultSecurityRulesClientListResponse{
 				{
-					SecurityRuleListResult: armnetwork.SecurityRuleListResult{
-						Value: []*armnetwork.SecurityRule{&rule1, &rule2},
-					},
+					Value: []*armnetwork.SecurityRule{&rule1, &rule2},
 				},
 			},
 		}
@@ -211,11 +209,9 @@ func TestNetworkDefaultSecurityRule(t *testing.T) {
 		mockPager := &mockDefaultSecurityRulesPager{
 			pages: []armnetwork.DefaultSecurityRulesClientListResponse{
 				{
-					SecurityRuleListResult: armnetwork.SecurityRuleListResult{
-						Value: []*armnetwork.SecurityRule{
-							{Name: nil, ID: new(string)},
-							&validRule,
-						},
+					Value: []*armnetwork.SecurityRule{
+						{Name: nil, ID: new(string)},
+						&validRule,
 					},
 				},
 			},

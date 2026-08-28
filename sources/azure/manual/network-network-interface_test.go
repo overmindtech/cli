@@ -178,9 +178,7 @@ func TestNetworkNetworkInterface(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armnetwork.InterfacesClientListResponse{
-					InterfaceListResult: armnetwork.InterfaceListResult{
-						Value: []*armnetwork.Interface{nic1, nic2},
-					},
+					Value: []*armnetwork.Interface{nic1, nic2},
 				}, nil),
 			mockPager.EXPECT().More().Return(false),
 		)
@@ -248,9 +246,7 @@ func TestNetworkNetworkInterface(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armnetwork.InterfacesClientListResponse{
-					InterfaceListResult: armnetwork.InterfaceListResult{
-						Value: []*armnetwork.Interface{nic1, nic2},
-					},
+					Value: []*armnetwork.Interface{nic1, nic2},
 				}, nil),
 		)
 		// Note: More() won't be called again after NextPage returns the items with nil name

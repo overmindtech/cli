@@ -350,9 +350,7 @@ func TestComputeGalleryImage(t *testing.T) {
 		mockClient := mocks.NewMockGalleryImagesClient(ctrl)
 		pages := []armcompute.GalleryImagesClientListByGalleryResponse{
 			{
-				GalleryImageList: armcompute.GalleryImageList{
-					Value: []*armcompute.GalleryImage{img1, img2},
-				},
+				Value: []*armcompute.GalleryImage{img1, img2},
 			},
 		}
 		mockPager := &mockGalleryImagesPager{pages: pages}

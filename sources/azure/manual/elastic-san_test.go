@@ -170,7 +170,7 @@ func TestElasticSan(t *testing.T) {
 		mockClient := mocks.NewMockElasticSanClient(ctrl)
 		mockPager := &mockElasticSanPager{
 			pages: []armelasticsan.ElasticSansClientListByResourceGroupResponse{
-				{List: armelasticsan.List{Value: []*armelasticsan.ElasticSan{es1, es2}}},
+				{Value: []*armelasticsan.ElasticSan{es1, es2}},
 			},
 		}
 		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(mockPager)
@@ -205,7 +205,7 @@ func TestElasticSan(t *testing.T) {
 		mockClient := mocks.NewMockElasticSanClient(ctrl)
 		mockPager := &mockElasticSanPager{
 			pages: []armelasticsan.ElasticSansClientListByResourceGroupResponse{
-				{List: armelasticsan.List{Value: []*armelasticsan.ElasticSan{es}}},
+				{Value: []*armelasticsan.ElasticSan{es}},
 			},
 		}
 		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(mockPager)
@@ -261,7 +261,7 @@ func TestElasticSan(t *testing.T) {
 		mockClient := mocks.NewMockElasticSanClient(ctrl)
 		mockPager := &mockElasticSanPager{
 			pages: []armelasticsan.ElasticSansClientListByResourceGroupResponse{
-				{List: armelasticsan.List{Value: []*armelasticsan.ElasticSan{es1, esNilName}}},
+				{Value: []*armelasticsan.ElasticSan{es1, esNilName}},
 			},
 		}
 		mockClient.EXPECT().NewListByResourceGroupPager(resourceGroup, nil).Return(mockPager)

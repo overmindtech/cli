@@ -50,8 +50,7 @@ func findMethod(ctx context.Context, client *apigateway.Client, restAPIID, resou
 	})
 
 	if err != nil {
-		var notFoundErr *types.NotFoundException
-		if errors.As(err, &notFoundErr) {
+		if _, ok := errors.AsType[*types.NotFoundException](err); ok {
 			return integration.NewNotFoundError(integration.ResourceName(
 				integration.APIGateway,
 				methodSrc,
@@ -74,8 +73,7 @@ func findMethodResponse(ctx context.Context, client *apigateway.Client, restAPII
 	})
 
 	if err != nil {
-		var notFoundErr *types.NotFoundException
-		if errors.As(err, &notFoundErr) {
+		if _, ok := errors.AsType[*types.NotFoundException](err); ok {
 			return integration.NewNotFoundError(integration.ResourceName(
 				integration.APIGateway,
 				methodResponseSrc,
@@ -98,8 +96,7 @@ func findIntegration(ctx context.Context, client *apigateway.Client, restAPIID, 
 	})
 
 	if err != nil {
-		var notFoundErr *types.NotFoundException
-		if errors.As(err, &notFoundErr) {
+		if _, ok := errors.AsType[*types.NotFoundException](err); ok {
 			return integration.NewNotFoundError(integration.ResourceName(
 				integration.APIGateway,
 				integrationSrc,
@@ -178,8 +175,7 @@ func findStageByName(ctx context.Context, client *apigateway.Client, restAPIID, 
 		StageName: &name,
 	})
 	if err != nil {
-		var notFoundErr *types.NotFoundException
-		if errors.As(err, &notFoundErr) {
+		if _, ok := errors.AsType[*types.NotFoundException](err); ok {
 			return integration.NewNotFoundError(integration.ResourceName(
 				integration.APIGateway,
 				stageSrc,
@@ -207,8 +203,7 @@ func findModelByName(ctx context.Context, client *apigateway.Client, restAPIID, 
 		ModelName: &name,
 	})
 	if err != nil {
-		var notFoundErr *types.NotFoundException
-		if errors.As(err, &notFoundErr) {
+		if _, ok := errors.AsType[*types.NotFoundException](err); ok {
 			return integration.NewNotFoundError(integration.ResourceName(
 				integration.APIGateway,
 				stageSrc,

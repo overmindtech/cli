@@ -252,9 +252,7 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 		mockPager := &mockManagedHSMsPager{
 			pages: []armkeyvault.ManagedHsmsClientListByResourceGroupResponse{
 				{
-					ManagedHsmListResult: armkeyvault.ManagedHsmListResult{
-						Value: []*armkeyvault.ManagedHsm{hsm1, hsm2},
-					},
+					Value: []*armkeyvault.ManagedHsm{hsm1, hsm2},
 				},
 			},
 		}
@@ -333,9 +331,7 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 		mockPager := &mockManagedHSMsPager{
 			pages: []armkeyvault.ManagedHsmsClientListByResourceGroupResponse{
 				{
-					ManagedHsmListResult: armkeyvault.ManagedHsmListResult{
-						Value: []*armkeyvault.ManagedHsm{hsm1, hsm2, hsm3},
-					},
+					Value: []*armkeyvault.ManagedHsm{hsm1, hsm2, hsm3},
 				},
 			},
 		}
@@ -374,9 +370,7 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 		mockPager := &mockManagedHSMsPager{
 			pages: []armkeyvault.ManagedHsmsClientListByResourceGroupResponse{
 				{
-					ManagedHsmListResult: armkeyvault.ManagedHsmListResult{
-						Value: []*armkeyvault.ManagedHsm{hsm1, hsm2},
-					},
+					Value: []*armkeyvault.ManagedHsm{hsm1, hsm2},
 				},
 			},
 		}
@@ -488,9 +482,7 @@ func TestKeyVaultManagedHSM(t *testing.T) {
 		mockPager := &mockManagedHSMsPager{
 			pages: []armkeyvault.ManagedHsmsClientListByResourceGroupResponse{
 				{
-					ManagedHsmListResult: armkeyvault.ManagedHsmListResult{
-						Value: []*armkeyvault.ManagedHsm{hsm1, hsm2, hsm3},
-					},
+					Value: []*armkeyvault.ManagedHsm{hsm1, hsm2, hsm3},
 				},
 			},
 		}

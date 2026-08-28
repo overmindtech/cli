@@ -32,8 +32,7 @@ func TestS3SearchImpl(t *testing.T) {
 		// We EXPECT this to succeed, but it currently fails with NOSCOPE error
 		// This test demonstrates the bug existing
 		if err != nil {
-			var ire *sdp.QueryError
-			if errors.As(err, &ire) {
+			if ire, ok := errors.AsType[*sdp.QueryError](err); ok {
 				if ire.GetErrorType() == sdp.QueryError_NOSCOPE && strings.Contains(ire.GetErrorString(), "ARN scope") {
 					// This is the bug - the search fails when it should succeed
 					t.Errorf("BUG REPRODUCED: Search failed with NOSCOPE error when it should succeed. "+
@@ -709,8 +708,7 @@ func TestS3SearchWithARNFormat(t *testing.T) {
 		// (S3 is global), and the adapter should use its own scope since it knows the account ID.
 		// CURRENT: Search fails with NOSCOPE error - THIS IS THE BUG
 		if err != nil {
-			var ire *sdp.QueryError
-			if errors.As(err, &ire) {
+			if ire, ok := errors.AsType[*sdp.QueryError](err); ok {
 				if ire.GetErrorType() == sdp.QueryError_NOSCOPE && strings.Contains(ire.GetErrorString(), "ARN scope") {
 					// This is the bug - the search fails when it should succeed
 					t.Errorf("BUG REPRODUCED: Search failed with NOSCOPE error when it should succeed. "+

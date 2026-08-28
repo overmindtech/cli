@@ -796,8 +796,7 @@ func deleteNetworkInterfaceForRunCommand(ctx context.Context, client *armnetwork
 	for attempt := 1; attempt <= maxRetries; attempt++ {
 		poller, err := client.BeginDelete(ctx, resourceGroupName, nicName, nil)
 		if err != nil {
-			var respErr *azcore.ResponseError
-			if errors.As(err, &respErr) {
+			if respErr, ok := errors.AsType[*azcore.ResponseError](err); ok {
 				if respErr.StatusCode == http.StatusNotFound {
 					log.Printf("Network interface %s not found, skipping deletion", nicName)
 					return nil

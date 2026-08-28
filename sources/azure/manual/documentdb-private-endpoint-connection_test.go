@@ -175,9 +175,7 @@ func TestDocumentDBPrivateEndpointConnection(t *testing.T) {
 		mockPager := &mockDocumentDBPrivateEndpointConnectionsPager{
 			pages: []armcosmos.PrivateEndpointConnectionsClientListByDatabaseAccountResponse{
 				{
-					PrivateEndpointConnectionListResult: armcosmos.PrivateEndpointConnectionListResult{
-						Value: []*armcosmos.PrivateEndpointConnection{conn1, conn2},
-					},
+					Value: []*armcosmos.PrivateEndpointConnection{conn1, conn2},
 				},
 			},
 		}
@@ -221,11 +219,9 @@ func TestDocumentDBPrivateEndpointConnection(t *testing.T) {
 		mockPager := &mockDocumentDBPrivateEndpointConnectionsPager{
 			pages: []armcosmos.PrivateEndpointConnectionsClientListByDatabaseAccountResponse{
 				{
-					PrivateEndpointConnectionListResult: armcosmos.PrivateEndpointConnectionListResult{
-						Value: []*armcosmos.PrivateEndpointConnection{
-							{Name: nil},
-							validConn,
-						},
+					Value: []*armcosmos.PrivateEndpointConnection{
+						{Name: nil},
+						validConn,
 					},
 				},
 			},

@@ -71,17 +71,13 @@ func (m *mockCapacityReservationsPager) More() bool {
 func (m *mockCapacityReservationsPager) NextPage(ctx context.Context) (armcompute.CapacityReservationsClientListByCapacityReservationGroupResponse, error) {
 	if m.index >= len(m.items) {
 		return armcompute.CapacityReservationsClientListByCapacityReservationGroupResponse{
-			CapacityReservationListResult: armcompute.CapacityReservationListResult{
-				Value: []*armcompute.CapacityReservation{},
-			},
+			Value: []*armcompute.CapacityReservation{},
 		}, nil
 	}
 	item := m.items[m.index]
 	m.index++
 	return armcompute.CapacityReservationsClientListByCapacityReservationGroupResponse{
-		CapacityReservationListResult: armcompute.CapacityReservationListResult{
-			Value: []*armcompute.CapacityReservation{item},
-		},
+		Value: []*armcompute.CapacityReservation{item},
 	}, nil
 }
 

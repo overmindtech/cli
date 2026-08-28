@@ -194,9 +194,7 @@ func TestSqlServerVirtualNetworkRule(t *testing.T) {
 		pager := &mockSqlServerVirtualNetworkRulePager{
 			pages: []armsql.VirtualNetworkRulesClientListByServerResponse{
 				{
-					VirtualNetworkRuleListResult: armsql.VirtualNetworkRuleListResult{
-						Value: []*armsql.VirtualNetworkRule{rule1, rule2},
-					},
+					Value: []*armsql.VirtualNetworkRule{rule1, rule2},
 				},
 			},
 		}
@@ -229,9 +227,7 @@ func TestSqlServerVirtualNetworkRule(t *testing.T) {
 		pager := &mockSqlServerVirtualNetworkRulePager{
 			pages: []armsql.VirtualNetworkRulesClientListByServerResponse{
 				{
-					VirtualNetworkRuleListResult: armsql.VirtualNetworkRuleListResult{
-						Value: []*armsql.VirtualNetworkRule{rule1},
-					},
+					Value: []*armsql.VirtualNetworkRule{rule1},
 				},
 			},
 		}

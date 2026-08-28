@@ -222,9 +222,7 @@ func TestSqlServerKey(t *testing.T) {
 		mockPager := &mockSqlServerKeysPager{
 			pages: []armsql.ServerKeysClientListByServerResponse{
 				{
-					ServerKeyListResult: armsql.ServerKeyListResult{
-						Value: []*armsql.ServerKey{serverKey1, serverKey2},
-					},
+					Value: []*armsql.ServerKey{serverKey1, serverKey2},
 				},
 			},
 		}
@@ -270,9 +268,7 @@ func TestSqlServerKey(t *testing.T) {
 		mockPager := &mockSqlServerKeysPager{
 			pages: []armsql.ServerKeysClientListByServerResponse{
 				{
-					ServerKeyListResult: armsql.ServerKeyListResult{
-						Value: []*armsql.ServerKey{serverKey1, serverKey2},
-					},
+					Value: []*armsql.ServerKey{serverKey1, serverKey2},
 				},
 			},
 		}
@@ -333,9 +329,7 @@ func TestSqlServerKey(t *testing.T) {
 		mockPager := &mockSqlServerKeysPager{
 			pages: []armsql.ServerKeysClientListByServerResponse{
 				{
-					ServerKeyListResult: armsql.ServerKeyListResult{
-						Value: []*armsql.ServerKey{serverKey1, serverKey2},
-					},
+					Value: []*armsql.ServerKey{serverKey1, serverKey2},
 				},
 			},
 		}

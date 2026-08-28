@@ -10,12 +10,10 @@ import (
 
 func TestDBClusterParameterGroupOutputMapper(t *testing.T) {
 	group := ClusterParameterGroup{
-		DBClusterParameterGroup: types.DBClusterParameterGroup{
-			DBClusterParameterGroupName: new("default.aurora-mysql5.7"),
-			DBParameterGroupFamily:      new("aurora-mysql5.7"),
-			Description:                 new("Default cluster parameter group for aurora-mysql5.7"),
-			DBClusterParameterGroupArn:  new("arn:aws:rds:eu-west-1:052392120703:cluster-pg:default.aurora-mysql5.7"),
-		},
+		DBClusterParameterGroupName: new("default.aurora-mysql5.7"),
+		DBParameterGroupFamily:      new("aurora-mysql5.7"),
+		Description:                 new("Default cluster parameter group for aurora-mysql5.7"),
+		DBClusterParameterGroupArn:  new("arn:aws:rds:eu-west-1:052392120703:cluster-pg:default.aurora-mysql5.7"),
 		Parameters: []types.Parameter{
 			{
 				ParameterName:  new("activate_all_roles_on_login"),

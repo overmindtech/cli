@@ -164,9 +164,7 @@ func TestNetworkVirtualNetwork(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armnetwork.VirtualNetworksClientListResponse{
-					VirtualNetworkListResult: armnetwork.VirtualNetworkListResult{
-						Value: []*armnetwork.VirtualNetwork{vnet1, vnet2},
-					},
+					Value: []*armnetwork.VirtualNetwork{vnet1, vnet2},
 				}, nil),
 			mockPager.EXPECT().More().Return(false),
 		)
@@ -229,9 +227,7 @@ func TestNetworkVirtualNetwork(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armnetwork.VirtualNetworksClientListResponse{
-					VirtualNetworkListResult: armnetwork.VirtualNetworkListResult{
-						Value: []*armnetwork.VirtualNetwork{vnet1, vnet2},
-					},
+					Value: []*armnetwork.VirtualNetwork{vnet1, vnet2},
 				}, nil),
 		)
 		// Note: More() won't be called again after NextPage returns the items with nil name

@@ -161,9 +161,7 @@ func TestDBforPostgreSQLFlexibleServerBackup(t *testing.T) {
 		pager := &mockDBforPostgreSQLFlexibleServerBackupPager{
 			pages: []armpostgresqlflexibleservers.BackupsAutomaticAndOnDemandClientListByServerResponse{
 				{
-					BackupAutomaticAndOnDemandList: armpostgresqlflexibleservers.BackupAutomaticAndOnDemandList{
-						Value: []*armpostgresqlflexibleservers.BackupAutomaticAndOnDemand{backup1, backup2},
-					},
+					Value: []*armpostgresqlflexibleservers.BackupAutomaticAndOnDemand{backup1, backup2},
 				},
 			},
 		}
@@ -196,9 +194,7 @@ func TestDBforPostgreSQLFlexibleServerBackup(t *testing.T) {
 		pager := &mockDBforPostgreSQLFlexibleServerBackupPager{
 			pages: []armpostgresqlflexibleservers.BackupsAutomaticAndOnDemandClientListByServerResponse{
 				{
-					BackupAutomaticAndOnDemandList: armpostgresqlflexibleservers.BackupAutomaticAndOnDemandList{
-						Value: []*armpostgresqlflexibleservers.BackupAutomaticAndOnDemand{backup1},
-					},
+					Value: []*armpostgresqlflexibleservers.BackupAutomaticAndOnDemand{backup1},
 				},
 			},
 		}

@@ -131,9 +131,7 @@ func TestNetworkPrivateEndpoint(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armnetwork.PrivateEndpointsClientListResponse{
-					PrivateEndpointListResult: armnetwork.PrivateEndpointListResult{
-						Value: []*armnetwork.PrivateEndpoint{pe1, pe2},
-					},
+					Value: []*armnetwork.PrivateEndpoint{pe1, pe2},
 				}, nil),
 			mockPager.EXPECT().More().Return(false),
 		)
@@ -185,9 +183,7 @@ func TestNetworkPrivateEndpoint(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armnetwork.PrivateEndpointsClientListResponse{
-					PrivateEndpointListResult: armnetwork.PrivateEndpointListResult{
-						Value: []*armnetwork.PrivateEndpoint{pe1, pe2},
-					},
+					Value: []*armnetwork.PrivateEndpoint{pe1, pe2},
 				}, nil),
 			mockPager.EXPECT().More().Return(false),
 		)

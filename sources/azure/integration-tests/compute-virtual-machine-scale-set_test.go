@@ -470,8 +470,7 @@ func createVirtualMachineScaleSet(ctx context.Context, client *armcompute.Virtua
 	}, nil)
 	if err != nil {
 		// Check if VMSS already exists (conflict) or quota issue
-		var respErr *azcore.ResponseError
-		if errors.As(err, &respErr) {
+		if respErr, ok := errors.AsType[*azcore.ResponseError](err); ok {
 			if respErr.StatusCode == http.StatusConflict {
 				log.Printf("Virtual machine scale set %s already exists (conflict), verifying it exists", vmssName)
 				// Verify the VMSS actually exists
@@ -619,8 +618,7 @@ func waitForVMSSAvailable(ctx context.Context, client *armcompute.VirtualMachine
 	for attempt := 1; attempt <= maxAttempts; attempt++ {
 		resp, err := client.Get(ctx, resourceGroupName, vmssName, nil)
 		if err != nil {
-			var respErr *azcore.ResponseError
-			if errors.As(err, &respErr) {
+			if respErr, ok := errors.AsType[*azcore.ResponseError](err); ok {
 				if respErr.StatusCode == http.StatusNotFound {
 					notFoundCount++
 					// If VMSS doesn't exist, fail after a few attempts

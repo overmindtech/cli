@@ -515,7 +515,7 @@ func (m *mockDiskEncryptionSetsPager) NextPage(ctx context.Context) (armcompute.
 	if m.index >= len(m.items) {
 		m.more = false
 		return armcompute.DiskEncryptionSetsClientListByResourceGroupResponse{
-			DiskEncryptionSetList: armcompute.DiskEncryptionSetList{Value: []*armcompute.DiskEncryptionSet{}},
+			Value: []*armcompute.DiskEncryptionSet{},
 		}, nil
 	}
 
@@ -524,7 +524,7 @@ func (m *mockDiskEncryptionSetsPager) NextPage(ctx context.Context) (armcompute.
 	m.more = m.index < len(m.items)
 
 	return armcompute.DiskEncryptionSetsClientListByResourceGroupResponse{
-		DiskEncryptionSetList: armcompute.DiskEncryptionSetList{Value: []*armcompute.DiskEncryptionSet{item}},
+		Value: []*armcompute.DiskEncryptionSet{item},
 	}, nil
 }
 

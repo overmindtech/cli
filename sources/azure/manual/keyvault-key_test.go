@@ -220,11 +220,9 @@ func TestKeyVaultKey(t *testing.T) {
 		mockPager := &mockKeysPager{
 			pages: []armkeyvault.KeysClientListResponse{
 				{
-					KeyListResult: armkeyvault.KeyListResult{
-						Value: []*armkeyvault.Key{
-							{ID: key1.ID, Name: key1.Name, Type: key1.Type, Properties: key1.Properties, Tags: key1.Tags},
-							{ID: key2.ID, Name: key2.Name, Type: key2.Type, Properties: key2.Properties, Tags: key2.Tags},
-						},
+					Value: []*armkeyvault.Key{
+						{ID: key1.ID, Name: key1.Name, Type: key1.Type, Properties: key1.Properties, Tags: key1.Tags},
+						{ID: key2.ID, Name: key2.Name, Type: key2.Type, Properties: key2.Properties, Tags: key2.Tags},
 					},
 				},
 			},
@@ -294,11 +292,9 @@ func TestKeyVaultKey(t *testing.T) {
 		mockPager := &mockKeysPager{
 			pages: []armkeyvault.KeysClientListResponse{
 				{
-					KeyListResult: armkeyvault.KeyListResult{
-						Value: []*armkeyvault.Key{
-							{Name: nil},
-							{ID: validKey.ID, Name: validKey.Name, Type: validKey.Type, Properties: validKey.Properties, Tags: validKey.Tags},
-						},
+					Value: []*armkeyvault.Key{
+						{Name: nil},
+						{ID: validKey.ID, Name: validKey.Name, Type: validKey.Type, Properties: validKey.Properties, Tags: validKey.Tags},
 					},
 				},
 			},

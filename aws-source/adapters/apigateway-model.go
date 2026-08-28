@@ -28,7 +28,7 @@ func modelOutputMapper(query, scope string, awsItem *types.Model) (*sdp.Item, er
 		return nil, err
 	}
 
-	restAPIID := strings.Split(query, "/")[0]
+	restAPIID, _, _ := strings.Cut(query, "/")
 
 	err = attributes.Set("UniqueAttribute", fmt.Sprintf("%s/%s", restAPIID, *awsItem.Name))
 	if err != nil {
@@ -61,7 +61,7 @@ func NewAPIGatewayModelAdapter(client *apigateway.Client, accountID string, regi
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: modelAdapterMetadata,
-		cache:        cache,
+		cache:           cache,
 		GetFunc: func(ctx context.Context, client *apigateway.Client, scope, query string) (*types.Model, error) {
 			f := strings.Split(query, "/")
 			if len(f) != 2 {

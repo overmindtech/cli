@@ -230,9 +230,7 @@ func TestNetworkPublicIPAddress(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armnetwork.PublicIPAddressesClientListResponse{
-					PublicIPAddressListResult: armnetwork.PublicIPAddressListResult{
-						Value: []*armnetwork.PublicIPAddress{publicIP1, publicIP2},
-					},
+					Value: []*armnetwork.PublicIPAddress{publicIP1, publicIP2},
 				}, nil),
 			mockPager.EXPECT().More().Return(false),
 		)
@@ -293,9 +291,7 @@ func TestNetworkPublicIPAddress(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armnetwork.PublicIPAddressesClientListResponse{
-					PublicIPAddressListResult: armnetwork.PublicIPAddressListResult{
-						Value: []*armnetwork.PublicIPAddress{publicIP1, publicIP2},
-					},
+					Value: []*armnetwork.PublicIPAddress{publicIP1, publicIP2},
 				}, nil),
 			mockPager.EXPECT().More().Return(false), // No more pages after processing
 		)

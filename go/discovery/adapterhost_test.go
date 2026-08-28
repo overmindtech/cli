@@ -200,11 +200,9 @@ func TestAdapterHostExpandQuery_WildcardScope(t *testing.T) {
 
 	// Add wildcard-supporting adapter
 	wildcardAdapter := &TestWildcardAdapter{
-		TestAdapter: TestAdapter{
-			ReturnScopes: []string{"project.zone-a", "project.zone-b"},
-			ReturnType:   "wildcard-type",
-			ReturnName:   "wildcard",
-		},
+		ReturnScopes:     []string{"project.zone-a", "project.zone-b"},
+		ReturnType:       "wildcard-type",
+		ReturnName:       "wildcard",
 		supportsWildcard: true,
 	}
 
@@ -322,12 +320,10 @@ func TestAdapterHostExpandQuery_WildcardScope(t *testing.T) {
 
 	t.Run("Hidden wildcard adapter with wildcard scope is not included", func(t *testing.T) {
 		hiddenWildcardAdapter := &TestWildcardAdapter{
-			TestAdapter: TestAdapter{
-				ReturnScopes: []string{"project.zone-a"},
-				ReturnType:   "hidden-wildcard-type",
-				ReturnName:   "hidden-wildcard",
-				IsHidden:     true,
-			},
+			ReturnScopes:     []string{"project.zone-a"},
+			ReturnType:       "hidden-wildcard-type",
+			ReturnName:       "hidden-wildcard",
+			IsHidden:         true,
 			supportsWildcard: true,
 		}
 

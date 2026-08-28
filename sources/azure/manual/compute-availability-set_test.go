@@ -414,9 +414,7 @@ func (m *mockAvailabilitySetsPager) NextPage(ctx context.Context) (armcompute.Av
 	if m.index >= len(m.items) {
 		m.more = false
 		return armcompute.AvailabilitySetsClientListResponse{
-			AvailabilitySetListResult: armcompute.AvailabilitySetListResult{
-				Value: []*armcompute.AvailabilitySet{},
-			},
+			Value: []*armcompute.AvailabilitySet{},
 		}, nil
 	}
 
@@ -425,8 +423,6 @@ func (m *mockAvailabilitySetsPager) NextPage(ctx context.Context) (armcompute.Av
 	m.more = m.index < len(m.items)
 
 	return armcompute.AvailabilitySetsClientListResponse{
-		AvailabilitySetListResult: armcompute.AvailabilitySetListResult{
-			Value: []*armcompute.AvailabilitySet{item},
-		},
+		Value: []*armcompute.AvailabilitySet{item},
 	}, nil
 }

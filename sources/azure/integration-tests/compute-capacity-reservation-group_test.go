@@ -269,8 +269,7 @@ func createCapacityReservationGroup(ctx context.Context, client *armcompute.Capa
 func deleteCapacityReservationGroup(ctx context.Context, client *armcompute.CapacityReservationGroupsClient, resourceGroupName, groupName string) error {
 	_, err := client.Delete(ctx, resourceGroupName, groupName, nil)
 	if err != nil {
-		var respErr *azcore.ResponseError
-		if errors.As(err, &respErr) {
+		if respErr, ok := errors.AsType[*azcore.ResponseError](err); ok {
 			switch respErr.StatusCode {
 			case http.StatusNotFound:
 				log.Printf("Capacity reservation group %s not found, skipping deletion", groupName)

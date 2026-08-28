@@ -172,9 +172,7 @@ func TestDBforPostgreSQLFlexibleServerReplica(t *testing.T) {
 		pager := &mockDBforPostgreSQLFlexibleServerReplicaPager{
 			pages: []armpostgresqlflexibleservers.ReplicasClientListByServerResponse{
 				{
-					ServerList: armpostgresqlflexibleservers.ServerList{
-						Value: []*armpostgresqlflexibleservers.Server{replica1, replica2},
-					},
+					Value: []*armpostgresqlflexibleservers.Server{replica1, replica2},
 				},
 			},
 		}
@@ -207,9 +205,7 @@ func TestDBforPostgreSQLFlexibleServerReplica(t *testing.T) {
 		pager := &mockDBforPostgreSQLFlexibleServerReplicaPager{
 			pages: []armpostgresqlflexibleservers.ReplicasClientListByServerResponse{
 				{
-					ServerList: armpostgresqlflexibleservers.ServerList{
-						Value: []*armpostgresqlflexibleservers.Server{replica1},
-					},
+					Value: []*armpostgresqlflexibleservers.Server{replica1},
 				},
 			},
 		}

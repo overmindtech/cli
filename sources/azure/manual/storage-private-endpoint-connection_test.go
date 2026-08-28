@@ -176,9 +176,7 @@ func TestStoragePrivateEndpointConnection(t *testing.T) {
 		mockPager := &mockPrivateEndpointConnectionsPager{
 			pages: []armstorage.PrivateEndpointConnectionsClientListResponse{
 				{
-					PrivateEndpointConnectionListResult: armstorage.PrivateEndpointConnectionListResult{
-						Value: []*armstorage.PrivateEndpointConnection{conn1, conn2},
-					},
+					Value: []*armstorage.PrivateEndpointConnection{conn1, conn2},
 				},
 			},
 		}
@@ -222,11 +220,9 @@ func TestStoragePrivateEndpointConnection(t *testing.T) {
 		mockPager := &mockPrivateEndpointConnectionsPager{
 			pages: []armstorage.PrivateEndpointConnectionsClientListResponse{
 				{
-					PrivateEndpointConnectionListResult: armstorage.PrivateEndpointConnectionListResult{
-						Value: []*armstorage.PrivateEndpointConnection{
-							{Name: nil},
-							validConn,
-						},
+					Value: []*armstorage.PrivateEndpointConnection{
+						{Name: nil},
+						validConn,
 					},
 				},
 			},

@@ -274,9 +274,7 @@ func (m *mockGalleriesPager) NextPage(ctx context.Context) (armcompute.Galleries
 	if m.index >= len(m.items) {
 		m.more = false
 		return armcompute.GalleriesClientListByResourceGroupResponse{
-			GalleryList: armcompute.GalleryList{
-				Value: []*armcompute.Gallery{},
-			},
+			Value: []*armcompute.Gallery{},
 		}, nil
 	}
 
@@ -285,8 +283,6 @@ func (m *mockGalleriesPager) NextPage(ctx context.Context) (armcompute.Galleries
 	m.more = m.index < len(m.items)
 
 	return armcompute.GalleriesClientListByResourceGroupResponse{
-		GalleryList: armcompute.GalleryList{
-			Value: []*armcompute.Gallery{item},
-		},
+		Value: []*armcompute.Gallery{item},
 	}, nil
 }

@@ -327,18 +327,14 @@ func (m *mockVirtualNetworkGatewaysPager) NextPage(ctx context.Context) (armnetw
 	if m.index >= len(m.items) {
 		m.more = false
 		return armnetwork.VirtualNetworkGatewaysClientListResponse{
-			VirtualNetworkGatewayListResult: armnetwork.VirtualNetworkGatewayListResult{
-				Value: []*armnetwork.VirtualNetworkGateway{},
-			},
+			Value: []*armnetwork.VirtualNetworkGateway{},
 		}, nil
 	}
 	item := m.items[m.index]
 	m.index++
 	m.more = m.index < len(m.items)
 	return armnetwork.VirtualNetworkGatewaysClientListResponse{
-		VirtualNetworkGatewayListResult: armnetwork.VirtualNetworkGatewayListResult{
-			Value: []*armnetwork.VirtualNetworkGateway{item},
-		},
+		Value: []*armnetwork.VirtualNetworkGateway{item},
 	}, nil
 }
 

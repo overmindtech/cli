@@ -176,9 +176,7 @@ func TestBatchBatchApplicationPackage(t *testing.T) {
 		mockClient := mocks.NewMockBatchApplicationPackagesClient(ctrl)
 		pages := []armbatch.ApplicationPackageClientListResponse{
 			{
-				ListApplicationPackagesResult: armbatch.ListApplicationPackagesResult{
-					Value: []*armbatch.ApplicationPackage{pkg1, pkg2},
-				},
+				Value: []*armbatch.ApplicationPackage{pkg1, pkg2},
 			},
 		}
 		mockPager := &mockBatchApplicationPackagesPager{pages: pages}
@@ -218,9 +216,7 @@ func TestBatchBatchApplicationPackage(t *testing.T) {
 		mockClient := mocks.NewMockBatchApplicationPackagesClient(ctrl)
 		pages := []armbatch.ApplicationPackageClientListResponse{
 			{
-				ListApplicationPackagesResult: armbatch.ListApplicationPackagesResult{
-					Value: []*armbatch.ApplicationPackage{pkg1, pkg2},
-				},
+				Value: []*armbatch.ApplicationPackage{pkg1, pkg2},
 			},
 		}
 		mockPager := &mockBatchApplicationPackagesPager{pages: pages}
@@ -290,9 +286,7 @@ func TestBatchBatchApplicationPackage(t *testing.T) {
 		mockClient := mocks.NewMockBatchApplicationPackagesClient(ctrl)
 		pages := []armbatch.ApplicationPackageClientListResponse{
 			{
-				ListApplicationPackagesResult: armbatch.ListApplicationPackagesResult{
-					Value: []*armbatch.ApplicationPackage{nilNamePkg, validPkg},
-				},
+				Value: []*armbatch.ApplicationPackage{nilNamePkg, validPkg},
 			},
 		}
 		mockPager := &mockBatchApplicationPackagesPager{pages: pages}

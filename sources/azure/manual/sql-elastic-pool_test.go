@@ -156,9 +156,7 @@ func TestSqlElasticPool(t *testing.T) {
 		pager := &mockSqlElasticPoolPager{
 			pages: []armsql.ElasticPoolsClientListByServerResponse{
 				{
-					ElasticPoolListResult: armsql.ElasticPoolListResult{
-						Value: []*armsql.ElasticPool{pool1, pool2},
-					},
+					Value: []*armsql.ElasticPool{pool1, pool2},
 				},
 			},
 		}
@@ -192,9 +190,7 @@ func TestSqlElasticPool(t *testing.T) {
 		pager := &mockSqlElasticPoolPager{
 			pages: []armsql.ElasticPoolsClientListByServerResponse{
 				{
-					ElasticPoolListResult: armsql.ElasticPoolListResult{
-						Value: []*armsql.ElasticPool{pool},
-					},
+					Value: []*armsql.ElasticPool{pool},
 				},
 			},
 		}

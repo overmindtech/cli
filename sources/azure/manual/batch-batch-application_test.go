@@ -169,9 +169,7 @@ func TestBatchBatchApplication(t *testing.T) {
 		mockClient := mocks.NewMockBatchApplicationsClient(ctrl)
 		pages := []armbatch.ApplicationClientListResponse{
 			{
-				ListApplicationsResult: armbatch.ListApplicationsResult{
-					Value: []*armbatch.Application{app1, app2},
-				},
+				Value: []*armbatch.Application{app1, app2},
 			},
 		}
 		mockPager := &mockBatchApplicationsPager{pages: pages}

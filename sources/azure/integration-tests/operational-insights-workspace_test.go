@@ -307,8 +307,7 @@ func createOperationalInsightsWorkspace(ctx context.Context, client *armoperatio
 		},
 	}, nil)
 	if err != nil {
-		var respErr *azcore.ResponseError
-		if errors.As(err, &respErr) {
+		if respErr, ok := errors.AsType[*azcore.ResponseError](err); ok {
 			// Check for authorization failure (resource provider not registered)
 			if respErr.StatusCode == http.StatusForbidden && respErr.ErrorCode == "AuthorizationFailed" {
 				return fmt.Errorf("%w: %s", errOperationalInsightsAuthorizationFailed, respErr.Error())

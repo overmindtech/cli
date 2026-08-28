@@ -401,9 +401,7 @@ func TestComputeVirtualMachineRunCommand(t *testing.T) {
 		mockPager := &mockVirtualMachineRunCommandsPager{
 			pages: []armcompute.VirtualMachineRunCommandsClientListByVirtualMachineResponse{
 				{
-					VirtualMachineRunCommandsListResult: armcompute.VirtualMachineRunCommandsListResult{
-						Value: []*armcompute.VirtualMachineRunCommand{runCommand1, runCommand2},
-					},
+					Value: []*armcompute.VirtualMachineRunCommand{runCommand1, runCommand2},
 				},
 			},
 			index: 0,
@@ -512,9 +510,7 @@ func TestComputeVirtualMachineRunCommand(t *testing.T) {
 			mockPager := &mockVirtualMachineRunCommandsPager{
 				pages: []armcompute.VirtualMachineRunCommandsClientListByVirtualMachineResponse{
 					{
-						VirtualMachineRunCommandsListResult: armcompute.VirtualMachineRunCommandsListResult{
-							Value: []*armcompute.VirtualMachineRunCommand{runCommandWithName, runCommandWithoutName},
-						},
+						Value: []*armcompute.VirtualMachineRunCommand{runCommandWithName, runCommandWithoutName},
 					},
 				},
 				index: 0,

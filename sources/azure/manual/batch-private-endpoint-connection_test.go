@@ -203,9 +203,7 @@ func TestBatchPrivateEndpointConnection(t *testing.T) {
 		mockPager := &mockBatchPrivateEndpointConnectionPager{
 			pages: []armbatch.PrivateEndpointConnectionClientListByBatchAccountResponse{
 				{
-					ListPrivateEndpointConnectionsResult: armbatch.ListPrivateEndpointConnectionsResult{
-						Value: []*armbatch.PrivateEndpointConnection{conn1, conn2},
-					},
+					Value: []*armbatch.PrivateEndpointConnection{conn1, conn2},
 				},
 			},
 		}
@@ -250,9 +248,7 @@ func TestBatchPrivateEndpointConnection(t *testing.T) {
 		mockPager := &mockBatchPrivateEndpointConnectionPager{
 			pages: []armbatch.PrivateEndpointConnectionClientListByBatchAccountResponse{
 				{
-					ListPrivateEndpointConnectionsResult: armbatch.ListPrivateEndpointConnectionsResult{
-						Value: []*armbatch.PrivateEndpointConnection{conn1, conn2},
-					},
+					Value: []*armbatch.PrivateEndpointConnection{conn1, conn2},
 				},
 			},
 		}
@@ -300,11 +296,9 @@ func TestBatchPrivateEndpointConnection(t *testing.T) {
 		mockPager := &mockBatchPrivateEndpointConnectionPager{
 			pages: []armbatch.PrivateEndpointConnectionClientListByBatchAccountResponse{
 				{
-					ListPrivateEndpointConnectionsResult: armbatch.ListPrivateEndpointConnectionsResult{
-						Value: []*armbatch.PrivateEndpointConnection{
-							{Name: nil},
-							validConn,
-						},
+					Value: []*armbatch.PrivateEndpointConnection{
+						{Name: nil},
+						validConn,
 					},
 				},
 			},

@@ -282,9 +282,7 @@ func TestDBforPostgreSQLFlexibleServer(t *testing.T) {
 		mockPager := &mockPostgreSQLFlexibleServersPager{
 			pages: []armpostgresqlflexibleservers.ServersClientListByResourceGroupResponse{
 				{
-					ServerList: armpostgresqlflexibleservers.ServerList{
-						Value: []*armpostgresqlflexibleservers.Server{server1, server2},
-					},
+					Value: []*armpostgresqlflexibleservers.Server{server1, server2},
 				},
 			},
 		}
@@ -335,9 +333,7 @@ func TestDBforPostgreSQLFlexibleServer(t *testing.T) {
 		mockPager := &mockPostgreSQLFlexibleServersPager{
 			pages: []armpostgresqlflexibleservers.ServersClientListByResourceGroupResponse{
 				{
-					ServerList: armpostgresqlflexibleservers.ServerList{
-						Value: []*armpostgresqlflexibleservers.Server{server1, server2},
-					},
+					Value: []*armpostgresqlflexibleservers.Server{server1, server2},
 				},
 			},
 		}

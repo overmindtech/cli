@@ -235,22 +235,20 @@ func TestKeyVaultSecret(t *testing.T) {
 		mockPager := &mockSecretsPager{
 			pages: []armkeyvault.SecretsClientListResponse{
 				{
-					SecretListResult: armkeyvault.SecretListResult{
-						Value: []*armkeyvault.Secret{
-							{
-								ID:         secret1.ID,
-								Name:       secret1.Name,
-								Type:       secret1.Type,
-								Properties: secret1.Properties,
-								Tags:       secret1.Tags,
-							},
-							{
-								ID:         secret2.ID,
-								Name:       secret2.Name,
-								Type:       secret2.Type,
-								Properties: secret2.Properties,
-								Tags:       secret2.Tags,
-							},
+					Value: []*armkeyvault.Secret{
+						{
+							ID:         secret1.ID,
+							Name:       secret1.Name,
+							Type:       secret1.Type,
+							Properties: secret1.Properties,
+							Tags:       secret1.Tags,
+						},
+						{
+							ID:         secret2.ID,
+							Name:       secret2.Name,
+							Type:       secret2.Type,
+							Properties: secret2.Properties,
+							Tags:       secret2.Tags,
 						},
 					},
 				},
@@ -324,19 +322,17 @@ func TestKeyVaultSecret(t *testing.T) {
 		mockPager := &mockSecretsPager{
 			pages: []armkeyvault.SecretsClientListResponse{
 				{
-					SecretListResult: armkeyvault.SecretListResult{
-						Value: []*armkeyvault.Secret{
-							{
-								// Secret with nil name should be skipped
-								Name: nil,
-							},
-							{
-								ID:         validSecret.ID,
-								Name:       validSecret.Name,
-								Type:       validSecret.Type,
-								Properties: validSecret.Properties,
-								Tags:       validSecret.Tags,
-							},
+					Value: []*armkeyvault.Secret{
+						{
+							// Secret with nil name should be skipped
+							Name: nil,
+						},
+						{
+							ID:         validSecret.ID,
+							Name:       validSecret.Name,
+							Type:       validSecret.Type,
+							Properties: validSecret.Properties,
+							Tags:       validSecret.Tags,
 						},
 					},
 				},

@@ -174,12 +174,10 @@ func TestNewAuthMiddleware(t *testing.T) {
 			Name: "with insufficient scopes",
 			Path: "/",
 			TokenOptions: &TestTokenOptions{
-				Audience: []string{"https://api.overmind.tech"},
-				Expiry:   time.Now().Add(time.Hour),
-				CustomClaims: CustomClaims{
-					AccountName: "test",
-					Scope:       "test:fail",
-				},
+				Audience:    []string{"https://api.overmind.tech"},
+				Expiry:      time.Now().Add(time.Hour),
+				AccountName: "test",
+				Scope:       "test:fail",
 			},
 			AuthConfig:   defaultConfig,
 			ExpectedCode: http.StatusUnauthorized,
@@ -188,12 +186,10 @@ func TestNewAuthMiddleware(t *testing.T) {
 			Name: "with correct scopes but wrong account",
 			Path: "/",
 			TokenOptions: &TestTokenOptions{
-				Audience: []string{"https://api.overmind.tech"},
-				Expiry:   time.Now().Add(time.Hour),
-				CustomClaims: CustomClaims{
-					AccountName: "fail",
-					Scope:       "test:pass",
-				},
+				Audience:    []string{"https://api.overmind.tech"},
+				Expiry:      time.Now().Add(time.Hour),
+				AccountName: "fail",
+				Scope:       "test:pass",
 			},
 			AuthConfig:   defaultConfig,
 			ExpectedCode: http.StatusUnauthorized,
@@ -202,12 +198,10 @@ func TestNewAuthMiddleware(t *testing.T) {
 			Name: "with correct scopes and account",
 			Path: "/",
 			TokenOptions: &TestTokenOptions{
-				Audience: []string{"https://api.overmind.tech"},
-				Expiry:   time.Now().Add(time.Hour),
-				CustomClaims: CustomClaims{
-					AccountName: "test",
-					Scope:       "test:pass",
-				},
+				Audience:    []string{"https://api.overmind.tech"},
+				Expiry:      time.Now().Add(time.Hour),
+				AccountName: "test",
+				Scope:       "test:pass",
 			},
 			AuthConfig:   defaultConfig,
 			ExpectedCode: http.StatusOK,
@@ -216,12 +210,10 @@ func TestNewAuthMiddleware(t *testing.T) {
 			Name: "with the correct scope and many others",
 			Path: "/",
 			TokenOptions: &TestTokenOptions{
-				Audience: []string{"https://api.overmind.tech"},
-				Expiry:   time.Now().Add(time.Hour),
-				CustomClaims: CustomClaims{
-					AccountName: "test",
-					Scope:       "test:pass test:fail foo:bar something",
-				},
+				Audience:    []string{"https://api.overmind.tech"},
+				Expiry:      time.Now().Add(time.Hour),
+				AccountName: "test",
+				Scope:       "test:pass test:fail foo:bar something",
 			},
 			AuthConfig:   defaultConfig,
 			ExpectedCode: http.StatusOK,
@@ -230,12 +222,10 @@ func TestNewAuthMiddleware(t *testing.T) {
 			Name: "with many audiences and many scopes",
 			Path: "/",
 			TokenOptions: &TestTokenOptions{
-				Audience: []string{"https://api.overmind.tech", "https://api.overmind.tech/other"},
-				Expiry:   time.Now().Add(time.Hour),
-				CustomClaims: CustomClaims{
-					AccountName: "test",
-					Scope:       "test:pass test:other",
-				},
+				Audience:    []string{"https://api.overmind.tech", "https://api.overmind.tech/other"},
+				Expiry:      time.Now().Add(time.Hour),
+				AccountName: "test",
+				Scope:       "test:pass test:other",
 			},
 			AuthConfig:   defaultConfig,
 			ExpectedCode: http.StatusOK,
@@ -244,12 +234,10 @@ func TestNewAuthMiddleware(t *testing.T) {
 			Name: "with many audiences and one scope",
 			Path: "/",
 			TokenOptions: &TestTokenOptions{
-				Audience: []string{"https://api.overmind.tech", "https://api.overmind.tech/other"},
-				Expiry:   time.Now().Add(time.Hour),
-				CustomClaims: CustomClaims{
-					AccountName: "test",
-					Scope:       "test:pass",
-				},
+				Audience:    []string{"https://api.overmind.tech", "https://api.overmind.tech/other"},
+				Expiry:      time.Now().Add(time.Hour),
+				AccountName: "test",
+				Scope:       "test:pass",
 			},
 			AuthConfig:   defaultConfig,
 			ExpectedCode: http.StatusOK,
@@ -258,12 +246,10 @@ func TestNewAuthMiddleware(t *testing.T) {
 			Name: "with good token and some bypassed paths",
 			Path: "/",
 			TokenOptions: &TestTokenOptions{
-				Audience: []string{"https://api.overmind.tech"},
-				Expiry:   time.Now().Add(time.Hour),
-				CustomClaims: CustomClaims{
-					AccountName: "test",
-					Scope:       "test:pass",
-				},
+				Audience:    []string{"https://api.overmind.tech"},
+				Expiry:      time.Now().Add(time.Hour),
+				AccountName: "test",
+				Scope:       "test:pass",
 			},
 			AuthConfig: MiddlewareConfig{
 				IssuerURL:          jwksURL,
@@ -288,12 +274,10 @@ func TestNewAuthMiddleware(t *testing.T) {
 			Name: "with bad token on a non-bypassed path",
 			Path: "/",
 			TokenOptions: &TestTokenOptions{
-				Audience: []string{"https://api.overmind.tech"},
-				Expiry:   time.Now().Add(time.Hour),
-				CustomClaims: CustomClaims{
-					AccountName: "test",
-					Scope:       "test:fail",
-				},
+				Audience:    []string{"https://api.overmind.tech"},
+				Expiry:      time.Now().Add(time.Hour),
+				AccountName: "test",
+				Scope:       "test:fail",
 			},
 			ExpectedCode: http.StatusUnauthorized,
 			AuthConfig:   bypassHealthConfig,
@@ -302,12 +286,10 @@ func TestNewAuthMiddleware(t *testing.T) {
 			Name: "with bad token on a bypassed path",
 			Path: "/health",
 			TokenOptions: &TestTokenOptions{
-				Audience: []string{"https://api.overmind.tech"},
-				Expiry:   time.Now().Add(time.Hour),
-				CustomClaims: CustomClaims{
-					AccountName: "test",
-					Scope:       "test:fail",
-				},
+				Audience:    []string{"https://api.overmind.tech"},
+				Expiry:      time.Now().Add(time.Hour),
+				AccountName: "test",
+				Scope:       "test:fail",
 			},
 			ExpectedCode: http.StatusOK,
 			AuthConfig:   bypassHealthConfig,
@@ -316,12 +298,10 @@ func TestNewAuthMiddleware(t *testing.T) {
 			Name: "with a good token and bypassed auth",
 			Path: "/",
 			TokenOptions: &TestTokenOptions{
-				Audience: []string{"https://api.overmind.tech"},
-				Expiry:   time.Now().Add(time.Hour),
-				CustomClaims: CustomClaims{
-					AccountName: "test",
-					Scope:       "test:pass",
-				},
+				Audience:    []string{"https://api.overmind.tech"},
+				Expiry:      time.Now().Add(time.Hour),
+				AccountName: "test",
+				Scope:       "test:pass",
 			},
 			ExpectedCode: http.StatusOK,
 			AuthConfig: MiddlewareConfig{
@@ -334,12 +314,10 @@ func TestNewAuthMiddleware(t *testing.T) {
 			Name: "with a bad token and bypassed auth",
 			Path: "/",
 			TokenOptions: &TestTokenOptions{
-				Audience: []string{"https://api.overmind.tech"},
-				Expiry:   time.Now().Add(-time.Hour), // expired
-				CustomClaims: CustomClaims{
-					AccountName: "test",
-					Scope:       "test:pass",
-				},
+				Audience:    []string{"https://api.overmind.tech"},
+				Expiry:      time.Now().Add(-time.Hour), // expired
+				AccountName: "test",
+				Scope:       "test:pass",
 			},
 			ExpectedCode: http.StatusOK,
 			AuthConfig: MiddlewareConfig{
@@ -352,12 +330,10 @@ func TestNewAuthMiddleware(t *testing.T) {
 			Name: "with account override",
 			Path: "/",
 			TokenOptions: &TestTokenOptions{
-				Audience: []string{"https://api.overmind.tech"},
-				Expiry:   time.Now().Add(time.Hour),
-				CustomClaims: CustomClaims{
-					AccountName: "bad",
-					Scope:       "test:pass",
-				},
+				Audience:    []string{"https://api.overmind.tech"},
+				Expiry:      time.Now().Add(time.Hour),
+				AccountName: "bad",
+				Scope:       "test:pass",
 			},
 			ExpectedCode: http.StatusOK,
 			AuthConfig: MiddlewareConfig{
@@ -370,12 +346,10 @@ func TestNewAuthMiddleware(t *testing.T) {
 			Name: "with scope override",
 			Path: "/",
 			TokenOptions: &TestTokenOptions{
-				Audience: []string{"https://api.overmind.tech"},
-				Expiry:   time.Now().Add(time.Hour),
-				CustomClaims: CustomClaims{
-					AccountName: "test",
-					Scope:       "test:fail",
-				},
+				Audience:    []string{"https://api.overmind.tech"},
+				Expiry:      time.Now().Add(time.Hour),
+				AccountName: "test",
+				Scope:       "test:fail",
 			},
 			ExpectedCode: http.StatusOK,
 			AuthConfig: MiddlewareConfig{
@@ -487,13 +461,11 @@ func TestNewAuthMiddleware_PreservesMCPGrantKeyClaim(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			token, err := server.GenerateJWT(&TestTokenOptions{
-				Audience: []string{"https://api.overmind.tech"},
-				Expiry:   time.Now().Add(time.Hour),
-				CustomClaims: CustomClaims{
-					AccountName: "test",
-					Scope:       "test:pass",
-					MCPGrantKey: test.mcpGrantKey,
-				},
+				Audience:    []string{"https://api.overmind.tech"},
+				Expiry:      time.Now().Add(time.Hour),
+				AccountName: "test",
+				Scope:       "test:pass",
+				MCPGrantKey: test.mcpGrantKey,
 			})
 			if err != nil {
 				t.Fatal(err)
@@ -1222,12 +1194,10 @@ func TestAuthMiddleware_PopulatesAuditData(t *testing.T) {
 		)
 
 		token, err := server.GenerateJWT(&TestTokenOptions{
-			Audience: []string{"https://api.overmind.tech"},
-			Expiry:   time.Now().Add(time.Hour),
-			CustomClaims: CustomClaims{
-				AccountName: "acme-corp",
-				Scope:       "read:items write:items",
-			},
+			Audience:    []string{"https://api.overmind.tech"},
+			Expiry:      time.Now().Add(time.Hour),
+			AccountName: "acme-corp",
+			Scope:       "read:items write:items",
 		})
 		if err != nil {
 			t.Fatal(err)
@@ -1273,12 +1243,10 @@ func TestAuthMiddleware_PopulatesAuditData(t *testing.T) {
 		)
 
 		token, err := server.GenerateJWT(&TestTokenOptions{
-			Audience: []string{"https://api.overmind.tech"},
-			Expiry:   time.Now().Add(time.Hour),
-			CustomClaims: CustomClaims{
-				AccountName: "original-acme",
-				Scope:       "read:items",
-			},
+			Audience:    []string{"https://api.overmind.tech"},
+			Expiry:      time.Now().Add(time.Hour),
+			AccountName: "original-acme",
+			Scope:       "read:items",
 		})
 		if err != nil {
 			t.Fatal(err)
@@ -1311,12 +1279,10 @@ func TestAuthMiddleware_PopulatesAuditData(t *testing.T) {
 		}, inner)
 
 		token, err := server.GenerateJWT(&TestTokenOptions{
-			Audience: []string{"https://api.overmind.tech"},
-			Expiry:   time.Now().Add(time.Hour),
-			CustomClaims: CustomClaims{
-				AccountName: "acme-corp",
-				Scope:       "read:items",
-			},
+			Audience:    []string{"https://api.overmind.tech"},
+			Expiry:      time.Now().Add(time.Hour),
+			AccountName: "acme-corp",
+			Scope:       "read:items",
 		})
 		if err != nil {
 			t.Fatal(err)

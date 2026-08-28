@@ -179,9 +179,7 @@ func TestNetworkLoadBalancerProbe(t *testing.T) {
 		mockPager := &mockLoadBalancerProbePager{
 			pages: []armnetwork.LoadBalancerProbesClientListResponse{
 				{
-					LoadBalancerProbeListResult: armnetwork.LoadBalancerProbeListResult{
-						Value: []*armnetwork.Probe{probe1, probe2},
-					},
+					Value: []*armnetwork.Probe{probe1, probe2},
 				},
 			},
 		}
@@ -225,11 +223,9 @@ func TestNetworkLoadBalancerProbe(t *testing.T) {
 		mockPager := &mockLoadBalancerProbePager{
 			pages: []armnetwork.LoadBalancerProbesClientListResponse{
 				{
-					LoadBalancerProbeListResult: armnetwork.LoadBalancerProbeListResult{
-						Value: []*armnetwork.Probe{
-							{Name: nil, ID: new("/some/id")},
-							validProbe,
-						},
+					Value: []*armnetwork.Probe{
+						{Name: nil, ID: new("/some/id")},
+						validProbe,
 					},
 				},
 			},

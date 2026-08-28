@@ -3,6 +3,7 @@ package shared
 import (
 	"context"
 	"fmt"
+	"slices"
 	"strings"
 
 	"go.opentelemetry.io/otel/attribute"
@@ -39,9 +40,9 @@ func LastPathComponent(url string) string {
 		return ""
 	}
 	parts := strings.Split(url, "/")
-	for i := len(parts) - 1; i >= 0; i-- {
-		if parts[i] != "" {
-			return parts[i]
+	for _, part := range slices.Backward(parts) {
+		if part != "" {
+			return part
 		}
 	}
 	return ""

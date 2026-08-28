@@ -374,18 +374,14 @@ func (m *mockIPGroupsPager) NextPage(ctx context.Context) (armnetwork.IPGroupsCl
 	if m.index >= len(m.items) {
 		m.more = false
 		return armnetwork.IPGroupsClientListByResourceGroupResponse{
-			IPGroupListResult: armnetwork.IPGroupListResult{
-				Value: []*armnetwork.IPGroup{},
-			},
+			Value: []*armnetwork.IPGroup{},
 		}, nil
 	}
 	item := m.items[m.index]
 	m.index++
 	m.more = m.index < len(m.items)
 	return armnetwork.IPGroupsClientListByResourceGroupResponse{
-		IPGroupListResult: armnetwork.IPGroupListResult{
-			Value: []*armnetwork.IPGroup{item},
-		},
+		Value: []*armnetwork.IPGroup{item},
 	}, nil
 }
 

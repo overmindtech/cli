@@ -255,9 +255,7 @@ func (m *mockMaintenanceConfigurationPager) NextPage(ctx context.Context) (armma
 	if m.index >= len(m.items) {
 		m.more = false
 		return armmaintenance.ConfigurationsForResourceGroupClientListResponse{
-			ListMaintenanceConfigurationsResult: armmaintenance.ListMaintenanceConfigurationsResult{
-				Value: []*armmaintenance.Configuration{},
-			},
+			Value: []*armmaintenance.Configuration{},
 		}, nil
 	}
 
@@ -266,8 +264,6 @@ func (m *mockMaintenanceConfigurationPager) NextPage(ctx context.Context) (armma
 	m.more = m.index < len(m.items)
 
 	return armmaintenance.ConfigurationsForResourceGroupClientListResponse{
-		ListMaintenanceConfigurationsResult: armmaintenance.ListMaintenanceConfigurationsResult{
-			Value: []*armmaintenance.Configuration{item},
-		},
+		Value: []*armmaintenance.Configuration{item},
 	}, nil
 }

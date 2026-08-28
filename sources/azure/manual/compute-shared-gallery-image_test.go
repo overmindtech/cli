@@ -430,9 +430,7 @@ func newMockSharedGalleryImagesPager(items []*armcompute.SharedGalleryImage) cli
 	return &mockSharedGalleryImagesPager{
 		pages: []armcompute.SharedGalleryImagesClientListResponse{
 			{
-				SharedGalleryImageList: armcompute.SharedGalleryImageList{
-					Value: items,
-				},
+				Value: items,
 			},
 		},
 		index: 0,

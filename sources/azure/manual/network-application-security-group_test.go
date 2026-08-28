@@ -307,18 +307,14 @@ func (m *mockApplicationSecurityGroupsPager) NextPage(ctx context.Context) (armn
 	if m.index >= len(m.items) {
 		m.more = false
 		return armnetwork.ApplicationSecurityGroupsClientListResponse{
-			ApplicationSecurityGroupListResult: armnetwork.ApplicationSecurityGroupListResult{
-				Value: []*armnetwork.ApplicationSecurityGroup{},
-			},
+			Value: []*armnetwork.ApplicationSecurityGroup{},
 		}, nil
 	}
 	item := m.items[m.index]
 	m.index++
 	m.more = m.index < len(m.items)
 	return armnetwork.ApplicationSecurityGroupsClientListResponse{
-		ApplicationSecurityGroupListResult: armnetwork.ApplicationSecurityGroupListResult{
-			Value: []*armnetwork.ApplicationSecurityGroup{item},
-		},
+		Value: []*armnetwork.ApplicationSecurityGroup{item},
 	}, nil
 }
 

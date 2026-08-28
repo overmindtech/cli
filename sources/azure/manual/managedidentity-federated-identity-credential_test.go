@@ -184,9 +184,7 @@ func TestManagedIdentityFederatedIdentityCredential(t *testing.T) {
 		mockPager := &mockFederatedIdentityCredentialsPager{
 			pages: []armmsi.FederatedIdentityCredentialsClientListResponse{
 				{
-					FederatedIdentityCredentialsListResult: armmsi.FederatedIdentityCredentialsListResult{
-						Value: []*armmsi.FederatedIdentityCredential{credential1, credential2},
-					},
+					Value: []*armmsi.FederatedIdentityCredential{credential1, credential2},
 				},
 			},
 		}
@@ -232,9 +230,7 @@ func TestManagedIdentityFederatedIdentityCredential(t *testing.T) {
 		mockPager := &mockFederatedIdentityCredentialsPager{
 			pages: []armmsi.FederatedIdentityCredentialsClientListResponse{
 				{
-					FederatedIdentityCredentialsListResult: armmsi.FederatedIdentityCredentialsListResult{
-						Value: []*armmsi.FederatedIdentityCredential{credential1, credential2},
-					},
+					Value: []*armmsi.FederatedIdentityCredential{credential1, credential2},
 				},
 			},
 		}
@@ -309,11 +305,9 @@ func TestManagedIdentityFederatedIdentityCredential(t *testing.T) {
 		mockPager := &mockFederatedIdentityCredentialsPager{
 			pages: []armmsi.FederatedIdentityCredentialsClientListResponse{
 				{
-					FederatedIdentityCredentialsListResult: armmsi.FederatedIdentityCredentialsListResult{
-						Value: []*armmsi.FederatedIdentityCredential{
-							{Name: nil},
-							createAzureFederatedIdentityCredential("valid-credential"),
-						},
+					Value: []*armmsi.FederatedIdentityCredential{
+						{Name: nil},
+						createAzureFederatedIdentityCredential("valid-credential"),
 					},
 				},
 			},

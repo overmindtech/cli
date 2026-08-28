@@ -632,9 +632,7 @@ func (m *mockDisksPager) NextPage(ctx context.Context) (armcompute.DisksClientLi
 	if m.index >= len(m.items) {
 		m.more = false
 		return armcompute.DisksClientListByResourceGroupResponse{
-			DiskList: armcompute.DiskList{
-				Value: []*armcompute.Disk{},
-			},
+			Value: []*armcompute.Disk{},
 		}, nil
 	}
 
@@ -643,9 +641,7 @@ func (m *mockDisksPager) NextPage(ctx context.Context) (armcompute.DisksClientLi
 	m.more = m.index < len(m.items)
 
 	return armcompute.DisksClientListByResourceGroupResponse{
-		DiskList: armcompute.DiskList{
-			Value: []*armcompute.Disk{item},
-		},
+		Value: []*armcompute.Disk{item},
 	}, nil
 }
 

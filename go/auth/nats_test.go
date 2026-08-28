@@ -231,8 +231,7 @@ func TestNATSConnect(t *testing.T) {
 			t.Errorf("Reconnecting took too long, expected <3s got: %v", time.Since(start).String())
 		}
 
-		var maxRetriesError MaxRetriesError
-		if !errors.As(err, &maxRetriesError) {
+		if _, ok := errors.AsType[MaxRetriesError](err); !ok {
 			t.Errorf("Unknown error type %T: %v", err, err)
 		}
 	})
@@ -254,8 +253,7 @@ func TestNATSConnect(t *testing.T) {
 
 		_, err = o.Connect()
 
-		var maxRetriesError MaxRetriesError
-		if errors.As(err, &maxRetriesError) {
+		if _, ok := errors.AsType[MaxRetriesError](err); ok {
 			// Make sure we have only got one token, not three
 			currentToken, err := o.TokenClient.GetJWT()
 			if err != nil {

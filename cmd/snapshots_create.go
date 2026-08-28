@@ -51,10 +51,10 @@ func CreateSnapshot(cmd *cobra.Command, args []string) error {
 	}
 
 	handler := &createSnapshotHandler{
-		lf:                           lf,
-		LoggingGatewayMessageHandler: sdpws.LoggingGatewayMessageHandler{Level: log.InfoLevel},
-		items:                        []*sdp.Item{},
-		edges:                        []*sdp.Edge{},
+		lf:    lf,
+		Level: log.InfoLevel,
+		items: []*sdp.Item{},
+		edges: []*sdp.Edge{},
 	}
 
 	gatewayUrl := oi.GatewayUrl()

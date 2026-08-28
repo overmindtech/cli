@@ -11,23 +11,21 @@ import (
 
 func TestHealthCheckItemMapper(t *testing.T) {
 	hc := HealthCheck{
-		HealthCheck: types.HealthCheck{
-			Id:              new("d7ce5d72-6d1f-4147-8246-d0ca3fb505d6"),
-			CallerReference: new("85d56b3f-873c-498b-a2dd-554ec13c5289"),
-			HealthCheckConfig: &types.HealthCheckConfig{
-				IPAddress:                new("1.1.1.1"),
-				Port:                     new(int32(443)),
-				Type:                     types.HealthCheckTypeHttps,
-				FullyQualifiedDomainName: new("one.one.one.one"),
-				RequestInterval:          new(int32(30)),
-				FailureThreshold:         new(int32(3)),
-				MeasureLatency:           new(false),
-				Inverted:                 new(false),
-				Disabled:                 new(false),
-				EnableSNI:                new(true),
-			},
-			HealthCheckVersion: new(int64(1)),
+		Id:              new("d7ce5d72-6d1f-4147-8246-d0ca3fb505d6"),
+		CallerReference: new("85d56b3f-873c-498b-a2dd-554ec13c5289"),
+		HealthCheckConfig: &types.HealthCheckConfig{
+			IPAddress:                new("1.1.1.1"),
+			Port:                     new(int32(443)),
+			Type:                     types.HealthCheckTypeHttps,
+			FullyQualifiedDomainName: new("one.one.one.one"),
+			RequestInterval:          new(int32(30)),
+			FailureThreshold:         new(int32(3)),
+			MeasureLatency:           new(false),
+			Inverted:                 new(false),
+			Disabled:                 new(false),
+			EnableSNI:                new(true),
 		},
+		HealthCheckVersion: new(int64(1)),
 		HealthCheckObservations: []types.HealthCheckObservation{
 			{
 				Region:    types.HealthCheckRegionApNortheast1,

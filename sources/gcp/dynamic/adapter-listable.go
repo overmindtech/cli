@@ -24,23 +24,21 @@ type ListableAdapter struct {
 // NewListableAdapter creates a new GCP dynamic adapter.
 func NewListableAdapter(listEndpointFunc gcpshared.ListEndpointFunc, config *AdapterConfig, cache sdpcache.Cache) discovery.ListableAdapter {
 	return ListableAdapter{
-		listEndpointFunc: listEndpointFunc,
-		listFilterFunc:   config.ListFilterFunc,
-		Adapter: Adapter{
-			locations:            config.Locations,
-			httpCli:              config.HTTPClient,
-			cache:                cache,
-			getURLFunc:           config.GetURLFunc,
-			sdpAssetType:         config.SDPAssetType,
-			sdpAdapterCategory:   config.SDPAdapterCategory,
-			terraformMappings:    config.TerraformMappings,
-			linker:               config.Linker,
-			potentialLinks:       potentialLinksFromLinkRules(config.SDPAssetType, gcpshared.LinkRules),
-			uniqueAttributeKeys:  config.UniqueAttributeKeys,
-			iamPermissions:       config.IAMPermissions,
-			nameSelector:         config.NameSelector,
-			listResponseSelector: config.ListResponseSelector,
-		},
+		listEndpointFunc:     listEndpointFunc,
+		listFilterFunc:       config.ListFilterFunc,
+		locations:            config.Locations,
+		httpCli:              config.HTTPClient,
+		cache:                cache,
+		getURLFunc:           config.GetURLFunc,
+		sdpAssetType:         config.SDPAssetType,
+		sdpAdapterCategory:   config.SDPAdapterCategory,
+		terraformMappings:    config.TerraformMappings,
+		linker:               config.Linker,
+		potentialLinks:       potentialLinksFromLinkRules(config.SDPAssetType, gcpshared.LinkRules),
+		uniqueAttributeKeys:  config.UniqueAttributeKeys,
+		iamPermissions:       config.IAMPermissions,
+		nameSelector:         config.NameSelector,
+		listResponseSelector: config.ListResponseSelector,
 	}
 }
 

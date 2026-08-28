@@ -160,9 +160,7 @@ func TestDBforPostgreSQLFlexibleServerPrivateEndpointConnection(t *testing.T) {
 		mockPager := &mockDBforPostgreSQLFlexibleServerPrivateEndpointConnectionsPager{
 			pages: []armpostgresqlflexibleservers.PrivateEndpointConnectionsClientListByServerResponse{
 				{
-					PrivateEndpointConnectionList: armpostgresqlflexibleservers.PrivateEndpointConnectionList{
-						Value: []*armpostgresqlflexibleservers.PrivateEndpointConnection{conn1, conn2},
-					},
+					Value: []*armpostgresqlflexibleservers.PrivateEndpointConnection{conn1, conn2},
 				},
 			},
 		}
@@ -193,12 +191,10 @@ func TestDBforPostgreSQLFlexibleServerPrivateEndpointConnection(t *testing.T) {
 		mockPager := &mockDBforPostgreSQLFlexibleServerPrivateEndpointConnectionsPager{
 			pages: []armpostgresqlflexibleservers.PrivateEndpointConnectionsClientListByServerResponse{
 				{
-					PrivateEndpointConnectionList: armpostgresqlflexibleservers.PrivateEndpointConnectionList{
-						Value: []*armpostgresqlflexibleservers.PrivateEndpointConnection{
-							nil,
-							{Name: nil},
-							validConn,
-						},
+					Value: []*armpostgresqlflexibleservers.PrivateEndpointConnection{
+						nil,
+						{Name: nil},
+						validConn,
 					},
 				},
 			},

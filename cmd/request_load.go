@@ -54,13 +54,13 @@ func RequestLoad(cmd *cobra.Command, args []string) error {
 	}
 
 	handler := &requestHandler{
-		lf:                           lf,
-		LoggingGatewayMessageHandler: sdpws.LoggingGatewayMessageHandler{Level: log.TraceLevel},
-		items:                        []*sdp.Item{},
-		edges:                        []*sdp.Edge{},
-		msgLog:                       []*sdp.GatewayResponse{},
-		bookmarkLoadResult:           make(chan *sdp.BookmarkLoadResult, 128),
-		snapshotLoadResult:           make(chan *sdp.SnapshotLoadResult, 128),
+		lf:                 lf,
+		Level:              log.TraceLevel,
+		items:              []*sdp.Item{},
+		edges:              []*sdp.Edge{},
+		msgLog:             []*sdp.GatewayResponse{},
+		bookmarkLoadResult: make(chan *sdp.BookmarkLoadResult, 128),
+		snapshotLoadResult: make(chan *sdp.SnapshotLoadResult, 128),
 	}
 	gatewayUrl := oi.GatewayUrl()
 	lf["gateway-url"] = gatewayUrl

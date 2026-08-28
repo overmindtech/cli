@@ -239,9 +239,7 @@ func TestKeyVaultVault(t *testing.T) {
 		mockPager := &mockVaultsPager{
 			pages: []armkeyvault.VaultsClientListByResourceGroupResponse{
 				{
-					VaultListResult: armkeyvault.VaultListResult{
-						Value: []*armkeyvault.Vault{vault1, vault2},
-					},
+					Value: []*armkeyvault.Vault{vault1, vault2},
 				},
 			},
 		}

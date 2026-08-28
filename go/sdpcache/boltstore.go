@@ -105,8 +105,7 @@ func fromCachedResult(cr *CachedResult) (*sdp.CachedEntry, error) {
 
 	if cr.Error != nil {
 		// Try to cast to QueryError for protobuf serialization
-		var qErr *sdp.QueryError
-		if errors.As(cr.Error, &qErr) {
+		if qErr, ok := errors.AsType[*sdp.QueryError](cr.Error); ok {
 			e.Error = qErr
 		} else {
 			// For non-QueryError errors, wrap in a QueryError

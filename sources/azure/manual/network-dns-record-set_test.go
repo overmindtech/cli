@@ -147,9 +147,7 @@ func TestNetworkDNSRecordSet(t *testing.T) {
 		mockPager := &mockRecordSetsPager{
 			pages: []armdns.RecordSetsClientListAllByDNSZoneResponse{
 				{
-					RecordSetListResult: armdns.RecordSetListResult{
-						Value: []*armdns.RecordSet{rs1, rs2},
-					},
+					Value: []*armdns.RecordSet{rs1, rs2},
 				},
 			},
 		}
@@ -184,9 +182,7 @@ func TestNetworkDNSRecordSet(t *testing.T) {
 		mockPager := &mockRecordSetsPager{
 			pages: []armdns.RecordSetsClientListAllByDNSZoneResponse{
 				{
-					RecordSetListResult: armdns.RecordSetListResult{
-						Value: []*armdns.RecordSet{rs},
-					},
+					Value: []*armdns.RecordSet{rs},
 				},
 			},
 		}

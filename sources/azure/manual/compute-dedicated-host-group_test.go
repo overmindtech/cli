@@ -368,9 +368,7 @@ func (m *mockDedicatedHostGroupsPager) NextPage(ctx context.Context) (armcompute
 	if m.index >= len(m.items) {
 		m.more = false
 		return armcompute.DedicatedHostGroupsClientListByResourceGroupResponse{
-			DedicatedHostGroupListResult: armcompute.DedicatedHostGroupListResult{
-				Value: []*armcompute.DedicatedHostGroup{},
-			},
+			Value: []*armcompute.DedicatedHostGroup{},
 		}, nil
 	}
 
@@ -379,9 +377,7 @@ func (m *mockDedicatedHostGroupsPager) NextPage(ctx context.Context) (armcompute
 	m.more = m.index < len(m.items)
 
 	return armcompute.DedicatedHostGroupsClientListByResourceGroupResponse{
-		DedicatedHostGroupListResult: armcompute.DedicatedHostGroupListResult{
-			Value: []*armcompute.DedicatedHostGroup{item},
-		},
+		Value: []*armcompute.DedicatedHostGroup{item},
 	}, nil
 }
 

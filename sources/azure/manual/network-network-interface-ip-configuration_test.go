@@ -221,9 +221,7 @@ func TestNetworkNetworkInterfaceIPConfiguration(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armnetwork.InterfaceIPConfigurationsClientListResponse{
-					InterfaceIPConfigurationListResult: armnetwork.InterfaceIPConfigurationListResult{
-						Value: []*armnetwork.InterfaceIPConfiguration{ipConfig1, ipConfig2},
-					},
+					Value: []*armnetwork.InterfaceIPConfiguration{ipConfig1, ipConfig2},
 				}, nil),
 			mockPager.EXPECT().More().Return(false),
 		)
@@ -300,9 +298,7 @@ func TestNetworkNetworkInterfaceIPConfiguration(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armnetwork.InterfaceIPConfigurationsClientListResponse{
-					InterfaceIPConfigurationListResult: armnetwork.InterfaceIPConfigurationListResult{
-						Value: []*armnetwork.InterfaceIPConfiguration{ipConfigNilName, ipConfigValid},
-					},
+					Value: []*armnetwork.InterfaceIPConfiguration{ipConfigNilName, ipConfigValid},
 				}, nil),
 			mockPager.EXPECT().More().Return(false),
 		)

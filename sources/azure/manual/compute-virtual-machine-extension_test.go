@@ -448,11 +448,9 @@ func TestComputeVirtualMachineExtension(t *testing.T) {
 		mockClient := mocks.NewMockVirtualMachineExtensionsClient(ctrl)
 		mockClient.EXPECT().List(ctx, resourceGroup, vmName, nil).Return(
 			armcompute.VirtualMachineExtensionsClientListResponse{
-				VirtualMachineExtensionsListResult: armcompute.VirtualMachineExtensionsListResult{
-					Value: []*armcompute.VirtualMachineExtension{
-						extension1,
-						extension2,
-					},
+				Value: []*armcompute.VirtualMachineExtension{
+					extension1,
+					extension2,
 				},
 			}, nil)
 
@@ -537,10 +535,8 @@ func TestComputeVirtualMachineExtension(t *testing.T) {
 			mockClient := mocks.NewMockVirtualMachineExtensionsClient(ctrl)
 			mockClient.EXPECT().List(ctx, resourceGroup, vmName, nil).Return(
 				armcompute.VirtualMachineExtensionsClientListResponse{
-					VirtualMachineExtensionsListResult: armcompute.VirtualMachineExtensionsListResult{
-						Value: []*armcompute.VirtualMachineExtension{
-							extension,
-						},
+					Value: []*armcompute.VirtualMachineExtension{
+						extension,
 					},
 				}, nil)
 

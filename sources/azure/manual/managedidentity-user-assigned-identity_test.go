@@ -338,9 +338,7 @@ func (m *mockUserAssignedIdentitiesPager) NextPage(ctx context.Context) (armmsi.
 	if m.index >= len(m.items) {
 		m.more = false
 		return armmsi.UserAssignedIdentitiesClientListByResourceGroupResponse{
-			UserAssignedIdentitiesListResult: armmsi.UserAssignedIdentitiesListResult{
-				Value: []*armmsi.Identity{},
-			},
+			Value: []*armmsi.Identity{},
 		}, nil
 	}
 
@@ -349,9 +347,7 @@ func (m *mockUserAssignedIdentitiesPager) NextPage(ctx context.Context) (armmsi.
 	m.more = m.index < len(m.items)
 
 	return armmsi.UserAssignedIdentitiesClientListByResourceGroupResponse{
-		UserAssignedIdentitiesListResult: armmsi.UserAssignedIdentitiesListResult{
-			Value: []*armmsi.Identity{item},
-		},
+		Value: []*armmsi.Identity{item},
 	}, nil
 }
 
