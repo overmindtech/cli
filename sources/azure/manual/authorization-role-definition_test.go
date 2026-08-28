@@ -160,9 +160,7 @@ func TestAuthorizationRoleDefinition(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armauthorization.RoleDefinitionsClientListResponse{
-					RoleDefinitionListResult: armauthorization.RoleDefinitionListResult{
-						Value: []*armauthorization.RoleDefinition{roleDefinition1, roleDefinition2},
-					},
+					Value: []*armauthorization.RoleDefinition{roleDefinition1, roleDefinition2},
 				}, nil),
 			mockPager.EXPECT().More().Return(false),
 		)
@@ -259,9 +257,7 @@ func TestAuthorizationRoleDefinition(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armauthorization.RoleDefinitionsClientListResponse{
-					RoleDefinitionListResult: armauthorization.RoleDefinitionListResult{
-						Value: []*armauthorization.RoleDefinition{roleDefinition1, roleDefinition2},
-					},
+					Value: []*armauthorization.RoleDefinition{roleDefinition1, roleDefinition2},
 				}, nil),
 			mockPager.EXPECT().More().Return(false),
 		)
@@ -298,9 +294,7 @@ func TestAuthorizationRoleDefinition(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armauthorization.RoleDefinitionsClientListResponse{
-					RoleDefinitionListResult: armauthorization.RoleDefinitionListResult{
-						Value: []*armauthorization.RoleDefinition{roleDefinition1, roleDefinition2},
-					},
+					Value: []*armauthorization.RoleDefinition{roleDefinition1, roleDefinition2},
 				}, nil),
 			mockPager.EXPECT().More().Return(false),
 		)

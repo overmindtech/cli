@@ -455,8 +455,7 @@ func (s *testQueryResultStream) SendItem(item *sdp.Item) {
 }
 
 func (s *testQueryResultStream) SendError(err error) {
-	var qErr *sdp.QueryError
-	if errors.As(err, &qErr) {
+	if qErr, ok := errors.AsType[*sdp.QueryError](err); ok {
 		s.errors = append(s.errors, qErr)
 	} else {
 		s.errors = append(s.errors, &sdp.QueryError{

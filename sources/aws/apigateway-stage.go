@@ -141,7 +141,7 @@ func (d *apiGatewayStageWrapper) awsToSdpItem(stage types.Stage, scope, query st
 		}
 	}
 
-	restAPIID := strings.Split(query, "/")[0]
+	restAPIID, _, _ := strings.Cut(query, "/")
 
 	err = attributes.Set("UniqueAttribute", query)
 	if err != nil {

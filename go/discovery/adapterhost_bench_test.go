@@ -315,11 +315,9 @@ func generateBenchmarkGCPLikeAdapters(projects, regions, zones, typesPerScope in
 		// Project-level adapters
 		for t := range projectTypes {
 			adapters = append(adapters, &BenchmarkListAdapter{
-				TestAdapter: TestAdapter{
-					ReturnScopes: []string{projectID},
-					ReturnType:   fmt.Sprintf("gcp-project-type-%d", t),
-					ReturnName:   fmt.Sprintf("adapter-%s-type-%d", projectID, t),
-				},
+				ReturnScopes: []string{projectID},
+				ReturnType:   fmt.Sprintf("gcp-project-type-%d", t),
+				ReturnName:   fmt.Sprintf("adapter-%s-type-%d", projectID, t),
 				itemsPerList: 10,
 			})
 		}
@@ -329,11 +327,9 @@ func generateBenchmarkGCPLikeAdapters(projects, regions, zones, typesPerScope in
 			scope := fmt.Sprintf("%s.region-%d", projectID, r)
 			for t := range regionalTypes {
 				adapters = append(adapters, &BenchmarkListAdapter{
-					TestAdapter: TestAdapter{
-						ReturnScopes: []string{scope},
-						ReturnType:   fmt.Sprintf("gcp-regional-type-%d", t),
-						ReturnName:   fmt.Sprintf("adapter-%s-type-%d", scope, t),
-					},
+					ReturnScopes: []string{scope},
+					ReturnType:   fmt.Sprintf("gcp-regional-type-%d", t),
+					ReturnName:   fmt.Sprintf("adapter-%s-type-%d", scope, t),
 					itemsPerList: 10,
 				})
 			}
@@ -344,11 +340,9 @@ func generateBenchmarkGCPLikeAdapters(projects, regions, zones, typesPerScope in
 			scope := fmt.Sprintf("%s.zone-%d", projectID, z)
 			for t := range zonalTypes {
 				adapters = append(adapters, &BenchmarkListAdapter{
-					TestAdapter: TestAdapter{
-						ReturnScopes: []string{scope},
-						ReturnType:   fmt.Sprintf("gcp-zonal-type-%d", t),
-						ReturnName:   fmt.Sprintf("adapter-%s-type-%d", scope, t),
-					},
+					ReturnScopes: []string{scope},
+					ReturnType:   fmt.Sprintf("gcp-zonal-type-%d", t),
+					ReturnName:   fmt.Sprintf("adapter-%s-type-%d", scope, t),
 					itemsPerList: 10,
 				})
 			}

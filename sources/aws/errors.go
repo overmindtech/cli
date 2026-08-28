@@ -11,8 +11,7 @@ import (
 
 // queryError takes an error and returns a sdp.QueryError.
 func queryError(err error, scope string, itemType string) *sdp.QueryError {
-	var responseErr *awsHttp.ResponseError
-	if errors.As(err, &responseErr) {
+	if responseErr, ok := errors.AsType[*awsHttp.ResponseError](err); ok {
 		// If the input is bad, access is denied, or the thing wasn't found then
 		// we should assume that it is not exist for this adapter
 		if slices.Contains([]int{400, 403, 404}, responseErr.HTTPStatusCode()) {

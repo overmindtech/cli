@@ -459,8 +459,7 @@ func TestHTTPGet(t *testing.T) {
 			t.Error("Expected error for link-local IP address, got nil")
 		}
 
-		var qErr *sdp.QueryError
-		if errors.As(err, &qErr) {
+		if qErr, ok := errors.AsType[*sdp.QueryError](err); ok {
 			if qErr.GetErrorType() != sdp.QueryError_OTHER {
 				t.Errorf("expected error type OTHER, got %v", qErr.GetErrorType())
 			}
@@ -499,8 +498,7 @@ func TestHTTPGet(t *testing.T) {
 			if err == nil {
 				t.Errorf("expected error for private IP %s, got nil", u)
 			}
-			var qErr *sdp.QueryError
-			if errors.As(err, &qErr) {
+			if qErr, ok := errors.AsType[*sdp.QueryError](err); ok {
 				if !strings.Contains(qErr.GetErrorString(), "private") {
 					t.Errorf("expected error for %s to mention 'private', got: %s", u, qErr.GetErrorString())
 				}
@@ -513,8 +511,7 @@ func TestHTTPGet(t *testing.T) {
 		if err == nil {
 			t.Error("expected error for unspecified address 0.0.0.0, got nil")
 		}
-		var qErr *sdp.QueryError
-		if errors.As(err, &qErr) {
+		if qErr, ok := errors.AsType[*sdp.QueryError](err); ok {
 			if !strings.Contains(qErr.GetErrorString(), "unspecified") {
 				t.Errorf("expected error to mention 'unspecified', got: %s", qErr.GetErrorString())
 			}
@@ -526,8 +523,7 @@ func TestHTTPGet(t *testing.T) {
 		if err == nil {
 			t.Error("expected error for CGNAT IP, got nil")
 		}
-		var qErr *sdp.QueryError
-		if errors.As(err, &qErr) {
+		if qErr, ok := errors.AsType[*sdp.QueryError](err); ok {
 			if !strings.Contains(qErr.GetErrorString(), "carrier-grade NAT") {
 				t.Errorf("expected error to mention 'carrier-grade NAT', got: %s", qErr.GetErrorString())
 			}
@@ -543,8 +539,7 @@ func TestHTTPGet(t *testing.T) {
 		if err == nil {
 			t.Error("expected error for IPv6 loopback, got nil")
 		}
-		var qErr *sdp.QueryError
-		if errors.As(err, &qErr) {
+		if qErr, ok := errors.AsType[*sdp.QueryError](err); ok {
 			if !strings.Contains(qErr.GetErrorString(), "loopback") {
 				t.Errorf("expected error to mention 'loopback', got: %s", qErr.GetErrorString())
 			}
@@ -556,8 +551,7 @@ func TestHTTPGet(t *testing.T) {
 		if err == nil {
 			t.Error("expected error for IPv6 ULA, got nil")
 		}
-		var qErr *sdp.QueryError
-		if errors.As(err, &qErr) {
+		if qErr, ok := errors.AsType[*sdp.QueryError](err); ok {
 			if !strings.Contains(qErr.GetErrorString(), "private") {
 				t.Errorf("expected error to mention 'private', got: %s", qErr.GetErrorString())
 			}
@@ -603,8 +597,7 @@ func TestHTTPGet(t *testing.T) {
 		if err == nil {
 			t.Error("expected error for IPv6 link-local, got nil")
 		}
-		var qErr *sdp.QueryError
-		if errors.As(err, &qErr) {
+		if qErr, ok := errors.AsType[*sdp.QueryError](err); ok {
 			if !strings.Contains(qErr.GetErrorString(), "link-local") {
 				t.Errorf("expected error to mention 'link-local', got: %s", qErr.GetErrorString())
 			}
@@ -616,8 +609,7 @@ func TestHTTPGet(t *testing.T) {
 		if err == nil {
 			t.Error("expected error for IPv4-mapped IPv6 private address, got nil")
 		}
-		var qErr *sdp.QueryError
-		if errors.As(err, &qErr) {
+		if qErr, ok := errors.AsType[*sdp.QueryError](err); ok {
 			if !strings.Contains(qErr.GetErrorString(), "private") {
 				t.Errorf("expected error to mention 'private', got: %s", qErr.GetErrorString())
 			}
@@ -633,8 +625,7 @@ func TestHTTPGet(t *testing.T) {
 		if err == nil {
 			t.Error("expected defaultIPPolicy to block loopback test server, got nil")
 		}
-		var qErr *sdp.QueryError
-		if errors.As(err, &qErr) {
+		if qErr, ok := errors.AsType[*sdp.QueryError](err); ok {
 			if !strings.Contains(qErr.GetErrorString(), "loopback") {
 				t.Errorf("expected error to mention 'loopback', got: %s", qErr.GetErrorString())
 			}
@@ -664,8 +655,7 @@ func TestHTTPGet(t *testing.T) {
 		if err == nil {
 			t.Error("expected DNS-rebinding to private IP to be blocked, got nil")
 		}
-		var qErr *sdp.QueryError
-		if errors.As(err, &qErr) {
+		if qErr, ok := errors.AsType[*sdp.QueryError](err); ok {
 			if !strings.Contains(qErr.GetErrorString(), "private") {
 				t.Errorf("expected error to mention 'private', got: %s", qErr.GetErrorString())
 			}

@@ -35,7 +35,7 @@ func deploymentOutputMapper(query, scope string, awsItem *types.Deployment) (*sd
 		Scope:           scope,
 	}
 
-	restAPIID := strings.Split(query, "/")[0]
+	restAPIID, _, _ := strings.Cut(query, "/")
 
 	item.LinkedItemQueries = append(item.LinkedItemQueries, &sdp.LinkedItemQuery{
 		Query: &sdp.Query{
@@ -65,7 +65,7 @@ func NewAPIGatewayDeploymentAdapter(client *apigateway.Client, accountID string,
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: deploymentAdapterMetadata,
-		cache:        cache,
+		cache:           cache,
 		GetFunc: func(ctx context.Context, client *apigateway.Client, scope, query string) (*types.Deployment, error) {
 			f := strings.Split(query, "/")
 			if len(f) != 2 {

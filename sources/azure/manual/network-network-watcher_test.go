@@ -309,9 +309,7 @@ func (m *mockNetworkWatchersPager) NextPage(ctx context.Context) (armnetwork.Wat
 	if m.index >= len(m.items) {
 		m.more = false
 		return armnetwork.WatchersClientListResponse{
-			WatcherListResult: armnetwork.WatcherListResult{
-				Value: []*armnetwork.Watcher{},
-			},
+			Value: []*armnetwork.Watcher{},
 		}, nil
 	}
 
@@ -320,8 +318,6 @@ func (m *mockNetworkWatchersPager) NextPage(ctx context.Context) (armnetwork.Wat
 	m.more = m.index < len(m.items)
 
 	return armnetwork.WatchersClientListResponse{
-		WatcherListResult: armnetwork.WatcherListResult{
-			Value: []*armnetwork.Watcher{item},
-		},
+		Value: []*armnetwork.Watcher{item},
 	}, nil
 }

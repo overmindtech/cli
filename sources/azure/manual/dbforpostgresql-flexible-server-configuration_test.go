@@ -131,9 +131,7 @@ func TestDBforPostgreSQLFlexibleServerConfiguration(t *testing.T) {
 		mockPager := &mockConfigurationsPager{
 			pages: []armpostgresqlflexibleservers.ConfigurationsClientListByServerResponse{
 				{
-					ConfigurationList: armpostgresqlflexibleservers.ConfigurationList{
-						Value: []*armpostgresqlflexibleservers.Configuration{config1, config2},
-					},
+					Value: []*armpostgresqlflexibleservers.Configuration{config1, config2},
 				},
 			},
 		}
@@ -179,9 +177,7 @@ func TestDBforPostgreSQLFlexibleServerConfiguration(t *testing.T) {
 		mockPager := &mockConfigurationsPager{
 			pages: []armpostgresqlflexibleservers.ConfigurationsClientListByServerResponse{
 				{
-					ConfigurationList: armpostgresqlflexibleservers.ConfigurationList{
-						Value: []*armpostgresqlflexibleservers.Configuration{config1, config2},
-					},
+					Value: []*armpostgresqlflexibleservers.Configuration{config1, config2},
 				},
 			},
 		}
@@ -305,11 +301,9 @@ func TestDBforPostgreSQLFlexibleServerConfiguration(t *testing.T) {
 		mockPager := &mockConfigurationsPager{
 			pages: []armpostgresqlflexibleservers.ConfigurationsClientListByServerResponse{
 				{
-					ConfigurationList: armpostgresqlflexibleservers.ConfigurationList{
-						Value: []*armpostgresqlflexibleservers.Configuration{
-							{Name: nil}, // Configuration with nil name should be skipped
-							configWithName,
-						},
+					Value: []*armpostgresqlflexibleservers.Configuration{
+						{Name: nil}, // Configuration with nil name should be skipped
+						configWithName,
 					},
 				},
 			},

@@ -163,9 +163,7 @@ func TestDBforPostgreSQLFlexibleServerFirewallRule(t *testing.T) {
 		pager := &mockPostgreSQLFlexibleServerFirewallRulePager{
 			pages: []armpostgresqlflexibleservers.FirewallRulesClientListByServerResponse{
 				{
-					FirewallRuleList: armpostgresqlflexibleservers.FirewallRuleList{
-						Value: []*armpostgresqlflexibleservers.FirewallRule{rule1, rule2},
-					},
+					Value: []*armpostgresqlflexibleservers.FirewallRule{rule1, rule2},
 				},
 			},
 		}
@@ -198,9 +196,7 @@ func TestDBforPostgreSQLFlexibleServerFirewallRule(t *testing.T) {
 		pager := &mockPostgreSQLFlexibleServerFirewallRulePager{
 			pages: []armpostgresqlflexibleservers.FirewallRulesClientListByServerResponse{
 				{
-					FirewallRuleList: armpostgresqlflexibleservers.FirewallRuleList{
-						Value: []*armpostgresqlflexibleservers.FirewallRule{rule1},
-					},
+					Value: []*armpostgresqlflexibleservers.FirewallRule{rule1},
 				},
 			},
 		}

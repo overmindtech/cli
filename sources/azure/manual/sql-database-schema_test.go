@@ -192,9 +192,7 @@ func TestSqlDatabaseSchema(t *testing.T) {
 		mockPager := &mockSqlDatabaseSchemasPager{
 			pages: []armsql.DatabaseSchemasClientListByDatabaseResponse{
 				{
-					DatabaseSchemaListResult: armsql.DatabaseSchemaListResult{
-						Value: []*armsql.DatabaseSchema{schema1, schema2},
-					},
+					Value: []*armsql.DatabaseSchema{schema1, schema2},
 				},
 			},
 		}
@@ -243,9 +241,7 @@ func TestSqlDatabaseSchema(t *testing.T) {
 		mockPager := &mockSqlDatabaseSchemasPager{
 			pages: []armsql.DatabaseSchemasClientListByDatabaseResponse{
 				{
-					DatabaseSchemaListResult: armsql.DatabaseSchemaListResult{
-						Value: []*armsql.DatabaseSchema{schema1, schema2},
-					},
+					Value: []*armsql.DatabaseSchema{schema1, schema2},
 				},
 			},
 		}

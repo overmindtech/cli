@@ -186,9 +186,7 @@ func TestNetworkZone(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armdns.ZonesClientListByResourceGroupResponse{
-					ZoneListResult: armdns.ZoneListResult{
-						Value: []*armdns.Zone{zone1, zone2},
-					},
+					Value: []*armdns.Zone{zone1, zone2},
 				}, nil),
 			mockPager.EXPECT().More().Return(false),
 		)
@@ -247,9 +245,7 @@ func TestNetworkZone(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armdns.ZonesClientListByResourceGroupResponse{
-					ZoneListResult: armdns.ZoneListResult{
-						Value: []*armdns.Zone{zone1, zone2},
-					},
+					Value: []*armdns.Zone{zone1, zone2},
 				}, nil),
 			mockPager.EXPECT().More().Return(false),
 		)

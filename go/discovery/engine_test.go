@@ -215,8 +215,8 @@ func TestNats(t *testing.T) {
 		t.Fatalf("Error initializing Engine: %v", err)
 	}
 
-	adapter := TestAdapter{}
-	adapter.cache = sdpcache.NewNoOpCache()
+	adapter := TestAdapter{
+		cache: sdpcache.NewNoOpCache()}
 	err = e.AddAdapters(
 		&adapter,
 		&TestAdapter{
@@ -630,8 +630,8 @@ func TestNatsAuth(t *testing.T) {
 		t.Fatalf("Error initializing Engine: %v", err)
 	}
 
-	adapter := TestAdapter{}
-	adapter.cache = sdpcache.NewNoOpCache()
+	adapter := TestAdapter{
+		cache: sdpcache.NewNoOpCache()}
 	if err := e.AddAdapters(
 		&adapter,
 		&TestAdapter{

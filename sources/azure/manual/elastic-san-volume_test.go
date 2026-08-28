@@ -228,9 +228,7 @@ func TestElasticSanVolume(t *testing.T) {
 		mockPager := &mockElasticSanVolumePager{
 			pages: []armelasticsan.VolumesClientListByVolumeGroupResponse{
 				{
-					VolumeList: armelasticsan.VolumeList{
-						Value: []*armelasticsan.Volume{vol1, vol2},
-					},
+					Value: []*armelasticsan.Volume{vol1, vol2},
 				},
 			},
 		}
@@ -299,9 +297,7 @@ func TestElasticSanVolume(t *testing.T) {
 		mockPager := &mockElasticSanVolumePager{
 			pages: []armelasticsan.VolumesClientListByVolumeGroupResponse{
 				{
-					VolumeList: armelasticsan.VolumeList{
-						Value: []*armelasticsan.Volume{vol},
-					},
+					Value: []*armelasticsan.Volume{vol},
 				},
 			},
 		}

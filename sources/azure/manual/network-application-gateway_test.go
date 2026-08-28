@@ -292,9 +292,7 @@ func TestNetworkApplicationGateway(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armnetwork.ApplicationGatewaysClientListResponse{
-					ApplicationGatewayListResult: armnetwork.ApplicationGatewayListResult{
-						Value: []*armnetwork.ApplicationGateway{ag1, ag2},
-					},
+					Value: []*armnetwork.ApplicationGateway{ag1, ag2},
 				}, nil),
 			mockPager.EXPECT().More().Return(false),
 		)
@@ -351,9 +349,7 @@ func TestNetworkApplicationGateway(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armnetwork.ApplicationGatewaysClientListResponse{
-					ApplicationGatewayListResult: armnetwork.ApplicationGatewayListResult{
-						Value: []*armnetwork.ApplicationGateway{ag1, ag2},
-					},
+					Value: []*armnetwork.ApplicationGateway{ag1, ag2},
 				}, nil),
 			mockPager.EXPECT().More().Return(false),
 		)

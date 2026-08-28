@@ -105,8 +105,7 @@ func GetTfc(cmd *cobra.Command, args []string) error {
 
 	client := AuthenticatedConfigurationClient(ctx, oi)
 	params, err := client.GetHcpConfig(ctx, &connect.Request[sdp.GetHcpConfigRequest]{})
-	var cErr *connect.Error
-	if errors.As(err, &cErr) {
+	if cErr, ok := errors.AsType[*connect.Error](err); ok {
 		if cErr.Code() == connect.CodeNotFound {
 			fmt.Println("HCP Terraform Cloud integration is not enabled. Use `create-tfc` to enable it.")
 			return nil

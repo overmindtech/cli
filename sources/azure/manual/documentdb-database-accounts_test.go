@@ -226,9 +226,7 @@ func TestDocumentDBDatabaseAccounts(t *testing.T) {
 		mockPager := &mockDocumentDBDatabaseAccountsPager{
 			pages: []armcosmos.DatabaseAccountsClientListByResourceGroupResponse{
 				{
-					DatabaseAccountsListResult: armcosmos.DatabaseAccountsListResult{
-						Value: []*armcosmos.DatabaseAccountGetResults{account1, account2},
-					},
+					Value: []*armcosmos.DatabaseAccountGetResults{account1, account2},
 				},
 			},
 		}

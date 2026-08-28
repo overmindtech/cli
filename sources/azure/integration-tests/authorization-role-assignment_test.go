@@ -394,8 +394,7 @@ func createRoleAssignmentWithRemediation(ctx context.Context, client *armauthori
 
 	resp, err := client.Create(ctx, scope, roleAssignmentName, parameters, nil)
 	if err != nil {
-		var respErr *azcore.ResponseError
-		if errors.As(err, &respErr) {
+		if respErr, ok := errors.AsType[*azcore.ResponseError](err); ok {
 			if respErr.StatusCode == http.StatusConflict {
 				if strings.Contains(respErr.Error(), "RoleAssignmentExists") {
 					existingID := extractExistingRoleAssignmentID(respErr.Error())

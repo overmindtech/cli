@@ -154,20 +154,18 @@ func TestStorageTables(t *testing.T) {
 		mockPager := &mockTablesPager{
 			pages: []armstorage.TableClientListResponse{
 				{
-					ListTableResource: armstorage.ListTableResource{
-						Value: []*armstorage.Table{
-							{
-								ID:              table1.ID,
-								Name:            table1.Name,
-								Type:            table1.Type,
-								TableProperties: table1.TableProperties,
-							},
-							{
-								ID:              table2.ID,
-								Name:            table2.Name,
-								Type:            table2.Type,
-								TableProperties: table2.TableProperties,
-							},
+					Value: []*armstorage.Table{
+						{
+							ID:              table1.ID,
+							Name:            table1.Name,
+							Type:            table1.Type,
+							TableProperties: table1.TableProperties,
+						},
+						{
+							ID:              table2.ID,
+							Name:            table2.Name,
+							Type:            table2.Type,
+							TableProperties: table2.TableProperties,
 						},
 					},
 				},
@@ -228,18 +226,16 @@ func TestStorageTables(t *testing.T) {
 		mockPager := &mockTablesPager{
 			pages: []armstorage.TableClientListResponse{
 				{
-					ListTableResource: armstorage.ListTableResource{
-						Value: []*armstorage.Table{
-							{
-								// Table with nil name should be skipped
-								Name: nil,
-							},
-							{
-								ID:              validTable.ID,
-								Name:            validTable.Name,
-								Type:            validTable.Type,
-								TableProperties: validTable.TableProperties,
-							},
+					Value: []*armstorage.Table{
+						{
+							// Table with nil name should be skipped
+							Name: nil,
+						},
+						{
+							ID:              validTable.ID,
+							Name:            validTable.Name,
+							Type:            validTable.Type,
+							TableProperties: validTable.TableProperties,
 						},
 					},
 				},

@@ -10,12 +10,10 @@ import (
 
 func TestDBParameterGroupOutputMapper(t *testing.T) {
 	group := ParameterGroup{
-		DBParameterGroup: types.DBParameterGroup{
-			DBParameterGroupName:   new("default.aurora-mysql5.7"),
-			DBParameterGroupFamily: new("aurora-mysql5.7"),
-			Description:            new("Default parameter group for aurora-mysql5.7"),
-			DBParameterGroupArn:    new("arn:aws:rds:eu-west-1:052392120703:pg:default.aurora-mysql5.7"),
-		},
+		DBParameterGroupName:   new("default.aurora-mysql5.7"),
+		DBParameterGroupFamily: new("aurora-mysql5.7"),
+		Description:            new("Default parameter group for aurora-mysql5.7"),
+		DBParameterGroupArn:    new("arn:aws:rds:eu-west-1:052392120703:pg:default.aurora-mysql5.7"),
 		Parameters: []types.Parameter{
 			{
 				ParameterName:  new("activate_all_roles_on_login"),

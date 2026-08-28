@@ -146,9 +146,7 @@ func TestStorageEncryptionScope(t *testing.T) {
 		mockPager := &mockEncryptionScopesPager{
 			pages: []armstorage.EncryptionScopesClientListResponse{
 				{
-					EncryptionScopeListResult: armstorage.EncryptionScopeListResult{
-						Value: []*armstorage.EncryptionScope{scope1, scope2},
-					},
+					Value: []*armstorage.EncryptionScope{scope1, scope2},
 				},
 			},
 		}
@@ -203,11 +201,9 @@ func TestStorageEncryptionScope(t *testing.T) {
 		mockPager := &mockEncryptionScopesPager{
 			pages: []armstorage.EncryptionScopesClientListResponse{
 				{
-					EncryptionScopeListResult: armstorage.EncryptionScopeListResult{
-						Value: []*armstorage.EncryptionScope{
-							{Name: nil},
-							validScope,
-						},
+					Value: []*armstorage.EncryptionScope{
+						{Name: nil},
+						validScope,
 					},
 				},
 			},

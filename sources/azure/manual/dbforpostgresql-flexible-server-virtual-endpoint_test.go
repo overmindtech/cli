@@ -174,9 +174,7 @@ func TestDBforPostgreSQLFlexibleServerVirtualEndpoint(t *testing.T) {
 		pager := &mockDBforPostgreSQLFlexibleServerVirtualEndpointPager{
 			pages: []armpostgresqlflexibleservers.VirtualEndpointsClientListByServerResponse{
 				{
-					VirtualEndpointsList: armpostgresqlflexibleservers.VirtualEndpointsList{
-						Value: []*armpostgresqlflexibleservers.VirtualEndpoint{virtualEndpoint1, virtualEndpoint2},
-					},
+					Value: []*armpostgresqlflexibleservers.VirtualEndpoint{virtualEndpoint1, virtualEndpoint2},
 				},
 			},
 		}
@@ -209,9 +207,7 @@ func TestDBforPostgreSQLFlexibleServerVirtualEndpoint(t *testing.T) {
 		pager := &mockDBforPostgreSQLFlexibleServerVirtualEndpointPager{
 			pages: []armpostgresqlflexibleservers.VirtualEndpointsClientListByServerResponse{
 				{
-					VirtualEndpointsList: armpostgresqlflexibleservers.VirtualEndpointsList{
-						Value: []*armpostgresqlflexibleservers.VirtualEndpoint{virtualEndpoint1},
-					},
+					Value: []*armpostgresqlflexibleservers.VirtualEndpoint{virtualEndpoint1},
 				},
 			},
 		}

@@ -105,8 +105,7 @@ func (lc *lookupCoordinator) Lookup(
 					return false, nil, nil, noopDone
 				}
 
-				var recheckQErr *sdp.QueryError
-				if errors.As(recheckErr, &recheckQErr) {
+				if recheckQErr, ok := errors.AsType[*sdp.QueryError](recheckErr); ok {
 					span.SetAttributes(
 						attribute.String("ovm.cache.result", "cache hit from pending work: error"),
 						attribute.Bool("ovm.cache.hit", true),

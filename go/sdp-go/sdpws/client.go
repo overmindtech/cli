@@ -397,8 +397,7 @@ func (c *Client) abort(ctx context.Context, err error) {
 	c.closedMu.Unlock()
 
 	isNormalClosure := false
-	var ce websocket.CloseError
-	if errors.As(err, &ce) {
+	if ce, ok := errors.AsType[websocket.CloseError](err); ok {
 		// tear down the connection without a new error if this is a regular close
 		isNormalClosure = ce.Code == websocket.StatusNormalClosure
 	}

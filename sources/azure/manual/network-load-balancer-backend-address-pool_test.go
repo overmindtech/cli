@@ -227,9 +227,7 @@ func TestNetworkLoadBalancerBackendAddressPool(t *testing.T) {
 		mockPager := &mockBackendAddressPoolPager{
 			pages: []armnetwork.LoadBalancerBackendAddressPoolsClientListResponse{
 				{
-					LoadBalancerBackendAddressPoolListResult: armnetwork.LoadBalancerBackendAddressPoolListResult{
-						Value: []*armnetwork.BackendAddressPool{pool1, pool2},
-					},
+					Value: []*armnetwork.BackendAddressPool{pool1, pool2},
 				},
 			},
 		}
@@ -273,11 +271,9 @@ func TestNetworkLoadBalancerBackendAddressPool(t *testing.T) {
 		mockPager := &mockBackendAddressPoolPager{
 			pages: []armnetwork.LoadBalancerBackendAddressPoolsClientListResponse{
 				{
-					LoadBalancerBackendAddressPoolListResult: armnetwork.LoadBalancerBackendAddressPoolListResult{
-						Value: []*armnetwork.BackendAddressPool{
-							{Name: nil, ID: new("/some/id")},
-							validPool,
-						},
+					Value: []*armnetwork.BackendAddressPool{
+						{Name: nil, ID: new("/some/id")},
+						validPool,
 					},
 				},
 			},

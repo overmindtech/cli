@@ -202,9 +202,7 @@ func TestSqlDatabase(t *testing.T) {
 		mockPager := &mockSqlDatabasesPager{
 			pages: []armsql.DatabasesClientListByServerResponse{
 				{
-					DatabaseListResult: armsql.DatabaseListResult{
-						Value: []*armsql.Database{database1, database2},
-					},
+					Value: []*armsql.Database{database1, database2},
 				},
 			},
 		}
@@ -260,9 +258,7 @@ func TestSqlDatabase(t *testing.T) {
 		mockPager := &mockSqlDatabasesPager{
 			pages: []armsql.DatabasesClientListByServerResponse{
 				{
-					DatabaseListResult: armsql.DatabaseListResult{
-						Value: []*armsql.Database{database1, database2},
-					},
+					Value: []*armsql.Database{database1, database2},
 				},
 			},
 		}

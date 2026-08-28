@@ -162,9 +162,7 @@ func TestNetworkPrivateLinkService(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armnetwork.PrivateLinkServicesClientListResponse{
-					PrivateLinkServiceListResult: armnetwork.PrivateLinkServiceListResult{
-						Value: []*armnetwork.PrivateLinkService{pls1, pls2},
-					},
+					Value: []*armnetwork.PrivateLinkService{pls1, pls2},
 				}, nil),
 			mockPager.EXPECT().More().Return(false),
 		)
@@ -209,9 +207,7 @@ func TestNetworkPrivateLinkService(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armnetwork.PrivateLinkServicesClientListResponse{
-					PrivateLinkServiceListResult: armnetwork.PrivateLinkServiceListResult{
-						Value: []*armnetwork.PrivateLinkService{pls1, pls2},
-					},
+					Value: []*armnetwork.PrivateLinkService{pls1, pls2},
 				}, nil),
 			mockPager.EXPECT().More().Return(false),
 		)
@@ -272,9 +268,7 @@ func TestNetworkPrivateLinkService(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armnetwork.PrivateLinkServicesClientListResponse{
-					PrivateLinkServiceListResult: armnetwork.PrivateLinkServiceListResult{
-						Value: []*armnetwork.PrivateLinkService{pls1, pls2},
-					},
+					Value: []*armnetwork.PrivateLinkService{pls1, pls2},
 				}, nil),
 			mockPager.EXPECT().More().Return(false),
 		)

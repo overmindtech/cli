@@ -166,9 +166,7 @@ func TestBatchBatchPool(t *testing.T) {
 		mockClient := mocks.NewMockBatchPoolsClient(ctrl)
 		pages := []armbatch.PoolClientListByBatchAccountResponse{
 			{
-				ListPoolsResult: armbatch.ListPoolsResult{
-					Value: []*armbatch.Pool{pool1, pool2},
-				},
+				Value: []*armbatch.Pool{pool1, pool2},
 			},
 		}
 		mockPager := &mockBatchPoolsPager{pages: pages}

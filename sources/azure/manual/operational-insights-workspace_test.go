@@ -473,9 +473,7 @@ func (m *mockOperationalInsightsWorkspacePager) NextPage(ctx context.Context) (a
 	if m.index >= len(m.items) {
 		m.more = false
 		return armoperationalinsights.WorkspacesClientListByResourceGroupResponse{
-			WorkspaceListResult: armoperationalinsights.WorkspaceListResult{
-				Value: []*armoperationalinsights.Workspace{},
-			},
+			Value: []*armoperationalinsights.Workspace{},
 		}, nil
 	}
 
@@ -484,8 +482,6 @@ func (m *mockOperationalInsightsWorkspacePager) NextPage(ctx context.Context) (a
 	m.more = m.index < len(m.items)
 
 	return armoperationalinsights.WorkspacesClientListByResourceGroupResponse{
-		WorkspaceListResult: armoperationalinsights.WorkspaceListResult{
-			Value: []*armoperationalinsights.Workspace{item},
-		},
+		Value: []*armoperationalinsights.Workspace{item},
 	}, nil
 }

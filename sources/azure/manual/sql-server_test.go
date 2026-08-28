@@ -591,9 +591,7 @@ func TestSqlServer(t *testing.T) {
 		mockPager := &mockSqlServersPager{
 			pages: []armsql.ServersClientListByResourceGroupResponse{
 				{
-					ServerListResult: armsql.ServerListResult{
-						Value: []*armsql.Server{server1, server2},
-					},
+					Value: []*armsql.Server{server1, server2},
 				},
 			},
 		}
@@ -652,9 +650,7 @@ func TestSqlServer(t *testing.T) {
 		mockPager := &mockSqlServersPager{
 			pages: []armsql.ServersClientListByResourceGroupResponse{
 				{
-					ServerListResult: armsql.ServerListResult{
-						Value: []*armsql.Server{server1, server2},
-					},
+					Value: []*armsql.Server{server1, server2},
 				},
 			},
 		}
@@ -695,9 +691,7 @@ func TestSqlServer(t *testing.T) {
 		mockPager := &mockSqlServersPager{
 			pages: []armsql.ServersClientListByResourceGroupResponse{
 				{
-					ServerListResult: armsql.ServerListResult{
-						Value: []*armsql.Server{server1, server2},
-					},
+					Value: []*armsql.Server{server1, server2},
 				},
 			},
 		}

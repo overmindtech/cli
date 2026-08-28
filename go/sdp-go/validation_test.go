@@ -573,8 +573,7 @@ func TestAdapterMetadataValidation(t *testing.T) {
 			t.Errorf("expected error, got nil")
 		}
 
-		var validationError *protovalidate.ValidationError
-		if !errors.As(err, &validationError) {
+		if _, ok := errors.AsType[*protovalidate.ValidationError](err); !ok {
 			t.Errorf("expected validation error, got %T: %v", err, err)
 		}
 	})
@@ -606,8 +605,7 @@ func TestAdapterMetadataValidation(t *testing.T) {
 			t.Errorf("expected error, got nil")
 		}
 
-		var validationError *protovalidate.ValidationError
-		if !errors.As(err, &validationError) {
+		if _, ok := errors.AsType[*protovalidate.ValidationError](err); !ok {
 			t.Errorf("expected validation error, got %T: %v", err, err)
 		}
 	})
@@ -639,8 +637,7 @@ func TestAdapterMetadataValidation(t *testing.T) {
 			t.Errorf("expected error, got nil")
 		}
 
-		var validationError *protovalidate.ValidationError
-		if !errors.As(err, &validationError) {
+		if _, ok := errors.AsType[*protovalidate.ValidationError](err); !ok {
 			t.Errorf("expected validation error, got %T: %v", err, err)
 		}
 	})
@@ -672,8 +669,7 @@ func TestAdapterMetadataValidation(t *testing.T) {
 			t.Errorf("expected error, got nil")
 		}
 
-		var validationError *protovalidate.ValidationError
-		if !errors.As(err, &validationError) {
+		if _, ok := errors.AsType[*protovalidate.ValidationError](err); !ok {
 			t.Errorf("expected validation error, got %T: %v", err, err)
 		}
 	})
@@ -705,8 +701,7 @@ func TestAdapterMetadataValidation(t *testing.T) {
 			t.Errorf("expected error, got nil")
 		}
 
-		var validationError *protovalidate.ValidationError
-		if !errors.As(err, &validationError) {
+		if _, ok := errors.AsType[*protovalidate.ValidationError](err); !ok {
 			t.Errorf("expected validation error, got %T: %v", err, err)
 		}
 	})
@@ -739,8 +734,7 @@ func TestAdapterMetadataValidation(t *testing.T) {
 			t.Errorf("expected error, got nil")
 		}
 
-		var validationError *protovalidate.ValidationError
-		if !errors.As(err, &validationError) {
+		if _, ok := errors.AsType[*protovalidate.ValidationError](err); !ok {
 			t.Errorf("expected validation error, got %T: %v", err, err)
 		}
 	})
@@ -768,8 +762,7 @@ func TestAdapterMetadataValidation(t *testing.T) {
 			t.Errorf("expected error, got nil")
 		}
 
-		var validationError *protovalidate.ValidationError
-		if !errors.As(err, &validationError) {
+		if _, ok := errors.AsType[*protovalidate.ValidationError](err); !ok {
 			t.Errorf("expected validation error, got %T: %v", err, err)
 		}
 	})
@@ -797,8 +790,7 @@ func TestAdapterMetadataValidation(t *testing.T) {
 			t.Errorf("expected error, got nil")
 		}
 
-		var validationError *protovalidate.ValidationError
-		if !errors.As(err, &validationError) {
+		if _, ok := errors.AsType[*protovalidate.ValidationError](err); !ok {
 			t.Errorf("expected validation error, got %T: %v", err, err)
 		}
 	})
@@ -826,8 +818,7 @@ func TestAdapterMetadataValidation(t *testing.T) {
 			t.Errorf("expected error, got nil")
 		}
 
-		var validationError *protovalidate.ValidationError
-		if !errors.As(err, &validationError) {
+		if _, ok := errors.AsType[*protovalidate.ValidationError](err); !ok {
 			t.Errorf("expected validation error, got %T: %v", err, err)
 		}
 	})
@@ -856,8 +847,7 @@ func TestAdapterMetadataValidation(t *testing.T) {
 			t.Errorf("expected error, got nil")
 		}
 
-		var validationError *protovalidate.ValidationError
-		if !errors.As(err, &validationError) {
+		if _, ok := errors.AsType[*protovalidate.ValidationError](err); !ok {
 			t.Errorf("expected validation error, got %T: %v", err, err)
 		}
 	})
@@ -886,8 +876,7 @@ func TestAdapterMetadataValidation(t *testing.T) {
 			t.Errorf("expected error, got nil")
 		}
 
-		var validationError *protovalidate.ValidationError
-		if !errors.As(err, &validationError) {
+		if _, ok := errors.AsType[*protovalidate.ValidationError](err); !ok {
 			t.Errorf("expected validation error, got %T: %v", err, err)
 		}
 	})
@@ -916,8 +905,7 @@ func TestAdapterMetadataValidation(t *testing.T) {
 			t.Errorf("expected error, got nil")
 		}
 
-		var validationError *protovalidate.ValidationError
-		if !errors.As(err, &validationError) {
+		if _, ok := errors.AsType[*protovalidate.ValidationError](err); !ok {
 			t.Errorf("expected validation error, got %T: %v", err, err)
 		}
 	})

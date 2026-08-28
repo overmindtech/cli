@@ -142,9 +142,7 @@ func TestNetworkRouteTable(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armnetwork.RouteTablesClientListResponse{
-					RouteTableListResult: armnetwork.RouteTableListResult{
-						Value: []*armnetwork.RouteTable{routeTable1, routeTable2},
-					},
+					Value: []*armnetwork.RouteTable{routeTable1, routeTable2},
 				}, nil),
 			mockPager.EXPECT().More().Return(false),
 		)
@@ -202,9 +200,7 @@ func TestNetworkRouteTable(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armnetwork.RouteTablesClientListResponse{
-					RouteTableListResult: armnetwork.RouteTableListResult{
-						Value: []*armnetwork.RouteTable{routeTable1, routeTable2},
-					},
+					Value: []*armnetwork.RouteTable{routeTable1, routeTable2},
 				}, nil),
 			mockPager.EXPECT().More().Return(false),
 		)

@@ -175,9 +175,7 @@ func TestComputeDiskAccessPrivateEndpointConnection(t *testing.T) {
 		mockPager := &mockComputeDiskAccessPrivateEndpointConnectionsPager{
 			pages: []armcompute.DiskAccessesClientListPrivateEndpointConnectionsResponse{
 				{
-					PrivateEndpointConnectionListResult: armcompute.PrivateEndpointConnectionListResult{
-						Value: []*armcompute.PrivateEndpointConnection{conn1, conn2},
-					},
+					Value: []*armcompute.PrivateEndpointConnection{conn1, conn2},
 				},
 			},
 		}
@@ -221,11 +219,9 @@ func TestComputeDiskAccessPrivateEndpointConnection(t *testing.T) {
 		mockPager := &mockComputeDiskAccessPrivateEndpointConnectionsPager{
 			pages: []armcompute.DiskAccessesClientListPrivateEndpointConnectionsResponse{
 				{
-					PrivateEndpointConnectionListResult: armcompute.PrivateEndpointConnectionListResult{
-						Value: []*armcompute.PrivateEndpointConnection{
-							{Name: nil},
-							validConn,
-						},
+					Value: []*armcompute.PrivateEndpointConnection{
+						{Name: nil},
+						validConn,
 					},
 				},
 			},

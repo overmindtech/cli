@@ -236,26 +236,24 @@ func TestStorageBlobContainer(t *testing.T) {
 		mockPager := &mockBlobContainersPager{
 			pages: []armstorage.BlobContainersClientListResponse{
 				{
-					ListContainerItems: armstorage.ListContainerItems{
-						Value: []*armstorage.ListContainerItem{
-							{
-								ID:   container1.ID,
-								Name: container1.Name,
-								Type: container1.Type,
-								Properties: &armstorage.ContainerProperties{
-									PublicAccess: container1.ContainerProperties.PublicAccess,
-								},
-								Etag: container1.Etag,
+					Value: []*armstorage.ListContainerItem{
+						{
+							ID:   container1.ID,
+							Name: container1.Name,
+							Type: container1.Type,
+							Properties: &armstorage.ContainerProperties{
+								PublicAccess: container1.ContainerProperties.PublicAccess,
 							},
-							{
-								ID:   container2.ID,
-								Name: container2.Name,
-								Type: container2.Type,
-								Properties: &armstorage.ContainerProperties{
-									PublicAccess: container2.ContainerProperties.PublicAccess,
-								},
-								Etag: container2.Etag,
+							Etag: container1.Etag,
+						},
+						{
+							ID:   container2.ID,
+							Name: container2.Name,
+							Type: container2.Type,
+							Properties: &armstorage.ContainerProperties{
+								PublicAccess: container2.ContainerProperties.PublicAccess,
 							},
+							Etag: container2.Etag,
 						},
 					},
 				},
@@ -317,17 +315,15 @@ func TestStorageBlobContainer(t *testing.T) {
 		mockPager := &mockBlobContainersPager{
 			pages: []armstorage.BlobContainersClientListResponse{
 				{
-					ListContainerItems: armstorage.ListContainerItems{
-						Value: []*armstorage.ListContainerItem{
-							{
-								// Container with nil name should be skipped
-								Name: nil,
-							},
-							{
-								ID:   new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorageaccount/blobServices/default/containers/valid-container"),
-								Name: new("valid-container"),
-								Type: new("Microsoft.Storage/storageAccounts/blobServices/containers"),
-							},
+					Value: []*armstorage.ListContainerItem{
+						{
+							// Container with nil name should be skipped
+							Name: nil,
+						},
+						{
+							ID:   new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorageaccount/blobServices/default/containers/valid-container"),
+							Name: new("valid-container"),
+							Type: new("Microsoft.Storage/storageAccounts/blobServices/containers"),
 						},
 					},
 				},

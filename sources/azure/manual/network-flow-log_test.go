@@ -258,9 +258,7 @@ func TestNetworkFlowLog(t *testing.T) {
 		mockPager := &mockFlowLogsPager{
 			pages: []armnetwork.FlowLogsClientListResponse{
 				{
-					FlowLogListResult: armnetwork.FlowLogListResult{
-						Value: []*armnetwork.FlowLog{flowLog1, flowLog2},
-					},
+					Value: []*armnetwork.FlowLog{flowLog1, flowLog2},
 				},
 			},
 		}
@@ -316,11 +314,9 @@ func TestNetworkFlowLog(t *testing.T) {
 		mockPager := &mockFlowLogsPager{
 			pages: []armnetwork.FlowLogsClientListResponse{
 				{
-					FlowLogListResult: armnetwork.FlowLogListResult{
-						Value: []*armnetwork.FlowLog{
-							{Name: nil, ID: new("/some/id")},
-							validFlowLog,
-						},
+					Value: []*armnetwork.FlowLog{
+						{Name: nil, ID: new("/some/id")},
+						validFlowLog,
 					},
 				},
 			},

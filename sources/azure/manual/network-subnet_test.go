@@ -139,9 +139,7 @@ func TestNetworkSubnet(t *testing.T) {
 		mockPager := &mockSubnetsPager{
 			pages: []armnetwork.SubnetsClientListResponse{
 				{
-					SubnetListResult: armnetwork.SubnetListResult{
-						Value: []*armnetwork.Subnet{subnet1, subnet2},
-					},
+					Value: []*armnetwork.Subnet{subnet1, subnet2},
 				},
 			},
 		}
@@ -197,11 +195,9 @@ func TestNetworkSubnet(t *testing.T) {
 		mockPager := &mockSubnetsPager{
 			pages: []armnetwork.SubnetsClientListResponse{
 				{
-					SubnetListResult: armnetwork.SubnetListResult{
-						Value: []*armnetwork.Subnet{
-							{Name: nil, ID: new("/some/id")},
-							validSubnet,
-						},
+					Value: []*armnetwork.Subnet{
+						{Name: nil, ID: new("/some/id")},
+						validSubnet,
 					},
 				},
 			},

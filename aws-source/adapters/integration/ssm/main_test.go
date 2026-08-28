@@ -90,8 +90,7 @@ func TestIntegrationSSM(t *testing.T) {
 									},
 								})
 								if err != nil {
-									var alreadyExistsErr *types.ParameterAlreadyExists
-									if errors.As(err, &alreadyExistsErr) {
+									if _, ok := errors.AsType[*types.ParameterAlreadyExists](err); ok {
 										// Skip if parameter already exists
 										continue
 									} else {

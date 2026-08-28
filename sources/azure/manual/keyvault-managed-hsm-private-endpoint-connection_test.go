@@ -175,9 +175,7 @@ func TestKeyVaultManagedHSMPrivateEndpointConnection(t *testing.T) {
 		mockPager := &mockKeyVaultManagedHSMPrivateEndpointConnectionsPager{
 			pages: []armkeyvault.MHSMPrivateEndpointConnectionsClientListByResourceResponse{
 				{
-					MHSMPrivateEndpointConnectionsListResult: armkeyvault.MHSMPrivateEndpointConnectionsListResult{
-						Value: []*armkeyvault.MHSMPrivateEndpointConnection{conn1, conn2},
-					},
+					Value: []*armkeyvault.MHSMPrivateEndpointConnection{conn1, conn2},
 				},
 			},
 		}
@@ -221,11 +219,9 @@ func TestKeyVaultManagedHSMPrivateEndpointConnection(t *testing.T) {
 		mockPager := &mockKeyVaultManagedHSMPrivateEndpointConnectionsPager{
 			pages: []armkeyvault.MHSMPrivateEndpointConnectionsClientListByResourceResponse{
 				{
-					MHSMPrivateEndpointConnectionsListResult: armkeyvault.MHSMPrivateEndpointConnectionsListResult{
-						Value: []*armkeyvault.MHSMPrivateEndpointConnection{
-							{Name: nil},
-							validConn,
-						},
+					Value: []*armkeyvault.MHSMPrivateEndpointConnection{
+						{Name: nil},
+						validConn,
 					},
 				},
 			},

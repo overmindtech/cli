@@ -153,8 +153,7 @@ func (c *ProjectHealthChecker) runCheck(ctx context.Context) (*ProjectPermission
 		prj, err := c.adapter.Get(ctx, *projectID, *projectID, false)
 		if err != nil {
 			// Check if this is a permission error and provide a simplified message
-			var permissionError *dynamic.PermissionError
-			if errors.As(err, &permissionError) {
+			if _, ok := errors.AsType[*dynamic.PermissionError](err); ok {
 				err = fmt.Errorf("insufficient permissions to access GCP project '%s'. "+
 					"Please ensure the service account has the 'resourcemanager.projects.get' permission via the 'roles/browser' predefined GCP role", *projectID)
 			} else {

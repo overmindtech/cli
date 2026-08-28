@@ -81,8 +81,7 @@ func TestValidateChangeStatus(t *testing.T) {
 					t.Errorf("validateChangeStatus() expected error but got none")
 				}
 				// Check that it returns a flagError
-				var fError flagError
-				if !errors.As(err, &fError) {
+				if _, ok := errors.AsType[flagError](err); !ok {
 					t.Errorf("validateChangeStatus() expected flagError but got %T", err)
 				}
 			} else {

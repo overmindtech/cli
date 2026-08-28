@@ -80,6 +80,8 @@ func firewallGetFunc(ctx context.Context, client networkFirewallClient, scope st
 		switch response.FirewallStatus.Status {
 		case types.FirewallStatusValueDeleting:
 			health = sdp.Health_HEALTH_PENDING.Enum()
+		case types.FirewallStatusValueFailed:
+			health = sdp.Health_HEALTH_ERROR.Enum()
 		case types.FirewallStatusValueProvisioning:
 			health = sdp.Health_HEALTH_PENDING.Enum()
 		case types.FirewallStatusValueReady:
@@ -232,7 +234,7 @@ func NewNetworkFirewallFirewallAdapter(client networkFirewallClient, accountID s
 		Region:          region,
 		ListInput:       &networkfirewall.ListFirewallsInput{},
 		AdapterMetadata: networkFirewallFirewallAdapterMetadata,
-		cache:        cache,
+		cache:           cache,
 		GetInputMapper: func(scope, query string) *networkfirewall.DescribeFirewallInput {
 			return &networkfirewall.DescribeFirewallInput{
 				FirewallName: &query,

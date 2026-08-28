@@ -308,8 +308,7 @@ func testOurServiceAccountDirectAuth(t *testing.T, ctx context.Context, state *t
 	}
 
 	// Check if it's a permission error
-	var apiErr *apierror.APIError
-	if errors.As(err, &apiErr) {
+	if apiErr, ok := errors.AsType[*apierror.APIError](err); ok {
 		if apiErr.HTTPCode() == http.StatusForbidden || apiErr.GRPCStatus().Code().String() == "PermissionDenied" {
 			t.Logf("✓ Correctly received permission denied error: %v", err)
 			return
@@ -319,8 +318,7 @@ func testOurServiceAccountDirectAuth(t *testing.T, ctx context.Context, state *t
 	}
 
 	// Also check for googleapi.Error
-	var gErr *googleapi.Error
-	if errors.As(err, &gErr) {
+	if gErr, ok := errors.AsType[*googleapi.Error](err); ok {
 		if gErr.Code == http.StatusForbidden {
 			t.Logf("✓ Correctly received permission denied error: %v", err)
 			return

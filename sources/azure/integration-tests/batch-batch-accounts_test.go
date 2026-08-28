@@ -344,8 +344,7 @@ func createBatchAccount(ctx context.Context, client *armbatch.AccountClient, res
 	}, nil)
 	if err != nil {
 		// Check if batch account already exists (conflict)
-		var respErr *azcore.ResponseError
-		if errors.As(err, &respErr) {
+		if respErr, ok := errors.AsType[*azcore.ResponseError](err); ok {
 			if respErr.StatusCode == http.StatusConflict {
 				log.Printf("Batch account %s already exists (conflict), skipping creation", accountName)
 				return nil

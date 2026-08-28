@@ -28,8 +28,7 @@ func CollectFromStream(
 	errs := stream.GetErrors()
 	if len(errs) > 0 {
 		// Return first error (preserving existing behavior)
-		var qErr *sdp.QueryError
-		if errors.As(errs[0], &qErr) {
+		if qErr, ok := errors.AsType[*sdp.QueryError](errs[0]); ok {
 			return nil, qErr
 		}
 		return nil, &sdp.QueryError{

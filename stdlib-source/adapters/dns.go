@@ -381,10 +381,8 @@ func (d *DNSAdapter) makeReverseQueryImpl(ctx context.Context, query string, ser
 				Qtype:  dns.TypePTR,
 			},
 		},
-		MsgHdr: dns.MsgHdr{
-			Opcode:           dns.OpcodeQuery,
-			RecursionDesired: true,
-		},
+		Opcode:           dns.OpcodeQuery,
+		RecursionDesired: true,
 	}
 
 	r, _, err := d.client.ExchangeContext(ctx, &msg, server)
@@ -427,10 +425,8 @@ func (d *DNSAdapter) makeQueryImpl(ctx context.Context, query string, server str
 				Qtype:  dns.TypeA,
 			},
 		},
-		MsgHdr: dns.MsgHdr{
-			Opcode:           dns.OpcodeQuery,
-			RecursionDesired: true,
-		},
+		Opcode:           dns.OpcodeQuery,
+		RecursionDesired: true,
 	}
 
 	r, _, err := d.client.ExchangeContext(ctx, &msg, server)

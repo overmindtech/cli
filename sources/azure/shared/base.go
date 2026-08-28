@@ -26,10 +26,8 @@ func NewResourceGroupBase(
 	item shared.ItemType,
 ) *ResourceGroupBase {
 	base := &ResourceGroupBase{
-		AzureBase: AzureBase{
-			subscriptionID: subscriptionID,
-		},
-		resourceGroup: resourceGroup,
+		subscriptionID: subscriptionID,
+		resourceGroup:  resourceGroup,
 	}
 	base.Base = shared.NewBase(
 		category,
@@ -92,9 +90,7 @@ func NewSubscriptionBase(
 	item shared.ItemType,
 ) *SubscriptionBase {
 	base := &SubscriptionBase{
-		AzureBase: AzureBase{
-			subscriptionID: subscriptionID,
-		},
+		subscriptionID: subscriptionID,
 	}
 	base.Base = shared.NewBase(
 		category,

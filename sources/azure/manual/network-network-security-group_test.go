@@ -167,9 +167,7 @@ func TestNetworkNetworkSecurityGroup(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armnetwork.SecurityGroupsClientListResponse{
-					SecurityGroupListResult: armnetwork.SecurityGroupListResult{
-						Value: []*armnetwork.SecurityGroup{nsg1, nsg2},
-					},
+					Value: []*armnetwork.SecurityGroup{nsg1, nsg2},
 				}, nil),
 			mockPager.EXPECT().More().Return(false),
 		)
@@ -227,9 +225,7 @@ func TestNetworkNetworkSecurityGroup(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armnetwork.SecurityGroupsClientListResponse{
-					SecurityGroupListResult: armnetwork.SecurityGroupListResult{
-						Value: []*armnetwork.SecurityGroup{nsg1, nsg2},
-					},
+					Value: []*armnetwork.SecurityGroup{nsg1, nsg2},
 				}, nil),
 			mockPager.EXPECT().More().Return(false),
 		)

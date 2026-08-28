@@ -338,9 +338,7 @@ func (m *mockProximityPlacementGroupsPager) NextPage(ctx context.Context) (armco
 	if m.index >= len(m.items) {
 		m.more = false
 		return armcompute.ProximityPlacementGroupsClientListByResourceGroupResponse{
-			ProximityPlacementGroupListResult: armcompute.ProximityPlacementGroupListResult{
-				Value: []*armcompute.ProximityPlacementGroup{},
-			},
+			Value: []*armcompute.ProximityPlacementGroup{},
 		}, nil
 	}
 
@@ -349,8 +347,6 @@ func (m *mockProximityPlacementGroupsPager) NextPage(ctx context.Context) (armco
 	m.more = m.index < len(m.items)
 
 	return armcompute.ProximityPlacementGroupsClientListByResourceGroupResponse{
-		ProximityPlacementGroupListResult: armcompute.ProximityPlacementGroupListResult{
-			Value: []*armcompute.ProximityPlacementGroup{item},
-		},
+		Value: []*armcompute.ProximityPlacementGroup{item},
 	}, nil
 }

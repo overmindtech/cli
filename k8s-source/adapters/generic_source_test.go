@@ -30,14 +30,12 @@ func (p PodClient) Get(ctx context.Context, name string, opts metav1.GetOptions)
 	uid := uuid.NewString()
 
 	return &v1.Pod{
-		TypeMeta: metav1.TypeMeta{},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:              name,
-			Namespace:         "default",
-			UID:               types.UID(uid),
-			ResourceVersion:   "9164",
-			CreationTimestamp: metav1.NewTime(time.Now()),
-		},
+		TypeMeta:          metav1.TypeMeta{},
+		Name:              name,
+		Namespace:         "default",
+		UID:               types.UID(uid),
+		ResourceVersion:   "9164",
+		CreationTimestamp: metav1.NewTime(time.Now()),
 		Spec: v1.PodSpec{
 			Volumes: []v1.Volume{
 				{
@@ -77,14 +75,12 @@ func (p PodClient) List(ctx context.Context, opts metav1.ListOptions) (*v1.PodLi
 	return &v1.PodList{
 		Items: []v1.Pod{
 			{
-				TypeMeta: metav1.TypeMeta{},
-				ObjectMeta: metav1.ObjectMeta{
-					Name:              "foo",
-					Namespace:         "default",
-					UID:               types.UID(uid),
-					ResourceVersion:   "9164",
-					CreationTimestamp: metav1.NewTime(time.Now()),
-				},
+				TypeMeta:          metav1.TypeMeta{},
+				Name:              "foo",
+				Namespace:         "default",
+				UID:               types.UID(uid),
+				ResourceVersion:   "9164",
+				CreationTimestamp: metav1.NewTime(time.Now()),
 				Spec: v1.PodSpec{
 					Volumes: []v1.Volume{
 						{
@@ -103,14 +99,12 @@ func (p PodClient) List(ctx context.Context, opts metav1.ListOptions) (*v1.PodLi
 				},
 			},
 			{
-				TypeMeta: metav1.TypeMeta{},
-				ObjectMeta: metav1.ObjectMeta{
-					Name:              "bar",
-					Namespace:         "default",
-					UID:               types.UID(uid),
-					ResourceVersion:   "9164",
-					CreationTimestamp: metav1.NewTime(time.Now()),
-				},
+				TypeMeta:          metav1.TypeMeta{},
+				Name:              "bar",
+				Namespace:         "default",
+				UID:               types.UID(uid),
+				ResourceVersion:   "9164",
+				CreationTimestamp: metav1.NewTime(time.Now()),
 				Spec: v1.PodSpec{
 					Volumes: []v1.Volume{
 						{

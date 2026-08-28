@@ -249,8 +249,8 @@ func TestGet(t *testing.T) {
 }
 
 func TestList(t *testing.T) {
-	adapter := TestAdapter{}
-	adapter.cache = sdpcache.NewMemoryCache()
+	adapter := TestAdapter{
+		cache: sdpcache.NewMemoryCache()}
 
 	e := newStartedEngine(t, "TestList", nil, nil, &adapter)
 
@@ -275,8 +275,8 @@ func TestList(t *testing.T) {
 }
 
 func TestSearch(t *testing.T) {
-	adapter := TestAdapter{}
-	adapter.cache = sdpcache.NewMemoryCache()
+	adapter := TestAdapter{
+		cache: sdpcache.NewMemoryCache()}
 
 	e := newStartedEngine(t, "TestSearch", nil, nil, &adapter)
 

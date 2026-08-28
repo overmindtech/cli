@@ -338,18 +338,14 @@ func (m *mockPrivateDNSZonesPager) NextPage(ctx context.Context) (armprivatedns.
 	if m.index >= len(m.items) {
 		m.more = false
 		return armprivatedns.PrivateZonesClientListByResourceGroupResponse{
-			PrivateZoneListResult: armprivatedns.PrivateZoneListResult{
-				Value: []*armprivatedns.PrivateZone{},
-			},
+			Value: []*armprivatedns.PrivateZone{},
 		}, nil
 	}
 	item := m.items[m.index]
 	m.index++
 	m.more = m.index < len(m.items)
 	return armprivatedns.PrivateZonesClientListByResourceGroupResponse{
-		PrivateZoneListResult: armprivatedns.PrivateZoneListResult{
-			Value: []*armprivatedns.PrivateZone{item},
-		},
+		Value: []*armprivatedns.PrivateZone{item},
 	}, nil
 }
 

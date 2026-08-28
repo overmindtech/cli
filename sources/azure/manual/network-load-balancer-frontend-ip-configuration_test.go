@@ -227,9 +227,7 @@ func TestNetworkLoadBalancerFrontendIPConfiguration(t *testing.T) {
 		mockPager := &mockFrontendIPConfigPager{
 			pages: []armnetwork.LoadBalancerFrontendIPConfigurationsClientListResponse{
 				{
-					LoadBalancerFrontendIPConfigurationListResult: armnetwork.LoadBalancerFrontendIPConfigurationListResult{
-						Value: []*armnetwork.FrontendIPConfiguration{frontendIP1, frontendIP2},
-					},
+					Value: []*armnetwork.FrontendIPConfiguration{frontendIP1, frontendIP2},
 				},
 			},
 		}
@@ -273,11 +271,9 @@ func TestNetworkLoadBalancerFrontendIPConfiguration(t *testing.T) {
 		mockPager := &mockFrontendIPConfigPager{
 			pages: []armnetwork.LoadBalancerFrontendIPConfigurationsClientListResponse{
 				{
-					LoadBalancerFrontendIPConfigurationListResult: armnetwork.LoadBalancerFrontendIPConfigurationListResult{
-						Value: []*armnetwork.FrontendIPConfiguration{
-							{Name: nil, ID: new("/some/id")},
-							validFrontendIP,
-						},
+					Value: []*armnetwork.FrontendIPConfiguration{
+						{Name: nil, ID: new("/some/id")},
+						validFrontendIP,
 					},
 				},
 			},

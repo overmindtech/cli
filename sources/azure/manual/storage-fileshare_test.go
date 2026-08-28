@@ -152,28 +152,26 @@ func TestStorageFileShare(t *testing.T) {
 		mockPager := &mockFileSharesPager{
 			pages: []armstorage.FileSharesClientListResponse{
 				{
-					FileShareItems: armstorage.FileShareItems{
-						Value: []*armstorage.FileShareItem{
-							{
-								ID:   share1.ID,
-								Name: share1.Name,
-								Type: share1.Type,
-								Properties: &armstorage.FileShareProperties{
-									AccessTier: share1.FileShareProperties.AccessTier,
-									ShareQuota: share1.FileShareProperties.ShareQuota,
-								},
-								Etag: share1.Etag,
+					Value: []*armstorage.FileShareItem{
+						{
+							ID:   share1.ID,
+							Name: share1.Name,
+							Type: share1.Type,
+							Properties: &armstorage.FileShareProperties{
+								AccessTier: share1.FileShareProperties.AccessTier,
+								ShareQuota: share1.FileShareProperties.ShareQuota,
 							},
-							{
-								ID:   share2.ID,
-								Name: share2.Name,
-								Type: share2.Type,
-								Properties: &armstorage.FileShareProperties{
-									AccessTier: share2.FileShareProperties.AccessTier,
-									ShareQuota: share2.FileShareProperties.ShareQuota,
-								},
-								Etag: share2.Etag,
+							Etag: share1.Etag,
+						},
+						{
+							ID:   share2.ID,
+							Name: share2.Name,
+							Type: share2.Type,
+							Properties: &armstorage.FileShareProperties{
+								AccessTier: share2.FileShareProperties.AccessTier,
+								ShareQuota: share2.FileShareProperties.ShareQuota,
 							},
+							Etag: share2.Etag,
 						},
 					},
 				},
@@ -233,17 +231,15 @@ func TestStorageFileShare(t *testing.T) {
 		mockPager := &mockFileSharesPager{
 			pages: []armstorage.FileSharesClientListResponse{
 				{
-					FileShareItems: armstorage.FileShareItems{
-						Value: []*armstorage.FileShareItem{
-							{
-								// Share with nil name should be skipped
-								Name: nil,
-							},
-							{
-								ID:   new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorageaccount/fileServices/default/shares/valid-share"),
-								Name: new("valid-share"),
-								Type: new("Microsoft.Storage/storageAccounts/fileServices/shares"),
-							},
+					Value: []*armstorage.FileShareItem{
+						{
+							// Share with nil name should be skipped
+							Name: nil,
+						},
+						{
+							ID:   new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Storage/storageAccounts/teststorageaccount/fileServices/default/shares/valid-share"),
+							Name: new("valid-share"),
+							Type: new("Microsoft.Storage/storageAccounts/fileServices/shares"),
 						},
 					},
 				},

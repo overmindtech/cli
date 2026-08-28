@@ -153,9 +153,7 @@ func TestNetworkVirtualNetworkPeering(t *testing.T) {
 		mockPager := &mockVirtualNetworkPeeringsPager{
 			pages: []armnetwork.VirtualNetworkPeeringsClientListResponse{
 				{
-					VirtualNetworkPeeringListResult: armnetwork.VirtualNetworkPeeringListResult{
-						Value: []*armnetwork.VirtualNetworkPeering{peering1, peering2},
-					},
+					Value: []*armnetwork.VirtualNetworkPeering{peering1, peering2},
 				},
 			},
 		}
@@ -211,11 +209,9 @@ func TestNetworkVirtualNetworkPeering(t *testing.T) {
 		mockPager := &mockVirtualNetworkPeeringsPager{
 			pages: []armnetwork.VirtualNetworkPeeringsClientListResponse{
 				{
-					VirtualNetworkPeeringListResult: armnetwork.VirtualNetworkPeeringListResult{
-						Value: []*armnetwork.VirtualNetworkPeering{
-							{Name: nil, ID: new("/some/id")},
-							validPeering,
-						},
+					Value: []*armnetwork.VirtualNetworkPeering{
+						{Name: nil, ID: new("/some/id")},
+						validPeering,
 					},
 				},
 			},

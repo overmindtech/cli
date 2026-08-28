@@ -193,9 +193,7 @@ func TestComputeVirtualMachine(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armcompute.VirtualMachinesClientListResponse{
-					VirtualMachineListResult: armcompute.VirtualMachineListResult{
-						Value: []*armcompute.VirtualMachine{vm1, vm2},
-					},
+					Value: []*armcompute.VirtualMachine{vm1, vm2},
 				}, nil),
 			mockPager.EXPECT().More().Return(false),
 		)
@@ -242,9 +240,7 @@ func TestComputeVirtualMachine(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armcompute.VirtualMachinesClientListResponse{
-					VirtualMachineListResult: armcompute.VirtualMachineListResult{
-						Value: []*armcompute.VirtualMachine{vm1, vm2},
-					},
+					Value: []*armcompute.VirtualMachine{vm1, vm2},
 				}, nil),
 			mockPager.EXPECT().More().Return(false),
 		)

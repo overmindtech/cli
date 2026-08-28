@@ -156,9 +156,7 @@ func TestElasticSanVolumeSnapshot(t *testing.T) {
 		mockPager := &mockElasticSanVolumeSnapshotPager{
 			pages: []armelasticsan.VolumeSnapshotsClientListByVolumeGroupResponse{
 				{
-					SnapshotList: armelasticsan.SnapshotList{
-						Value: []*armelasticsan.Snapshot{snapshot1, snapshot2},
-					},
+					Value: []*armelasticsan.Snapshot{snapshot1, snapshot2},
 				},
 			},
 		}
@@ -193,9 +191,7 @@ func TestElasticSanVolumeSnapshot(t *testing.T) {
 		mockPager := &mockElasticSanVolumeSnapshotPager{
 			pages: []armelasticsan.VolumeSnapshotsClientListByVolumeGroupResponse{
 				{
-					SnapshotList: armelasticsan.SnapshotList{
-						Value: []*armelasticsan.Snapshot{snapshot},
-					},
+					Value: []*armelasticsan.Snapshot{snapshot},
 				},
 			},
 		}

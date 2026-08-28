@@ -42,7 +42,7 @@ func stageOutputMapper(query, scope string, awsItem *types.Stage) (*sdp.Item, er
 
 	// if it is `GET`, the query will be: rest-api-id/stage-name
 	// if it is `SEARCH`, the query will be: rest-api-id/deployment-id or rest-api-id
-	restAPIID := strings.Split(query, "/")[0]
+	restAPIID, _, _ := strings.Cut(query, "/")
 
 	err = attributes.Set("UniqueAttribute", fmt.Sprintf("%s/%s", restAPIID, *awsItem.StageName))
 	if err != nil {
@@ -87,7 +87,7 @@ func NewAPIGatewayStageAdapter(client *apigateway.Client, accountID string, regi
 		AccountID:       accountID,
 		Region:          region,
 		AdapterMetadata: stageAdapterMetadata,
-		cache:        cache,
+		cache:           cache,
 		GetFunc: func(ctx context.Context, client *apigateway.Client, scope, query string) (*types.Stage, error) {
 			f := strings.Split(query, "/")
 			if len(f) != 2 {

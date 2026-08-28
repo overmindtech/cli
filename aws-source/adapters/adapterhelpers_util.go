@@ -217,9 +217,8 @@ func GetAllAWSPartitionDNSSuffixes() []string {
 
 // WrapAWSError Wraps an AWS error in the appropriate SDP error
 func WrapAWSError(err error) *sdp.QueryError {
-	var responseErr *awsHttp.ResponseError
 
-	if errors.As(err, &responseErr) {
+	if responseErr, ok := errors.AsType[*awsHttp.ResponseError](err); ok {
 		// If the input is bad, access is denied, or the thing wasn't found then
 		// we should assume that it is not exist for this adapter
 		if slices.Contains([]int{400, 403, 404}, responseErr.HTTPStatusCode()) {
@@ -437,8 +436,7 @@ func (e E2ETest) Run(t *testing.T) {
 
 			if !e.SkipNotFoundCheck {
 				// Make sure the error is an SDP error
-				var sdpErr *sdp.QueryError
-				if errors.As(err, &sdpErr) {
+				if sdpErr, ok := errors.AsType[*sdp.QueryError](err); ok {
 					if sdpErr.GetErrorType() != sdp.QueryError_NOTFOUND {
 						t.Errorf("expected error to be NOTFOUND, got %v\nError: %v", sdpErr.GetErrorType().String(), sdpErr.GetErrorString())
 					}

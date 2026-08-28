@@ -17,11 +17,11 @@ import (
 
 	"github.com/getsentry/sentry-go"
 	"github.com/overmindtech/cli/go/discovery"
-	"github.com/overmindtech/cli/k8s-source/adapters"
-	"github.com/overmindtech/cli/k8s-source/proc"
 	"github.com/overmindtech/cli/go/logging"
 	"github.com/overmindtech/cli/go/sdpcache"
 	"github.com/overmindtech/cli/go/tracing"
+	"github.com/overmindtech/cli/k8s-source/adapters"
+	"github.com/overmindtech/cli/k8s-source/proc"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -192,8 +192,7 @@ var rootCmd = &cobra.Command{
 							wi, err = watchNamespaces(watchCtx, clientSet)
 							// Check for transient network errors
 							if err != nil {
-								var netErr *net.OpError
-								if errors.As(err, &netErr) {
+								if _, ok := errors.AsType[*net.OpError](err); ok {
 									// Mark a failure
 									attempts++
 

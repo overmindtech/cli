@@ -154,9 +154,7 @@ func TestStorageAccount(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armstorage.AccountsClientListByResourceGroupResponse{
-					AccountListResult: armstorage.AccountListResult{
-						Value: []*armstorage.Account{account1, account2},
-					},
+					Value: []*armstorage.Account{account1, account2},
 				}, nil),
 			mockPager.EXPECT().More().Return(false),
 		)
@@ -217,9 +215,7 @@ func TestStorageAccount(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armstorage.AccountsClientListByResourceGroupResponse{
-					AccountListResult: armstorage.AccountListResult{
-						Value: []*armstorage.Account{account1, account2},
-					},
+					Value: []*armstorage.Account{account1, account2},
 				}, nil),
 			mockPager.EXPECT().More().Return(false),
 		)

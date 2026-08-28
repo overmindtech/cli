@@ -328,9 +328,7 @@ func TestComputeVirtualMachineScaleSet(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armcompute.VirtualMachineScaleSetsClientListResponse{
-					VirtualMachineScaleSetListResult: armcompute.VirtualMachineScaleSetListResult{
-						Value: []*armcompute.VirtualMachineScaleSet{scaleSet1, scaleSet2},
-					},
+					Value: []*armcompute.VirtualMachineScaleSet{scaleSet1, scaleSet2},
 				}, nil),
 			mockPager.EXPECT().More().Return(false),
 		)
@@ -377,9 +375,7 @@ func TestComputeVirtualMachineScaleSet(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armcompute.VirtualMachineScaleSetsClientListResponse{
-					VirtualMachineScaleSetListResult: armcompute.VirtualMachineScaleSetListResult{
-						Value: []*armcompute.VirtualMachineScaleSet{scaleSet1, scaleSet2},
-					},
+					Value: []*armcompute.VirtualMachineScaleSet{scaleSet1, scaleSet2},
 				}, nil),
 			mockPager.EXPECT().More().Return(false),
 		)

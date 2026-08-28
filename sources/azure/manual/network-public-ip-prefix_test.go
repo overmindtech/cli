@@ -383,18 +383,14 @@ func (m *mockPublicIPPrefixesPager) NextPage(ctx context.Context) (armnetwork.Pu
 	if m.index >= len(m.items) {
 		m.more = false
 		return armnetwork.PublicIPPrefixesClientListResponse{
-			PublicIPPrefixListResult: armnetwork.PublicIPPrefixListResult{
-				Value: []*armnetwork.PublicIPPrefix{},
-			},
+			Value: []*armnetwork.PublicIPPrefix{},
 		}, nil
 	}
 	item := m.items[m.index]
 	m.index++
 	m.more = m.index < len(m.items)
 	return armnetwork.PublicIPPrefixesClientListResponse{
-		PublicIPPrefixListResult: armnetwork.PublicIPPrefixListResult{
-			Value: []*armnetwork.PublicIPPrefix{item},
-		},
+		Value: []*armnetwork.PublicIPPrefix{item},
 	}, nil
 }
 

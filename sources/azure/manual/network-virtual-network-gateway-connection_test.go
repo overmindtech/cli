@@ -60,80 +60,80 @@ func TestNetworkVirtualNetworkGatewayConnection(t *testing.T) {
 		}
 
 		t.Run("StaticTests", func(t *testing.T) {
-		queryTests := shared.QueryTests{
-			{
-				ExpectedType:   azureshared.NetworkVirtualNetworkGateway.String(),
-				ExpectedMethod: sdp.QueryMethod_GET,
-				ExpectedQuery:  "gateway1",
-				ExpectedScope:  subscriptionID + "." + resourceGroup,
-			},
-			{
-				ExpectedType:   azureshared.NetworkVirtualNetworkGateway.String(),
-				ExpectedMethod: sdp.QueryMethod_GET,
-				ExpectedQuery:  "gateway2",
-				ExpectedScope:  subscriptionID + "." + resourceGroup,
-			},
-			{
-				ExpectedType:   azureshared.NetworkLocalNetworkGateway.String(),
-				ExpectedMethod: sdp.QueryMethod_GET,
-				ExpectedQuery:  "local-gw",
-				ExpectedScope:  subscriptionID + "." + resourceGroup,
-			},
-			{
-				ExpectedType:   azureshared.NetworkExpressRouteCircuitPeering.String(),
-				ExpectedMethod: sdp.QueryMethod_GET,
-				ExpectedQuery:  "circuit1|peering1",
-				ExpectedScope:  subscriptionID + "." + resourceGroup,
-			},
-			{
-				ExpectedType:   azureshared.NetworkVirtualNetworkGatewayNatRule.String(),
-				ExpectedMethod: sdp.QueryMethod_GET,
-				ExpectedQuery:  "gateway1|egress-rule1",
-				ExpectedScope:  subscriptionID + "." + resourceGroup,
-			},
-			{
-				ExpectedType:   azureshared.NetworkVirtualNetworkGatewayNatRule.String(),
-				ExpectedMethod: sdp.QueryMethod_GET,
-				ExpectedQuery:  "gateway1|ingress-rule1",
-				ExpectedScope:  subscriptionID + "." + resourceGroup,
-			},
-			{
-				ExpectedType:   stdlib.NetworkIP.String(),
-				ExpectedMethod: sdp.QueryMethod_GET,
-				ExpectedQuery:  "10.0.0.1",
-				ExpectedScope:  "global",
-			},
-			{
-				ExpectedType:   azureshared.NetworkVirtualNetworkGatewayIPConfiguration.String(),
-				ExpectedMethod: sdp.QueryMethod_GET,
-				ExpectedQuery:  "gateway1|default",
-				ExpectedScope:  subscriptionID + "." + resourceGroup,
-			},
-			{
-				ExpectedType:   stdlib.NetworkIP.String(),
-				ExpectedMethod: sdp.QueryMethod_GET,
-				ExpectedQuery:  "10.0.0.2",
-				ExpectedScope:  "global",
-			},
-			{
-				ExpectedType:   azureshared.NetworkVirtualNetworkGatewayIPConfiguration.String(),
-				ExpectedMethod: sdp.QueryMethod_GET,
-				ExpectedQuery:  "gateway2|default",
-				ExpectedScope:  subscriptionID + "." + resourceGroup,
-			},
-			{
-				ExpectedType:   stdlib.NetworkIP.String(),
-				ExpectedMethod: sdp.QueryMethod_GET,
-				ExpectedQuery:  "192.168.1.1",
-				ExpectedScope:  "global",
-			},
-			{
-				ExpectedType:   stdlib.NetworkIP.String(),
-				ExpectedMethod: sdp.QueryMethod_GET,
-				ExpectedQuery:  "10.1.1.1",
-				ExpectedScope:  "global",
-			},
-		}
+			queryTests := shared.QueryTests{
+				{
+					ExpectedType:   azureshared.NetworkVirtualNetworkGateway.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "gateway1",
+					ExpectedScope:  subscriptionID + "." + resourceGroup,
+				},
+				{
+					ExpectedType:   azureshared.NetworkVirtualNetworkGateway.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "gateway2",
+					ExpectedScope:  subscriptionID + "." + resourceGroup,
+				},
+				{
+					ExpectedType:   azureshared.NetworkLocalNetworkGateway.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "local-gw",
+					ExpectedScope:  subscriptionID + "." + resourceGroup,
+				},
+				{
+					ExpectedType:   azureshared.NetworkExpressRouteCircuitPeering.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "circuit1|peering1",
+					ExpectedScope:  subscriptionID + "." + resourceGroup,
+				},
+				{
+					ExpectedType:   azureshared.NetworkVirtualNetworkGatewayNatRule.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "gateway1|egress-rule1",
+					ExpectedScope:  subscriptionID + "." + resourceGroup,
+				},
+				{
+					ExpectedType:   azureshared.NetworkVirtualNetworkGatewayNatRule.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "gateway1|ingress-rule1",
+					ExpectedScope:  subscriptionID + "." + resourceGroup,
+				},
+				{
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "10.0.0.1",
+					ExpectedScope:  "global",
+				},
+				{
+					ExpectedType:   azureshared.NetworkVirtualNetworkGatewayIPConfiguration.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "gateway1|default",
+					ExpectedScope:  subscriptionID + "." + resourceGroup,
+				},
+				{
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "10.0.0.2",
+					ExpectedScope:  "global",
+				},
+				{
+					ExpectedType:   azureshared.NetworkVirtualNetworkGatewayIPConfiguration.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "gateway2|default",
+					ExpectedScope:  subscriptionID + "." + resourceGroup,
+				},
+				{
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "192.168.1.1",
+					ExpectedScope:  "global",
+				},
+				{
+					ExpectedType:   stdlib.NetworkIP.String(),
+					ExpectedMethod: sdp.QueryMethod_GET,
+					ExpectedQuery:  "10.1.1.1",
+					ExpectedScope:  "global",
+				},
+			}
 
 			shared.RunStaticTests(t, adapter, sdpItem, queryTests)
 		})
@@ -430,9 +430,7 @@ func (m *mockVirtualNetworkGatewayConnectionsPager) NextPage(ctx context.Context
 	if m.index >= len(m.items) {
 		m.more = false
 		return armnetwork.VirtualNetworkGatewayConnectionsClientListResponse{
-			VirtualNetworkGatewayConnectionListResult: armnetwork.VirtualNetworkGatewayConnectionListResult{
-				Value: []*armnetwork.VirtualNetworkGatewayConnection{},
-			},
+			Value: []*armnetwork.VirtualNetworkGatewayConnection{},
 		}, nil
 	}
 
@@ -441,8 +439,6 @@ func (m *mockVirtualNetworkGatewayConnectionsPager) NextPage(ctx context.Context
 	m.more = m.index < len(m.items)
 
 	return armnetwork.VirtualNetworkGatewayConnectionsClientListResponse{
-		VirtualNetworkGatewayConnectionListResult: armnetwork.VirtualNetworkGatewayConnectionListResult{
-			Value: []*armnetwork.VirtualNetworkGatewayConnection{item},
-		},
+		Value: []*armnetwork.VirtualNetworkGatewayConnection{item},
 	}, nil
 }

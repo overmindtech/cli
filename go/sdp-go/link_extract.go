@@ -183,7 +183,7 @@ func extractLinksFromStringValue(val string) []*LinkedItemQuery {
 
 				// If this is an S3 object ARN (contains /), extract just the bucket
 				if strings.Contains(resource, "/") {
-					bucketName := strings.SplitN(resource, "/", 2)[0]
+					bucketName, _, _ := strings.Cut(resource, "/")
 					// Construct a bucket-only ARN for the query
 					val = "arn:aws:s3:::" + bucketName
 				}

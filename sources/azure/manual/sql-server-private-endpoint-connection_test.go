@@ -175,9 +175,7 @@ func TestSQLServerPrivateEndpointConnection(t *testing.T) {
 		mockPager := &mockSQLServerPrivateEndpointConnectionsPager{
 			pages: []armsql.PrivateEndpointConnectionsClientListByServerResponse{
 				{
-					PrivateEndpointConnectionListResult: armsql.PrivateEndpointConnectionListResult{
-						Value: []*armsql.PrivateEndpointConnection{conn1, conn2},
-					},
+					Value: []*armsql.PrivateEndpointConnection{conn1, conn2},
 				},
 			},
 		}
@@ -221,11 +219,9 @@ func TestSQLServerPrivateEndpointConnection(t *testing.T) {
 		mockPager := &mockSQLServerPrivateEndpointConnectionsPager{
 			pages: []armsql.PrivateEndpointConnectionsClientListByServerResponse{
 				{
-					PrivateEndpointConnectionListResult: armsql.PrivateEndpointConnectionListResult{
-						Value: []*armsql.PrivateEndpointConnection{
-							{Name: nil},
-							validConn,
-						},
+					Value: []*armsql.PrivateEndpointConnection{
+						{Name: nil},
+						validConn,
 					},
 				},
 			},

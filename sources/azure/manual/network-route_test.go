@@ -160,9 +160,7 @@ func TestNetworkRoute(t *testing.T) {
 		mockPager := &mockRoutesPager{
 			pages: []armnetwork.RoutesClientListResponse{
 				{
-					RouteListResult: armnetwork.RouteListResult{
-						Value: []*armnetwork.Route{route1, route2},
-					},
+					Value: []*armnetwork.Route{route1, route2},
 				},
 			},
 		}
@@ -218,11 +216,9 @@ func TestNetworkRoute(t *testing.T) {
 		mockPager := &mockRoutesPager{
 			pages: []armnetwork.RoutesClientListResponse{
 				{
-					RouteListResult: armnetwork.RouteListResult{
-						Value: []*armnetwork.Route{
-							{Name: nil, ID: new("/some/id")},
-							validRoute,
-						},
+					Value: []*armnetwork.Route{
+						{Name: nil, ID: new("/some/id")},
+						validRoute,
 					},
 				},
 			},

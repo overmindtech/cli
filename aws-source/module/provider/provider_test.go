@@ -149,8 +149,8 @@ func startTestServer(t *testing.T) string {
 func unitTestProviderFactories(serverURL string) map[string]func() (tfprotov6.ProviderServer, error) {
 	return map[string]func() (tfprotov6.ProviderServer, error){
 		"overmind": providerserver.NewProtocol6WithError(&testProvider{
-			overmindProvider: overmindProvider{version: "test"},
-			serverURL:        serverURL,
+			version:   "test",
+			serverURL: serverURL,
 		}),
 	}
 }

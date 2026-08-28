@@ -163,9 +163,7 @@ func TestSqlServerFirewallRule(t *testing.T) {
 		pager := &mockSqlServerFirewallRulePager{
 			pages: []armsql.FirewallRulesClientListByServerResponse{
 				{
-					FirewallRuleListResult: armsql.FirewallRuleListResult{
-						Value: []*armsql.FirewallRule{rule1, rule2},
-					},
+					Value: []*armsql.FirewallRule{rule1, rule2},
 				},
 			},
 		}
@@ -198,9 +196,7 @@ func TestSqlServerFirewallRule(t *testing.T) {
 		pager := &mockSqlServerFirewallRulePager{
 			pages: []armsql.FirewallRulesClientListByServerResponse{
 				{
-					FirewallRuleListResult: armsql.FirewallRuleListResult{
-						Value: []*armsql.FirewallRule{rule1},
-					},
+					Value: []*armsql.FirewallRule{rule1},
 				},
 			},
 		}

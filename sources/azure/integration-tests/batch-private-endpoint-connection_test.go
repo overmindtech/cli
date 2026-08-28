@@ -383,8 +383,7 @@ func createBatchAccountWithPrivateEndpointPolicy(ctx context.Context, client *ar
 		},
 	}, nil)
 	if err != nil {
-		var respErr *azcore.ResponseError
-		if errors.As(err, &respErr) {
+		if respErr, ok := errors.AsType[*azcore.ResponseError](err); ok {
 			if respErr.StatusCode == http.StatusConflict {
 				log.Printf("Batch account %s already exists (conflict), skipping creation", accountName)
 				return nil

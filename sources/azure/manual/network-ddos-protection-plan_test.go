@@ -351,18 +351,14 @@ func (m *mockDdosProtectionPlansPager) NextPage(ctx context.Context) (armnetwork
 	if m.index >= len(m.items) {
 		m.more = false
 		return armnetwork.DdosProtectionPlansClientListByResourceGroupResponse{
-			DdosProtectionPlanListResult: armnetwork.DdosProtectionPlanListResult{
-				Value: []*armnetwork.DdosProtectionPlan{},
-			},
+			Value: []*armnetwork.DdosProtectionPlan{},
 		}, nil
 	}
 	item := m.items[m.index]
 	m.index++
 	m.more = m.index < len(m.items)
 	return armnetwork.DdosProtectionPlansClientListByResourceGroupResponse{
-		DdosProtectionPlanListResult: armnetwork.DdosProtectionPlanListResult{
-			Value: []*armnetwork.DdosProtectionPlan{item},
-		},
+		Value: []*armnetwork.DdosProtectionPlan{item},
 	}, nil
 }
 

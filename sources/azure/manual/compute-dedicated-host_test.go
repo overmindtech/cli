@@ -71,17 +71,13 @@ func (m *mockDedicatedHostsPager) More() bool {
 func (m *mockDedicatedHostsPager) NextPage(ctx context.Context) (armcompute.DedicatedHostsClientListByHostGroupResponse, error) {
 	if m.index >= len(m.items) {
 		return armcompute.DedicatedHostsClientListByHostGroupResponse{
-			DedicatedHostListResult: armcompute.DedicatedHostListResult{
-				Value: []*armcompute.DedicatedHost{},
-			},
+			Value: []*armcompute.DedicatedHost{},
 		}, nil
 	}
 	item := m.items[m.index]
 	m.index++
 	return armcompute.DedicatedHostsClientListByHostGroupResponse{
-		DedicatedHostListResult: armcompute.DedicatedHostListResult{
-			Value: []*armcompute.DedicatedHost{item},
-		},
+		Value: []*armcompute.DedicatedHost{item},
 	}, nil
 }
 

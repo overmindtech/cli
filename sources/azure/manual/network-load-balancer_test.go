@@ -164,9 +164,7 @@ func TestNetworkLoadBalancer(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armnetwork.LoadBalancersClientListResponse{
-					LoadBalancerListResult: armnetwork.LoadBalancerListResult{
-						Value: []*armnetwork.LoadBalancer{lb1, lb2},
-					},
+					Value: []*armnetwork.LoadBalancer{lb1, lb2},
 				}, nil),
 			mockPager.EXPECT().More().Return(false),
 		)
@@ -225,9 +223,7 @@ func TestNetworkLoadBalancer(t *testing.T) {
 			mockPager.EXPECT().More().Return(true),
 			mockPager.EXPECT().NextPage(ctx).Return(
 				armnetwork.LoadBalancersClientListResponse{
-					LoadBalancerListResult: armnetwork.LoadBalancerListResult{
-						Value: []*armnetwork.LoadBalancer{lb1, lb2},
-					},
+					Value: []*armnetwork.LoadBalancer{lb1, lb2},
 				}, nil),
 			mockPager.EXPECT().More().Return(false),
 		)

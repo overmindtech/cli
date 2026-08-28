@@ -331,18 +331,14 @@ func (m *mockLocalNetworkGatewaysPager) NextPage(ctx context.Context) (armnetwor
 	if m.index >= len(m.items) {
 		m.more = false
 		return armnetwork.LocalNetworkGatewaysClientListResponse{
-			LocalNetworkGatewayListResult: armnetwork.LocalNetworkGatewayListResult{
-				Value: []*armnetwork.LocalNetworkGateway{},
-			},
+			Value: []*armnetwork.LocalNetworkGateway{},
 		}, nil
 	}
 	item := m.items[m.index]
 	m.index++
 	m.more = m.index < len(m.items)
 	return armnetwork.LocalNetworkGatewaysClientListResponse{
-		LocalNetworkGatewayListResult: armnetwork.LocalNetworkGatewayListResult{
-			Value: []*armnetwork.LocalNetworkGateway{item},
-		},
+		Value: []*armnetwork.LocalNetworkGateway{item},
 	}, nil
 }
 

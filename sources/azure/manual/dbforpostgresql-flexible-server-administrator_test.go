@@ -178,9 +178,7 @@ func TestDBforPostgreSQLFlexibleServerAdministrator(t *testing.T) {
 		mockPager := &mockAdministratorPager{
 			pages: []armpostgresqlflexibleservers.AdministratorsMicrosoftEntraClientListByServerResponse{
 				{
-					AdministratorMicrosoftEntraList: armpostgresqlflexibleservers.AdministratorMicrosoftEntraList{
-						Value: []*armpostgresqlflexibleservers.AdministratorMicrosoftEntra{admin1, admin2},
-					},
+					Value: []*armpostgresqlflexibleservers.AdministratorMicrosoftEntra{admin1, admin2},
 				},
 			},
 		}
@@ -250,9 +248,7 @@ func TestDBforPostgreSQLFlexibleServerAdministrator(t *testing.T) {
 		mockPager := &mockAdministratorPager{
 			pages: []armpostgresqlflexibleservers.AdministratorsMicrosoftEntraClientListByServerResponse{
 				{
-					AdministratorMicrosoftEntraList: armpostgresqlflexibleservers.AdministratorMicrosoftEntraList{
-						Value: []*armpostgresqlflexibleservers.AdministratorMicrosoftEntra{admin1, admin2},
-					},
+					Value: []*armpostgresqlflexibleservers.AdministratorMicrosoftEntra{admin1, admin2},
 				},
 			},
 		}
@@ -349,9 +345,7 @@ func TestDBforPostgreSQLFlexibleServerAdministrator(t *testing.T) {
 		mockPager := &mockAdministratorPager{
 			pages: []armpostgresqlflexibleservers.AdministratorsMicrosoftEntraClientListByServerResponse{
 				{
-					AdministratorMicrosoftEntraList: armpostgresqlflexibleservers.AdministratorMicrosoftEntraList{
-						Value: []*armpostgresqlflexibleservers.AdministratorMicrosoftEntra{nilNameAdmin, validAdmin},
-					},
+					Value: []*armpostgresqlflexibleservers.AdministratorMicrosoftEntra{nilNameAdmin, validAdmin},
 				},
 			},
 		}

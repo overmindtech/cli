@@ -98,8 +98,7 @@ func isOptInRegionError(err error) bool {
 		return false
 	}
 
-	var apiErr smithy.APIError
-	if errors.As(err, &apiErr) {
+	if apiErr, ok := errors.AsType[smithy.APIError](err); ok {
 		if apiErr.ErrorCode() == "InvalidIdentityToken" {
 			errMsg := err.Error()
 			if strings.Contains(errMsg, "No OpenIDConnect provider found") {

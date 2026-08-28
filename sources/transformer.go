@@ -95,9 +95,8 @@ func WrapperToAdapter(wrapper Wrapper, cache sdpcache.Cache) StandardAdapter {
 	core := standardAdapterCore{
 		wrapper: wrapper,
 		cache:   cache,
-	}
 
-	core.sourceType = "unknown"
+		sourceType: "unknown"}
 
 	it, ok := wrapper.ItemType().(shared.ItemTypeInstance)
 	if ok {
@@ -259,8 +258,7 @@ func (s *standardAdapterCore) validateScopes(scope string) error {
 //
 // IsNotFound returns true if err is a QueryError with ErrorType NOTFOUND.
 func IsNotFound(err error) bool {
-	var qe *sdp.QueryError
-	if errors.As(err, &qe) {
+	if qe, ok := errors.AsType[*sdp.QueryError](err); ok {
 		return qe.GetErrorType() == sdp.QueryError_NOTFOUND
 	}
 	return false
