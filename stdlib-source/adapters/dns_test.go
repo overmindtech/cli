@@ -3,7 +3,9 @@ package adapters
 import (
 	"context"
 	"errors"
+	"fmt"
 	"net"
+	"syscall"
 	"testing"
 	"time"
 
@@ -146,7 +148,9 @@ func TestDnsGet(t *testing.T) {
 	// point running this test
 	dialer := &net.Dialer{}
 	conn, err = dialer.DialContext(t.Context(), "tcp", "one.one.one.one:443")
-	conn.Close()
+	if conn != nil {
+		_ = conn.Close()
+	}
 
 	if err != nil {
 		t.Skip("No internet connection detected")
@@ -372,4 +376,224 @@ func TestTimeoutShorterThanCaller(t *testing.T) {
 	if !errors.Is(err, context.DeadlineExceeded) {
 		t.Errorf("expected context.DeadlineExceeded error, got: %v", err)
 	}
+}
+
+type timeoutNetError struct{}
+
+func (timeoutNetError) Error() string   { return "i/o timeout" }
+func (timeoutNetError) Timeout() bool   { return true }
+func (timeoutNetError) Temporary() bool { return true }
+
+func wrapSyscall(err error) error {
+	return fmt.Errorf("read udp 169.254.169.253:53: %w", &net.OpError{
+		Op:  "read",
+		Net: "udp",
+		Err: err,
+	})
+}
+
+func TestRetryDNSQueryTransportFailover(t *testing.T) {
+	t.Parallel()
+
+	success := []*sdp.Item{{Type: ItemType, UniqueAttribute: UniqueAttribute, Scope: "global"}}
+	servers := []string{"169.254.169.253:53", "1.1.1.1:53"}
+
+	unreachableErrs := []struct {
+		name string
+		err  error
+	}{
+		{"ECONNREFUSED", syscall.ECONNREFUSED},
+		{"ENETUNREACH", syscall.ENETUNREACH},
+		{"EHOSTUNREACH", syscall.EHOSTUNREACH},
+	}
+
+	for _, tc := range unreachableErrs {
+		t.Run("first server "+tc.name+" then second succeeds", func(t *testing.T) {
+			t.Parallel()
+
+			d := DNSAdapter{
+				cache:   sdpcache.NewNoOpCache(),
+				Servers: servers,
+			}
+			var attempted []string
+			items, err := d.retryDNSQuery(t.Context(), func(_ context.Context, server string) ([]*sdp.Item, error) {
+				attempted = append(attempted, server)
+				if server == servers[0] {
+					return nil, wrapSyscall(tc.err)
+				}
+				return success, nil
+			})
+			if err != nil {
+				t.Fatalf("expected success after failover, got error: %v", err)
+			}
+			if len(items) != 1 {
+				t.Errorf("expected 1 item, got %d", len(items))
+			}
+			wantAttempted := []string{servers[0], servers[1]}
+			if len(attempted) != len(wantAttempted) {
+				t.Fatalf("expected attempted %v, got %v", wantAttempted, attempted)
+			}
+			for i, got := range attempted {
+				if got != wantAttempted[i] {
+					t.Errorf("attempted[%d]: expected %q, got %q", i, wantAttempted[i], got)
+				}
+			}
+		})
+	}
+
+	t.Run("NOTFOUND from first server does not call second", func(t *testing.T) {
+		t.Parallel()
+
+		d := DNSAdapter{
+			cache:   sdpcache.NewNoOpCache(),
+			Servers: servers,
+		}
+		notFound := &sdp.QueryError{
+			ErrorType:   sdp.QueryError_NOTFOUND,
+			ErrorString: "no A or AAAA records found",
+			Scope:       "global",
+			SourceName:  d.Name(),
+			ItemType:    d.Type(),
+		}
+		var attempted []string
+		_, err := d.retryDNSQuery(t.Context(), func(_ context.Context, server string) ([]*sdp.Item, error) {
+			attempted = append(attempted, server)
+			if server == servers[0] {
+				return nil, notFound
+			}
+			t.Error("second server should not be queried after NOTFOUND")
+			return success, nil
+		})
+		if err == nil {
+			t.Fatal("expected NOTFOUND error, got nil")
+		}
+		var qe *sdp.QueryError
+		if !errors.As(err, &qe) || qe.GetErrorType() != sdp.QueryError_NOTFOUND {
+			t.Errorf("expected NOTFOUND, got %v", err)
+		}
+		if len(attempted) != 1 || attempted[0] != servers[0] {
+			t.Errorf("expected only first server, got %v", attempted)
+		}
+	})
+
+	t.Run("other non-transport errors do not rotate", func(t *testing.T) {
+		t.Parallel()
+
+		d := DNSAdapter{
+			cache:   sdpcache.NewNoOpCache(),
+			Servers: servers,
+		}
+		appErr := errors.New("servfail")
+		var attempted []string
+		_, err := d.retryDNSQuery(t.Context(), func(_ context.Context, server string) ([]*sdp.Item, error) {
+			attempted = append(attempted, server)
+			if server == servers[0] {
+				return nil, appErr
+			}
+			t.Error("second server should not be queried after application error")
+			return success, nil
+		})
+		if !errors.Is(err, appErr) {
+			t.Errorf("expected %v, got %v", appErr, err)
+		}
+		if len(attempted) != 1 || attempted[0] != servers[0] {
+			t.Errorf("expected only first server, got %v", attempted)
+		}
+	})
+
+	t.Run("every server refused fails after one pass", func(t *testing.T) {
+		t.Parallel()
+
+		d := DNSAdapter{
+			cache:   sdpcache.NewNoOpCache(),
+			Servers: []string{"10.0.0.1:53", "10.0.0.2:53", "10.0.0.3:53"},
+		}
+		var attempted []string
+		start := time.Now()
+		_, err := d.retryDNSQuery(t.Context(), func(_ context.Context, server string) ([]*sdp.Item, error) {
+			attempted = append(attempted, server)
+			return nil, wrapSyscall(syscall.ECONNREFUSED)
+		})
+		elapsed := time.Since(start)
+		if elapsed > 2*time.Second {
+			t.Errorf("expected one pass to finish quickly, took %v", elapsed)
+		}
+		if !errors.Is(err, syscall.ECONNREFUSED) {
+			t.Errorf("expected last error to be ECONNREFUSED, got %v", err)
+		}
+		if len(attempted) != 3 {
+			t.Errorf("expected 3 attempts (one per server), got %d: %v", len(attempted), attempted)
+		}
+		for i, got := range attempted {
+			if got != d.Servers[i] {
+				t.Errorf("attempted[%d]: expected %q, got %q", i, d.Servers[i], got)
+			}
+		}
+	})
+
+	t.Run("caller context cancel returns promptly", func(t *testing.T) {
+		t.Parallel()
+
+		d := DNSAdapter{
+			cache:   sdpcache.NewNoOpCache(),
+			Servers: servers,
+		}
+		ctx, cancel := context.WithCancel(t.Context())
+		go func() {
+			time.Sleep(50 * time.Millisecond)
+			cancel()
+		}()
+		start := time.Now()
+		_, err := d.retryDNSQuery(ctx, func(ctx context.Context, _ string) ([]*sdp.Item, error) {
+			<-ctx.Done()
+			return nil, ctx.Err()
+		})
+		elapsed := time.Since(start)
+		if elapsed > 2*time.Second {
+			t.Errorf("expected cancel to return promptly, took %v", elapsed)
+		}
+		if !errors.Is(err, context.Canceled) {
+			t.Errorf("expected context.Canceled, got %v", err)
+		}
+	})
+
+	t.Run("timeout on first server rotates to second", func(t *testing.T) {
+		t.Parallel()
+
+		d := DNSAdapter{
+			cache:   sdpcache.NewNoOpCache(),
+			Servers: servers,
+		}
+
+		timeoutCases := []struct {
+			name string
+			err  error
+		}{
+			{"DeadlineExceeded", context.DeadlineExceeded},
+			{"net.Error Timeout", timeoutNetError{}},
+		}
+		for _, tc := range timeoutCases {
+			t.Run(tc.name, func(t *testing.T) {
+				t.Parallel()
+
+				var attempted []string
+				items, err := d.retryDNSQuery(t.Context(), func(_ context.Context, server string) ([]*sdp.Item, error) {
+					attempted = append(attempted, server)
+					if server == servers[0] {
+						return nil, tc.err
+					}
+					return success, nil
+				})
+				if err != nil {
+					t.Fatalf("expected success after timeout failover, got error: %v", err)
+				}
+				if len(items) != 1 {
+					t.Errorf("expected 1 item, got %d", len(items))
+				}
+				if len(attempted) < 2 || attempted[0] != servers[0] || attempted[1] != servers[1] {
+					t.Errorf("expected first then second server, got %v", attempted)
+				}
+			})
+		}
+	})
 }
