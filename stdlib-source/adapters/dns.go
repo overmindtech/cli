@@ -7,6 +7,7 @@ import (
 	"net"
 	"sort"
 	"strings"
+	"syscall"
 	"time"
 
 	"github.com/cenkalti/backoff/v7"
@@ -298,7 +299,32 @@ func (d *DNSAdapter) Search(ctx context.Context, scope string, query string, ign
 	return items, nil
 }
 
-// retryDNSQuery handles retrying DNS queries with backoff and server rotation
+// isImmediateUnreachable reports nameserver transport failures that mean this
+// server cannot be reached. These should fail over to the next configured
+// server once, rather than being treated as a permanent query failure or
+// retried for the full backoff budget (the Depot/CI case: UDP/53 to VPC DNS
+// returns ECONNREFUSED).
+func isImmediateUnreachable(err error) bool {
+	return errors.Is(err, syscall.ECONNREFUSED) ||
+		errors.Is(err, syscall.ENETUNREACH) ||
+		errors.Is(err, syscall.EHOSTUNREACH)
+}
+
+// isRetryableTimeout reports query timeouts that may still succeed on another
+// nameserver or a later attempt within the backoff budget.
+func isRetryableTimeout(err error) bool {
+	if errors.Is(err, context.DeadlineExceeded) {
+		return true
+	}
+	var ne net.Error
+	return errors.As(err, &ne) && ne.Timeout()
+}
+
+// retryDNSQuery handles retrying DNS queries with backoff and server rotation.
+// Immediate unreachability (connection refused / host or network unreachable)
+// walks the configured server list once and returns the last error. Timeouts
+// may backoff and rotate within MaxElapsedTime. DNS responses including
+// NOTFOUND, and other application errors, are permanent and do not rotate.
 func (d *DNSAdapter) retryDNSQuery(ctx context.Context, queryFn func(context.Context, string) ([]*sdp.Item, error)) ([]*sdp.Item, error) {
 	b := backoff.NewExponentialBackOff()
 	b.InitialInterval = 100 * time.Millisecond
@@ -307,31 +333,44 @@ func (d *DNSAdapter) retryDNSQuery(ctx context.Context, queryFn func(context.Con
 	var items []*sdp.Item
 	var i int
 	var server string
+	var lastUnreachable error
 
 	operation := func() (any, error) {
-		if i >= len(d.GetServers()) {
-			i = 0
-		}
+		servers := d.GetServers()
+		n := len(servers)
 
-		ctx, cancel := context.WithTimeout(ctx, 3*time.Second)
-		defer cancel()
-
-		server = d.GetServers()[i]
-
-		var err error
-		items, err = queryFn(ctx, server)
-		if err != nil {
-			i++ // Move to next server on error
-
-			if errors.Is(err, context.DeadlineExceeded) ||
-				strings.Contains(err.Error(), "timeout") ||
-				strings.Contains(err.Error(), "temporary failure") {
-				return nil, err // Retry on timeout
+		for range n {
+			if err := ctx.Err(); err != nil {
+				return nil, err
 			}
+			if i >= n {
+				i = 0
+			}
+
+			attemptCtx, cancel := context.WithTimeout(ctx, 3*time.Second)
+			server = servers[i]
+			var err error
+			items, err = queryFn(attemptCtx, server)
+			cancel()
+			if err == nil {
+				return nil, nil
+			}
+
+			if isImmediateUnreachable(err) {
+				lastUnreachable = err
+				i++
+				continue
+			}
+			if isRetryableTimeout(err) {
+				i++
+				return nil, err
+			}
+			// DNS response (including NOTFOUND) or other application error:
+			// do not rotate to the next nameserver.
 			return nil, backoff.Permanent(err)
 		}
 
-		return nil, nil
+		return nil, backoff.Permanent(lastUnreachable)
 	}
 
 	_, err := backoff.Retry(ctx, operation,
