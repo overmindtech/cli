@@ -119,7 +119,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.75.1
 	github.com/aws/aws-sdk-go-v2/service/sts v1.47.1
 	github.com/aws/smithy-go v1.28.1
-	github.com/bombsimon/logrusr/v4 v4.1.0
+	github.com/bombsimon/logrusr/v4 v4.2.0
 	github.com/bradleyfalzon/ghinstallation/v2 v2.19.0
 	github.com/brianvoe/gofakeit/v7 v7.16.0
 	github.com/cenkalti/backoff/v7 v7.0.0
@@ -170,7 +170,7 @@ require (
 	github.com/pb33f/ordered-map/v2 v2.3.1
 	github.com/pborman/ansi v1.3.0
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
-	github.com/posthog/posthog-go v1.24.3
+	github.com/posthog/posthog-go v1.24.4
 	github.com/qhenkart/anthropic-tokenizer-go v0.0.0-20231011194518-5519949e0faf
 	github.com/resend/resend-go/v3 v3.17.0
 	github.com/riverqueue/river v0.45.0
@@ -180,7 +180,7 @@ require (
 	github.com/rs/cors v1.11.1
 	github.com/samber/slog-logrus/v2 v2.5.4
 	github.com/sashabaranov/go-openai v1.42.0
-	github.com/sirupsen/logrus v1.10.1
+	github.com/sirupsen/logrus v1.10.2
 	github.com/slack-go/slack v0.29.0
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8
 	github.com/spf13/cobra v1.10.2
@@ -194,7 +194,7 @@ require (
 	github.com/uptrace/opentelemetry-go-extra/otellogrus v0.3.2
 	github.com/xiam/dig v0.0.0-20191116195832-893b5fb5093b
 	github.com/zclconf/go-cty v1.19.0
-	gitlab.com/gitlab-org/api/client-go/v2 v2.60.0
+	gitlab.com/gitlab-org/api/client-go/v2 v2.61.0
 	go.etcd.io/bbolt v1.5.0
 	go.opentelemetry.io/contrib/detectors/aws/ec2/v2 v2.0.0-20250901115419-474a7992e57c
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.70.0
@@ -219,7 +219,7 @@ require (
 	gonum.org/v1/gonum v0.17.0
 	google.golang.org/api v0.293.0
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20260819154853-08b0e4226688
-	google.golang.org/grpc v1.83.1
+	google.golang.org/grpc v1.83.2
 	google.golang.org/protobuf v1.36.12
 	gopkg.in/ini.v1 v1.67.3
 	gopkg.in/yaml.v3 v3.0.1
