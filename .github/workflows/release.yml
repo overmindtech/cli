@@ -57,7 +57,7 @@ jobs:
       # block in .goreleaser.yaml). It is not preinstalled on GitHub-hosted
       # runners, so download it before goreleaser runs.
       - name: Install Syft
-        uses: anchore/sbom-action/download-syft@v0.24.0
+        uses: anchore/sbom-action/download-syft@v0.24.2
 
       - name: Run GoReleaser (publish)
         uses: goreleaser/goreleaser-action@v7
