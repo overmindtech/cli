@@ -133,7 +133,7 @@ require (
 	github.com/getsentry/sentry-go v0.48.0
 	github.com/go-jose/go-jose/v4 v4.1.4
 	github.com/google/btree v1.1.3
-	github.com/google/go-github/v90 v90.0.0
+	github.com/google/go-github/v91 v91.0.0
 	github.com/google/uuid v1.6.0
 	github.com/googleapis/gax-go/v2 v2.24.0
 	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
@@ -175,7 +175,7 @@ require (
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/posthog/posthog-go v1.24.4
 	github.com/qhenkart/anthropic-tokenizer-go v0.0.0-20231011194518-5519949e0faf
-	github.com/resend/resend-go/v3 v3.17.0
+	github.com/resend/resend-go/v4 v4.2.0
 	github.com/riverqueue/river v0.45.0
 	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.45.0
 	github.com/riverqueue/river/rivertype v0.45.0
