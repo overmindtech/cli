@@ -311,9 +311,12 @@ func TestIsAllowedMCPRedirect(t *testing.T) {
 		{"https://www.cursor.com/agents/mcp/oauth/callback", true},
 		{"https://linear.app/connect/mcp/callback", true},
 		{"https://ampcode.com/auth/mcp/callback", true},
+		{"https://antigravity.google/oauth-callback", true},
 		{"http://127.0.0.1/callback", true},
 		{"https://linear.app/connect/mcp/callback/extra", false},
 		{"https://ampcode.com/auth/mcp/callback?state=unexpected", false},
+		{"https://antigravity.google/oauth-callback/extra", false},
+		{"https://antigravity.google/oauth-callback?state=unexpected", false},
 		{"https://evil.com/callback", false},
 	}
 	for _, tt := range tests {
