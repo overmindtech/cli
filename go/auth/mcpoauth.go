@@ -143,19 +143,22 @@ func NewMCPPRMHandler(authorizationServerURL, resourceURL string, scopes []strin
 }
 
 const (
-	cursorMCPRedirectURI      = "cursor://anysphere.cursor-mcp/oauth/callback"
-	cursorCloudAgentsRedirect = "https://www.cursor.com/agents/mcp/oauth/callback"
-	linearAgentMCPRedirectURI = "https://linear.app/connect/mcp/callback"
-	ampWebsiteMCPRedirectURI  = "https://ampcode.com/auth/mcp/callback" //nolint:gosec // exact third-party MCP callback URI
+	cursorMCPRedirectURI       = "cursor://anysphere.cursor-mcp/oauth/callback"
+	cursorCloudAgentsRedirect  = "https://www.cursor.com/agents/mcp/oauth/callback"
+	linearAgentMCPRedirectURI  = "https://linear.app/connect/mcp/callback"
+	ampWebsiteMCPRedirectURI   = "https://ampcode.com/auth/mcp/callback" //nolint:gosec // exact third-party MCP callback URI
+	antigravityMCPRedirectURI  = "https://antigravity.google/oauth-callback"
 )
 
 // IsAllowedMCPRedirect returns true when uri is a registered MCP handoff target
-// (Cursor desktop, Cursor Cloud Agents, Linear Agent, Amp website, or loopback).
+// (Cursor desktop, Cursor Cloud Agents, Linear Agent, Amp website,
+// Antigravity CLI, or loopback).
 func IsAllowedMCPRedirect(uri string) bool {
 	if uri == cursorMCPRedirectURI ||
 		uri == cursorCloudAgentsRedirect ||
 		uri == linearAgentMCPRedirectURI ||
-		uri == ampWebsiteMCPRedirectURI {
+		uri == ampWebsiteMCPRedirectURI ||
+		uri == antigravityMCPRedirectURI {
 		return true
 	}
 	return IsLocalhostRedirect(uri)
