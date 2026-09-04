@@ -9,24 +9,118 @@ import (
 	"testing"
 	"time"
 
+	"github.com/miekg/dns"
 	"github.com/overmindtech/cli/go/discovery"
 	"github.com/overmindtech/cli/go/sdp-go"
 	"github.com/overmindtech/cli/go/sdpcache"
 )
 
+const (
+	testDNSAddressName = "address.test"
+	testDNSAliasName   = "alias.test"
+	testDNSMissingName = "missing.test"
+	testDNSIPv4        = "192.0.2.10"
+	testDNSIPv6        = "2001:db8::10"
+)
+
+func newTestDNSServer(t *testing.T) string {
+	t.Helper()
+
+	var lc net.ListenConfig
+	packetConn, err := lc.ListenPacket(t.Context(), "udp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatalf("listen for test DNS server: %v", err)
+	}
+
+	handler := dns.HandlerFunc(func(w dns.ResponseWriter, request *dns.Msg) {
+		response := new(dns.Msg)
+		response.SetReply(request)
+		response.Authoritative = true
+
+		if len(request.Question) != 1 {
+			response.SetRcode(request, dns.RcodeFormatError)
+		} else {
+			question := request.Question[0]
+			switch {
+			case question.Name == dns.Fqdn(testDNSAddressName) && question.Qtype == dns.TypeA:
+				response.Answer = append(response.Answer, &dns.A{
+					Hdr: dns.RR_Header{
+						Name:   question.Name,
+						Rrtype: dns.TypeA,
+						Class:  dns.ClassINET,
+						Ttl:    60,
+					},
+					A: net.ParseIP(testDNSIPv4).To4(),
+				})
+			case question.Name == dns.Fqdn(testDNSAddressName) && question.Qtype == dns.TypeAAAA:
+				response.Answer = append(response.Answer, &dns.AAAA{
+					Hdr: dns.RR_Header{
+						Name:   question.Name,
+						Rrtype: dns.TypeAAAA,
+						Class:  dns.ClassINET,
+						Ttl:    60,
+					},
+					AAAA: net.ParseIP(testDNSIPv6),
+				})
+			case question.Name == dns.Fqdn(testDNSAliasName):
+				response.Answer = append(response.Answer, &dns.CNAME{
+					Hdr: dns.RR_Header{
+						Name:   question.Name,
+						Rrtype: dns.TypeCNAME,
+						Class:  dns.ClassINET,
+						Ttl:    60,
+					},
+					Target: dns.Fqdn(testDNSAddressName),
+				})
+			case question.Name == "10.2.0.192.in-addr.arpa." && question.Qtype == dns.TypePTR:
+				response.Answer = append(response.Answer, &dns.PTR{
+					Hdr: dns.RR_Header{
+						Name:   question.Name,
+						Rrtype: dns.TypePTR,
+						Class:  dns.ClassINET,
+						Ttl:    60,
+					},
+					Ptr: dns.Fqdn(testDNSAddressName),
+				})
+			default:
+				response.SetRcode(request, dns.RcodeNameError)
+			}
+		}
+
+		if err := w.WriteMsg(response); err != nil {
+			t.Errorf("write test DNS response: %v", err)
+		}
+	})
+
+	server := &dns.Server{
+		PacketConn: packetConn,
+		Handler:    handler,
+	}
+	go func() {
+		if err := server.ActivateAndServe(); err != nil && !errors.Is(err, net.ErrClosed) {
+			t.Errorf("serve test DNS: %v", err)
+		}
+	}()
+	t.Cleanup(func() {
+		if err := server.Shutdown(); err != nil {
+			t.Errorf("shutdown test DNS server: %v", err)
+		}
+	})
+
+	return packetConn.LocalAddr().String()
+}
+
 func TestSearch(t *testing.T) {
 	t.Parallel()
 
+	server := newTestDNSServer(t)
 	s := DNSAdapter{
-		cache: sdpcache.NewNoOpCache(),
-		Servers: []string{
-			"1.1.1.1:53",
-			"8.8.8.8:53",
-		},
+		cache:   sdpcache.NewNoOpCache(),
+		Servers: []string{server},
 	}
 
 	t.Run("with a bad DNS name", func(t *testing.T) {
-		_, err := s.Search(context.Background(), "global", "not.real.overmind.tech", false)
+		_, err := s.Search(context.Background(), "global", testDNSMissingName, false)
 		if err == nil {
 			t.Error("expected error for non-existent name")
 		}
@@ -36,8 +130,8 @@ func TestSearch(t *testing.T) {
 		}
 	})
 
-	t.Run("with one.one.one.one", func(t *testing.T) {
-		items, err := s.Search(context.Background(), "global", "one.one.one.one", false)
+	t.Run("with an address record", func(t *testing.T) {
+		items, err := s.Search(context.Background(), "global", testDNSAddressName, false)
 
 		if err != nil {
 			t.Error(err)
@@ -47,25 +141,25 @@ func TestSearch(t *testing.T) {
 			t.Errorf("expected 1 item, got %v", len(items))
 		}
 
-		// Make sure 1.1.1.1 is in there
+		// Make sure both fixed address records are linked.
 		var foundV4 bool
 		var foundV6 bool
 		for _, item := range items {
 			for _, q := range item.GetLinkedItemQueries() {
-				if q.GetQuery().GetQuery() == "1.1.1.1" {
+				if q.GetQuery().GetQuery() == testDNSIPv4 {
 					foundV4 = true
 				}
-				if q.GetQuery().GetQuery() == "2606:4700:4700::1111" {
+				if q.GetQuery().GetQuery() == testDNSIPv6 {
 					foundV6 = true
 				}
 			}
 		}
 
 		if !foundV4 {
-			t.Error("could not find 1.1.1.1 in linked item queries")
+			t.Errorf("could not find %s in linked item queries", testDNSIPv4)
 		}
 		if !foundV6 {
-			t.Error("could not find 2606:4700:4700::1111 in linked item queries")
+			t.Errorf("could not find %s in linked item queries", testDNSIPv6)
 		}
 
 		discovery.TestValidateItems(t, items)
@@ -75,7 +169,7 @@ func TestSearch(t *testing.T) {
 		// First call (fresh NOTFOUND) and second call (cached NOTFOUND) must return the same: nil items, same error
 		cache := sdpcache.NewMemoryCache()
 		cachedSrc := DNSAdapter{cache: cache, Servers: s.Servers}
-		query := "not.real.overmind.tech"
+		query := testDNSMissingName
 
 		first, err1 := cachedSrc.Search(context.Background(), "global", query, false)
 		if err1 == nil {
@@ -107,31 +201,31 @@ func TestSearch(t *testing.T) {
 
 	t.Run("with an IP and therefore reverse DNS", func(t *testing.T) {
 		s.ReverseLookup = true
-		items, err := s.Search(context.Background(), "global", "1.1.1.1", false)
+		items, err := s.Search(context.Background(), "global", testDNSIPv4, false)
 
 		if err != nil {
 			t.Error(err)
 		}
 
-		// Make sure 1.1.1.1 is in there
+		// Reverse lookup resolves to the same fixed address record.
 		var foundV4 bool
 		var foundV6 bool
 		for _, item := range items {
 			for _, q := range item.GetLinkedItemQueries() {
-				if q.GetQuery().GetQuery() == "1.1.1.1" {
+				if q.GetQuery().GetQuery() == testDNSIPv4 {
 					foundV4 = true
 				}
-				if q.GetQuery().GetQuery() == "2606:4700:4700::1111" {
+				if q.GetQuery().GetQuery() == testDNSIPv6 {
 					foundV6 = true
 				}
 			}
 		}
 
 		if !foundV4 {
-			t.Error("could not find 1.1.1.1 in linked item queries")
+			t.Errorf("could not find %s in linked item queries", testDNSIPv4)
 		}
 		if !foundV6 {
-			t.Error("could not find 2606:4700:4700::1111 in linked item queries")
+			t.Errorf("could not find %s in linked item queries", testDNSIPv6)
 		}
 
 		discovery.TestValidateItems(t, items)
@@ -141,27 +235,15 @@ func TestSearch(t *testing.T) {
 func TestDnsGet(t *testing.T) {
 	t.Parallel()
 
-	var conn net.Conn
-	var err error
-
-	// Check that we actually have an internet connection, if not there is not
-	// point running this test
-	dialer := &net.Dialer{}
-	conn, err = dialer.DialContext(t.Context(), "tcp", "one.one.one.one:443")
-	if conn != nil {
-		_ = conn.Close()
-	}
-
-	if err != nil {
-		t.Skip("No internet connection detected")
-	}
+	server := newTestDNSServer(t)
 
 	src := DNSAdapter{
-		cache: sdpcache.NewNoOpCache(),
+		cache:   sdpcache.NewNoOpCache(),
+		Servers: []string{server},
 	}
 
 	t.Run("working request", func(t *testing.T) {
-		item, err := src.Get(context.Background(), "global", "one.one.one.one", false)
+		item, err := src.Get(context.Background(), "global", testDNSAddressName, false)
 
 		if err != nil {
 			t.Fatal(err)
@@ -171,7 +253,7 @@ func TestDnsGet(t *testing.T) {
 	})
 
 	t.Run("bad dns entry", func(t *testing.T) {
-		_, err := src.Get(context.Background(), "global", "something.does.not.exist.please.testing", false)
+		_, err := src.Get(context.Background(), "global", testDNSMissingName, false)
 
 		if err == nil {
 			t.Error("expected error but got nil")
@@ -229,7 +311,7 @@ func TestDnsGet(t *testing.T) {
 	})
 
 	t.Run("bad scope", func(t *testing.T) {
-		_, err := src.Get(context.Background(), "something.local.test", "something.does.not.exist.please.testing", false)
+		_, err := src.Get(context.Background(), "something.local.test", testDNSMissingName, false)
 
 		if err == nil {
 			t.Error("expected error but got nil")
@@ -243,15 +325,15 @@ func TestDnsGet(t *testing.T) {
 	t.Run("with a CNAME", func(t *testing.T) {
 		// When we do a Get on a CNAME, I wan it to work, but only return the
 		// first thing
-		item, err := src.Get(context.Background(), "global", "www.github.com", false)
+		item, err := src.Get(context.Background(), "global", testDNSAliasName, false)
 
 		if err != nil {
 			t.Fatal(err)
 		}
 
 		target := item.GetAttributes().GetAttrStruct().GetFields()["target"].GetStringValue()
-		if target != "github.com" {
-			t.Errorf("expected target to be github.com, got %v", target)
+		if target != testDNSAddressName {
+			t.Errorf("expected target to be %s, got %v", testDNSAddressName, target)
 		}
 
 		t.Log(item)
@@ -298,8 +380,10 @@ func TestGetTimeout(t *testing.T) {
 func TestSearchTimeoutContext(t *testing.T) {
 	t.Parallel()
 
+	server := newTestDNSServer(t)
 	src := DNSAdapter{
-		cache: sdpcache.NewNoOpCache(),
+		cache:   sdpcache.NewNoOpCache(),
+		Servers: []string{server},
 	}
 
 	// Create a context with a very long deadline to ensure Search creates its own timeout
@@ -307,7 +391,7 @@ func TestSearchTimeoutContext(t *testing.T) {
 	defer cancel()
 
 	// Use a valid, fast DNS query to verify the timeout wrapper doesn't break normal operation
-	items, err := src.Search(ctx, "global", "one.one.one.one", false)
+	items, err := src.Search(ctx, "global", testDNSAddressName, false)
 
 	// Should succeed with the fast query
 	if err != nil {
@@ -316,7 +400,7 @@ func TestSearchTimeoutContext(t *testing.T) {
 
 	// Should return at least one item for this known DNS name
 	if len(items) == 0 {
-		t.Error("expected at least one DNS item for one.one.one.one")
+		t.Errorf("expected at least one DNS item for %s, got %d", testDNSAddressName, len(items))
 	}
 }
 
