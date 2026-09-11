@@ -36,7 +36,7 @@ require (
 	cloud.google.com/go/aiplatform v1.126.0
 	cloud.google.com/go/auth v0.23.2
 	cloud.google.com/go/auth/oauth2adapt v0.2.8
-	cloud.google.com/go/bigquery v1.81.0
+	cloud.google.com/go/bigquery v1.83.0
 	cloud.google.com/go/bigtable v1.52.0
 	cloud.google.com/go/certificatemanager v1.15.0
 	cloud.google.com/go/compute v1.67.0
@@ -59,7 +59,7 @@ require (
 	cloud.google.com/go/secretmanager v1.21.0
 	cloud.google.com/go/securitycentermanagement v1.6.0
 	cloud.google.com/go/spanner v1.95.0
-	cloud.google.com/go/storage v1.65.0
+	cloud.google.com/go/storage v1.67.1
 	cloud.google.com/go/storagetransfer v1.19.0
 	connectrpc.com/connect v1.20.0 // v1.19.0 was faulty, wait until it is above this version
 	connectrpc.com/otelconnect v0.9.0
@@ -124,7 +124,7 @@ require (
 	github.com/aws/smithy-go v1.28.1
 	github.com/bombsimon/logrusr/v4 v4.2.0
 	github.com/bradleyfalzon/ghinstallation/v2 v2.19.0
-	github.com/brianvoe/gofakeit/v7 v7.16.0
+	github.com/brianvoe/gofakeit/v7 v7.17.0
 	github.com/cenkalti/backoff/v7 v7.0.0
 	github.com/coder/websocket v1.8.15
 	github.com/coreos/go-oidc/v3 v3.21.0
@@ -147,7 +147,7 @@ require (
 	github.com/hashicorp/terraform-plugin-go v0.31.0
 	github.com/hashicorp/terraform-plugin-testing v1.16.0
 	github.com/invopop/jsonschema v0.14.0
-	github.com/jackc/pgx/v5 v5.10.0
+	github.com/jackc/pgx/v5 v5.11.0
 	github.com/jedib0t/go-pretty/v6 v6.8.3
 	github.com/jxskiss/base62 v1.1.0
 	github.com/kaptinlin/jsonrepair v0.4.9
@@ -198,7 +198,7 @@ require (
 	github.com/uptrace/opentelemetry-go-extra/otellogrus v0.3.2
 	github.com/xiam/dig v0.0.0-20191116195832-893b5fb5093b
 	github.com/zclconf/go-cty v1.19.0
-	gitlab.com/gitlab-org/api/client-go/v2 v2.62.0
+	gitlab.com/gitlab-org/api/client-go/v2 v2.64.0
 	go.etcd.io/bbolt v1.5.0
 	go.opentelemetry.io/contrib/detectors/aws/ec2/v2 v2.5.3
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.70.0
