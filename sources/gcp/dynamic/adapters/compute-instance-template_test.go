@@ -2,7 +2,9 @@ package adapters
 
 import (
 	"context"
+	"encoding/json"
 	"net/http"
+	"strings"
 	"testing"
 	"time"
 
@@ -30,6 +32,7 @@ func TestComputeInstanceTemplate(t *testing.T) {
 	ctx := context.Background()
 	projectID := "test-project"
 	linker := gcpshared.NewLinker()
+	startupScript := "echo fixture-instance-template-startup-script"
 
 	// Create a template object
 	template := &compute.InstanceTemplate{
@@ -110,6 +113,14 @@ func TestComputeInstanceTemplate(t *testing.T) {
 				Key:                    "compute.googleapis.com/reservation-name",
 				Values:                 []string{"my-reservation"},
 			},
+			Metadata: &compute.Metadata{
+				Items: []*compute.MetadataItems{
+					{
+						Key:   "startup-script",
+						Value: new(startupScript),
+					},
+				},
+			},
 		},
 		SelfLink: "https://compute.googleapis.com/compute/v1/projects/test-project/global/instanceTemplates/test-instance-template",
 	}
@@ -160,6 +171,29 @@ func TestComputeInstanceTemplate(t *testing.T) {
 		if sdpItem.UniqueAttributeValue() != "test-instance-template" {
 			t.Errorf("Expected unique attribute value 'test-instance-template', got %s", sdpItem.UniqueAttributeValue())
 		}
+
+		t.Run("ExcludesMetadataItemsFromAttributes", func(t *testing.T) {
+			attrsJSON, marshalErr := json.Marshal(sdpItem.GetAttributes().GetAttrStruct().AsMap())
+			if marshalErr != nil {
+				t.Fatalf("marshal attributes: %v", marshalErr)
+			}
+			if strings.Contains(string(attrsJSON), startupScript) {
+				t.Errorf("startup-script value leaked in attributes: %s", attrsJSON)
+			}
+
+			attrMap := sdpItem.GetAttributes().GetAttrStruct().AsMap()
+			properties, ok := attrMap["properties"].(map[string]any)
+			if !ok {
+				t.Fatalf("expected properties object, got %v", attrMap["properties"])
+			}
+			metadata, _ := properties["metadata"].(map[string]any)
+			if metadata == nil {
+				return
+			}
+			if items, hasItems := metadata["items"]; hasItems {
+				t.Errorf("expected properties.metadata.items to be excluded, got %v", items)
+			}
+		})
 
 		t.Run("StaticTests", func(t *testing.T) {
 			queryTests := shared.QueryTests{

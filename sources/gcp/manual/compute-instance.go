@@ -310,7 +310,7 @@ func (c computeInstanceWrapper) listAggregatedStream(ctx context.Context, stream
 }
 
 func (c computeInstanceWrapper) gcpComputeInstanceToSDPItem(ctx context.Context, instance *computepb.Instance, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {
-	attributes, err := shared.ToAttributesWithExclude(instance, "labels")
+	attributes, err := shared.ToAttributesWithExclude(instance, "labels", "metadata.items")
 	if err != nil {
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,

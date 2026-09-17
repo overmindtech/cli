@@ -101,7 +101,14 @@ func externalToSDP(
 	linker *gcpshared.Linker,
 	nameSelector string,
 ) (*sdp.Item, error) {
-	attributes, err := shared.ToAttributesWithExclude(resp, "labels")
+	// Instance templates embed VM metadata (startup-script, ssh-keys) under
+	// properties.metadata.items. Drop those values from attributes; other
+	// dynamic adapters keep current content.
+	exclusions := []string{"labels"}
+	if sdpAssetType.String() == gcpshared.ComputeInstanceTemplate.String() {
+		exclusions = append(exclusions, "properties.metadata.items")
+	}
+	attributes, err := shared.ToAttributesWithExclude(resp, exclusions...)
 	if err != nil {
 		return nil, err
 	}
