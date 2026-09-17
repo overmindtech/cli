@@ -157,7 +157,7 @@ func (c computeMachineImageWrapper) ListStream(ctx context.Context, stream disco
 }
 
 func (c computeMachineImageWrapper) gcpComputeMachineImageToSDPItem(ctx context.Context, machineImage *computepb.MachineImage, location gcpshared.LocationInfo) (*sdp.Item, *sdp.QueryError) {
-	attributes, err := shared.ToAttributesWithExclude(machineImage, "labels")
+	attributes, err := shared.ToAttributesWithExclude(machineImage, "labels", "instance_properties.metadata.items", "source_instance_properties.metadata.items")
 	if err != nil {
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,

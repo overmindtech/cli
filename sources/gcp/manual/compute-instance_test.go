@@ -2,7 +2,9 @@ package manual_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"strings"
 	"sync"
 	"testing"
 
@@ -710,8 +712,13 @@ func TestComputeInstance(t *testing.T) {
 		igmName := "my-mig"
 		igmURI := fmt.Sprintf("projects/%s/regions/us-central1/instanceGroupManagers/%s", projectID, igmName)
 
+		startupScript := "echo fixture-compute-instance-startup-script"
+		sshKeys := "fixture-user:ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIfixture testhost"
+
 		instance := createComputeInstance("test-instance", computepb.Instance_RUNNING)
 		instance.Metadata = &computepb.Metadata{
+			Fingerprint: new("fixture-metadata-fingerprint"),
+			Kind:        new("compute#metadata"),
 			Items: []*computepb.Items{
 				{
 					Key:   new("instance-template"),
@@ -720,6 +727,14 @@ func TestComputeInstance(t *testing.T) {
 				{
 					Key:   new("created-by"),
 					Value: new(igmURI),
+				},
+				{
+					Key:   new("startup-script"),
+					Value: new(startupScript),
+				},
+				{
+					Key:   new("ssh-keys"),
+					Value: new(sshKeys),
 				},
 			},
 		}
@@ -732,6 +747,20 @@ func TestComputeInstance(t *testing.T) {
 		if qErr != nil {
 			t.Fatalf("Expected no error, got: %v", qErr)
 		}
+
+		t.Run("ExcludesMetadataItemsFromAttributes", func(t *testing.T) {
+			assertAttributesOmitSecrets(t, sdpItem, startupScript, sshKeys)
+			assertNestedMapKeyAbsent(t, sdpItem, "metadata", "items")
+
+			attrMap := sdpItem.GetAttributes().GetAttrStruct().AsMap()
+			metadata, ok := attrMap["metadata"].(map[string]any)
+			if !ok {
+				t.Fatalf("expected metadata object to remain, got %v", attrMap["metadata"])
+			}
+			if got := metadata["fingerprint"]; got != "fixture-metadata-fingerprint" {
+				t.Errorf("expected metadata.fingerprint %q, got %v", "fixture-metadata-fingerprint", got)
+			}
+		})
 
 		t.Run("StaticTests", func(t *testing.T) {
 			// Base queries that are always present
@@ -1100,5 +1129,47 @@ func createComputeInstance(instanceName string, status computepb.Instance_Status
 		ResourcePolicies: []string{
 			"projects/test-project-id/regions/us-central1/resourcePolicies/test-policy",
 		},
+	}
+}
+
+func attributesJSON(t *testing.T, item *sdp.Item) string {
+	t.Helper()
+	b, err := json.Marshal(item.GetAttributes().GetAttrStruct().AsMap())
+	if err != nil {
+		t.Fatalf("marshal attributes: %v", err)
+	}
+	return string(b)
+}
+
+func assertAttributesOmitSecrets(t *testing.T, item *sdp.Item, secrets ...string) {
+	t.Helper()
+	attrsJSON := attributesJSON(t, item)
+	for _, secret := range secrets {
+		if strings.Contains(attrsJSON, secret) {
+			t.Errorf("secret value %q leaked in attributes: %s", secret, attrsJSON)
+		}
+	}
+}
+
+func assertNestedMapKeyAbsent(t *testing.T, item *sdp.Item, path ...string) {
+	t.Helper()
+	current := any(item.GetAttributes().GetAttrStruct().AsMap())
+	for i, key := range path {
+		m, ok := current.(map[string]any)
+		if !ok {
+			if i == len(path)-1 {
+				return
+			}
+			t.Fatalf("expected map at %v, got %T", path[:i], current)
+		}
+		next, exists := m[key]
+		if !exists {
+			return
+		}
+		if i == len(path)-1 {
+			t.Errorf("expected %s to be excluded, got %v", strings.Join(path, "."), next)
+			return
+		}
+		current = next
 	}
 }

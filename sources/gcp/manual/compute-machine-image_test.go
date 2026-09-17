@@ -178,6 +178,46 @@ func TestComputeMachineImage(t *testing.T) {
 		})
 	})
 
+	t.Run("GetWithMetadataSecrets", func(t *testing.T) {
+		wrapper := manual.NewComputeMachineImage(mockClient, []gcpshared.LocationInfo{gcpshared.NewProjectLocation(projectID)})
+
+		instancePropertiesScript := "echo fixture-machine-image-instance-properties-startup-script"
+		sourceInstancePropertiesScript := "echo fixture-machine-image-source-instance-properties-startup-script"
+
+		image := createComputeMachineImage("test-machine-image", computepb.MachineImage_READY)
+		image.InstanceProperties.Metadata = &computepb.Metadata{
+			Items: []*computepb.Items{
+				{
+					Key:   new("startup-script"),
+					Value: new(instancePropertiesScript),
+				},
+			},
+		}
+		image.SourceInstanceProperties = &computepb.SourceInstanceProperties{
+			Metadata: &computepb.Metadata{
+				Items: []*computepb.Items{
+					{
+						Key:   new("startup-script"),
+						Value: new(sourceInstancePropertiesScript),
+					},
+				},
+			},
+		}
+
+		mockClient.EXPECT().Get(ctx, gomock.Any()).Return(image, nil)
+
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], "test-machine-image", true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		assertAttributesOmitSecrets(t, sdpItem, instancePropertiesScript, sourceInstancePropertiesScript)
+		assertNestedMapKeyAbsent(t, sdpItem, "instance_properties", "metadata", "items")
+		assertNestedMapKeyAbsent(t, sdpItem, "source_instance_properties", "metadata", "items")
+	})
+
 	t.Run("HealthCheck", func(t *testing.T) {
 		type testCase struct {
 			name     string
