@@ -2,8 +2,10 @@ package adapters_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 
 	"cloud.google.com/go/functions/apiv2/functionspb"
@@ -23,6 +25,13 @@ func TestCloudFunctionsFunction(t *testing.T) {
 	linker := gcpshared.NewLinker()
 	location := "us-central1"
 	functionName := "test-function"
+	const (
+		serviceEnvSentinel = "ovm-fn-svc-env-sentinel-9f3a"
+		buildEnvSentinel   = "ovm-fn-build-env-sentinel-7c2b"
+		serviceEnvName     = "DATABASE_PASSWORD"
+		buildEnvName       = "NPM_TOKEN"
+		secretEnvName      = "fn-api-key"
+	)
 
 	// Mock response for a Cloud Function
 	cloudFunction := &functionspb.Function{
@@ -43,7 +52,14 @@ func TestCloudFunctionsFunction(t *testing.T) {
 			VpcConnector:        fmt.Sprintf("projects/%s/locations/%s/connectors/test-connector", projectID, location),
 			Service:             fmt.Sprintf("projects/%s/locations/%s/services/test-function-service", projectID, location),
 			EnvironmentVariables: map[string]string{
-				"ENV": "test",
+				serviceEnvName: serviceEnvSentinel,
+			},
+			SecretEnvironmentVariables: []*functionspb.SecretEnvVar{
+				{
+					Key:     "API_KEY",
+					Secret:  secretEnvName,
+					Version: "1",
+				},
 			},
 		},
 		BuildConfig: &functionspb.BuildConfig{
@@ -51,6 +67,9 @@ func TestCloudFunctionsFunction(t *testing.T) {
 			EntryPoint:       "main",
 			DockerRepository: fmt.Sprintf("projects/%s/locations/%s/repositories/test-docker-repo", projectID, location),
 			WorkerPool:       fmt.Sprintf("projects/%s/locations/%s/workerPools/test-worker-pool", projectID, location),
+			EnvironmentVariables: map[string]string{
+				buildEnvName: buildEnvSentinel,
+			},
 			Source: &functionspb.Source{
 				Source: &functionspb.Source_StorageSource{
 					StorageSource: &functionspb.StorageSource{
@@ -189,6 +208,47 @@ func TestCloudFunctionsFunction(t *testing.T) {
 		}
 		if buildConfigMap["entryPoint"] != "main" {
 			t.Errorf("Expected buildConfig.entryPoint to be 'main', got %s", buildConfigMap["entryPoint"])
+		}
+
+		attrMap := sdpItem.GetAttributes().GetAttrStruct().AsMap()
+		attrsJSON, marshalErr := json.Marshal(attrMap)
+		if marshalErr != nil {
+			t.Fatalf("marshal attributes: %v", marshalErr)
+		}
+		if strings.Contains(string(attrsJSON), serviceEnvSentinel) {
+			t.Errorf("serviceConfig environment variable value leaked in attributes: %s", attrsJSON)
+		}
+		if strings.Contains(string(attrsJSON), buildEnvSentinel) {
+			t.Errorf("buildConfig environment variable value leaked in attributes: %s", attrsJSON)
+		}
+		if !strings.Contains(string(attrsJSON), secretEnvName) {
+			t.Errorf("expected secretEnvironmentVariables secret name %q to remain: %s", secretEnvName, attrsJSON)
+		}
+
+		serviceConfig, ok := attrMap["serviceConfig"].(map[string]any)
+		if !ok {
+			t.Fatalf("expected serviceConfig object, got %T", attrMap["serviceConfig"])
+		}
+		serviceEnv, ok := serviceConfig["environmentVariables"].(map[string]any)
+		if !ok {
+			t.Fatalf("expected serviceConfig.environmentVariables map, got %T", serviceConfig["environmentVariables"])
+		}
+		if _, exists := serviceEnv[serviceEnvName]; !exists {
+			t.Errorf("expected serviceConfig environment variable name %q to remain", serviceEnvName)
+		}
+		if serviceEnv[serviceEnvName] != "" {
+			t.Errorf("expected serviceConfig environment variable %q to be empty, got %#v", serviceEnvName, serviceEnv[serviceEnvName])
+		}
+
+		buildEnv, ok := buildConfigMap["environmentVariables"].(map[string]any)
+		if !ok {
+			t.Fatalf("expected buildConfig.environmentVariables map, got %T", buildConfigMap["environmentVariables"])
+		}
+		if _, exists := buildEnv[buildEnvName]; !exists {
+			t.Errorf("expected buildConfig environment variable name %q to remain", buildEnvName)
+		}
+		if buildEnv[buildEnvName] != "" {
+			t.Errorf("expected buildConfig environment variable %q to be empty, got %#v", buildEnvName, buildEnv[buildEnvName])
 		}
 
 		t.Run("StaticTests", func(t *testing.T) {

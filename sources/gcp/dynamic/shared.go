@@ -101,14 +101,29 @@ func externalToSDP(
 	linker *gcpshared.Linker,
 	nameSelector string,
 ) (*sdp.Item, error) {
-	// Instance templates embed VM metadata (startup-script, ssh-keys) under
-	// properties.metadata.items. Drop those values from attributes; other
-	// dynamic adapters keep current content.
+	// Redact on the attribute copy so linkItem still walks the original
+	// API payload. Instance templates drop metadata items; Cloud Run and
+	// Cloud Functions drop plaintext environment values while keeping
+	// names and secret references.
 	exclusions := []string{"labels"}
-	if sdpAssetType.String() == gcpshared.ComputeInstanceTemplate.String() {
+	var blankMaps []string
+	switch sdpAssetType.String() {
+	case gcpshared.ComputeInstanceTemplate.String():
 		exclusions = append(exclusions, "properties.metadata.items")
+	case gcpshared.RunService.String():
+		exclusions = append(exclusions, "template.containers.env.value")
+		blankMaps = []string{"buildConfig.environmentVariables"}
+	case gcpshared.RunRevision.String():
+		exclusions = append(exclusions, "containers.env.value")
+	case gcpshared.RunWorkerPool.String():
+		exclusions = append(exclusions, "template.containers.env.value")
+	case gcpshared.CloudFunctionsFunction.String():
+		blankMaps = []string{
+			"serviceConfig.environmentVariables",
+			"buildConfig.environmentVariables",
+		}
 	}
-	attributes, err := shared.ToAttributesWithExclude(resp, exclusions...)
+	attributes, err := shared.ToAttributesRedacting(resp, exclusions, blankMaps)
 	if err != nil {
 		return nil, err
 	}

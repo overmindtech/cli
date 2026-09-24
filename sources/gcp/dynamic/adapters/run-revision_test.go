@@ -2,8 +2,10 @@ package adapters_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 	"testing"
 
 	"google.golang.org/api/run/v2"
@@ -23,11 +25,36 @@ func TestRunRevision(t *testing.T) {
 	serviceName := "test-service"
 	revisionName := "test-revision"
 	linker := gcpshared.NewLinker()
+	const (
+		plaintextEnvSentinel = "ovm-run-rev-env-sentinel-8b6f"
+		plaintextEnvName     = "DATABASE_URL"
+		secretEnvName        = "API_KEY"
+		secretRef            = "projects/test-project/secrets/rev-api-key"
+	)
 
 	revision := &run.GoogleCloudRunV2Revision{
 		Name:           fmt.Sprintf("projects/%s/locations/%s/services/%s/revisions/%s", projectID, location, serviceName, revisionName),
 		ServiceAccount: "run-sa@test-project.iam.gserviceaccount.com",
 		Service:        fmt.Sprintf("projects/%s/locations/%s/services/%s", projectID, location, serviceName),
+		Containers: []*run.GoogleCloudRunV2Container{
+			{
+				Image: fmt.Sprintf("%s-docker.pkg.dev/%s/repo/image:latest", location, projectID),
+				Env: []*run.GoogleCloudRunV2EnvVar{
+					{
+						Name:  plaintextEnvName,
+						Value: plaintextEnvSentinel,
+					},
+					{
+						Name: secretEnvName,
+						ValueSource: &run.GoogleCloudRunV2EnvVarSource{
+							SecretKeyRef: &run.GoogleCloudRunV2SecretKeySelector{
+								Secret: secretRef,
+							},
+						},
+					},
+				},
+			},
+		},
 	}
 
 	revisionList := &run.GoogleCloudRunV2ListRevisionsResponse{
@@ -62,6 +89,21 @@ func TestRunRevision(t *testing.T) {
 
 		if sdpItem.GetType() != sdpItemType.String() {
 			t.Errorf("Expected type %s, got %s", sdpItemType.String(), sdpItem.GetType())
+		}
+
+		attrMap := sdpItem.GetAttributes().GetAttrStruct().AsMap()
+		attrsJSON, marshalErr := json.Marshal(attrMap)
+		if marshalErr != nil {
+			t.Fatalf("marshal attributes: %v", marshalErr)
+		}
+		if strings.Contains(string(attrsJSON), plaintextEnvSentinel) {
+			t.Errorf("plaintext env value leaked in attributes: %s", attrsJSON)
+		}
+		if !strings.Contains(string(attrsJSON), plaintextEnvName) {
+			t.Errorf("expected env name %q to remain in attributes: %s", plaintextEnvName, attrsJSON)
+		}
+		if !strings.Contains(string(attrsJSON), secretRef) {
+			t.Errorf("expected secret ref to remain in attributes: %s", attrsJSON)
 		}
 
 		t.Run("StaticTests", func(t *testing.T) {
