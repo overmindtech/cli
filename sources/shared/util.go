@@ -11,7 +11,19 @@ import (
 // function, and also allows the user to exclude certain fields from the resulting attributes.
 // Top-level exclusions use the field name as it appears in JSON (e.g. "tags").
 // Dot-separated paths exclude nested fields (e.g. "Properties.Value" matches properties.value).
+// Intermediate arrays are walked in full so a path such as template.containers.env.value
+// deletes value on every env entry of every container.
 func ToAttributesWithExclude(i any, exclusions ...string) (*sdp.ItemAttributes, error) {
+	return ToAttributesRedacting(i, exclusions, nil)
+}
+
+// ToAttributesRedacting converts an interface to SDP attributes, then redacts
+// selected fields on that attribute copy. exclude drops keys (case-insensitive),
+// and dotted paths descend maps and every element of arrays. blankMaps names
+// maps whose values are each replaced with an empty string; keys are kept.
+// A missing path is a no-op. A non-string map value is also replaced with an
+// empty string so an unexpected JSON type cannot keep a secret.
+func ToAttributesRedacting(i any, exclude []string, blankMaps []string) (*sdp.ItemAttributes, error) {
 	b, err := json.Marshal(i)
 	if err != nil {
 		return nil, err
@@ -22,49 +34,78 @@ func ToAttributesWithExclude(i any, exclusions ...string) (*sdp.ItemAttributes, 
 		return nil, err
 	}
 
-	for _, exclusion := range exclusions {
+	for _, exclusion := range exclude {
 		if exclusion == "" {
 			continue
 		}
-		if strings.Contains(exclusion, ".") {
-			deleteNestedMapKey(m, strings.Split(exclusion, "."))
-		} else {
-			deleteMapKey(m, exclusion)
+		walkAndDelete(m, strings.Split(exclusion, "."))
+	}
+
+	for _, path := range blankMaps {
+		if path == "" {
+			continue
 		}
+		walkAndBlankMap(m, strings.Split(path, "."))
 	}
 
 	return sdp.ToAttributes(m)
 }
 
-func deleteMapKey(m map[string]any, key string) {
-	for k := range m {
-		if strings.EqualFold(k, key) {
-			delete(m, k)
+func walkAndDelete(node any, path []string) {
+	if len(path) == 0 || node == nil {
+		return
+	}
+
+	switch current := node.(type) {
+	case map[string]any:
+		key := path[0]
+		for k, v := range current {
+			if !strings.EqualFold(k, key) {
+				continue
+			}
+			if len(path) == 1 {
+				delete(current, k)
+				return
+			}
+			walkAndDelete(v, path[1:])
 			return
+		}
+	case []any:
+		for _, elem := range current {
+			walkAndDelete(elem, path)
 		}
 	}
 }
 
-func deleteNestedMapKey(m map[string]any, path []string) {
-	if len(path) == 0 || m == nil {
+func walkAndBlankMap(node any, path []string) {
+	if len(path) == 0 || node == nil {
 		return
 	}
 
-	key := path[0]
-	for k, v := range m {
-		if !strings.EqualFold(k, key) {
-			continue
-		}
-		if len(path) == 1 {
-			delete(m, k)
+	switch current := node.(type) {
+	case map[string]any:
+		key := path[0]
+		for k, v := range current {
+			if !strings.EqualFold(k, key) {
+				continue
+			}
+			if len(path) == 1 {
+				nested, ok := v.(map[string]any)
+				if !ok {
+					return
+				}
+				for mk := range nested {
+					nested[mk] = ""
+				}
+				return
+			}
+			walkAndBlankMap(v, path[1:])
 			return
 		}
-		nested, ok := v.(map[string]any)
-		if !ok {
-			return
+	case []any:
+		for _, elem := range current {
+			walkAndBlankMap(elem, path)
 		}
-		deleteNestedMapKey(nested, path[1:])
-		return
 	}
 }
 
