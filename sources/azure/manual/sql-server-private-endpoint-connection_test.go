@@ -293,17 +293,60 @@ func TestSQLServerPrivateEndpointConnection(t *testing.T) {
 			t.Error("Expected NetworkPrivateEndpoint in PotentialLinks")
 		}
 	})
+
+	t.Run("HealthMapping", func(t *testing.T) {
+		tests := []struct {
+			name           string
+			state          armsql.PrivateEndpointProvisioningState
+			expectedHealth sdp.Health
+		}{
+			{"Succeeded", armsql.PrivateEndpointProvisioningStateSucceeded, sdp.Health_HEALTH_OK},
+			{"Created", armsql.PrivateEndpointProvisioningStateCreated, sdp.Health_HEALTH_PENDING},
+			{"InProgress", armsql.PrivateEndpointProvisioningStateInProgress, sdp.Health_HEALTH_PENDING},
+			{"Failed", armsql.PrivateEndpointProvisioningStateFailed, sdp.Health_HEALTH_ERROR},
+			{"Canceled", armsql.PrivateEndpointProvisioningStateCanceled, sdp.Health_HEALTH_ERROR},
+			// Removed in API version 2025-08-01-preview; this client does not treat it as healthy.
+			{"RemovedReady", armsql.PrivateEndpointProvisioningState("Ready"), sdp.Health_HEALTH_UNKNOWN},
+		}
+
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				conn := createAzureSQLServerPrivateEndpointConnection(connectionName, "")
+				conn.Properties.ProvisioningState = &tt.state
+
+				mockClient := mocks.NewMockSQLServerPrivateEndpointConnectionsClient(ctrl)
+				mockClient.EXPECT().Get(ctx, resourceGroup, serverName, connectionName).Return(
+					armsql.PrivateEndpointConnectionsClientGetResponse{
+						PrivateEndpointConnection: *conn,
+					}, nil)
+
+				testClient := &testSQLServerPrivateEndpointConnectionsClient{MockSQLServerPrivateEndpointConnectionsClient: mockClient}
+				wrapper := manual.NewSQLServerPrivateEndpointConnection(testClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
+				adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+				query := shared.CompositeLookupKey(serverName, connectionName)
+				sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], query, true)
+				if qErr != nil {
+					t.Fatalf("Expected no error, got: %v", qErr)
+				}
+
+				if sdpItem.GetHealth() != tt.expectedHealth {
+					t.Errorf("Expected health %v, got %v", tt.expectedHealth, sdpItem.GetHealth())
+				}
+			})
+		}
+	})
 }
 
 func createAzureSQLServerPrivateEndpointConnection(connectionName, privateEndpointID string) *armsql.PrivateEndpointConnection {
-	ready := armsql.PrivateEndpointProvisioningStateReady
+	succeeded := armsql.PrivateEndpointProvisioningStateSucceeded
 	approved := armsql.PrivateLinkServiceConnectionStateStatusApproved
 	conn := &armsql.PrivateEndpointConnection{
 		ID:   new("/subscriptions/test-subscription/resourceGroups/test-rg/providers/Microsoft.Sql/servers/test-sql-server/privateEndpointConnections/" + connectionName),
 		Name: new(connectionName),
 		Type: new("Microsoft.Sql/servers/privateEndpointConnections"),
 		Properties: &armsql.PrivateEndpointConnectionProperties{
-			ProvisioningState: &ready,
+			ProvisioningState: &succeeded,
 			PrivateLinkServiceConnectionState: &armsql.PrivateLinkServiceConnectionStateProperty{
 				Status: &approved,
 			},
