@@ -3,7 +3,6 @@ package manual
 import (
 	"context"
 	"errors"
-	"strings"
 
 	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/sql/armsql/v2"
 	"github.com/overmindtech/cli/go/discovery"
@@ -177,15 +176,19 @@ func (s sqlServerPrivateEndpointConnectionWrapper) azurePrivateEndpointConnectio
 		Scope:           scope,
 	}
 
-	// Health from provisioning state (armsql uses PrivateEndpointProvisioningState enum)
+	// Health from provisioning state. API version 2026-08-01-preview (the
+	// version this client calls) dropped Ready, Approving, Dropping, and
+	// Rejecting in 2025-08-01-preview. Those strings are no longer part of
+	// the contract, so they fall through to unknown.
 	if conn.Properties != nil && conn.Properties.ProvisioningState != nil {
-		state := strings.ToLower(string(*conn.Properties.ProvisioningState))
-		switch state {
-		case "ready":
+		switch *conn.Properties.ProvisioningState {
+		case armsql.PrivateEndpointProvisioningStateSucceeded:
 			sdpItem.Health = sdp.Health_HEALTH_OK.Enum()
-		case "approving", "dropping":
+		case armsql.PrivateEndpointProvisioningStateCreated,
+			armsql.PrivateEndpointProvisioningStateInProgress:
 			sdpItem.Health = sdp.Health_HEALTH_PENDING.Enum()
-		case "failed", "rejecting":
+		case armsql.PrivateEndpointProvisioningStateFailed,
+			armsql.PrivateEndpointProvisioningStateCanceled:
 			sdpItem.Health = sdp.Health_HEALTH_ERROR.Enum()
 		default:
 			sdpItem.Health = sdp.Health_HEALTH_UNKNOWN.Enum()
