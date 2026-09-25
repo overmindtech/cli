@@ -2,9 +2,11 @@ package adapters
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 	"testing"
 	"time"
 
@@ -36,6 +38,9 @@ func (p PodClient) Get(ctx context.Context, name string, opts metav1.GetOptions)
 		UID:               types.UID(uid),
 		ResourceVersion:   "9164",
 		CreationTimestamp: metav1.NewTime(time.Now()),
+		Annotations: map[string]string{
+			"overmind.example/url": "http://example.com",
+		},
 		Spec: v1.PodSpec{
 			Volumes: []v1.Volume{
 				{
@@ -50,8 +55,17 @@ func (p PodClient) Get(ctx context.Context, name string, opts metav1.GetOptions)
 				{
 					Env: []v1.EnvVar{
 						{
-							Name:  "INTERESTING_URL",
-							Value: "http://example.com",
+							Name:  workloadEnvName,
+							Value: workloadEnvSentinel,
+						},
+						{
+							Name: workloadSecretEnvName,
+							ValueFrom: &v1.EnvVarSource{
+								SecretKeyRef: &v1.SecretKeySelector{
+									Name: workloadSecretRefName,
+									Key:  "token",
+								},
+							},
 						},
 					},
 				},
@@ -351,6 +365,21 @@ func TestAdapterGet(t *testing.T) {
 
 		if !foundAutomaticLink {
 			t.Errorf("expected automatic link to http://example.com, got none")
+		}
+
+		attrMap := item.GetAttributes().GetAttrStruct().AsMap()
+		attrsJSON, marshalErr := json.Marshal(attrMap)
+		if marshalErr != nil {
+			t.Fatalf("marshal attributes: %v", marshalErr)
+		}
+		if strings.Contains(string(attrsJSON), workloadEnvSentinel) {
+			t.Errorf("plaintext env value leaked in attributes: %s", attrsJSON)
+		}
+		if !strings.Contains(string(attrsJSON), workloadEnvName) {
+			t.Errorf("expected env name %q to remain in attributes: %s", workloadEnvName, attrsJSON)
+		}
+		if !strings.Contains(string(attrsJSON), workloadSecretRefName) {
+			t.Errorf("expected secret ref %q to remain in attributes: %s", workloadSecretRefName, attrsJSON)
 		}
 	})
 

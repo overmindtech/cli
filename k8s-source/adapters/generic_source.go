@@ -346,6 +346,10 @@ func (s *KubeTypeAdapter[Resource, ResourceList]) resourceToItem(resource Resour
 		resource = s.Redact(resource)
 	}
 
+	// Drop plaintext container environment values from workload objects.
+	// Names and valueFrom references stay so secret links still work.
+	redactWorkloadEnvValues(resource)
+
 	attributes, err := sdp.ToAttributesViaJson(resource)
 
 	if err != nil {
