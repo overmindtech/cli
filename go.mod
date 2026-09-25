@@ -1,6 +1,6 @@
 module github.com/overmindtech/cli
 
-go 1.27.0
+go 1.27.1
 
 replace github.com/anthropics/anthropic-sdk-go => github.com/anthropics/anthropic-sdk-go v0.2.0-alpha.4
 
@@ -75,7 +75,7 @@ require (
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/keyvault/armkeyvault/v2 v2.0.2
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/maintenance/armmaintenance v1.3.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/msi/armmsi v1.3.0
-	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v11 v11.0.0
+	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v12 v12.0.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/operationalinsights/armoperationalinsights/v3 v3.0.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/postgresql/armpostgresqlflexibleservers/v5 v5.0.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/privatedns/armprivatedns/v2 v2.0.0
@@ -134,7 +134,7 @@ require (
 	github.com/go-jose/go-jose/v4 v4.1.5
 	github.com/google/btree v1.1.3
 	github.com/google/go-github/v88 v88.0.0
-	github.com/google/go-github/v91 v91.0.0
+	github.com/google/go-github/v92 v92.0.0
 	github.com/google/uuid v1.6.0
 	github.com/googleapis/gax-go/v2 v2.24.1
 	github.com/goombaio/namegenerator v0.0.0-20181006234301-989e774b106e
@@ -199,7 +199,7 @@ require (
 	github.com/uptrace/opentelemetry-go-extra/otellogrus v0.3.2
 	github.com/xiam/dig v0.0.0-20191116195832-893b5fb5093b
 	github.com/zclconf/go-cty v1.19.0
-	gitlab.com/gitlab-org/api/client-go/v2 v2.64.0
+	gitlab.com/gitlab-org/api/client-go/v3 v3.13.0
 	go.etcd.io/bbolt v1.5.0
 	go.opentelemetry.io/contrib/detectors/aws/ec2/v2 v2.5.3
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.70.0

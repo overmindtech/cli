@@ -3,7 +3,7 @@ package clients
 import (
 	"context"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v11"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v12"
 )
 
 //go:generate mockgen -destination=../shared/mocks/mock_nat_gateways_client.go -package=mocks -source=nat-gateways-client.go

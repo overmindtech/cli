@@ -5,7 +5,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v11"
+	"github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/network/armnetwork/v12"
 	"go.uber.org/mock/gomock"
 
 	"github.com/overmindtech/cli/go/discovery"
