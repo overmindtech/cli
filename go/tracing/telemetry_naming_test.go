@@ -47,35 +47,11 @@ func TestNoLegacyBrentTelemetryLiterals(t *testing.T) {
 		"AddEvent",
 	}
 
-	// Allowlist of non-telemetry brent.* identifiers that may remain.
+	// Allowlist of non-telemetry identifiers that may remain.
 	allowlist := []string{
 		// Test fixture URLs (not actual telemetry emission)
 		`"https://until.example`,
 		`"http://until.example`,
-
-		// Proto field comments describing legacy attribute keys
-		`"ovm.brent.llm.keySource"`,
-
-		// File paths and directory references
-		`".brent/workflows"`,
-		`".brent/"`,
-		`"/brent/"`,
-
-		// Function/method names in strings (not telemetry keys)
-		`"brent.validateBYOConnectEndpoint"`,
-		`"brent.MapByoIntakeError"`,
-
-		// Auth0 identifiers, package names, and other non-telemetry uses
-		`"brent.Auth0ManagementClient"`,
-		`"brent.proto"`,
-		`"brent-backend"`,
-		`"project-brent"`,
-
-		// Legacy plan ID prefixes in tests/docs (not telemetry)
-		`"BRENT-"`,
-
-		// Test assertions checking for absence of brent prefix
-		`"brent."`, // Used in strings.HasPrefix checks in tests
 	}
 
 	var failures []string
