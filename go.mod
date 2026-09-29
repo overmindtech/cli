@@ -184,7 +184,6 @@ require (
 	github.com/robfig/cron/v3 v3.0.1
 	github.com/rs/cors v1.11.1
 	github.com/samber/slog-logrus/v2 v2.5.4
-	github.com/sashabaranov/go-openai v1.42.0
 	github.com/sirupsen/logrus v1.10.2
 	github.com/slack-go/slack v0.29.0
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8
