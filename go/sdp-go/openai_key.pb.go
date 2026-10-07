@@ -29,8 +29,13 @@ type OpenAIKeyStatus struct {
 	SecretLast4     string                 `protobuf:"bytes,2,opt,name=secret_last4,json=secretLast4,proto3" json:"secret_last4,omitempty"`
 	LastValidatedAt *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=last_validated_at,json=lastValidatedAt,proto3" json:"last_validated_at,omitempty"`
 	UpdatedAt       *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	// When the latest reported call on this key failed for the key. Unset when
+	// the latest reported call succeeded or no call has been reported.
+	LastFailureAt *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=last_failure_at,json=lastFailureAt,proto3" json:"last_failure_at,omitempty"`
+	// key_rejected or quota_exhausted. Empty when last_failure_at is unset.
+	LastFailureReason string `protobuf:"bytes,6,opt,name=last_failure_reason,json=lastFailureReason,proto3" json:"last_failure_reason,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *OpenAIKeyStatus) Reset() {
@@ -89,6 +94,20 @@ func (x *OpenAIKeyStatus) GetUpdatedAt() *timestamppb.Timestamp {
 		return x.UpdatedAt
 	}
 	return nil
+}
+
+func (x *OpenAIKeyStatus) GetLastFailureAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.LastFailureAt
+	}
+	return nil
+}
+
+func (x *OpenAIKeyStatus) GetLastFailureReason() string {
+	if x != nil {
+		return x.LastFailureReason
+	}
+	return ""
 }
 
 type GetOpenAIKeyStatusRequest struct {
@@ -393,9 +412,13 @@ func (x *IssueOpenAIKeyRequest) GetAccountName() string {
 }
 
 type IssueOpenAIKeyResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Secret        string                 `protobuf:"bytes,1,opt,name=secret,proto3" json:"secret,omitempty"`
-	AccountName   string                 `protobuf:"bytes,2,opt,name=account_name,json=accountName,proto3" json:"account_name,omitempty"`
+	state       protoimpl.MessageState `protogen:"open.v1"`
+	Secret      string                 `protobuf:"bytes,1,opt,name=secret,proto3" json:"secret,omitempty"`
+	AccountName string                 `protobuf:"bytes,2,opt,name=account_name,json=accountName,proto3" json:"account_name,omitempty"`
+	// The generation of the stored key that was issued. Send both back on
+	// ReportOpenAIKeyResult.
+	SecretVersion int32                  `protobuf:"varint,3,opt,name=secret_version,json=secretVersion,proto3" json:"secret_version,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -444,18 +467,148 @@ func (x *IssueOpenAIKeyResponse) GetAccountName() string {
 	return ""
 }
 
+func (x *IssueOpenAIKeyResponse) GetSecretVersion() int32 {
+	if x != nil {
+		return x.SecretVersion
+	}
+	return 0
+}
+
+func (x *IssueOpenAIKeyResponse) GetUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return nil
+}
+
+type ReportOpenAIKeyResultRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AccountName   string                 `protobuf:"bytes,1,opt,name=account_name,json=accountName,proto3" json:"account_name,omitempty"`
+	SecretVersion int32                  `protobuf:"varint,2,opt,name=secret_version,json=secretVersion,proto3" json:"secret_version,omitempty"`
+	UpdatedAt     *timestamppb.Timestamp `protobuf:"bytes,3,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	// key_rejected, quota_exhausted, or succeeded.
+	Outcome string `protobuf:"bytes,4,opt,name=outcome,proto3" json:"outcome,omitempty"`
+	// When the call returned.
+	ObservedAt    *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=observed_at,json=observedAt,proto3" json:"observed_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReportOpenAIKeyResultRequest) Reset() {
+	*x = ReportOpenAIKeyResultRequest{}
+	mi := &file_openai_key_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReportOpenAIKeyResultRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReportOpenAIKeyResultRequest) ProtoMessage() {}
+
+func (x *ReportOpenAIKeyResultRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_openai_key_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReportOpenAIKeyResultRequest.ProtoReflect.Descriptor instead.
+func (*ReportOpenAIKeyResultRequest) Descriptor() ([]byte, []int) {
+	return file_openai_key_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *ReportOpenAIKeyResultRequest) GetAccountName() string {
+	if x != nil {
+		return x.AccountName
+	}
+	return ""
+}
+
+func (x *ReportOpenAIKeyResultRequest) GetSecretVersion() int32 {
+	if x != nil {
+		return x.SecretVersion
+	}
+	return 0
+}
+
+func (x *ReportOpenAIKeyResultRequest) GetUpdatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return nil
+}
+
+func (x *ReportOpenAIKeyResultRequest) GetOutcome() string {
+	if x != nil {
+		return x.Outcome
+	}
+	return ""
+}
+
+func (x *ReportOpenAIKeyResultRequest) GetObservedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.ObservedAt
+	}
+	return nil
+}
+
+type ReportOpenAIKeyResultResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReportOpenAIKeyResultResponse) Reset() {
+	*x = ReportOpenAIKeyResultResponse{}
+	mi := &file_openai_key_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReportOpenAIKeyResultResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReportOpenAIKeyResultResponse) ProtoMessage() {}
+
+func (x *ReportOpenAIKeyResultResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_openai_key_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReportOpenAIKeyResultResponse.ProtoReflect.Descriptor instead.
+func (*ReportOpenAIKeyResultResponse) Descriptor() ([]byte, []int) {
+	return file_openai_key_proto_rawDescGZIP(), []int{10}
+}
+
 var File_openai_key_proto protoreflect.FileDescriptor
 
 const file_openai_key_proto_rawDesc = "" +
 	"\n" +
 	"\x10openai_key.proto\x12\n" +
-	"openai_key\x1a\x1fgoogle/protobuf/timestamp.proto\"\xd5\x01\n" +
+	"openai_key\x1a\x1fgoogle/protobuf/timestamp.proto\"\xc9\x02\n" +
 	"\x0fOpenAIKeyStatus\x12\x1c\n" +
 	"\tconnected\x18\x01 \x01(\bR\tconnected\x12!\n" +
 	"\fsecret_last4\x18\x02 \x01(\tR\vsecretLast4\x12F\n" +
 	"\x11last_validated_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\x0flastValidatedAt\x129\n" +
 	"\n" +
-	"updated_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\x1b\n" +
+	"updated_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12B\n" +
+	"\x0flast_failure_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\rlastFailureAt\x12.\n" +
+	"\x13last_failure_reason\x18\x06 \x01(\tR\x11lastFailureReason\"\x1b\n" +
 	"\x19GetOpenAIKeyStatusRequest\"Q\n" +
 	"\x1aGetOpenAIKeyStatusResponse\x123\n" +
 	"\x06status\x18\x01 \x01(\v2\x1b.openai_key.OpenAIKeyStatusR\x06status\"-\n" +
@@ -468,16 +621,29 @@ const file_openai_key_proto_rawDesc = "" +
 	"\x17DeleteOpenAIKeyResponse\x123\n" +
 	"\x06status\x18\x01 \x01(\v2\x1b.openai_key.OpenAIKeyStatusR\x06status\":\n" +
 	"\x15IssueOpenAIKeyRequest\x12!\n" +
-	"\faccount_name\x18\x01 \x01(\tR\vaccountName\"S\n" +
+	"\faccount_name\x18\x01 \x01(\tR\vaccountName\"\xb5\x01\n" +
 	"\x16IssueOpenAIKeyResponse\x12\x16\n" +
 	"\x06secret\x18\x01 \x01(\tR\x06secret\x12!\n" +
-	"\faccount_name\x18\x02 \x01(\tR\vaccountName2\xad\x02\n" +
+	"\faccount_name\x18\x02 \x01(\tR\vaccountName\x12%\n" +
+	"\x0esecret_version\x18\x03 \x01(\x05R\rsecretVersion\x129\n" +
+	"\n" +
+	"updated_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\"\xfa\x01\n" +
+	"\x1cReportOpenAIKeyResultRequest\x12!\n" +
+	"\faccount_name\x18\x01 \x01(\tR\vaccountName\x12%\n" +
+	"\x0esecret_version\x18\x02 \x01(\x05R\rsecretVersion\x129\n" +
+	"\n" +
+	"updated_at\x18\x03 \x01(\v2\x1a.google.protobuf.TimestampR\tupdatedAt\x12\x18\n" +
+	"\aoutcome\x18\x04 \x01(\tR\aoutcome\x12;\n" +
+	"\vobserved_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\n" +
+	"observedAt\"\x1f\n" +
+	"\x1dReportOpenAIKeyResultResponse2\xad\x02\n" +
 	"\x17AccountOpenAIKeyService\x12c\n" +
 	"\x12GetOpenAIKeyStatus\x12%.openai_key.GetOpenAIKeyStatusRequest\x1a&.openai_key.GetOpenAIKeyStatusResponse\x12Q\n" +
 	"\fSetOpenAIKey\x12\x1f.openai_key.SetOpenAIKeyRequest\x1a .openai_key.SetOpenAIKeyResponse\x12Z\n" +
-	"\x0fDeleteOpenAIKey\x12\".openai_key.DeleteOpenAIKeyRequest\x1a#.openai_key.DeleteOpenAIKeyResponse2s\n" +
+	"\x0fDeleteOpenAIKey\x12\".openai_key.DeleteOpenAIKeyRequest\x1a#.openai_key.DeleteOpenAIKeyResponse2\xe1\x01\n" +
 	"\x18InternalOpenAIKeyService\x12W\n" +
-	"\x0eIssueOpenAIKey\x12!.openai_key.IssueOpenAIKeyRequest\x1a\".openai_key.IssueOpenAIKeyResponseB1Z/github.com/overmindtech/workspace/go/sdp-go;sdpb\x06proto3"
+	"\x0eIssueOpenAIKey\x12!.openai_key.IssueOpenAIKeyRequest\x1a\".openai_key.IssueOpenAIKeyResponse\x12l\n" +
+	"\x15ReportOpenAIKeyResult\x12(.openai_key.ReportOpenAIKeyResultRequest\x1a).openai_key.ReportOpenAIKeyResultResponseB1Z/github.com/overmindtech/workspace/go/sdp-go;sdpb\x06proto3"
 
 var (
 	file_openai_key_proto_rawDescOnce sync.Once
@@ -491,38 +657,46 @@ func file_openai_key_proto_rawDescGZIP() []byte {
 	return file_openai_key_proto_rawDescData
 }
 
-var file_openai_key_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_openai_key_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_openai_key_proto_goTypes = []any{
-	(*OpenAIKeyStatus)(nil),            // 0: openai_key.OpenAIKeyStatus
-	(*GetOpenAIKeyStatusRequest)(nil),  // 1: openai_key.GetOpenAIKeyStatusRequest
-	(*GetOpenAIKeyStatusResponse)(nil), // 2: openai_key.GetOpenAIKeyStatusResponse
-	(*SetOpenAIKeyRequest)(nil),        // 3: openai_key.SetOpenAIKeyRequest
-	(*SetOpenAIKeyResponse)(nil),       // 4: openai_key.SetOpenAIKeyResponse
-	(*DeleteOpenAIKeyRequest)(nil),     // 5: openai_key.DeleteOpenAIKeyRequest
-	(*DeleteOpenAIKeyResponse)(nil),    // 6: openai_key.DeleteOpenAIKeyResponse
-	(*IssueOpenAIKeyRequest)(nil),      // 7: openai_key.IssueOpenAIKeyRequest
-	(*IssueOpenAIKeyResponse)(nil),     // 8: openai_key.IssueOpenAIKeyResponse
-	(*timestamppb.Timestamp)(nil),      // 9: google.protobuf.Timestamp
+	(*OpenAIKeyStatus)(nil),               // 0: openai_key.OpenAIKeyStatus
+	(*GetOpenAIKeyStatusRequest)(nil),     // 1: openai_key.GetOpenAIKeyStatusRequest
+	(*GetOpenAIKeyStatusResponse)(nil),    // 2: openai_key.GetOpenAIKeyStatusResponse
+	(*SetOpenAIKeyRequest)(nil),           // 3: openai_key.SetOpenAIKeyRequest
+	(*SetOpenAIKeyResponse)(nil),          // 4: openai_key.SetOpenAIKeyResponse
+	(*DeleteOpenAIKeyRequest)(nil),        // 5: openai_key.DeleteOpenAIKeyRequest
+	(*DeleteOpenAIKeyResponse)(nil),       // 6: openai_key.DeleteOpenAIKeyResponse
+	(*IssueOpenAIKeyRequest)(nil),         // 7: openai_key.IssueOpenAIKeyRequest
+	(*IssueOpenAIKeyResponse)(nil),        // 8: openai_key.IssueOpenAIKeyResponse
+	(*ReportOpenAIKeyResultRequest)(nil),  // 9: openai_key.ReportOpenAIKeyResultRequest
+	(*ReportOpenAIKeyResultResponse)(nil), // 10: openai_key.ReportOpenAIKeyResultResponse
+	(*timestamppb.Timestamp)(nil),         // 11: google.protobuf.Timestamp
 }
 var file_openai_key_proto_depIdxs = []int32{
-	9, // 0: openai_key.OpenAIKeyStatus.last_validated_at:type_name -> google.protobuf.Timestamp
-	9, // 1: openai_key.OpenAIKeyStatus.updated_at:type_name -> google.protobuf.Timestamp
-	0, // 2: openai_key.GetOpenAIKeyStatusResponse.status:type_name -> openai_key.OpenAIKeyStatus
-	0, // 3: openai_key.SetOpenAIKeyResponse.status:type_name -> openai_key.OpenAIKeyStatus
-	0, // 4: openai_key.DeleteOpenAIKeyResponse.status:type_name -> openai_key.OpenAIKeyStatus
-	1, // 5: openai_key.AccountOpenAIKeyService.GetOpenAIKeyStatus:input_type -> openai_key.GetOpenAIKeyStatusRequest
-	3, // 6: openai_key.AccountOpenAIKeyService.SetOpenAIKey:input_type -> openai_key.SetOpenAIKeyRequest
-	5, // 7: openai_key.AccountOpenAIKeyService.DeleteOpenAIKey:input_type -> openai_key.DeleteOpenAIKeyRequest
-	7, // 8: openai_key.InternalOpenAIKeyService.IssueOpenAIKey:input_type -> openai_key.IssueOpenAIKeyRequest
-	2, // 9: openai_key.AccountOpenAIKeyService.GetOpenAIKeyStatus:output_type -> openai_key.GetOpenAIKeyStatusResponse
-	4, // 10: openai_key.AccountOpenAIKeyService.SetOpenAIKey:output_type -> openai_key.SetOpenAIKeyResponse
-	6, // 11: openai_key.AccountOpenAIKeyService.DeleteOpenAIKey:output_type -> openai_key.DeleteOpenAIKeyResponse
-	8, // 12: openai_key.InternalOpenAIKeyService.IssueOpenAIKey:output_type -> openai_key.IssueOpenAIKeyResponse
-	9, // [9:13] is the sub-list for method output_type
-	5, // [5:9] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	11, // 0: openai_key.OpenAIKeyStatus.last_validated_at:type_name -> google.protobuf.Timestamp
+	11, // 1: openai_key.OpenAIKeyStatus.updated_at:type_name -> google.protobuf.Timestamp
+	11, // 2: openai_key.OpenAIKeyStatus.last_failure_at:type_name -> google.protobuf.Timestamp
+	0,  // 3: openai_key.GetOpenAIKeyStatusResponse.status:type_name -> openai_key.OpenAIKeyStatus
+	0,  // 4: openai_key.SetOpenAIKeyResponse.status:type_name -> openai_key.OpenAIKeyStatus
+	0,  // 5: openai_key.DeleteOpenAIKeyResponse.status:type_name -> openai_key.OpenAIKeyStatus
+	11, // 6: openai_key.IssueOpenAIKeyResponse.updated_at:type_name -> google.protobuf.Timestamp
+	11, // 7: openai_key.ReportOpenAIKeyResultRequest.updated_at:type_name -> google.protobuf.Timestamp
+	11, // 8: openai_key.ReportOpenAIKeyResultRequest.observed_at:type_name -> google.protobuf.Timestamp
+	1,  // 9: openai_key.AccountOpenAIKeyService.GetOpenAIKeyStatus:input_type -> openai_key.GetOpenAIKeyStatusRequest
+	3,  // 10: openai_key.AccountOpenAIKeyService.SetOpenAIKey:input_type -> openai_key.SetOpenAIKeyRequest
+	5,  // 11: openai_key.AccountOpenAIKeyService.DeleteOpenAIKey:input_type -> openai_key.DeleteOpenAIKeyRequest
+	7,  // 12: openai_key.InternalOpenAIKeyService.IssueOpenAIKey:input_type -> openai_key.IssueOpenAIKeyRequest
+	9,  // 13: openai_key.InternalOpenAIKeyService.ReportOpenAIKeyResult:input_type -> openai_key.ReportOpenAIKeyResultRequest
+	2,  // 14: openai_key.AccountOpenAIKeyService.GetOpenAIKeyStatus:output_type -> openai_key.GetOpenAIKeyStatusResponse
+	4,  // 15: openai_key.AccountOpenAIKeyService.SetOpenAIKey:output_type -> openai_key.SetOpenAIKeyResponse
+	6,  // 16: openai_key.AccountOpenAIKeyService.DeleteOpenAIKey:output_type -> openai_key.DeleteOpenAIKeyResponse
+	8,  // 17: openai_key.InternalOpenAIKeyService.IssueOpenAIKey:output_type -> openai_key.IssueOpenAIKeyResponse
+	10, // 18: openai_key.InternalOpenAIKeyService.ReportOpenAIKeyResult:output_type -> openai_key.ReportOpenAIKeyResultResponse
+	14, // [14:19] is the sub-list for method output_type
+	9,  // [9:14] is the sub-list for method input_type
+	9,  // [9:9] is the sub-list for extension type_name
+	9,  // [9:9] is the sub-list for extension extendee
+	0,  // [0:9] is the sub-list for field type_name
 }
 
 func init() { file_openai_key_proto_init() }
@@ -536,7 +710,7 @@ func file_openai_key_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_openai_key_proto_rawDesc), len(file_openai_key_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   9,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   2,
 		},

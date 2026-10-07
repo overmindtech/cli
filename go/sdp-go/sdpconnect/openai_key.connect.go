@@ -47,6 +47,9 @@ const (
 	// InternalOpenAIKeyServiceIssueOpenAIKeyProcedure is the fully-qualified name of the
 	// InternalOpenAIKeyService's IssueOpenAIKey RPC.
 	InternalOpenAIKeyServiceIssueOpenAIKeyProcedure = "/openai_key.InternalOpenAIKeyService/IssueOpenAIKey"
+	// InternalOpenAIKeyServiceReportOpenAIKeyResultProcedure is the fully-qualified name of the
+	// InternalOpenAIKeyService's ReportOpenAIKeyResult RPC.
+	InternalOpenAIKeyServiceReportOpenAIKeyResultProcedure = "/openai_key.InternalOpenAIKeyService/ReportOpenAIKeyResult"
 )
 
 // AccountOpenAIKeyServiceClient is a client for the openai_key.AccountOpenAIKeyService service.
@@ -175,6 +178,9 @@ func (UnimplementedAccountOpenAIKeyServiceHandler) DeleteOpenAIKey(context.Conte
 // InternalOpenAIKeyServiceClient is a client for the openai_key.InternalOpenAIKeyService service.
 type InternalOpenAIKeyServiceClient interface {
 	IssueOpenAIKey(context.Context, *connect.Request[sdp_go.IssueOpenAIKeyRequest]) (*connect.Response[sdp_go.IssueOpenAIKeyResponse], error)
+	// ReportOpenAIKeyResult records the result of a call made with an issued
+	// key. It writes only when the stored key still has the issued generation.
+	ReportOpenAIKeyResult(context.Context, *connect.Request[sdp_go.ReportOpenAIKeyResultRequest]) (*connect.Response[sdp_go.ReportOpenAIKeyResultResponse], error)
 }
 
 // NewInternalOpenAIKeyServiceClient constructs a client for the openai_key.InternalOpenAIKeyService
@@ -194,12 +200,19 @@ func NewInternalOpenAIKeyServiceClient(httpClient connect.HTTPClient, baseURL st
 			connect.WithSchema(internalOpenAIKeyServiceMethods.ByName("IssueOpenAIKey")),
 			connect.WithClientOptions(opts...),
 		),
+		reportOpenAIKeyResult: connect.NewClient[sdp_go.ReportOpenAIKeyResultRequest, sdp_go.ReportOpenAIKeyResultResponse](
+			httpClient,
+			baseURL+InternalOpenAIKeyServiceReportOpenAIKeyResultProcedure,
+			connect.WithSchema(internalOpenAIKeyServiceMethods.ByName("ReportOpenAIKeyResult")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // internalOpenAIKeyServiceClient implements InternalOpenAIKeyServiceClient.
 type internalOpenAIKeyServiceClient struct {
-	issueOpenAIKey *connect.Client[sdp_go.IssueOpenAIKeyRequest, sdp_go.IssueOpenAIKeyResponse]
+	issueOpenAIKey        *connect.Client[sdp_go.IssueOpenAIKeyRequest, sdp_go.IssueOpenAIKeyResponse]
+	reportOpenAIKeyResult *connect.Client[sdp_go.ReportOpenAIKeyResultRequest, sdp_go.ReportOpenAIKeyResultResponse]
 }
 
 // IssueOpenAIKey calls openai_key.InternalOpenAIKeyService.IssueOpenAIKey.
@@ -207,10 +220,18 @@ func (c *internalOpenAIKeyServiceClient) IssueOpenAIKey(ctx context.Context, req
 	return c.issueOpenAIKey.CallUnary(ctx, req)
 }
 
+// ReportOpenAIKeyResult calls openai_key.InternalOpenAIKeyService.ReportOpenAIKeyResult.
+func (c *internalOpenAIKeyServiceClient) ReportOpenAIKeyResult(ctx context.Context, req *connect.Request[sdp_go.ReportOpenAIKeyResultRequest]) (*connect.Response[sdp_go.ReportOpenAIKeyResultResponse], error) {
+	return c.reportOpenAIKeyResult.CallUnary(ctx, req)
+}
+
 // InternalOpenAIKeyServiceHandler is an implementation of the openai_key.InternalOpenAIKeyService
 // service.
 type InternalOpenAIKeyServiceHandler interface {
 	IssueOpenAIKey(context.Context, *connect.Request[sdp_go.IssueOpenAIKeyRequest]) (*connect.Response[sdp_go.IssueOpenAIKeyResponse], error)
+	// ReportOpenAIKeyResult records the result of a call made with an issued
+	// key. It writes only when the stored key still has the issued generation.
+	ReportOpenAIKeyResult(context.Context, *connect.Request[sdp_go.ReportOpenAIKeyResultRequest]) (*connect.Response[sdp_go.ReportOpenAIKeyResultResponse], error)
 }
 
 // NewInternalOpenAIKeyServiceHandler builds an HTTP handler from the service implementation. It
@@ -226,10 +247,18 @@ func NewInternalOpenAIKeyServiceHandler(svc InternalOpenAIKeyServiceHandler, opt
 		connect.WithSchema(internalOpenAIKeyServiceMethods.ByName("IssueOpenAIKey")),
 		connect.WithHandlerOptions(opts...),
 	)
+	internalOpenAIKeyServiceReportOpenAIKeyResultHandler := connect.NewUnaryHandler(
+		InternalOpenAIKeyServiceReportOpenAIKeyResultProcedure,
+		svc.ReportOpenAIKeyResult,
+		connect.WithSchema(internalOpenAIKeyServiceMethods.ByName("ReportOpenAIKeyResult")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/openai_key.InternalOpenAIKeyService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case InternalOpenAIKeyServiceIssueOpenAIKeyProcedure:
 			internalOpenAIKeyServiceIssueOpenAIKeyHandler.ServeHTTP(w, r)
+		case InternalOpenAIKeyServiceReportOpenAIKeyResultProcedure:
+			internalOpenAIKeyServiceReportOpenAIKeyResultHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -241,4 +270,8 @@ type UnimplementedInternalOpenAIKeyServiceHandler struct{}
 
 func (UnimplementedInternalOpenAIKeyServiceHandler) IssueOpenAIKey(context.Context, *connect.Request[sdp_go.IssueOpenAIKeyRequest]) (*connect.Response[sdp_go.IssueOpenAIKeyResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("openai_key.InternalOpenAIKeyService.IssueOpenAIKey is not implemented"))
+}
+
+func (UnimplementedInternalOpenAIKeyServiceHandler) ReportOpenAIKeyResult(context.Context, *connect.Request[sdp_go.ReportOpenAIKeyResultRequest]) (*connect.Response[sdp_go.ReportOpenAIKeyResultResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("openai_key.InternalOpenAIKeyService.ReportOpenAIKeyResult is not implemented"))
 }
