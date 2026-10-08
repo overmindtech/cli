@@ -237,7 +237,11 @@ func (x *SetOpenAIKeyRequest) GetSecret() string {
 type SetOpenAIKeyResponse struct {
 	state  protoimpl.MessageState `protogen:"open.v1"`
 	Status *OpenAIKeyStatus       `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
-	// Set when the key was stored but the save-time probe did not succeed.
+	// Deprecated: never set. A save that OpenAI does not confirm stores nothing
+	// and fails with UNAVAILABLE; a cancelled save fails with CANCELED or
+	// DEADLINE_EXCEEDED.
+	//
+	// Deprecated: Marked as deprecated in openai_key.proto.
 	ValidationWarning string `protobuf:"bytes,2,opt,name=validation_warning,json=validationWarning,proto3" json:"validation_warning,omitempty"`
 	unknownFields     protoimpl.UnknownFields
 	sizeCache         protoimpl.SizeCache
@@ -280,6 +284,7 @@ func (x *SetOpenAIKeyResponse) GetStatus() *OpenAIKeyStatus {
 	return nil
 }
 
+// Deprecated: Marked as deprecated in openai_key.proto.
 func (x *SetOpenAIKeyResponse) GetValidationWarning() string {
 	if x != nil {
 		return x.ValidationWarning
@@ -613,10 +618,10 @@ const file_openai_key_proto_rawDesc = "" +
 	"\x1aGetOpenAIKeyStatusResponse\x123\n" +
 	"\x06status\x18\x01 \x01(\v2\x1b.openai_key.OpenAIKeyStatusR\x06status\"-\n" +
 	"\x13SetOpenAIKeyRequest\x12\x16\n" +
-	"\x06secret\x18\x01 \x01(\tR\x06secret\"z\n" +
+	"\x06secret\x18\x01 \x01(\tR\x06secret\"~\n" +
 	"\x14SetOpenAIKeyResponse\x123\n" +
-	"\x06status\x18\x01 \x01(\v2\x1b.openai_key.OpenAIKeyStatusR\x06status\x12-\n" +
-	"\x12validation_warning\x18\x02 \x01(\tR\x11validationWarning\"\x18\n" +
+	"\x06status\x18\x01 \x01(\v2\x1b.openai_key.OpenAIKeyStatusR\x06status\x121\n" +
+	"\x12validation_warning\x18\x02 \x01(\tB\x02\x18\x01R\x11validationWarning\"\x18\n" +
 	"\x16DeleteOpenAIKeyRequest\"N\n" +
 	"\x17DeleteOpenAIKeyResponse\x123\n" +
 	"\x06status\x18\x01 \x01(\v2\x1b.openai_key.OpenAIKeyStatusR\x06status\":\n" +
