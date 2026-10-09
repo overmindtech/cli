@@ -16,4 +16,4 @@ RUN cat /tmp/config.alpine.txt >> /etc/apk/repositories \
     && rm /tmp/config.alpine.txt
 
 RUN apk update
-RUN apk add --no-cache overmind-cli
+RUN apk add --no-cache overmind-cli 'zlib>=1.3.2-r1'
