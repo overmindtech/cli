@@ -192,24 +192,24 @@ require (
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.12.1
 	github.com/stripe/stripe-go/v86 v86.4.2
-	github.com/tidwall/gjson v1.19.0
+	github.com/tidwall/gjson v1.20.0
 	github.com/tiktoken-go/tokenizer v0.8.1
 	github.com/ttacon/chalk v0.0.0-20160626202418-22c06c80ed31
-	github.com/uptrace/opentelemetry-go-extra/otellogrus v0.3.2
+	github.com/uptrace/opentelemetry-go-extra/otellogrus v0.4.0
 	github.com/xiam/dig v0.0.0-20191116195832-893b5fb5093b
 	github.com/zclconf/go-cty v1.19.0
 	gitlab.com/gitlab-org/api/client-go/v3 v3.15.0
 	go.etcd.io/bbolt v1.5.0
-	go.opentelemetry.io/contrib/detectors/aws/ec2/v2 v2.5.3
+	go.opentelemetry.io/contrib/detectors/aws/ec2/v2 v2.6.0
 	go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp v0.70.0
-	go.opentelemetry.io/otel v1.46.0
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.46.0
-	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.46.0
-	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.46.0
-	go.opentelemetry.io/otel/metric v1.46.0
-	go.opentelemetry.io/otel/sdk v1.46.0
-	go.opentelemetry.io/otel/sdk/metric v1.46.0
-	go.opentelemetry.io/otel/trace v1.46.0
+	go.opentelemetry.io/otel v1.47.0
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace v1.47.0
+	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp v1.47.0
+	go.opentelemetry.io/otel/exporters/stdout/stdouttrace v1.47.0
+	go.opentelemetry.io/otel/metric v1.47.0
+	go.opentelemetry.io/otel/sdk v1.47.0
+	go.opentelemetry.io/otel/sdk/metric v1.47.0
+	go.opentelemetry.io/otel/trace v1.47.0
 	go.uber.org/automaxprocs v1.6.0
 	go.uber.org/goleak v1.3.0
 	go.uber.org/mock v0.6.0
@@ -438,7 +438,7 @@ require (
 	github.com/tidwall/match v1.2.0 // indirect
 	github.com/tidwall/pretty v1.2.2 // indirect
 	github.com/tidwall/sjson v1.2.5 // indirect
-	github.com/uptrace/opentelemetry-go-extra/otelutil v0.3.2 // indirect
+	github.com/uptrace/opentelemetry-go-extra/otelutil v0.4.0 // indirect
 	github.com/valyala/fastjson v1.6.7 // indirect
 	github.com/vmihailenco/msgpack v4.0.4+incompatible // indirect
 	github.com/vmihailenco/msgpack/v5 v5.4.1 // indirect
@@ -456,7 +456,7 @@ require (
 	go.opentelemetry.io/contrib/detectors/gcp v1.45.0 // indirect
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.70.0 // indirect
 	go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracegrpc v1.46.0 // indirect
-	go.opentelemetry.io/otel/log v0.11.0 // indirect
+	go.opentelemetry.io/otel/log v1.47.0 // indirect
 	go.opentelemetry.io/otel/schema v0.0.17 // indirect
 	go.opentelemetry.io/proto/otlp v1.11.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
@@ -473,7 +473,7 @@ require (
 	gomodules.xyz/jsonpatch/v2 v2.5.0 // indirect
 	google.golang.org/appengine v1.6.8 // indirect
 	google.golang.org/genproto v0.0.0-20260715232425-e75dac1f907d // indirect
-	google.golang.org/genproto/googleapis/api v0.0.0-20260819154853-08b0e4226688 // indirect
+	google.golang.org/genproto/googleapis/api v0.0.0-20260928230214-8a89bd6388cc // indirect
 	gopkg.in/evanphx/json-patch.v4 v4.13.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	k8s.io/apiextensions-apiserver v0.36.4 // indirect
