@@ -618,7 +618,7 @@ func Explore(cmd *cobra.Command, args []string) error {
 	defer func() {
 		_, _ = multi.Stop()
 	}()
-	ctx, oi, token, err := login(ctx, cmd, []string{"request:receive", "api:read"}, multi.NewWriter())
+	ctx, oi, token, err := login(ctx, cmd, localDiscoveryScopes(), multi.NewWriter())
 	_, _ = multi.Stop()
 	if err != nil {
 		return err
