@@ -67,7 +67,7 @@ func StartSources(ctx context.Context, cmd *cobra.Command, args []string) (conte
 		_, _ = multi.Stop()
 	}()
 
-	ctx, oi, token, err := login(ctx, cmd, []string{"explore:read", "changes:write", "config:write", "request:receive", "api:read", "sources:read"}, multi.NewWriter())
+	ctx, oi, token, err := login(ctx, cmd, terraformWorkflowScopes(), multi.NewWriter())
 	if err != nil {
 		return ctx, sdp.OvermindInstance{}, nil, nil, err
 	}
@@ -284,3 +284,11 @@ func heartbeatOptions(oi sdp.OvermindInstance, token *oauth2.Token) *discovery.H
 	}
 }
 
+// Discovery runs local sources but does not change account configuration.
+func localDiscoveryScopes() []string {
+	return []string{"explore:read", "request:receive"}
+}
+
+func terraformWorkflowScopes() []string {
+	return append(localDiscoveryScopes(), "changes:write", "sources:read")
+}
