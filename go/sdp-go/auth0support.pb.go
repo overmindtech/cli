@@ -135,8 +135,13 @@ func (x *Auth0CreateUserRequest) GetPictureUrl() string {
 }
 
 type Auth0CreateUserResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	OrgId         string                 `protobuf:"bytes,1,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	OrgId string                 `protobuf:"bytes,1,opt,name=org_id,json=orgId,proto3" json:"org_id,omitempty"`
+	// Whether this invocation created the account, rather than joining one.
+	CreatedAccount *bool `protobuf:"varint,2,opt,name=created_account,json=createdAccount,proto3,oneof" json:"created_account,omitempty"`
+	// Whether this user is the account's only user, including pending invitees.
+	// Allows initial Admin assignment to recover on a later login.
+	IsOnlyUser    *bool `protobuf:"varint,3,opt,name=is_only_user,json=isOnlyUser,proto3,oneof" json:"is_only_user,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -178,6 +183,20 @@ func (x *Auth0CreateUserResponse) GetOrgId() string {
 	return ""
 }
 
+func (x *Auth0CreateUserResponse) GetCreatedAccount() bool {
+	if x != nil && x.CreatedAccount != nil {
+		return *x.CreatedAccount
+	}
+	return false
+}
+
+func (x *Auth0CreateUserResponse) GetIsOnlyUser() bool {
+	if x != nil && x.IsOnlyUser != nil {
+		return *x.IsOnlyUser
+	}
+	return false
+}
+
 var File_auth0support_proto protoreflect.FileDescriptor
 
 const file_auth0support_proto_rawDesc = "" +
@@ -193,9 +212,14 @@ const file_auth0support_proto_rawDesc = "" +
 	"\tlast_name\x18\x06 \x01(\tR\blastName\x12#\n" +
 	"\rconnection_id\x18\a \x01(\tR\fconnectionId\x12\x1f\n" +
 	"\vpicture_url\x18\b \x01(\tR\n" +
-	"pictureUrl\"0\n" +
+	"pictureUrl\"\xaa\x01\n" +
 	"\x17Auth0CreateUserResponse\x12\x15\n" +
-	"\x06org_id\x18\x01 \x01(\tR\x05orgId2\xc7\x01\n" +
+	"\x06org_id\x18\x01 \x01(\tR\x05orgId\x12,\n" +
+	"\x0fcreated_account\x18\x02 \x01(\bH\x00R\x0ecreatedAccount\x88\x01\x01\x12%\n" +
+	"\fis_only_user\x18\x03 \x01(\bH\x01R\n" +
+	"isOnlyUser\x88\x01\x01B\x12\n" +
+	"\x10_created_accountB\x0f\n" +
+	"\r_is_only_user2\xc7\x01\n" +
 	"\fAuth0Support\x12Y\n" +
 	"\n" +
 	"CreateUser\x12$.auth0support.Auth0CreateUserRequest\x1a%.auth0support.Auth0CreateUserResponse\x12\\\n" +
@@ -238,6 +262,7 @@ func file_auth0support_proto_init() {
 		return
 	}
 	file_account_proto_init()
+	file_auth0support_proto_msgTypes[1].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
