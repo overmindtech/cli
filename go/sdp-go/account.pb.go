@@ -351,6 +351,57 @@ func (AdapterCategory) EnumDescriptor() ([]byte, []int) {
 	return file_account_proto_rawDescGZIP(), []int{4}
 }
 
+// A user's role within their account
+type TeamMemberRole int32
+
+const (
+	// The user has neither the Admin nor the Member role
+	TeamMemberRole_TEAM_MEMBER_ROLE_UNSPECIFIED TeamMemberRole = 0
+	TeamMemberRole_TEAM_MEMBER_ROLE_ADMIN       TeamMemberRole = 1
+	TeamMemberRole_TEAM_MEMBER_ROLE_MEMBER      TeamMemberRole = 2
+)
+
+// Enum value maps for TeamMemberRole.
+var (
+	TeamMemberRole_name = map[int32]string{
+		0: "TEAM_MEMBER_ROLE_UNSPECIFIED",
+		1: "TEAM_MEMBER_ROLE_ADMIN",
+		2: "TEAM_MEMBER_ROLE_MEMBER",
+	}
+	TeamMemberRole_value = map[string]int32{
+		"TEAM_MEMBER_ROLE_UNSPECIFIED": 0,
+		"TEAM_MEMBER_ROLE_ADMIN":       1,
+		"TEAM_MEMBER_ROLE_MEMBER":      2,
+	}
+)
+
+func (x TeamMemberRole) Enum() *TeamMemberRole {
+	p := new(TeamMemberRole)
+	*p = x
+	return p
+}
+
+func (x TeamMemberRole) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (TeamMemberRole) Descriptor() protoreflect.EnumDescriptor {
+	return file_account_proto_enumTypes[5].Descriptor()
+}
+
+func (TeamMemberRole) Type() protoreflect.EnumType {
+	return &file_account_proto_enumTypes[5]
+}
+
+func (x TeamMemberRole) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use TeamMemberRole.Descriptor instead.
+func (TeamMemberRole) EnumDescriptor() ([]byte, []int) {
+	return file_account_proto_rawDescGZIP(), []int{5}
+}
+
 type ListAccountsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -3886,9 +3937,12 @@ func (x *GetOrCreateAWSExternalIdResponse) GetAwsExternalId() string {
 
 // Team member related messages
 type ListTeamMembersRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// Also return the current user, marked with is_current_user. Defaults to
+	// false, which excludes them
+	IncludeCurrentUser bool `protobuf:"varint,1,opt,name=include_current_user,json=includeCurrentUser,proto3" json:"include_current_user,omitempty"`
+	unknownFields      protoimpl.UnknownFields
+	sizeCache          protoimpl.SizeCache
 }
 
 func (x *ListTeamMembersRequest) Reset() {
@@ -3921,11 +3975,21 @@ func (*ListTeamMembersRequest) Descriptor() ([]byte, []int) {
 	return file_account_proto_rawDescGZIP(), []int{68}
 }
 
+func (x *ListTeamMembersRequest) GetIncludeCurrentUser() bool {
+	if x != nil {
+		return x.IncludeCurrentUser
+	}
+	return false
+}
+
 type ListTeamMembersResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Members       []*TeamMember          `protobuf:"bytes,1,rep,name=members,proto3" json:"members,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state   protoimpl.MessageState `protogen:"open.v1"`
+	Members []*TeamMember          `protobuf:"bytes,1,rep,name=members,proto3" json:"members,omitempty"`
+	// True when the account's SSO connection maps roles from an IdP group, so
+	// roles cannot be changed in Overmind
+	RolesManagedByIdp bool `protobuf:"varint,2,opt,name=roles_managed_by_idp,json=rolesManagedByIdp,proto3" json:"roles_managed_by_idp,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
 }
 
 func (x *ListTeamMembersResponse) Reset() {
@@ -3965,6 +4029,13 @@ func (x *ListTeamMembersResponse) GetMembers() []*TeamMember {
 	return nil
 }
 
+func (x *ListTeamMembersResponse) GetRolesManagedByIdp() bool {
+	if x != nil {
+		return x.RolesManagedByIdp
+	}
+	return false
+}
+
 type TeamMember struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// Unique identifier for the team member
@@ -3972,7 +4043,11 @@ type TeamMember struct {
 	// Team member's display name
 	Name string `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
 	// URL to the team member's profile picture
-	PictureUrl    string `protobuf:"bytes,3,opt,name=picture_url,json=pictureUrl,proto3" json:"picture_url,omitempty"`
+	PictureUrl string `protobuf:"bytes,3,opt,name=picture_url,json=pictureUrl,proto3" json:"picture_url,omitempty"`
+	// The team member's role in the account
+	Role TeamMemberRole `protobuf:"varint,4,opt,name=role,proto3,enum=account.TeamMemberRole" json:"role,omitempty"`
+	// True when this team member is the current user
+	IsCurrentUser bool `protobuf:"varint,5,opt,name=is_current_user,json=isCurrentUser,proto3" json:"is_current_user,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -4028,6 +4103,110 @@ func (x *TeamMember) GetPictureUrl() string {
 	return ""
 }
 
+func (x *TeamMember) GetRole() TeamMemberRole {
+	if x != nil {
+		return x.Role
+	}
+	return TeamMemberRole_TEAM_MEMBER_ROLE_UNSPECIFIED
+}
+
+func (x *TeamMember) GetIsCurrentUser() bool {
+	if x != nil {
+		return x.IsCurrentUser
+	}
+	return false
+}
+
+type SetUserRoleRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// TeamMember.UUID of the user to change
+	UserUuid []byte `protobuf:"bytes,1,opt,name=user_uuid,json=userUuid,proto3" json:"user_uuid,omitempty"`
+	// The role to give the user. TEAM_MEMBER_ROLE_UNSPECIFIED is invalid
+	Role          TeamMemberRole `protobuf:"varint,2,opt,name=role,proto3,enum=account.TeamMemberRole" json:"role,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetUserRoleRequest) Reset() {
+	*x = SetUserRoleRequest{}
+	mi := &file_account_proto_msgTypes[71]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetUserRoleRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetUserRoleRequest) ProtoMessage() {}
+
+func (x *SetUserRoleRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_account_proto_msgTypes[71]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetUserRoleRequest.ProtoReflect.Descriptor instead.
+func (*SetUserRoleRequest) Descriptor() ([]byte, []int) {
+	return file_account_proto_rawDescGZIP(), []int{71}
+}
+
+func (x *SetUserRoleRequest) GetUserUuid() []byte {
+	if x != nil {
+		return x.UserUuid
+	}
+	return nil
+}
+
+func (x *SetUserRoleRequest) GetRole() TeamMemberRole {
+	if x != nil {
+		return x.Role
+	}
+	return TeamMemberRole_TEAM_MEMBER_ROLE_UNSPECIFIED
+}
+
+type SetUserRoleResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *SetUserRoleResponse) Reset() {
+	*x = SetUserRoleResponse{}
+	mi := &file_account_proto_msgTypes[72]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *SetUserRoleResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*SetUserRoleResponse) ProtoMessage() {}
+
+func (x *SetUserRoleResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_account_proto_msgTypes[72]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use SetUserRoleResponse.ProtoReflect.Descriptor instead.
+func (*SetUserRoleResponse) Descriptor() ([]byte, []int) {
+	return file_account_proto_rawDescGZIP(), []int{72}
+}
+
 type GetWelcomeScreenInformationRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -4036,7 +4215,7 @@ type GetWelcomeScreenInformationRequest struct {
 
 func (x *GetWelcomeScreenInformationRequest) Reset() {
 	*x = GetWelcomeScreenInformationRequest{}
-	mi := &file_account_proto_msgTypes[71]
+	mi := &file_account_proto_msgTypes[73]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4048,7 +4227,7 @@ func (x *GetWelcomeScreenInformationRequest) String() string {
 func (*GetWelcomeScreenInformationRequest) ProtoMessage() {}
 
 func (x *GetWelcomeScreenInformationRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[71]
+	mi := &file_account_proto_msgTypes[73]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4061,7 +4240,7 @@ func (x *GetWelcomeScreenInformationRequest) ProtoReflect() protoreflect.Message
 
 // Deprecated: Use GetWelcomeScreenInformationRequest.ProtoReflect.Descriptor instead.
 func (*GetWelcomeScreenInformationRequest) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{71}
+	return file_account_proto_rawDescGZIP(), []int{73}
 }
 
 type InviterInformation struct {
@@ -4075,7 +4254,7 @@ type InviterInformation struct {
 
 func (x *InviterInformation) Reset() {
 	*x = InviterInformation{}
-	mi := &file_account_proto_msgTypes[72]
+	mi := &file_account_proto_msgTypes[74]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4087,7 +4266,7 @@ func (x *InviterInformation) String() string {
 func (*InviterInformation) ProtoMessage() {}
 
 func (x *InviterInformation) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[72]
+	mi := &file_account_proto_msgTypes[74]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4100,7 +4279,7 @@ func (x *InviterInformation) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use InviterInformation.ProtoReflect.Descriptor instead.
 func (*InviterInformation) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{72}
+	return file_account_proto_rawDescGZIP(), []int{74}
 }
 
 func (x *InviterInformation) GetEmail() string {
@@ -4133,7 +4312,7 @@ type GetWelcomeScreenInformationResponse struct {
 
 func (x *GetWelcomeScreenInformationResponse) Reset() {
 	*x = GetWelcomeScreenInformationResponse{}
-	mi := &file_account_proto_msgTypes[73]
+	mi := &file_account_proto_msgTypes[75]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4145,7 +4324,7 @@ func (x *GetWelcomeScreenInformationResponse) String() string {
 func (*GetWelcomeScreenInformationResponse) ProtoMessage() {}
 
 func (x *GetWelcomeScreenInformationResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_account_proto_msgTypes[73]
+	mi := &file_account_proto_msgTypes[75]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4158,7 +4337,7 @@ func (x *GetWelcomeScreenInformationResponse) ProtoReflect() protoreflect.Messag
 
 // Deprecated: Use GetWelcomeScreenInformationResponse.ProtoReflect.Descriptor instead.
 func (*GetWelcomeScreenInformationResponse) Descriptor() ([]byte, []int) {
-	return file_account_proto_rawDescGZIP(), []int{73}
+	return file_account_proto_rawDescGZIP(), []int{75}
 }
 
 func (x *GetWelcomeScreenInformationResponse) GetInviterInformation() *InviterInformation {
@@ -4393,16 +4572,24 @@ const file_account_proto_rawDesc = "" +
 	"!UnsetGithubInstallationIDResponse\"!\n" +
 	"\x1fGetOrCreateAWSExternalIdRequest\"J\n" +
 	" GetOrCreateAWSExternalIdResponse\x12&\n" +
-	"\x0faws_external_id\x18\x01 \x01(\tR\rawsExternalId\"\x18\n" +
-	"\x16ListTeamMembersRequest\"H\n" +
+	"\x0faws_external_id\x18\x01 \x01(\tR\rawsExternalId\"J\n" +
+	"\x16ListTeamMembersRequest\x120\n" +
+	"\x14include_current_user\x18\x01 \x01(\bR\x12includeCurrentUser\"y\n" +
 	"\x17ListTeamMembersResponse\x12-\n" +
-	"\amembers\x18\x01 \x03(\v2\x13.account.TeamMemberR\amembers\"U\n" +
+	"\amembers\x18\x01 \x03(\v2\x13.account.TeamMemberR\amembers\x12/\n" +
+	"\x14roles_managed_by_idp\x18\x02 \x01(\bR\x11rolesManagedByIdp\"\xaa\x01\n" +
 	"\n" +
 	"TeamMember\x12\x12\n" +
 	"\x04UUID\x18\x01 \x01(\fR\x04UUID\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1f\n" +
 	"\vpicture_url\x18\x03 \x01(\tR\n" +
-	"pictureUrl\"$\n" +
+	"pictureUrl\x12+\n" +
+	"\x04role\x18\x04 \x01(\x0e2\x17.account.TeamMemberRoleR\x04role\x12&\n" +
+	"\x0fis_current_user\x18\x05 \x01(\bR\risCurrentUser\"^\n" +
+	"\x12SetUserRoleRequest\x12\x1b\n" +
+	"\tuser_uuid\x18\x01 \x01(\fR\buserUuid\x12+\n" +
+	"\x04role\x18\x02 \x01(\x0e2\x17.account.TeamMemberRoleR\x04role\"\x15\n" +
+	"\x13SetUserRoleResponse\"$\n" +
 	"\"GetWelcomeScreenInformationRequest\"_\n" +
 	"\x12InviterInformation\x12\x14\n" +
 	"\x05email\x18\x01 \x01(\tR\x05email\x12\x12\n" +
@@ -4438,7 +4625,11 @@ const file_account_proto_rawDesc = "" +
 	"\x1eADAPTER_CATEGORY_OBSERVABILITY\x10\x05\x12\x1d\n" +
 	"\x19ADAPTER_CATEGORY_DATABASE\x10\x06\x12\"\n" +
 	"\x1eADAPTER_CATEGORY_CONFIGURATION\x10\a\x12\x17\n" +
-	"\x13ADAPTER_CATEGORY_AI\x10\b2\xe1\a\n" +
+	"\x13ADAPTER_CATEGORY_AI\x10\b*k\n" +
+	"\x0eTeamMemberRole\x12 \n" +
+	"\x1cTEAM_MEMBER_ROLE_UNSPECIFIED\x10\x00\x12\x1a\n" +
+	"\x16TEAM_MEMBER_ROLE_ADMIN\x10\x01\x12\x1b\n" +
+	"\x17TEAM_MEMBER_ROLE_MEMBER\x10\x022\xe1\a\n" +
 	"\fAdminService\x12K\n" +
 	"\fListAccounts\x12\x1c.account.ListAccountsRequest\x1a\x1d.account.ListAccountsResponse\x12N\n" +
 	"\rCreateAccount\x12\x1d.account.CreateAccountRequest\x1a\x1e.account.CreateAccountResponse\x12S\n" +
@@ -4452,7 +4643,7 @@ const file_account_proto_rawDesc = "" +
 	"\fUpdateSource\x12!.account.AdminUpdateSourceRequest\x1a\x1d.account.UpdateSourceResponse\x12P\n" +
 	"\fDeleteSource\x12!.account.AdminDeleteSourceRequest\x1a\x1d.account.DeleteSourceResponse\x12\\\n" +
 	"\x10KeepaliveSources\x12%.account.AdminKeepaliveSourcesRequest\x1a!.account.KeepaliveSourcesResponse\x12M\n" +
-	"\vCreateToken\x12 .account.AdminCreateTokenRequest\x1a\x1c.account.CreateTokenResponse2\x89\x10\n" +
+	"\vCreateToken\x12 .account.AdminCreateTokenRequest\x1a\x1c.account.CreateTokenResponse2\xd3\x10\n" +
 	"\x11ManagementService\x12E\n" +
 	"\n" +
 	"GetAccount\x12\x1a.account.GetAccountRequest\x1a\x1b.account.GetAccountResponse\x12N\n" +
@@ -4472,7 +4663,8 @@ const file_account_proto_rawDesc = "" +
 	"\x0fGetSourceStatus\x12\x1f.account.GetSourceStatusRequest\x1a .account.GetSourceStatusResponse\x12l\n" +
 	"\x17GetUserOnboardingStatus\x12'.account.GetUserOnboardingStatusRequest\x1a(.account.GetUserOnboardingStatusResponse\x12l\n" +
 	"\x17SetUserOnboardingStatus\x12'.account.SetUserOnboardingStatusRequest\x1a(.account.SetUserOnboardingStatusResponse\x12T\n" +
-	"\x0fListTeamMembers\x12\x1f.account.ListTeamMembersRequest\x1a .account.ListTeamMembersResponse\x12x\n" +
+	"\x0fListTeamMembers\x12\x1f.account.ListTeamMembersRequest\x1a .account.ListTeamMembersResponse\x12H\n" +
+	"\vSetUserRole\x12\x1b.account.SetUserRoleRequest\x1a\x1c.account.SetUserRoleResponse\x12x\n" +
 	"\x1bGetWelcomeScreenInformation\x12+.account.GetWelcomeScreenInformationRequest\x1a,.account.GetWelcomeScreenInformationResponse\x12l\n" +
 	"\x17SetGithubInstallationID\x12'.account.SetGithubInstallationIDRequest\x1a(.account.SetGithubInstallationIDResponse\x12r\n" +
 	"\x19UnsetGithubInstallationID\x12).account.UnsetGithubInstallationIDRequest\x1a*.account.UnsetGithubInstallationIDResponse\x12o\n" +
@@ -4490,222 +4682,229 @@ func file_account_proto_rawDescGZIP() []byte {
 	return file_account_proto_rawDescData
 }
 
-var file_account_proto_enumTypes = make([]protoimpl.EnumInfo, 5)
-var file_account_proto_msgTypes = make([]protoimpl.MessageInfo, 74)
+var file_account_proto_enumTypes = make([]protoimpl.EnumInfo, 6)
+var file_account_proto_msgTypes = make([]protoimpl.MessageInfo, 76)
 var file_account_proto_goTypes = []any{
 	(SourceStatus)(0),                           // 0: account.SourceStatus
 	(RepositoryStatus)(0),                       // 1: account.RepositoryStatus
 	(AccountPlan)(0),                            // 2: account.AccountPlan
 	(SourceManaged)(0),                          // 3: account.SourceManaged
 	(AdapterCategory)(0),                        // 4: account.AdapterCategory
-	(*ListAccountsRequest)(nil),                 // 5: account.ListAccountsRequest
-	(*ListAccountsResponse)(nil),                // 6: account.ListAccountsResponse
-	(*CreateAccountRequest)(nil),                // 7: account.CreateAccountRequest
-	(*CreateAccountResponse)(nil),               // 8: account.CreateAccountResponse
-	(*UpdateAccountRequest)(nil),                // 9: account.UpdateAccountRequest
-	(*UpdateAccountResponse)(nil),               // 10: account.UpdateAccountResponse
-	(*AdminUpdateAccountRequest)(nil),           // 11: account.AdminUpdateAccountRequest
-	(*AdminGetAccountRequest)(nil),              // 12: account.AdminGetAccountRequest
-	(*AdminDeleteAccountRequest)(nil),           // 13: account.AdminDeleteAccountRequest
-	(*AdminDeleteAccountResponse)(nil),          // 14: account.AdminDeleteAccountResponse
-	(*AdminListSourcesRequest)(nil),             // 15: account.AdminListSourcesRequest
-	(*AdminCreateSourceRequest)(nil),            // 16: account.AdminCreateSourceRequest
-	(*AdminGetSourceRequest)(nil),               // 17: account.AdminGetSourceRequest
-	(*AdminUpdateSourceRequest)(nil),            // 18: account.AdminUpdateSourceRequest
-	(*AdminDeleteSourceRequest)(nil),            // 19: account.AdminDeleteSourceRequest
-	(*AdminKeepaliveSourcesRequest)(nil),        // 20: account.AdminKeepaliveSourcesRequest
-	(*AdminCreateTokenRequest)(nil),             // 21: account.AdminCreateTokenRequest
-	(*Source)(nil),                              // 22: account.Source
-	(*SourceMetadata)(nil),                      // 23: account.SourceMetadata
-	(*SourceProperties)(nil),                    // 24: account.SourceProperties
-	(*Account)(nil),                             // 25: account.Account
-	(*AccountMetadata)(nil),                     // 26: account.AccountMetadata
-	(*Repository)(nil),                          // 27: account.Repository
-	(*AccountProperties)(nil),                   // 28: account.AccountProperties
-	(*GetAccountRequest)(nil),                   // 29: account.GetAccountRequest
-	(*GetAccountResponse)(nil),                  // 30: account.GetAccountResponse
-	(*DeleteAccountRequest)(nil),                // 31: account.DeleteAccountRequest
-	(*DeleteAccountResponse)(nil),               // 32: account.DeleteAccountResponse
-	(*ListSourcesRequest)(nil),                  // 33: account.ListSourcesRequest
-	(*ListSourcesResponse)(nil),                 // 34: account.ListSourcesResponse
-	(*CreateSourceRequest)(nil),                 // 35: account.CreateSourceRequest
-	(*CreateSourceResponse)(nil),                // 36: account.CreateSourceResponse
-	(*GetSourceRequest)(nil),                    // 37: account.GetSourceRequest
-	(*GetSourceResponse)(nil),                   // 38: account.GetSourceResponse
-	(*UpdateSourceRequest)(nil),                 // 39: account.UpdateSourceRequest
-	(*UpdateSourceResponse)(nil),                // 40: account.UpdateSourceResponse
-	(*DeleteSourceRequest)(nil),                 // 41: account.DeleteSourceRequest
-	(*DeleteSourceResponse)(nil),                // 42: account.DeleteSourceResponse
-	(*SourceKeepaliveResult)(nil),               // 43: account.SourceKeepaliveResult
-	(*ListAllSourcesStatusRequest)(nil),         // 44: account.ListAllSourcesStatusRequest
-	(*SourceHealth)(nil),                        // 45: account.SourceHealth
-	(*ListAllSourcesStatusResponse)(nil),        // 46: account.ListAllSourcesStatusResponse
-	(*SubmitSourceHeartbeatRequest)(nil),        // 47: account.SubmitSourceHeartbeatRequest
-	(*AdapterMetadata)(nil),                     // 48: account.AdapterMetadata
-	(*AdapterSupportedQueryMethods)(nil),        // 49: account.AdapterSupportedQueryMethods
-	(*TerraformMapping)(nil),                    // 50: account.TerraformMapping
-	(*SubmitSourceHeartbeatResponse)(nil),       // 51: account.SubmitSourceHeartbeatResponse
-	(*KeepaliveSourcesRequest)(nil),             // 52: account.KeepaliveSourcesRequest
-	(*KeepaliveSourcesResponse)(nil),            // 53: account.KeepaliveSourcesResponse
-	(*CreateTokenRequest)(nil),                  // 54: account.CreateTokenRequest
-	(*CreateTokenResponse)(nil),                 // 55: account.CreateTokenResponse
-	(*RevlinkWarmupRequest)(nil),                // 56: account.RevlinkWarmupRequest
-	(*RevlinkWarmupResponse)(nil),               // 57: account.RevlinkWarmupResponse
-	(*AvailableItemType)(nil),                   // 58: account.AvailableItemType
-	(*ListAvailableItemTypesRequest)(nil),       // 59: account.ListAvailableItemTypesRequest
-	(*ListAvailableItemTypesResponse)(nil),      // 60: account.ListAvailableItemTypesResponse
-	(*GetSourceStatusRequest)(nil),              // 61: account.GetSourceStatusRequest
-	(*GetSourceStatusResponse)(nil),             // 62: account.GetSourceStatusResponse
-	(*GetUserOnboardingStatusRequest)(nil),      // 63: account.GetUserOnboardingStatusRequest
-	(*GetUserOnboardingStatusResponse)(nil),     // 64: account.GetUserOnboardingStatusResponse
-	(*SetUserOnboardingStatusRequest)(nil),      // 65: account.SetUserOnboardingStatusRequest
-	(*SetUserOnboardingStatusResponse)(nil),     // 66: account.SetUserOnboardingStatusResponse
-	(*SetGithubInstallationIDRequest)(nil),      // 67: account.SetGithubInstallationIDRequest
-	(*SetGithubInstallationIDResponse)(nil),     // 68: account.SetGithubInstallationIDResponse
-	(*UnsetGithubInstallationIDRequest)(nil),    // 69: account.UnsetGithubInstallationIDRequest
-	(*UnsetGithubInstallationIDResponse)(nil),   // 70: account.UnsetGithubInstallationIDResponse
-	(*GetOrCreateAWSExternalIdRequest)(nil),     // 71: account.GetOrCreateAWSExternalIdRequest
-	(*GetOrCreateAWSExternalIdResponse)(nil),    // 72: account.GetOrCreateAWSExternalIdResponse
-	(*ListTeamMembersRequest)(nil),              // 73: account.ListTeamMembersRequest
-	(*ListTeamMembersResponse)(nil),             // 74: account.ListTeamMembersResponse
-	(*TeamMember)(nil),                          // 75: account.TeamMember
-	(*GetWelcomeScreenInformationRequest)(nil),  // 76: account.GetWelcomeScreenInformationRequest
-	(*InviterInformation)(nil),                  // 77: account.InviterInformation
-	(*GetWelcomeScreenInformationResponse)(nil), // 78: account.GetWelcomeScreenInformationResponse
-	(*timestamppb.Timestamp)(nil),               // 79: google.protobuf.Timestamp
-	(*structpb.Struct)(nil),                     // 80: google.protobuf.Struct
-	(*durationpb.Duration)(nil),                 // 81: google.protobuf.Duration
-	(QueryMethod)(0),                            // 82: QueryMethod
+	(TeamMemberRole)(0),                         // 5: account.TeamMemberRole
+	(*ListAccountsRequest)(nil),                 // 6: account.ListAccountsRequest
+	(*ListAccountsResponse)(nil),                // 7: account.ListAccountsResponse
+	(*CreateAccountRequest)(nil),                // 8: account.CreateAccountRequest
+	(*CreateAccountResponse)(nil),               // 9: account.CreateAccountResponse
+	(*UpdateAccountRequest)(nil),                // 10: account.UpdateAccountRequest
+	(*UpdateAccountResponse)(nil),               // 11: account.UpdateAccountResponse
+	(*AdminUpdateAccountRequest)(nil),           // 12: account.AdminUpdateAccountRequest
+	(*AdminGetAccountRequest)(nil),              // 13: account.AdminGetAccountRequest
+	(*AdminDeleteAccountRequest)(nil),           // 14: account.AdminDeleteAccountRequest
+	(*AdminDeleteAccountResponse)(nil),          // 15: account.AdminDeleteAccountResponse
+	(*AdminListSourcesRequest)(nil),             // 16: account.AdminListSourcesRequest
+	(*AdminCreateSourceRequest)(nil),            // 17: account.AdminCreateSourceRequest
+	(*AdminGetSourceRequest)(nil),               // 18: account.AdminGetSourceRequest
+	(*AdminUpdateSourceRequest)(nil),            // 19: account.AdminUpdateSourceRequest
+	(*AdminDeleteSourceRequest)(nil),            // 20: account.AdminDeleteSourceRequest
+	(*AdminKeepaliveSourcesRequest)(nil),        // 21: account.AdminKeepaliveSourcesRequest
+	(*AdminCreateTokenRequest)(nil),             // 22: account.AdminCreateTokenRequest
+	(*Source)(nil),                              // 23: account.Source
+	(*SourceMetadata)(nil),                      // 24: account.SourceMetadata
+	(*SourceProperties)(nil),                    // 25: account.SourceProperties
+	(*Account)(nil),                             // 26: account.Account
+	(*AccountMetadata)(nil),                     // 27: account.AccountMetadata
+	(*Repository)(nil),                          // 28: account.Repository
+	(*AccountProperties)(nil),                   // 29: account.AccountProperties
+	(*GetAccountRequest)(nil),                   // 30: account.GetAccountRequest
+	(*GetAccountResponse)(nil),                  // 31: account.GetAccountResponse
+	(*DeleteAccountRequest)(nil),                // 32: account.DeleteAccountRequest
+	(*DeleteAccountResponse)(nil),               // 33: account.DeleteAccountResponse
+	(*ListSourcesRequest)(nil),                  // 34: account.ListSourcesRequest
+	(*ListSourcesResponse)(nil),                 // 35: account.ListSourcesResponse
+	(*CreateSourceRequest)(nil),                 // 36: account.CreateSourceRequest
+	(*CreateSourceResponse)(nil),                // 37: account.CreateSourceResponse
+	(*GetSourceRequest)(nil),                    // 38: account.GetSourceRequest
+	(*GetSourceResponse)(nil),                   // 39: account.GetSourceResponse
+	(*UpdateSourceRequest)(nil),                 // 40: account.UpdateSourceRequest
+	(*UpdateSourceResponse)(nil),                // 41: account.UpdateSourceResponse
+	(*DeleteSourceRequest)(nil),                 // 42: account.DeleteSourceRequest
+	(*DeleteSourceResponse)(nil),                // 43: account.DeleteSourceResponse
+	(*SourceKeepaliveResult)(nil),               // 44: account.SourceKeepaliveResult
+	(*ListAllSourcesStatusRequest)(nil),         // 45: account.ListAllSourcesStatusRequest
+	(*SourceHealth)(nil),                        // 46: account.SourceHealth
+	(*ListAllSourcesStatusResponse)(nil),        // 47: account.ListAllSourcesStatusResponse
+	(*SubmitSourceHeartbeatRequest)(nil),        // 48: account.SubmitSourceHeartbeatRequest
+	(*AdapterMetadata)(nil),                     // 49: account.AdapterMetadata
+	(*AdapterSupportedQueryMethods)(nil),        // 50: account.AdapterSupportedQueryMethods
+	(*TerraformMapping)(nil),                    // 51: account.TerraformMapping
+	(*SubmitSourceHeartbeatResponse)(nil),       // 52: account.SubmitSourceHeartbeatResponse
+	(*KeepaliveSourcesRequest)(nil),             // 53: account.KeepaliveSourcesRequest
+	(*KeepaliveSourcesResponse)(nil),            // 54: account.KeepaliveSourcesResponse
+	(*CreateTokenRequest)(nil),                  // 55: account.CreateTokenRequest
+	(*CreateTokenResponse)(nil),                 // 56: account.CreateTokenResponse
+	(*RevlinkWarmupRequest)(nil),                // 57: account.RevlinkWarmupRequest
+	(*RevlinkWarmupResponse)(nil),               // 58: account.RevlinkWarmupResponse
+	(*AvailableItemType)(nil),                   // 59: account.AvailableItemType
+	(*ListAvailableItemTypesRequest)(nil),       // 60: account.ListAvailableItemTypesRequest
+	(*ListAvailableItemTypesResponse)(nil),      // 61: account.ListAvailableItemTypesResponse
+	(*GetSourceStatusRequest)(nil),              // 62: account.GetSourceStatusRequest
+	(*GetSourceStatusResponse)(nil),             // 63: account.GetSourceStatusResponse
+	(*GetUserOnboardingStatusRequest)(nil),      // 64: account.GetUserOnboardingStatusRequest
+	(*GetUserOnboardingStatusResponse)(nil),     // 65: account.GetUserOnboardingStatusResponse
+	(*SetUserOnboardingStatusRequest)(nil),      // 66: account.SetUserOnboardingStatusRequest
+	(*SetUserOnboardingStatusResponse)(nil),     // 67: account.SetUserOnboardingStatusResponse
+	(*SetGithubInstallationIDRequest)(nil),      // 68: account.SetGithubInstallationIDRequest
+	(*SetGithubInstallationIDResponse)(nil),     // 69: account.SetGithubInstallationIDResponse
+	(*UnsetGithubInstallationIDRequest)(nil),    // 70: account.UnsetGithubInstallationIDRequest
+	(*UnsetGithubInstallationIDResponse)(nil),   // 71: account.UnsetGithubInstallationIDResponse
+	(*GetOrCreateAWSExternalIdRequest)(nil),     // 72: account.GetOrCreateAWSExternalIdRequest
+	(*GetOrCreateAWSExternalIdResponse)(nil),    // 73: account.GetOrCreateAWSExternalIdResponse
+	(*ListTeamMembersRequest)(nil),              // 74: account.ListTeamMembersRequest
+	(*ListTeamMembersResponse)(nil),             // 75: account.ListTeamMembersResponse
+	(*TeamMember)(nil),                          // 76: account.TeamMember
+	(*SetUserRoleRequest)(nil),                  // 77: account.SetUserRoleRequest
+	(*SetUserRoleResponse)(nil),                 // 78: account.SetUserRoleResponse
+	(*GetWelcomeScreenInformationRequest)(nil),  // 79: account.GetWelcomeScreenInformationRequest
+	(*InviterInformation)(nil),                  // 80: account.InviterInformation
+	(*GetWelcomeScreenInformationResponse)(nil), // 81: account.GetWelcomeScreenInformationResponse
+	(*timestamppb.Timestamp)(nil),               // 82: google.protobuf.Timestamp
+	(*structpb.Struct)(nil),                     // 83: google.protobuf.Struct
+	(*durationpb.Duration)(nil),                 // 84: google.protobuf.Duration
+	(QueryMethod)(0),                            // 85: QueryMethod
 }
 var file_account_proto_depIdxs = []int32{
-	25, // 0: account.ListAccountsResponse.accounts:type_name -> account.Account
-	28, // 1: account.CreateAccountRequest.properties:type_name -> account.AccountProperties
-	25, // 2: account.CreateAccountResponse.account:type_name -> account.Account
-	28, // 3: account.UpdateAccountRequest.properties:type_name -> account.AccountProperties
-	25, // 4: account.UpdateAccountResponse.account:type_name -> account.Account
-	9,  // 5: account.AdminUpdateAccountRequest.request:type_name -> account.UpdateAccountRequest
-	33, // 6: account.AdminListSourcesRequest.request:type_name -> account.ListSourcesRequest
-	35, // 7: account.AdminCreateSourceRequest.request:type_name -> account.CreateSourceRequest
-	37, // 8: account.AdminGetSourceRequest.request:type_name -> account.GetSourceRequest
-	39, // 9: account.AdminUpdateSourceRequest.request:type_name -> account.UpdateSourceRequest
-	41, // 10: account.AdminDeleteSourceRequest.request:type_name -> account.DeleteSourceRequest
-	52, // 11: account.AdminKeepaliveSourcesRequest.request:type_name -> account.KeepaliveSourcesRequest
-	54, // 12: account.AdminCreateTokenRequest.request:type_name -> account.CreateTokenRequest
-	23, // 13: account.Source.metadata:type_name -> account.SourceMetadata
-	24, // 14: account.Source.properties:type_name -> account.SourceProperties
-	79, // 15: account.SourceMetadata.TokenExpiry:type_name -> google.protobuf.Timestamp
+	26, // 0: account.ListAccountsResponse.accounts:type_name -> account.Account
+	29, // 1: account.CreateAccountRequest.properties:type_name -> account.AccountProperties
+	26, // 2: account.CreateAccountResponse.account:type_name -> account.Account
+	29, // 3: account.UpdateAccountRequest.properties:type_name -> account.AccountProperties
+	26, // 4: account.UpdateAccountResponse.account:type_name -> account.Account
+	10, // 5: account.AdminUpdateAccountRequest.request:type_name -> account.UpdateAccountRequest
+	34, // 6: account.AdminListSourcesRequest.request:type_name -> account.ListSourcesRequest
+	36, // 7: account.AdminCreateSourceRequest.request:type_name -> account.CreateSourceRequest
+	38, // 8: account.AdminGetSourceRequest.request:type_name -> account.GetSourceRequest
+	40, // 9: account.AdminUpdateSourceRequest.request:type_name -> account.UpdateSourceRequest
+	42, // 10: account.AdminDeleteSourceRequest.request:type_name -> account.DeleteSourceRequest
+	53, // 11: account.AdminKeepaliveSourcesRequest.request:type_name -> account.KeepaliveSourcesRequest
+	55, // 12: account.AdminCreateTokenRequest.request:type_name -> account.CreateTokenRequest
+	24, // 13: account.Source.metadata:type_name -> account.SourceMetadata
+	25, // 14: account.Source.properties:type_name -> account.SourceProperties
+	82, // 15: account.SourceMetadata.TokenExpiry:type_name -> google.protobuf.Timestamp
 	0,  // 16: account.SourceMetadata.Status:type_name -> account.SourceStatus
-	80, // 17: account.SourceProperties.Config:type_name -> google.protobuf.Struct
-	80, // 18: account.SourceProperties.AdditionalConfig:type_name -> google.protobuf.Struct
-	26, // 19: account.Account.metadata:type_name -> account.AccountMetadata
-	28, // 20: account.Account.properties:type_name -> account.AccountProperties
-	27, // 21: account.AccountMetadata.repositories:type_name -> account.Repository
+	83, // 17: account.SourceProperties.Config:type_name -> google.protobuf.Struct
+	83, // 18: account.SourceProperties.AdditionalConfig:type_name -> google.protobuf.Struct
+	27, // 19: account.Account.metadata:type_name -> account.AccountMetadata
+	29, // 20: account.Account.properties:type_name -> account.AccountProperties
+	28, // 21: account.AccountMetadata.repositories:type_name -> account.Repository
 	2,  // 22: account.AccountMetadata.Plan:type_name -> account.AccountPlan
-	79, // 23: account.Repository.lastChangeAt:type_name -> google.protobuf.Timestamp
+	82, // 23: account.Repository.lastChangeAt:type_name -> google.protobuf.Timestamp
 	1,  // 24: account.Repository.status:type_name -> account.RepositoryStatus
-	25, // 25: account.GetAccountResponse.account:type_name -> account.Account
-	22, // 26: account.ListSourcesResponse.Sources:type_name -> account.Source
-	24, // 27: account.CreateSourceRequest.properties:type_name -> account.SourceProperties
-	22, // 28: account.CreateSourceResponse.source:type_name -> account.Source
-	22, // 29: account.GetSourceResponse.source:type_name -> account.Source
-	24, // 30: account.UpdateSourceRequest.properties:type_name -> account.SourceProperties
-	22, // 31: account.UpdateSourceResponse.source:type_name -> account.Source
+	26, // 25: account.GetAccountResponse.account:type_name -> account.Account
+	23, // 26: account.ListSourcesResponse.Sources:type_name -> account.Source
+	25, // 27: account.CreateSourceRequest.properties:type_name -> account.SourceProperties
+	23, // 28: account.CreateSourceResponse.source:type_name -> account.Source
+	23, // 29: account.GetSourceResponse.source:type_name -> account.Source
+	25, // 30: account.UpdateSourceRequest.properties:type_name -> account.SourceProperties
+	23, // 31: account.UpdateSourceResponse.source:type_name -> account.Source
 	0,  // 32: account.SourceKeepaliveResult.Status:type_name -> account.SourceStatus
 	0,  // 33: account.SourceHealth.status:type_name -> account.SourceStatus
-	79, // 34: account.SourceHealth.createdAt:type_name -> google.protobuf.Timestamp
-	79, // 35: account.SourceHealth.lastHeartbeat:type_name -> google.protobuf.Timestamp
-	79, // 36: account.SourceHealth.nextHeartbeat:type_name -> google.protobuf.Timestamp
+	82, // 34: account.SourceHealth.createdAt:type_name -> google.protobuf.Timestamp
+	82, // 35: account.SourceHealth.lastHeartbeat:type_name -> google.protobuf.Timestamp
+	82, // 36: account.SourceHealth.nextHeartbeat:type_name -> google.protobuf.Timestamp
 	3,  // 37: account.SourceHealth.managed:type_name -> account.SourceManaged
-	48, // 38: account.SourceHealth.adapterMetadata:type_name -> account.AdapterMetadata
-	45, // 39: account.ListAllSourcesStatusResponse.sources:type_name -> account.SourceHealth
-	81, // 40: account.SubmitSourceHeartbeatRequest.nextHeartbeatMax:type_name -> google.protobuf.Duration
+	49, // 38: account.SourceHealth.adapterMetadata:type_name -> account.AdapterMetadata
+	46, // 39: account.ListAllSourcesStatusResponse.sources:type_name -> account.SourceHealth
+	84, // 40: account.SubmitSourceHeartbeatRequest.nextHeartbeatMax:type_name -> google.protobuf.Duration
 	3,  // 41: account.SubmitSourceHeartbeatRequest.managed:type_name -> account.SourceManaged
-	48, // 42: account.SubmitSourceHeartbeatRequest.adapterMetadata:type_name -> account.AdapterMetadata
+	49, // 42: account.SubmitSourceHeartbeatRequest.adapterMetadata:type_name -> account.AdapterMetadata
 	4,  // 43: account.AdapterMetadata.category:type_name -> account.AdapterCategory
-	49, // 44: account.AdapterMetadata.supportedQueryMethods:type_name -> account.AdapterSupportedQueryMethods
-	50, // 45: account.AdapterMetadata.terraformMappings:type_name -> account.TerraformMapping
-	82, // 46: account.TerraformMapping.terraformMethod:type_name -> QueryMethod
-	81, // 47: account.KeepaliveSourcesRequest.timeout:type_name -> google.protobuf.Duration
-	43, // 48: account.KeepaliveSourcesResponse.sources:type_name -> account.SourceKeepaliveResult
+	50, // 44: account.AdapterMetadata.supportedQueryMethods:type_name -> account.AdapterSupportedQueryMethods
+	51, // 45: account.AdapterMetadata.terraformMappings:type_name -> account.TerraformMapping
+	85, // 46: account.TerraformMapping.terraformMethod:type_name -> QueryMethod
+	84, // 47: account.KeepaliveSourcesRequest.timeout:type_name -> google.protobuf.Duration
+	44, // 48: account.KeepaliveSourcesResponse.sources:type_name -> account.SourceKeepaliveResult
 	4,  // 49: account.AvailableItemType.category:type_name -> account.AdapterCategory
-	49, // 50: account.AvailableItemType.supportedQueryMethods:type_name -> account.AdapterSupportedQueryMethods
-	58, // 51: account.ListAvailableItemTypesResponse.types:type_name -> account.AvailableItemType
-	45, // 52: account.GetSourceStatusResponse.source:type_name -> account.SourceHealth
-	75, // 53: account.ListTeamMembersResponse.members:type_name -> account.TeamMember
-	77, // 54: account.GetWelcomeScreenInformationResponse.inviter_information:type_name -> account.InviterInformation
-	5,  // 55: account.AdminService.ListAccounts:input_type -> account.ListAccountsRequest
-	7,  // 56: account.AdminService.CreateAccount:input_type -> account.CreateAccountRequest
-	11, // 57: account.AdminService.UpdateAccount:input_type -> account.AdminUpdateAccountRequest
-	12, // 58: account.AdminService.GetAccount:input_type -> account.AdminGetAccountRequest
-	13, // 59: account.AdminService.DeleteAccount:input_type -> account.AdminDeleteAccountRequest
-	15, // 60: account.AdminService.ListSources:input_type -> account.AdminListSourcesRequest
-	16, // 61: account.AdminService.CreateSource:input_type -> account.AdminCreateSourceRequest
-	17, // 62: account.AdminService.GetSource:input_type -> account.AdminGetSourceRequest
-	18, // 63: account.AdminService.UpdateSource:input_type -> account.AdminUpdateSourceRequest
-	19, // 64: account.AdminService.DeleteSource:input_type -> account.AdminDeleteSourceRequest
-	20, // 65: account.AdminService.KeepaliveSources:input_type -> account.AdminKeepaliveSourcesRequest
-	21, // 66: account.AdminService.CreateToken:input_type -> account.AdminCreateTokenRequest
-	29, // 67: account.ManagementService.GetAccount:input_type -> account.GetAccountRequest
-	31, // 68: account.ManagementService.DeleteAccount:input_type -> account.DeleteAccountRequest
-	33, // 69: account.ManagementService.ListSources:input_type -> account.ListSourcesRequest
-	35, // 70: account.ManagementService.CreateSource:input_type -> account.CreateSourceRequest
-	37, // 71: account.ManagementService.GetSource:input_type -> account.GetSourceRequest
-	39, // 72: account.ManagementService.UpdateSource:input_type -> account.UpdateSourceRequest
-	41, // 73: account.ManagementService.DeleteSource:input_type -> account.DeleteSourceRequest
-	44, // 74: account.ManagementService.ListAllSourcesStatus:input_type -> account.ListAllSourcesStatusRequest
-	44, // 75: account.ManagementService.ListActiveSourcesStatus:input_type -> account.ListAllSourcesStatusRequest
-	47, // 76: account.ManagementService.SubmitSourceHeartbeat:input_type -> account.SubmitSourceHeartbeatRequest
-	52, // 77: account.ManagementService.KeepaliveSources:input_type -> account.KeepaliveSourcesRequest
-	54, // 78: account.ManagementService.CreateToken:input_type -> account.CreateTokenRequest
-	56, // 79: account.ManagementService.RevlinkWarmup:input_type -> account.RevlinkWarmupRequest
-	59, // 80: account.ManagementService.ListAvailableItemTypes:input_type -> account.ListAvailableItemTypesRequest
-	61, // 81: account.ManagementService.GetSourceStatus:input_type -> account.GetSourceStatusRequest
-	63, // 82: account.ManagementService.GetUserOnboardingStatus:input_type -> account.GetUserOnboardingStatusRequest
-	65, // 83: account.ManagementService.SetUserOnboardingStatus:input_type -> account.SetUserOnboardingStatusRequest
-	73, // 84: account.ManagementService.ListTeamMembers:input_type -> account.ListTeamMembersRequest
-	76, // 85: account.ManagementService.GetWelcomeScreenInformation:input_type -> account.GetWelcomeScreenInformationRequest
-	67, // 86: account.ManagementService.SetGithubInstallationID:input_type -> account.SetGithubInstallationIDRequest
-	69, // 87: account.ManagementService.UnsetGithubInstallationID:input_type -> account.UnsetGithubInstallationIDRequest
-	71, // 88: account.ManagementService.GetOrCreateAWSExternalId:input_type -> account.GetOrCreateAWSExternalIdRequest
-	6,  // 89: account.AdminService.ListAccounts:output_type -> account.ListAccountsResponse
-	8,  // 90: account.AdminService.CreateAccount:output_type -> account.CreateAccountResponse
-	10, // 91: account.AdminService.UpdateAccount:output_type -> account.UpdateAccountResponse
-	30, // 92: account.AdminService.GetAccount:output_type -> account.GetAccountResponse
-	14, // 93: account.AdminService.DeleteAccount:output_type -> account.AdminDeleteAccountResponse
-	34, // 94: account.AdminService.ListSources:output_type -> account.ListSourcesResponse
-	36, // 95: account.AdminService.CreateSource:output_type -> account.CreateSourceResponse
-	38, // 96: account.AdminService.GetSource:output_type -> account.GetSourceResponse
-	40, // 97: account.AdminService.UpdateSource:output_type -> account.UpdateSourceResponse
-	42, // 98: account.AdminService.DeleteSource:output_type -> account.DeleteSourceResponse
-	53, // 99: account.AdminService.KeepaliveSources:output_type -> account.KeepaliveSourcesResponse
-	55, // 100: account.AdminService.CreateToken:output_type -> account.CreateTokenResponse
-	30, // 101: account.ManagementService.GetAccount:output_type -> account.GetAccountResponse
-	32, // 102: account.ManagementService.DeleteAccount:output_type -> account.DeleteAccountResponse
-	34, // 103: account.ManagementService.ListSources:output_type -> account.ListSourcesResponse
-	36, // 104: account.ManagementService.CreateSource:output_type -> account.CreateSourceResponse
-	38, // 105: account.ManagementService.GetSource:output_type -> account.GetSourceResponse
-	40, // 106: account.ManagementService.UpdateSource:output_type -> account.UpdateSourceResponse
-	42, // 107: account.ManagementService.DeleteSource:output_type -> account.DeleteSourceResponse
-	46, // 108: account.ManagementService.ListAllSourcesStatus:output_type -> account.ListAllSourcesStatusResponse
-	46, // 109: account.ManagementService.ListActiveSourcesStatus:output_type -> account.ListAllSourcesStatusResponse
-	51, // 110: account.ManagementService.SubmitSourceHeartbeat:output_type -> account.SubmitSourceHeartbeatResponse
-	53, // 111: account.ManagementService.KeepaliveSources:output_type -> account.KeepaliveSourcesResponse
-	55, // 112: account.ManagementService.CreateToken:output_type -> account.CreateTokenResponse
-	57, // 113: account.ManagementService.RevlinkWarmup:output_type -> account.RevlinkWarmupResponse
-	60, // 114: account.ManagementService.ListAvailableItemTypes:output_type -> account.ListAvailableItemTypesResponse
-	62, // 115: account.ManagementService.GetSourceStatus:output_type -> account.GetSourceStatusResponse
-	64, // 116: account.ManagementService.GetUserOnboardingStatus:output_type -> account.GetUserOnboardingStatusResponse
-	66, // 117: account.ManagementService.SetUserOnboardingStatus:output_type -> account.SetUserOnboardingStatusResponse
-	74, // 118: account.ManagementService.ListTeamMembers:output_type -> account.ListTeamMembersResponse
-	78, // 119: account.ManagementService.GetWelcomeScreenInformation:output_type -> account.GetWelcomeScreenInformationResponse
-	68, // 120: account.ManagementService.SetGithubInstallationID:output_type -> account.SetGithubInstallationIDResponse
-	70, // 121: account.ManagementService.UnsetGithubInstallationID:output_type -> account.UnsetGithubInstallationIDResponse
-	72, // 122: account.ManagementService.GetOrCreateAWSExternalId:output_type -> account.GetOrCreateAWSExternalIdResponse
-	89, // [89:123] is the sub-list for method output_type
-	55, // [55:89] is the sub-list for method input_type
-	55, // [55:55] is the sub-list for extension type_name
-	55, // [55:55] is the sub-list for extension extendee
-	0,  // [0:55] is the sub-list for field type_name
+	50, // 50: account.AvailableItemType.supportedQueryMethods:type_name -> account.AdapterSupportedQueryMethods
+	59, // 51: account.ListAvailableItemTypesResponse.types:type_name -> account.AvailableItemType
+	46, // 52: account.GetSourceStatusResponse.source:type_name -> account.SourceHealth
+	76, // 53: account.ListTeamMembersResponse.members:type_name -> account.TeamMember
+	5,  // 54: account.TeamMember.role:type_name -> account.TeamMemberRole
+	5,  // 55: account.SetUserRoleRequest.role:type_name -> account.TeamMemberRole
+	80, // 56: account.GetWelcomeScreenInformationResponse.inviter_information:type_name -> account.InviterInformation
+	6,  // 57: account.AdminService.ListAccounts:input_type -> account.ListAccountsRequest
+	8,  // 58: account.AdminService.CreateAccount:input_type -> account.CreateAccountRequest
+	12, // 59: account.AdminService.UpdateAccount:input_type -> account.AdminUpdateAccountRequest
+	13, // 60: account.AdminService.GetAccount:input_type -> account.AdminGetAccountRequest
+	14, // 61: account.AdminService.DeleteAccount:input_type -> account.AdminDeleteAccountRequest
+	16, // 62: account.AdminService.ListSources:input_type -> account.AdminListSourcesRequest
+	17, // 63: account.AdminService.CreateSource:input_type -> account.AdminCreateSourceRequest
+	18, // 64: account.AdminService.GetSource:input_type -> account.AdminGetSourceRequest
+	19, // 65: account.AdminService.UpdateSource:input_type -> account.AdminUpdateSourceRequest
+	20, // 66: account.AdminService.DeleteSource:input_type -> account.AdminDeleteSourceRequest
+	21, // 67: account.AdminService.KeepaliveSources:input_type -> account.AdminKeepaliveSourcesRequest
+	22, // 68: account.AdminService.CreateToken:input_type -> account.AdminCreateTokenRequest
+	30, // 69: account.ManagementService.GetAccount:input_type -> account.GetAccountRequest
+	32, // 70: account.ManagementService.DeleteAccount:input_type -> account.DeleteAccountRequest
+	34, // 71: account.ManagementService.ListSources:input_type -> account.ListSourcesRequest
+	36, // 72: account.ManagementService.CreateSource:input_type -> account.CreateSourceRequest
+	38, // 73: account.ManagementService.GetSource:input_type -> account.GetSourceRequest
+	40, // 74: account.ManagementService.UpdateSource:input_type -> account.UpdateSourceRequest
+	42, // 75: account.ManagementService.DeleteSource:input_type -> account.DeleteSourceRequest
+	45, // 76: account.ManagementService.ListAllSourcesStatus:input_type -> account.ListAllSourcesStatusRequest
+	45, // 77: account.ManagementService.ListActiveSourcesStatus:input_type -> account.ListAllSourcesStatusRequest
+	48, // 78: account.ManagementService.SubmitSourceHeartbeat:input_type -> account.SubmitSourceHeartbeatRequest
+	53, // 79: account.ManagementService.KeepaliveSources:input_type -> account.KeepaliveSourcesRequest
+	55, // 80: account.ManagementService.CreateToken:input_type -> account.CreateTokenRequest
+	57, // 81: account.ManagementService.RevlinkWarmup:input_type -> account.RevlinkWarmupRequest
+	60, // 82: account.ManagementService.ListAvailableItemTypes:input_type -> account.ListAvailableItemTypesRequest
+	62, // 83: account.ManagementService.GetSourceStatus:input_type -> account.GetSourceStatusRequest
+	64, // 84: account.ManagementService.GetUserOnboardingStatus:input_type -> account.GetUserOnboardingStatusRequest
+	66, // 85: account.ManagementService.SetUserOnboardingStatus:input_type -> account.SetUserOnboardingStatusRequest
+	74, // 86: account.ManagementService.ListTeamMembers:input_type -> account.ListTeamMembersRequest
+	77, // 87: account.ManagementService.SetUserRole:input_type -> account.SetUserRoleRequest
+	79, // 88: account.ManagementService.GetWelcomeScreenInformation:input_type -> account.GetWelcomeScreenInformationRequest
+	68, // 89: account.ManagementService.SetGithubInstallationID:input_type -> account.SetGithubInstallationIDRequest
+	70, // 90: account.ManagementService.UnsetGithubInstallationID:input_type -> account.UnsetGithubInstallationIDRequest
+	72, // 91: account.ManagementService.GetOrCreateAWSExternalId:input_type -> account.GetOrCreateAWSExternalIdRequest
+	7,  // 92: account.AdminService.ListAccounts:output_type -> account.ListAccountsResponse
+	9,  // 93: account.AdminService.CreateAccount:output_type -> account.CreateAccountResponse
+	11, // 94: account.AdminService.UpdateAccount:output_type -> account.UpdateAccountResponse
+	31, // 95: account.AdminService.GetAccount:output_type -> account.GetAccountResponse
+	15, // 96: account.AdminService.DeleteAccount:output_type -> account.AdminDeleteAccountResponse
+	35, // 97: account.AdminService.ListSources:output_type -> account.ListSourcesResponse
+	37, // 98: account.AdminService.CreateSource:output_type -> account.CreateSourceResponse
+	39, // 99: account.AdminService.GetSource:output_type -> account.GetSourceResponse
+	41, // 100: account.AdminService.UpdateSource:output_type -> account.UpdateSourceResponse
+	43, // 101: account.AdminService.DeleteSource:output_type -> account.DeleteSourceResponse
+	54, // 102: account.AdminService.KeepaliveSources:output_type -> account.KeepaliveSourcesResponse
+	56, // 103: account.AdminService.CreateToken:output_type -> account.CreateTokenResponse
+	31, // 104: account.ManagementService.GetAccount:output_type -> account.GetAccountResponse
+	33, // 105: account.ManagementService.DeleteAccount:output_type -> account.DeleteAccountResponse
+	35, // 106: account.ManagementService.ListSources:output_type -> account.ListSourcesResponse
+	37, // 107: account.ManagementService.CreateSource:output_type -> account.CreateSourceResponse
+	39, // 108: account.ManagementService.GetSource:output_type -> account.GetSourceResponse
+	41, // 109: account.ManagementService.UpdateSource:output_type -> account.UpdateSourceResponse
+	43, // 110: account.ManagementService.DeleteSource:output_type -> account.DeleteSourceResponse
+	47, // 111: account.ManagementService.ListAllSourcesStatus:output_type -> account.ListAllSourcesStatusResponse
+	47, // 112: account.ManagementService.ListActiveSourcesStatus:output_type -> account.ListAllSourcesStatusResponse
+	52, // 113: account.ManagementService.SubmitSourceHeartbeat:output_type -> account.SubmitSourceHeartbeatResponse
+	54, // 114: account.ManagementService.KeepaliveSources:output_type -> account.KeepaliveSourcesResponse
+	56, // 115: account.ManagementService.CreateToken:output_type -> account.CreateTokenResponse
+	58, // 116: account.ManagementService.RevlinkWarmup:output_type -> account.RevlinkWarmupResponse
+	61, // 117: account.ManagementService.ListAvailableItemTypes:output_type -> account.ListAvailableItemTypesResponse
+	63, // 118: account.ManagementService.GetSourceStatus:output_type -> account.GetSourceStatusResponse
+	65, // 119: account.ManagementService.GetUserOnboardingStatus:output_type -> account.GetUserOnboardingStatusResponse
+	67, // 120: account.ManagementService.SetUserOnboardingStatus:output_type -> account.SetUserOnboardingStatusResponse
+	75, // 121: account.ManagementService.ListTeamMembers:output_type -> account.ListTeamMembersResponse
+	78, // 122: account.ManagementService.SetUserRole:output_type -> account.SetUserRoleResponse
+	81, // 123: account.ManagementService.GetWelcomeScreenInformation:output_type -> account.GetWelcomeScreenInformationResponse
+	69, // 124: account.ManagementService.SetGithubInstallationID:output_type -> account.SetGithubInstallationIDResponse
+	71, // 125: account.ManagementService.UnsetGithubInstallationID:output_type -> account.UnsetGithubInstallationIDResponse
+	73, // 126: account.ManagementService.GetOrCreateAWSExternalId:output_type -> account.GetOrCreateAWSExternalIdResponse
+	92, // [92:127] is the sub-list for method output_type
+	57, // [57:92] is the sub-list for method input_type
+	57, // [57:57] is the sub-list for extension type_name
+	57, // [57:57] is the sub-list for extension extendee
+	0,  // [0:57] is the sub-list for field type_name
 }
 
 func init() { file_account_proto_init() }
@@ -4721,8 +4920,8 @@ func file_account_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_account_proto_rawDesc), len(file_account_proto_rawDesc)),
-			NumEnums:      5,
-			NumMessages:   74,
+			NumEnums:      6,
+			NumMessages:   76,
 			NumExtensions: 0,
 			NumServices:   2,
 		},

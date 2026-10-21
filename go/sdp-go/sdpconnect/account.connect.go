@@ -123,6 +123,9 @@ const (
 	// ManagementServiceListTeamMembersProcedure is the fully-qualified name of the ManagementService's
 	// ListTeamMembers RPC.
 	ManagementServiceListTeamMembersProcedure = "/account.ManagementService/ListTeamMembers"
+	// ManagementServiceSetUserRoleProcedure is the fully-qualified name of the ManagementService's
+	// SetUserRole RPC.
+	ManagementServiceSetUserRoleProcedure = "/account.ManagementService/SetUserRole"
 	// ManagementServiceGetWelcomeScreenInformationProcedure is the fully-qualified name of the
 	// ManagementService's GetWelcomeScreenInformation RPC.
 	ManagementServiceGetWelcomeScreenInformationProcedure = "/account.ManagementService/GetWelcomeScreenInformation"
@@ -579,6 +582,8 @@ type ManagementServiceClient interface {
 	SetUserOnboardingStatus(context.Context, *connect.Request[sdp_go.SetUserOnboardingStatusRequest]) (*connect.Response[sdp_go.SetUserOnboardingStatusResponse], error)
 	// List team members in the current user's account (excludes the active user)
 	ListTeamMembers(context.Context, *connect.Request[sdp_go.ListTeamMembersRequest]) (*connect.Response[sdp_go.ListTeamMembersResponse], error)
+	// Sets a user's role in the current user's account. Requires account:write
+	SetUserRole(context.Context, *connect.Request[sdp_go.SetUserRoleRequest]) (*connect.Response[sdp_go.SetUserRoleResponse], error)
 	// Get welcome information for the current user
 	GetWelcomeScreenInformation(context.Context, *connect.Request[sdp_go.GetWelcomeScreenInformationRequest]) (*connect.Response[sdp_go.GetWelcomeScreenInformationResponse], error)
 	// Set github installation ID for the account
@@ -710,6 +715,12 @@ func NewManagementServiceClient(httpClient connect.HTTPClient, baseURL string, o
 			connect.WithSchema(managementServiceMethods.ByName("ListTeamMembers")),
 			connect.WithClientOptions(opts...),
 		),
+		setUserRole: connect.NewClient[sdp_go.SetUserRoleRequest, sdp_go.SetUserRoleResponse](
+			httpClient,
+			baseURL+ManagementServiceSetUserRoleProcedure,
+			connect.WithSchema(managementServiceMethods.ByName("SetUserRole")),
+			connect.WithClientOptions(opts...),
+		),
 		getWelcomeScreenInformation: connect.NewClient[sdp_go.GetWelcomeScreenInformationRequest, sdp_go.GetWelcomeScreenInformationResponse](
 			httpClient,
 			baseURL+ManagementServiceGetWelcomeScreenInformationProcedure,
@@ -757,6 +768,7 @@ type managementServiceClient struct {
 	getUserOnboardingStatus     *connect.Client[sdp_go.GetUserOnboardingStatusRequest, sdp_go.GetUserOnboardingStatusResponse]
 	setUserOnboardingStatus     *connect.Client[sdp_go.SetUserOnboardingStatusRequest, sdp_go.SetUserOnboardingStatusResponse]
 	listTeamMembers             *connect.Client[sdp_go.ListTeamMembersRequest, sdp_go.ListTeamMembersResponse]
+	setUserRole                 *connect.Client[sdp_go.SetUserRoleRequest, sdp_go.SetUserRoleResponse]
 	getWelcomeScreenInformation *connect.Client[sdp_go.GetWelcomeScreenInformationRequest, sdp_go.GetWelcomeScreenInformationResponse]
 	setGithubInstallationID     *connect.Client[sdp_go.SetGithubInstallationIDRequest, sdp_go.SetGithubInstallationIDResponse]
 	unsetGithubInstallationID   *connect.Client[sdp_go.UnsetGithubInstallationIDRequest, sdp_go.UnsetGithubInstallationIDResponse]
@@ -853,6 +865,11 @@ func (c *managementServiceClient) ListTeamMembers(ctx context.Context, req *conn
 	return c.listTeamMembers.CallUnary(ctx, req)
 }
 
+// SetUserRole calls account.ManagementService.SetUserRole.
+func (c *managementServiceClient) SetUserRole(ctx context.Context, req *connect.Request[sdp_go.SetUserRoleRequest]) (*connect.Response[sdp_go.SetUserRoleResponse], error) {
+	return c.setUserRole.CallUnary(ctx, req)
+}
+
 // GetWelcomeScreenInformation calls account.ManagementService.GetWelcomeScreenInformation.
 func (c *managementServiceClient) GetWelcomeScreenInformation(ctx context.Context, req *connect.Request[sdp_go.GetWelcomeScreenInformationRequest]) (*connect.Response[sdp_go.GetWelcomeScreenInformationResponse], error) {
 	return c.getWelcomeScreenInformation.CallUnary(ctx, req)
@@ -925,6 +942,8 @@ type ManagementServiceHandler interface {
 	SetUserOnboardingStatus(context.Context, *connect.Request[sdp_go.SetUserOnboardingStatusRequest]) (*connect.Response[sdp_go.SetUserOnboardingStatusResponse], error)
 	// List team members in the current user's account (excludes the active user)
 	ListTeamMembers(context.Context, *connect.Request[sdp_go.ListTeamMembersRequest]) (*connect.Response[sdp_go.ListTeamMembersResponse], error)
+	// Sets a user's role in the current user's account. Requires account:write
+	SetUserRole(context.Context, *connect.Request[sdp_go.SetUserRoleRequest]) (*connect.Response[sdp_go.SetUserRoleResponse], error)
 	// Get welcome information for the current user
 	GetWelcomeScreenInformation(context.Context, *connect.Request[sdp_go.GetWelcomeScreenInformationRequest]) (*connect.Response[sdp_go.GetWelcomeScreenInformationResponse], error)
 	// Set github installation ID for the account
@@ -1052,6 +1071,12 @@ func NewManagementServiceHandler(svc ManagementServiceHandler, opts ...connect.H
 		connect.WithSchema(managementServiceMethods.ByName("ListTeamMembers")),
 		connect.WithHandlerOptions(opts...),
 	)
+	managementServiceSetUserRoleHandler := connect.NewUnaryHandler(
+		ManagementServiceSetUserRoleProcedure,
+		svc.SetUserRole,
+		connect.WithSchema(managementServiceMethods.ByName("SetUserRole")),
+		connect.WithHandlerOptions(opts...),
+	)
 	managementServiceGetWelcomeScreenInformationHandler := connect.NewUnaryHandler(
 		ManagementServiceGetWelcomeScreenInformationProcedure,
 		svc.GetWelcomeScreenInformation,
@@ -1114,6 +1139,8 @@ func NewManagementServiceHandler(svc ManagementServiceHandler, opts ...connect.H
 			managementServiceSetUserOnboardingStatusHandler.ServeHTTP(w, r)
 		case ManagementServiceListTeamMembersProcedure:
 			managementServiceListTeamMembersHandler.ServeHTTP(w, r)
+		case ManagementServiceSetUserRoleProcedure:
+			managementServiceSetUserRoleHandler.ServeHTTP(w, r)
 		case ManagementServiceGetWelcomeScreenInformationProcedure:
 			managementServiceGetWelcomeScreenInformationHandler.ServeHTTP(w, r)
 		case ManagementServiceSetGithubInstallationIDProcedure:
@@ -1201,6 +1228,10 @@ func (UnimplementedManagementServiceHandler) SetUserOnboardingStatus(context.Con
 
 func (UnimplementedManagementServiceHandler) ListTeamMembers(context.Context, *connect.Request[sdp_go.ListTeamMembersRequest]) (*connect.Response[sdp_go.ListTeamMembersResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("account.ManagementService.ListTeamMembers is not implemented"))
+}
+
+func (UnimplementedManagementServiceHandler) SetUserRole(context.Context, *connect.Request[sdp_go.SetUserRoleRequest]) (*connect.Response[sdp_go.SetUserRoleResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("account.ManagementService.SetUserRole is not implemented"))
 }
 
 func (UnimplementedManagementServiceHandler) GetWelcomeScreenInformation(context.Context, *connect.Request[sdp_go.GetWelcomeScreenInformationRequest]) (*connect.Response[sdp_go.GetWelcomeScreenInformationResponse], error) {
