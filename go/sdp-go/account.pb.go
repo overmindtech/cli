@@ -4048,6 +4048,8 @@ type TeamMember struct {
 	Role TeamMemberRole `protobuf:"varint,4,opt,name=role,proto3,enum=account.TeamMemberRole" json:"role,omitempty"`
 	// True when this team member is the current user
 	IsCurrentUser bool `protobuf:"varint,5,opt,name=is_current_user,json=isCurrentUser,proto3" json:"is_current_user,omitempty"`
+	// The team member's email address
+	Email         string `protobuf:"bytes,6,opt,name=email,proto3" json:"email,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -4115,6 +4117,13 @@ func (x *TeamMember) GetIsCurrentUser() bool {
 		return x.IsCurrentUser
 	}
 	return false
+}
+
+func (x *TeamMember) GetEmail() string {
+	if x != nil {
+		return x.Email
+	}
+	return ""
 }
 
 type SetUserRoleRequest struct {
@@ -4577,7 +4586,7 @@ const file_account_proto_rawDesc = "" +
 	"\x14include_current_user\x18\x01 \x01(\bR\x12includeCurrentUser\"y\n" +
 	"\x17ListTeamMembersResponse\x12-\n" +
 	"\amembers\x18\x01 \x03(\v2\x13.account.TeamMemberR\amembers\x12/\n" +
-	"\x14roles_managed_by_idp\x18\x02 \x01(\bR\x11rolesManagedByIdp\"\xaa\x01\n" +
+	"\x14roles_managed_by_idp\x18\x02 \x01(\bR\x11rolesManagedByIdp\"\xc0\x01\n" +
 	"\n" +
 	"TeamMember\x12\x12\n" +
 	"\x04UUID\x18\x01 \x01(\fR\x04UUID\x12\x12\n" +
@@ -4585,7 +4594,8 @@ const file_account_proto_rawDesc = "" +
 	"\vpicture_url\x18\x03 \x01(\tR\n" +
 	"pictureUrl\x12+\n" +
 	"\x04role\x18\x04 \x01(\x0e2\x17.account.TeamMemberRoleR\x04role\x12&\n" +
-	"\x0fis_current_user\x18\x05 \x01(\bR\risCurrentUser\"^\n" +
+	"\x0fis_current_user\x18\x05 \x01(\bR\risCurrentUser\x12\x14\n" +
+	"\x05email\x18\x06 \x01(\tR\x05email\"^\n" +
 	"\x12SetUserRoleRequest\x12\x1b\n" +
 	"\tuser_uuid\x18\x01 \x01(\fR\buserUuid\x12+\n" +
 	"\x04role\x18\x02 \x01(\x0e2\x17.account.TeamMemberRoleR\x04role\"\x15\n" +
