@@ -48,7 +48,7 @@ func parseTagsArgument() (*sdp.EnrichedTags, error) {
 	for _, tag := range viper.GetStringSlice("tags") {
 		parts := strings.SplitN(tag, "=", 2)
 		if len(parts) != 2 {
-			return nil, fmt.Errorf("invalid tag format: %s", tag)
+			return nil, flagError{usage: fmt.Sprintf("invalid --tags value '%s', expected format 'key=value'", tag)}
 		}
 		tags[parts[0]] = parts[1]
 	}

@@ -149,24 +149,7 @@ func Execute() {
 
 		err := rootCmd.ExecuteContext(ctx)
 		if err != nil {
-			switch err := err.(type) { //nolint:errorlint // the selected error types are all top-level wrappers used by the CLI implementation
-			case flagError:
-				// print errors from viper with usage to stderr
-				fmt.Fprintln(os.Stderr, err)
-			case loggedError:
-				log.WithContext(ctx).WithError(err.err).WithFields(err.fields).Error(err.message)
-			}
-			if cmdSpan != nil {
-				// if printing the error was not requested by the appropriate
-				// wrapper, only record the data to honeycomb and sentry, the
-				// command already has handled logging
-				cmdSpan.SetAttributes(
-					attribute.Bool("ovm.cli.fatalError", true),
-					attribute.String("ovm.cli.fatalError.msg", err.Error()),
-				)
-				cmdSpan.RecordError(err)
-			}
-			sentry.CaptureException(err)
+			reportCommandError(ctx, err, sentry.CaptureException)
 		}
 
 		return err
@@ -400,6 +383,41 @@ type flagError struct {
 
 func (f flagError) Error() string {
 	return f.usage
+}
+
+// captureExceptionFunc is the Sentry capture hook used by reportCommandError.
+type captureExceptionFunc func(error) *sentry.EventID
+
+// reportCommandError prints expected CLI errors, records them on the command
+// span for Honeycomb, and reports unexpected failures to Sentry.
+//
+// flagError is returned for malformed user input (invalid flags, missing
+// required arguments, and similar validation). Those are expected exit paths:
+// the user already sees the validation message and a non-zero exit. Sending
+// them to Sentry creates high-priority noise (ENG-6795 / CLI-Q).
+func reportCommandError(ctx context.Context, err error, capture captureExceptionFunc) {
+	reportToSentry := true
+	switch e := err.(type) { //nolint:errorlint // the selected error types are all top-level wrappers used by the CLI implementation
+	case flagError:
+		// print errors from viper with usage to stderr
+		fmt.Fprintln(os.Stderr, e)
+		reportToSentry = false
+	case loggedError:
+		log.WithContext(ctx).WithError(e.err).WithFields(e.fields).Error(e.message)
+	}
+	if cmdSpan != nil {
+		// if printing the error was not requested by the appropriate
+		// wrapper, only record the data to honeycomb and sentry, the
+		// command already has handled logging
+		cmdSpan.SetAttributes(
+			attribute.Bool("ovm.cli.fatalError", true),
+			attribute.String("ovm.cli.fatalError.msg", err.Error()),
+		)
+		cmdSpan.RecordError(err)
+	}
+	if reportToSentry && capture != nil {
+		capture(err)
+	}
 }
 
 type loggedError struct {

@@ -245,7 +245,7 @@ func TerraformPlanImpl(ctx context.Context, cmd *cobra.Command, oi sdp.OvermindI
 	enrichedTags, err := parseTagsArgument()
 	if err != nil {
 		uploadChangesSpinner.Fail(fmt.Sprintf("Uploading planned changes: failed to parse tags: %v", err))
-		return nil
+		return err
 	}
 
 	labels, err := parseLabelsArgument()

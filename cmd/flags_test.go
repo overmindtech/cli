@@ -1,12 +1,88 @@
 package cmd
 
 import (
+	"errors"
 	"strings"
 	"testing"
 
 	"github.com/overmindtech/cli/go/sdp-go"
 	"github.com/spf13/viper"
 )
+
+func TestParseTagsArgument(t *testing.T) {
+	tests := []struct {
+		name          string
+		tags          []string
+		want          map[string]string
+		errorContains string
+		flagError     bool
+	}{
+		{
+			name: "empty tags",
+			tags: []string{},
+			want: map[string]string{},
+		},
+		{
+			name: "single tag",
+			tags: []string{"env=prod"},
+			want: map[string]string{"env": "prod"},
+		},
+		{
+			name: "multiple tags",
+			tags: []string{"env=prod", "team=platform"},
+			want: map[string]string{"env": "prod", "team": "platform"},
+		},
+		{
+			name:          "missing equals sign",
+			tags:          []string{"bad"},
+			errorContains: "invalid --tags value 'bad', expected format 'key=value'",
+			flagError:     true,
+		},
+		{
+			name: "empty value is allowed",
+			tags: []string{"key="},
+			want: map[string]string{"key": ""},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			viper.Reset()
+			viper.Set("tags", tt.tags)
+
+			got, err := parseTagsArgument()
+			if tt.errorContains != "" {
+				if err == nil {
+					t.Fatalf("parseTagsArgument() expected error containing %q, got nil", tt.errorContains)
+				}
+				if !strings.Contains(err.Error(), tt.errorContains) {
+					t.Fatalf("parseTagsArgument() error = %v, want containing %q", err, tt.errorContains)
+				}
+				if tt.flagError {
+					if _, ok := errors.AsType[flagError](err); !ok {
+						t.Fatalf("parseTagsArgument() expected flagError, got %T", err)
+					}
+				}
+				return
+			}
+			if err != nil {
+				t.Fatalf("parseTagsArgument() unexpected error: %v", err)
+			}
+			if len(got.GetTagValue()) != len(tt.want) {
+				t.Fatalf("parseTagsArgument() returned %d tags, want %d", len(got.GetTagValue()), len(tt.want))
+			}
+			for key, value := range tt.want {
+				tag, ok := got.GetTagValue()[key]
+				if !ok {
+					t.Fatalf("parseTagsArgument() missing tag %q", key)
+				}
+				if tag.GetUserTagValue().GetValue() != value {
+					t.Fatalf("parseTagsArgument() tag %q = %q, want %q", key, tag.GetUserTagValue().GetValue(), value)
+				}
+			}
+		})
+	}
+}
 
 func TestParseLabelsArgument(t *testing.T) {
 	tests := []struct {

@@ -182,11 +182,7 @@ func SubmitPlan(cmd *cobra.Command, args []string) error {
 
 	enrichedTags, err := parseTagsArgument()
 	if err != nil {
-		return loggedError{
-			err:     err,
-			fields:  lf,
-			message: "Failed to parse tags",
-		}
+		return err
 	}
 
 	labels, err := parseLabelsArgument()
