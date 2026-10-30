@@ -1,5 +1,6 @@
 # Build the source binary
-FROM golang:1.27.1-alpine3.23 AS builder
+# renovate: datasource=docker depName=golang
+FROM golang:1.27.3-alpine3.23 AS builder
 ARG TARGETOS
 ARG TARGETARCH
 ARG BUILD_VERSION
