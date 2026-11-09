@@ -33,38 +33,38 @@ require (
 	cel.dev/cel-go v0.32.0
 	charm.land/glamour/v2 v2.0.1
 	charm.land/lipgloss/v2 v2.0.6
-	cloud.google.com/go/aiplatform v1.127.0
+	cloud.google.com/go/aiplatform v1.127.1
 	cloud.google.com/go/auth v0.24.1
 	cloud.google.com/go/auth/oauth2adapt v0.3.0
-	cloud.google.com/go/bigquery v1.85.0
+	cloud.google.com/go/bigquery v1.86.2
 	cloud.google.com/go/bigtable v1.58.0
-	cloud.google.com/go/certificatemanager v1.16.0
+	cloud.google.com/go/certificatemanager v1.17.1
 	cloud.google.com/go/compute v1.70.0
 	cloud.google.com/go/compute/metadata v0.10.0
-	cloud.google.com/go/container v1.55.0
-	cloud.google.com/go/dataplex v1.37.0
-	cloud.google.com/go/dataproc/v2 v2.27.0
-	cloud.google.com/go/eventarc v1.26.0
-	cloud.google.com/go/filestore v1.17.0
-	cloud.google.com/go/functions v1.26.0
-	cloud.google.com/go/iam v1.14.0
-	cloud.google.com/go/kms v1.35.0
-	cloud.google.com/go/logging v1.20.0
-	cloud.google.com/go/monitoring v1.31.0
+	cloud.google.com/go/container v1.56.1
+	cloud.google.com/go/dataplex v1.38.1
+	cloud.google.com/go/dataproc/v2 v2.28.1
+	cloud.google.com/go/eventarc v1.27.1
+	cloud.google.com/go/filestore v1.18.1
+	cloud.google.com/go/functions v1.27.1
+	cloud.google.com/go/iam v1.15.1
+	cloud.google.com/go/kms v1.36.1
+	cloud.google.com/go/logging v1.21.1
+	cloud.google.com/go/monitoring v1.32.1
 	cloud.google.com/go/networksecurity v0.20.0
-	cloud.google.com/go/orgpolicy v1.21.0
-	cloud.google.com/go/redis v1.27.0
-	cloud.google.com/go/resourcemanager v1.17.0
-	cloud.google.com/go/run v1.23.0
-	cloud.google.com/go/secretmanager v1.22.0
-	cloud.google.com/go/securitycentermanagement v1.7.0
+	cloud.google.com/go/orgpolicy v1.22.1
+	cloud.google.com/go/redis v1.29.0
+	cloud.google.com/go/resourcemanager v1.18.1
+	cloud.google.com/go/run v1.24.1
+	cloud.google.com/go/secretmanager v1.24.0
+	cloud.google.com/go/securitycentermanagement v1.8.1
 	cloud.google.com/go/spanner v1.96.1
 	cloud.google.com/go/storage v1.70.0
-	cloud.google.com/go/storagetransfer v1.20.0
+	cloud.google.com/go/storagetransfer v1.21.1
 	connectrpc.com/connect v1.21.1 // v1.19.0 was faulty, wait until it is above this version
 	connectrpc.com/otelconnect v0.9.0
 	github.com/1password/onepassword-sdk-go v0.4.1
-	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.23.3
+	github.com/Azure/azure-sdk-for-go/sdk/azcore v1.24.0
 	github.com/Azure/azure-sdk-for-go/sdk/azidentity v1.15.0
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/authorization/armauthorization/v3 v3.0.0-beta.3
 	github.com/Azure/azure-sdk-for-go/sdk/resourcemanager/batch/armbatch/v4 v4.0.0
@@ -90,7 +90,7 @@ require (
 	github.com/akedrou/textdiff v0.1.0
 	github.com/anthropics/anthropic-sdk-go v0.2.0-alpha.4
 	github.com/antihax/optional v1.0.0
-	github.com/auth0/go-auth0/v3 v3.10.0
+	github.com/auth0/go-auth0/v3 v3.11.0
 	github.com/auth0/go-jwt-middleware/v3 v3.4.0
 	github.com/aws/aws-sdk-go-v2 v1.47.3
 	github.com/aws/aws-sdk-go-v2/config v1.33.9
@@ -121,17 +121,17 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/sqs v1.52.4
 	github.com/aws/aws-sdk-go-v2/service/ssm v1.79.3
 	github.com/aws/aws-sdk-go-v2/service/sts v1.51.4
-	github.com/aws/smithy-go v1.28.5
+	github.com/aws/smithy-go v1.28.8
 	github.com/bombsimon/logrusr/v4 v4.2.0
 	github.com/bradleyfalzon/ghinstallation/v2 v2.19.0
-	github.com/brianvoe/gofakeit/v7 v7.18.0
-	github.com/cenkalti/backoff/v7 v7.0.1
+	github.com/brianvoe/gofakeit/v7 v7.18.1
+	github.com/cenkalti/backoff/v7 v7.0.3
 	github.com/coder/websocket v1.8.15
 	github.com/coreos/go-oidc/v3 v3.21.0
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc
 	github.com/exaring/otelpgx v0.11.1
 	github.com/getsentry/sentry-go v0.49.0
-	github.com/go-jose/go-jose/v4 v4.1.6
+	github.com/go-jose/go-jose/v4 v4.1.9
 	github.com/google/btree v1.1.3
 	github.com/google/go-github/v88 v88.0.0
 	github.com/google/go-github/v92 v92.0.0
@@ -148,7 +148,7 @@ require (
 	github.com/hashicorp/terraform-plugin-go v0.31.0
 	github.com/hashicorp/terraform-plugin-testing v1.16.0
 	github.com/invopop/jsonschema v0.14.0
-	github.com/jackc/pgx/v5 v5.11.0
+	github.com/jackc/pgx/v5 v5.12.0
 	github.com/jedib0t/go-pretty/v6 v6.8.3
 	github.com/jxskiss/base62 v1.1.0
 	github.com/kaptinlin/jsonrepair v0.4.9
@@ -162,11 +162,11 @@ require (
 	github.com/modelcontextprotocol/go-sdk v1.8.0
 	github.com/muesli/reflow v0.3.0
 	github.com/nats-io/jwt/v2 v2.8.2
-	github.com/nats-io/nats-server/v2 v2.15.1
+	github.com/nats-io/nats-server/v2 v2.15.2
 	github.com/nats-io/nats.go v1.55.0
 	github.com/nats-io/nkeys v0.4.16
-	github.com/neo4j/neo4j-go-driver/v6 v6.3.0
-	github.com/onsi/ginkgo/v2 v2.33.1
+	github.com/neo4j/neo4j-go-driver/v6 v6.4.0
+	github.com/onsi/ginkgo/v2 v2.34.0
 	github.com/onsi/gomega v1.44.0
 	github.com/openai/openai-go/v3 v3.70.0
 	github.com/openrdap/rdap v0.10.2
@@ -176,7 +176,7 @@ require (
 	github.com/pkg/browser v0.0.0-20240102092130-5ac0b6a4141c
 	github.com/posthog/posthog-go v1.25.1
 	github.com/qhenkart/anthropic-tokenizer-go v0.0.0-20231011194518-5519949e0faf
-	github.com/resend/resend-go/v4 v4.9.0
+	github.com/resend/resend-go/v4 v4.12.0
 	github.com/riverqueue/river v0.48.0
 	github.com/riverqueue/river/riverdriver/riverpgxv5 v0.48.0
 	github.com/riverqueue/river/rivertype v0.48.0
@@ -188,7 +188,7 @@ require (
 	github.com/slack-go/slack v0.29.0
 	github.com/sourcegraph/conc v0.3.1-0.20240121214520-5f936abd7ae8
 	github.com/spf13/cobra v1.10.2
-	github.com/spf13/pflag v1.0.10
+	github.com/spf13/pflag v1.1.0
 	github.com/spf13/viper v1.21.0
 	github.com/stretchr/testify v1.12.1
 	github.com/stripe/stripe-go/v86 v86.4.2
@@ -213,7 +213,7 @@ require (
 	go.uber.org/automaxprocs v1.6.0
 	go.uber.org/goleak v1.3.0
 	go.uber.org/mock v0.6.0
-	go.yaml.in/yaml/v3 v3.0.5
+	go.yaml.in/yaml/v3 v3.0.6
 	golang.org/x/image v0.46.0
 	golang.org/x/net v0.62.0
 	golang.org/x/oauth2 v0.37.0
@@ -223,7 +223,7 @@ require (
 	gonum.org/v1/gonum v0.17.0
 	google.golang.org/api v0.307.0
 	google.golang.org/genproto/googleapis/rpc v0.0.0-20261019180522-ce908d29299b
-	google.golang.org/grpc v1.84.0
+	google.golang.org/grpc v1.85.0
 	google.golang.org/protobuf v1.36.12
 	gopkg.in/ini.v1 v1.67.3
 	gopkg.in/yaml.v3 v3.0.1
@@ -243,7 +243,7 @@ require (
 	atomicgo.dev/schedule v0.1.0 // indirect
 	cel.dev/expr v0.25.3 // indirect
 	cloud.google.com/go v0.123.0 // indirect
-	cloud.google.com/go/longrunning v1.3.0 // indirect
+	cloud.google.com/go/longrunning v1.5.0 // indirect
 	github.com/Azure/azure-sdk-for-go/sdk/internal v1.13.0 // indirect
 	github.com/AzureAD/microsoft-authentication-library-for-go v1.10.1 // indirect
 	github.com/BurntSushi/toml v1.4.0 // indirect
@@ -256,7 +256,7 @@ require (
 	github.com/alecthomas/chroma/v2 v2.16.0 // indirect
 	github.com/alecthomas/kingpin/v2 v2.4.0 // indirect
 	github.com/alecthomas/units v0.0.0-20240927000941-0f3dac36c52b // indirect
-	github.com/andybalholm/brotli v1.1.1 // indirect
+	github.com/andybalholm/brotli v1.2.7 // indirect
 	github.com/antithesishq/antithesis-sdk-go v0.8.0-default-no-op // indirect
 	github.com/antlr4-go/antlr/v4 v4.13.1 // indirect
 	github.com/apache/arrow/go/v15 v15.0.2 // indirect
@@ -298,7 +298,7 @@ require (
 	github.com/dlclark/regexp2/v2 v2.5.1 // indirect
 	github.com/dylibso/observe-sdk/go v0.0.0-20240828172851-9145d8ad07e1 // indirect
 	github.com/emicklei/go-restful/v3 v3.13.0 // indirect
-	github.com/envoyproxy/go-control-plane/envoy v1.37.0 // indirect
+	github.com/envoyproxy/go-control-plane/envoy v1.39.1-0.20260819172001-e6e3fd93e4be // indirect
 	github.com/envoyproxy/protoc-gen-validate v1.3.3 // indirect
 	github.com/evanphx/json-patch/v5 v5.9.11 // indirect
 	github.com/extism/go-sdk v1.7.1 // indirect
@@ -373,9 +373,9 @@ require (
 	github.com/jackc/pgerrcode v0.0.0-20250907135507-afb5586c32a6 // indirect
 	github.com/jackc/pgpassfile v1.0.0 // indirect
 	github.com/jackc/pgservicefile v0.0.0-20240606120523-5a60cdf6a761 // indirect
-	github.com/jackc/puddle/v2 v2.2.2 // indirect
+	github.com/jackc/puddle/v2 v2.2.3 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/klauspost/compress v1.20.2 // indirect
+	github.com/klauspost/compress v1.20.3 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/kylelemons/godebug v1.1.0 // indirect
 	github.com/leodido/go-urn v1.4.0 // indirect
