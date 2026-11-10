@@ -3,6 +3,14 @@
   "category": 4,
   "potentialLinks": ["Pod"],
   "descriptiveName": "Network Policy",
+  "supportedQueryMethods": {
+    "get": true,
+    "getDescription": "Get a NetworkPolicy by name",
+    "list": true,
+    "listDescription": "List all NetworkPolicys",
+    "search": true,
+    "searchDescription": "Search for a NetworkPolicy using the ListOptions JSON format e.g. {\"labelSelector\": \"app=wordpress\"}"
+  },
   "terraformMappings": [
     {
       "terraformQueryMap": "kubernetes_network_policy.metadata[0].name"

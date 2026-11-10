@@ -77,10 +77,11 @@ func newNetworkPolicyAdapter(cs *kubernetes.Clientset, cluster string, namespace
 }
 
 var networkPolicyAdapterMetadata = Metadata.Register(&sdp.AdapterMetadata{
-	Type:            "NetworkPolicy",
-	DescriptiveName: "Network Policy",
-	Category:        sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,
-	PotentialLinks:  []string{"Pod"},
+	Type:                  "NetworkPolicy",
+	DescriptiveName:       "Network Policy",
+	Category:              sdp.AdapterCategory_ADAPTER_CATEGORY_SECURITY,
+	PotentialLinks:        []string{"Pod"},
+	SupportedQueryMethods: DefaultSupportedQueryMethods("NetworkPolicy"),
 	TerraformMappings: []*sdp.TerraformMapping{
 		{
 			TerraformMethod:   sdp.QueryMethod_GET,
