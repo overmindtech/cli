@@ -2,7 +2,9 @@ package manual_test
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"strings"
 	"sync"
 	"testing"
 
@@ -290,6 +292,40 @@ func TestComputeVirtualMachine(t *testing.T) {
 		}
 	})
 
+	t.Run("GetRedactsBootstrapSecrets", func(t *testing.T) {
+		const (
+			userData   = "azure-vm-userdata-sentinel-ENG6865"
+			customData = "azure-vm-customdata-sentinel-ENG6865"
+		)
+
+		vmName := "test-vm-userdata"
+		vm := createAzureVirtualMachine(vmName, "Succeeded")
+		vm.Properties.UserData = new(userData)
+		vm.Properties.OSProfile = &armcompute.OSProfile{
+			ComputerName: new("test-vm-userdata"),
+			CustomData:   new(customData),
+		}
+
+		mockClient := mocks.NewMockVirtualMachinesClient(ctrl)
+		mockClient.EXPECT().Get(ctx, resourceGroup, vmName, nil).Return(
+			armcompute.VirtualMachinesClientGetResponse{
+				VirtualMachine: *vm,
+			}, nil)
+
+		wrapper := manual.NewComputeVirtualMachine(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], vmName, true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		assertAttributesOmitSecrets(t, sdpItem, userData, customData)
+		assertNestedValue(t, sdpItem, true, "properties", "userData")
+		assertNestedValue(t, sdpItem, true, "properties", "osProfile", "customData")
+		assertNestedValue(t, sdpItem, "test-vm-userdata", "properties", "osProfile", "computerName")
+	})
+
 	t.Run("ErrorHandling", func(t *testing.T) {
 		expectedErr := errors.New("VM not found")
 
@@ -352,5 +388,38 @@ func createAzureVirtualMachine(vmName, provisioningState string) *armcompute.Vir
 				Type: new("Microsoft.Compute/virtualMachines/extensions"),
 			},
 		},
+	}
+}
+
+func assertAttributesOmitSecrets(t *testing.T, item *sdp.Item, secrets ...string) {
+	t.Helper()
+	b, err := json.Marshal(item.GetAttributes().GetAttrStruct().AsMap())
+	if err != nil {
+		t.Fatalf("marshal attributes: %v", err)
+	}
+	attrsJSON := string(b)
+	for _, secret := range secrets {
+		if strings.Contains(attrsJSON, secret) {
+			t.Errorf("secret value %q leaked in attributes: %s", secret, attrsJSON)
+		}
+	}
+}
+
+func assertNestedValue(t *testing.T, item *sdp.Item, want any, path ...string) {
+	t.Helper()
+	current := any(item.GetAttributes().GetAttrStruct().AsMap())
+	for i, key := range path {
+		m, ok := current.(map[string]any)
+		if !ok {
+			t.Fatalf("expected map at %s, got %T", strings.Join(path[:i], "."), current)
+		}
+		next, exists := m[key]
+		if !exists {
+			t.Fatalf("expected %s to exist", strings.Join(path[:i+1], "."))
+		}
+		current = next
+	}
+	if current != want {
+		t.Errorf("expected %s %#v, got %#v", strings.Join(path, "."), want, current)
 	}
 }

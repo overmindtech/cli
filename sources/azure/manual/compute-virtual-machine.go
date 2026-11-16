@@ -185,7 +185,12 @@ func (c computeVirtualMachineWrapper) ListStream(ctx context.Context, stream dis
 }
 
 func (c computeVirtualMachineWrapper) azureVirtualMachineToSDPItem(vm *armcompute.VirtualMachine, scope string) (*sdp.Item, *sdp.QueryError) {
-	attributes, err := shared.ToAttributesWithExclude(vm, "tags")
+	// Replace bootstrap payloads with a presence flag. A digest would still let
+	// someone confirm a guessed low-entropy payload from the stored item.
+	attributes, err := shared.ToAttributesWithPresence(vm, []string{"tags"}, []string{
+		"properties.userData",
+		"properties.osProfile.customData",
+	})
 	if err != nil {
 		return nil, &sdp.QueryError{
 			ErrorType:   sdp.QueryError_OTHER,
