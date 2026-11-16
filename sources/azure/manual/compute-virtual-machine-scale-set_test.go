@@ -425,6 +425,38 @@ func TestComputeVirtualMachineScaleSet(t *testing.T) {
 		}
 	})
 
+	t.Run("GetRedactsBootstrapSecrets", func(t *testing.T) {
+		const (
+			userData   = "azure-vmss-userdata-sentinel-ENG6865"
+			customData = "azure-vmss-customdata-sentinel-ENG6865"
+		)
+
+		scaleSetName := "test-vmss-userdata"
+		scaleSet := createAzureVirtualMachineScaleSet(scaleSetName, "Succeeded")
+		scaleSet.Properties.VirtualMachineProfile.UserData = new(userData)
+		scaleSet.Properties.VirtualMachineProfile.OSProfile.CustomData = new(customData)
+		scaleSet.Properties.VirtualMachineProfile.OSProfile.ComputerNamePrefix = new("testvm")
+
+		mockClient := mocks.NewMockVirtualMachineScaleSetsClient(ctrl)
+		mockClient.EXPECT().Get(ctx, resourceGroup, scaleSetName, nil).Return(
+			armcompute.VirtualMachineScaleSetsClientGetResponse{
+				VirtualMachineScaleSet: *scaleSet,
+			}, nil)
+
+		wrapper := manual.NewComputeVirtualMachineScaleSet(mockClient, []azureshared.ResourceGroupScope{azureshared.NewResourceGroupScope(subscriptionID, resourceGroup)})
+		adapter := sources.WrapperToAdapter(wrapper, sdpcache.NewNoOpCache())
+
+		sdpItem, qErr := adapter.Get(ctx, wrapper.Scopes()[0], scaleSetName, true)
+		if qErr != nil {
+			t.Fatalf("Expected no error, got: %v", qErr)
+		}
+
+		assertAttributesOmitSecrets(t, sdpItem, userData, customData)
+		assertNestedValue(t, sdpItem, true, "properties", "virtualMachineProfile", "userData")
+		assertNestedValue(t, sdpItem, true, "properties", "virtualMachineProfile", "osProfile", "customData")
+		assertNestedValue(t, sdpItem, "testvm", "properties", "virtualMachineProfile", "osProfile", "computerNamePrefix")
+	})
+
 	t.Run("ErrorHandling", func(t *testing.T) {
 		expectedErr := errors.New("VMSS not found")
 

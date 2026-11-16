@@ -219,6 +219,106 @@ func TestToAttributesRedacting_blanksMapValues(t *testing.T) {
 	}
 }
 
+func TestToAttributesWithPresence_replacesLeafAndWalksArrays(t *testing.T) {
+	t.Parallel()
+
+	const payload = "presence-sentinel-please"
+	input := map[string]any{
+		"tags": map[string]any{"env": "prod"},
+		"properties": map[string]any{
+			"userData": payload,
+			"osProfile": map[string]any{
+				"customData":   payload,
+				"computerName": "vm-1",
+			},
+			"profiles": []any{
+				map[string]any{"userData": payload, "name": "a"},
+				map[string]any{"userData": payload, "name": "b"},
+			},
+		},
+		"keep": "visible",
+	}
+
+	attrs, err := ToAttributesWithPresence(input, []string{"tags"}, []string{
+		"properties.userData",
+		"properties.osProfile.customData",
+		"properties.profiles.userData",
+		"missing.path",
+	})
+	if err != nil {
+		t.Fatalf("ToAttributesWithPresence: %v", err)
+	}
+
+	attrMap := attrs.GetAttrStruct().AsMap()
+	attrsJSON := mustMarshalAttrs(t, attrMap)
+	if containsJSONStringValue(attrsJSON, payload) {
+		t.Fatalf("payload leaked in attributes: %s", attrsJSON)
+	}
+	if _, ok := attrMap["tags"]; ok {
+		t.Fatalf("expected tags to be excluded, got %v", attrMap["tags"])
+	}
+	if attrMap["keep"] != "visible" {
+		t.Errorf("expected keep to remain, got %v", attrMap["keep"])
+	}
+
+	properties, ok := attrMap["properties"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected properties object, got %T", attrMap["properties"])
+	}
+	if properties["userData"] != true {
+		t.Errorf("expected properties.userData true, got %#v", properties["userData"])
+	}
+
+	osProfile, ok := properties["osProfile"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected osProfile object, got %T", properties["osProfile"])
+	}
+	if osProfile["customData"] != true {
+		t.Errorf("expected customData true, got %#v", osProfile["customData"])
+	}
+	if osProfile["computerName"] != "vm-1" {
+		t.Errorf("expected computerName to remain, got %v", osProfile["computerName"])
+	}
+
+	profiles, ok := properties["profiles"].([]any)
+	if !ok {
+		t.Fatalf("expected profiles array, got %T", properties["profiles"])
+	}
+	if len(profiles) != 2 {
+		t.Fatalf("expected 2 profiles, got %d", len(profiles))
+	}
+	for i, profile := range profiles {
+		entry, ok := profile.(map[string]any)
+		if !ok {
+			t.Fatalf("profile[%d]: expected object, got %T", i, profile)
+		}
+		if entry["userData"] != true {
+			t.Errorf("profile[%d].userData: expected true, got %#v", i, entry["userData"])
+		}
+	}
+}
+
+func TestToAttributesWithPresence_nonStringLeafBecomesTrue(t *testing.T) {
+	t.Parallel()
+
+	attrs, err := ToAttributesWithPresence(map[string]any{
+		"properties": map[string]any{
+			"userData": 42,
+		},
+	}, nil, []string{"properties.userData"})
+	if err != nil {
+		t.Fatalf("ToAttributesWithPresence: %v", err)
+	}
+
+	properties, ok := attrs.GetAttrStruct().AsMap()["properties"].(map[string]any)
+	if !ok {
+		t.Fatalf("expected properties object, got %v", attrs.GetAttrStruct().AsMap()["properties"])
+	}
+	if properties["userData"] != true {
+		t.Errorf("expected non-string userData to become true, got %#v", properties["userData"])
+	}
+}
+
 func TestToAttributesRedacting_nonArrayExcludeAndMissingBlankPath(t *testing.T) {
 	t.Parallel()
 

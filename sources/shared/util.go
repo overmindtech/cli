@@ -17,6 +17,15 @@ func ToAttributesWithExclude(i any, exclusions ...string) (*sdp.ItemAttributes, 
 	return ToAttributesRedacting(i, exclusions, nil)
 }
 
+// ToAttributesWithPresence converts an interface to SDP attributes, excluding
+// the given keys, then replaces presencePaths with true when the field exists.
+// Use this for secret payloads where even a digest would let someone confirm a
+// guessed value. The key stays at the same JSON path so add/remove is visible.
+// A missing path is a no-op.
+func ToAttributesWithPresence(i any, exclude []string, presencePaths []string) (*sdp.ItemAttributes, error) {
+	return toAttributesTransformed(i, exclude, nil, presencePaths)
+}
+
 // ToAttributesRedacting converts an interface to SDP attributes, then redacts
 // selected fields on that attribute copy. exclude drops keys (case-insensitive),
 // and dotted paths descend maps and every element of arrays. blankMaps names
@@ -24,6 +33,10 @@ func ToAttributesWithExclude(i any, exclusions ...string) (*sdp.ItemAttributes, 
 // A missing path is a no-op. A non-string map value is also replaced with an
 // empty string so an unexpected JSON type cannot keep a secret.
 func ToAttributesRedacting(i any, exclude []string, blankMaps []string) (*sdp.ItemAttributes, error) {
+	return toAttributesTransformed(i, exclude, blankMaps, nil)
+}
+
+func toAttributesTransformed(i any, exclude, blankMaps, presencePaths []string) (*sdp.ItemAttributes, error) {
 	b, err := json.Marshal(i)
 	if err != nil {
 		return nil, err
@@ -46,6 +59,13 @@ func ToAttributesRedacting(i any, exclude []string, blankMaps []string) (*sdp.It
 			continue
 		}
 		walkAndBlankMap(m, strings.Split(path, "."))
+	}
+
+	for _, path := range presencePaths {
+		if path == "" {
+			continue
+		}
+		walkAndMarkPresent(m, strings.Split(path, "."))
 	}
 
 	return sdp.ToAttributes(m)
@@ -105,6 +125,32 @@ func walkAndBlankMap(node any, path []string) {
 	case []any:
 		for _, elem := range current {
 			walkAndBlankMap(elem, path)
+		}
+	}
+}
+
+func walkAndMarkPresent(node any, path []string) {
+	if len(path) == 0 || node == nil {
+		return
+	}
+
+	switch current := node.(type) {
+	case map[string]any:
+		key := path[0]
+		for k, v := range current {
+			if !strings.EqualFold(k, key) {
+				continue
+			}
+			if len(path) == 1 {
+				current[k] = true
+				return
+			}
+			walkAndMarkPresent(v, path[1:])
+			return
+		}
+	case []any:
+		for _, elem := range current {
+			walkAndMarkPresent(elem, path)
 		}
 	}
 }

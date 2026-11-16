@@ -111,7 +111,12 @@ func (c computeVirtualMachineScaleSetWrapper) azureVirtualMachineScaleSetToSDPIt
 	if scaleSet.Name == nil {
 		return nil, azureshared.QueryError(errors.New("scaleSetName is nil"), scope, c.Type())
 	}
-	attributes, err := shared.ToAttributesWithExclude(scaleSet, "tags")
+	// Replace bootstrap payloads with a presence flag. A digest would still let
+	// someone confirm a guessed low-entropy payload from the stored item.
+	attributes, err := shared.ToAttributesWithPresence(scaleSet, []string{"tags"}, []string{
+		"properties.virtualMachineProfile.userData",
+		"properties.virtualMachineProfile.osProfile.customData",
+	})
 	if err != nil {
 		return nil, azureshared.QueryError(err, scope, c.Type())
 	}
