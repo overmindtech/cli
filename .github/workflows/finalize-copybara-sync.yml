@@ -15,6 +15,7 @@ jobs:
   finalize:
     runs-on: ubuntu-latest
     permissions:
+      actions: write
       contents: write
       pull-requests: write
 
@@ -55,6 +56,12 @@ jobs:
           else
             echo "No changes from go mod tidy"
           fi
+
+      - name: Trigger tests for finalized commit
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          HEAD_BRANCH: ${{ github.ref_name }}
+        run: gh workflow run tests.yml --repo "$GITHUB_REPOSITORY" --ref "$HEAD_BRANCH"
 
       - name: Extract original commit author
         id: author
